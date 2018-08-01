@@ -1,0 +1,23 @@
+{
+  "name": "engine262",
+  "version": "0.0.1",
+  "description": "Implementation of ECMA-262 in JavaScript",
+  "main": ".",
+  "dependencies": {
+    "cst": "^0.4.10"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devsnek/engine262.git"
+  },
+  "author": "devsnek",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devsnek/engine262/issues"
+  },
+  "homepage": "https://github.com/devsnek/engine262#readme"
+}
