@@ -7,21 +7,17 @@ import {
   CreateBuiltinFunction,
 } from '../engine.mjs';
 
-function MathAbs(thisArg, [x]) {
+function MathAbs(realm, [x]) {
   if (isNaN(x.value)) {
-    return NewValue(x.realm, NaN);
+    return NewValue(realm, NaN);
   }
   if (Object.is(x.value, -0)) {
-    return NewValue(x.realm, 0);
+    return NewValue(realm, 0);
   }
   if (x.value === -Infinity) {
-    return NewValue(x.realm, Infinity);
+    return NewValue(realm, Infinity);
   }
-  return x.value >= 0 ? x.value : -x.value;
-}
-
-function MathAcos(thisArg, [x]) {
-  return NewValue(x.realm, Math.acos(x));
+  return NewValue(realm, x.value >= 0 ? x.value : -x.value);
 }
 
 // 20.2 The Math Object
@@ -57,7 +53,7 @@ export function CreateMath(realmRec) {
 
   [
     ['abs', MathAbs],
-    ['acos', MathAcos],
+    ['acos'],
     ['acosh'],
     ['asin'],
     ['asinh'],
@@ -95,8 +91,8 @@ export function CreateMath(realmRec) {
     mathObj.DefineOwnProperty(NewValue(realmRec, name), {
       Value: nativeMethod ?
         CreateBuiltinFunction(nativeMethod, [], realmRec) :
-        CreateBuiltinFunction((thisArg) => {
-          thisArg.realm.exception.TypeError('unimplemented');
+        CreateBuiltinFunction((realm) => {
+          realm.exception.TypeError('unimplemented');
         }, [], realmRec),
       Writable: true,
       Enumerable: false,

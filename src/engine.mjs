@@ -580,6 +580,27 @@ function CreateIntrinsics(realmRec) {
 
   thrower.SetPrototypeOf(funcProto);
 
+  // Well-known symbols
+  const wellKnownSymbolNames = [
+    'asyncIterator',
+    'hasInstance',
+    'isConcatSpreadable',
+    'iterator',
+    'match',
+    'replace',
+    'search',
+    'species',
+    'split',
+    'toPrimitive',
+    'toStringTag',
+    'unscopables',
+  ];
+
+  wellKnownSymbolNames.forEach((name) => {
+    const sym = new SymbolValue(realmRec, NewValue(realmRec, name));
+    realmRec.Intrinsics[`@@${name}`] = sym;
+  });
+
   CreateArrayPrototype(realmRec);
   CreateArray(realmRec);
 
@@ -588,6 +609,17 @@ function CreateIntrinsics(realmRec) {
 
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);
+
+  wellKnownSymbolNames.forEach((name) => {
+    realmRec.Intrinsics['%Symbol%'].DefineOwnProperty(
+      NewValue(realmRec, name), {
+        Value: realmRec.Intrinsics[`@@${name}`],
+        Writable: false,
+        Enumerable: false,
+        Configurable: false,
+      },
+    );
+  });
 
   CreateMath(realmRec);
 
@@ -646,7 +678,7 @@ export function InitializeHostDefinedRealm() {
   const global = undefined;
   const thisValue = undefined;
   SetRealmGlobalObject(realm, global, thisValue);
-  const globalObj = SetDefaultGlobalBindings(realm);
+  SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
 }
 
@@ -1279,6 +1311,16 @@ export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
     console.log(error);
   });
+}
+
+// 19.4.3.2.1 SymbolDescriptiveString
+export function SymbolDescriptiveString(sym) {
+  Assert(Type(sym) === 'Symbol');
+  let desc = sym.Description;
+  if (desc.value === undefined) {
+    desc = NewValue(sym.realm, '');
+  }
+  return NewValue(sym.realm, `Symbol(${desc.value})`);
 }
 
 // 24.4.1.0 WakeWaiter

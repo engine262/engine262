@@ -62,32 +62,5 @@ export function CreateSymbol(realmRec) {
     },
   );
 
-  // Well-known symbols
-  [
-    'asyncIterator',
-    'hasInstance',
-    'isConcatSpreadable',
-    'iterator',
-    'match',
-    'replace',
-    'search',
-    'species',
-    'split',
-    'toPrimitive',
-    'toStringTag',
-    'unscopables',
-  ].forEach((name) => {
-    const sym = new SymbolValue(realmRec, NewValue(realmRec, name));
-    symbolConstructor.DefineOwnProperty(
-      NewValue(realmRec, name), {
-        Value: sym,
-        Writable: false,
-        Enumerable: false,
-        Configurable: false,
-      },
-    );
-    realmRec.Intrinsics[`@@${name}`] = sym;
-  });
-
-  return symbolConstructor;
+  realmRec.Intrinsics['%Symbol%'] = symbolConstructor;
 }
