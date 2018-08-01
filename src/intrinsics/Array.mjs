@@ -13,9 +13,8 @@ import {
 import {
   ObjectValue,
   ArrayValue,
+  New as NewValue,
 } from '../value.mjs';
-
-function ArraySetLength() {}
 
 export function ArrayCreate(length, proto) {
   Assert(length >= 0);
@@ -29,38 +28,37 @@ export function ArrayCreate(length, proto) {
     proto = currentRealmRecord().Intrinsics['%ArrayPrototype%'];
   }
   const A = new ArrayValue(currentRealmRecord());
+
   // Set A's essential internal methods except for [[DefineOwnProperty]]
   // to the default ordinary object definitions specified in 9.1.
-  A.DefineOwnProperty = function DefineOwnProperty(P, Desc) {
-    Assert(IsPropertyKey(P));
-    if (P.value === 'length') {
-      return ArraySetLength(A, Desc);
-    }
 
-    if (IsArrayIndex(P)) {
-      const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
-    }
-
-    return OrdinaryDefineOwnProperty(A, P, Desc);
-  }
+  return A;
 }
 
-function ArrayConstructor(thisArgument, argumentsList, newTarget) {
+function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
-    if (newTarget.value === undefined) {
-      newTarget = activeFunctionObject();
+    if (NewTarget.value === undefined) {
+      NewTarget = activeFunctionObject();
     }
-    const proto = GetPrototypeFromConstructor(newTarget, '%ArrayPrototype%');
+    const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
     return ArrayCreate(0, proto);
   }
 }
 
 export function CreateArray(realmRec) {
-  const arrayPrototype = new ObjectValue(realmRec);
-  const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec, arrayPrototype);
+  const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);
 
-  return constructor;
+  realmRec.Intrinsics['%ArrayPrototype%'].DefineOwnProperty(
+    NewValue(realmRec, 'constructor'), {
+      Value: constructor,
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    },
+  );
+
+  realmRec.Intrinsics['%Array%'] = constructor;
 }

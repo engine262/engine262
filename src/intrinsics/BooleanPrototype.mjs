@@ -23,16 +23,16 @@ function thisBooleanValue(value) {
   return value.realm.exception.TypeError();
 }
 
-function BooleanToString(thisArg) {
-  const b = thisBooleanValue(thisArg);
+function BooleanToString(realm, argList, { thisArgument }) {
+  const b = thisBooleanValue(thisArgument);
   if (b.value === true) {
-    return NewValue(thisArg.realm, 'true');
+    return NewValue(realm, 'true');
   }
-  return NewValue(thisArg.realm, 'false');
+  return NewValue(realm, 'false');
 }
 
-function BooleanValueOf(thisArg) {
-  return thisBooleanValue(thisArg);
+function BooleanValueOf(realm, argList, { thisArgument }) {
+  return thisBooleanValue(thisArgument);
 }
 
 export function CreateBooleanPrototype(realmRec) {
@@ -50,5 +50,5 @@ export function CreateBooleanPrototype(realmRec) {
     });
   });
 
-  return proto;
+  realmRec.Intrinsics['%BooleanPrototype%'] = proto;
 }

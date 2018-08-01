@@ -1,6 +1,21 @@
 import {
   executionContextStack,
   ExecutionContext,
+  Assert,
+  Type,
+
+  SameValue,
+  IsExtensible,
+  IsPropertyKey,
+  IsArrayIndex,
+  IsConstructor,
+  GetMethod,
+
+  CreateArrayFromList,
+  ArraySetLength,
+  Construct,
+
+  ToBoolean,
 
   OrdinaryGetPrototypeOf,
   OrdinarySetPrototypeOf,
@@ -13,6 +28,8 @@ import {
   OrdinarySet,
   OrdinaryDelete,
   OrdinaryOwnPropertyKeys,
+
+  Call,
 } from './engine.mjs';
 
 export class Value {
@@ -46,7 +63,12 @@ export class NumberValue extends PrimitiveValue {}
 
 export class StringValue extends PrimitiveValue {}
 
-export class SymbolValue extends PrimitiveValue {}
+export class SymbolValue extends PrimitiveValue {
+  constructor(realm, Description) {
+    super(realm);
+    this.Description = Description;
+  }
+}
 
 class InternalPropertyMap extends Map {
   get(name) {
@@ -82,8 +104,15 @@ class InternalPropertyMap extends Map {
 }
 
 export class ObjectValue extends PrimitiveValue {
-  constructor(realm) {
+  constructor(realm, Prototype) {
     super(realm);
+
+    this.Prototype = Prototype ||
+      realm.Intrinsics['%ObjectPrototype%'] ||
+      new NullValue(realm);
+
+    this.Extensible = true;
+    this.IsClassPrototype = false;
     this.properties = new InternalPropertyMap();
   }
 
@@ -132,7 +161,20 @@ export class ObjectValue extends PrimitiveValue {
   }
 }
 
-export class ArrayValue extends ObjectValue {}
+export class ArrayValue extends ObjectValue {
+  DefineOwnProperty(P, Desc) {
+    const A = this;
+
+    Assert(IsPropertyKey(P));
+    if (P.value === 'length') {
+      return ArraySetLength(A, Desc);
+    }
+    if (IsArrayIndex(P)) {
+      const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
+    }
+    return OrdinaryDefineOwnProperty(A, P, Desc);
+  }
+}
 
 export class FunctionValue extends ObjectValue {}
 
@@ -144,6 +186,7 @@ export class BuiltInFunctionValue extends FunctionValue {
 
   Call(thisArgument, argumentsList) {
     const F = this;
+
     const callerContext = executionContextStack[executionContextStack.length - 1];
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
@@ -156,7 +199,35 @@ export class BuiltInFunctionValue extends FunctionValue {
 
     executionContextStack.push(calleeContext);
 
-    const result = this.nativeFunction(thisArgument, argumentsList);
+    const result = this.nativeFunction(calleeRealm, argumentsList, {
+      thisArgument,
+      NewTarget: undefined,
+    });
+
+    executionContextStack.pop();
+
+    return result;
+  }
+
+  Construct(argumentsList, newTarget) {
+    const F = this;
+
+    const callerContext = executionContextStack[executionContextStack.length - 1];
+    // If callerContext is not already suspended, suspend callerContext.
+    const calleeContext = new ExecutionContext();
+    calleeContext.Function = F;
+    const calleeRealm = F.Realm;
+    calleeContext.Realm = calleeRealm;
+    calleeContext.ScriptOrModule = F.ScriptOrModule;
+
+    // 8. Perform any necessary implementation-defined initialization of calleeContext.
+
+    executionContextStack.push(calleeContext);
+
+    const result = this.nativeFunction(calleeRealm, argumentsList, {
+      thisArgument: undefined,
+      NewTarget: newTarget,
+    });
 
     executionContextStack.pop();
 
@@ -164,15 +235,160 @@ export class BuiltInFunctionValue extends FunctionValue {
   }
 }
 
-export class ProxyValue extends ObjectValue {}
+export class ProxyValue extends ObjectValue {
+  constructor(realm) {
+    super(realm);
+
+    this.ProxyTarget = undefined;
+    this.ProxyHandler = undefined;
+  }
+
+  GetPrototypeOf() {
+    const O = this;
+    const handler = O.ProxyHandler;
+    if (handler.value === null) {
+      this.realm.exception.TypeError();
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'getPrototypeOf');
+    if (trap.value === undefined) {
+      return target.GetPrototypeOf();
+    }
+    const handlerProto = Call(trap, handler, [target]);
+    if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
+      this.realm.exception.TypeError();
+    }
+    const extensibleTarget = IsExtensible(target);
+    if (extensibleTarget === true) {
+      return handlerProto;
+    }
+    const targetProto = target.GetPrototypeOf();
+    if (SameValue(handlerProto, targetProto) === false) {
+      this.realm.exception.TypeError();
+    }
+    return handlerProto;
+  }
+
+  SetPrototypeOf(V) {
+    const O = this;
+
+    Assert(Type(V) === 'Object' || Type(V) === 'Null');
+    const handler = O.ProxyHandler;
+    if (handler.value === null) {
+      this.realm.exception.TypeError();
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'setPrototypeOf');
+    if (trap.value === undefined) {
+      return target.SetPrototypeOf(V);
+    }
+    const booleanTrapResult = ToBoolean(Call(trap, handler, [target, V]));
+    if (booleanTrapResult.value === false) {
+      return false;
+    }
+    const extensibleTarget = IsExtensible(target);
+    if (extensibleTarget === true) {
+      return true;
+    }
+    const targetProto = target.GetPrototypeOf();
+    if (SameValue(V, targetProto)) {
+      this.realm.exception.TypeError();
+    }
+    return true;
+  }
+
+  IsExtensible() {
+    const O = this;
+
+    const handler = O.ProxyHandler;
+    if (handler.value === null) {
+      this.realm.exception.TypeError();
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'isExtensible');
+    if (trap.value === undefined) {
+      return target.IsExtensible();
+    }
+    const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
+    const targetResult = target.IsExtensible();
+    if (SameValue(booleanTrapResult, targetResult) === false) {
+      this.realm.exception.TypeError();
+    }
+    return booleanTrapResult;
+  }
+
+  PreventExtensions() {
+    const O = this;
+
+    const handler = O.ProxyHandler;
+    if (handler.value === null) {
+      this.realm.exception.TypeError();
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'PreventExtensions');
+    if (trap.value === undefined) {
+      return target.PreventExtensions();
+    }
+    const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
+    if (booleanTrapResult.value === true) {
+      const targetIsExtensible = target.IsExtensible();
+      if (targetIsExtensible === true) {
+        this.realm.exception.TypeError();
+      }
+    }
+    return booleanTrapResult;
+  }
+
+  GetOwnProperty(P) {}
+
+  DefineOwnProperty(P, Desc) {}
+
+  HasProperty(P) {}
+
+  Get(P, Receiver) {}
+
+  Set(P, V, Receiver) {}
+
+  Delete(P) {}
+
+  OwnPropertyKeys() {}
+
+  Call(thisArgument, argumentsList) {}
+
+  Construct(argumentsList, newTarget) {
+    const O = this;
+
+    const handler = O.ProxyHandler;
+    if (handler.value === null) {
+      this.realm.exception.TypeError();
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'construct');
+    if (trap.value === undefined) {
+      Assert(IsConstructor(target));
+      return Construct(target, argumentsList, newTarget);
+    }
+    const argArray = CreateArrayFromList(argumentsList);
+    const newObj = Call(trap, handler, [target, argArray, newTarget]);
+    if (Type(newObj) !== 'Object') {
+      this.realm.exception.TypeError();
+    }
+    return newObj;
+  }
+}
 
 export function New(realm, value) {
   if (value === null) {
-    return new NullValue();
+    return new NullValue(realm);
   }
 
   if (value === undefined) {
-    return new UndefinedValue();
+    return new UndefinedValue(realm);
   }
 
   if (typeof value === 'string') {

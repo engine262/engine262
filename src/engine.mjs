@@ -2,6 +2,7 @@
 /* eslint-disable import/no-cycle */
 
 import {
+  Value,
   UndefinedValue,
   NullValue,
   BooleanValue,
@@ -23,9 +24,13 @@ import {
   GlobalEnvironmentRecord,
 } from './environment.mjs';
 
-import { CreateArray } from './intrinsics/Array.mjs';
+import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
+import { CreateArray, ArrayCreate } from './intrinsics/Array.mjs';
 import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
 import { CreateBoolean } from './intrinsics/Boolean.mjs';
+import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
+import { CreateSymbol } from './intrinsics/Symbol.mjs';
+import { CreateMath } from './intrinsics/Math.mjs';
 
 export const executionContextStack = [];
 export function runningExecutionContext() {
@@ -190,12 +195,140 @@ export function IsGenericDescriptor(Desc) {
   return true;
 }
 
+// 7.1.1 ToPrimitive
+export function ToPrimitive(input, preferredType) {
+  if (Type(input) === 'Object') {
+    let hint;
+    if (preferredType === undefined) {
+      hint = NewValue(input.realm, 'default');
+    } else if (preferredType === 'String') {
+      hint = NewValue(input.realm, 'string');
+    } else if (preferredType === 'Number') {
+      hint = NewValue(input.realm, 'number');
+    }
+    const exoticToPrim = GetMethod(input, input.realm.Intrinsics['@@toPrimitive']);
+    if (exoticToPrim.value !== undefined) {
+      const result = Call(exoticToPrim, input, [hint]);
+      if (Type(result) !== 'Object') {
+        return result;
+      }
+      input.realm.exception.TypeError();
+    }
+    if (hint.value === 'default') {
+      hint = NewValue(input.realm, 'number');
+    }
+    return OrdinaryToPrimitive(input, hint);
+  }
+  return input;
+}
+
+// 7.1.1.1 OrdinaryToPrimitive
+export function OrdinaryToPrimitive(O, hint) {
+  Assert(Type(O) === 'Object');
+  Assert(Type(hint) === 'String' &&
+         (hint.value === 'string' || hint.value === 'number'));
+  let methodNames;
+  if (hint.value === 'string') {
+    methodNames = [NewValue(O.realm, 'toString'), NewValue(O.realm, 'valueOf')];
+  } else {
+    methodNames = [NewValue(O.realm, 'valueOf'), NewValue(O.realm, 'toString')];
+  }
+  for (const name of methodNames) {
+    const method = Get(O, name);
+    if (IsCallable(method) === true) {
+      const result = Call(method, O);
+      if (Type(result) !== 'Object') {
+        return result;
+      }
+    }
+  }
+  O.realm.exception.TypeError();
+}
+
+// 7.1.12 ToString
+export function ToString(argument) {
+  const type = Type(argument);
+  switch (type) {
+    case 'Undefined':
+      return NewValue(argument.realm, 'undefined');
+    case 'Null':
+      return NewValue(argument.realm, 'null');
+    case 'Boolean':
+      return NewValue(argument.realm, argument.value ? 'true' : 'false');
+    case 'Number':
+      return NumberToString(argument);
+    case 'String':
+      return argument;
+    case 'Symbol':
+      return argument.realm.exception.TypeError();
+    case 'Object': {
+      const primValue = ToPrimitive(argument, 'String');
+      return ToString(primValue);
+    }
+    default:
+      throw new RangeError('ToString(argument) unknown type');
+  }
+}
+
+// 7.1.12.1 NumberToString
+export function NumberToString(m) {
+  if (Number.isNaN(m.value)) {
+    return NewValue(m.realm, 'NaN');
+  }
+}
+
+// 7.1.13 ToObject
+export function ToObject(argument) {
+  const type = Type(argument);
+  switch (type) {
+    case 'Undefined':
+      return argument.realm.exception.TypeError();
+    case 'Null':
+      return argument.realm.exception.TypeError();
+    case 'Boolean': {
+      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%BooleanPrototype%']);
+      obj.BooleanData = argument;
+      return obj;
+    }
+    case 'Number': {
+      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%NumberPrototype%']);
+      obj.NumberData = argument;
+      return obj;
+    }
+    case 'String': {
+      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%StringPrototype%']);
+      obj.StringData = argument;
+      return obj;
+    }
+    case 'Symbol': {
+      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%SymbolPrototype%']);
+      obj.SymbolData = argument;
+      return obj;
+    }
+    case 'Object':
+      return argument;
+    default:
+      throw new RangeError('ToObject(argument) unknown type');
+  }
+}
+
 // 7.2.3 IsCallable
 export function IsCallable(argument) {
   if (Type(argument) !== 'Object') {
     return false;
   }
   if ('Call' in argument) {
+    return true;
+  }
+  return false;
+}
+
+// 7.2.4 IsConstructor
+export function IsConstructor(argument) {
+  if (Type(argument) !== 'Object') {
+    return false;
+  }
+  if ('Construct' in argument) {
     return true;
   }
   return false;
@@ -266,11 +399,54 @@ export function SameValueNonNumber(x, y) {
   return x === y;
 }
 
+// 7.2.7 IsPropertyKey
+export function IsPropertyKey(argument) {
+  if (Type(argument) === 'String') {
+    return true;
+  }
+  if (Type(argument) === 'Symbol') {
+    return true;
+  }
+  return false;
+}
+
+// 7.2.22 GetFunctionRealm
+export function GetFunctionRealm(obj) {
+  Assert(IsCallable(obj));
+  if ('Realm' in obj) {
+    return obj.Realm;
+  }
+
+  /*
+  if (IsBoundFunctionExoticObject(obj)) {
+    const target = obj.BoundTargetFunction;
+    return GetFunctionRealm(target);
+  }
+
+  if (IsProxyExoticObject(obj)) {
+    if (obj.ProxyHandler.value === null) {
+      obj.realm.exception.TypeError();
+      const proxyTarget = obj.ProxyTarget;
+      return GetFunctionRealm(proxyTarget);
+    }
+  }
+  */
+
+  return currentRealmRecord();
+}
+
 // 7.3.1 Get
 export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return O.Get(P, O);
+}
+
+// 7.3.2 GetV
+export function GetV(V, P) {
+  Assert(IsPropertyKey(P));
+  const O = ToObject(V);
+  return O.Get(V, P);
 }
 
 // 7.3.4 CreateDataProperty
@@ -287,15 +463,17 @@ export function CreateDataProperty(O, P, V) {
   return O.DefineOwnProperty(P, newDesc);
 }
 
-// 7.2.7 IsPropertyKey
-export function IsPropertyKey(argument) {
-  if (Type(argument) === 'String') {
-    return true;
+// 7.3.9 GetMethod
+export function GetMethod(V, P) {
+  Assert(IsPropertyKey(P));
+  const func = GetV(V, P);
+  if (func.value === null || func.value === undefined) {
+    return NewValue(V.realm, undefined);
   }
-  if (Type(argument) === 'Symbol') {
-    return true;
+  if (IsCallable(func) === false) {
+    V.realm.exception.TypeError();
   }
-  return false;
+  return func;
 }
 
 // 7.3.10 HasProperty
@@ -329,29 +507,30 @@ export function Call(F, V, argumentsList) {
   return F.Call(V, argumentsList);
 }
 
-// 7.2.22 GetFunctionRealm
-export function GetFunctionRealm(obj) {
-  Assert(IsCallable(obj));
-  if ('Realm' in obj) {
-    return obj.Realm;
+// 7.3.13 Construct
+export function Construct(F, argumentsList, newTarget) {
+  if (!newTarget) {
+    newTarget = F;
   }
-
-  /*
-  if (IsBoundFunctionExoticObject(obj)) {
-    const target = obj.BoundTargetFunction;
-    return GetFunctionRealm(target);
+  if (!argumentsList) {
+    argumentsList = [];
   }
+  Assert(IsConstructor(F));
+  Assert(IsConstructor(newTarget));
+  return F.Construct(argumentsList, newTarget);
+}
 
-  if (IsProxyExoticObject(obj)) {
-    if (obj.ProxyHandler.value === null) {
-      obj.realm.exception.TypeError();
-      const proxyTarget = obj.ProxyTarget;
-      return GetFunctionRealm(proxyTarget);
-    }
-  }
-  */
-
-  return currentRealmRecord();
+// 7.3.16 CreateArrayFromList
+export function CreateArrayFromList(elements) {
+  Assert(elements.every((e) => e instanceof Value));
+  const array = ArrayCreate(0);
+  let n = 0;
+  elements.forEach((e) => {
+    const status = CreateDataProperty(array, ToString(n), e);
+    Assert(status === true);
+    n += 1;
+  });
+  return array;
 }
 
 // 8.1.2.5 NewGlobalEnvironment
@@ -401,10 +580,16 @@ function CreateIntrinsics(realmRec) {
 
   thrower.SetPrototypeOf(funcProto);
 
-  intrinsics['%Array%'] = CreateArray(realmRec);
+  CreateArrayPrototype(realmRec);
+  CreateArray(realmRec);
 
-  intrinsics['%BooleanPrototype%'] = CreateBooleanPrototype(realmRec);
-  intrinsics['%Boolean%'] = CreateBoolean(realmRec);
+  CreateBooleanPrototype(realmRec);
+  CreateBoolean(realmRec);
+
+  CreateSymbolPrototype(realmRec);
+  CreateSymbol(realmRec);
+
+  CreateMath(realmRec);
 
   return intrinsics;
 }
@@ -897,6 +1082,58 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
   func.ScriptOrModule = null;
 
   return func;
+}
+
+// 9.4.2.4 ArraySetLength
+export function ArraySetLength(A, Desc) {
+  if ('Value' in Desc === false) {
+    return OrdinaryDefineOwnProperty(A, 'length', Desc);
+  }
+  const newLenDesc = { ...Desc };
+  const newLen = ToUint32(Desc.Value);
+  const numberLen = ToNumber(Desc.Value);
+  if (newLen.value !== numberLen.value) {
+    A.realm.exception.RangeError();
+  }
+  newLenDesc.Value = newLen;
+  const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
+  Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
+  let oldLen = oldLenDesc.Value;
+  if (newLen.value > oldLen.value) {
+    return OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+  }
+  if (oldLenDesc.Writable === false) {
+    return false;
+  }
+  let newWritable;
+  if (!('Writable' in newLenDesc) || newLenDesc.Writable === true) {
+    newWritable = true;
+  } else {
+    newWritable = false;
+    newLenDesc.Writable = true;
+  }
+  const succeeded = OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+  if (succeeded === false) {
+    return false;
+  }
+  while (newLen < oldLen) {
+    oldLen -= 1;
+    const deleteSucceeded = A.Delete(ToString(oldLen));
+    if (deleteSucceeded === false) {
+      newLenDesc.Value = oldLen + 1;
+      if (newWritable === false) {
+        newLenDesc.Writable = false;
+      }
+      OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+      return false;
+    }
+  }
+  if (newWritable === false) {
+    return OrdinaryDefineOwnProperty(A, 'length', {
+      Writable: false,
+    });
+  }
+  return true;
 }
 
 // 13.2.7 Static Semantics: TopLevelLexicallyDeclaredNames
