@@ -1,6 +1,5 @@
 import {
   SymbolValue,
-  ObjectValue,
   New as NewValue,
 } from '../value.mjs';
 
@@ -18,7 +17,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
     realm.exception.TypeError();
   }
   const descString = description.value === undefined ?
-    NewValue(realm, undefined) :
+    NewValue(undefined) :
     ToString(description);
 
   const val = new SymbolValue(realm);
@@ -47,14 +46,26 @@ function SymbolKeyFor(realm, [sym]) {
       return e.Key;
     }
   }
-  return NewValue(realm, undefined);
+  return NewValue(undefined);
 }
 
 export function CreateSymbol(realmRec) {
   const symbolConstructor = CreateBuiltinFunction(SymbolConstructor, [], realmRec);
 
+  [
+    ['for', SymbolFor],
+    ['keyFor', SymbolKeyFor],
+  ].forEach(([name, fn]) => {
+    symbolConstructor.DefineOwnProperty(NewValue(name), {
+      Value: CreateBuiltinFunction(fn, [], realmRec),
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    });
+  });
+
   realmRec.Intrinsics['%SymbolPrototype%'].DefineOwnProperty(
-    NewValue(realmRec, 'constructor'), {
+    NewValue('constructor'), {
       Value: symbolConstructor,
       Writable: true,
       Enumerable: false,

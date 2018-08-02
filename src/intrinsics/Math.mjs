@@ -9,15 +9,15 @@ import {
 
 function MathAbs(realm, [x]) {
   if (isNaN(x.value)) {
-    return NewValue(realm, NaN);
+    return NewValue(NaN);
   }
   if (Object.is(x.value, -0)) {
-    return NewValue(realm, 0);
+    return NewValue(0);
   }
   if (x.value === -Infinity) {
-    return NewValue(realm, Infinity);
+    return NewValue(Infinity);
   }
-  return NewValue(realm, x.value >= 0 ? x.value : -x.value);
+  return NewValue(x.value >= 0 ? x.value : -x.value);
 }
 
 // 20.2 The Math Object
@@ -35,8 +35,8 @@ export function CreateMath(realmRec) {
     ['SQRT1_2', Math.SQRT1_2],
     ['SQRT2', Math.SQRT2],
   ].forEach(([name, value]) => {
-    mathObj.DefineOwnProperty(NewValue(realmRec, name), {
-      Value: NewValue(realmRec, value),
+    mathObj.DefineOwnProperty(NewValue(name), {
+      Value: NewValue(value),
       Writable: false,
       Enumerable: false,
       Configurable: false,
@@ -44,7 +44,7 @@ export function CreateMath(realmRec) {
   });
 
   mathObj.DefineOwnProperty(realmRec.Intrinsics['@@toStringTag'], {
-    Value: NewValue(realmRec, 'Math'),
+    Value: NewValue('Math'),
     Enumerable: false,
     Configurable: false,
   });
@@ -88,7 +88,7 @@ export function CreateMath(realmRec) {
     ['tanh'],
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
-    mathObj.DefineOwnProperty(NewValue(realmRec, name), {
+    mathObj.DefineOwnProperty(NewValue(name), {
       Value: nativeMethod ?
         CreateBuiltinFunction(nativeMethod, [], realmRec) :
         CreateBuiltinFunction((realm) => {
@@ -100,5 +100,5 @@ export function CreateMath(realmRec) {
     });
   });
 
-  return mathObj;
+  realmRec.Intrinsics['%Math%'] = mathObj;
 }

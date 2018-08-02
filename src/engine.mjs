@@ -1,5 +1,7 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable import/no-cycle */
+/* eslint-disable no-lonely-if */
+/* eslint-disable no-else-return */
 
 import {
   Value,
@@ -10,6 +12,8 @@ import {
   NumberValue,
   SymbolValue,
   ObjectValue,
+  ArrayValue,
+  ProxyValue,
   New as NewValue,
 } from './value.mjs';
 
@@ -32,33 +36,9 @@ import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 
-export const executionContextStack = [];
-export function runningExecutionContext() {
-  return executionContextStack[executionContextStack.length - 1];
-}
-export function currentRealmRecord() {
-  const currentCtx = runningExecutionContext();
-  if (currentCtx !== undefined) {
-    return currentCtx.Realm;
-  }
-  return undefined;
-}
-export function activeFunctionObject() {
-  return runningExecutionContext().Function;
-}
-
 const jobQueues = new Map([
   ['ScriptJobs', []],
 ]);
-
-function pickQueue() {
-  for (const queue of jobQueues.values()) {
-    if (queue.length > 0) {
-      return queue;
-    }
-  }
-  return undefined;
-}
 
 // totally wrong but aaaaaaaaa
 export function Evaluate(body, envRec) {
@@ -77,7 +57,7 @@ export function Evaluate(body, envRec) {
   }
 
   if (body.type === 'BooleanLiteral') {
-    return NewValue(envRec.Realm, body.firstChild.value);
+    return NewValue(body.firstChild.value);
   }
 }
 
@@ -86,6 +66,51 @@ export function Assert(invarient) {
     throw new TypeError('Assert failed');
   }
 }
+
+export class Agent {
+  constructor() {
+    this.LittleEndian = false;
+    this.CanBlock = true;
+    this.Signifier = undefined;
+    this.IsLockFree1 = true;
+    this.IsLockFree2 = true;
+    this.CandidiateExecution = undefined;
+
+    this.executionContextStack = [];
+
+    this.jobQueues = new Map([
+      ['ScriptJobs', []],
+    ]);
+  }
+
+  get runningExecutionContext() {
+    return this.executionContextStack[this.executionContextStack.length - 1];
+  }
+
+
+  get currentRealmRecord() {
+    const currentCtx = this.runningExecutionContext;
+    if (currentCtx !== undefined) {
+      return currentCtx.Realm;
+    }
+    return undefined;
+  }
+
+  get activeFunctionObject() {
+    return this.runningExecutionContext.Function;
+  }
+
+  pickQueue() {
+    for (const queue of jobQueues.values()) {
+      if (queue.length > 0) {
+        return queue;
+      }
+    }
+    return undefined;
+  }
+}
+
+export const agent = new Agent();
 
 export class Realm {
   constructor() {
@@ -200,11 +225,11 @@ export function ToPrimitive(input, preferredType) {
   if (Type(input) === 'Object') {
     let hint;
     if (preferredType === undefined) {
-      hint = NewValue(input.realm, 'default');
+      hint = NewValue('default');
     } else if (preferredType === 'String') {
-      hint = NewValue(input.realm, 'string');
+      hint = NewValue('string');
     } else if (preferredType === 'Number') {
-      hint = NewValue(input.realm, 'number');
+      hint = NewValue('number');
     }
     const exoticToPrim = GetMethod(input, input.realm.Intrinsics['@@toPrimitive']);
     if (exoticToPrim.value !== undefined) {
@@ -215,7 +240,7 @@ export function ToPrimitive(input, preferredType) {
       input.realm.exception.TypeError();
     }
     if (hint.value === 'default') {
-      hint = NewValue(input.realm, 'number');
+      hint = NewValue('number');
     }
     return OrdinaryToPrimitive(input, hint);
   }
@@ -229,9 +254,9 @@ export function OrdinaryToPrimitive(O, hint) {
          (hint.value === 'string' || hint.value === 'number'));
   let methodNames;
   if (hint.value === 'string') {
-    methodNames = [NewValue(O.realm, 'toString'), NewValue(O.realm, 'valueOf')];
+    methodNames = [NewValue('toString'), NewValue('valueOf')];
   } else {
-    methodNames = [NewValue(O.realm, 'valueOf'), NewValue(O.realm, 'toString')];
+    methodNames = [NewValue('valueOf'), NewValue('toString')];
   }
   for (const name of methodNames) {
     const method = Get(O, name);
@@ -245,16 +270,73 @@ export function OrdinaryToPrimitive(O, hint) {
   O.realm.exception.TypeError();
 }
 
+// 7.1.3 ToNumber
+export function ToNumber(argument) {
+  const type = Type(argument);
+  switch (type) {
+    case 'Undefined':
+      return NewValue(NaN);
+    case 'Null':
+      return NewValue(0);
+    case 'Boolean':
+      if (argument.value) {
+        return NewValue(1);
+      } else {
+        return NewValue(0);
+      }
+    case 'Number':
+      return argument;
+    case 'Symbol':
+      return argument.realm.exception.TypeError();
+    case 'Object': {
+      const primValue = ToPrimitive(argument, 'Number');
+      return ToNumber(primValue);
+    }
+    default:
+      throw new RangeError('ToNumber(argument) unknown type');
+  }
+}
+
+// 7.1.4 ToInteger
+export function ToInteger(argument) {
+  const number = ToNumber(argument);
+  if (isNaN(number.value)) {
+    return NewValue(0);
+  }
+  if (number.value === 0 || // || number.value === -0
+      number.value === Infinity ||
+      number.value === -Infinity) {
+    return number;
+  }
+  return NewValue(
+    agent.currentRealmRecord,
+    Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1,
+  );
+}
+
+// 7.1.6 ToUint32
+export function ToUint32(argument) {
+  const number = ToNumber(argument);
+  if (number.value === 0 || // || number.value === -0
+      number.value === Infinity ||
+      number.value === -Infinity) {
+    return NewValue(0);
+  }
+  const int = Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1;
+  const int32bit = int % (2 ** 32);
+  return NewValue(int32bit);
+}
+
 // 7.1.12 ToString
 export function ToString(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return NewValue(argument.realm, 'undefined');
+      return NewValue('undefined');
     case 'Null':
-      return NewValue(argument.realm, 'null');
+      return NewValue('null');
     case 'Boolean':
-      return NewValue(argument.realm, argument.value ? 'true' : 'false');
+      return NewValue(argument.value ? 'true' : 'false');
     case 'Number':
       return NumberToString(argument);
     case 'String':
@@ -273,7 +355,7 @@ export function ToString(argument) {
 // 7.1.12.1 NumberToString
 export function NumberToString(m) {
   if (Number.isNaN(m.value)) {
-    return NewValue(m.realm, 'NaN');
+    return NewValue('NaN');
   }
 }
 
@@ -310,6 +392,33 @@ export function ToObject(argument) {
     default:
       throw new RangeError('ToObject(argument) unknown type');
   }
+}
+
+// 7.1.15 ToLength
+export function ToLength(argument) {
+  const len = ToInteger(argument);
+  if (len.value <= 0) {
+    return NewValue(0);
+  }
+  return Math.min(len, (2 ** 53) - 1);
+}
+
+// 7.2.2 IsArray
+export function IsArray(argument) {
+  if (Type(argument) !== 'Object') {
+    return false;
+  }
+  if (argument instanceof ArrayValue) {
+    return true;
+  }
+  if (argument instanceof ProxyValue) {
+    if (argument.ProxyHandler.value === null) {
+      argument.realm.exception.TypeError();
+    }
+    const target = argument.ProxyTarget;
+    return IsArray(target);
+  }
+  return false;
 }
 
 // 7.2.3 IsCallable
@@ -432,7 +541,7 @@ export function GetFunctionRealm(obj) {
   }
   */
 
-  return currentRealmRecord();
+  return agent.currentRealmRecord;
 }
 
 // 7.3.1 Get
@@ -463,12 +572,23 @@ export function CreateDataProperty(O, P, V) {
   return O.DefineOwnProperty(P, newDesc);
 }
 
+// 7.3.6 CreateDataPropertyOrThrow
+export function CreateDataPropertyOrThrow(O, P, V) {
+  Assert(Type(O) === 'Object');
+  Assert(IsPropertyKey(P));
+  const success = CreateDataProperty(O, P, V);
+  if (success === false) {
+    agent.currentRealmRecord.exception.TypeError();
+  }
+  return success;
+}
+
 // 7.3.9 GetMethod
 export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
   if (func.value === null || func.value === undefined) {
-    return NewValue(V.realm, undefined);
+    return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
     V.realm.exception.TypeError();
@@ -567,12 +687,12 @@ function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  const objProto = ObjectCreate(NewValue(realmRec, null));
+  const objProto = ObjectCreate(NewValue(null, realmRec));
   intrinsics['%ObjectPrototype%'] = objProto;
 
   const thrower = CreateBuiltinFunction(() => {
     realmRec.exception.TypeError();
-  }, [], realmRec, NewValue(realmRec, null));
+  }, [], realmRec, NewValue(null, realmRec));
   intrinsics['%ThrowTypeError%'] = thrower;
 
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
@@ -597,7 +717,7 @@ function CreateIntrinsics(realmRec) {
   ];
 
   wellKnownSymbolNames.forEach((name) => {
-    const sym = new SymbolValue(realmRec, NewValue(realmRec, name));
+    const sym = new SymbolValue(realmRec, NewValue(name, realmRec));
     realmRec.Intrinsics[`@@${name}`] = sym;
   });
 
@@ -612,7 +732,7 @@ function CreateIntrinsics(realmRec) {
 
   wellKnownSymbolNames.forEach((name) => {
     realmRec.Intrinsics['%Symbol%'].DefineOwnProperty(
-      NewValue(realmRec, name), {
+      NewValue(name, realmRec), {
         Value: realmRec.Intrinsics[`@@${name}`],
         Writable: false,
         Enumerable: false,
@@ -654,7 +774,7 @@ export function SetDefaultGlobalBindings(realmRec) {
 
 // 8.4.1 EnqueueJob
 export function EnqueueJob(queueName, job, args) {
-  const callerContext = runningExecutionContext();
+  const callerContext = agent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
   const callerScriptOrModule = callerContext.ScriptOrModule;
   const pending = {
@@ -674,12 +794,13 @@ export function InitializeHostDefinedRealm() {
   const newContext = new ExecutionContext();
   newContext.Function = null;
   newContext.Realm = realm;
-  executionContextStack.push(newContext);
+  agent.executionContextStack.push(newContext);
   const global = undefined;
   const thisValue = undefined;
   SetRealmGlobalObject(realm, global, thisValue);
-  SetDefaultGlobalBindings(realm);
+  const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
+  console.log(globalObj);
 }
 
 // 8.6 RunJobs
@@ -702,9 +823,9 @@ export function RunJobs() {
     EnqueueJob('ScriptJobs', TopLevelModuleEvaluationJob, [sourceText, hostDefined]);
   });
 
-  while (true) {
-    executionContextStack.pop();
-    const nextQueue = pickQueue();
+  while (true) { // eslint-disable-line no-constant-condition
+    agent.executionContextStack.pop();
+    const nextQueue = agent.pickQueue();
     // host specific behaviour
     if (!nextQueue) {
       break;
@@ -714,7 +835,7 @@ export function RunJobs() {
     newContext.Function = null;
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
-    executionContextStack.push(newContext);
+    agent.executionContextStack.push(newContext);
     try {
       const res = nextPending.Job(...nextPending.Arguments);
       console.log(res);
@@ -780,7 +901,7 @@ export function OrdinaryGetOwnProperty(O, P) {
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
-    return NewValue(O.realm, undefined);
+    return NewValue(undefined);
   }
 
   const D = {};
@@ -821,7 +942,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (O !== undefined) {
         O.properties.set(P, {
-          Value: 'Value' in Desc ? Desc.Value : NewValue(O.realm, undefined),
+          Value: 'Value' in Desc ? Desc.Value : NewValue(undefined),
           Writable: 'Writable' in Desc ? Desc.Writable : false,
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
@@ -830,8 +951,8 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     } else {
       if (O !== undefined) {
         O.properties.set(P, {
-          Get: 'Get' in Desc ? Desc.Get : NewValue(O.realm, undefined),
-          Set: 'Set' in Desc ? Desc.Set : NewValue(O.realm, undefined),
+          Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
+          Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
         });
@@ -866,15 +987,15 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
         const entry = O.properties.get(P);
         delete entry.Value;
         delete entry.Writable;
-        entry.Get = NewValue(O.realm, undefined);
-        entry.Set = NewValue(O.realm, undefined);
+        entry.Get = NewValue(undefined);
+        entry.Set = NewValue(undefined);
       }
     } else {
       if (O !== undefined) {
         const entry = O.properties.get(P);
         delete entry.Get;
         delete entry.Set;
-        entry.Value = NewValue(O.realm, undefined);
+        entry.Value = NewValue(undefined);
         entry.Writable = false;
       }
     }
@@ -902,9 +1023,9 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
 
   if (O !== undefined) {
     O.properties.set(P, current);
-    for (const field in Desc) {
+    Object.keys(Desc).forEach((field) => {
       current[field] = Desc[field];
-    }
+    });
   }
 
   return true;
@@ -933,7 +1054,7 @@ export function OrdinaryGet(O, P, Receiver) {
   if (desc === undefined) {
     const parent = O.GetPrototypeOf();
     if (parent === null) {
-      return NewValue(O.realm, undefined);
+      return NewValue(undefined);
     }
     return parent.Get(P, Receiver);
   }
@@ -943,7 +1064,7 @@ export function OrdinaryGet(O, P, Receiver) {
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
   if (getter === undefined) {
-    return NewValue(O.realm, undefined);
+    return NewValue(undefined);
   }
   return Call(getter, Receiver);
 }
@@ -965,7 +1086,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
       return parent.Set(P, V, Receiver);
     } else {
       ownDesc = {
-        Value: NewValue(O.realm, undefined),
+        Value: NewValue(undefined),
         Writable: true,
         Enumerable: true,
         Configurable: true,
@@ -1054,7 +1175,7 @@ export function ObjectCreate(proto, internalSlotsList) {
     internalSlotsList = [];
   }
 
-  const obj = new ObjectValue(currentRealmRecord() || proto.realm);
+  const obj = new ObjectValue(agent.currentRealmRecord || proto.realm);
 
   // Set obj's essential internal methods to the default ordinary
   // object definitions specified in 9.1.
@@ -1093,7 +1214,7 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
 export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype) {
   if (!realm) {
     // If realm is not present, set realm to the current Realm Record.
-    realm = currentRealmRecord();
+    realm = agent.currentRealmRecord;
   }
 
   if (!prototype) {
@@ -1102,7 +1223,7 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
 
   // Let func be a new built-in function object that when
   // called performs the action described by steps.
-  const func = NewValue(realm, steps);
+  const func = NewValue(steps, realm);
 
   internalSlotsList.forEach((slot) => {
     func[slot] = undefined;
@@ -1185,7 +1306,7 @@ export function LexicallyDeclaredNames(ScriptBody) {
 }
 
 // 15.1.4 LexicallyScopedDeclarations
-export function LexicallyScopedDeclarations(ScriptBody) {
+export function LexicallyScopedDeclarations() {
   return [];
 }
 
@@ -1196,7 +1317,7 @@ export function VarDeclaredNames(ScriptBody) {
 }
 
 // 15.1.6 VarScopedDeclarations
-export function VarScopedDeclarations(ScriptBody) {
+export function VarScopedDeclarations() {
   return [];
 }
 
@@ -1210,7 +1331,7 @@ export function ScriptEvaluation(scriptRecord) {
   scriptCtx.VariableEnvironment = globalEnv;
   scriptCtx.LexicalEnvironment = globalEnv;
   // Suspend the currently running execution context.
-  executionContextStack.push(scriptCtx);
+  agent.executionContextStack.push(scriptCtx);
   const scriptBody = scriptRecord.ECMAScriptCode;
   let result = GlobalDeclarationInstantiation(scriptBody, globalEnv);
   if (result.Type === 'normal') {
@@ -1218,10 +1339,10 @@ export function ScriptEvaluation(scriptRecord) {
   }
 
   if (result.Type === 'normal' && result.Value === undefined) {
-    result = new NormalCompletion(NewValue(scriptRecord.Realm, undefined));
+    result = new NormalCompletion(NewValue(undefined));
   }
   // Suspend scriptCtx
-  executionContextStack.pop();
+  agent.executionContextStack.pop();
   // Resume the context that is now on the top of the
   // execution context stack as the running execution context.
 
@@ -1258,15 +1379,15 @@ export function GlobalDeclarationInstantiation(script, env) {
   const varDeclarations = VarScopedDeclarations(script);
 
   const functionsToInitialize = [];
-  const declaredFunctionNames = [];
+  // const declaredFunctionNames = [];
 
-  varDeclarations.reverse().forEach((d) => {
+  varDeclarations.reverse().forEach(() => {
     // stuff
   });
 
   const declaredVarNames = [];
 
-  varDeclarations.forEach((d) => {
+  varDeclarations.forEach(() => {
     // stuff
   });
 
@@ -1276,11 +1397,11 @@ export function GlobalDeclarationInstantiation(script, env) {
   }
 
   const lexDeclarations = LexicallyScopedDeclarations(script);
-  lexDeclarations.forEach((d) => {
+  lexDeclarations.forEach(() => {
     // stuff
   });
 
-  functionsToInitialize.forEach((f) => {
+  functionsToInitialize.forEach(() => {
     // stuff
   });
 
@@ -1293,14 +1414,14 @@ export function GlobalDeclarationInstantiation(script, env) {
 
 // 15.1.12 ScriptEvaluationJob
 export function ScriptEvaluationJob(sourceText, hostDefined) {
-  const realm = currentRealmRecord();
+  const realm = agent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
   return ScriptEvaluation(s);
 }
 
 // 15.2.1.19
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
-  const realm = currentRealmRecord();
+  const realm = agent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
   m.Instantiate();
   m.Evaluate();
@@ -1318,9 +1439,21 @@ export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
   if (desc.value === undefined) {
-    desc = NewValue(sym.realm, '');
+    desc = NewValue('');
   }
   return NewValue(sym.realm, `Symbol(${desc.value})`);
+}
+
+// 22.1.3.1 IsConcatSpreadable
+export function IsConcatSpreadable(O) {
+  if (Type(O) !== 'Object') {
+    return false;
+  }
+  const spreadable = Get(O, O.realm.Intrinsics['@@isConcatSpreadable']);
+  if (spreadable.value !== undefined) {
+    return ToBoolean(spreadable);
+  }
+  return IsArray(O);
 }
 
 // 24.4.1.0 WakeWaiter
@@ -1329,7 +1462,7 @@ export function WakeWaiter(WL, W) {
 }
 
 // 24.4.1.9 Suspend
-export function Suspend(WL, W, timeout) {
+export function Suspend() {
   // LeaveCriticalSection(WL);
   // suspend W for up to timeout milliseconds, performing the
   // combined operation in such a way that a wakeup that arrives

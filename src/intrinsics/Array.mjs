@@ -1,17 +1,11 @@
 import {
-  currentRealmRecord,
-  activeFunctionObject,
+  agent,
   Assert,
-  IsArrayIndex,
-  IsPropertyKey,
-  OrdinaryGetOwnProperty,
-  OrdinaryDefineOwnProperty,
   CreateBuiltinFunction,
   GetPrototypeFromConstructor,
 } from '../engine.mjs';
 
 import {
-  ObjectValue,
   ArrayValue,
   New as NewValue,
 } from '../value.mjs';
@@ -22,12 +16,12 @@ export function ArrayCreate(length, proto) {
     length = 0;
   }
   if (length > (2 ** 32) - 1) {
-    currentRealmRecord().exception.RangeError();
+    agent.currentRealmRecord.exception.RangeError();
   }
   if (proto === undefined) {
-    proto = currentRealmRecord().Intrinsics['%ArrayPrototype%'];
+    proto = agent.currentRealmRecord.Intrinsics['%ArrayPrototype%'];
   }
-  const A = new ArrayValue(currentRealmRecord());
+  const A = new ArrayValue(agent.currentRealmRecord);
 
   // Set A's essential internal methods except for [[DefineOwnProperty]]
   // to the default ordinary object definitions specified in 9.1.
@@ -41,7 +35,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
     if (NewTarget.value === undefined) {
-      NewTarget = activeFunctionObject();
+      NewTarget = agent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
     return ArrayCreate(0, proto);
@@ -51,8 +45,15 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
 export function CreateArray(realmRec) {
   const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);
 
+  constructor.DefineOwnProperty(NewValue('constructor'), {
+    Value: realmRec.Intrinsics['%ArrayPrototype%'],
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
+  });
+
   realmRec.Intrinsics['%ArrayPrototype%'].DefineOwnProperty(
-    NewValue(realmRec, 'constructor'), {
+    NewValue('constructor'), {
       Value: constructor,
       Writable: true,
       Enumerable: false,

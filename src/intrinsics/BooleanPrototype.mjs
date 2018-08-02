@@ -26,9 +26,9 @@ function thisBooleanValue(value) {
 function BooleanToString(realm, argList, { thisArgument }) {
   const b = thisBooleanValue(thisArgument);
   if (b.value === true) {
-    return NewValue(realm, 'true');
+    return NewValue('true');
   }
-  return NewValue(realm, 'false');
+  return NewValue('false');
 }
 
 function BooleanValueOf(realm, argList, { thisArgument }) {
@@ -42,7 +42,7 @@ export function CreateBooleanPrototype(realmRec) {
     ['toString', BooleanToString],
     ['valueOf', BooleanValueOf],
   ].forEach(([name, nativeFunction]) => {
-    proto.DefineOwnProperty(NewValue(realmRec, name), {
+    proto.DefineOwnProperty(NewValue(name), {
       Value: CreateBuiltinFunction(nativeFunction, [], realmRec),
       Writable: false,
       Enumerable: false,

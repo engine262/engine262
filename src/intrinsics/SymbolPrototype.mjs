@@ -37,7 +37,7 @@ function SymbolToPrimitive(realm, argList, { thisArgument }) {
 }
 
 function SymbolToStringTag(realm) {
-  return NewValue(realm, 'Symbol');
+  return NewValue('Symbol');
 }
 
 export function CreateSymbolPrototype(realmRec) {
@@ -47,7 +47,7 @@ export function CreateSymbolPrototype(realmRec) {
     ['toString', SymbolToString],
     ['valueOf', SymbolValueOf],
   ].forEach(([name, nativeFunction]) => {
-    proto.DefineOwnProperty(NewValue(realmRec, name), {
+    proto.DefineOwnProperty(NewValue(name), {
       Value: CreateBuiltinFunction(nativeFunction, [], realmRec),
       Writable: true,
       Enumerable: false,

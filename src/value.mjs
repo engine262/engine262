@@ -1,5 +1,5 @@
 import {
-  executionContextStack,
+  agent,
   ExecutionContext,
   Assert,
   Type,
@@ -187,7 +187,7 @@ export class BuiltInFunctionValue extends FunctionValue {
   Call(thisArgument, argumentsList) {
     const F = this;
 
-    const callerContext = executionContextStack[executionContextStack.length - 1];
+    const callerContext = agent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
@@ -197,14 +197,14 @@ export class BuiltInFunctionValue extends FunctionValue {
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
 
-    executionContextStack.push(calleeContext);
+    agent.executionContextStack.push(calleeContext);
 
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument,
       NewTarget: undefined,
     });
 
-    executionContextStack.pop();
+    agent.executionContextStack.pop();
 
     return result;
   }
@@ -212,7 +212,7 @@ export class BuiltInFunctionValue extends FunctionValue {
   Construct(argumentsList, newTarget) {
     const F = this;
 
-    const callerContext = executionContextStack[executionContextStack.length - 1];
+    const callerContext = agent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
@@ -222,14 +222,14 @@ export class BuiltInFunctionValue extends FunctionValue {
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
 
-    executionContextStack.push(calleeContext);
+    agent.executionContextStack.push(calleeContext);
 
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument: undefined,
       NewTarget: newTarget,
     });
 
-    executionContextStack.pop();
+    agent.executionContextStack.pop();
 
     return result;
   }
@@ -382,7 +382,7 @@ export class ProxyValue extends ObjectValue {
   }
 }
 
-export function New(realm, value) {
+export function New(value, realm = agent.currentRealmRecord) {
   if (value === null) {
     return new NullValue(realm);
   }
