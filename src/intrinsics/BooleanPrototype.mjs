@@ -5,6 +5,8 @@ import {
 } from '../value.mjs';
 
 import {
+  surroundingAgent,
+
   Assert,
   Type,
   CreateBuiltinFunction,
@@ -20,7 +22,7 @@ function thisBooleanValue(value) {
     return value.BooleanData;
   }
 
-  return value.realm.exception.TypeError();
+  return surroundingAgent.Throw('TypeError');
 }
 
 function BooleanToString(realm, argList, { thisArgument }) {

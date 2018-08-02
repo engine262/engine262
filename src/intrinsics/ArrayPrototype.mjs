@@ -51,15 +51,15 @@ function ArraySpeciesCreate(originalArray, length) {
   }
   if (Type(C) === 'Object') {
     C = Get(C, C.realm.Intrinsics['@@species']);
-    if (C.value === null) {
+    if (C.isNull()) {
       C = NewValue(undefined);
     }
   }
-  if (C.value === undefined) {
+  if (C.isUndefined()) {
     return ArrayCreate(length);
   }
   if (IsConstructor(C) === false) {
-    C.realm.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
   return Construct(C, [length]);
 }
@@ -76,7 +76,7 @@ function ArrayConcat(realm, args, { thisArgument }) {
       let k = 0;
       const len = ToLength(Get(E, 'length'));
       if (n + len > (2 ** 53) - 1) {
-        realm.exception.TypeError();
+        surroundingAgent.Throw('TypeError');
       }
       while (k < len) {
         const P = ToString(k);
@@ -90,7 +90,7 @@ function ArrayConcat(realm, args, { thisArgument }) {
       }
     } else {
       if (n >= (2 ** 53) - 1) {
-        realm.exception.TypeError();
+        surroundingAgent.Throw('TypeError');
       }
       CreateDataPropertyOrThrow(A, ToString(n), E);
       n += 1;

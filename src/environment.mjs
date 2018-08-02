@@ -63,7 +63,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     if (!this.bindings.has(N)) {
       if (S === true) {
-        // throw a ReferenceError exception
+        surroundingAgent.Throw('ReferenceError');
         envRec.CreateMutableBinding(N, true);
         envRec.InitializeBinding(N, V);
         return;
@@ -77,18 +77,18 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
 
     if (binding.initialized === false) {
-      surroundingAgent.currentRealmRecord.exception.ReferenceError();
+      surroundingAgent.Throw('ReferenceError');
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S === true) {
-      surroundingAgent.currentRealmRecord.exception.TypeError();
+      surroundingAgent.Throw('ReferenceError');
     }
   }
 
   GetBindingValue(N, S) {
     const binding = this.bindings.get(N);
     if (binding.initialized === false) {
-      surroundingAgent.currentRealmRecord.exception.ReferenceError();
+      surroundingAgent.Throw('ReferenceError');
     }
     return binding.value;
   }

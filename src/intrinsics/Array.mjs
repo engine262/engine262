@@ -16,7 +16,7 @@ export function ArrayCreate(length, proto) {
     length = 0;
   }
   if (length > (2 ** 32) - 1) {
-    surroundingAgent.currentRealmRecord.exception.RangeError();
+    surroundingAgent.Throw('RangeError');
   }
   if (proto === undefined) {
     proto = surroundingAgent.currentRealmRecord.Intrinsics['%ArrayPrototype%'];

@@ -4,6 +4,7 @@ import {
 } from '../value.mjs';
 
 import {
+  surroundingAgent,
   CreateBuiltinFunction,
 } from '../engine.mjs';
 
@@ -91,8 +92,8 @@ export function CreateMath(realmRec) {
     mathObj.DefineOwnProperty(NewValue(name), {
       Value: nativeMethod
         ? CreateBuiltinFunction(nativeMethod, [], realmRec)
-        : CreateBuiltinFunction((realm) => {
-          realm.exception.TypeError('unimplemented');
+        : CreateBuiltinFunction(() => {
+          surroundingAgent.Throw('TypeError');
         }, [], realmRec),
       Writable: true,
       Enumerable: false,

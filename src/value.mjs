@@ -38,32 +38,66 @@ export class Value {
   constructor(realm) {
     this.realm = realm;
   }
-}
 
-export class PrimitiveValue extends Value {
-  constructor(realm, value) {
-    super(realm);
-    this.value = value;
+  get value() {
+    throw new Error();
+  }
+
+  isUndefined() {
+    return false;
+  }
+
+  isNull() {
+    return false;
   }
 }
 
+export class PrimitiveValue extends Value {}
+
 export class UndefinedValue extends PrimitiveValue {
-  constructor(realm) {
-    super(realm, undefined);
+  isUndefined() {
+    return true;
   }
 }
 
 export class NullValue extends PrimitiveValue {
-  constructor(realm) {
-    super(realm, null);
+  isNull() {
+    return true;
   }
 }
 
-export class BooleanValue extends PrimitiveValue {}
+export class BooleanValue extends PrimitiveValue {
+  constructor(realm, boolean) {
+    super(realm);
+    this.boolean = boolean;
+  }
 
-export class NumberValue extends PrimitiveValue {}
+  booleanValue() {
+    return this.boolean;
+  }
+}
 
-export class StringValue extends PrimitiveValue {}
+export class NumberValue extends PrimitiveValue {
+  constructor(realm, number) {
+    super(realm);
+    this.number = number;
+  }
+
+  numberValue() {
+    return this.number;
+  }
+}
+
+export class StringValue extends PrimitiveValue {
+  constructor(realm, string) {
+    super(realm);
+    this.string = string;
+  }
+
+  stringValue() {
+    return this.string;
+  }
+}
 
 export class SymbolValue extends PrimitiveValue {
   constructor(realm, Description) {
@@ -75,14 +109,14 @@ export class SymbolValue extends PrimitiveValue {
 class InternalPropertyMap extends Map {
   get(name) {
     if (name instanceof StringValue) {
-      name = name.value;
+      name = name.stringValue();
     }
     return super.get(name);
   }
 
   set(name, value) {
     if (name instanceof StringValue) {
-      name = name.value;
+      name = name.stringValue();
     }
 
     return super.set(name, value);
@@ -90,7 +124,7 @@ class InternalPropertyMap extends Map {
 
   has(name) {
     if (name instanceof StringValue) {
-      name = name.value;
+      name = name.stringValue();
     }
 
     return super.has(name);
@@ -168,7 +202,7 @@ export class ArrayValue extends ObjectValue {
     const A = this;
 
     Assert(IsPropertyKey(P));
-    if (P.value === 'length') {
+    if (P.stringValue() === 'length') {
       return ArraySetLength(A, Desc);
     }
     if (IsArrayIndex(P)) {
@@ -256,7 +290,7 @@ export class ProxyValue extends ObjectValue {
     const O = this;
     const handler = O.ProxyHandler;
     if (handler.value === null) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -266,7 +300,7 @@ export class ProxyValue extends ObjectValue {
     }
     const handlerProto = Call(trap, handler, [target]);
     if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     const extensibleTarget = IsExtensible(target);
     if (extensibleTarget === true) {
@@ -274,7 +308,7 @@ export class ProxyValue extends ObjectValue {
     }
     const targetProto = target.GetPrototypeOf();
     if (SameValue(handlerProto, targetProto) === false) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     return handlerProto;
   }
@@ -285,7 +319,7 @@ export class ProxyValue extends ObjectValue {
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
     if (handler.value === null) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -303,7 +337,7 @@ export class ProxyValue extends ObjectValue {
     }
     const targetProto = target.GetPrototypeOf();
     if (SameValue(V, targetProto)) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     return true;
   }
@@ -313,7 +347,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler.value === null) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -324,7 +358,7 @@ export class ProxyValue extends ObjectValue {
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
     const targetResult = target.IsExtensible();
     if (SameValue(booleanTrapResult, targetResult) === false) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     return booleanTrapResult;
   }
@@ -334,7 +368,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler.value === null) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -346,7 +380,7 @@ export class ProxyValue extends ObjectValue {
     if (booleanTrapResult.value === true) {
       const targetIsExtensible = target.IsExtensible();
       if (targetIsExtensible === true) {
-        this.realm.exception.TypeError();
+        surroundingAgent.Throw('TypeError');
       }
     }
     return booleanTrapResult;
@@ -373,7 +407,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler.value === null) {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -385,7 +419,7 @@ export class ProxyValue extends ObjectValue {
     const argArray = CreateArrayFromList(argumentsList);
     const newObj = Call(trap, handler, [target, argArray, newTarget]);
     if (Type(newObj) !== 'Object') {
-      this.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     return newObj;
   }

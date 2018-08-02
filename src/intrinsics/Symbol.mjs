@@ -4,6 +4,8 @@ import {
 } from '../value.mjs';
 
 import {
+  surroundingAgent,
+
   Type,
   SameValue,
   ToString,
@@ -14,9 +16,9 @@ export const GlobalSymbolRegistry = [];
 
 function SymbolConstructor(realm, [description], { NewTarget }) {
   if (NewTarget !== undefined) {
-    realm.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
-  const descString = description.value === undefined
+  const descString = description.isUndefined()
     ? NewValue(undefined)
     : ToString(description);
 
@@ -39,7 +41,7 @@ function SymbolFor(realm, [key]) {
 
 function SymbolKeyFor(realm, [sym]) {
   if (Type(sym) !== 'Symbol') {
-    realm.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Symbol, sym)) {

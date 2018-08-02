@@ -4,6 +4,8 @@ import {
 } from '../value.mjs';
 
 import {
+  surroundingAgent,
+
   Assert,
   Type,
 
@@ -20,7 +22,7 @@ function thisSymbolValue(value) {
     Assert(Type(value.SymbolData) === 'Symbol');
     return value.SymbolData;
   }
-  return value.realm.exception.TypeError();
+  return surroundingAgent.Throw('TypeError');
 }
 
 function SymbolToString(realm, argList, { thisArgument }) {

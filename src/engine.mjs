@@ -14,7 +14,11 @@ import {
 
 import { ParseScript, ParseModule } from './parse.mjs';
 
-import { AbruptCompletion, NormalCompletion } from './completions.mjs';
+import {
+  AbruptCompletion,
+  ThrowCompletion,
+  NormalCompletion,
+} from './completions.mjs';
 import {
   LexicalEnvironment,
   EnvironmentRecord,
@@ -23,6 +27,8 @@ import {
   GlobalEnvironmentRecord,
 } from './environment.mjs';
 
+import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
+import { CreateObject } from './intrinsics/Object.mjs';
 import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
 import { CreateArray, ArrayCreate } from './intrinsics/Array.mjs';
 import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
@@ -100,6 +106,12 @@ export class Agent {
     }
     return undefined;
   }
+
+  Throw(type, args) {
+    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
+    const error = Construct(cons, args);
+    throw new ThrowCompletion(error);
+  }
 }
 Agent.Increment = 0;
 
@@ -164,7 +176,7 @@ export function IsArrayIndex(P) {
       return false;
     }
     if (type === 'String') {
-      P = P.value;
+      P = P.stringValue();
     }
   }
   const index = Number.parseInt(P, 10);
@@ -230,7 +242,7 @@ export function ToPrimitive(input, preferredType) {
       if (Type(result) !== 'Object') {
         return result;
       }
-      input.realm.exception.TypeError();
+      surroundingAgent.Throw('TypeError');
     }
     if (hint.value === 'default') {
       hint = NewValue('number');
@@ -260,7 +272,7 @@ export function OrdinaryToPrimitive(O, hint) {
       }
     }
   }
-  O.realm.exception.TypeError();
+  surroundingAgent.Throw('TypeError');
 }
 
 // 7.1.3 ToNumber
@@ -280,7 +292,7 @@ export function ToNumber(argument) {
     case 'Number':
       return argument;
     case 'Symbol':
-      return argument.realm.exception.TypeError();
+      return surroundingAgent.Throw('TypeError');
     case 'Object': {
       const primValue = ToPrimitive(argument, 'Number');
       return ToNumber(primValue);
@@ -334,7 +346,7 @@ export function ToString(argument) {
     case 'String':
       return argument;
     case 'Symbol':
-      return argument.realm.exception.TypeError();
+      return surroundingAgent.Throw('TypeError');
     case 'Object': {
       const primValue = ToPrimitive(argument, 'String');
       return ToString(primValue);
@@ -356,9 +368,9 @@ export function ToObject(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return argument.realm.exception.TypeError();
+      return surroundingAgent.Throw('TypeError');
     case 'Null':
-      return argument.realm.exception.TypeError();
+      return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
       const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%BooleanPrototype%']);
       obj.BooleanData = argument;
@@ -386,6 +398,15 @@ export function ToObject(argument) {
   }
 }
 
+// 7.1.14 ToPropertyKey
+export function ToPropertyKey(argument) {
+  const key = ToPrimitive(argument, 'String');
+  if (Type(key) === 'Symbol') {
+    return key;
+  }
+  return ToString(key);
+}
+
 // 7.1.15 ToLength
 export function ToLength(argument) {
   const len = ToInteger(argument);
@@ -404,8 +425,8 @@ export function IsArray(argument) {
     return true;
   }
   if (argument instanceof ProxyValue) {
-    if (argument.ProxyHandler.value === null) {
-      argument.realm.exception.TypeError();
+    if (argument.ProxyHandler.isNull()) {
+      surroundingAgent.Throw('TypeError');
     }
     const target = argument.ProxyTarget;
     return IsArray(target);
@@ -526,8 +547,8 @@ export function GetFunctionRealm(obj) {
   */
 
   if (obj instanceof ProxyValue) {
-    if (obj.ProxyHandler.value === null) {
-      obj.realm.exception.TypeError();
+    if (obj.ProxyHandler.isNull()) {
+      surroundingAgent.Throw('TypeError');
       const proxyTarget = obj.ProxyTarget;
       return GetFunctionRealm(proxyTarget);
     }
@@ -570,7 +591,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(IsPropertyKey(P));
   const success = CreateDataProperty(O, P, V);
   if (success === false) {
-    surroundingAgent.currentRealmRecord.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
   return success;
 }
@@ -579,11 +600,11 @@ export function CreateDataPropertyOrThrow(O, P, V) {
 export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
-  if (func.value === null || func.value === undefined) {
+  if (func.isNull() || func.isUndefined()) {
     return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
-    V.realm.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
   return func;
 }
@@ -613,7 +634,7 @@ export function Call(F, V, argumentsList) {
   }
 
   if (IsCallable(F) === false) {
-    F.realm.exception.TypeError();
+    surroundingAgent.Throw('TypeError');
   }
 
   return F.Call(V, argumentsList);
@@ -643,6 +664,16 @@ export function CreateArrayFromList(elements) {
     n += 1;
   });
   return array;
+}
+
+// 7.3.18 Invoke
+export function Invoke(V, P, argumentsList) {
+  Assert(IsPropertyKey(P));
+  if (!argumentsList) {
+    argumentsList = [];
+  }
+  const func = GetV(V, P);
+  return Call(func, V, argumentsList);
 }
 
 // 8.1.2.5 NewGlobalEnvironment
@@ -679,18 +710,116 @@ function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  const objProto = ObjectCreate(NewValue(null, realmRec));
-  intrinsics['%ObjectPrototype%'] = objProto;
-
-  const thrower = CreateBuiltinFunction(() => {
-    realmRec.exception.TypeError();
-  }, [], realmRec, NewValue(null, realmRec));
-  intrinsics['%ThrowTypeError%'] = thrower;
-
-  const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
-  intrinsics['%FunctionPrototype%'] = funcProto;
-
-  thrower.SetPrototypeOf(funcProto);
+  // %Array%
+  // %ArrayBuffer%
+  // %ArrayBufferPrototype%
+  // %ArrayIteratorPrototype%
+  // %ArrayPrototype%
+  // %ArrayProto_entries%
+  // %ArrayProto_forEach%
+  // %ArrayProto_keys%
+  // %ArrayProto_values%
+  // %AsyncFromSyncIteratorPrototype%
+  // %AsyncFunction%
+  // %AsyncFunctionPrototype%
+  // %AsyncGenerator%
+  // %AsyncGeneratorFunction%
+  // %AsyncGeneratorPrototype%
+  // %AsyncIteratorPrototype%
+  // %Atomics%
+  // %Boolean%
+  // %BooleanPrototype%
+  // %DataView%
+  // %DataViewPrototype%
+  // %Date%
+  // %DatePrototype%
+  // %decodeURI%
+  // %decodeURIComponent%
+  // %encodeURI%
+  // %encodeURIComponent%
+  // %Error%
+  // %ErrorPrototype%
+  // %eval%
+  // %EvalError%
+  // %EvalErrorPrototype%
+  // %Float32Array%
+  // %Float32ArrayPrototype%
+  // %Float64Array%
+  // %Float64ArrayPrototype%
+  // %Function%
+  // %FunctionPrototype%
+  // %Generator%
+  // %GeneratorFunction%
+  // %GeneratorPrototype%
+  // %Int8Array%
+  // %Int8ArrayPrototype%
+  // %Int16Array%
+  // %Int16ArrayPrototype%
+  // %Int32Array%
+  // %Int32ArrayPrototype%
+  // %isFinite%
+  // %isNaN%
+  // %IteratorPrototype%
+  // %JSON%
+  // %JSONParse%
+  // %JSONStringify%
+  // %Map%
+  // %MapIteratorPrototype%
+  // %MapPrototype%
+  // %Math%
+  // %Number%
+  // %NumberPrototype%
+  // %Object%
+  // %ObjectPrototype%
+  // %ObjProto_toString%
+  // %ObjProto_valueOf%
+  // %parseFloat%
+  // %parseInt%
+  // %Promise%
+  // %PromisePrototype%
+  // %PromiseProto_then%
+  // %Promise_all%
+  // %Promise_reject%
+  // %Promise_resolve%
+  // %Proxy%
+  // %RangeError%
+  // %RangeErrorPrototype%
+  // %ReferenceError%
+  // %ReferenceErrorPrototype%
+  // %Reflect%
+  // %RegExp%
+  // %RegExpPrototype%
+  // %Set%
+  // %SetIteratorPrototype%
+  // %SetPrototype%
+  // %SharedArrayBuffer%
+  // %SharedArrayBufferPrototype%
+  // %String%
+  // %StringIteratorPrototype%
+  // %StringPrototype%
+  // %Symbol%
+  // %SymbolPrototype%
+  // %SyntaxError%
+  // %SyntaxErrorPrototype%
+  // %ThrowTypeError%
+  // %TypedArray%
+  // %TypedArrayPrototype%
+  // %TypeError%
+  // %TypeErrorPrototype%
+  // %Uint8Array%
+  // %Uint8ArrayPrototype%
+  // %Uint8ClampedArray%
+  // %Uint8ClampedArrayPrototype%
+  // %Uint16Array%
+  // %Uint16ArrayPrototype%
+  // %Uint32Array%
+  // %Uint32ArrayPrototype%
+  // %URIError%
+  // %URIErrorPrototype%
+  // %WeakMap%
+  // %WeakMapPrototype%
+  // %WeakSet%
+  // %WeakSetPrototype%
 
   // Well-known symbols
   const wellKnownSymbolNames = [
@@ -712,6 +841,22 @@ function CreateIntrinsics(realmRec) {
     const sym = new SymbolValue(realmRec, NewValue(name, realmRec));
     realmRec.Intrinsics[`@@${name}`] = sym;
   });
+
+  const objProto = ObjectCreate(NewValue(null, realmRec));
+  intrinsics['%ObjectPrototype%'] = objProto;
+  CreateObjectPrototype(realmRec);
+
+  const thrower = CreateBuiltinFunction(() => {
+    surroundingAgent.Throw('TypeError');
+  }, [], realmRec, NewValue(null, realmRec));
+  intrinsics['%ThrowTypeError%'] = thrower;
+
+  const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
+  intrinsics['%FunctionPrototype%'] = funcProto;
+
+  thrower.SetPrototypeOf(funcProto);
+
+  CreateObject(realmRec);
 
   CreateArrayPrototype(realmRec);
   CreateArray(realmRec);
@@ -740,12 +885,12 @@ function CreateIntrinsics(realmRec) {
 
 // 8.2.3 SetRealmGlobalObject
 function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
-  if (globalObj === undefined) {
+  if (globalObj.isUndefined()) {
     const intrinsics = realmRec.Intrinsics;
     globalObj = ObjectCreate(intrinsics.ObjectPrototype);
   }
 
-  if (thisValue === undefined) {
+  if (thisValue.isUndefined()) {
     thisValue = globalObj;
   }
 
@@ -787,8 +932,8 @@ export function InitializeHostDefinedRealm() {
   newContext.Function = null;
   newContext.Realm = realm;
   surroundingAgent.executionContextStack.push(newContext);
-  const global = undefined;
-  const thisValue = undefined;
+  const global = NewValue(undefined);
+  const thisValue = NewValue(undefined);
   SetRealmGlobalObject(realm, global, thisValue);
   const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
@@ -926,17 +1071,17 @@ export function OrdinaryDefineOwnProperty(O, P, Desc) {
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-  Assert(O === undefined || IsPropertyKey(P));
+  Assert(O.isUndefined() || IsPropertyKey(P));
 
-  if (current === undefined) {
+  if (current.isUndefined()) {
     if (extensible === false) {
       return false;
     }
 
-    Assert(extensible);
+    Assert(extensible === true);
 
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-      if (O !== undefined) {
+      if (!O.isUndefined()) {
         O.properties.set(P, {
           Value: 'Value' in Desc ? Desc.Value : NewValue(undefined),
           Writable: 'Writable' in Desc ? Desc.Writable : false,
@@ -944,7 +1089,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
         });
       }
-    } else if (O !== undefined) {
+    } else if (!O.IsUndefined()) {
       O.properties.set(P, {
         Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
         Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
@@ -977,14 +1122,14 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
       return false;
     }
     if (IsDataDescriptor(current)) {
-      if (O !== undefined) {
+      if (!O.isUndefined()) {
         const entry = O.properties.get(P);
         delete entry.Value;
         delete entry.Writable;
         entry.Get = NewValue(undefined);
         entry.Set = NewValue(undefined);
       }
-    } else if (O !== undefined) {
+    } else if (!O.isUndefined()) {
       const entry = O.properties.get(P);
       delete entry.Get;
       delete entry.Set;
@@ -993,25 +1138,25 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     }
   } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
     if (current.Configurable === false && current.Writable === false) {
-      if (Desc.Writable !== undefined && Desc.Writable === true) {
+      if ('Writable' in Desc && Desc.Writable === true) {
         return false;
       }
-      if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === false) {
+      if ('Value' in Desc && SameValue(Desc.Value, current.Value) === false) {
         return false;
       }
       return true;
     }
   } else if (current.Configurable === false) {
-    if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === false) {
+    if ('Set' in Desc && SameValue(Desc.Set, current.Set) === false) {
       return false;
     }
-    if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get)) {
+    if ('Get' in Desc && SameValue(Desc.Get, current.Get)) {
       return false;
     }
     return true;
   }
 
-  if (O !== undefined) {
+  if (!O.isUndefined()) {
     O.properties.set(P, current);
     Object.keys(Desc).forEach((field) => {
       current[field] = Desc[field];
@@ -1026,11 +1171,11 @@ export function OrdinaryHasProperty(O, P) {
   Assert(IsPropertyKey(P));
 
   const hasOwn = O.GetOwnProperty(P);
-  if (hasOwn !== undefined) {
+  if (!hasOwn.isUndefined()) {
     return true;
   }
   const parent = O.GetPrototypeOf();
-  if (parent.value !== null) {
+  if (!parent.isNull()) {
     return parent.HasOwnProperty(P);
   }
   return false;
@@ -1043,7 +1188,7 @@ export function OrdinaryGet(O, P, Receiver) {
   const desc = O.GetOwnProperty(P);
   if (desc === undefined) {
     const parent = O.GetPrototypeOf();
-    if (parent === null) {
+    if (parent.isNull()) {
       return NewValue(undefined);
     }
     return parent.Get(P, Receiver);
@@ -1053,7 +1198,7 @@ export function OrdinaryGet(O, P, Receiver) {
   }
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
-  if (getter === undefined) {
+  if (getter.isUndefined()) {
     return NewValue(undefined);
   }
   return Call(getter, Receiver);
@@ -1070,9 +1215,9 @@ export function OrdinarySet(O, P, V, Receiver) {
 export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   Assert(IsPropertyKey(P));
 
-  if (ownDesc === undefined) {
+  if (ownDesc.isUndefined()) {
     const parent = O.GetPrototypeOf();
-    if (parent.value !== null) {
+    if (!parent.isNull()) {
       return parent.Set(P, V, Receiver);
     }
     ownDesc = {
@@ -1091,7 +1236,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
       return false;
     }
     const existingDescriptor = Receiver.GetOwnProperty(P);
-    if (existingDescriptor !== undefined) {
+    if (!existingDescriptor.isUndefined()) {
       if (IsAccessorDescriptor(existingDescriptor)) {
         return false;
       }
@@ -1104,7 +1249,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
 
   Assert(IsAccessorDescriptor(ownDesc));
   const setter = ownDesc.Set;
-  if (setter === undefined) {
+  if (setter.isUndefined()) {
     return false;
   }
   Call(setter, Receiver, [V]);
@@ -1115,7 +1260,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
 export function OrdinaryDelete(O, P) {
   Assert(IsPropertyKey(P));
   const desc = O.GetOwnProperty(P);
-  if (desc === undefined) {
+  if (desc.isUndefined()) {
     return true;
   }
   if (desc.Configurable === true) {
@@ -1235,11 +1380,11 @@ export function ArraySetLength(A, Desc) {
   const newLen = ToUint32(Desc.Value);
   const numberLen = ToNumber(Desc.Value);
   if (newLen.value !== numberLen.value) {
-    A.realm.exception.RangeError();
+    surroundingAgent.Throw('RangeError');
   }
   newLenDesc.Value = newLen;
   const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
-  Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
+  Assert(!oldLenDesc.isUndefined() && !IsAccessorDescriptor(oldLenDesc));
   let oldLen = oldLenDesc.Value;
   if (newLen.value > oldLen.value) {
     return OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
@@ -1327,7 +1472,7 @@ export function ScriptEvaluation(scriptRecord) {
     result = Evaluate(scriptBody, globalEnv);
   }
 
-  if (result.Type === 'normal' && result.Value === undefined) {
+  if (result.Type === 'normal' && result.Value.isUndefined()) {
     result = new NormalCompletion(NewValue(undefined));
   }
   // Suspend scriptCtx
@@ -1347,14 +1492,14 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   lexNames.forEach((name) => {
     if (envRec.HasVarDeclaration(name)) {
-      envRec.Realm.exception.SyntaxError();
+      surroundingAgent.Throw('SyntaxError');
     }
     if (envRec.HasLexicalDeclaration(name)) {
-      envRec.Realm.exception.SyntaxError();
+      surroundingAgent.Throw('SyntaxError');
     }
     const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
     if (hasRestrictedGlobal) {
-      envRec.Realm.exception.SyntaxError();
+      surroundingAgent.Throw('SyntaxError');
     }
   });
 
@@ -1426,7 +1571,7 @@ export function HostReportErrors(errorList) {
 export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
-  if (desc.value === undefined) {
+  if (desc.isUndefined()) {
     desc = NewValue('');
   }
   return NewValue(sym.realm, `Symbol(${desc.value})`);
