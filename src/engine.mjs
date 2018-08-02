@@ -56,6 +56,8 @@ export function Evaluate(body, envRec) {
   if (body.type === 'BooleanLiteral') {
     return NewValue(body.firstChild.value);
   }
+
+  console.log(body);
 }
 
 export function Assert(invarient) {
@@ -1429,8 +1431,10 @@ export function TopLevelLexicallyDeclaredNames() {
 }
 
 // 13.2.9 Static Semantics TopLevelVarDeclaredNames
-export function TopLevelVarDeclaredNames() {
-  return [];
+export function TopLevelVarDeclaredNames(StatementList) {
+  return StatementList
+    .filter((c) => c.type === 'VariableDeclaration')
+    .map((c) => c.childElements[2].firstChild.firstChild.value);
 }
 
 // 15.1.3 LexicallyDeclaredNames
@@ -1447,7 +1451,7 @@ export function LexicallyScopedDeclarations() {
 // 15.1.5 VarDeclaredNames
 export function VarDeclaredNames(ScriptBody) {
   // Return TopLevelVarDeclaredNames of StatementList.
-  return TopLevelVarDeclaredNames(ScriptBody.body);
+  return TopLevelVarDeclaredNames(ScriptBody.childElements);
 }
 
 // 15.1.6 VarScopedDeclarations

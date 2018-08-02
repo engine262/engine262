@@ -157,4 +157,102 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     this.DeclarativeRecord = new DeclarativeEnvironmentRecord(this.realm);
     this.VarNames = [];
   }
+
+  HasBinding(N) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      return true;
+    }
+    const ObjRec = envRec.ObjectRecord;
+    return ObjRec.HasBinding(N);
+  }
+
+  CreateMutableBinding(N, D) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      surroundingAgent.Throw('TypeError');
+    }
+    return DclRec.CreateMutableBinding(N, D);
+  }
+
+  CreateImmutableBinding(N, S) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      surroundingAgent.Throw('TypeError');
+    }
+    return DclRec.CreateImmutableBinding(N, S);
+  }
+
+  InitializeBinding(N, V) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      return DclRec.InitializeBinding(N, V);
+    }
+    const ObjRec = envRec.ObjectRecord;
+    return ObjRec.InitializeBinding(N, V);
+  }
+
+  SetMutableBinding(N, V, S) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      return DclRec.SetMutableBinding(N, V, S);
+    }
+    const ObjRec = envRec.ObjectRecord;
+    return ObjRec.SetMutableBinding(N, V, S);
+  }
+
+  GetBindingValue(N, S) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      return DclRec.GetBindingValue(N, S);
+    }
+    const ObjRec = envRec.ObjectRecord;
+    return ObjRec.GetBindingValue(N, S);
+  }
+
+  DeleteBinding(N) {
+    const envRec = this;
+    const DclRec = this.DeclarativeRecord;
+    if (DclRec.HasBinding(N)) {
+      return DclRec.DeleteBinding(N);
+    }
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const existingProp = HasOwnProperty(globalObject, N);
+    if (existingProp === true) {
+      const status = ObjRec.DeleteBinding(N);
+      if (status === true) {
+        const varNames = envRec.VarNames;
+        // If N is an element of varNames, remove that element from the varNames.
+      }
+      return status;
+    }
+    return true;
+  }
+
+  HasThisBinding() {}
+
+  HasSuperBinding() {}
+
+  WithBaseObject() {}
+
+  HasVarDeclaration() {}
+
+  HasLexicalDeclaration() {}
+
+  HasRestrictedGlobalProperty() {}
+
+  CanDeclareGlobalVar() {}
+
+  CanDeclareGlobalFunction() {}
+
+  CreateGlobalVarBinding() {}
+
+  CreateGlobalFunctionBinding() {}
 }
