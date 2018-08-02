@@ -16,9 +16,9 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
   if (NewTarget !== undefined) {
     realm.exception.TypeError();
   }
-  const descString = description.value === undefined ?
-    NewValue(undefined) :
-    ToString(description);
+  const descString = description.value === undefined
+    ? NewValue(undefined)
+    : ToString(description);
 
   const val = new SymbolValue(realm);
   val.Description = descString;

@@ -4,7 +4,7 @@ import {
 } from '../value.mjs';
 
 import {
-  agent,
+  surroundingAgent,
 
   Assert,
   Type,
@@ -41,7 +41,7 @@ function ArraySpeciesCreate(originalArray, length) {
   }
   let C = Get(originalArray, 'constructor');
   if (IsConstructor(C) === true) {
-    const thisRealm = agent.currentRealmRecord;
+    const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = GetFunctionRealm(C);
     if (thisRealm !== realmC) {
       if (SameValue(C, realmC.Intrinsics['%Array%']) === true) {

@@ -1,4 +1,6 @@
 import {
+  surroundingAgent,
+
   Type,
   HasProperty,
   Get,
@@ -75,18 +77,18 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
 
     if (binding.initialized === false) {
-      // throw a ReferenceError exception
+      surroundingAgent.currentRealmRecord.exception.ReferenceError();
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S === true) {
-      // throw a TypeError exception
+      surroundingAgent.currentRealmRecord.exception.TypeError();
     }
   }
 
   GetBindingValue(N, S) {
     const binding = this.bindings.get(N);
     if (binding.initialized === false) {
-      // throw a ReferenceError exception
+      surroundingAgent.currentRealmRecord.exception.ReferenceError();
     }
     return binding.value;
   }

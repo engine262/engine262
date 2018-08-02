@@ -1,5 +1,5 @@
 import {
-  agent,
+  surroundingAgent,
   Assert,
   CreateBuiltinFunction,
   GetPrototypeFromConstructor,
@@ -16,12 +16,12 @@ export function ArrayCreate(length, proto) {
     length = 0;
   }
   if (length > (2 ** 32) - 1) {
-    agent.currentRealmRecord.exception.RangeError();
+    surroundingAgent.currentRealmRecord.exception.RangeError();
   }
   if (proto === undefined) {
-    proto = agent.currentRealmRecord.Intrinsics['%ArrayPrototype%'];
+    proto = surroundingAgent.currentRealmRecord.Intrinsics['%ArrayPrototype%'];
   }
-  const A = new ArrayValue(agent.currentRealmRecord);
+  const A = new ArrayValue(surroundingAgent.currentRealmRecord);
 
   // Set A's essential internal methods except for [[DefineOwnProperty]]
   // to the default ordinary object definitions specified in 9.1.
@@ -35,7 +35,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
     if (NewTarget.value === undefined) {
-      NewTarget = agent.activeFunctionObject;
+      NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
     return ArrayCreate(0, proto);

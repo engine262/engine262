@@ -36,7 +36,7 @@ function SymbolToPrimitive(realm, argList, { thisArgument }) {
   return thisSymbolValue(thisArgument);
 }
 
-function SymbolToStringTag(realm) {
+function SymbolToStringTag() {
   return NewValue('Symbol');
 }
 

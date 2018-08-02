@@ -1,5 +1,5 @@
 import {
-  agent,
+  surroundingAgent,
   ExecutionContext,
   Assert,
   Type,
@@ -9,6 +9,7 @@ import {
   IsPropertyKey,
   IsArrayIndex,
   IsConstructor,
+  IsAccessorDescriptor,
   GetMethod,
 
   CreateArrayFromList,
@@ -16,6 +17,7 @@ import {
   Construct,
 
   ToBoolean,
+  ToUint32,
 
   OrdinaryGetPrototypeOf,
   OrdinarySetPrototypeOf,
@@ -107,9 +109,9 @@ export class ObjectValue extends PrimitiveValue {
   constructor(realm, Prototype) {
     super(realm);
 
-    this.Prototype = Prototype ||
-      realm.Intrinsics['%ObjectPrototype%'] ||
-      new NullValue(realm);
+    this.Prototype = Prototype
+      || realm.Intrinsics['%ObjectPrototype%']
+      || new NullValue(realm);
 
     this.Extensible = true;
     this.IsClassPrototype = false;
@@ -171,6 +173,22 @@ export class ArrayValue extends ObjectValue {
     }
     if (IsArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
+      Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
+      const oldLen = oldLenDesc.Value;
+      const index = ToUint32(P);
+      if (index.value >= oldLen.value && oldLenDesc.Writable === false) {
+        return false;
+      }
+      const succeeded = OrdinaryDefineOwnProperty(A, P, Desc);
+      if (succeeded === false) {
+        return false;
+      }
+      if (index.value >= oldLen.value) {
+        oldLenDesc.Value = New(index + 1);
+        const succeeded = OrdinaryDefineOwnProperty(A, 'length', oldLenDesc);
+        Assert(succeeded === true);
+      }
+      return true;
     }
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }
@@ -187,24 +205,20 @@ export class BuiltInFunctionValue extends FunctionValue {
   Call(thisArgument, argumentsList) {
     const F = this;
 
-    const callerContext = agent.runningExecutionContext;
+    const callerContext = surroundingAgent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
     const calleeRealm = F.Realm;
     calleeContext.Realm = calleeRealm;
     calleeContext.ScriptOrModule = F.ScriptOrModule;
-
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-
-    agent.executionContextStack.push(calleeContext);
-
+    surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument,
       NewTarget: undefined,
     });
-
-    agent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop();
 
     return result;
   }
@@ -212,25 +226,20 @@ export class BuiltInFunctionValue extends FunctionValue {
   Construct(argumentsList, newTarget) {
     const F = this;
 
-    const callerContext = agent.runningExecutionContext;
+    const callerContext = surroundingAgent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
     const calleeRealm = F.Realm;
     calleeContext.Realm = calleeRealm;
     calleeContext.ScriptOrModule = F.ScriptOrModule;
-
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-
-    agent.executionContextStack.push(calleeContext);
-
+    surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument: undefined,
       NewTarget: newTarget,
     });
-
-    agent.executionContextStack.pop();
-
+    surroundingAgent.executionContextStack.pop();
     return result;
   }
 }
@@ -382,7 +391,7 @@ export class ProxyValue extends ObjectValue {
   }
 }
 
-export function New(value, realm = agent.currentRealmRecord) {
+export function New(value, realm = surroundingAgent.currentRealmRecord) {
   if (value === null) {
     return new NullValue(realm);
   }

@@ -8,7 +8,7 @@ import {
 } from '../engine.mjs';
 
 function MathAbs(realm, [x]) {
-  if (isNaN(x.value)) {
+  if (Number.isNaN(x.value)) {
     return NewValue(NaN);
   }
   if (Object.is(x.value, -0)) {
@@ -89,9 +89,9 @@ export function CreateMath(realmRec) {
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
     mathObj.DefineOwnProperty(NewValue(name), {
-      Value: nativeMethod ?
-        CreateBuiltinFunction(nativeMethod, [], realmRec) :
-        CreateBuiltinFunction((realm) => {
+      Value: nativeMethod
+        ? CreateBuiltinFunction(nativeMethod, [], realmRec)
+        : CreateBuiltinFunction((realm) => {
           realm.exception.TypeError('unimplemented');
         }, [], realmRec),
       Writable: true,

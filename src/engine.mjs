@@ -1,8 +1,3 @@
-/* eslint-disable no-use-before-define */
-/* eslint-disable import/no-cycle */
-/* eslint-disable no-lonely-if */
-/* eslint-disable no-else-return */
-
 import {
   Value,
   UndefinedValue,
@@ -36,10 +31,6 @@ import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 
-const jobQueues = new Map([
-  ['ScriptJobs', []],
-]);
-
 // totally wrong but aaaaaaaaa
 export function Evaluate(body, envRec) {
   if (body.type === 'Program') {
@@ -71,7 +62,8 @@ export class Agent {
   constructor() {
     this.LittleEndian = false;
     this.CanBlock = true;
-    this.Signifier = undefined;
+    this.Signifier = Agent.Increment;
+    Agent.Increment += 1;
     this.IsLockFree1 = true;
     this.IsLockFree2 = true;
     this.CandidiateExecution = undefined;
@@ -101,7 +93,7 @@ export class Agent {
   }
 
   pickQueue() {
-    for (const queue of jobQueues.values()) {
+    for (const queue of this.jobQueues.values()) {
       if (queue.length > 0) {
         return queue;
       }
@@ -109,8 +101,9 @@ export class Agent {
     return undefined;
   }
 }
+Agent.Increment = 0;
 
-export const agent = new Agent();
+export const surroundingAgent = new Agent();
 
 export class Realm {
   constructor() {
@@ -250,8 +243,8 @@ export function ToPrimitive(input, preferredType) {
 // 7.1.1.1 OrdinaryToPrimitive
 export function OrdinaryToPrimitive(O, hint) {
   Assert(Type(O) === 'Object');
-  Assert(Type(hint) === 'String' &&
-         (hint.value === 'string' || hint.value === 'number'));
+  Assert(Type(hint) === 'String'
+         && (hint.value === 'string' || hint.value === 'number'));
   let methodNames;
   if (hint.value === 'string') {
     methodNames = [NewValue('toString'), NewValue('valueOf')];
@@ -281,9 +274,9 @@ export function ToNumber(argument) {
     case 'Boolean':
       if (argument.value) {
         return NewValue(1);
-      } else {
-        return NewValue(0);
       }
+      return NewValue(0);
+
     case 'Number':
       return argument;
     case 'Symbol':
@@ -300,16 +293,15 @@ export function ToNumber(argument) {
 // 7.1.4 ToInteger
 export function ToInteger(argument) {
   const number = ToNumber(argument);
-  if (isNaN(number.value)) {
+  if (Number.isNaN(number.value)) {
     return NewValue(0);
   }
-  if (number.value === 0 || // || number.value === -0
-      number.value === Infinity ||
-      number.value === -Infinity) {
+  if (number.value === 0 // || number.value === -0
+      || number.value === Infinity
+      || number.value === -Infinity) {
     return number;
   }
   return NewValue(
-    agent.currentRealmRecord,
     Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1,
   );
 }
@@ -317,9 +309,9 @@ export function ToInteger(argument) {
 // 7.1.6 ToUint32
 export function ToUint32(argument) {
   const number = ToNumber(argument);
-  if (number.value === 0 || // || number.value === -0
-      number.value === Infinity ||
-      number.value === -Infinity) {
+  if (number.value === 0 // || number.value === -0
+      || number.value === Infinity
+      || number.value === -Infinity) {
     return NewValue(0);
   }
   const int = Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1;
@@ -456,7 +448,7 @@ export function SameValue(x, y) {
   }
 
   if (Type(x) === 'Number') {
-    if (isNaN(x.value) && isNaN(y.value)) {
+    if (Number.isNaN(x.value) && Number.isNaN(y.value)) {
       return true;
     }
     if (Object.is(x.value, 0) && Object.is(y.value, -0)) {
@@ -531,17 +523,17 @@ export function GetFunctionRealm(obj) {
     const target = obj.BoundTargetFunction;
     return GetFunctionRealm(target);
   }
+  */
 
-  if (IsProxyExoticObject(obj)) {
+  if (obj instanceof ProxyValue) {
     if (obj.ProxyHandler.value === null) {
       obj.realm.exception.TypeError();
       const proxyTarget = obj.ProxyTarget;
       return GetFunctionRealm(proxyTarget);
     }
   }
-  */
 
-  return agent.currentRealmRecord;
+  return surroundingAgent.currentRealmRecord;
 }
 
 // 7.3.1 Get
@@ -578,7 +570,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(IsPropertyKey(P));
   const success = CreateDataProperty(O, P, V);
   if (success === false) {
-    agent.currentRealmRecord.exception.TypeError();
+    surroundingAgent.currentRealmRecord.exception.TypeError();
   }
   return success;
 }
@@ -774,7 +766,7 @@ export function SetDefaultGlobalBindings(realmRec) {
 
 // 8.4.1 EnqueueJob
 export function EnqueueJob(queueName, job, args) {
-  const callerContext = agent.runningExecutionContext;
+  const callerContext = surroundingAgent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
   const callerScriptOrModule = callerContext.ScriptOrModule;
   const pending = {
@@ -785,7 +777,7 @@ export function EnqueueJob(queueName, job, args) {
     HostDefined: undefined,
   };
 
-  jobQueues.get(queueName).push(pending);
+  surroundingAgent.jobQueues.get(queueName).push(pending);
 }
 
 // 8.6 InitializeHostDefinedRealm
@@ -794,7 +786,7 @@ export function InitializeHostDefinedRealm() {
   const newContext = new ExecutionContext();
   newContext.Function = null;
   newContext.Realm = realm;
-  agent.executionContextStack.push(newContext);
+  surroundingAgent.executionContextStack.push(newContext);
   const global = undefined;
   const thisValue = undefined;
   SetRealmGlobalObject(realm, global, thisValue);
@@ -824,8 +816,8 @@ export function RunJobs() {
   });
 
   while (true) { // eslint-disable-line no-constant-condition
-    agent.executionContextStack.pop();
-    const nextQueue = agent.pickQueue();
+    surroundingAgent.executionContextStack.pop();
+    const nextQueue = surroundingAgent.pickQueue();
     // host specific behaviour
     if (!nextQueue) {
       break;
@@ -835,7 +827,7 @@ export function RunJobs() {
     newContext.Function = null;
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
-    agent.executionContextStack.push(newContext);
+    surroundingAgent.executionContextStack.push(newContext);
     try {
       const res = nextPending.Job(...nextPending.Arguments);
       console.log(res);
@@ -847,6 +839,12 @@ export function RunJobs() {
       }
     }
   }
+}
+
+// 8.7.1 AgentSignifier
+export function AgentSignifier() {
+  const AR = surroundingAgent;
+  return AR.Signifier;
 }
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
@@ -873,12 +871,10 @@ export function OrdinarySetPrototypeOf(O, V) {
       done = true;
     } else if (SameValue(p, O) === true) {
       return false;
+    } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
+      done = true;
     } else {
-      if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
-        done = true;
-      } else {
-        p = p.Prototype;
-      }
+      p = p.Prototype;
     }
   }
   O.Prototype = V;
@@ -948,15 +944,13 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
         });
       }
-    } else {
-      if (O !== undefined) {
-        O.properties.set(P, {
-          Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
-          Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
-          Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
-          Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
-        });
-      }
+    } else if (O !== undefined) {
+      O.properties.set(P, {
+        Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
+        Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
+        Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
+        Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
+      });
     }
 
     return true;
@@ -990,14 +984,12 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
         entry.Get = NewValue(undefined);
         entry.Set = NewValue(undefined);
       }
-    } else {
-      if (O !== undefined) {
-        const entry = O.properties.get(P);
-        delete entry.Get;
-        delete entry.Set;
-        entry.Value = NewValue(undefined);
-        entry.Writable = false;
-      }
+    } else if (O !== undefined) {
+      const entry = O.properties.get(P);
+      delete entry.Get;
+      delete entry.Set;
+      entry.Value = NewValue(undefined);
+      entry.Writable = false;
     }
   } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
     if (current.Configurable === false && current.Writable === false) {
@@ -1009,16 +1001,14 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
       }
       return true;
     }
-  } else {
-    if (current.Configurable === false) {
-      if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === false) {
-        return false;
-      }
-      if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get)) {
-        return false;
-      }
-      return true;
+  } else if (current.Configurable === false) {
+    if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === false) {
+      return false;
     }
+    if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get)) {
+      return false;
+    }
+    return true;
   }
 
   if (O !== undefined) {
@@ -1084,14 +1074,13 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     const parent = O.GetPrototypeOf();
     if (parent.value !== null) {
       return parent.Set(P, V, Receiver);
-    } else {
-      ownDesc = {
-        Value: NewValue(undefined),
-        Writable: true,
-        Enumerable: true,
-        Configurable: true,
-      };
     }
+    ownDesc = {
+      Value: NewValue(undefined),
+      Writable: true,
+      Enumerable: true,
+      Configurable: true,
+    };
   }
 
   if (IsDataDescriptor(ownDesc)) {
@@ -1175,7 +1164,7 @@ export function ObjectCreate(proto, internalSlotsList) {
     internalSlotsList = [];
   }
 
-  const obj = new ObjectValue(agent.currentRealmRecord || proto.realm);
+  const obj = new ObjectValue(surroundingAgent.currentRealmRecord || proto.realm);
 
   // Set obj's essential internal methods to the default ordinary
   // object definitions specified in 9.1.
@@ -1214,7 +1203,7 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
 export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype) {
   if (!realm) {
     // If realm is not present, set realm to the current Realm Record.
-    realm = agent.currentRealmRecord;
+    realm = surroundingAgent.currentRealmRecord;
   }
 
   if (!prototype) {
@@ -1330,8 +1319,8 @@ export function ScriptEvaluation(scriptRecord) {
   scriptCtx.ScriptOrModule = scriptRecord;
   scriptCtx.VariableEnvironment = globalEnv;
   scriptCtx.LexicalEnvironment = globalEnv;
-  // Suspend the currently running execution context.
-  agent.executionContextStack.push(scriptCtx);
+  // Suspend runningExecutionContext
+  surroundingAgent.executionContextStack.push(scriptCtx);
   const scriptBody = scriptRecord.ECMAScriptCode;
   let result = GlobalDeclarationInstantiation(scriptBody, globalEnv);
   if (result.Type === 'normal') {
@@ -1342,9 +1331,8 @@ export function ScriptEvaluation(scriptRecord) {
     result = new NormalCompletion(NewValue(undefined));
   }
   // Suspend scriptCtx
-  agent.executionContextStack.pop();
-  // Resume the context that is now on the top of the
-  // execution context stack as the running execution context.
+  surroundingAgent.executionContextStack.pop();
+  // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
 }
@@ -1414,14 +1402,14 @@ export function GlobalDeclarationInstantiation(script, env) {
 
 // 15.1.12 ScriptEvaluationJob
 export function ScriptEvaluationJob(sourceText, hostDefined) {
-  const realm = agent.currentRealmRecord;
+  const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
   return ScriptEvaluation(s);
 }
 
 // 15.2.1.19
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
-  const realm = agent.currentRealmRecord;
+  const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
   m.Instantiate();
   m.Evaluate();
@@ -1456,13 +1444,10 @@ export function IsConcatSpreadable(O) {
   return IsArray(O);
 }
 
-// 24.4.1.0 WakeWaiter
-export function WakeWaiter(WL, W) {
-  W.Wake();
-}
-
 // 24.4.1.9 Suspend
-export function Suspend() {
+export function Suspend(WL, W) {
+  // Assert: The calling agent is in the critical section for WL.
+  Assert(W === AgentSignifier());
   // LeaveCriticalSection(WL);
   // suspend W for up to timeout milliseconds, performing the
   // combined operation in such a way that a wakeup that arrives
