@@ -1,27 +1,61 @@
+/* @flow */
+
+/* ::
+import type {
+  Realm,
+} from './engine.mjs';
+
+import type {
+  Value,
+  ObjectValue,
+} from './value.mjs';
+*/
+
 import {
   surroundingAgent,
-
   Type,
+
   HasProperty,
+  HasOwnProperty,
   Get,
+
   ToBoolean,
 } from './engine.mjs';
 
 export class LexicalEnvironment {
+  /* ::
+  EnvironmentRecord: ?EnvironmentRecord
+  */
   constructor() {
     this.EnvironmentRecord = undefined;
   }
 }
 
 export class EnvironmentRecord {
-  constructor(realm) {
+  /* ::
+  realm: Realm
+  */
+  constructor(realm /* : Realm */) {
     this.realm = realm;
   }
 }
 
+/* ::
+declare type Binding = {
+  initialized: boolean,
+  mutable: boolean,
+  strict: ?boolean,
+  deletable: boolean,
+  value: ?Value,
+};
+*/
+
 // https://tc39.github.io/ecma262/#sec-lexical-environments
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  constructor(realm) {
+  /* ::
+  bindings: Map<Value, Binding>
+  */
+  constructor(realm /* : Realm */) {
     super(realm);
     this.bindings = new Map();
   }
@@ -150,7 +184,13 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 }
 
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
-  constructor(realm, globalObject) {
+  /* ::
+  ObjectRecord: ObjectEnvironmentRecord
+  GlobalThisValue: ObjectValue
+  DeclarativeRecord: DeclarativeEnvironmentRecord
+  VarNames: string[]
+  */
+  constructor(realm /* : Realm */, globalObject /* : ObjectValue */) {
     super(realm);
     this.ObjectRecord = new ObjectEnvironmentRecord(this.realm, globalObject);
     this.GlobalThisValue = globalObject;
@@ -216,7 +256,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.GetBindingValue(N, S);
   }
 
-  DeleteBinding(N) {
+  DeleteBinding(N /* : Value */) {
     const envRec = this;
     const DclRec = this.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {

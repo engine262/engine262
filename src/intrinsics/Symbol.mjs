@@ -1,3 +1,11 @@
+/* @flow */
+
+/* ::
+import type {
+  Realm,
+} from '../engine.mjs';
+*/
+
 import {
   SymbolValue,
   New as NewValue,
@@ -22,8 +30,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
     ? NewValue(undefined)
     : ToString(description);
 
-  const val = new SymbolValue(realm);
-  val.Description = descString;
+  return new SymbolValue(realm, descString);
 }
 
 function SymbolFor(realm, [key]) {
@@ -51,7 +58,7 @@ function SymbolKeyFor(realm, [sym]) {
   return NewValue(undefined);
 }
 
-export function CreateSymbol(realmRec) {
+export function CreateSymbol(realmRec /* : Realm */) {
   const symbolConstructor = CreateBuiltinFunction(SymbolConstructor, [], realmRec);
 
   [

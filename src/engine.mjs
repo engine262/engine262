@@ -1,3 +1,12 @@
+/* @flow */
+
+/* ::
+import type {
+  PrimitiveValue,
+  FunctionValue,
+} from './value.mjs';
+*/
+
 import {
   Value,
   UndefinedValue,
@@ -38,7 +47,7 @@ import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 
 // totally wrong but aaaaaaaaa
-export function Evaluate(body, envRec) {
+export function Evaluate(body /* : Object */, envRec /* : EnvironmentRecord */) {
   if (body.type === 'Program') {
     const res = body.childElements
       .filter((e) => e.type !== 'Punctuator' && e.type !== 'EOF')
@@ -60,13 +69,34 @@ export function Evaluate(body, envRec) {
   console.log(body);
 }
 
-export function Assert(invarient) {
+export function Assert(invarient /* : boolean */) {
   if (!invarient) {
     throw new TypeError('Assert failed');
   }
 }
 
+/* ::
+declare type Job = {
+  Job: function,
+  Arguments: any[],
+  Realm: Realm,
+  ScriptOrModule: ?Object,
+  HostDefined: ?Object,
+};
+*/
+
 export class Agent {
+  /* ::
+  static Increment: number
+  LittleEndian: boolean
+  CanBlock: boolean
+  Signifier: number
+  IsLockFree1: boolean
+  IsLockFree2: boolean
+  CandidateExecution: ?Object
+  executionContextStack: ExecutionContext[]
+  jobQueues: Map<string, Job[]>
+  */
   constructor() {
     this.LittleEndian = false;
     this.CanBlock = true;
@@ -74,7 +104,7 @@ export class Agent {
     Agent.Increment += 1;
     this.IsLockFree1 = true;
     this.IsLockFree2 = true;
-    this.CandidiateExecution = undefined;
+    this.CandidateExecution = undefined;
 
     this.executionContextStack = [];
 
@@ -87,12 +117,12 @@ export class Agent {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
 
-
-  get currentRealmRecord() {
+  get currentRealmRecord() /* : Realm */ {
     const currentCtx = this.runningExecutionContext;
     if (currentCtx !== undefined) {
       return currentCtx.Realm;
     }
+    // $FlowFixMe
     return undefined;
   }
 
@@ -109,7 +139,11 @@ export class Agent {
     return undefined;
   }
 
-  Throw(type, args) {
+  intrinsic(name /* : string */) {
+    return this.currentRealmRecord.Intrinsics[name];
+  }
+
+  Throw(type /* : string */, args /* : ?Value[] */) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, args);
     throw new ThrowCompletion(error);
@@ -119,8 +153,22 @@ Agent.Increment = 0;
 
 export const surroundingAgent = new Agent();
 
+/* ::
+declare type IntrinsicMap = {
+ [string]: Value,
+};
+*/
+
 export class Realm {
+  /* ::
+  Intrinsics: IntrinsicMap
+  GlobalObject: ?ObjectValue
+  GlobalEnv: ?EnvironmentRecord
+  TemplateMap: ?Object
+  HostDefined: ?Object
+  */
   constructor() {
+    // $FlowFixMe
     this.Intrinsics = undefined;
     this.GlobalObject = undefined;
     this.GlobalEnv = undefined;
@@ -130,15 +178,22 @@ export class Realm {
 }
 
 export class ExecutionContext {
+  /* ::
+  codeEvaluationState: ?boolean
+  Function: ?FunctionValue
+  Realm: Realm
+  ScriptOrModule: ?Object
+  */
   constructor() {
     this.codeEvaluationState = undefined;
     this.Function = undefined;
+    // $FlowFixMe
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
   }
 }
 
-export function Type(val) {
+export function Type(val /* : Value */) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';
   }
@@ -159,18 +214,18 @@ export function Type(val) {
     return 'Number';
   }
 
-  if (val instanceof ObjectValue) {
-    return 'Object';
-  }
-
   if (val instanceof SymbolValue) {
     return 'Symbol';
+  }
+
+  if (val instanceof ObjectValue) {
+    return 'Object';
   }
 
   throw new RangeError('Type(val) invalid argument');
 }
 
-export function IsArrayIndex(P) {
+export function IsArrayIndex(P /* : Value */) {
   Assert(IsPropertyKey(P));
   if (typeof P !== 'string') {
     const type = Type(P);
@@ -181,15 +236,27 @@ export function IsArrayIndex(P) {
       P = P.stringValue();
     }
   }
-  const index = Number.parseInt(P, 10);
+  const index = Number.parseInt(P.numberValue(), 10);
   if (index >= 0 && index < (2 ** 32) - 1) {
     return true;
   }
   return false;
 }
 
+/* ::
+declare type PropertyDescriptor = {
+  Value: ?Value,
+  Get: ?FunctionValue,
+  Set: ?FunctionValue,
+  Writable: ?boolean,
+  Enumerable: boolean,
+  Configurable: boolean,
+};
+export type { PropertyDescriptor };
+*/
+
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc) {
+export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {
   if (Desc === undefined) {
     return false;
   }
@@ -202,7 +269,7 @@ export function IsAccessorDescriptor(Desc) {
 }
 
 // 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc) {
+export function IsDataDescriptor(Desc /* : PropertyDescriptor */) {
   if (Desc === undefined) {
     return false;
   }
@@ -215,7 +282,7 @@ export function IsDataDescriptor(Desc) {
 }
 
 // 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc) {
+export function IsGenericDescriptor(Desc /* : PropertyDescriptor */) {
   if (Desc === undefined) {
     return false;
   }
@@ -227,8 +294,12 @@ export function IsGenericDescriptor(Desc) {
   return true;
 }
 
+/* ::
+declare type Hint = 'String' | 'Number';
+*/
+
 // 7.1.1 ToPrimitive
-export function ToPrimitive(input, preferredType) {
+export function ToPrimitive(input /* : Value */, preferredType /* : Hint */) /* : PrimitiveValue */ {
   if (Type(input) === 'Object') {
     let hint;
     if (preferredType === undefined) {
@@ -238,7 +309,7 @@ export function ToPrimitive(input, preferredType) {
     } else if (preferredType === 'Number') {
       hint = NewValue('number');
     }
-    const exoticToPrim = GetMethod(input, input.realm.Intrinsics['@@toPrimitive']);
+    const exoticToPrim = GetMethod(input, surroundingAgent.intrinsic('@@toPrimitive'));
     if (exoticToPrim.value !== undefined) {
       const result = Call(exoticToPrim, input, [hint]);
       if (Type(result) !== 'Object') {
@@ -246,7 +317,7 @@ export function ToPrimitive(input, preferredType) {
       }
       surroundingAgent.Throw('TypeError');
     }
-    if (hint.value === 'default') {
+    if (hint.stringValue() === 'default') {
       hint = NewValue('number');
     }
     return OrdinaryToPrimitive(input, hint);
@@ -255,12 +326,14 @@ export function ToPrimitive(input, preferredType) {
 }
 
 // 7.1.1.1 OrdinaryToPrimitive
-export function OrdinaryToPrimitive(O, hint) {
+export function OrdinaryToPrimitive(
+  O /* : ObjectValue */, hint /* : StringValue */,
+) /* : PrimitiveValue */ {
   Assert(Type(O) === 'Object');
   Assert(Type(hint) === 'String'
-         && (hint.value === 'string' || hint.value === 'number'));
+         && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
   let methodNames;
-  if (hint.value === 'string') {
+  if (hint.stringValue() === 'string') {
     methodNames = [NewValue('toString'), NewValue('valueOf')];
   } else {
     methodNames = [NewValue('valueOf'), NewValue('toString')];
@@ -274,11 +347,50 @@ export function OrdinaryToPrimitive(O, hint) {
       }
     }
   }
-  surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError');
+}
+
+// 7.1.2 ToBoolean
+export function ToBoolean(argument /* : Value */) /* : BooleanValue */ {
+  if (argument instanceof UndefinedValue) {
+    return NewValue(false);
+  }
+
+  if (argument instanceof NullValue) {
+    return NewValue(false);
+  }
+
+  if (argument instanceof BooleanValue) {
+    return argument;
+  }
+
+  if (argument instanceof NumberValue) {
+    if (argument.numberValue() === 0 || argument.isNaN()) {
+      return NewValue(false);
+    }
+    return NewValue(true);
+  }
+
+  if (argument instanceof StringValue) {
+    if (argument.stringValue().length > 0) {
+      return NewValue(true);
+    }
+    return NewValue(false);
+  }
+
+  if (argument instanceof SymbolValue) {
+    return NewValue(true);
+  }
+
+  if (argument instanceof ObjectValue) {
+    return NewValue(true);
+  }
+
+  throw new RangeError('ToBoolean(argument) unknown type');
 }
 
 // 7.1.3 ToNumber
-export function ToNumber(argument) {
+export function ToNumber(argument /* : Value */) /* : NumberValue */ {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -286,11 +398,10 @@ export function ToNumber(argument) {
     case 'Null':
       return NewValue(0);
     case 'Boolean':
-      if (argument.value) {
+      if (argument.isTrue()) {
         return NewValue(1);
       }
       return NewValue(0);
-
     case 'Number':
       return argument;
     case 'Symbol':
@@ -305,36 +416,36 @@ export function ToNumber(argument) {
 }
 
 // 7.1.4 ToInteger
-export function ToInteger(argument) {
+export function ToInteger(argument /* : Value */) {
   const number = ToNumber(argument);
-  if (Number.isNaN(number.value)) {
+  if (number.isNaN()) {
     return NewValue(0);
   }
-  if (number.value === 0 // || number.value === -0
-      || number.value === Infinity
-      || number.value === -Infinity) {
+  if (number.numberValue() === 0 // || number.value === -0
+      || number.numberValue() === Infinity
+      || number.numberValue() === -Infinity) {
     return number;
   }
   return NewValue(
-    Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1,
+    Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1,
   );
 }
 
 // 7.1.6 ToUint32
-export function ToUint32(argument) {
+export function ToUint32(argument /* : Value */) {
   const number = ToNumber(argument);
-  if (number.value === 0 // || number.value === -0
-      || number.value === Infinity
-      || number.value === -Infinity) {
+  if (number.numberValue() === 0 // || number.value === -0
+      || number.numberValue() === Infinity
+      || number.numberValue() === -Infinity) {
     return NewValue(0);
   }
-  const int = Math.floor(Math.abs(number.value)) * number.value > 0 ? 1 : -1;
+  const int = Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1;
   const int32bit = int % (2 ** 32);
   return NewValue(int32bit);
 }
 
 // 7.1.12 ToString
-export function ToString(argument) {
+export function ToString(argument /* : Value */) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -342,7 +453,7 @@ export function ToString(argument) {
     case 'Null':
       return NewValue('null');
     case 'Boolean':
-      return NewValue(argument.value ? 'true' : 'false');
+      return NewValue(argument.isTrue() ? 'true' : 'false');
     case 'Number':
       return NumberToString(argument);
     case 'String':
@@ -359,14 +470,17 @@ export function ToString(argument) {
 }
 
 // 7.1.12.1 NumberToString
-export function NumberToString(m) {
-  if (Number.isNaN(m.value)) {
+export function NumberToString(m /* : NumberValue */) {
+  if (m.isNaN()) {
     return NewValue('NaN');
+  }
+  if (m.numberValue() === 0) {
+    return NewValue('0');
   }
 }
 
 // 7.1.13 ToObject
-export function ToObject(argument) {
+export function ToObject(argument /* : Value */) /* : ObjectValue */{
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -374,12 +488,12 @@ export function ToObject(argument) {
     case 'Null':
       return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
-      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%BooleanPrototype%']);
+      const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%BooleanPrototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%NumberPrototype%']);
+      const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%NumberPrototype%'));
       obj.NumberData = argument;
       return obj;
     }
@@ -401,7 +515,7 @@ export function ToObject(argument) {
 }
 
 // 7.1.14 ToPropertyKey
-export function ToPropertyKey(argument) {
+export function ToPropertyKey(argument /* : Value */) {
   const key = ToPrimitive(argument, 'String');
   if (Type(key) === 'Symbol') {
     return key;
@@ -410,21 +524,21 @@ export function ToPropertyKey(argument) {
 }
 
 // 7.1.15 ToLength
-export function ToLength(argument) {
+export function ToLength(argument /* : Value */) {
   const len = ToInteger(argument);
-  if (len.value <= 0) {
+  if (len.numberValue() <= 0) {
     return NewValue(0);
   }
-  return Math.min(len, (2 ** 53) - 1);
+  return NewValue(Math.min(len.numberValue(), (2 ** 53) - 1));
 }
 
 // 7.2.2 IsArray
-export function IsArray(argument) {
+export function IsArray(argument /* : Value */) {
   if (Type(argument) !== 'Object') {
-    return false;
+    return NewValue(false);
   }
   if (argument instanceof ArrayValue) {
-    return true;
+    return NewValue(true);
   }
   if (argument instanceof ProxyValue) {
     if (argument.ProxyHandler.isNull()) {
@@ -433,11 +547,11 @@ export function IsArray(argument) {
     const target = argument.ProxyTarget;
     return IsArray(target);
   }
-  return false;
+  return NewValue(false);
 }
 
 // 7.2.3 IsCallable
-export function IsCallable(argument) {
+export function IsCallable(argument /* : Value */) {
   if (Type(argument) !== 'Object') {
     return false;
   }
@@ -448,7 +562,7 @@ export function IsCallable(argument) {
 }
 
 // 7.2.4 IsConstructor
-export function IsConstructor(argument) {
+export function IsConstructor(argument /* : Value */) {
   if (Type(argument) !== 'Object') {
     return false;
   }
@@ -459,28 +573,28 @@ export function IsConstructor(argument) {
 }
 
 // 7.2.5 IsExtensible
-export function IsExtensible(O) {
+export function IsExtensible(O /* : ObjectValue */) {
   Assert(Type(O) === 'Object');
   return O.IsExtensible();
 }
 
 // 7.2.10 SameValue
-export function SameValue(x, y) {
+export function SameValue(x /* : Value */, y /* : Value */) {
   if (Type(x) !== Type(y)) {
     return false;
   }
 
   if (Type(x) === 'Number') {
-    if (Number.isNaN(x.value) && Number.isNaN(y.value)) {
+    if (x.isNaN() && y.isNaN()) {
       return true;
     }
-    if (Object.is(x.value, 0) && Object.is(y.value, -0)) {
+    if (Object.is(x.numberValue(), 0) && Object.is(y.numberValue(), -0)) {
       return false;
     }
-    if (Object.is(x.value, -0) && Object.is(y.value, 0)) {
+    if (Object.is(x.numberValue(), -0) && Object.is(y.numberValue(), 0)) {
       return false;
     }
-    if (x.value === y.value) {
+    if (x.numberValue() === y.numberValue()) {
       return true;
     }
     return false;
@@ -524,7 +638,7 @@ export function SameValueNonNumber(x, y) {
 }
 
 // 7.2.7 IsPropertyKey
-export function IsPropertyKey(argument) {
+export function IsPropertyKey(argument /* : Value */) {
   if (Type(argument) === 'String') {
     return true;
   }
@@ -535,7 +649,7 @@ export function IsPropertyKey(argument) {
 }
 
 // 7.2.22 GetFunctionRealm
-export function GetFunctionRealm(obj) {
+export function GetFunctionRealm(obj /* : Value */) {
   Assert(IsCallable(obj));
   if ('Realm' in obj) {
     return obj.Realm;
@@ -560,14 +674,14 @@ export function GetFunctionRealm(obj) {
 }
 
 // 7.3.1 Get
-export function Get(O, P) {
+export function Get(O /* : ObjectValue */, P /* : Value */) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return O.Get(P, O);
 }
 
 // 7.3.2 GetV
-export function GetV(V, P) {
+export function GetV(V /* : Value */, P /* : Value */) {
   Assert(IsPropertyKey(P));
   const O = ToObject(V);
   return O.Get(V, P);
@@ -623,7 +737,7 @@ export function HasOwnProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const desc = O.GetOwnProperty(P);
-  if (desc === undefined) {
+  if (desc.isUndefined()) {
     return false;
   }
   return true;
@@ -912,7 +1026,7 @@ export function SetDefaultGlobalBindings(realmRec) {
 }
 
 // 8.4.1 EnqueueJob
-export function EnqueueJob(queueName, job, args) {
+export function EnqueueJob(queueName /* : string */, job /* : function */, args /* : any[] */) {
   const callerContext = surroundingAgent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
   const callerScriptOrModule = callerContext.ScriptOrModule;
@@ -995,12 +1109,12 @@ export function AgentSignifier() {
 }
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
-export function OrdinaryGetPrototypeOf(O) {
+export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {
   return O.Prototype;
 }
 
 // 9.1.2.1 OrdinarySetPrototypeOf
-export function OrdinarySetPrototypeOf(O, V) {
+export function OrdinarySetPrototypeOf(O /* : ObjectValue */, V /* : ObjectValue | NullValue */) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
 
   const extensible = O.Extensible;
@@ -1014,7 +1128,7 @@ export function OrdinarySetPrototypeOf(O, V) {
   let p = V;
   let done = false;
   while (done === false) {
-    if (p === null) {
+    if (p.isNull()) {
       done = true;
     } else if (SameValue(p, O) === true) {
       return false;
@@ -1029,18 +1143,18 @@ export function OrdinarySetPrototypeOf(O, V) {
 }
 
 // 9.1.3.1 OrdinaryIsExtensible
-export function OrdinaryIsExtensible(O) {
+export function OrdinaryIsExtensible(O /* : ObjectValue */) {
   return O.Extensible;
 }
 
 // 9.1.4.1 OrdinaryPreventExtensions
-export function OrdinaryPreventExtensions(O) {
+export function OrdinaryPreventExtensions(O /* : ObjectValue */) {
   O.Extensible = false;
   return true;
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
-export function OrdinaryGetOwnProperty(O, P) {
+export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : Value */) {
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
@@ -1347,7 +1461,12 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
 }
 
 // 9.3.3 CreateBuiltinFunction
-export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype) {
+export function CreateBuiltinFunction(
+  steps /* : BuiltinFunctionCallback */,
+  internalSlotsList /* : string[] */,
+  realm /* : ?Realm */,
+  prototype /* : ?ObjectValue | ?NullValue */,
+) /* : BuiltinFunctionValue */ {
   if (!realm) {
     // If realm is not present, set realm to the current Realm Record.
     realm = surroundingAgent.currentRealmRecord;
@@ -1607,40 +1726,4 @@ export function Suspend(WL, W) {
   // EnterCriticalSection(WL);
   // If W was woken explicitly by another agent calling WakeWaiter(WL, W), return true.
   return false;
-}
-
-export function ToBoolean(argument) {
-  if (argument instanceof UndefinedValue) {
-    return false;
-  }
-
-  if (argument instanceof NullValue) {
-    return false;
-  }
-
-  if (argument instanceof BooleanValue) {
-    return argument;
-  }
-
-  if (argument instanceof NumberValue) {
-    if (argument.value === 0 || argument.isNaN()) {
-      return false;
-    }
-    return true;
-  }
-
-  if (argument instanceof StringValue) {
-    if (argument.value.length > 0) {
-      return true;
-    }
-    return false;
-  }
-
-  if (argument instanceof SymbolValue) {
-    return true;
-  }
-
-  if (argument instanceof ObjectValue) {
-    return true;
-  }
 }
