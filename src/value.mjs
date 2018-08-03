@@ -1,3 +1,12 @@
+/* @flow */
+
+/* ::
+import type {
+  Realm,
+  PropertyDescriptor,
+} from './engine.mjs';
+*/
+
 import {
   surroundingAgent,
   ExecutionContext,
@@ -35,12 +44,9 @@ import {
 } from './engine.mjs';
 
 export class Value {
-  constructor(realm) {
+  /* :: realm: Realm; */
+  constructor(realm /* : Realm */) {
     this.realm = realm;
-  }
-
-  get value() {
-    throw new Error();
   }
 
   isUndefined() {
@@ -48,6 +54,14 @@ export class Value {
   }
 
   isNull() {
+    return false;
+  }
+
+  isFalse() {
+    return false;
+  }
+
+  isTrue() {
     return false;
   }
 }
@@ -67,18 +81,24 @@ export class NullValue extends PrimitiveValue {
 }
 
 export class BooleanValue extends PrimitiveValue {
-  constructor(realm, boolean) {
+  /* :: boolean: Boolean */
+  constructor(realm /* : Realm */, boolean /* : Boolean */) {
     super(realm);
     this.boolean = boolean;
   }
 
-  booleanValue() {
-    return this.boolean;
+  isTrue() {
+    return this.boolean === true;
+  }
+
+  isFalse() {
+    return this.boolean === false;
   }
 }
 
 export class NumberValue extends PrimitiveValue {
-  constructor(realm, number) {
+  /* :: number: Number */
+  constructor(realm /* : Realm */, number /* : Number */) {
     super(realm);
     this.number = number;
   }
@@ -86,10 +106,15 @@ export class NumberValue extends PrimitiveValue {
   numberValue() {
     return this.number;
   }
+
+  isNaN() {
+    return Number.isNaN(this.number);
+  }
 }
 
 export class StringValue extends PrimitiveValue {
-  constructor(realm, string) {
+  /* :: string: String */
+  constructor(realm /* : Realm */, string /* : String */) {
     super(realm);
     this.string = string;
   }
@@ -100,13 +125,14 @@ export class StringValue extends PrimitiveValue {
 }
 
 export class SymbolValue extends PrimitiveValue {
-  constructor(realm, Description) {
+  /* :: Description: UndefinedValue|StringValue */
+  constructor(realm /* : Realm */, Description /* : StringValue */) {
     super(realm);
     this.Description = Description;
   }
 }
 
-class InternalPropertyMap extends Map {
+class InternalPropertyMap extends Map /* <Value, Value> */ {
   get(name) {
     if (name instanceof StringValue) {
       name = name.stringValue();
@@ -140,10 +166,17 @@ class InternalPropertyMap extends Map {
 }
 
 export class ObjectValue extends PrimitiveValue {
-  constructor(realm, Prototype) {
+  /* ::
+  Prototype: NullValue | ObjectValue
+  Extensible: boolean
+  IsClassPrototype: boolean
+  properties: InternalPropertyMap
+  */
+  constructor(realm /* : Realm */, Prototype /* : ?NullValue | ?ObjectValue */) {
     super(realm);
 
     this.Prototype = Prototype
+      // $FlowFixMe
       || realm.Intrinsics['%ObjectPrototype%']
       || new NullValue(realm);
 
@@ -156,7 +189,7 @@ export class ObjectValue extends PrimitiveValue {
     return OrdinaryGetPrototypeOf(this);
   }
 
-  SetPrototypeOf(V) {
+  SetPrototypeOf(V /* : NullValue | ObjectValue */) {
     return OrdinarySetPrototypeOf(this, V);
   }
 
@@ -168,27 +201,27 @@ export class ObjectValue extends PrimitiveValue {
     return OrdinaryPreventExtensions(this);
   }
 
-  GetOwnProperty(P) {
+  GetOwnProperty(P /* : Value */) {
     return OrdinaryGetOwnProperty(this, P);
   }
 
-  DefineOwnProperty(P, Desc) {
+  DefineOwnProperty(P /* : Value */, Desc /* : PropertyDescriptor */) {
     return OrdinaryDefineOwnProperty(this, P, Desc);
   }
 
-  HasProperty(P) {
+  HasProperty(P /* : Value */) {
     return OrdinaryHasProperty(this, P);
   }
 
-  Get(P, Receiver) {
+  Get(P /* : Value */, Receiver /* : Value */) {
     return OrdinaryGet(this, P, Receiver);
   }
 
-  Set(P, V, Receiver) {
+  Set(P /* : Value */, V /* : Value */, Receiver /* : Value */) {
     return OrdinarySet(this, P, V, Receiver);
   }
 
-  Delete(P) {
+  Delete(P /* : Value */) {
     return OrdinaryDelete(this, P);
   }
 
@@ -198,7 +231,7 @@ export class ObjectValue extends PrimitiveValue {
 }
 
 export class ArrayValue extends ObjectValue {
-  DefineOwnProperty(P, Desc) {
+  DefineOwnProperty(P /* : Value */, Desc /* : PropertyDescriptor */) {
     const A = this;
 
     Assert(IsPropertyKey(P));
@@ -210,15 +243,15 @@ export class ArrayValue extends ObjectValue {
       Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = ToUint32(P);
-      if (index.value >= oldLen.value && oldLenDesc.Writable === false) {
+      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
         return false;
       }
       const succeeded = OrdinaryDefineOwnProperty(A, P, Desc);
       if (succeeded === false) {
         return false;
       }
-      if (index.value >= oldLen.value) {
-        oldLenDesc.Value = New(index + 1);
+      if (index.numberValue() >= oldLen.numberValue()) {
+        oldLenDesc.Value = New(index.numberValue() + 1);
         const succeeded = OrdinaryDefineOwnProperty(A, 'length', oldLenDesc);
         Assert(succeeded === true);
       }
@@ -228,15 +261,30 @@ export class ArrayValue extends ObjectValue {
   }
 }
 
-export class FunctionValue extends ObjectValue {}
+export class FunctionValue extends ObjectValue {
+  /* ::
+  Realm: Realm
+  ScriptOrModule: ?ScriptOrModule
+  */
+}
 
-export class BuiltInFunctionValue extends FunctionValue {
-  constructor(realm, nativeFunction) {
+/* ::
+declare type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], contextInfo: {
+  thisArgument: Value,
+  NewTarget: Value,
+}) => Value;
+*/
+
+export class BuiltinFunctionValue extends FunctionValue {
+  /* ::
+  nativeFunction: BuiltinFunctionCallback
+  */
+  constructor(realm /* : Realm */, nativeFunction /* : BuiltinFunctionCallback */) {
     super(realm);
     this.nativeFunction = nativeFunction;
   }
 
-  Call(thisArgument, argumentsList) {
+  Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
     const F = this;
 
     const callerContext = surroundingAgent.runningExecutionContext;
@@ -250,14 +298,14 @@ export class BuiltInFunctionValue extends FunctionValue {
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument,
-      NewTarget: undefined,
+      NewTarget: New(undefined),
     });
     surroundingAgent.executionContextStack.pop();
 
     return result;
   }
 
-  Construct(argumentsList, newTarget) {
+  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
     const F = this;
 
     const callerContext = surroundingAgent.runningExecutionContext;
@@ -270,7 +318,7 @@ export class BuiltInFunctionValue extends FunctionValue {
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
-      thisArgument: undefined,
+      thisArgument: New(undefined),
       NewTarget: newTarget,
     });
     surroundingAgent.executionContextStack.pop();
@@ -279,23 +327,31 @@ export class BuiltInFunctionValue extends FunctionValue {
 }
 
 export class ProxyValue extends ObjectValue {
-  constructor(realm) {
+  /* ::
+  ProxyTarget: ObjectValue
+  ProxyHandler: NullValue | ObjectValue
+  */
+  constructor(
+    realm /* : Realm */,
+    ProxyTarget /* : ObjectValue */,
+    ProxyHandler /* : NullValue | ObjectValue */,
+  ) {
     super(realm);
 
-    this.ProxyTarget = undefined;
-    this.ProxyHandler = undefined;
+    this.ProxyTarget = ProxyTarget;
+    this.ProxyHandler = ProxyHandler;
   }
 
   GetPrototypeOf() {
     const O = this;
     const handler = O.ProxyHandler;
-    if (handler.value === null) {
+    if (handler.isNull()) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'getPrototypeOf');
-    if (trap.value === undefined) {
+    if (trap.isUndefined()) {
       return target.GetPrototypeOf();
     }
     const handlerProto = Call(trap, handler, [target]);
@@ -313,22 +369,22 @@ export class ProxyValue extends ObjectValue {
     return handlerProto;
   }
 
-  SetPrototypeOf(V) {
+  SetPrototypeOf(V /* : NullValue | ObjectValue */) {
     const O = this;
 
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
-    if (handler.value === null) {
+    if (handler.isNull()) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'setPrototypeOf');
-    if (trap.value === undefined) {
+    if (trap.isUndefined()) {
       return target.SetPrototypeOf(V);
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, V]));
-    if (booleanTrapResult.value === false) {
+    if (booleanTrapResult.isFalse()) {
       return false;
     }
     const extensibleTarget = IsExtensible(target);
@@ -346,13 +402,13 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler.value === null) {
+    if (handler.isNull()) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'isExtensible');
-    if (trap.value === undefined) {
+    if (trap.isUndefined()) {
       return target.IsExtensible();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
@@ -367,17 +423,17 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler.value === null) {
+    if (handler.isNull()) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'PreventExtensions');
-    if (trap.value === undefined) {
+    if (trap.isUndefined()) {
       return target.PreventExtensions();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
-    if (booleanTrapResult.value === true) {
+    if (booleanTrapResult.isTrue()) {
       const targetIsExtensible = target.IsExtensible();
       if (targetIsExtensible === true) {
         surroundingAgent.Throw('TypeError');
@@ -386,33 +442,74 @@ export class ProxyValue extends ObjectValue {
     return booleanTrapResult;
   }
 
-  GetOwnProperty(P) {}
+  GetOwnProperty(P /* : Value */) {}
 
-  DefineOwnProperty(P, Desc) {}
+  DefineOwnProperty(P /* : Value */, Desc /* : PropertyDescriptor */) {}
 
-  HasProperty(P) {}
+  HasProperty(P /* : Value */) {}
 
-  Get(P, Receiver) {}
+  Get(P /* : Value */, Receiver /* : Value */) {}
 
-  Set(P, V, Receiver) {}
+  Set(P /* : Value */, V /* : Value */, Receiver /* : Value */) {}
 
-  Delete(P) {}
+  Delete(P /* : Value */) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (handler.isNull()) {
+      surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'deleteProperty');
+    if (trap.isUndefined()) {
+      return target.Delete(P);
+    }
+    const booleanTrapResult = ToBoolean(Call(trap, handler, [target, P]));
+    if (booleanTrapResult.isFalse()) {
+      return New(false);
+    }
+    const targetDesc = target.GetOwnProperty(P);
+    if (targetDesc.isUndefined()) {
+      return New(true);
+    }
+    if (targetDesc.Configurable === false) {
+      surroundingAgent.Throw('TypeError');
+    }
+    return New(true);
+  }
 
   OwnPropertyKeys() {}
 
-  Call(thisArgument, argumentsList) {}
-
-  Construct(argumentsList, newTarget) {
+  Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler.value === null) {
+    if (handler.isNull()) {
+      surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = GetMethod(handler, 'apply');
+    if (trap.isUndefined()) {
+      return Call(target, thisArgument, argumentsList);
+    }
+    const argArray = CreateArrayFromList(argumentsList);
+    return Call(trap, handler, [target, thisArgument, argArray]);
+  }
+
+  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
+    const O = this;
+
+    const handler = O.ProxyHandler;
+    if (handler.isNull()) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'construct');
-    if (trap.value === undefined) {
+    if (trap.isUndefined()) {
       Assert(IsConstructor(target));
       return Construct(target, argumentsList, newTarget);
     }
@@ -425,7 +522,19 @@ export class ProxyValue extends ObjectValue {
   }
 }
 
-export function New(value, realm = surroundingAgent.currentRealmRecord) {
+/* ::
+type symbol = Symbol;
+
+declare function New(null, ?Realm): NullValue;
+declare function New(void, ?Realm): UndefinedValue;
+declare function New(string, ?Realm): StringValue;
+declare function New(number, ?Realm): NumberValue;
+declare function New(boolean, ?Realm): BooleanValue;
+declare function New(symbol, ?Realm): SymbolValue;
+declare function New(function, ?Realm): FunctionValue;
+*/
+
+export function New(value, realm) {
   if (value === null) {
     return new NullValue(realm);
   }
@@ -446,12 +555,13 @@ export function New(value, realm = surroundingAgent.currentRealmRecord) {
     return new BooleanValue(realm, value);
   }
 
+  // $FlowFixMe 'symbol' isn't valid for typeof
   if (typeof value === 'symbol') {
     return new SymbolValue(realm, value);
   }
 
   if (typeof value === 'function') {
-    return new BuiltInFunctionValue(realm, value);
+    return new BuiltinFunctionValue(realm, value);
   }
 
   throw new RangeError('NewValue type out of range');

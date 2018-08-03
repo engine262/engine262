@@ -1,6 +1,8 @@
 import CST from 'cst';
 
-export function ParseScript(sourceText, realm, hostDefined) {
+export function ParseScript(
+  sourceText /* : string */, realm /* : Realm */, hostDefined /* :?Object */,
+) {
   const parser = new CST.Parser({
     sourceType: 'script',
     experimentalFeatures: {
