@@ -169,10 +169,9 @@ export function GetFunctionRealm(obj /* : FunctionValue */) {
     if (obj.ProxyHandler.isNull()) {
       surroundingAgent.Throw('TypeError');
       return;
-    } else {
-      const proxyTarget = obj.ProxyTarget;
-      return GetFunctionRealm(proxyTarget);
     }
+    const proxyTarget = obj.ProxyTarget;
+    return GetFunctionRealm(proxyTarget);
   }
 
   return surroundingAgent.currentRealmRecord;

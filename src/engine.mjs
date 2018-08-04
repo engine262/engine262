@@ -2,6 +2,7 @@
 
 /* ::
 import type {
+  Value,
   PrimitiveValue,
   FunctionValue,
 } from './value.mjs';
@@ -9,6 +10,7 @@ import type {
 
 import {
   SymbolValue,
+  UndefinedValue,
   New as NewValue,
   Type,
 } from './value.mjs';
@@ -191,18 +193,13 @@ export class ExecutionContext {
   }
 }
 
-export function IsArrayIndex(P /* : Value */) {
+export function isArrayIndex(P /* : Value */) {
   Assert(IsPropertyKey(P));
-  if (typeof P !== 'string') {
-    const type = Type(P);
-    if (type === 'Symbol') {
-      return false;
-    }
-    if (type === 'String') {
-      P = P.stringValue();
-    }
+  const type = Type(P);
+  if (type === 'Symbol') {
+    return false;
   }
-  const index = Number.parseInt(P.numberValue(), 10);
+  const index = Number.parseInt(P.stringValue(), 10);
   if (index >= 0 && index < (2 ** 32) - 1) {
     return true;
   }
@@ -418,12 +415,12 @@ function CreateIntrinsics(realmRec) {
 
 // 8.2.3 SetRealmGlobalObject
 function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
-  if (globalObj.isUndefined()) {
+  if (globalObj instanceof UndefinedValue) {
     const intrinsics = realmRec.Intrinsics;
     globalObj = ObjectCreate(intrinsics.ObjectPrototype);
   }
 
-  if (thisValue.isUndefined()) {
+  if (thisValue instanceof UndefinedValue) {
     thisValue = globalObj;
   }
 
@@ -576,7 +573,7 @@ export function ScriptEvaluation(scriptRecord) {
     result = Evaluate(scriptBody, globalEnv);
   }
 
-  if (result.Type === 'normal' && result.Value.isUndefined()) {
+  if (result.Type === 'normal' && result.Value instanceof UndefinedValue) {
     result = new NormalCompletion(NewValue(undefined));
   }
   // Suspend scriptCtx
@@ -665,20 +662,20 @@ export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
 }
 
 // 16.1 HostReportErrors
-export function HostReportErrors(errorList) {
+export function HostReportErrors(errorList /* : any[] */) {
   errorList.forEach((error) => {
     console.log(error);
   });
 }
 
 // 19.4.3.2.1 SymbolDescriptiveString
-export function SymbolDescriptiveString(sym) {
+export function SymbolDescriptiveString(sym /* : SymbolValue */) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
-  if (desc.isUndefined()) {
+  if (desc instanceof UndefinedValue) {
     desc = NewValue('');
   }
-  return NewValue(sym.realm, `Symbol(${desc.value})`);
+  return NewValue(`Symbol(${desc.value})`);
 }
 
 // 22.1.3.1 IsConcatSpreadable

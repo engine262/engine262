@@ -5,6 +5,7 @@ import type {
   BooleanValue,
   PropertyKey,
   Value,
+  BuiltinFunctionCallback,
 } from '../value.mjs';
 import type {
   PropertyDescriptor,
@@ -75,13 +76,13 @@ export function OrdinarySetPrototypeOf(O /* : ObjectValue */, V /* : ObjectValue
 
 // 9.1.3.1 OrdinaryIsExtensible
 export function OrdinaryIsExtensible(O /* : ObjectValue */) {
-  return O.Extensible;
+  return NewValue(O.Extensible);
 }
 
 // 9.1.4.1 OrdinaryPreventExtensions
 export function OrdinaryPreventExtensions(O /* : ObjectValue */) {
   O.Extensible = false;
-  return true;
+  return NewValue(true);
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
@@ -113,14 +114,20 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
 export function OrdinaryDefineOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */, Desc /* : PropertyDescriptor */) {
   const current = O.GetOwnProperty(P);
   const extensible = IsExtensible(O);
-  return ValidateAndApplyPropertyDescriptor(O, P, NewValue(extensible), Desc, current);
+  return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
 }
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-export function ValidateAndApplyPropertyDescriptor(O /* : UndefinedValue | ObjectValue */, P /* : UndefinedValue | PropertyKey */, extensible /* : BooleanValue */, Desc /* : PropertyDescriptor */, current /* : PropertyDescriptor */) {
-  Assert(O.isUndefined() || IsPropertyKey(P));
+export function ValidateAndApplyPropertyDescriptor(
+  O /* : UndefinedValue | ObjectValue */,
+  P /* : UndefinedValue | PropertyKey */,
+  extensible /* : BooleanValue */,
+  Desc /* : PropertyDescriptor */,
+  current /* : PropertyDescriptor */,
+) {
+  Assert(O instanceof UndefinedValue || IsPropertyKey(P));
 
-  if (current.isUndefined()) {
+  if (current instanceof UndefinedValue) {
     if (extensible.isFalse()) {
       return false;
     }
@@ -226,7 +233,7 @@ export function OrdinaryHasProperty(O /* : ObjectValue */, P /* : PropertyKey */
   Assert(IsPropertyKey(P));
 
   const hasOwn = O.GetOwnProperty(P);
-  if (!hasOwn.isUndefined()) {
+  if (!(hasOwn instanceof UndefinedValue)) {
     return true;
   }
   const parent = O.GetPrototypeOf();
@@ -253,7 +260,7 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
   }
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
-  if (getter.isUndefined()) {
+  if (getter instanceof UndefinedValue) {
     return NewValue(undefined);
   }
   return Call(getter, Receiver);
@@ -301,9 +308,8 @@ export function OrdinarySetWithOwnDescriptor(O /* : ObjectValue */, P /* : Prope
       }
       const valueDesc = { Value: V };
       return Receiver.DefineOwnProperty(P, valueDesc);
-    } else {
-      return CreateDataProperty(Receiver, P, V);
     }
+    return CreateDataProperty(Receiver, P, V);
   }
 
   Assert(IsAccessorDescriptor(ownDesc));
@@ -319,7 +325,7 @@ export function OrdinarySetWithOwnDescriptor(O /* : ObjectValue */, P /* : Prope
 export function OrdinaryDelete(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(IsPropertyKey(P));
   const desc = O.GetOwnProperty(P);
-  if (desc.isUndefined()) {
+  if (desc instanceof UndefinedValue) {
     return true;
   }
   if (desc.Configurable === true) {
@@ -448,7 +454,7 @@ export function ArraySetLength(A, Desc) {
   }
   newLenDesc.Value = newLen;
   const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
-  Assert(!oldLenDesc.isUndefined() && !IsAccessorDescriptor(oldLenDesc));
+  Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
   let oldLen = oldLenDesc.Value;
   if (newLen.value > oldLen.value) {
     return OrdinaryDefineOwnProperty(A, 'length', newLenDesc);

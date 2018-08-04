@@ -33,14 +33,7 @@ export class LexicalEnvironment {
   }
 }
 
-export class EnvironmentRecord {
-  /* ::
-  realm: Realm
-  */
-  constructor(realm /* : Realm */) {
-    this.realm = realm;
-  }
-}
+export class EnvironmentRecord {}
 
 /* ::
 declare type Binding = {
@@ -57,12 +50,12 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   /* ::
   bindings: Map<Value, Binding>
   */
-  constructor(realm /* : Realm */) {
-    super(realm);
+  constructor() {
+    super();
     this.bindings = new Map();
   }
 
-  HasBinding(N) {
+  HasBinding(N /* : Value */) {
     if (this.bindings.has(N)) {
       return true;
     }
@@ -154,8 +147,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 }
 
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
-  constructor(realm, BindingObject) {
-    super(realm);
+  constructor(BindingObject) {
+    super();
     this.bindingObject = BindingObject;
     this.withEnvironment = false;
   }
@@ -173,7 +166,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       return false;
     }
 
-    const unscopables = Get(bindings, this.realm.Intrinsics.SymbolUnscopables);
+    const unscopables = Get(bindings, surroundingAgent.intrinsic('@@unscopables'));
     if (Type(unscopables) === 'Object') {
       const blocked = ToBoolean(Get(unscopables, N));
       if (blocked === true) {
@@ -192,15 +185,18 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   DeclarativeRecord: DeclarativeEnvironmentRecord
   VarNames: string[]
   */
-  constructor(realm /* : Realm */, globalObject /* : ObjectValue */) {
-    super(realm);
-    this.ObjectRecord = new ObjectEnvironmentRecord(this.realm, globalObject);
-    this.GlobalThisValue = globalObject;
-    this.DeclarativeRecord = new DeclarativeEnvironmentRecord(this.realm);
+  constructor() {
+    super();
+    // $FlowFixMe
+    this.ObjectRecord = undefined;
+    // $FlowFixMe
+    this.GlobalThisValue = undefined;
+    // $FlowFixMe
+    this.DeclarativeRecord = undefined;
     this.VarNames = [];
   }
 
-  HasBinding(N) {
+  HasBinding(N /* : Value */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -210,7 +206,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.HasBinding(N);
   }
 
-  CreateMutableBinding(N, D) {
+  CreateMutableBinding(N /* : Value */, D) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -219,7 +215,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateMutableBinding(N, D);
   }
 
-  CreateImmutableBinding(N, S) {
+  CreateImmutableBinding(N /* : Value */, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
