@@ -9,16 +9,18 @@ import type {
 import {
   SymbolValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 
 import {
   surroundingAgent,
+} from '../engine.mjs';
 
-  Type,
+import {
+  CreateBuiltinFunction,
   SameValue,
   ToString,
-  CreateBuiltinFunction,
-} from '../engine.mjs';
+} from '../abstract-ops/all.mjs';
 
 export const GlobalSymbolRegistry = [];
 

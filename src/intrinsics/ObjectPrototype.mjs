@@ -2,26 +2,23 @@ import {
   StringValue,
   ObjectValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 
 import {
   surroundingAgent,
-  Type,
-
-  SameValue,
-
-  IsArray,
-
-  ToPropertyKey,
-  ToObject,
-
-  HasOwnProperty,
-  Get,
-
-  Invoke,
-
-  CreateBuiltinFunction,
 } from '../engine.mjs';
+
+import {
+  CreateBuiltinFunction,
+  Get,
+  HasOwnProperty,
+  Invoke,
+  IsArray,
+  SameValue,
+  ToObject,
+  ToPropertyKey,
+} from '../abstract-ops/all.mjs';
 
 function ObjectHasOwnProperty(realm, [V], { thisArgument }) {
   const P = ToPropertyKey(V);

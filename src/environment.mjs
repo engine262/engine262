@@ -12,15 +12,17 @@ import type {
 */
 
 import {
-  surroundingAgent,
   Type,
-
-  HasProperty,
-  HasOwnProperty,
-  Get,
-
-  ToBoolean,
+} from './value.mjs';
+import {
+  surroundingAgent,
 } from './engine.mjs';
+import {
+  Get,
+  HasOwnProperty,
+  HasProperty,
+  ToBoolean,
+} from './abstract-ops/all.mjs';
 
 export class LexicalEnvironment {
   /* ::

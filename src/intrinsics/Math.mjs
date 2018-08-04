@@ -5,8 +5,11 @@ import {
 
 import {
   surroundingAgent,
-  CreateBuiltinFunction,
 } from '../engine.mjs';
+
+import {
+  CreateBuiltinFunction,
+} from '../abstract-ops/all.mjs';
 
 function MathAbs(realm, [x]) {
   if (Number.isNaN(x.value)) {

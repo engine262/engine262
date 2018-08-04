@@ -1,35 +1,29 @@
 import {
   ArrayValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 
 import {
   surroundingAgent,
-
-  Assert,
-  Type,
-
-  SameValue,
-
-  IsConstructor,
   IsConcatSpreadable,
-  IsArray,
+} from '../engine.mjs';
 
+import {
+  Assert,
+  Construct,
+  CreateBuiltinFunction,
+  CreateDataPropertyOrThrow,
+  Get,
+  GetFunctionRealm,
+  HasProperty,
+  IsArray,
+  IsConstructor,
+  SameValue,
+  ToLength,
   ToObject,
   ToString,
-  ToLength,
-
-  GetFunctionRealm,
-
-  HasProperty,
-  Get,
-
-  Construct,
-
-  CreateDataPropertyOrThrow,
-
-  CreateBuiltinFunction,
-} from '../engine.mjs';
+} from '../abstract-ops/all.mjs';
 
 import { ArrayCreate } from './Array.mjs';
 

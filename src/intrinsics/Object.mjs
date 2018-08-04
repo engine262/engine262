@@ -4,14 +4,14 @@ import {
 
 import {
   surroundingAgent,
-
-  ToObject,
-
-  ObjectCreate,
-
-  OrdinaryCreateFromConstructor,
-  CreateBuiltinFunction,
 } from '../engine.mjs';
+
+import {
+  CreateBuiltinFunction,
+  ObjectCreate,
+  OrdinaryCreateFromConstructor,
+  ToObject,
+} from '../abstract-ops/all.mjs';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
   if (!NewTarget.isUndefined() && NewTarget !== surroundingAgent.activeFunction) {
