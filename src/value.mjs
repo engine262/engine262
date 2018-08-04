@@ -3,15 +3,19 @@
 /* ::
 import type {
   Realm,
-  PropertyDescriptor,
 } from './engine.mjs';
+
+import type {
+  PropertyDescriptor,
+} from './abstract-ops/all.mjs';
 */
 
 import {
   surroundingAgent,
   ExecutionContext,
-  IsArrayIndex,
+  isArrayIndex,
 } from './engine.mjs';
+
 import {
   ArraySetLength,
   Assert,
@@ -44,37 +48,13 @@ export class Value {
   constructor(realm /* : Realm */) {
     this.realm = realm;
   }
-
-  isUndefined() {
-    return false;
-  }
-
-  isNull() {
-    return false;
-  }
-
-  isFalse() {
-    return false;
-  }
-
-  isTrue() {
-    return false;
-  }
 }
 
 export class PrimitiveValue extends Value {}
 
-export class UndefinedValue extends PrimitiveValue {
-  isUndefined() {
-    return true;
-  }
-}
+export class UndefinedValue extends PrimitiveValue {}
 
-export class NullValue extends PrimitiveValue {
-  isNull() {
-    return true;
-  }
-}
+export class NullValue extends PrimitiveValue {}
 
 export class BooleanValue extends PrimitiveValue {
   /* :: boolean: Boolean */
@@ -154,7 +134,7 @@ class InternalPropertyMap extends Map /* <Value, Value> */ {
 
   delete(name) {
     if (name instanceof StringValue) {
-      name = name.value;
+      name = name.stringValue();
     }
 
     return super.delete(name);
@@ -235,7 +215,7 @@ export class ArrayValue extends ObjectValue {
     if (P.stringValue() === 'length') {
       return ArraySetLength(A, Desc);
     }
-    if (IsArrayIndex(P)) {
+    if (isArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
       Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
@@ -276,6 +256,7 @@ declare type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], co
   thisArgument: Value,
   NewTarget: Value,
 }) => Value;
+export type { BuiltinFunctionCallback };
 */
 
 export class BuiltinFunctionValue extends FunctionValue {
@@ -331,7 +312,7 @@ export class BuiltinFunctionValue extends FunctionValue {
 
 export class ProxyValue extends ObjectValue {
   /* ::
-  ProxyTarget: ObjectValue
+  ProxyTarget: ObjectValue | FunctionValue
   ProxyHandler: NullValue | ObjectValue
   */
   constructor(
@@ -343,18 +324,61 @@ export class ProxyValue extends ObjectValue {
 
     this.ProxyTarget = ProxyTarget;
     this.ProxyHandler = ProxyHandler;
+
+    if (ProxyTarget instanceof FunctionValue) {
+      this.Call = (thisArgument /* : Value */, argumentsList /* : Value[] */) => {
+        const O = this;
+
+        const handler = O.ProxyHandler;
+        if (handler instanceof NullValue) {
+          surroundingAgent.Throw('TypeError');
+        }
+        Assert(Type(handler) === 'Object');
+        const target = O.ProxyTarget;
+        const trap = GetMethod(handler, New('apply'));
+        if (trap instanceof UndefinedValue) {
+          return Call(target, thisArgument, argumentsList);
+        }
+        const argArray = CreateArrayFromList(argumentsList);
+        return Call(trap, handler, [target, thisArgument, argArray]);
+      };
+    }
+
+    if ('Construct' in ProxyTarget) {
+      this.Construct = (argumentsList /* : Value[] */, newTarget /* : Value */) => {
+        const O = this;
+
+        const handler = O.ProxyHandler;
+        if (handler instanceof NullValue) {
+          surroundingAgent.Throw('TypeError');
+        }
+        Assert(Type(handler) === 'Object');
+        const target = O.ProxyTarget;
+        const trap = GetMethod(handler, New('construct'));
+        if (trap instanceof UndefinedValue) {
+          Assert(IsConstructor(target));
+          return Construct(target, argumentsList, newTarget);
+        }
+        const argArray = CreateArrayFromList(argumentsList);
+        const newObj = Call(trap, handler, [target, argArray, newTarget]);
+        if (Type(newObj) !== 'Object') {
+          surroundingAgent.Throw('TypeError');
+        }
+        return newObj;
+      };
+    }
   }
 
   GetPrototypeOf() {
     const O = this;
     const handler = O.ProxyHandler;
-    if (handler.isNull()) {
+    if (handler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, 'getPrototypeOf');
-    if (trap.isUndefined()) {
+    if (trap instanceof UndefinedValue) {
       return target.GetPrototypeOf();
     }
     const handlerProto = Call(trap, handler, [target]);
@@ -377,13 +401,13 @@ export class ProxyValue extends ObjectValue {
 
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
-    if (handler.isNull()) {
+    if (handler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'setPrototypeOf');
-    if (trap.isUndefined()) {
+    const trap = GetMethod(handler, New('setPrototypeOf'));
+    if (trap instanceof UndefinedValue) {
       return target.SetPrototypeOf(V);
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, V]));
@@ -405,13 +429,13 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler.isNull()) {
+    if (handler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'isExtensible');
-    if (trap.isUndefined()) {
+    const trap = GetMethod(handler, New('isExtensible'));
+    if (trap instanceof UndefinedValue) {
       return target.IsExtensible();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
@@ -426,13 +450,13 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler.isNull()) {
+    if (handler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'PreventExtensions');
-    if (trap.isUndefined()) {
+    const trap = GetMethod(handler, New('PreventExtensions'));
+    if (trap instanceof UndefinedValue) {
       return target.PreventExtensions();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
@@ -460,13 +484,13 @@ export class ProxyValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (handler.isNull()) {
+    if (handler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'deleteProperty');
-    if (trap.isUndefined()) {
+    const trap = GetMethod(handler, New('deleteProperty'));
+    if (trap instanceof UndefinedValue) {
       return target.Delete(P);
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, P]));
@@ -474,7 +498,7 @@ export class ProxyValue extends ObjectValue {
       return New(false);
     }
     const targetDesc = target.GetOwnProperty(P);
-    if (targetDesc.isUndefined()) {
+    if (targetDesc instanceof UndefinedValue) {
       return New(true);
     }
     if (targetDesc.Configurable === false) {
@@ -484,45 +508,6 @@ export class ProxyValue extends ObjectValue {
   }
 
   OwnPropertyKeys() {}
-
-  Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
-    const O = this;
-
-    const handler = O.ProxyHandler;
-    if (handler.isNull()) {
-      surroundingAgent.Throw('TypeError');
-    }
-    Assert(Type(handler) === 'Object');
-    const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'apply');
-    if (trap.isUndefined()) {
-      return Call(target, thisArgument, argumentsList);
-    }
-    const argArray = CreateArrayFromList(argumentsList);
-    return Call(trap, handler, [target, thisArgument, argArray]);
-  }
-
-  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
-    const O = this;
-
-    const handler = O.ProxyHandler;
-    if (handler.isNull()) {
-      surroundingAgent.Throw('TypeError');
-    }
-    Assert(Type(handler) === 'Object');
-    const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'construct');
-    if (trap.isUndefined()) {
-      Assert(IsConstructor(target));
-      return Construct(target, argumentsList, newTarget);
-    }
-    const argArray = CreateArrayFromList(argumentsList);
-    const newObj = Call(trap, handler, [target, argArray, newTarget]);
-    if (Type(newObj) !== 'Object') {
-      surroundingAgent.Throw('TypeError');
-    }
-    return newObj;
-  }
 }
 
 /* ::
@@ -570,7 +555,18 @@ export function New(value, realm) {
   throw new RangeError('NewValue type out of range');
 }
 
-export function Type(val /* : Value */) {
+/* ::
+declare function Type(UndefinedValue): 'Undefined';
+declare function Type(NullValue): 'Null';
+declare function Type(BooleanValue): 'Boolean';
+declare function Type(StringValue): 'String';
+declare function Type(NumberValue): 'Number';
+declare function Type(SymbolValue): 'Symbol';
+declare function Type(ObjectValue): 'Object';
+declare function Type(Value): string;
+*/
+
+export function Type(val) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';
   }

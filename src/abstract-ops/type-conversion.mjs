@@ -1,5 +1,12 @@
 /* @flow */
 
+/* ::
+import type {
+  Value,
+  PrimitiveValue,
+} from '../value.mjs';
+*/
+
 import {
   UndefinedValue,
   NullValue,
@@ -11,9 +18,11 @@ import {
   New as NewValue,
   Type,
 } from '../value.mjs';
+
 import {
   surroundingAgent,
 } from '../engine.mjs';
+
 import {
   Assert,
   Call,

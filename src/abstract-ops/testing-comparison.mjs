@@ -1,14 +1,24 @@
 /* @flow */
 
+/* ::
+import type {
+  Value,
+  ObjectValue,
+} from '../value.mjs';
+*/
+
 import {
   Type,
+  NullValue,
   ArrayValue,
   ProxyValue,
   New as NewValue,
 } from '../value.mjs';
+
 import {
   surroundingAgent,
 } from '../engine.mjs';
+
 import {
   Assert,
 } from './all.mjs';
@@ -22,7 +32,7 @@ export function IsArray(argument /* : Value */) {
     return NewValue(true);
   }
   if (argument instanceof ProxyValue) {
-    if (argument.ProxyHandler.isNull()) {
+    if (argument.ProxyHandler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
     }
     const target = argument.ProxyTarget;
@@ -85,7 +95,7 @@ export function SameValue(x /* : Value */, y /* : Value */) {
 }
 
 // 7.2.12 SameValueNonNumber
-export function SameValueNonNumber(x, y) {
+export function SameValueNonNumber(x /* : Value */, y /* : Value */) {
   Assert(Type(x) !== 'Number');
   Assert(Type(x) === Type(y));
 
@@ -98,14 +108,14 @@ export function SameValueNonNumber(x, y) {
   }
 
   if (Type(x) === 'String') {
-    if (x.value === y.value) {
+    if (x.stringValue() === y.stringValue()) {
       return true;
     }
     return false;
   }
 
   if (Type(x) === 'Boolean') {
-    if (x.value === y.value) {
+    if (x.booleanValue() === y.booleanValue()) {
       return true;
     }
     return false;
