@@ -7,6 +7,9 @@ import {
   CreateBuiltinFunction,
   ObjectCreate,
 } from './abstract-ops/objects.mjs';
+import {
+  NewGlobalEnvironment,
+} from './environment.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
