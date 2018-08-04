@@ -73,18 +73,22 @@ export class BooleanValue extends PrimitiveValue {
 }
 
 export class NumberValue extends PrimitiveValue {
-  /* :: number: Number */
-  constructor(realm /* : Realm */, number /* : Number */) {
+  /* :: number: number */
+  constructor(realm /* : Realm */, number /* : number */) {
     super(realm);
     this.number = number;
   }
 
-  numberValue() {
+  numberValue() /* : number */ {
     return this.number;
   }
 
   isNaN() {
     return Number.isNaN(this.number);
+  }
+
+  isInfinity() {
+    return !Number.isFinite(this.number) && !this.isNaN();
   }
 }
 
@@ -252,11 +256,10 @@ export class FunctionValue extends ObjectValue {
 }
 
 /* ::
-declare type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], contextInfo: {
+export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], contextInfo: {
   thisArgument: Value,
   NewTarget: Value,
 }) => Value;
-export type { BuiltinFunctionCallback };
 */
 
 export class BuiltinFunctionValue extends FunctionValue {
@@ -519,7 +522,7 @@ declare function New(string, ?Realm): StringValue;
 declare function New(number, ?Realm): NumberValue;
 declare function New(boolean, ?Realm): BooleanValue;
 declare function New(symbol, ?Realm): SymbolValue;
-declare function New(function, ?Realm): FunctionValue;
+declare function New(function, ?Realm): BuiltinFunctionValue;
 */
 
 export function New(value, realm) {

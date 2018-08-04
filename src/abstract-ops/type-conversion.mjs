@@ -3,11 +3,11 @@
 /* ::
 import type {
   Value,
-  PrimitiveValue,
 } from '../value.mjs';
 */
 
 import {
+  PrimitiveValue,
   UndefinedValue,
   NullValue,
   BooleanValue,
@@ -25,29 +25,35 @@ import {
 
 import {
   Assert,
+} from './notational-conventions.mjs';
+import {
   Call,
   Get,
   GetMethod,
+} from './object-operations.mjs';
+import {
   IsCallable,
-} from './all.mjs';
+} from './testing-comparison.mjs';
 
 /* ::
 declare type Hint = 'String' | 'Number';
 */
 
 // 7.1.1 ToPrimitive
-export function ToPrimitive(input /* : Value */, preferredType /* : Hint */) /* : PrimitiveValue */ {
+export function ToPrimitive(input /* : Value */, preferredType /* : ?Hint */) /* : PrimitiveValue */ {
   if (Type(input) === 'Object') {
-    let hint;
+    /* :: input = ((input : any) : ObjectValue ); */
+    let hint /* : StringValue */;
     if (preferredType === undefined) {
       hint = NewValue('default');
     } else if (preferredType === 'String') {
       hint = NewValue('string');
-    } else if (preferredType === 'Number') {
+    } else {
+      Assert(preferredType === 'Number');
       hint = NewValue('number');
     }
     const exoticToPrim = GetMethod(input, surroundingAgent.intrinsic('@@toPrimitive'));
-    if (exoticToPrim.value !== undefined) {
+    if (!(exoticToPrim instanceof UndefinedValue)) {
       const result = Call(exoticToPrim, input, [hint]);
       if (Type(result) !== 'Object') {
         return result;
@@ -59,6 +65,8 @@ export function ToPrimitive(input /* : Value */, preferredType /* : Hint */) /* 
     }
     return OrdinaryToPrimitive(input, hint);
   }
+  /* :: input = ((input : any) : PrimitiveValue ); */
+  Assert(input instanceof PrimitiveValue);
   return input;
 }
 
@@ -140,6 +148,7 @@ export function ToNumber(argument /* : Value */) /* : NumberValue */ {
       }
       return NewValue(0);
     case 'Number':
+      /* :: argument = ((argument : any) : NumberValue); */
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
@@ -182,7 +191,7 @@ export function ToUint32(argument /* : Value */) {
 }
 
 // 7.1.12 ToString
-export function ToString(argument /* : Value */) {
+export function ToString(argument /* : Value */) /* : StringValue */ {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -190,14 +199,18 @@ export function ToString(argument /* : Value */) {
     case 'Null':
       return NewValue('null');
     case 'Boolean':
+      /* :: argument = ((argument : any) : BooleanValue); */
       return NewValue(argument.isTrue() ? 'true' : 'false');
     case 'Number':
+      /* :: argument = ((argument : any) : NumberValue); */
       return NumberToString(argument);
     case 'String':
+      /* :: argument = ((argument : any) : StringValue); */
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
+      /* :: argument = ((argument : any) : ObjectValue); */
       const primValue = ToPrimitive(argument, 'String');
       return ToString(primValue);
     }
@@ -211,9 +224,18 @@ export function NumberToString(m /* : NumberValue */) {
   if (m.isNaN()) {
     return NewValue('NaN');
   }
+  const mVal = m.numberValue();
   if (m.numberValue() === 0) {
     return NewValue('0');
   }
+  if (mVal < 0) {
+    return NewValue(`-${NumberToString(NewValue(-mVal)).stringValue()}`);
+  }
+  if (m.isInfinity()) {
+    return NewValue('Infinity');
+  }
+  // TODO: implement properly
+  return NewValue(`${mVal}`);
 }
 
 // 7.1.13 ToObject
@@ -225,26 +247,31 @@ export function ToObject(argument /* : Value */) /* : ObjectValue */{
     case 'Null':
       return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
+      /* :: argument = ((argument : any) : BooleanValue); */
       const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%BooleanPrototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
+      /* :: argument = ((argument : any) : NumberValue); */
       const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%NumberPrototype%'));
       obj.NumberData = argument;
       return obj;
     }
     case 'String': {
+      /* :: argument = ((argument : any) : StringValue); */
       const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%StringPrototype%']);
       obj.StringData = argument;
       return obj;
     }
     case 'Symbol': {
+      /* :: argument = ((argument : any) : SymbolValue); */
       const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%SymbolPrototype%']);
       obj.SymbolData = argument;
       return obj;
     }
     case 'Object':
+      /* :: argument = ((argument : any) : ObjectValue); */
       return argument;
     default:
       throw new RangeError('ToObject(argument) unknown type');

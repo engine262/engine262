@@ -3,12 +3,16 @@
 /* ::
 import type {
   Realm,
-} from './engine.mjs';
+} from './realm.mjs';
 
 import type {
   Value,
+  StringValue,
   ObjectValue,
 } from './value.mjs';
+import type {
+  List,
+} from './abstract-ops/spec-types.mjs';
 */
 
 import {
@@ -18,11 +22,16 @@ import {
   surroundingAgent,
 } from './engine.mjs';
 import {
+  Assert,
+} from './abstract-ops/notational-conventions.mjs';
+import {
   Get,
   HasOwnProperty,
   HasProperty,
+} from './abstract-ops/object-operations.mjs';
+import {
   ToBoolean,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/type-conversion.mjs';
 
 export class LexicalEnvironment {
   /* ::
@@ -48,22 +57,22 @@ declare type Binding = {
 // https://tc39.github.io/ecma262/#sec-lexical-environments
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   /* ::
-  bindings: Map<Value, Binding>
+  bindings: Map<string, Binding>
   */
   constructor() {
     super();
     this.bindings = new Map();
   }
 
-  HasBinding(N /* : Value */) {
-    if (this.bindings.has(N)) {
+  HasBinding(N /* : StringValue */) {
+    if (this.bindings.has(N.stringValue())) {
       return true;
     }
     return false;
   }
 
-  CreateMutableBinding(N, D) {
-    this.bindings.set(N, {
+  CreateMutableBinding(N /* : StringValue */, D /* : boolean */) {
+    this.bindings.set(N.stringValue(), {
       initialized: false,
       mutable: true,
       strict: undefined,
@@ -72,8 +81,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     });
   }
 
-  CreateImmutableBinding(N, S) {
-    this.bindings.set(N, {
+  CreateImmutableBinding(N /* : StringValue */, S /* : boolean */) {
+    this.bindings.set(N.stringValue(), {
       initialized: false,
       mutable: false,
       strict: S,
@@ -82,15 +91,17 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     });
   }
 
-  InitializeBinding(N, V) {
-    const binding = this.bindings.get(N);
+  InitializeBinding(N /* : StringValue */, V /* : Value */) {
+    const binding = ((this.bindings.get(N.stringValue()) /* : any */) /* : Binding */);
+    Assert(binding !== undefined);
     binding.value = V;
     binding.initialized = true;
   }
 
-  SetMutableBinding(N, V, S) {
+  SetMutableBinding(N /* : StringValue */, V /* : Value */, S /* : boolean */) {
     const envRec = this;
-    if (!this.bindings.has(N)) {
+    const n = N.stringValue();
+    if (!this.bindings.has(n)) {
       if (S === true) {
         surroundingAgent.Throw('ReferenceError');
         envRec.CreateMutableBinding(N, true);
@@ -99,7 +110,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       }
     }
 
-    const binding = this.bindings.get(N);
+    const binding = this.bindings.get(n);
 
     if (binding.strict === true) {
       S = true;
@@ -114,21 +125,22 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
   }
 
-  GetBindingValue(N, S) {
-    const binding = this.bindings.get(N);
+  GetBindingValue(N /* : StringValue *//* , S */) {
+    const binding = this.bindings.get(N.stringValue());
     if (binding.initialized === false) {
       surroundingAgent.Throw('ReferenceError');
     }
     return binding.value;
   }
 
-  DeleteBinding(N) {
-    const binding = this.bindings.get(N);
+  DeleteBinding(N /* : StringValue */) {
+    const n = N.stringValue();
+    const binding = this.bindings.get(n);
     if (binding.deletable === false) {
       return false;
     }
 
-    this.bindings.delete(N);
+    this.bindings.delete(n);
 
     return true;
   }
@@ -153,7 +165,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     this.withEnvironment = false;
   }
 
-  HasBinding(N) {
+  HasBinding(N /* : StringValue */) {
     const envRec = this;
     const bindings = envRec.bindingObject;
 
@@ -183,7 +195,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   ObjectRecord: ObjectEnvironmentRecord
   GlobalThisValue: ObjectValue
   DeclarativeRecord: DeclarativeEnvironmentRecord
-  VarNames: string[]
+  VarNames: List<string>
   */
   constructor() {
     super();
@@ -196,7 +208,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     this.VarNames = [];
   }
 
-  HasBinding(N /* : Value */) {
+  HasBinding(N /* : StringValue */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -206,7 +218,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.HasBinding(N);
   }
 
-  CreateMutableBinding(N /* : Value */, D) {
+  CreateMutableBinding(N /* : StringValue */, D /* : boolean */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -215,7 +227,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateMutableBinding(N, D);
   }
 
-  CreateImmutableBinding(N /* : Value */, S) {
+  CreateImmutableBinding(N /* : StringValue */, S /* : boolean */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -224,7 +236,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateImmutableBinding(N, S);
   }
 
-  InitializeBinding(N, V) {
+  InitializeBinding(N /* : StringValue */, V /* : Value */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -234,7 +246,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.InitializeBinding(N, V);
   }
 
-  SetMutableBinding(N, V, S) {
+  SetMutableBinding(N /* : StringValue */, V /* : Value */, S /* : boolean */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -244,7 +256,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.SetMutableBinding(N, V, S);
   }
 
-  GetBindingValue(N, S) {
+  GetBindingValue(N /* : StringValue */, S /* : boolean */) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -254,7 +266,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.GetBindingValue(N, S);
   }
 
-  DeleteBinding(N /* : Value */) {
+  DeleteBinding(N /* : StringValue */) {
     const envRec = this;
     const DclRec = this.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -267,7 +279,10 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       const status = ObjRec.DeleteBinding(N);
       if (status === true) {
         const varNames = envRec.VarNames;
-        // If N is an element of varNames, remove that element from the varNames.
+        const idx = varNames.indexOf(N.stringValue());
+        if (idx >= 0) {
+          varNames.splice(idx, 1);
+        }
       }
       return status;
     }
@@ -293,4 +308,23 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   CreateGlobalVarBinding() {}
 
   CreateGlobalFunctionBinding() {}
+}
+
+// 8.1.2.5 NewGlobalEnvironment
+export function NewGlobalEnvironment(G, thisValue) {
+  const env = new LexicalEnvironment();
+  const objRec = new ObjectEnvironmentRecord(G);
+  const dclRec = new DeclarativeEnvironmentRecord();
+  const globalRec = new GlobalEnvironmentRecord();
+
+  globalRec.ObjectRecord = objRec;
+  globalRec.GlobalThisValue = thisValue;
+  globalRec.DeclarativeRecord = dclRec;
+  globalRec.VarNames = [];
+
+  env.EnvironmentRecord = globalRec;
+
+  env.outerLexicalEnvironment = null;
+
+  return env;
 }

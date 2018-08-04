@@ -5,11 +5,18 @@ import type {
   BooleanValue,
   PropertyKey,
   Value,
+  FunctionValue,
+  BuiltinFunctionValue,
   BuiltinFunctionCallback,
+  ArrayValue,
 } from '../value.mjs';
 import type {
   PropertyDescriptor,
+  List,
 } from './spec-types.mjs';
+import type {
+  Realm,
+} from '../realm.mjs';
 */
 
 import {
@@ -24,21 +31,29 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
+} from './notational-conventions.mjs';
+import {
   Call,
   CreateDataProperty,
   Get,
   GetFunctionRealm,
+} from './object-operations.mjs';
+import {
   IsAccessorDescriptor,
-  IsCallable,
   IsDataDescriptor,
-  IsExtensible,
   IsGenericDescriptor,
+} from './spec-types.mjs';
+import {
+  IsCallable,
+  IsExtensible,
   IsPropertyKey,
   SameValue,
+} from './testing-comparison.mjs';
+import {
   ToNumber,
   ToString,
   ToUint32,
-} from './all.mjs';
+} from './type-conversion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {
@@ -282,12 +297,12 @@ export function OrdinarySetWithOwnDescriptor(O /* : ObjectValue */, P /* : Prope
     if (!parent.isNull()) {
       return parent.Set(P, V, Receiver);
     }
-    ownDesc = {
+    ownDesc = ({
       Value: NewValue(undefined),
       Writable: true,
       Enumerable: true,
       Configurable: true,
-    };
+    } /* : PropertyDescriptor */);
   }
 
   if (IsDataDescriptor(ownDesc)) {
@@ -336,7 +351,7 @@ export function OrdinaryDelete(O /* : ObjectValue */, P /* : PropertyKey */) {
 }
 
 // 9.1.11.1
-export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) {
+export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) /* : List<PropertyKey> */ {
   const keys = [];
 
   const integerIndexes = [];
@@ -369,7 +384,7 @@ export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) {
 }
 
 // 9.1.12 ObjectCreate
-export function ObjectCreate(proto, internalSlotsList) {
+export function ObjectCreate(proto /* : ObjectValue | NullValue */, internalSlotsList /* : ?List<string> */) /* : ObjectValue */ {
   if (!internalSlotsList) {
     internalSlotsList = [];
   }
@@ -388,7 +403,7 @@ export function ObjectCreate(proto, internalSlotsList) {
 
 // 9.1.13 OrdinaryCreateFromConstructor
 export function OrdinaryCreateFromConstructor(
-  constructor, intrinsicDefaultProto, internalSlotsList,
+  constructor /* : FunctionValue */, intrinsicDefaultProto /* : ObjectValue | NullValue */, internalSlotsList /* : ?List<string> */,
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
@@ -397,11 +412,11 @@ export function OrdinaryCreateFromConstructor(
 }
 
 // 9.1.14 GetPrototypeFromConstructor
-export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
+export function GetPrototypeFromConstructor(constructor /* : FunctionValue */, intrinsicDefaultProto /* : ObjectValue | NullValue */) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor));
-  let proto = Get(constructor, 'prototype');
+  let proto = Get(constructor, NewValue('prototype'));
   if (Type(proto) !== 'Object') {
     const realm = GetFunctionRealm(constructor);
     proto = realm.Intrinsics[intrinsicDefaultProto];
@@ -442,22 +457,25 @@ export function CreateBuiltinFunction(
 }
 
 // 9.4.2.4 ArraySetLength
-export function ArraySetLength(A, Desc) {
+export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescriptor */) {
+  const lengthStr = NewValue('length');
   if ('Value' in Desc === false) {
-    return OrdinaryDefineOwnProperty(A, 'length', Desc);
+    return OrdinaryDefineOwnProperty(A, lengthStr, Desc);
   }
   const newLenDesc = { ...Desc };
   const newLen = ToUint32(Desc.Value);
+  const newLenVal = newLen.numberValue();
   const numberLen = ToNumber(Desc.Value);
-  if (newLen.value !== numberLen.value) {
+  if (newLenVal !== numberLen.numberValue()) {
     surroundingAgent.Throw('RangeError');
   }
   newLenDesc.Value = newLen;
-  const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
+  const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)/* : any */)/* : PropertyDescriptor */);
   Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
-  let oldLen = oldLenDesc.Value;
-  if (newLen.value > oldLen.value) {
-    return OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+  const oldLen = oldLenDesc.Value;
+  let oldLenVal = oldLen.numberValue();
+  if (newLenVal > oldLenVal) {
+    return OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
   }
   if (oldLenDesc.Writable === false) {
     return false;
@@ -469,24 +487,24 @@ export function ArraySetLength(A, Desc) {
     newWritable = false;
     newLenDesc.Writable = true;
   }
-  const succeeded = OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+  const succeeded = OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
   if (succeeded === false) {
     return false;
   }
-  while (newLen < oldLen) {
-    oldLen -= 1;
-    const deleteSucceeded = A.Delete(ToString(oldLen));
+  while (newLenVal < oldLenVal) {
+    oldLenVal -= 1;
+    const deleteSucceeded = A.Delete(ToString(NewValue(oldLenVal)));
     if (deleteSucceeded === false) {
-      newLenDesc.Value = oldLen + 1;
+      newLenDesc.Value = NewValue(oldLenVal + 1);
       if (newWritable === false) {
         newLenDesc.Writable = false;
       }
-      OrdinaryDefineOwnProperty(A, 'length', newLenDesc);
+      OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
       return false;
     }
   }
   if (newWritable === false) {
-    return OrdinaryDefineOwnProperty(A, 'length', {
+    return OrdinaryDefineOwnProperty(A, lengthStr, {
       Writable: false,
     });
   }

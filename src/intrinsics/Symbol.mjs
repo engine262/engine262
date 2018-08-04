@@ -3,7 +3,7 @@
 /* ::
 import type {
   Realm,
-} from '../engine.mjs';
+} from '../realm.mjs';
 */
 
 import {

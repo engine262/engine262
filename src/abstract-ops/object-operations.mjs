@@ -2,18 +2,23 @@
 
 /* ::
 import type {
-  FunctionValue,
+  UndefinedValue,
   ObjectValue,
+  FunctionValue,
   PropertyKey,
 } from '../value.mjs';
 import type {
   List,
 } from './spec-types.mjs';
+import type {
+  Realm,
+} from '../realm.mjs';
 */
 
 import {
   Type,
   Value,
+  NullValue,
   ProxyValue,
   New as NewValue,
 } from '../value.mjs';
@@ -22,12 +27,16 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
+} from './notational-conventions.mjs';
+import {
   IsCallable,
   IsConstructor,
   IsPropertyKey,
+} from './testing-comparison.mjs';
+import {
   ToObject,
   ToString,
-} from './all.mjs';
+} from './type-conversion.mjs';
 import {
   ArrayCreate,
 } from '../intrinsics/Array.mjs';
@@ -72,7 +81,7 @@ export function CreateDataPropertyOrThrow(O /* : ObjectValue */, P /* : Property
 }
 
 // 7.3.9 GetMethod
-export function GetMethod(V /* : Value */, P /* : PropertyKey */) {
+export function GetMethod(V /* : Value */, P /* : PropertyKey */) /* : FunctionValue | UndefinedValue */ {
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
   if (func.isNull() || func.isUndefined()) {
@@ -116,7 +125,7 @@ export function Call(F /* : FunctionValue */, V /* : Value */, argumentsList /* 
 }
 
 // 7.3.13 Construct
-export function Construct(F /* : FunctionValue */, argumentsList /* : List<Value> */, newTarget /* : FunctionValue */) {
+export function Construct(F /* : FunctionValue */, argumentsList /* : List<Value> */, newTarget /* : ?FunctionValue */) {
   if (!newTarget) {
     newTarget = F;
   }
@@ -134,7 +143,7 @@ export function CreateArrayFromList(elements /* : List<Value> */) {
   const array = ArrayCreate(0);
   let n = 0;
   elements.forEach((e) => {
-    const status = CreateDataProperty(array, ToString(n), e);
+    const status = CreateDataProperty(array, ToString(NewValue(n)), e);
     Assert(status === true);
     n += 1;
   });
@@ -152,7 +161,7 @@ export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* 
 }
 
 // 7.3.22 GetFunctionRealm
-export function GetFunctionRealm(obj /* : FunctionValue */) {
+export function GetFunctionRealm(obj /* : FunctionValue */) /* : Realm */ {
   Assert(IsCallable(obj));
   if ('Realm' in obj) {
     return obj.Realm;
@@ -166,7 +175,7 @@ export function GetFunctionRealm(obj /* : FunctionValue */) {
   */
 
   if (obj instanceof ProxyValue) {
-    if (obj.ProxyHandler.isNull()) {
+    if (obj.ProxyHandler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
       return;
     }

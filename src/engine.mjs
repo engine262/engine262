@@ -4,13 +4,20 @@
 import type {
   Value,
   PrimitiveValue,
+  UndefinedValue,
+  SymbolValue,
+  ObjectValue,
   FunctionValue,
 } from './value.mjs';
+import type {
+  List,
+} from './abstract-ops/spec-types.mjs';
+import type {
+  Realm,
+} from './realm.mjs';
 */
 
 import {
-  SymbolValue,
-  UndefinedValue,
   New as NewValue,
   Type,
 } from './value.mjs';
@@ -23,33 +30,28 @@ import {
   NormalCompletion,
 } from './completions.mjs';
 import {
-  LexicalEnvironment,
   EnvironmentRecord,
-  DeclarativeEnvironmentRecord,
-  ObjectEnvironmentRecord,
-  GlobalEnvironmentRecord,
 } from './environment.mjs';
-
-import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
-import { CreateObject } from './intrinsics/Object.mjs';
-import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
-import { CreateArray } from './intrinsics/Array.mjs';
-import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
-import { CreateBoolean } from './intrinsics/Boolean.mjs';
-import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
-import { CreateSymbol } from './intrinsics/Symbol.mjs';
-import { CreateMath } from './intrinsics/Math.mjs';
+import {
+  CreateRealm,
+  SetRealmGlobalObject,
+  SetDefaultGlobalBindings,
+} from './realm.mjs';
 
 import {
   Assert,
+} from './abstract-ops/notational-conventions.mjs';
+import {
   Construct,
-  CreateBuiltinFunction,
   Get,
+} from './abstract-ops/object-operations.mjs';
+import {
   IsArray,
   IsPropertyKey,
-  ObjectCreate,
+} from './abstract-ops/testing-comparison.mjs';
+import {
   ToBoolean,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/type-conversion.mjs';
 
 // totally wrong but aaaaaaaaa
 export function Evaluate(body /* : Object */, envRec /* : EnvironmentRecord */) {
@@ -78,7 +80,7 @@ export function Evaluate(body /* : Object */, envRec /* : EnvironmentRecord */) 
 /* ::
 declare type Job = {
   Job: function,
-  Arguments: any[],
+  Arguments: List<any>,
   Realm: Realm,
   ScriptOrModule: ?Object,
   HostDefined: ?Object,
@@ -94,8 +96,8 @@ export class Agent {
   IsLockFree1: boolean
   IsLockFree2: boolean
   CandidateExecution: ?Object
-  executionContextStack: ExecutionContext[]
-  jobQueues: Map<string, Job[]>
+  executionContextStack: List<ExecutionContext>
+  jobQueues: Map<string, List<Job>>
   */
   constructor() {
     this.LittleEndian = false;
@@ -143,7 +145,7 @@ export class Agent {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
-  Throw(type /* : string */, args /* : ?Value[] */) {
+  Throw(type /* : string */, args /* : ?List<Value> */) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, args);
     throw new ThrowCompletion(error);
@@ -152,30 +154,6 @@ export class Agent {
 Agent.Increment = 0;
 
 export const surroundingAgent = new Agent();
-
-/* ::
-declare type IntrinsicMap = {
- [string]: Value,
-};
-*/
-
-export class Realm {
-  /* ::
-  Intrinsics: IntrinsicMap
-  GlobalObject: ?ObjectValue
-  GlobalEnv: ?EnvironmentRecord
-  TemplateMap: ?Object
-  HostDefined: ?Object
-  */
-  constructor() {
-    // $FlowFixMe
-    this.Intrinsics = undefined;
-    this.GlobalObject = undefined;
-    this.GlobalEnv = undefined;
-    this.TemplateMap = undefined;
-    this.HostDefined = undefined;
-  }
-}
 
 export class ExecutionContext {
   /* ::
@@ -206,241 +184,8 @@ export function isArrayIndex(P /* : Value */) {
   return false;
 }
 
-// 8.1.2.5 NewGlobalEnvironment
-export function NewGlobalEnvironment(G, thisValue) {
-  const env = new LexicalEnvironment();
-  const objRec = new ObjectEnvironmentRecord(G);
-  const dclRec = new DeclarativeEnvironmentRecord();
-  const globalRec = new GlobalEnvironmentRecord();
-
-  globalRec.ObjectRecord = objRec;
-  globalRec.GlobalThisValue = thisValue;
-  globalRec.DeclarativeRecord = dclRec;
-  globalRec.VarNames = [];
-
-  env.EnvironmentRecord = globalRec;
-
-  env.outerLexicalEnvironment = null;
-
-  return env;
-}
-
-// 8.2.1 CreateRealm
-export function CreateRealm() {
-  const realmRec = new Realm();
-  CreateIntrinsics(realmRec);
-  realmRec.GlobalObject = undefined;
-  realmRec.GlobalEnv = undefined;
-  realmRec.TemplateMap = undefined;
-  return realmRec;
-}
-
-// 8.2.2 CreateIntrinsics
-function CreateIntrinsics(realmRec) {
-  const intrinsics = Object.create(null);
-  realmRec.Intrinsics = intrinsics;
-
-  // %Array%
-  // %ArrayBuffer%
-  // %ArrayBufferPrototype%
-  // %ArrayIteratorPrototype%
-  // %ArrayPrototype%
-  // %ArrayProto_entries%
-  // %ArrayProto_forEach%
-  // %ArrayProto_keys%
-  // %ArrayProto_values%
-  // %AsyncFromSyncIteratorPrototype%
-  // %AsyncFunction%
-  // %AsyncFunctionPrototype%
-  // %AsyncGenerator%
-  // %AsyncGeneratorFunction%
-  // %AsyncGeneratorPrototype%
-  // %AsyncIteratorPrototype%
-  // %Atomics%
-  // %Boolean%
-  // %BooleanPrototype%
-  // %DataView%
-  // %DataViewPrototype%
-  // %Date%
-  // %DatePrototype%
-  // %decodeURI%
-  // %decodeURIComponent%
-  // %encodeURI%
-  // %encodeURIComponent%
-  // %Error%
-  // %ErrorPrototype%
-  // %eval%
-  // %EvalError%
-  // %EvalErrorPrototype%
-  // %Float32Array%
-  // %Float32ArrayPrototype%
-  // %Float64Array%
-  // %Float64ArrayPrototype%
-  // %Function%
-  // %FunctionPrototype%
-  // %Generator%
-  // %GeneratorFunction%
-  // %GeneratorPrototype%
-  // %Int8Array%
-  // %Int8ArrayPrototype%
-  // %Int16Array%
-  // %Int16ArrayPrototype%
-  // %Int32Array%
-  // %Int32ArrayPrototype%
-  // %isFinite%
-  // %isNaN%
-  // %IteratorPrototype%
-  // %JSON%
-  // %JSONParse%
-  // %JSONStringify%
-  // %Map%
-  // %MapIteratorPrototype%
-  // %MapPrototype%
-  // %Math%
-  // %Number%
-  // %NumberPrototype%
-  // %Object%
-  // %ObjectPrototype%
-  // %ObjProto_toString%
-  // %ObjProto_valueOf%
-  // %parseFloat%
-  // %parseInt%
-  // %Promise%
-  // %PromisePrototype%
-  // %PromiseProto_then%
-  // %Promise_all%
-  // %Promise_reject%
-  // %Promise_resolve%
-  // %Proxy%
-  // %RangeError%
-  // %RangeErrorPrototype%
-  // %ReferenceError%
-  // %ReferenceErrorPrototype%
-  // %Reflect%
-  // %RegExp%
-  // %RegExpPrototype%
-  // %Set%
-  // %SetIteratorPrototype%
-  // %SetPrototype%
-  // %SharedArrayBuffer%
-  // %SharedArrayBufferPrototype%
-  // %String%
-  // %StringIteratorPrototype%
-  // %StringPrototype%
-  // %Symbol%
-  // %SymbolPrototype%
-  // %SyntaxError%
-  // %SyntaxErrorPrototype%
-  // %ThrowTypeError%
-  // %TypedArray%
-  // %TypedArrayPrototype%
-  // %TypeError%
-  // %TypeErrorPrototype%
-  // %Uint8Array%
-  // %Uint8ArrayPrototype%
-  // %Uint8ClampedArray%
-  // %Uint8ClampedArrayPrototype%
-  // %Uint16Array%
-  // %Uint16ArrayPrototype%
-  // %Uint32Array%
-  // %Uint32ArrayPrototype%
-  // %URIError%
-  // %URIErrorPrototype%
-  // %WeakMap%
-  // %WeakMapPrototype%
-  // %WeakSet%
-  // %WeakSetPrototype%
-
-  // Well-known symbols
-  const wellKnownSymbolNames = [
-    'asyncIterator',
-    'hasInstance',
-    'isConcatSpreadable',
-    'iterator',
-    'match',
-    'replace',
-    'search',
-    'species',
-    'split',
-    'toPrimitive',
-    'toStringTag',
-    'unscopables',
-  ];
-
-  wellKnownSymbolNames.forEach((name) => {
-    const sym = new SymbolValue(realmRec, NewValue(name, realmRec));
-    realmRec.Intrinsics[`@@${name}`] = sym;
-  });
-
-  const objProto = ObjectCreate(NewValue(null, realmRec));
-  intrinsics['%ObjectPrototype%'] = objProto;
-  CreateObjectPrototype(realmRec);
-
-  const thrower = CreateBuiltinFunction(() => {
-    surroundingAgent.Throw('TypeError');
-  }, [], realmRec, NewValue(null, realmRec));
-  intrinsics['%ThrowTypeError%'] = thrower;
-
-  const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
-  intrinsics['%FunctionPrototype%'] = funcProto;
-
-  thrower.SetPrototypeOf(funcProto);
-
-  CreateObject(realmRec);
-
-  CreateArrayPrototype(realmRec);
-  CreateArray(realmRec);
-
-  CreateBooleanPrototype(realmRec);
-  CreateBoolean(realmRec);
-
-  CreateSymbolPrototype(realmRec);
-  CreateSymbol(realmRec);
-
-  wellKnownSymbolNames.forEach((name) => {
-    realmRec.Intrinsics['%Symbol%'].DefineOwnProperty(
-      NewValue(name, realmRec), {
-        Value: realmRec.Intrinsics[`@@${name}`],
-        Writable: false,
-        Enumerable: false,
-        Configurable: false,
-      },
-    );
-  });
-
-  CreateMath(realmRec);
-
-  return intrinsics;
-}
-
-// 8.2.3 SetRealmGlobalObject
-function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
-  if (globalObj instanceof UndefinedValue) {
-    const intrinsics = realmRec.Intrinsics;
-    globalObj = ObjectCreate(intrinsics.ObjectPrototype);
-  }
-
-  if (thisValue instanceof UndefinedValue) {
-    thisValue = globalObj;
-  }
-
-  realmRec.GlobalObject = globalObj;
-
-  const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
-  realmRec.GlobalEnv = newGlobalEnv;
-
-  return realmRec;
-}
-
-// 8.2.4 SetDefaultGlobalBindings
-export function SetDefaultGlobalBindings(realmRec) {
-  const global = realmRec.GlobalObject;
-
-  return global;
-}
-
 // 8.4.1 EnqueueJob
-export function EnqueueJob(queueName /* : string */, job /* : function */, args /* : any[] */) {
+export function EnqueueJob(queueName /* : string */, job /* : function */, args /* : List<any> */) {
   const callerContext = surroundingAgent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
   const callerScriptOrModule = callerContext.ScriptOrModule;
