@@ -4,7 +4,6 @@
 import type {
   Value,
   PrimitiveValue,
-  UndefinedValue,
   SymbolValue,
   ObjectValue,
   FunctionValue,
@@ -18,6 +17,7 @@ import type {
 */
 
 import {
+  UndefinedValue,
   New as NewValue,
   Type,
 } from './value.mjs';
