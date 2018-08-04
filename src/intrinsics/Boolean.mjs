@@ -1,8 +1,8 @@
 import {
-  ToBoolean,
   CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
-} from '../engine.mjs';
+  ToBoolean,
+} from '../abstract-ops/all.mjs';
 
 import {
   New as NewValue,

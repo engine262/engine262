@@ -1,9 +1,11 @@
 import {
   surroundingAgent,
+} from '../engine.mjs';
+import {
   Assert,
   CreateBuiltinFunction,
   GetPrototypeFromConstructor,
-} from '../engine.mjs';
+} from '../abstract-ops/all.mjs';
 
 import {
   ArrayValue,

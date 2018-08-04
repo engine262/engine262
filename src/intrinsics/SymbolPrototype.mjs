@@ -1,18 +1,18 @@
 import {
   ObjectValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 
 import {
   surroundingAgent,
-
-  Assert,
-  Type,
-
-  CreateBuiltinFunction,
-
   SymbolDescriptiveString,
 } from '../engine.mjs';
+
+import {
+  Assert,
+  CreateBuiltinFunction,
+} from '../abstract-ops/all.mjs';
 
 function thisSymbolValue(value) {
   if (Type(value) === 'Symbol') {

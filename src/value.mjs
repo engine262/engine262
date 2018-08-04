@@ -10,38 +10,34 @@ import type {
 import {
   surroundingAgent,
   ExecutionContext,
+  IsArrayIndex,
+} from './engine.mjs';
+import {
+  ArraySetLength,
   Assert,
-  Type,
-
-  SameValue,
+  Call,
+  Construct,
+  CreateArrayFromList,
+  GetMethod,
+  IsAccessorDescriptor,
+  IsConstructor,
   IsExtensible,
   IsPropertyKey,
-  IsArrayIndex,
-  IsConstructor,
-  IsAccessorDescriptor,
-  GetMethod,
-
-  CreateArrayFromList,
-  ArraySetLength,
-  Construct,
-
+  OrdinaryDefineOwnProperty,
+  OrdinaryDelete,
+  OrdinaryGet,
+  OrdinaryGetOwnProperty,
+  OrdinaryGetPrototypeOf,
+  OrdinaryHasProperty,
+  OrdinaryIsExtensible,
+  OrdinaryOwnPropertyKeys,
+  OrdinaryPreventExtensions,
+  OrdinarySet,
+  OrdinarySetPrototypeOf,
+  SameValue,
   ToBoolean,
   ToUint32,
-
-  OrdinaryGetPrototypeOf,
-  OrdinarySetPrototypeOf,
-  OrdinaryIsExtensible,
-  OrdinaryPreventExtensions,
-  OrdinaryGetOwnProperty,
-  OrdinaryDefineOwnProperty,
-  OrdinaryHasProperty,
-  OrdinaryGet,
-  OrdinarySet,
-  OrdinaryDelete,
-  OrdinaryOwnPropertyKeys,
-
-  Call,
-} from './engine.mjs';
+} from './abstract-ops/all.mjs';
 
 export class Value {
   /* :: realm: Realm; */
@@ -165,6 +161,7 @@ class InternalPropertyMap extends Map /* <Value, Value> */ {
   }
 }
 
+/* :: export type PropertyKey = StringValue | SymbolValue; */
 export class ObjectValue extends PrimitiveValue {
   /* ::
   Prototype: NullValue | ObjectValue
@@ -266,6 +263,12 @@ export class FunctionValue extends ObjectValue {
   Realm: Realm
   ScriptOrModule: ?ScriptOrModule
   */
+  Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
+    throw new TypeError('This function object does not have [[Call]] implemented');
+  }
+  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
+    throw new TypeError('This function object does not have [[Construct]] implemented');
+  }
 }
 
 /* ::
@@ -565,4 +568,36 @@ export function New(value, realm) {
   }
 
   throw new RangeError('NewValue type out of range');
+}
+
+export function Type(val /* : Value */) {
+  if (val instanceof UndefinedValue) {
+    return 'Undefined';
+  }
+
+  if (val instanceof NullValue) {
+    return 'Null';
+  }
+
+  if (val instanceof BooleanValue) {
+    return 'Boolean';
+  }
+
+  if (val instanceof StringValue) {
+    return 'String';
+  }
+
+  if (val instanceof NumberValue) {
+    return 'Number';
+  }
+
+  if (val instanceof SymbolValue) {
+    return 'Symbol';
+  }
+
+  if (val instanceof ObjectValue) {
+    return 'Object';
+  }
+
+  throw new RangeError('Type(val) invalid argument');
 }

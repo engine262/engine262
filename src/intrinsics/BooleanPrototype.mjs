@@ -2,15 +2,17 @@ import {
   ObjectValue,
   BooleanValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 
 import {
   surroundingAgent,
-
-  Assert,
-  Type,
-  CreateBuiltinFunction,
 } from '../engine.mjs';
+
+import {
+  Assert,
+  CreateBuiltinFunction,
+} from '../abstract-ops/all.mjs';
 
 function thisBooleanValue(value) {
   if (Type(value) === 'Boolean') {
