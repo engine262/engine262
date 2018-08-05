@@ -1,6 +1,15 @@
+/* @flow */
+
+/* ::
+import type {
+  NumberValue,
+} from '../value.mjs';
+*/
+
 import {
   surroundingAgent,
 } from '../engine.mjs';
+
 import {
   Assert,
   CreateBuiltinFunction,
@@ -9,19 +18,20 @@ import {
 
 import {
   ArrayValue,
+  UndefinedValue,
   New as NewValue,
 } from '../value.mjs';
 
-export function ArrayCreate(length, proto) {
-  Assert(length >= 0);
-  if (Object.is(length, -0)) {
-    length = 0;
+export function ArrayCreate(length /* : NumberValue */, proto) {
+  Assert(length.numberValue() >= 0);
+  if (Object.is(length.numberValue(), -0)) {
+    length = NewValue(0);
   }
-  if (length > (2 ** 32) - 1) {
+  if (length.numberValue() > (2 ** 32) - 1) {
     surroundingAgent.Throw('RangeError');
   }
-  if (proto === undefined) {
-    proto = surroundingAgent.currentRealmRecord.Intrinsics['%ArrayPrototype%'];
+  if (proto instanceof UndefinedValue) {
+    proto = surroundingAgent.intrinsic('%ArrayPrototype%');
   }
   const A = new ArrayValue(surroundingAgent.currentRealmRecord);
 
@@ -36,15 +46,15 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
-    if (NewTarget.value === undefined) {
+    if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
-    return ArrayCreate(0, proto);
+    return ArrayCreate(NewValue(0), proto);
   }
 }
 
-export function CreateArray(realmRec) {
+export function CreateArray(realmRec /* : Realm */) {
   const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);
 
   constructor.DefineOwnProperty(NewValue('constructor'), {
