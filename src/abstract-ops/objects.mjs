@@ -403,7 +403,9 @@ export function ObjectCreate(proto /* : ObjectValue | NullValue */, internalSlot
 
 // 9.1.13 OrdinaryCreateFromConstructor
 export function OrdinaryCreateFromConstructor(
-  constructor /* : FunctionValue */, intrinsicDefaultProto /* : ObjectValue | NullValue */, internalSlotsList /* : ?List<string> */,
+  constructor /* : FunctionValue */,
+  intrinsicDefaultProto /* : string */,
+  internalSlotsList /* : ?List<string> */,
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
@@ -412,7 +414,9 @@ export function OrdinaryCreateFromConstructor(
 }
 
 // 9.1.14 GetPrototypeFromConstructor
-export function GetPrototypeFromConstructor(constructor /* : FunctionValue */, intrinsicDefaultProto /* : ObjectValue | NullValue */) {
+export function GetPrototypeFromConstructor(
+  constructor /* : FunctionValue */, intrinsicDefaultProto /* : string */,
+) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor));
@@ -445,6 +449,7 @@ export function CreateBuiltinFunction(
   const func = NewValue(steps, realm);
 
   internalSlotsList.forEach((slot) => {
+    // $FlowFixMe
     func[slot] = undefined;
   });
 

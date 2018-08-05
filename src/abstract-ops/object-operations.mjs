@@ -2,13 +2,14 @@
 
 /* ::
 import type {
-  UndefinedValue,
+  BooleanValue,
   ObjectValue,
   FunctionValue,
   PropertyKey,
 } from '../value.mjs';
 import type {
   List,
+  PropertyDescriptor,
 } from './spec-types.mjs';
 import type {
   Realm,
@@ -18,6 +19,7 @@ import type {
 import {
   Type,
   Value,
+  UndefinedValue,
   NullValue,
   ProxyValue,
   New as NewValue,
@@ -27,16 +29,15 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-} from './notational-conventions.mjs';
-import {
   IsCallable,
   IsConstructor,
   IsPropertyKey,
-} from './testing-comparison.mjs';
-import {
   ToObject,
   ToString,
-} from './type-conversion.mjs';
+  IsAccessorDescriptor,
+  IsDataDescriptor,
+  IsExtensible,
+} from './all.mjs';
 import {
   ArrayCreate,
 } from '../intrinsics/Array.mjs';
@@ -55,6 +56,23 @@ export function GetV(V /* : Value */, P /* : PropertyKey */) {
   return O.Get(V, P);
 }
 
+// #sec-set-o-p-v-throw Set
+export function Set(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+  V /* : Value */,
+  Throw /* : BooleanValue */,
+) {
+  Assert(Type(O) === 'Object');
+  Assert(IsPropertyKey(P));
+  Assert(Type(Throw) === 'Boolean');
+  const success = O.Set(P, V, O);
+  if (success.isFalse() && Throw.isTrue()) {
+    surroundingAgent.Throw('TypeError');
+  }
+  return success;
+}
+
 // 7.3.4 CreateDataProperty
 export function CreateDataProperty(O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */) {
   Assert(Type(O) === 'Object');
@@ -70,7 +88,9 @@ export function CreateDataProperty(O /* : ObjectValue */, P /* : PropertyKey */,
 }
 
 // 7.3.6 CreateDataPropertyOrThrow
-export function CreateDataPropertyOrThrow(O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */) {
+export function CreateDataPropertyOrThrow(
+  O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */,
+) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const success = CreateDataProperty(O, P, V);
@@ -80,8 +100,26 @@ export function CreateDataPropertyOrThrow(O /* : ObjectValue */, P /* : Property
   return success;
 }
 
+// #sec-definepropertyorthrow DefinePropertyOrThrow
+export function DefinePropertyOrThrow(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+  desc /* : PropertyDescriptor */,
+) {
+  Assert(Type(O) === 'Object');
+  Assert(IsPropertyKey(P));
+  const success = O.DefineOwnProperty(P, desc);
+  if (success.isFalse()) {
+    surroundingAgent.Throw('TypeError');
+  }
+  return success;
+}
+
 // 7.3.9 GetMethod
-export function GetMethod(V /* : Value */, P /* : PropertyKey */) /* : FunctionValue | UndefinedValue */ {
+export function GetMethod(
+  V /* : Value */,
+  P /* : PropertyKey */,
+) /* : FunctionValue | UndefinedValue */ {
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
   if (func.isNull() || func.isUndefined()) {
@@ -125,7 +163,11 @@ export function Call(F /* : FunctionValue */, V /* : Value */, argumentsList /* 
 }
 
 // 7.3.13 Construct
-export function Construct(F /* : FunctionValue */, argumentsList /* : List<Value> */, newTarget /* : ?FunctionValue */) {
+export function Construct(
+  F /* : FunctionValue */,
+  argumentsList /* : List<Value> */,
+  newTarget /* : ?FunctionValue */,
+) {
   if (!newTarget) {
     newTarget = F;
   }
@@ -137,10 +179,63 @@ export function Construct(F /* : FunctionValue */, argumentsList /* : List<Value
   return F.Construct(argumentsList, newTarget);
 }
 
+// #sec-setintegritylevel SetIntegrityLevel
+export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
+  Assert(Type(O) === 'Object');
+  Assert(level === 'sealed' || level === 'frozen');
+  const status = O.PreventExtensions();
+  if (status.isFalse()) {
+    return NewValue(false);
+  }
+  const keys = O.OwnPropertyKeys();
+  if (level === 'sealed') {
+    keys.forEach((k) => {
+      DefinePropertyOrThrow(O, k, { Configurable: false });
+    });
+  } else if (level === 'frozen') {
+    keys.forEach((k) => {
+      const currentDesc = O.GetOwnProperty(k);
+      if (!(currentDesc instanceof UndefinedValue)) {
+        let desc;
+        if (IsAccessorDescriptor(currentDesc) === true) {
+          desc = { Configurable: false };
+        } else {
+          desc = { Configurable: false, Writable: false };
+        }
+        DefinePropertyOrThrow(O, k, desc);
+      }
+    });
+  }
+}
+
+// #sec-testintegritylevel TestIntegrityLevel
+export function TestIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
+  Assert(Type(O) === 'Object');
+  Assert(level === 'sealed' || level === 'frozen');
+  const status = IsExtensible(O);
+  if (status.isTrue()) {
+    return NewValue(false);
+  }
+  const keys = O.OwnPropertyKeys();
+  for (const k of keys) {
+    const currentDesc = O.GetOwnProperty(k);
+    if (!(currentDesc instanceof UndefinedValue)) {
+      if (currentDesc.Configurable === true) {
+        return NewValue(false);
+      }
+      if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
+        if (currentDesc.Writable === true) {
+          return false;
+        }
+      }
+    }
+  }
+}
+
 // 7.3.16 CreateArrayFromList
 export function CreateArrayFromList(elements /* : List<Value> */) {
   Assert(elements.every((e) => e instanceof Value));
-  const array = ArrayCreate(0);
+  const array = ArrayCreate(NewValue(0));
   let n = 0;
   elements.forEach((e) => {
     const status = CreateDataProperty(array, ToString(NewValue(n)), e);
@@ -161,9 +256,10 @@ export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* 
 }
 
 // 7.3.22 GetFunctionRealm
-export function GetFunctionRealm(obj /* : FunctionValue */) /* : Realm */ {
+export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
   Assert(IsCallable(obj));
   if ('Realm' in obj) {
+    // $FlowFixMe
     return obj.Realm;
   }
 
@@ -177,7 +273,6 @@ export function GetFunctionRealm(obj /* : FunctionValue */) /* : Realm */ {
   if (obj instanceof ProxyValue) {
     if (obj.ProxyHandler instanceof NullValue) {
       surroundingAgent.Throw('TypeError');
-      return;
     }
     const proxyTarget = obj.ProxyTarget;
     return GetFunctionRealm(proxyTarget);
