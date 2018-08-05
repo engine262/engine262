@@ -25,25 +25,24 @@ import {
 
 import {
   Assert,
-} from './notational-conventions.mjs';
-import {
   Call,
   Get,
   GetMethod,
-} from './object-operations.mjs';
-import {
   IsCallable,
-} from './testing-comparison.mjs';
+} from './all.mjs';
 
 /* ::
 declare type Hint = 'String' | 'Number';
 */
 
 // 7.1.1 ToPrimitive
-export function ToPrimitive(input /* : Value */, preferredType /* : ?Hint */) /* : PrimitiveValue */ {
+export function ToPrimitive(
+  input /* : Value */,
+  preferredType /* : ?Hint */,
+) /* : PrimitiveValue */ {
   if (Type(input) === 'Object') {
     /* :: input = ((input : any) : ObjectValue ); */
-    let hint /* : StringValue */;
+    let hint;
     if (preferredType === undefined) {
       hint = NewValue('default');
     } else if (preferredType === 'String') {

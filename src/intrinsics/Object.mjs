@@ -18,16 +18,21 @@ import {
   IsExtensible,
   ToPropertyDescriptor,
   FromPropertyDescriptor,
+  EnumerableOwnPropertyNames,
   ToPropertyKey,
   ToObject,
   Get,
   Set,
   TestIntegrityLevel,
   SetIntegrityLevel,
+  CreateArrayFromList,
+  CreateDataProperty,
+  RequireObjectCoercible,
 } from '../abstract-ops/all.mjs';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
-  if (!(NewTarget instanceof UndefinedValue) && NewTarget !== surroundingAgent.activeFunctionObject) {
+  if (!(NewTarget instanceof UndefinedValue)
+      && NewTarget !== surroundingAgent.activeFunctionObject) {
     return OrdinaryCreateFromConstructor(NewTarget, '%ObjectPrototype%');
   }
   if (value instanceof NullValue || value instanceof UndefinedValue) {

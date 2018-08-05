@@ -6,10 +6,13 @@ import {
 import {
   CreateBuiltinFunction,
   ObjectCreate,
-} from './abstract-ops/objects.mjs';
+} from './abstract-ops/all.mjs';
 import {
   NewGlobalEnvironment,
 } from './environment.mjs';
+import {
+  surroundingAgent,
+} from './engine.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
