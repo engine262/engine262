@@ -255,6 +255,43 @@ export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* 
   return Call(func, V, argumentsList);
 }
 
+/* ::
+export type OwnPropertyNamesKind = 'key' | 'value' | 'key+value';
+*/
+
+// #sec-enumerableownpropertynames EnumerableOwnPropertyNames
+export function EnumerableOwnPropertyNames(
+  O /* : ObjectValue */,
+  kind /* : OwnPropertyNamesKind */,
+) {
+  Assert(Type(O) === 'Object');
+  const ownKeys = O.OwnPropertyKeys();
+  const properties = [];
+  ownKeys.forEach((key) => {
+    if (Type(key) === 'String') {
+      const desc = O.GetOwnProperty(key);
+      if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
+        if (kind === 'key') {
+          properties.push(key);
+        } else {
+          const value = Get(O, key);
+          if (kind === 'value') {
+            properties.push(value);
+          } else {
+            Assert(kind === 'key+value');
+            const entry = CreateArrayFromList([key, value]);
+            properties.push(entry);
+          }
+        }
+      }
+    }
+  });
+  // Order the elements of properties so they are in the same relative
+  // order as would be produced by the Iterator that would be returned
+  // if the EnumerateObjectProperties internal method were invoked with O.
+  return properties;
+}
+
 // 7.3.22 GetFunctionRealm
 export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
   Assert(IsCallable(obj));

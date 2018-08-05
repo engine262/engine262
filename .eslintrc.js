@@ -10,5 +10,6 @@ module.exports = {
     'no-use-before-define': 'off',
     'import/no-cycle': 'off',
     'import/prefer-default-export': 'off',
+    'react/destructuring-assignment': 'off',
   },
 };

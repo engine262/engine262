@@ -26,6 +26,24 @@ import {
   Assert,
 } from './notational-conventions.mjs';
 
+// #sec-requireobjectcoercible
+export function RequireObjectCoercible(argument /* : Value */) {
+  const type = Type(argument);
+  switch (type) {
+    case 'Undefined':
+    case 'Null':
+      return surroundingAgent.Throw('TypeError');
+    case 'Boolean':
+    case 'Number':
+    case 'String':
+    case 'Symbol':
+    case 'Object':
+      return argument;
+    default:
+      throw new RangeError('RequireObjectCoercible: unknown type');
+  }
+}
+
 // 7.2.2 IsArray
 export function IsArray(argument /* : Value */) /* : BooleanValue */ {
   if (Type(argument) !== 'Object') {

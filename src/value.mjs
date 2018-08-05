@@ -216,12 +216,12 @@ export class ArrayValue extends ObjectValue {
     const A = this;
 
     Assert(IsPropertyKey(P));
-    if (P.stringValue() === 'length') {
+    if (P instanceof StringValue && P.stringValue() === 'length') {
       return ArraySetLength(A, Desc);
     }
     if (isArrayIndex(P)) {
-      const oldLenDesc = OrdinaryGetOwnProperty(A, 'length');
-      Assert(oldLenDesc !== undefined && !IsAccessorDescriptor(oldLenDesc));
+      const oldLenDesc = OrdinaryGetOwnProperty(A, New('length'));
+      Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = ToUint32(P);
       if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
@@ -233,7 +233,7 @@ export class ArrayValue extends ObjectValue {
       }
       if (index.numberValue() >= oldLen.numberValue()) {
         oldLenDesc.Value = New(index.numberValue() + 1);
-        const succeeded = OrdinaryDefineOwnProperty(A, 'length', oldLenDesc);
+        const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc);
         Assert(succeeded === true);
       }
       return true;
@@ -246,12 +246,11 @@ export class FunctionValue extends ObjectValue {
   /* ::
   Realm: Realm
   ScriptOrModule: ?ScriptOrModule
+  Contruct: ?function
   */
+
   Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
     throw new TypeError('This function object does not have [[Call]] implemented');
-  }
-  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
-    throw new TypeError('This function object does not have [[Construct]] implemented');
   }
 }
 

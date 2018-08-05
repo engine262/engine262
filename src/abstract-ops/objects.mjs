@@ -31,29 +31,21 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-} from './notational-conventions.mjs';
-import {
   Call,
   CreateDataProperty,
   Get,
   GetFunctionRealm,
-} from './object-operations.mjs';
-import {
   IsAccessorDescriptor,
   IsDataDescriptor,
   IsGenericDescriptor,
-} from './spec-types.mjs';
-import {
   IsCallable,
   IsExtensible,
   IsPropertyKey,
   SameValue,
-} from './testing-comparison.mjs';
-import {
   ToNumber,
   ToString,
   ToUint32,
-} from './type-conversion.mjs';
+} from './all.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {
@@ -126,7 +118,11 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
 }
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
-export function OrdinaryDefineOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */, Desc /* : PropertyDescriptor */) {
+export function OrdinaryDefineOwnProperty(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+  Desc /* : PropertyDescriptor */,
+) {
   const current = O.GetOwnProperty(P);
   const extensible = IsExtensible(O);
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
@@ -282,14 +278,25 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
 }
 
 // 9.1.9.1 OrdinarySet
-export function OrdinarySet(O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */, Receiver /* : Value */) {
+export function OrdinarySet(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+  V /* : Value */,
+  Receiver /* : Value */,
+) {
   Assert(IsPropertyKey(P));
   const ownDesc = O.GetOwnProperty(P);
   return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function OrdinarySetWithOwnDescriptor(O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */, Receiver /* : Value */, ownDesc /* : PropertyDescriptor | UndefinedValue */) {
+export function OrdinarySetWithOwnDescriptor(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+  V /* : Value */,
+  Receiver /* : Value */,
+  ownDesc /* : PropertyDescriptor | UndefinedValue */,
+) {
   Assert(IsPropertyKey(P));
 
   if (ownDesc instanceof UndefinedValue) {
@@ -384,7 +391,10 @@ export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) /* : List<Propert
 }
 
 // 9.1.12 ObjectCreate
-export function ObjectCreate(proto /* : ObjectValue | NullValue */, internalSlotsList /* : ?List<string> */) /* : ObjectValue */ {
+export function ObjectCreate(
+  proto /* : ObjectValue | NullValue */,
+  internalSlotsList /* : ?List<string> */,
+) /* : ObjectValue */ {
   if (!internalSlotsList) {
     internalSlotsList = [];
   }
