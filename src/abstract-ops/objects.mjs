@@ -399,14 +399,15 @@ export function ObjectCreate(
     internalSlotsList = [];
   }
 
-  const obj = new ObjectValue(surroundingAgent.currentRealmRecord || proto.realm);
+  const obj = new ObjectValue(surroundingAgent.currentRealmRecord, proto);
 
+  // The following steps happen in ObjectValue constructor:
+  //
   // Set obj's essential internal methods to the default ordinary
   // object definitions specified in 9.1.
-  // Happens in ObjectValue constructor
-
-  obj.Prototype = proto;
-  obj.Extensible = true;
+  //
+  // Set obj.[[Prototype]] to proto.
+  // Set obj.[[Extensible]] to true.
 
   return obj;
 }

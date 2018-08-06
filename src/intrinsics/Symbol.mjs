@@ -32,7 +32,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
     ? NewValue(undefined)
     : ToString(description);
 
-  return new SymbolValue(realm, descString);
+  return new SymbolValue(descString);
 }
 
 function SymbolFor(realm, [key]) {
@@ -43,7 +43,7 @@ function SymbolFor(realm, [key]) {
     }
   }
   // Assert: GlobalSymbolRegistry does not currently contain an entry for stringKey.
-  const newSymbol = new SymbolValue(realm, stringKey);
+  const newSymbol = new SymbolValue(stringKey);
   GlobalSymbolRegistry.push({ Key: stringKey, Symbol: newSymbol });
   return newSymbol;
 }
