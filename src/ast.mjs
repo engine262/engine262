@@ -3,6 +3,44 @@ export function isBindingIdentifier(node) {
   return node.type === 'Identifier';
 }
 
+// Used in #prod-SingleNameBinding
+export function isBindingIdentifierAndInitializer(node) {
+  return node.type === 'AssignmentPattern' && isBindingIdentifier(node.left);
+}
+
+// #prod-SingleNameBinding
+export function isSingleNameBinding(node) {
+  return isBindingIdentifier(node) || isBindingIdentifierAndInitializer(node);
+}
+
+// Used in #prod-BindingElement
+export function isBindingPatternAndInitializer(node) {
+  return node.type === 'AssignmentPattern' && isBindingPattern(node.left);
+}
+
+// #prod-BindingElement
+export function isBindingElement(node) {
+  return isSingleNameBinding(node) ||
+         isBindingPattern(node) ||
+         isBindingPatternAndInitializer(node);
+}
+
+// #prod-BindingRestElement
+export function isBindingRestElement(node) {
+  return node.type === 'RestElement';
+}
+
+// #prod-BindingProperty
+export function isBindingProperty(node) {
+  // ESTree puts the SingleNameBinding in node.value.
+  return node.type === 'Property' && isBindingElement(node.value);
+}
+
+// #prod-BindingRestProperty
+export function isBindingRestProperty(node) {
+  return node.type === 'RestElement';
+}
+
 // #prod-BlockStatement
 export function isBlockStatement(node) {
   return node.type === 'BlockStatement';
