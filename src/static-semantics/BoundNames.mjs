@@ -149,6 +149,7 @@ function BoundNamesObjectBindingPattern(ObjectBindingPattern) {
         throw new TypeError(`Invalid element of ObjectBindingPattern: ${BindingPropertyOrBindingRestProperty.type}`);
     }
   }
+  return names;
 }
 
 // (implicit)
@@ -187,6 +188,7 @@ export function BoundNamesLexicalDeclaration(LexicalDeclaration) {
         throw new TypeError(`Invalid LexicalBinding: ${declarator.id.type}`);
     }
   }
+  return names;
 }
 
 // (implicit)
