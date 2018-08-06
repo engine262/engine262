@@ -22,11 +22,9 @@ import type {
 import {
   Type,
   New as NewValue,
-  trueValue,
   NullValue,
   ObjectValue,
   UndefinedValue,
-  undefinedValue,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -91,7 +89,7 @@ export function OrdinaryIsExtensible(O /* : ObjectValue */) {
 // 9.1.4.1 OrdinaryPreventExtensions
 export function OrdinaryPreventExtensions(O /* : ObjectValue */) {
   O.Extensible = false;
-  return trueValue;
+  return NewValue(true);
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
@@ -99,7 +97,7 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
-    return undefinedValue;
+    return NewValue(undefined);
   }
 
   const D = {};

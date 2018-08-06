@@ -11,8 +11,6 @@ import {
   UndefinedValue,
   NullValue,
   BooleanValue,
-  trueValue,
-  falseValue,
   StringValue,
   NumberValue,
   SymbolValue,
@@ -100,11 +98,11 @@ export function OrdinaryToPrimitive(
 // 7.1.2 ToBoolean
 export function ToBoolean(argument /* : Value */) /* : BooleanValue */ {
   if (argument instanceof UndefinedValue) {
-    return falseValue;
+    return NewValue(false);
   }
 
   if (argument instanceof NullValue) {
-    return falseValue;
+    return NewValue(false);
   }
 
   if (argument instanceof BooleanValue) {
@@ -113,24 +111,24 @@ export function ToBoolean(argument /* : Value */) /* : BooleanValue */ {
 
   if (argument instanceof NumberValue) {
     if (argument.numberValue() === 0 || argument.isNaN()) {
-      return falseValue;
+      return NewValue(false);
     }
-    return trueValue;
+    return NewValue(true);
   }
 
   if (argument instanceof StringValue) {
     if (argument.stringValue().length > 0) {
-      return trueValue;
+      return NewValue(true);
     }
-    return falseValue;
+    return NewValue(false);
   }
 
   if (argument instanceof SymbolValue) {
-    return trueValue;
+    return NewValue(true);
   }
 
   if (argument instanceof ObjectValue) {
-    return trueValue;
+    return NewValue(true);
   }
 
   throw new RangeError('ToBoolean(argument) unknown type');

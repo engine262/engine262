@@ -18,7 +18,6 @@ import type {
 
 import {
   UndefinedValue,
-  undefinedValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
@@ -126,7 +125,7 @@ export class Agent {
   get currentRealmRecord() /* : Realm */ {
     const currentRealmRecord = this.currentRealmRecordOrUndefined;
     Assert(currentRealmRecord !== undefined);
-    return /* :: (( */ currentRealmRecord /* : any ) : Realm) */;
+    return /* :: (( */ currentRealmRecord;
   }
 
   get activeFunctionObject() {
@@ -208,8 +207,8 @@ export function InitializeHostDefinedRealm() {
   newContext.Function = null;
   newContext.Realm = realm;
   surroundingAgent.executionContextStack.push(newContext);
-  const global = undefinedValue;
-  const thisValue = undefinedValue;
+  const global = NewValue(undefined);
+  const thisValue = NewValue(undefined);
   SetRealmGlobalObject(realm, global, thisValue);
   const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
@@ -286,7 +285,7 @@ export function ScriptEvaluation(scriptRecord) {
   }
 
   if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(undefinedValue);
+    result = new NormalCompletion(NewValue(undefined));
   }
   // Suspend scriptCtx
   surroundingAgent.executionContextStack.pop();

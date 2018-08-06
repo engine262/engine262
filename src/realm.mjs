@@ -1,8 +1,8 @@
 import {
   UndefinedValue,
-  nullValue,
   SymbolValue,
   ObjectValue,
+  New as NewValue,
 } from './value.mjs';
 import {
   CreateBuiltinFunction,
@@ -180,12 +180,12 @@ export function CreateIntrinsics(realmRec) {
 
   // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
   // current Realm record yet.
-  const objProto = new ObjectValue(realmRec, nullValue);
+  const objProto = new ObjectValue(realmRec, NewValue(null));
   intrinsics['%ObjectPrototype%'] = objProto;
 
   const thrower = CreateBuiltinFunction(() => {
     surroundingAgent.Throw('TypeError');
-  }, [], realmRec, nullValue);
+  }, [], realmRec, NewValue(null));
   intrinsics['%ThrowTypeError%'] = thrower;
 
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);

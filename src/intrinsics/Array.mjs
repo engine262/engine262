@@ -237,7 +237,7 @@ function ArrayOf(realm, [...items], { thisArgument }) {
   }
   Set(A, NewValue('length'), NewValue(len), NewValue(true));
   return A;
- }
+}
 
 export function CreateArray(realmRec /* : Realm */) {
   const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);

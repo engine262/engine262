@@ -1,6 +1,5 @@
 import {
   ArrayValue,
-  undefinedValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
@@ -41,14 +40,14 @@ function ArraySpeciesCreate(originalArray, length) {
     const realmC = GetFunctionRealm(C);
     if (thisRealm !== realmC) {
       if (SameValue(C, realmC.Intrinsics['%Array%']) === true) {
-        C = undefinedValue;
+        C = NewValue(undefined);
       }
     }
   }
   if (Type(C) === 'Object') {
     C = Get(C, wellKnownSymbols.species);
     if (C.isNull()) {
-      C = undefinedValue;
+      C = NewValue(undefined);
     }
   }
   if (C.isUndefined()) {

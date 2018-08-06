@@ -57,7 +57,7 @@ function EvaluateExpressionStatement(ExpressionStatement, envRec) {
 // (implicit)
 //   Expression : BooleanLiteral
 function EvaluateExpression(Expression, envRec) {
-  if (Expression.type === "Literal" && typeof Expression.value === "boolean") {
+  if (Expression.type === 'Literal' && typeof Expression.value === 'boolean') {
     return new NormalCompletion(NewValue(Expression.value));
   }
 }
