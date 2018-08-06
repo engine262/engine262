@@ -22,9 +22,11 @@ import type {
 import {
   Type,
   New as NewValue,
+  trueValue,
   NullValue,
   ObjectValue,
   UndefinedValue,
+  undefinedValue,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -89,7 +91,7 @@ export function OrdinaryIsExtensible(O /* : ObjectValue */) {
 // 9.1.4.1 OrdinaryPreventExtensions
 export function OrdinaryPreventExtensions(O /* : ObjectValue */) {
   O.Extensible = false;
-  return NewValue(true);
+  return trueValue;
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
@@ -97,7 +99,7 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
-    return NewValue(undefined);
+    return undefinedValue;
   }
 
   const D = {};
@@ -148,7 +150,7 @@ export function ValidateAndApplyPropertyDescriptor(
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, {
-          Value: 'Value' in Desc ? Desc.Value : NewValue(undefined),
+          Value: 'Value' in Desc ? Desc.Value : undefinedValue,
           Writable: 'Writable' in Desc ? Desc.Writable : false,
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
@@ -158,8 +160,8 @@ export function ValidateAndApplyPropertyDescriptor(
       Assert(IsAccessorDescriptor(Desc));
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, {
-          Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
-          Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
+          Get: 'Get' in Desc ? Desc.Get : undefinedValue,
+          Set: 'Set' in Desc ? Desc.Set : undefinedValue,
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
         });
@@ -194,15 +196,15 @@ export function ValidateAndApplyPropertyDescriptor(
         const entry = O.properties.get(P);
         delete entry.Value;
         delete entry.Writable;
-        entry.Get = NewValue(undefined);
-        entry.Set = NewValue(undefined);
+        entry.Get = undefinedValue;
+        entry.Set = undefinedValue;
       }
     } else {
       if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         delete entry.Get;
         delete entry.Set;
-        entry.Value = NewValue(undefined);
+        entry.Value = undefinedValue;
         entry.Writable = false;
       }
     }
@@ -262,7 +264,7 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
   if (desc === undefined) {
     const parent = O.GetPrototypeOf();
     if (parent.isNull()) {
-      return NewValue(undefined);
+      return undefinedValue;
     }
     return parent.Get(P, Receiver);
   }
@@ -272,7 +274,7 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
   if (getter instanceof UndefinedValue) {
-    return NewValue(undefined);
+    return undefinedValue;
   }
   return Call(getter, Receiver);
 }
@@ -305,7 +307,7 @@ export function OrdinarySetWithOwnDescriptor(
       return parent.Set(P, V, Receiver);
     }
     ownDesc = ({
-      Value: NewValue(undefined),
+      Value: undefinedValue,
       Writable: true,
       Enumerable: true,
       Configurable: true,

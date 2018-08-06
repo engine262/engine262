@@ -4,6 +4,8 @@ import {
   Type,
   NullValue,
   UndefinedValue,
+  trueValue,
+  falseValue,
   New as NewValue,
 } from '../value.mjs';
 import {
@@ -60,7 +62,7 @@ function ObjectAssign(realm, [target, ...sources]) {
       const desc = from.GetOwnProperty(nextKey);
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
         const propValue = Get(from, nextKey);
-        Set(to, nextKey, propValue, NewValue(true));
+        Set(to, nextKey, propValue, trueValue);
       }
     });
   });
@@ -185,21 +187,21 @@ function ObjectIs(realm, [value1, value2]) {
 
 function ObjectIsExtensible(realm, [O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(false);
+    return falseValue;
   }
   return IsExtensible(O);
 }
 
 function ObjectIsFrozen(realm, [O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(true);
+    return trueValue;
   }
   return TestIntegrityLevel(O, 'frozen');
 }
 
 function ObjectIsSealed(realm, [O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(true);
+    return trueValue;
   }
   return TestIntegrityLevel(O, 'sealed');
 }

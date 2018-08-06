@@ -20,7 +20,9 @@ import {
   Type,
   Value,
   UndefinedValue,
+  undefinedValue,
   NullValue,
+  falseValue,
   ProxyValue,
   New as NewValue,
 } from '../value.mjs';
@@ -123,7 +125,7 @@ export function GetMethod(
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
   if (func.isNull() || func.isUndefined()) {
-    return NewValue(undefined);
+    return undefinedValue;
   }
   if (IsCallable(func) === false) {
     surroundingAgent.Throw('TypeError');
@@ -185,7 +187,7 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
   Assert(level === 'sealed' || level === 'frozen');
   const status = O.PreventExtensions();
   if (status.isFalse()) {
-    return NewValue(false);
+    return falseValue;
   }
   const keys = O.OwnPropertyKeys();
   if (level === 'sealed') {
@@ -214,14 +216,14 @@ export function TestIntegrityLevel(O /* : ObjectValue */, level /* : string */) 
   Assert(level === 'sealed' || level === 'frozen');
   const status = IsExtensible(O);
   if (status.isTrue()) {
-    return NewValue(false);
+    return falseValue;
   }
   const keys = O.OwnPropertyKeys();
   for (const k of keys) {
     const currentDesc = O.GetOwnProperty(k);
     if (!(currentDesc instanceof UndefinedValue)) {
       if (currentDesc.Configurable === true) {
-        return NewValue(false);
+        return falseValue;
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
         if (currentDesc.Writable === true) {

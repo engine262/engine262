@@ -17,6 +17,7 @@ import {
 import {
   Type,
   UndefinedValue,
+  undefinedValue,
   New as NewValue,
 } from '../value.mjs';
 import {
@@ -70,7 +71,7 @@ export function IsGenericDescriptor(Desc /* : PropertyDescriptor */) {
 // #sec-frompropertydescriptor FromPropertyDescriptor
 export function FromPropertyDescriptor(Desc /* : PropertyDescriptor */) {
   if (Desc instanceof UndefinedValue) {
-    return NewValue(undefined);
+    return undefinedValue;
   }
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   if ('Value' in Desc) {

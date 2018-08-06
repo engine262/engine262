@@ -18,6 +18,7 @@ import type {
 
 import {
   UndefinedValue,
+  undefinedValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
@@ -213,8 +214,8 @@ export function InitializeHostDefinedRealm() {
   newContext.Function = null;
   newContext.Realm = realm;
   surroundingAgent.executionContextStack.push(newContext);
-  const global = NewValue(undefined);
-  const thisValue = NewValue(undefined);
+  const global = undefinedValue;
+  const thisValue = undefinedValue;
   SetRealmGlobalObject(realm, global, thisValue);
   const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
@@ -325,7 +326,7 @@ export function ScriptEvaluation(scriptRecord) {
   }
 
   if (result.Type === 'normal' && result.Value instanceof UndefinedValue) {
-    result = new NormalCompletion(NewValue(undefined));
+    result = new NormalCompletion(undefinedValue);
   }
   // Suspend scriptCtx
   surroundingAgent.executionContextStack.pop();

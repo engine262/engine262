@@ -313,7 +313,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisArgument,
-      NewTarget: New(undefined),
+      NewTarget: undefinedValue,
     });
     surroundingAgent.executionContextStack.pop();
 
@@ -333,7 +333,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
-      thisArgument: New(undefined),
+      thisArgument: undefinedValue,
       NewTarget: newTarget,
     });
     surroundingAgent.executionContextStack.pop();
@@ -525,16 +525,16 @@ export class ProxyValue extends ObjectValue {
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, P]));
     if (booleanTrapResult.isFalse()) {
-      return New(false);
+      return falseValue;
     }
     const targetDesc = target.GetOwnProperty(P);
     if (targetDesc instanceof UndefinedValue) {
-      return New(true);
+      return trueValue;
     }
     if (targetDesc.Configurable === false) {
       surroundingAgent.Throw('TypeError');
     }
-    return New(true);
+    return trueValue;
   }
 
   OwnPropertyKeys() {}

@@ -7,6 +7,7 @@ import type {
 */
 
 import {
+  undefinedValue,
   SymbolValue,
   wellKnownSymbols,
   New as NewValue,
@@ -30,7 +31,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
     surroundingAgent.Throw('TypeError');
   }
   const descString = description.isUndefined()
-    ? NewValue(undefined)
+    ? undefinedValue
     : ToString(description);
 
   return new SymbolValue(descString);
@@ -58,7 +59,7 @@ function SymbolKeyFor(realm, [sym]) {
       return e.Key;
     }
   }
-  return NewValue(undefined);
+  return undefinedValue;
 }
 
 export function CreateSymbol(realmRec /* : Realm */) {

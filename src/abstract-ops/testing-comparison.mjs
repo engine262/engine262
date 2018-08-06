@@ -13,6 +13,8 @@ import type {
 import {
   Type,
   NullValue,
+  trueValue,
+  falseValue,
   ArrayValue,
   ProxyValue,
   New as NewValue,
@@ -47,10 +49,10 @@ export function RequireObjectCoercible(argument /* : Value */) {
 // 7.2.2 IsArray
 export function IsArray(argument /* : Value */) /* : BooleanValue */ {
   if (Type(argument) !== 'Object') {
-    return NewValue(false);
+    return falseValue;
   }
   if (argument instanceof ArrayValue) {
-    return NewValue(true);
+    return trueValue;
   }
   if (argument instanceof ProxyValue) {
     if (argument.ProxyHandler instanceof NullValue) {
@@ -59,7 +61,7 @@ export function IsArray(argument /* : Value */) /* : BooleanValue */ {
     const target = argument.ProxyTarget;
     return IsArray(target);
   }
-  return NewValue(false);
+  return falseValue;
 }
 
 // 7.2.3 IsCallable
