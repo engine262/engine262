@@ -5,6 +5,7 @@ module.exports = {
     'lines-between-class-members': 'off',
     'class-methods-use-this': 'off',
     'no-lonely-if': 'off',
+    'no-else-return': 'off',
     'no-restricted-syntax': 'off',
     'no-param-reassign': 'off',
     'no-use-before-define': 'off',
