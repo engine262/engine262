@@ -55,28 +55,22 @@ import {
   ToBoolean,
 } from './abstract-ops/type-conversion.mjs';
 
-// totally wrong but aaaaaaaaa
-export function Evaluate(body /* : Object */, envRec /* : EnvironmentRecord */) {
-  if (body.type === 'Program') {
-    const res = body.childElements
-      .filter((e) => e.type !== 'Punctuator' && e.type !== 'EOF')
-      .map((e) => Evaluate(e, envRec));
-    return new NormalCompletion(res[res.length - 1]);
-  }
+import {
+  LexicallyDeclaredNamesScriptBody,
+} from './static-semantics/LexicallyDeclaredNames.mjs';
+import {
+  LexicallyScopedDeclarationsScriptBody,
+} from './static-semantics/LexicallyScopedDeclarations.mjs';
+import {
+  VarDeclaredNamesScriptBody,
+} from './static-semantics/VarDeclaredNames.mjs';
+import {
+  VarScopedDeclarationsScriptBody,
+} from './static-semantics/VarScopedDeclarations.mjs';
 
-  if (body.type === 'ExpressionStatement') {
-    const res = body.childElements
-      .filter((e) => e.type !== 'Punctuator')
-      .map((e) => Evaluate(e, envRec));
-    return res[res.length - 1];
-  }
-
-  if (body.type === 'BooleanLiteral') {
-    return NewValue(body.firstChild.value);
-  }
-
-  console.log(body);
-}
+import {
+  EvaluateScript,
+} from './evaluator.mjs';
 
 
 /* ::
@@ -229,7 +223,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'true;', hostDefined: undefined },
+    { sourceText: 'true; false;', hostDefined: undefined },
   ];
 
   const modules = [];
@@ -274,40 +268,6 @@ export function AgentSignifier() {
   return AR.Signifier;
 }
 
-// 13.2.7 Static Semantics: TopLevelLexicallyDeclaredNames
-export function TopLevelLexicallyDeclaredNames() {
-  return [];
-}
-
-// 13.2.9 Static Semantics TopLevelVarDeclaredNames
-export function TopLevelVarDeclaredNames(StatementList) {
-  return StatementList
-    .filter((c) => c.type === 'VariableDeclaration')
-    .map((c) => c.childElements[2].firstChild.firstChild.value);
-}
-
-// 15.1.3 LexicallyDeclaredNames
-export function LexicallyDeclaredNames(ScriptBody) {
-  // Return TopLevelLexicallyDeclaredNames of StatementList.
-  return TopLevelLexicallyDeclaredNames(ScriptBody.body);
-}
-
-// 15.1.4 LexicallyScopedDeclarations
-export function LexicallyScopedDeclarations() {
-  return [];
-}
-
-// 15.1.5 VarDeclaredNames
-export function VarDeclaredNames(ScriptBody) {
-  // Return TopLevelVarDeclaredNames of StatementList.
-  return TopLevelVarDeclaredNames(ScriptBody.childElements);
-}
-
-// 15.1.6 VarScopedDeclarations
-export function VarScopedDeclarations() {
-  return [];
-}
-
 // 15.1.10 ScriptEvaluation
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
@@ -319,13 +279,13 @@ export function ScriptEvaluation(scriptRecord) {
   scriptCtx.LexicalEnvironment = globalEnv;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptCtx);
-  const scriptBody = scriptRecord.ECMAScriptCode;
+  const scriptBody = scriptRecord.ECMAScriptCode.body;
   let result = GlobalDeclarationInstantiation(scriptBody, globalEnv);
   if (result.Type === 'normal') {
-    result = Evaluate(scriptBody, globalEnv);
+    result = EvaluateScript(scriptBody, globalEnv);
   }
 
-  if (result.Type === 'normal' && result.Value instanceof UndefinedValue) {
+  if (result.Type === 'normal' && !result.Value) {
     result = new NormalCompletion(undefinedValue);
   }
   // Suspend scriptCtx
@@ -340,8 +300,8 @@ export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
-  const lexNames = LexicallyDeclaredNames(script);
-  const varNames = VarDeclaredNames(script);
+  const lexNames = LexicallyDeclaredNamesScriptBody(script);
+  const varNames = VarDeclaredNamesScriptBody(script);
 
   lexNames.forEach((name) => {
     if (envRec.HasVarDeclaration(name)) {
@@ -362,7 +322,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     }
   });
 
-  const varDeclarations = VarScopedDeclarations(script);
+  const varDeclarations = VarScopedDeclarationsScriptBody(script);
 
   const functionsToInitialize = [];
   // const declaredFunctionNames = [];
@@ -382,7 +342,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     // annex b
   }
 
-  const lexDeclarations = LexicallyScopedDeclarations(script);
+  const lexDeclarations = LexicallyScopedDeclarationsScriptBody(script);
   lexDeclarations.forEach(() => {
     // stuff
   });

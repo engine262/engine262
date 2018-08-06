@@ -12,7 +12,7 @@ import {
 } from './BoundNames.mjs';
 
 import {
-  VarDeclaredNames,
+  VarDeclaredNamesStatementListItem,
 } from './VarDeclaredNames.mjs';
 
 // Static Semantics: TopLevelVarDeclaredNames
@@ -25,7 +25,6 @@ export function TopLevelVarDeclaredNamesStatementList(StatementList) {
   }
   return names;
 }
-
 
 // #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementListItem : Declaration
@@ -43,7 +42,7 @@ export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
       if (isLabelledStatement(StatementListItem)) {
         return TopLevelVarDeclaredNamesLabelledItem(StatementListItem.body);
       }
-      return VarDeclaredNames(StatementListItem);
+      return VarDeclaredNamesStatementListItem(StatementListItem);
     default:
       throw new TypeError(`Unexpected StatementListItem: ${StatementListItem.type}`);
   }
