@@ -49,24 +49,28 @@ export class Value {}
 export class PrimitiveValue extends Value {}
 
 export class UndefinedValue extends PrimitiveValue {}
+export const undefinedValue = new UndefinedValue();
 
 export class NullValue extends PrimitiveValue {}
+export const nullValue = new NullValue();
 
 export class BooleanValue extends PrimitiveValue {
-  /* :: boolean: Boolean */
-  constructor(boolean /* : Boolean */) {
+  /* :: boolean: boolean */
+  constructor(boolean /* : boolean */) {
     super();
     this.boolean = boolean;
   }
 
   isTrue() {
-    return this.boolean === true;
+    return this === trueValue;
   }
 
   isFalse() {
-    return this.boolean === false;
+    return this === falseValue;
   }
 }
+export const trueValue = new BooleanValue(true);
+export const falseValue = new BooleanValue(false);
 
 export class NumberValue extends PrimitiveValue {
   /* :: number: number */
@@ -157,7 +161,7 @@ export class ObjectValue extends PrimitiveValue {
     this.Prototype = Prototype
       // $FlowFixMe
       || realm.Intrinsics['%ObjectPrototype%']
-      || new NullValue();
+      || nullValue;
 
     this.Extensible = true;
     this.IsClassPrototype = false;
@@ -530,11 +534,11 @@ declare function New(function, ?Realm): BuiltinFunctionValue;
 
 export function New(value, realm) {
   if (value === null) {
-    return new NullValue();
+    return nullValue;
   }
 
   if (value === undefined) {
-    return new UndefinedValue();
+    return undefinedValue;
   }
 
   if (typeof value === 'string') {
@@ -546,7 +550,7 @@ export function New(value, realm) {
   }
 
   if (typeof value === 'boolean') {
-    return new BooleanValue(value);
+    return value ? trueValue : falseValue;
   }
 
   // $FlowFixMe 'symbol' isn't valid for typeof
