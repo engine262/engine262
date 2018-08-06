@@ -1,13 +1,14 @@
 import {
   isDeclaration,
+  isFunctionDeclaration,
   isHoistableDeclaration,
   isStatement,
   isLabelledStatement,
 } from '../ast.mjs';
 
 import {
-  BoundNames,
   BoundNamesFunctionDeclaration,
+  BoundNamesHoistableDeclaration,
 } from './BoundNames.mjs';
 
 import {
@@ -35,7 +36,7 @@ export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
   switch (true) {
     case isDeclaration(StatementListItem):
       if (isHoistableDeclaration(StatementListItem)) {
-        return BoundNames(StatementListItem);
+        return BoundNamesHoistableDeclaration(StatementListItem);
       }
       return [];
     case isStatement(StatementListItem):
