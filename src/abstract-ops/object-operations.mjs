@@ -20,9 +20,7 @@ import {
   Type,
   Value,
   UndefinedValue,
-  undefinedValue,
   NullValue,
-  falseValue,
   ProxyValue,
   New as NewValue,
 } from '../value.mjs';
@@ -125,7 +123,7 @@ export function GetMethod(
   Assert(IsPropertyKey(P));
   const func = GetV(V, P);
   if (func.isNull() || func.isUndefined()) {
-    return undefinedValue;
+    return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
     surroundingAgent.Throw('TypeError');
@@ -187,7 +185,7 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
   Assert(level === 'sealed' || level === 'frozen');
   const status = O.PreventExtensions();
   if (status.isFalse()) {
-    return falseValue;
+    return NewValue(false);
   }
   const keys = O.OwnPropertyKeys();
   if (level === 'sealed') {

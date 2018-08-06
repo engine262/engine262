@@ -20,9 +20,9 @@ export function isBindingPatternAndInitializer(node) {
 
 // #prod-BindingElement
 export function isBindingElement(node) {
-  return isSingleNameBinding(node) ||
-         isBindingPattern(node) ||
-         isBindingPatternAndInitializer(node);
+  return isSingleNameBinding(node)
+         || isBindingPattern(node)
+         || isBindingPatternAndInitializer(node);
 }
 
 // #prod-BindingRestElement
@@ -92,11 +92,11 @@ export function isBreakableStatement(node) {
 // #prod-IterationStatement
 export function isIterationStatement(node) {
   // for-await-of is ForOfStatement with await = true
-  return node.type === 'DoWhileStatement' ||
-         node.type === 'WhileStatement' ||
-         node.type === 'ForStatement' ||
-         node.type === 'ForInStatement' ||
-         node.type === 'ForOfStatement';
+  return node.type === 'DoWhileStatement'
+         || node.type === 'WhileStatement'
+         || node.type === 'ForStatement'
+         || node.type === 'ForInStatement'
+         || node.type === 'ForOfStatement';
 }
 
 // #prod-SwitchStatement
@@ -146,27 +146,27 @@ export function isDebuggerStatement(node) {
 
 // #prod-Statement
 export function isStatement(node) {
-  return isBlockStatement(node) ||
-         isVariableStatement(node) ||
-         isEmptyStatement(node) ||
-         isExpressionStatement(node) ||
-         isIfStatement(node) ||
-         isBreakableStatement(node) ||
-         isContinueStatement(node) ||
-         isBreakStatement(node) ||
-         isReturnStatement(node) ||
-         isWithStatement(node) ||
-         isLabelledStatement(node) ||
-         isThrowStatement(node) ||
-         isTryStatement(node) ||
-         isDebuggerStatement(node);
+  return isBlockStatement(node)
+         || isVariableStatement(node)
+         || isEmptyStatement(node)
+         || isExpressionStatement(node)
+         || isIfStatement(node)
+         || isBreakableStatement(node)
+         || isContinueStatement(node)
+         || isBreakStatement(node)
+         || isReturnStatement(node)
+         || isWithStatement(node)
+         || isLabelledStatement(node)
+         || isThrowStatement(node)
+         || isTryStatement(node)
+         || isDebuggerStatement(node);
 }
 
 // #prod-Declaration
 export function isDeclaration(node) {
-  return isHoistableDeclaration(node) ||
-         isClassDeclaration(node) ||
-         isLexicalDeclaration(node);
+  return isHoistableDeclaration(node)
+         || isClassDeclaration(node)
+         || isLexicalDeclaration(node);
 }
 
 // #prod-HoistableDeclaration
@@ -178,30 +178,30 @@ export function isHoistableDeclaration(node) {
 
 // #prod-FunctionDeclaration
 export function isFunctionDeclaration(node) {
-  return node.type === 'FunctionDeclaration' &&
-         !node.generator &&
-         !node.async;
+  return node.type === 'FunctionDeclaration'
+         && !node.generator
+         && !node.async;
 }
 
 // #prod-GeneratorDeclaration
 export function isGeneratorDeclaration(node) {
-  return node.type === 'FunctionDeclaration' &&
-         node.generator &&
-         !node.async;
+  return node.type === 'FunctionDeclaration'
+         && node.generator
+         && !node.async;
 }
 
 // #prod-AsyncFunctionDeclaration
 export function isAsyncFunctionDeclaration(node) {
-  return node.type === 'FunctionDeclaration' &&
-         !node.generator &&
-         node.async;
+  return node.type === 'FunctionDeclaration'
+         && !node.generator
+         && node.async;
 }
 
 // #prod-AsyncGeneratorDeclaration
 export function isAsyncGeneratorDeclaration(node) {
-  return node.type === 'FunctionDeclaration' &&
-         node.generator &&
-         node.async;
+  return node.type === 'FunctionDeclaration'
+         && node.generator
+         && node.async;
 }
 
 // #prod-ClassDeclaration

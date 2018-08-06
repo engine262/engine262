@@ -49,10 +49,8 @@ export class Value {}
 export class PrimitiveValue extends Value {}
 
 export class UndefinedValue extends PrimitiveValue {}
-export const undefinedValue = new UndefinedValue();
 
 export class NullValue extends PrimitiveValue {}
-export const nullValue = new NullValue();
 
 export class BooleanValue extends PrimitiveValue {
   /* :: boolean: boolean */
@@ -69,8 +67,6 @@ export class BooleanValue extends PrimitiveValue {
     return this === falseValue;
   }
 }
-export const trueValue = new BooleanValue(true);
-export const falseValue = new BooleanValue(false);
 
 export class NumberValue extends PrimitiveValue {
   /* :: number: number */
@@ -551,6 +547,11 @@ declare function New(boolean, ?Realm): BooleanValue;
 declare function New(symbol, ?Realm): SymbolValue;
 declare function New(function, ?Realm): BuiltinFunctionValue;
 */
+
+const undefinedValue = new UndefinedValue();
+const nullValue = new NullValue();
+const trueValue = new BooleanValue(true);
+const falseValue = new BooleanValue(false);
 
 export function New(value, realm) {
   if (value === null) {
