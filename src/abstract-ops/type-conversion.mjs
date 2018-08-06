@@ -240,6 +240,7 @@ export function NumberToString(m /* : NumberValue */) {
 // 7.1.13 ToObject
 export function ToObject(argument /* : Value */) /* : ObjectValue */{
   const type = Type(argument);
+  const realm = surroundingAgent.currentRealmRecord;
   switch (type) {
     case 'Undefined':
       return surroundingAgent.Throw('TypeError');
@@ -247,25 +248,25 @@ export function ToObject(argument /* : Value */) /* : ObjectValue */{
       return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
       /* :: argument = ((argument : any) : BooleanValue); */
-      const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%BooleanPrototype%'));
+      const obj = new ObjectValue(realm, realm.Intrinsics['%BooleanPrototype%']);
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
       /* :: argument = ((argument : any) : NumberValue); */
-      const obj = new ObjectValue(argument.realm, surroundingAgent.intrinsic('%NumberPrototype%'));
+      const obj = new ObjectValue(realm, realm.Intrinsics['%NumberPrototype%']);
       obj.NumberData = argument;
       return obj;
     }
     case 'String': {
       /* :: argument = ((argument : any) : StringValue); */
-      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%StringPrototype%']);
+      const obj = new ObjectValue(realm, realm.Intrinsics['%StringPrototype%']);
       obj.StringData = argument;
       return obj;
     }
     case 'Symbol': {
       /* :: argument = ((argument : any) : SymbolValue); */
-      const obj = new ObjectValue(argument.realm, argument.realm.Intrinsics['%SymbolPrototype%']);
+      const obj = new ObjectValue(realm, realm.Intrinsics['%SymbolPrototype%']);
       obj.SymbolData = argument;
       return obj;
     }

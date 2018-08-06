@@ -6,6 +6,7 @@ import type {
 } from './engine.mjs';
 
 import type {
+  List,
   PropertyDescriptor,
 } from './abstract-ops/all.mjs';
 */
@@ -43,12 +44,7 @@ import {
   ToUint32,
 } from './abstract-ops/all.mjs';
 
-export class Value {
-  /* :: realm: Realm; */
-  constructor(realm /* : Realm */) {
-    this.realm = realm;
-  }
-}
+export class Value {}
 
 export class PrimitiveValue extends Value {}
 
@@ -58,8 +54,8 @@ export class NullValue extends PrimitiveValue {}
 
 export class BooleanValue extends PrimitiveValue {
   /* :: boolean: Boolean */
-  constructor(realm /* : Realm */, boolean /* : Boolean */) {
-    super(realm);
+  constructor(boolean /* : Boolean */) {
+    super();
     this.boolean = boolean;
   }
 
@@ -74,8 +70,8 @@ export class BooleanValue extends PrimitiveValue {
 
 export class NumberValue extends PrimitiveValue {
   /* :: number: number */
-  constructor(realm /* : Realm */, number /* : number */) {
-    super(realm);
+  constructor(number /* : number */) {
+    super();
     this.number = number;
   }
 
@@ -94,8 +90,8 @@ export class NumberValue extends PrimitiveValue {
 
 export class StringValue extends PrimitiveValue {
   /* :: string: String */
-  constructor(realm /* : Realm */, string /* : String */) {
-    super(realm);
+  constructor(string /* : String */) {
+    super();
     this.string = string;
   }
 
@@ -106,8 +102,8 @@ export class StringValue extends PrimitiveValue {
 
 export class SymbolValue extends PrimitiveValue {
   /* :: Description: UndefinedValue|StringValue */
-  constructor(realm /* : Realm */, Description /* : StringValue */) {
-    super(realm);
+  constructor(Description /* : StringValue */) {
+    super();
     this.Description = Description;
   }
 }
@@ -148,18 +144,20 @@ class InternalPropertyMap extends Map /* <Value, Value> */ {
 /* :: export type PropertyKey = StringValue | SymbolValue; */
 export class ObjectValue extends PrimitiveValue {
   /* ::
+  realm: Realm
   Prototype: NullValue | ObjectValue
   Extensible: boolean
   IsClassPrototype: boolean
   properties: InternalPropertyMap
   */
-  constructor(realm /* : Realm */, Prototype /* : ?NullValue | ?ObjectValue */) {
-    super(realm);
+  constructor(realm /* : Realm */, Prototype /* : ?(NullValue | ObjectValue) */) {
+    super();
 
+    this.realm = realm;
     this.Prototype = Prototype
       // $FlowFixMe
       || realm.Intrinsics['%ObjectPrototype%']
-      || new NullValue(realm);
+      || new NullValue();
 
     this.Extensible = true;
     this.IsClassPrototype = false;
@@ -244,8 +242,6 @@ export class ArrayValue extends ObjectValue {
 
 export class FunctionValue extends ObjectValue {
   /* ::
-  Realm: Realm
-  ScriptOrModule: ?ScriptOrModule
   Contruct: ?function
   */
 
@@ -263,14 +259,23 @@ export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], con
 
 export class BuiltinFunctionValue extends FunctionValue {
   /* ::
+  Realm: ?Realm
+  ScriptOrModule: ?ScriptOrModule
   nativeFunction: BuiltinFunctionCallback
   */
+
   constructor(realm /* : Realm */, nativeFunction /* : BuiltinFunctionCallback */) {
-    super(realm);
+    // Unless otherwise specified every built-in function object has the
+    // %FunctionPrototype% object as the initial value of its [[Prototype]]
+    // internal slot.
+    super(realm, realm.Intrinsics['%FunctionPrototype%']);
     this.nativeFunction = nativeFunction;
+    // Will be filled in CreateBuiltinFunction.
+    this.Realm = undefined;
+    this.ScriptOrModule = undefined;
   }
 
-  Call(thisArgument /* : Value */, argumentsList /* : Value[] */) {
+  Call(thisArgument /* : Value */, argumentsList /* : List<Value> */) {
     const F = this;
 
     const callerContext = surroundingAgent.runningExecutionContext;
@@ -291,7 +296,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     return result;
   }
 
-  Construct(argumentsList /* : Value[] */, newTarget /* : Value */) {
+  Construct(argumentsList /* : List<Value> */, newTarget /* : Value */) {
     const F = this;
 
     const callerContext = surroundingAgent.runningExecutionContext;
@@ -318,11 +323,10 @@ export class ProxyValue extends ObjectValue {
   ProxyHandler: NullValue | ObjectValue
   */
   constructor(
-    realm /* : Realm */,
     ProxyTarget /* : ObjectValue */,
     ProxyHandler /* : NullValue | ObjectValue */,
   ) {
-    super(realm);
+    super();
 
     this.ProxyTarget = ProxyTarget;
     this.ProxyHandler = ProxyHandler;
@@ -526,28 +530,28 @@ declare function New(function, ?Realm): BuiltinFunctionValue;
 
 export function New(value, realm) {
   if (value === null) {
-    return new NullValue(realm);
+    return new NullValue();
   }
 
   if (value === undefined) {
-    return new UndefinedValue(realm);
+    return new UndefinedValue();
   }
 
   if (typeof value === 'string') {
-    return new StringValue(realm, value);
+    return new StringValue(value);
   }
 
   if (typeof value === 'number') {
-    return new NumberValue(realm, value);
+    return new NumberValue(value);
   }
 
   if (typeof value === 'boolean') {
-    return new BooleanValue(realm, value);
+    return new BooleanValue(value);
   }
 
   // $FlowFixMe 'symbol' isn't valid for typeof
   if (typeof value === 'symbol') {
-    return new SymbolValue(realm, value);
+    return new SymbolValue(value);
   }
 
   if (typeof value === 'function') {

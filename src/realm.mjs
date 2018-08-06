@@ -1,6 +1,7 @@
 import {
   UndefinedValue,
   SymbolValue,
+  ObjectValue,
   New as NewValue,
 } from './value.mjs';
 import {
@@ -20,6 +21,7 @@ import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
 import { CreateArray } from './intrinsics/Array.mjs';
 import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
 import { CreateBoolean } from './intrinsics/Boolean.mjs';
+// import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
 import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
@@ -193,17 +195,18 @@ export function CreateIntrinsics(realmRec) {
   ];
 
   wellKnownSymbolNames.forEach((name) => {
-    const sym = new SymbolValue(realmRec, NewValue(name, realmRec));
+    const sym = new SymbolValue(NewValue(name));
     realmRec.Intrinsics[`@@${name}`] = sym;
   });
 
-  const objProto = ObjectCreate(NewValue(null, realmRec));
+  // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
+  // current Realm record yet.
+  const objProto = new ObjectValue(realmRec, NewValue(null));
   intrinsics['%ObjectPrototype%'] = objProto;
-  CreateObjectPrototype(realmRec);
 
   const thrower = CreateBuiltinFunction(() => {
     surroundingAgent.Throw('TypeError');
-  }, [], realmRec, NewValue(null, realmRec));
+  }, [], realmRec, NewValue(null));
   intrinsics['%ThrowTypeError%'] = thrower;
 
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
@@ -211,6 +214,7 @@ export function CreateIntrinsics(realmRec) {
 
   thrower.SetPrototypeOf(funcProto);
 
+  CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
 
   CreateArrayPrototype(realmRec);
@@ -218,6 +222,8 @@ export function CreateIntrinsics(realmRec) {
 
   CreateBooleanPrototype(realmRec);
   CreateBoolean(realmRec);
+
+  // CreateFunctionPrototype(realmRec);
 
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);

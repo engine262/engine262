@@ -119,13 +119,18 @@ export class Agent {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
 
-  get currentRealmRecord() /* : Realm */ {
+  get currentRealmRecordOrUndefined() /* : Realm | void */ {
     const currentCtx = this.runningExecutionContext;
     if (currentCtx !== undefined) {
       return currentCtx.Realm;
     }
-    // $FlowFixMe
     return undefined;
+  }
+
+  get currentRealmRecord() /* : Realm */ {
+    const currentRealmRecord = this.currentRealmRecordOrUndefined;
+    Assert(currentRealmRecord !== undefined);
+    return /* :: (( */ currentRealmRecord /* : any ) : Realm) */;
   }
 
   get activeFunctionObject() {
