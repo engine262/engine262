@@ -1,21 +1,11 @@
-import CST from 'cst';
+import acorn from 'acorn';
 
 export function ParseScript(
   sourceText /* : string */, realm /* : Realm */, hostDefined /* :?Object */,
 ) {
-  const parser = new CST.Parser({
+  const body = acorn.parse(sourceText, {
     sourceType: 'script',
-    experimentalFeatures: {
-      flow: false,
-      jsx: false,
-      decorators: false,
-      doExpressions: false,
-      functionBind: false,
-      classProperties: false,
-    },
   });
-
-  const body = parser.parse(sourceText);
 
   return {
     Realm: realm,
