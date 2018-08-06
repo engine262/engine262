@@ -1,5 +1,6 @@
 import {
   ObjectValue,
+  wellKnownSymbols,
   New as NewValue,
 } from '../value.mjs';
 
@@ -47,7 +48,7 @@ export function CreateMath(realmRec) {
     });
   });
 
-  mathObj.DefineOwnProperty(realmRec.Intrinsics['@@toStringTag'], {
+  mathObj.DefineOwnProperty(wellKnownSymbols.toStringTag, {
     Value: NewValue('Math'),
     Enumerable: false,
     Configurable: false,

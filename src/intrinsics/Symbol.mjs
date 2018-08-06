@@ -8,6 +8,7 @@ import type {
 
 import {
   SymbolValue,
+  wellKnownSymbols,
   New as NewValue,
   Type,
 } from '../value.mjs';
@@ -74,6 +75,15 @@ export function CreateSymbol(realmRec /* : Realm */) {
       Configurable: true,
     });
   });
+
+  for (const [name, sym] of Object.entries(wellKnownSymbols)) {
+    symbolConstructor.DefineOwnProperty(NewValue(name), {
+      Value: sym,
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+    });
+  }
 
   realmRec.Intrinsics['%SymbolPrototype%'].DefineOwnProperty(
     NewValue('constructor'), {

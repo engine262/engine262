@@ -178,27 +178,6 @@ export function CreateIntrinsics(realmRec) {
   // %WeakSet%
   // %WeakSetPrototype%
 
-  // Well-known symbols
-  const wellKnownSymbolNames = [
-    'asyncIterator',
-    'hasInstance',
-    'isConcatSpreadable',
-    'iterator',
-    'match',
-    'replace',
-    'search',
-    'species',
-    'split',
-    'toPrimitive',
-    'toStringTag',
-    'unscopables',
-  ];
-
-  wellKnownSymbolNames.forEach((name) => {
-    const sym = new SymbolValue(NewValue(name));
-    realmRec.Intrinsics[`@@${name}`] = sym;
-  });
-
   // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
   // current Realm record yet.
   const objProto = new ObjectValue(realmRec, NewValue(null));
@@ -227,17 +206,6 @@ export function CreateIntrinsics(realmRec) {
 
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);
-
-  wellKnownSymbolNames.forEach((name) => {
-    realmRec.Intrinsics['%Symbol%'].DefineOwnProperty(
-      NewValue(name, realmRec), {
-        Value: realmRec.Intrinsics[`@@${name}`],
-        Writable: false,
-        Enumerable: false,
-        Configurable: false,
-      },
-    );
-  });
 
   CreateMath(realmRec);
 

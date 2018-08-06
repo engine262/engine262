@@ -18,6 +18,7 @@ import type {
 
 import {
   UndefinedValue,
+  wellKnownSymbols,
   New as NewValue,
   Type,
 } from './value.mjs';
@@ -433,7 +434,7 @@ export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {
     return false;
   }
-  const spreadable = Get(O, O.realm.Intrinsics['@@isConcatSpreadable']);
+  const spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
   if (spreadable.value !== undefined) {
     return ToBoolean(spreadable);
   }

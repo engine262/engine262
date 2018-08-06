@@ -16,6 +16,7 @@ import type {
 */
 
 import {
+  wellKnownSymbols,
   Type,
 } from './value.mjs';
 import {
@@ -178,7 +179,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       return false;
     }
 
-    const unscopables = Get(bindings, surroundingAgent.intrinsic('@@unscopables'));
+    const unscopables = Get(bindings, wellKnownSymbols.unscopables);
     if (Type(unscopables) === 'Object') {
       const blocked = ToBoolean(Get(unscopables, N));
       if (blocked === true) {
