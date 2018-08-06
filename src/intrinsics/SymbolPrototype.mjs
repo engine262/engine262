@@ -1,5 +1,6 @@
 import {
   ObjectValue,
+  wellKnownSymbols,
   New as NewValue,
   Type,
 } from '../value.mjs';
@@ -57,14 +58,14 @@ export function CreateSymbolPrototype(realmRec) {
     });
   });
 
-  proto.DefineOwnProperty(realmRec.Intrinsics['@@toPrimitive'], {
+  proto.DefineOwnProperty(wellKnownSymbols.toPrimitive, {
     Value: CreateBuiltinFunction(SymbolToPrimitive, [], realmRec),
     Writable: false,
     Enumerable: false,
     Configurable: false,
   });
 
-  proto.DefineOwnProperty(realmRec.Intrinsics['@@toStringTag'], {
+  proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
     Value: CreateBuiltinFunction(SymbolToStringTag, [], realmRec),
     Writable: false,
     Enumerable: false,

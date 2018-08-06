@@ -1,5 +1,6 @@
 import {
   ArrayValue,
+  wellKnownSymbols,
   New as NewValue,
   Type,
 } from '../value.mjs';
@@ -44,7 +45,7 @@ function ArraySpeciesCreate(originalArray, length) {
     }
   }
   if (Type(C) === 'Object') {
-    C = Get(C, C.realm.Intrinsics['@@species']);
+    C = Get(C, wellKnownSymbols.species);
     if (C.isNull()) {
       C = NewValue(undefined);
     }

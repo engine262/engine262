@@ -93,8 +93,8 @@ export class NumberValue extends PrimitiveValue {
 }
 
 export class StringValue extends PrimitiveValue {
-  /* :: string: String */
-  constructor(string /* : String */) {
+  /* :: string: string */
+  constructor(string /* : string */) {
     super();
     this.string = string;
   }
@@ -144,6 +144,26 @@ class InternalPropertyMap extends Map /* <Value, Value> */ {
     return super.delete(name);
   }
 }
+
+export const wellKnownSymbols = Object.create(null);
+for (const name of [
+  'asyncIterator',
+  'hasInstance',
+  'isConcatSpreadable',
+  'iterator',
+  'match',
+  'replace',
+  'search',
+  'species',
+  'split',
+  'toPrimitive',
+  'toStringTag',
+  'unscopables',
+]) {
+  const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
+  wellKnownSymbols[name] = sym;
+}
+Object.freeze(wellKnownSymbols);
 
 /* :: export type PropertyKey = StringValue | SymbolValue; */
 export class ObjectValue extends PrimitiveValue {

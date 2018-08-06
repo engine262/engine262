@@ -1,5 +1,6 @@
 import {
   StringValue,
+  wellKnownSymbols,
   ObjectValue,
   New as NewValue,
   Type,
@@ -88,7 +89,7 @@ function ObjectToString(realm, argList, { thisArgument }) {
   } else {
     builtinTag = 'Object';
   }
-  let tag = Get(O, surroundingAgent.currentRealmRecord.Intrinsics['@@toStringTag']);
+  let tag = Get(O, wellKnownSymbols.toStringTag);
   if (Type(tag) !== 'String') {
     tag = builtinTag;
   }

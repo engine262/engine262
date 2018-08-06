@@ -14,6 +14,7 @@ import {
   StringValue,
   NumberValue,
   SymbolValue,
+  wellKnownSymbols,
   ObjectValue,
   New as NewValue,
   Type,
@@ -51,7 +52,7 @@ export function ToPrimitive(
       Assert(preferredType === 'Number');
       hint = NewValue('number');
     }
-    const exoticToPrim = GetMethod(input, surroundingAgent.intrinsic('@@toPrimitive'));
+    const exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
     if (!(exoticToPrim instanceof UndefinedValue)) {
       const result = Call(exoticToPrim, input, [hint]);
       if (Type(result) !== 'Object') {
