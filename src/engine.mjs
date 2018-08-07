@@ -125,7 +125,7 @@ export class Agent {
   get currentRealmRecord() /* : Realm */ {
     const currentRealmRecord = this.currentRealmRecordOrUndefined;
     Assert(currentRealmRecord !== undefined);
-    return /* :: (( */ currentRealmRecord;
+    return currentRealmRecord;
   }
 
   get activeFunctionObject() {
@@ -268,7 +268,7 @@ export function AgentSignifier() {
 }
 
 // 15.1.10 ScriptEvaluation
-export function ScriptEvaluation(scriptRecord) {
+export function ScriptEvaluation(scriptRecord /* : Object */) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
   scriptCtx.Function = null;
@@ -295,7 +295,7 @@ export function ScriptEvaluation(scriptRecord) {
 }
 
 // 15.1.11 GlobalDeclarationInstantiation
-export function GlobalDeclarationInstantiation(script, env) {
+export function GlobalDeclarationInstantiation(script /* : Object */, env /* : Object */) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
@@ -358,14 +358,14 @@ export function GlobalDeclarationInstantiation(script, env) {
 }
 
 // 15.1.12 ScriptEvaluationJob
-export function ScriptEvaluationJob(sourceText, hostDefined) {
+export function ScriptEvaluationJob(sourceText /* : string */, hostDefined /* : any */) {
   const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
   return ScriptEvaluation(s);
 }
 
 // 15.2.1.19
-export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
+export function TopLevelModuleEvaluationJob(sourceText /* : string */, hostDefined /* : any */) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
   m.Instantiate();
@@ -386,13 +386,13 @@ export function SymbolDescriptiveString(sym /* : SymbolValue */) {
   if (desc instanceof UndefinedValue) {
     desc = NewValue('');
   }
-  return NewValue(`Symbol(${desc.value})`);
+  return NewValue(`Symbol(${desc.stringValue()})`);
 }
 
 // 22.1.3.1 IsConcatSpreadable
-export function IsConcatSpreadable(O) {
+export function IsConcatSpreadable(O /* : Value */) {
   if (Type(O) !== 'Object') {
-    return false;
+    return NewValue(false);
   }
   const spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
   if (spreadable.value !== undefined) {

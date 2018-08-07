@@ -136,12 +136,12 @@ export function ValidateAndApplyPropertyDescriptor(
   extensible /* : BooleanValue */,
   Desc /* : PropertyDescriptor */,
   current /* : PropertyDescriptor */,
-) {
+) /* : BooleanValue */ {
   Assert(O instanceof UndefinedValue || IsPropertyKey(P));
 
   if (current instanceof UndefinedValue) {
     if (extensible.isFalse()) {
-      return false;
+      return NewValue(false);
     }
 
     Assert(extensible.isTrue());
@@ -167,20 +167,20 @@ export function ValidateAndApplyPropertyDescriptor(
       }
     }
 
-    return true;
+    return NewValue(true);
   }
 
   if (Object.keys(Desc).length === 0) {
-    return true;
+    return NewValue(true);
   }
 
   if (current.Configurable === false) {
     if (Desc.Configurable === true) {
-      return false;
+      return NewValue(false);
     }
 
     if ('Enumerable' in Desc && Desc.Enumerable !== current.Enumerable) {
-      return false;
+      return NewValue(false);
     }
   }
 
@@ -188,7 +188,7 @@ export function ValidateAndApplyPropertyDescriptor(
     // No further validation is required.
   } else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
     if (current.Configurable === false) {
-      return false;
+      return NewValue(false);
     }
     if (IsDataDescriptor(current)) {
       if (!(O instanceof UndefinedValue)) {
@@ -210,23 +210,23 @@ export function ValidateAndApplyPropertyDescriptor(
   } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
     if (current.Configurable === false && current.Writable === false) {
       if ('Writable' in Desc && Desc.Writable === true) {
-        return false;
+        return NewValue(false);
       }
       if ('Value' in Desc && SameValue(Desc.Value, current.Value) === false) {
-        return false;
+        return NewValue(false);
       }
-      return true;
+      return NewValue(true);
     }
   } else {
     Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc));
     if (current.Configurable === false) {
       if ('Set' in Desc && SameValue(Desc.Set, current.Set) === false) {
-        return false;
+        return NewValue(false);
       }
       if ('Get' in Desc && SameValue(Desc.Get, current.Get)) {
-        return false;
+        return NewValue(false);
       }
-      return true;
+      return NewValue(true);
     }
   }
 
@@ -237,7 +237,7 @@ export function ValidateAndApplyPropertyDescriptor(
     });
   }
 
-  return true;
+  return NewValue(true);
 }
 
 // 9.1.7.1 OrdinaryHasProperty

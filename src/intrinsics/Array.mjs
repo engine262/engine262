@@ -127,6 +127,8 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     Assert(Get(array, NewValue('length')).numberValue() === numberOfArgs);
     return array;
   }
+
+  throw new RangeError('ArrayConstructor arguments out of range');
 }
 
 function ArrayFrom(realm, argList, { thisArgument }) {
