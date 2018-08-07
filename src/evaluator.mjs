@@ -2,7 +2,7 @@ import {
   NormalCompletion,
   AbruptCompletion,
   UpdateEmpty,
-} from './completions.mjs';
+} from './completion.mjs';
 
 import {
   isExpressionStatement,

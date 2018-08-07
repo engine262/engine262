@@ -16,10 +16,17 @@ import {
 } from '../value.mjs';
 import {
   Completion,
-} from '../completions.mjs';
+  Q,
+} from '../completion.mjs';
 
 /* ::
 export type GetIteratorHint = 'sync' | 'async';
+
+export type IteratorRecord = {
+  Iterator: ObjectValue,
+  NextMethod: FunctionValue,
+  Done: boolean,
+};
 */
 
 // #sec-getiterator
@@ -35,19 +42,19 @@ export function GetIterator(
     if (hint === 'async') {
       method = GetMethod(obj, surroundingAgent.intrinsic('@@asyncIterator'));
       if (method instanceof UndefinedValue) {
-        const syncMethod = GetMethod(obj, surroundingAgent.intrinsic('@@iterator'));
-        const syncIteratorRecord = GetIterator(obj, 'sync', syncMethod);
-        return CreateAsyncFromSyncIterator(syncIteratorRecord);
+        const syncMethod = Q(GetMethod(obj, surroundingAgent.intrinsic('@@iterator')));
+        const syncIteratorRecord = Q(GetIterator(obj, 'sync', syncMethod));
+        return Q(CreateAsyncFromSyncIterator(syncIteratorRecord));
       }
     } else {
-      method = GetMethod(obj, surroundingAgent.intrinsic('@@iterator'));
+      method = Q(GetMethod(obj, surroundingAgent.intrinsic('@@iterator')));
     }
   }
-  const iterator = Call(method, obj);
+  const iterator = Q(Call(method, obj));
   if (Type(iterator) !== 'Object') {
     surroundingAgent.Throw('TypeError');
   }
-  const nextMethod = GetV(iterator, 'next');
+  const nextMethod = Q(GetV(iterator, 'next'));
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
@@ -60,9 +67,9 @@ export function GetIterator(
 export function IteratorNext(iteratorRecord, value) {
   let result;
   if (!value) {
-    result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []);
+    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
   } else {
-    result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]);
+    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
   if (Type(result) !== 'Object') {
     surroundingAgent.Throw('TypeError');
@@ -73,19 +80,19 @@ export function IteratorNext(iteratorRecord, value) {
 // #sec-iteratorcomplete
 export function IteratorComplete(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return ToBoolean(Get(iterResult, NewValue('done')));
+  return ToBoolean(Q(Get(iterResult, NewValue('done'))));
 }
 
 // #sec-iteratorvalue
 export function IteratorValue(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return Get(iterResult, NewValue('value'));
+  return Q(Get(iterResult, NewValue('value')));
 }
 
 // #sec-iteratorstep
 export function IteratorStep(iteratorRecord) {
-  const result = IteratorNext(iteratorRecord);
-  const done = IteratorComplete(result);
+  const result = Q(IteratorNext(iteratorRecord));
+  const done = Q(IteratorComplete(result));
   if (done.isTrue()) {
     return NewValue(false);
   }
@@ -97,7 +104,7 @@ export function IteratorClose(iteratorRecord, completion) {
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
   const iterator = iteratorRecord.Iterator;
-  const ret = GetMethod(iterator, NewValue('return'));
+  const ret = Q(GetMethod(iterator, NewValue('return')));
   if (ret instanceof UndefinedValue) {
     return completion;
   }

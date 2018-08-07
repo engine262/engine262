@@ -3,8 +3,23 @@
 /* ::
 import type {
   Value,
+  UndefinedValue,
+  NullValue,
+  BooleanValue,
+  NumberValue,
+  StringValue,
+  SymbolValue,
+  FunctionValue,
+  BuiltinFunctionValue,
+  ObjectValue,
+  ArrayValue,
+  ProxyValue,
 } from './value.mjs';
 */
+
+import {
+  Assert,
+} from './abstract-ops/all.mjs';
 
 export class Completion {
   /* ::
@@ -59,4 +74,37 @@ export function UpdateEmpty(completionRecord /* : Completion */, value /* : Valu
     return completionRecord;
   }
   return new Completion(completionRecord.Type, value, completionRecord.Target);
+}
+
+/* ::
+declare function ReturnIfAbrupt<T>(T): T;
+declare function ReturnIfAbrupt(Completion): Value;
+*/
+
+export function ReturnIfAbrupt(argument) {
+  if (argument instanceof AbruptCompletion) {
+    throw argument;
+  }
+  if (argument instanceof Completion) {
+    return argument.Value;
+  }
+  return argument;
+}
+
+// #sec-returnifabrupt-shorthands ? OperationName()
+export const Q = ReturnIfAbrupt;
+
+// #sec-returnifabrupt-shorthands ! OperationName()
+
+/* ::
+declare function X<T>(T): T;
+declare function X(Completion): Value;
+*/
+
+export function X(val) {
+  Assert(!(val instanceof AbruptCompletion));
+  if (val instanceof Completion) {
+    return val.Value;
+  }
+  return val;
 }

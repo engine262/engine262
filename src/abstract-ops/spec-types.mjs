@@ -27,6 +27,7 @@ import {
   CreateDataProperty,
   ObjectCreate,
 } from './all.mjs';
+import { Q, X } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {
@@ -101,37 +102,37 @@ export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor 
     surroundingAgent.Throw('TypeError');
   }
   const desc = {};
-  const hasEnumerable = HasProperty(Obj, NewValue('enumerable'));
+  const hasEnumerable = Q(HasProperty(Obj, NewValue('enumerable')));
   if (hasEnumerable.isTrue()) {
-    const enumerable = ToBoolean(Get(Obj, NewValue('enumerable')));
+    const enumerable = ToBoolean(Q(Get(Obj, NewValue('enumerable'))));
     desc.Enumerable = enumerable.booleanValue();
   }
-  const hasConfigurable = HasProperty(Obj, NewValue('configurable'));
+  const hasConfigurable = Q(HasProperty(Obj, NewValue('configurable')));
   if (hasConfigurable.isTrue()) {
-    const conf = ToBoolean(Get(Obj, NewValue('configurable')));
+    const conf = ToBoolean(Q(Get(Obj, NewValue('configurable'))));
     desc.Configurable = conf.booleanValue();
   }
-  const hasValue = HasProperty(Obj, NewValue('value'));
+  const hasValue = Q(HasProperty(Obj, NewValue('value')));
   if (hasValue.isTrue()) {
-    const value = Get(Obj, NewValue('value'));
+    const value = Q(Get(Obj, NewValue('value')));
     desc.Value = value;
   }
-  const hasWritable = HasProperty(Obj, NewValue('writable'));
+  const hasWritable = Q(HasProperty(Obj, NewValue('writable')));
   if (hasWritable.isTrue()) {
-    const writable = ToBoolean(Get(Obj, NewValue('writable')));
+    const writable = ToBoolean(Q(Get(Obj, NewValue('writable'))));
     desc.Writable = writable.booleanValue();
   }
-  const hasGet = HasProperty(Obj, NewValue('get'));
+  const hasGet = Q(HasProperty(Obj, NewValue('get')));
   if (hasGet.isTrue()) {
-    const getter = Get(Obj, NewValue('get'));
+    const getter = Q(Get(Obj, NewValue('get')));
     if (IsCallable(getter).isFalse() && !(getter instanceof UndefinedValue)) {
       surroundingAgent.Throw('TypeError');
     }
     desc.Get = getter;
   }
-  const hasSet = HasProperty(Obj, NewValue('set'));
+  const hasSet = Q(HasProperty(Obj, NewValue('set')));
   if (hasSet.isTrue()) {
-    const setter = Get(Obj, NewValue('set'));
+    const setter = Q(Get(Obj, NewValue('set')));
     if (IsCallable(setter).isFalse() && !(setter instanceof UndefinedValue)) {
       surroundingAgent.Throw('TypeError');
     }

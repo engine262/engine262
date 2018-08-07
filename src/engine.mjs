@@ -29,7 +29,7 @@ import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
-} from './completions.mjs';
+} from './completion.mjs';
 import {
   EnvironmentRecord,
 } from './environment.mjs';
