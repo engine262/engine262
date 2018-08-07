@@ -29,8 +29,6 @@ export function TopLevelVarDeclaredNamesStatementList(StatementList) {
 // #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementListItem : Declaration
 //   StatementListItem : Statement
-// #sec-labelled-statements-static-semantics-toplevelvardeclarednames
-//   LabelledStatement : LabelIdentifier `:` LabelledItem
 export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
   switch (true) {
     case isDeclaration(StatementListItem):
@@ -40,12 +38,18 @@ export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
       return [];
     case isStatement(StatementListItem):
       if (isLabelledStatement(StatementListItem)) {
-        return TopLevelVarDeclaredNamesLabelledItem(StatementListItem.body);
+        return TopLevelVarDeclaredNamesLabelledStatement(StatementListItem);
       }
       return VarDeclaredNamesStatementListItem(StatementListItem);
     default:
       throw new TypeError(`Unexpected StatementListItem: ${StatementListItem.type}`);
   }
+}
+
+// #sec-labelled-statements-static-semantics-toplevelvardeclarednames
+//   LabelledStatement : LabelIdentifier `:` LabelledItem
+export function TopLevelVarDeclaredNamesLabelledStatement(LabelledStatement) {
+  return TopLevelVarDeclaredNamesLabelledItem(LabelledStatement.body);
 }
 
 // #sec-labelled-statements-static-semantics-toplevelvardeclarednames

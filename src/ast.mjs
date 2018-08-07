@@ -1,6 +1,471 @@
-// #prod-BindingIdentifier
-export function isBindingIdentifier(node) {
+// #prod-NullLiteral
+export function isNullLiteral(node) {
+  return node.type === 'Literal' && typeof node.value === 'null';
+}
+
+// #prod-BooleanLiteral
+export function isBooleanLiteral(node) {
+  return node.type === 'Literal' && typeof node.value === 'boolean';
+}
+
+// #prod-NumericLiteral
+export function isNumericLiteral(node) {
+  return node.type === 'Literal' && typeof node.value === 'number';
+}
+
+// #prod-StringLiteral
+export function isStringLiteral(node) {
+  return node.type === 'Literal' && typeof node.value === 'string';
+}
+
+// #prod-RegularExpressionLiteral
+export function isRegularExpressionLiteral(node) {
+  return node.type === 'Literal' && typeof node.regex === 'object';
+}
+
+// #prod-Identifier
+// Not exact, as we allow reserved words when appropriate. (This is more like
+// IdentifierReference.)
+export function isIdentifier(node) {
   return node.type === 'Identifier';
+}
+
+// #prod-IdentifierReference
+export const isIdentifierReference = isIdentifier;
+
+// #prod-BindingIdentifier
+export const isBindingIdentifier = isIdentifier;
+
+// #prod-LabelIdentifier
+export const isLabelIdentifier = isIdentifier;
+
+// Used in #prod-PrimaryExpression
+export function isThis(node) {
+  return node.type === 'ThisExpression';
+}
+
+// #prod-Literal
+export function isLiteral(node) {
+  // Just checking node.type is not enough as RegularExpressionLiteral also
+  // uses 'Literal' as node.type.
+  return isNullLiteral(node)
+         || isBooleanLiteral(node)
+         || isNumericLiteral(node)
+         || isStringLiteral(node);
+}
+
+// #prod-ArrayLiteral
+export function isArrayLiteral(node) {
+  return node.type === 'ArrayExpression';
+}
+
+// #prod-ObjectLiteral
+export function isObjectLiteral(node) {
+  return node.type === 'ObjectExpression';
+}
+
+// #prod-FunctionExpression
+export function isFunctionExpression(node) {
+  return node.type === 'FunctionExpression'
+         && !node.generator
+         && !node.async;
+}
+
+// #prod-ClassExpression
+export function isClassExpression(node) {
+  return node.type === 'ClassExpression';
+}
+
+// #prod-GeneratorExpression
+export function isGeneratorExpression(node) {
+  return node.type === 'FunctionExpression'
+         && node.generator
+         && !node.async;
+}
+
+// #prod-AsyncFunctionExpression
+export function isAsyncFunctionExpression(node) {
+  return node.type === 'FunctionExpression'
+         && !node.generator
+         && node.async;
+}
+
+// #prod-AsyncGeneratorExpression
+export function isAsyncGeneratorExpression(node) {
+  return node.type === 'FunctionExpression'
+         && node.generator
+         && node.async;
+}
+
+// #prod-TemplateLiteral
+export function isTemplateLiteral(node) {
+  return node.type === 'TemplateLiteral';
+}
+
+// #prod-PrimaryExpression
+export function isPrimaryExpression(node) {
+  return isThis(node)
+         || isIdentifierReference(node)
+         || isLiteral(node)
+         || isArrayLiteral(node)
+         || isObjectLiteral(node)
+         || isFunctionExpression(node)
+         || isClassExpression(node)
+         || isGeneratorExpression(node)
+         || isAsyncFunctionExpression(node)
+         || isAsyncGeneratorExpression(node)
+         || isRegularExpressionLiteral(node)
+         || isTemplateLiteral(node);
+}
+
+// Used in #prod-MemberExpression
+export function isMemberExpressionWithBrackets(node) {
+  return node.type === 'MemberExpression'
+         && node.computed
+         && isMemberExpression(node.object);
+}
+
+// Used in #prod-MemberExpression
+export function isMemberExpressionWithDot(node) {
+  return node.type === 'MemberExpression'
+         && !node.computed
+         && isMemberExpression(node.object);
+}
+
+// Used in #prod-MemberExpression
+export function isMemberExpressionWithTaggedTemplate(node) {
+  return node.type === 'TaggedTemplateExpression'
+         && isMemberExpression(node.tag);
+}
+
+// #prod-SuperProperty
+export function isSuperProperty(node) {
+  return node.type === 'MemberExpression' && node.object.type === 'Super';
+}
+
+// #prod-MetaProperty
+export function isMetaProperty(node) {
+  return node.type === 'MetaProperty';
+}
+
+// #prod-NewTarget
+export function isNewTarget(node) {
+  return isMetaProperty(node)
+         && node.meta.name === 'new'
+         && node.property.name === 'target';
+}
+
+// Used in #prod-MemberExpression
+export function isMemberExpressionWithNew(node) {
+  return node.type === 'NewExpression';
+}
+
+// #prod-MemberExpression
+export function isMemberExpression(node) {
+  return isPrimaryExpression(node)
+         || isMemberExpressionWithBrackets(node)
+         || isMemberExpressionWithDot(node)
+         || isMemberExpressionWithTaggedTemplate(node)
+         || isSuperProperty(node)
+         || isMetaProperty(node)
+         || isMemberExpressionWithNew(node);
+}
+
+// #prod-NewExpression
+export function isNewExpression(node) {
+  return node.type === 'NewExpression' || isMemberExpression(node);
+}
+
+// #prod-CallMemberExpression
+export function isCallMemberExpression(node) {
+  return node.type === 'CallExpression' && isMemberExpression(node.callee);
+}
+
+// #prod-SuperCall
+export function isSuperCall(node) {
+  return node.type === 'CallExpression' && node.callee.type === 'Super';
+}
+
+// Used in #prod-CallExpression
+export function isCallExpressionWithCall(node) {
+  return node.type === 'CallExpression' && isCallExpression(node.callee);
+}
+
+// Used in #prod-CallExpression
+export function isCallExpressionWithBrackets(node) {
+  return node.type === 'MemberExpression'
+         && node.computed
+         && isCallExpression(node.object);
+}
+
+// Used in #prod-CallExpression
+export function isCallExpressionWithDot(node) {
+  return node.type === 'MemberExpression'
+         && !node.computed
+         && isCallExpression(node.object);
+}
+
+// Used in #prod-CallExpression
+export function isCallExpressionWithTaggedTemplate(node) {
+  return node.type === 'TaggedTemplateExpression'
+         && isCallExpression(node.tag);
+}
+
+// #prod-CallExpression
+export function isCallExpression(node) {
+  return isCallMemberExpression(node)
+         || isSuperCall(node)
+         || isCallExpressionWithCall(node)
+         || isCallExpressionWithBrackets(node)
+         || isCallExpressionWithDot(node)
+         || isCallExpressionWithTaggedTemplate(node);
+}
+
+// #prod-LeftHandSideExpression
+export function isLeftHandSideExpression(node) {
+  return isNewExpression(node) || isCallExpression(node);
+}
+
+// Used in #prod-UpdateExpression
+export function isActualUpdateExpression(node) {
+  return node.type === 'UpdateExpression';
+}
+
+// #prod-UpdateExpression
+export function isUpdateExpression(node) {
+  return isLeftHandSideExpression(node) || isActualUpdateExpression(node);
+}
+
+// Used in #prod-UnaryExpression
+export function isActualUnaryExpression(node) {
+  return node.type === 'UnaryExpression';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithDelete(node) {
+  return node.type === 'UnaryExpression' && node.operator === 'delete';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithVoid(node) {
+  return node.type === 'UnaryExpression' && node.operator === 'void';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithTypeof(node) {
+  return node.type === 'UnaryExpression' && node.operator === 'typeof';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithPlus(node) {
+  return node.type === 'UnaryExpression' && node.operator === '+';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithMinus(node) {
+  return node.type === 'UnaryExpression' && node.operator === '-';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithTilde(node) {
+  return node.type === 'UnaryExpression' && node.operator === '~';
+}
+
+// Used in #prod-UnaryExpression
+export function isUnaryExpressionWithBang(node) {
+  return node.type === 'UnaryExpression' && node.operator === '!';
+}
+
+// #prod-AwaitExpression
+export function isAwaitExpression(node) {
+  return node.type === 'AwaitExpression';
+}
+
+// #prod-UnaryExpression
+export function isUnaryExpression(node) {
+  return isUpdateExpression(node)
+         || isActualUnaryExpression(node)
+         || isAwaitExpression(node);
+}
+
+// Used in #prod-ExponentiationExpression
+export function isActualExponentiationExpression(node) {
+  return node.type === 'ExponentiationExpression';
+}
+
+// #prod-ExponentiationExpression
+export function isExponentiationExpression(node) {
+  return isUnaryExpression(node) || isActualExponentiationExpression(node);
+}
+
+// Used in #prod-MultiplicativeExpression
+export function isActualMultiplicativeExpression(node) {
+  return node.type === 'BinaryExpression'
+         && (
+           node.operator === '*'
+           || node.operator === '/'
+           || node.operator === '%'
+         );
+}
+
+// #prod-MultiplicativeExpression
+export function isMultiplicativeExpression(node) {
+  return isExponentiationExpression(node) || isActualMultiplicativeExpression(node);
+}
+
+// Used in #prod-AdditiveExpression
+export function isActualAdditiveExpression(node) {
+  return node.type === 'BinaryExpression'
+         && (node.operator === '+' || node.operator === '-');
+}
+
+// #prod-AdditiveExpression
+export function isAdditiveExpression(node) {
+  return isMultiplicativeExpression(node) || isActualAdditiveExpression(node);
+}
+
+// Used in #prod-ShiftExpression
+export function isActualShiftExpression(node) {
+  return node.type === 'BinaryExpression'
+         && (
+           node.operator === '<<'
+           || node.operator === '>>'
+           || node.operator === '>>>'
+         );
+}
+
+// #prod-ShiftExpression
+export function isShiftExpression(node) {
+  return isAdditiveExpression(node) || isActualShiftExpression(node);
+}
+
+// Used in #prod-RelationalExpression
+export function isActualRelationalExpression(node) {
+  return node.type === 'BinaryExpression'
+         && (
+           node.operator === '<'
+           || node.operator === '>'
+           || node.operator === '<='
+           || node.operator === '>='
+           || node.operator === 'instanceof'
+           || node.operator === 'in'
+         );
+}
+
+// #prod-RelationalExpression
+export function isRelationalExpression(node) {
+  return isShiftExpression(node) || isActualRelationalExpression(node);
+}
+
+// Used in #prod-EqualityExpression
+export function isActualEqualityExpression(node) {
+  return node.type === 'BinaryExpression'
+         && (
+           node.operator === '=='
+           || node.operator === '!='
+           || node.operator === '==='
+           || node.operator === '!=='
+         );
+}
+
+// #prod-EqualityExpression
+export function isEqualityExpression(node) {
+  return isRelationalExpression(node) || isActualEqualityExpression(node);
+}
+
+// Used in #prod-BitwiseANDExpression
+export function isActualBitwiseANDExpression(node) {
+  return node.type === 'BinaryExpression' && node.operator === '&';
+}
+
+// #prod-BitwiseANDExpression
+export function isBitwiseANDExpression(node) {
+  return isEqualityExpression(node) || isActualBitwiseANDExpression(node);
+}
+
+// Used in #prod-BitwiseXORExpression
+export function isActualBitwiseXORExpression(node) {
+  return node.type === 'BinaryExpression' && node.operator === '^';
+}
+
+// #prod-BitwiseXORExpression
+export function isBitwiseXORExpression(node) {
+  return isBitwiseANDExpression(node) || isActualBitwiseXORExpression(node);
+}
+
+// Used in #prod-BitwiseORExpression
+export function isActualBitwiseORExpression(node) {
+  return node.type === 'BinaryExpression' && node.operator === '|';
+}
+
+// #prod-BitwiseORExpression
+export function isBitwiseORExpression(node) {
+  return isBitwiseXORExpression(node) || isActualBitwiseORExpression(node);
+}
+
+// Used in #prod-LogicalANDExpression
+export function isActualLogicalANDExpression(node) {
+  return node.type === 'LogicalExpression' && node.operator === '&&';
+}
+
+// #prod-LogicalANDExpression
+export function isLogicalANDExpression(node) {
+  return isBitwiseORExpression(node) || isActualLogicalANDExpression(node);
+}
+
+// Used in #prod-LogicalORExpression
+export function isActualLogicalORExpression(node) {
+  return node.type === 'LogicalExpression' && node.operator === '||';
+}
+
+// #prod-LogicalORExpression
+export function isLogicalORExpression(node) {
+  return isLogicalANDExpression(node) || isActualLogicalORExpression(node);
+}
+
+// Used in #prod-ConditionalExpression
+export function isActualConditionalExpression(node) {
+  return node.type === 'ConditionalExpression';
+}
+
+// #prod-ConditionalExpression
+export function isConditionalExpression(node) {
+  return isLogicalORExpression(node) || isActualConditionalExpression(node);
+}
+
+// Used in #prod-AssignmentExpression
+export function isActualAssignmentExpression(node) {
+  return node.type === 'AssignmentExpression';
+}
+
+// Used in #prod-AssignmentExpression
+export function isAssignmentExpressionWithEquals(node) {
+  return isActualAssignmentExpression(node) && node.operator === '=';
+}
+
+// Used in #prod-AssignmentExpression
+export function isAssignmentExpressionWithAssignmentOperator(node) {
+  return isActualAssignmentExpression(node) && node.operator !== '=';
+}
+
+// #prod-AssignmentExpression
+export function isAssignmentExpression(node) {
+  return isConditionalExpression(node)
+         || isYieldExpression(node)
+         || isArrowFunction(node)
+         || isAsyncArrowFunction(node)
+         || isActualAssignmentExpression(node);
+}
+
+// Used in #prod-Expression
+export function isExpressionWithComma(node) {
+  return node.type === 'SequenceExpression';
+}
+
+// #prod-Expression
+export function isExpression(node) {
+  return isAssignmentExpression(node)
+         || isExpressionWithComma(node);
 }
 
 // Used in #prod-SingleNameBinding
@@ -66,7 +531,7 @@ export const isBlock = isBlockStatement;
 
 // #prod-VariableStatement
 export function isVariableStatement(node) {
-  return node.type === 'VariableDeclaration';
+  return node.type === 'VariableDeclaration' && node.kind === 'var';
 }
 
 // #prod-EmptyStatement

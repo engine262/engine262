@@ -8,6 +8,9 @@ import {
   isBindingProperty,
   isBindingRestElement,
   isBindingRestProperty,
+  isClassDeclaration,
+  isHoistableDeclaration,
+  isLexicalDeclaration,
   isObjectBindingPattern,
   isSingleNameBinding,
 } from '../ast.mjs';
@@ -224,6 +227,24 @@ export function BoundNamesVariableDeclaration(VariableDeclaration) {
   }
 }
 
+// #sec-for-in-and-for-of-statements-static-semantics-boundnames
+//   ForDeclaration : LetOrConst ForBinding
+//
+// (implicit)
+//   ForBinding : BindingIdentifier
+//   ForBinding : BindingPattern
+export function BoundNamesForDeclaration(ForDeclaration) {
+  const ForBinding = ForDeclaration.declarations[0].id;
+  switch (true) {
+    case isBindingIdentifier(ForBinding):
+      return BoundNamesBindingIdentifier(ForBinding);
+    case isBindingPattern(ForBinding):
+      return BoundNamesBindingPattern(ForBinding);
+    default:
+      throw new TypeError(`Invalid LexicalBinding: ${ForBinding.type}`);
+  }
+}
+
 // #sec-function-definitions-static-semantics-boundnames
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
@@ -265,3 +286,26 @@ export const BoundNamesFunctionDeclaration = BoundNamesHoistableDeclaration;
 export const BoundNamesGeneratorDeclaration = BoundNamesHoistableDeclaration;
 export const BoundNamesAsyncFunctionDeclaration = BoundNamesHoistableDeclaration;
 export const BoundNamesAsyncGeneratorDeclaration = BoundNamesHoistableDeclaration;
+
+// #sec-class-definitions-static-semantics-boundnames
+//   ClassDeclaration : `class` BindingIdentifier ClassTail
+//   ClassDeclaration : `class` ClassTail
+export function BoundNamesClassDeclaration(ClassDeclaration) {
+  if (ClassDeclaration.id === null) {
+    return ['*default*'];
+  }
+  return BoundNamesBindingIdentifier(ClassDeclaration.id);
+}
+
+export function BoundNamesDeclaration(Declaration) {
+  switch (true) {
+    case isHoistableDeclaration(Declaration):
+      return BoundNamesHoistableDeclaration(Declaration);
+    case isClassDeclaration(Declaration):
+      return BoundNamesClassDeclaration(Declaration);
+    case isLexicalDeclaration(Declaration):
+      return BoundNamesLexicalDeclaration(Declaration);
+    default:
+      throw new TypeError(`Unexpected Declaration: ${Declaration.type}`);
+  }
+}
