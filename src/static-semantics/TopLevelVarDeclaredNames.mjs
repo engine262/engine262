@@ -7,21 +7,21 @@ import {
 } from '../ast.mjs';
 
 import {
-  BoundNamesFunctionDeclaration,
-  BoundNamesHoistableDeclaration,
+  BoundNames_FunctionDeclaration,
+  BoundNames_HoistableDeclaration,
 } from './BoundNames.mjs';
 
 import {
-  VarDeclaredNamesStatementListItem,
+  VarDeclaredNames_StatementListItem,
 } from './VarDeclaredNames.mjs';
 
 // Static Semantics: TopLevelVarDeclaredNames
 // #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementList : StatementList StatementListItem
-export function TopLevelVarDeclaredNamesStatementList(StatementList) {
+export function TopLevelVarDeclaredNames_StatementList(StatementList) {
   const names = [];
   for (const StatementListItem of StatementList) {
-    names.push(...TopLevelVarDeclaredNamesStatementListItem(StatementListItem));
+    names.push(...TopLevelVarDeclaredNames_StatementListItem(StatementListItem));
   }
   return names;
 }
@@ -29,18 +29,18 @@ export function TopLevelVarDeclaredNamesStatementList(StatementList) {
 // #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementListItem : Declaration
 //   StatementListItem : Statement
-export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
+export function TopLevelVarDeclaredNames_StatementListItem(StatementListItem) {
   switch (true) {
     case isDeclaration(StatementListItem):
       if (isHoistableDeclaration(StatementListItem)) {
-        return BoundNamesHoistableDeclaration(StatementListItem);
+        return BoundNames_HoistableDeclaration(StatementListItem);
       }
       return [];
     case isStatement(StatementListItem):
       if (isLabelledStatement(StatementListItem)) {
-        return TopLevelVarDeclaredNamesLabelledStatement(StatementListItem);
+        return TopLevelVarDeclaredNames_LabelledStatement(StatementListItem);
       }
-      return VarDeclaredNamesStatementListItem(StatementListItem);
+      return VarDeclaredNames_StatementListItem(StatementListItem);
     default:
       throw new TypeError(`Unexpected StatementListItem: ${StatementListItem.type}`);
   }
@@ -48,22 +48,22 @@ export function TopLevelVarDeclaredNamesStatementListItem(StatementListItem) {
 
 // #sec-labelled-statements-static-semantics-toplevelvardeclarednames
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
-export function TopLevelVarDeclaredNamesLabelledStatement(LabelledStatement) {
-  return TopLevelVarDeclaredNamesLabelledItem(LabelledStatement.body);
+export function TopLevelVarDeclaredNames_LabelledStatement(LabelledStatement) {
+  return TopLevelVarDeclaredNames_LabelledItem(LabelledStatement.body);
 }
 
 // #sec-labelled-statements-static-semantics-toplevelvardeclarednames
 //   LabelledItem : Statement
 //   LabelledItem : FunctionDeclaration
-export function TopLevelVarDeclaredNamesLabelledItem(LabelledItem) {
+export function TopLevelVarDeclaredNames_LabelledItem(LabelledItem) {
   switch (true) {
     case isStatement(LabelledItem):
       if (isLabelledStatement(LabelledItem)) {
-        return TopLevelVarDeclaredNamesLabelledItem(LabelledItem.body);
+        return TopLevelVarDeclaredNames_LabelledItem(LabelledItem.body);
       }
-      return VarDeclaredNames(LabelledItem);
+      return VarDeclaredNames_StatementListItem(LabelledItem);
     case isFunctionDeclaration(LabelledItem):
-      return BoundNamesFunctionDeclaration(LabelledItem);
+      return BoundNames_FunctionDeclaration(LabelledItem);
     default:
       throw new TypeError(`Unexpected LabelledItem: ${LabelledItem.type}`);
   }

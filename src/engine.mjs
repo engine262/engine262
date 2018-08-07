@@ -55,16 +55,16 @@ import {
 } from './abstract-ops/type-conversion.mjs';
 
 import {
-  LexicallyDeclaredNamesScriptBody,
+  LexicallyDeclaredNames_ScriptBody,
 } from './static-semantics/LexicallyDeclaredNames.mjs';
 import {
-  LexicallyScopedDeclarationsScriptBody,
+  LexicallyScopedDeclarations_ScriptBody,
 } from './static-semantics/LexicallyScopedDeclarations.mjs';
 import {
-  VarDeclaredNamesScriptBody,
+  VarDeclaredNames_ScriptBody,
 } from './static-semantics/VarDeclaredNames.mjs';
 import {
-  VarScopedDeclarationsScriptBody,
+  VarScopedDeclarations_ScriptBody,
 } from './static-semantics/VarScopedDeclarations.mjs';
 
 import {
@@ -299,8 +299,8 @@ export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
-  const lexNames = LexicallyDeclaredNamesScriptBody(script);
-  const varNames = VarDeclaredNamesScriptBody(script);
+  const lexNames = LexicallyDeclaredNames_ScriptBody(script);
+  const varNames = VarDeclaredNames_ScriptBody(script);
 
   lexNames.forEach((name) => {
     if (envRec.HasVarDeclaration(name)) {
@@ -321,7 +321,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     }
   });
 
-  const varDeclarations = VarScopedDeclarationsScriptBody(script);
+  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
 
   const functionsToInitialize = [];
   // const declaredFunctionNames = [];
@@ -341,7 +341,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     // annex b
   }
 
-  const lexDeclarations = LexicallyScopedDeclarationsScriptBody(script);
+  const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   lexDeclarations.forEach(() => {
     // stuff
   });
