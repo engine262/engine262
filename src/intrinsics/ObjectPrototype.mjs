@@ -19,17 +19,17 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-function ObjectHasOwnProperty(realm, [V], { thisArgument }) {
+function ObjectHasOwnProperty(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
-  const O = Q(ToObject(thisArgument));
+  const O = Q(ToObject(thisValue));
   return HasOwnProperty(O, P);
 }
 
-function ObjectIsPrototypeOf(realm, [V], { thisArgument }) {
+function ObjectIsPrototypeOf(realm, [V], { thisValue }) {
   if (Type(V) !== 'Object') {
     return NewValue(false);
   }
-  const O = Q(ToObject(thisArgument));
+  const O = Q(ToObject(thisValue));
   while (true) {
     V = Q(V.GetPrototypeOf());
     if (V instanceof NullValue) {
@@ -41,9 +41,9 @@ function ObjectIsPrototypeOf(realm, [V], { thisArgument }) {
   }
 }
 
-function ObjectPropertyIsEnumerable(realm, [V], { thisArgument }) {
+function ObjectPropertyIsEnumerable(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
-  const O = Q(ToObject(thisArgument));
+  const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
     return NewValue(false);
@@ -51,19 +51,19 @@ function ObjectPropertyIsEnumerable(realm, [V], { thisArgument }) {
   return desc.Enumerable;
 }
 
-function ObjectToLocaleString(realm, argList, { thisArgument }) {
-  const O = thisArgument;
+function ObjectToLocaleString(realm, argList, { thisValue }) {
+  const O = thisValue;
   return Q(Invoke(O, 'toString'));
 }
 
-function ObjectToString(realm, argList, { thisArgument }) {
-  if (thisArgument instanceof UndefinedValue) {
+function ObjectToString(realm, argList, { thisValue }) {
+  if (thisValue instanceof UndefinedValue) {
     return NewValue('[object Undefined]');
   }
-  if (thisArgument instanceof UndefinedValue) {
+  if (thisValue instanceof UndefinedValue) {
     return NewValue('[object Null]');
   }
-  const O = X(ToObject(thisArgument));
+  const O = X(ToObject(thisValue));
   const isArray = Q(IsArray(O));
   let builtinTag;
   if (isArray === true) {
@@ -94,8 +94,8 @@ function ObjectToString(realm, argList, { thisArgument }) {
   return NewValue(`[object ${tag}]`);
 }
 
-function ObjectValueOf(realm, argList, { thisArgument }) {
-  return Q(ToObject(thisArgument));
+function ObjectValueOf(realm, argList, { thisValue }) {
+  return Q(ToObject(thisValue));
 }
 
 export function CreateObjectPrototype(realmRec) {
