@@ -4,16 +4,15 @@ import {
   New as NewValue,
   Type,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
   SymbolDescriptiveString,
 } from '../engine.mjs';
-
 import {
   Assert,
   CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
+import { Q } from '../completion.mjs';
 
 function thisSymbolValue(value) {
   if (Type(value) === 'Symbol') {
@@ -27,16 +26,16 @@ function thisSymbolValue(value) {
 }
 
 function SymbolToString(realm, argList, { thisArgument }) {
-  const sym = thisSymbolValue(thisArgument);
+  const sym = Q(thisSymbolValue(thisArgument));
   return SymbolDescriptiveString(sym);
 }
 
 function SymbolValueOf(realm, argList, { thisArgument }) {
-  return thisSymbolValue(thisArgument);
+  return Q(thisSymbolValue(thisArgument));
 }
 
 function SymbolToPrimitive(realm, argList, { thisArgument }) {
-  return thisSymbolValue(thisArgument);
+  return Q(thisSymbolValue(thisArgument));
 }
 
 function SymbolToStringTag() {

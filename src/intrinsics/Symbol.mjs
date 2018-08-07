@@ -7,21 +7,21 @@ import type {
 */
 
 import {
+  UndefinedValue,
   SymbolValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
 } from '../engine.mjs';
-
 import {
   CreateBuiltinFunction,
   SameValue,
   ToString,
 } from '../abstract-ops/all.mjs';
+import { Q } from '../completion.mjs';
 
 export const GlobalSymbolRegistry = [];
 
@@ -29,9 +29,9 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
   if (NewTarget !== undefined) {
     surroundingAgent.Throw('TypeError');
   }
-  const descString = description.isUndefined()
+  const descString = description instanceof UndefinedValue
     ? NewValue(undefined)
-    : ToString(description);
+    : Q(ToString(description));
 
   return new SymbolValue(descString);
 }

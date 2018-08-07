@@ -4,15 +4,14 @@ import {
   New as NewValue,
   Type,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
 } from '../engine.mjs';
-
 import {
   Assert,
   CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
+import { Q } from '../completion.mjs';
 
 function thisBooleanValue(value) {
   if (Type(value) === 'Boolean') {
@@ -28,15 +27,15 @@ function thisBooleanValue(value) {
 }
 
 function BooleanToString(realm, argList, { thisArgument }) {
-  const b = thisBooleanValue(thisArgument);
-  if (b.value === true) {
+  const b = Q(thisBooleanValue(thisArgument));
+  if (b.isTrue()) {
     return NewValue('true');
   }
   return NewValue('false');
 }
 
 function BooleanValueOf(realm, argList, { thisArgument }) {
-  return thisBooleanValue(thisArgument);
+  return Q(thisBooleanValue(thisArgument));
 }
 
 export function CreateBooleanPrototype(realmRec) {

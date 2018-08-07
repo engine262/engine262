@@ -101,8 +101,8 @@ export class StringValue extends PrimitiveValue {
 }
 
 export class SymbolValue extends PrimitiveValue {
-  /* :: Description: UndefinedValue|StringValue */
-  constructor(Description /* : StringValue */) {
+  /* :: Description: UndefinedValue | StringValue */
+  constructor(Description /* : StringValue | UndefinedValue */) {
     super();
     this.Description = Description;
   }

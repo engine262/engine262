@@ -14,6 +14,7 @@ import {
 import {
   AbruptCompletion,
   ThrowCompletion,
+  X, Q,
 } from '../completion.mjs';
 import {
   Assert,
@@ -37,6 +38,7 @@ import {
   ToLength,
   IsArray,
   ToUint32,
+  OrdinaryDefineOwnProperty,
 } from '../abstract-ops/all.mjs';
 
 import {
@@ -44,6 +46,7 @@ import {
   ArrayValue,
   UndefinedValue,
   New as NewValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 
 export function ArrayCreate(length /* : NumberValue */, proto /* : ?Value */) {
@@ -61,6 +64,13 @@ export function ArrayCreate(length /* : NumberValue */, proto /* : ?Value */) {
 
   // Set A's essential internal methods except for [[DefineOwnProperty]]
   // to the default ordinary object definitions specified in 9.1.
+
+  X(OrdinaryDefineOwnProperty(A, NewValue('length'), {
+    Value: length,
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
+  }));
 
   return A;
 }
@@ -138,24 +148,24 @@ function ArrayFrom(realm, argList, { thisArgument }) {
     }
     mapping = true;
   }
-  const usingIterator = GetMethod(items, surroundingAgent.intrinsic('@@iterator'));
+  const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
   if (!(usingIterator instanceof UndefinedValue)) {
     if (IsConstructor(C) === true) {
-      A = Construct(C);
+      A = Q(Construct(C));
     } else {
-      A = ArrayCreate(NewValue(0));
+      A = X(ArrayCreate(NewValue(0)));
     }
-    const iteratorRecord = GetIterator(items, 'sync', usingIterator);
+    const iteratorRecord = Q(GetIterator(items, 'sync', usingIterator));
     let k = 0;
     while (true) {
       if (k > (2 ** 53) - 1) {
         const error = new ThrowCompletion(Construct(surroundingAgent.intrinsic('%TypeError%')));
-        return IteratorClose(iteratorRecord, error);
+        return Q(IteratorClose(iteratorRecord, error));
       }
-      const Pk = ToString(NewValue(k));
-      const next = IteratorStep(iteratorRecord);
+      const Pk = X(ToString(NewValue(k)));
+      const next = Q(IteratorStep(iteratorRecord));
       if (next.isFalse()) {
-        Set(A, NewValue('length'), NewValue(k), NewValue(true));
+        Q(Set(A, NewValue('length'), NewValue(k), NewValue(true)));
         return A;
       }
       const nextValue = IteratorValue(next);
@@ -164,10 +174,10 @@ function ArrayFrom(realm, argList, { thisArgument }) {
         // If mappedValue is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, mappedValue).
         try {
-          mappedValue = Call(mapfn, T, [nextValue, NewValue(k)]);
+          mappedValue = Q(Call(mapfn, T, [nextValue, NewValue(k)]));
         } catch (e) {
           if (e instanceof AbruptCompletion) {
-            return IteratorClose(iteratorRecord, e);
+            return Q(IteratorClose(iteratorRecord, e));
           } else {
             throw e;
           }
@@ -182,7 +192,7 @@ function ArrayFrom(realm, argList, { thisArgument }) {
         CreateDataPropertyOrThrow(A, Pk, mappedValue);
       } catch (defineStatus) {
         if (defineStatus instanceof AbruptCompletion) {
-          return IteratorClose(iteratorRecord, defineStatus);
+          return Q(IteratorClose(iteratorRecord, defineStatus));
         } else {
           throw defineStatus;
         }
@@ -190,32 +200,32 @@ function ArrayFrom(realm, argList, { thisArgument }) {
       k += 1;
     }
   }
-  const arrayLike = ToObject(items);
-  const len = ToLength(Get(arrayLike, NewValue('length')));
+  const arrayLike = X(ToObject(items));
+  const len = Q(ToLength(Q(Get(arrayLike, NewValue('length')))));
   if (IsConstructor(C) === true) {
-    A = Construct(C, [len]);
+    A = Q(Construct(C, [len]));
   } else {
-    A = ArrayCreate(len);
+    A = Q(ArrayCreate(len));
   }
   let k = 0;
   while (k < len.numberValue()) {
-    const Pk = ToString(NewValue(k));
-    const kValue = Get(arrayLike, Pk);
+    const Pk = X(ToString(NewValue(k)));
+    const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     if (mapping === true) {
-      mappedValue = Call(mapfn, T, [kValue, NewValue(k)]);
+      mappedValue = Q(Call(mapfn, T, [kValue, NewValue(k)]));
     } else {
       mappedValue = kValue;
     }
-    CreateDataPropertyOrThrow(A, Pk, mappedValue);
+    Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
     k += 1;
   }
-  Set(A, NewValue('length'), len, NewValue(true));
+  Q(Set(A, NewValue('length'), len, NewValue(true)));
   return A;
 }
 
 function ArrayIsArray(realm, [arg]) {
-  return IsArray(arg);
+  return Q(IsArray(arg));
 }
 
 function ArrayOf(realm, [...items], { thisArgument }) {
@@ -224,18 +234,18 @@ function ArrayOf(realm, [...items], { thisArgument }) {
   const C = thisArgument;
   let A;
   if (IsConstructor(C) === true) {
-    A = Construct(C, [len]);
+    A = Q(Construct(C, [len]));
   } else {
-    A = ArrayCreate(NewValue(len));
+    A = Q(ArrayCreate(NewValue(len)));
   }
   let k = 0;
   while (k < len) {
     const kValue = items[k];
-    const Pk = ToString(NewValue(k));
-    CreateDataPropertyOrThrow(A, Pk, kValue);
+    const Pk = X(ToString(NewValue(k)));
+    Q(CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;
   }
-  Set(A, NewValue('length'), NewValue(len), NewValue(true));
+  Q(Set(A, NewValue('length'), NewValue(len), NewValue(true)));
   return A;
 }
 

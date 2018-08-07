@@ -3,17 +3,17 @@ import {
   OrdinaryCreateFromConstructor,
   ToBoolean,
 } from '../abstract-ops/all.mjs';
-
 import {
   New as NewValue,
 } from '../value.mjs';
+import { Q } from '../completion.mjs';
 
 function BooleanConstructor(realm, [value], { NewTarget }) {
   const b = ToBoolean(value);
   if (NewTarget.value === undefined) {
     return b;
   }
-  const O = OrdinaryCreateFromConstructor(NewTarget, '%BooleanPrototype%', ['BooleanData']);
+  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%BooleanPrototype%', ['BooleanData']));
   O.BooleanData = b;
   return O;
 }
