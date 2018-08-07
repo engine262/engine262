@@ -222,7 +222,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'true; false;', hostDefined: undefined },
+    { sourceText: 'true; "hi";', hostDefined: undefined },
   ];
 
   const modules = [];
