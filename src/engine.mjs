@@ -4,6 +4,7 @@
 import type {
   Value,
   PrimitiveValue,
+  StringValue,
   SymbolValue,
   ObjectValue,
   FunctionValue,
@@ -177,6 +178,7 @@ export function isArrayIndex(P /* : Value */) {
   if (type === 'Symbol') {
     return false;
   }
+  /* :: P = ((P: any): StringValue); */
   const index = Number.parseInt(P.stringValue(), 10);
   if (index >= 0 && index < (2 ** 32) - 1) {
     return true;

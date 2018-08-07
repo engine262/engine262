@@ -153,7 +153,7 @@ export function HasOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
 }
 
 // 7.3.12 Call
-export function Call(F /* : FunctionValue */, V /* : Value */, argumentsList /* : List<Value> */) {
+export function Call(F /* : Value */, V /* : Value */, argumentsList /* : ?List<Value> */) {
   if (!argumentsList) {
     argumentsList = [];
   }

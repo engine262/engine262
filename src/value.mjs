@@ -3,8 +3,7 @@
 /* ::
 import type {
   Realm,
-} from './engine.mjs';
-
+} from './realm.mjs';
 import type {
   List,
   PropertyDescriptor,
@@ -175,7 +174,6 @@ export class ObjectValue extends PrimitiveValue {
 
     this.realm = realm;
     this.Prototype = Prototype
-      // $FlowFixMe
       || realm.Intrinsics['%ObjectPrototype%']
       || nullValue;
 
@@ -282,14 +280,16 @@ export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], con
 */
 
 function nc(fn, realm, args, thisArgument, newTarget) {
-  return fn(realm, new Proxy(args, {
+  const argp = new Proxy(args, {
     get(target, prop, receiver) {
       if (Reflect.has(target, prop)) {
         return Reflect.get(target, prop, receiver);
       }
       return New(undefined);
     },
-  }), {
+  });
+  /* :: argp = ((argp: any): Value[]); */
+  return fn(realm, argp, {
     thisArgument: thisArgument || New(undefined),
     NewTarget: newTarget || New(undefined),
   });
@@ -353,6 +353,8 @@ export class ProxyValue extends ObjectValue {
   /* ::
   ProxyTarget: ObjectValue | FunctionValue
   ProxyHandler: NullValue | ObjectValue
+  Call: ?function
+  Construct: ?function
   */
   constructor(
     ProxyTarget /* : ObjectValue */,
@@ -394,7 +396,7 @@ export class ProxyValue extends ObjectValue {
         const target = O.ProxyTarget;
         const trap = GetMethod(handler, New('construct'));
         if (trap instanceof UndefinedValue) {
-          Assert(IsConstructor(target));
+          Assert(IsConstructor(target).isTrue());
           return Construct(target, argumentsList, newTarget);
         }
         const argArray = CreateArrayFromList(argumentsList);
@@ -415,7 +417,7 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, 'getPrototypeOf');
+    const trap = GetMethod(handler, New('getPrototypeOf'));
     if (trap instanceof UndefinedValue) {
       return target.GetPrototypeOf();
     }
@@ -493,7 +495,7 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('PreventExtensions'));
+    const trap = GetMethod(handler, New('preventExtensions'));
     if (trap instanceof UndefinedValue) {
       return target.PreventExtensions();
     }

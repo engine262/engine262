@@ -63,25 +63,25 @@ export function IsArray(argument /* : Value */) /* : BooleanValue */ {
 }
 
 // 7.2.3 IsCallable
-export function IsCallable(argument /* : Value */) /* : boolean */ {
+export function IsCallable(argument /* : Value */) {
   if (Type(argument) !== 'Object') {
-    return false;
+    return NewValue(false);
   }
   if ('Call' in argument) {
-    return true;
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 // 7.2.4 IsConstructor
-export function IsConstructor(argument /* : Value */) /* : boolean */ {
+export function IsConstructor(argument /* : Value */) {
   if (Type(argument) !== 'Object') {
-    return false;
+    return NewValue(false);
   }
   if ('Construct' in argument) {
-    return true;
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 // 7.2.5 IsExtensible

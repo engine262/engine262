@@ -9,6 +9,7 @@ import type {
   BuiltinFunctionValue,
   BuiltinFunctionCallback,
   ArrayValue,
+  NumberValue,
 } from '../value.mjs';
 import type {
   PropertyDescriptor,
@@ -223,7 +224,7 @@ export function ValidateAndApplyPropertyDescriptor(
       if ('Set' in Desc && SameValue(Desc.Set, current.Set) === false) {
         return NewValue(false);
       }
-      if ('Get' in Desc && SameValue(Desc.Get, current.Get)) {
+      if ('Get' in Desc && SameValue(Desc.Get, current.Get) === false) {
         return NewValue(false);
       }
       return NewValue(true);
@@ -233,6 +234,7 @@ export function ValidateAndApplyPropertyDescriptor(
   if (!(O instanceof UndefinedValue)) {
     O.properties.set(P, current);
     Object.keys(Desc).forEach((field) => {
+      // $FlowFixMe
       current[field] = Desc[field];
     });
   }
@@ -320,6 +322,7 @@ export function OrdinarySetWithOwnDescriptor(
     if (Type(Receiver) !== 'Object') {
       return NewValue(false);
     }
+    /* :: Receiver = ((Receiver: any): ObjectValue); */
     const existingDescriptor = Q(Receiver.GetOwnProperty(P));
     if (!(existingDescriptor instanceof UndefinedValue)) {
       if (IsAccessorDescriptor(existingDescriptor)) {
@@ -430,7 +433,7 @@ export function GetPrototypeFromConstructor(
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
-  Assert(IsCallable(constructor));
+  Assert(IsCallable(constructor).isTrue());
   let proto = Q(Get(constructor, NewValue('prototype')));
   if (Type(proto) !== 'Object') {
     const realm = Q(GetFunctionRealm(constructor));
@@ -488,6 +491,7 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
   const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)/* : any */)/* : PropertyDescriptor */);
   Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
   let oldLen = oldLenDesc.Value;
+  /* :: oldLen = ((oldLen: any): NumberValue); */
   if (newLen.numberValue() > oldLen.numberValue()) {
     return OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
   }

@@ -1,12 +1,20 @@
+/* @flow */
+
 /* ::
+import type {
+  ObjectValue,
+  FunctionValue,
+  Value,
+} from '../value.mjs';
+
 export type List<T> = T[];
 declare type PropertyDescriptor = {
-  Value: ?Value,
-  Get: ?FunctionValue,
-  Set: ?FunctionValue,
-  Writable: ?boolean,
-  Enumerable: boolean,
-  Configurable: boolean,
+  Value?: Value,
+  Get?: FunctionValue,
+  Set?: FunctionValue,
+  Writable?: boolean,
+  Enumerable?: boolean,
+  Configurable?: boolean,
 };
 export type { PropertyDescriptor };
 */
@@ -101,16 +109,17 @@ export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor 
   if (Type(Obj) !== 'Object') {
     surroundingAgent.Throw('TypeError');
   }
+  /* :: Obj = ((Obj: any): ObjectValue); */
   const desc = {};
   const hasEnumerable = Q(HasProperty(Obj, NewValue('enumerable')));
   if (hasEnumerable.isTrue()) {
     const enumerable = ToBoolean(Q(Get(Obj, NewValue('enumerable'))));
-    desc.Enumerable = enumerable.booleanValue();
+    desc.Enumerable = enumerable.isTrue();
   }
   const hasConfigurable = Q(HasProperty(Obj, NewValue('configurable')));
   if (hasConfigurable.isTrue()) {
     const conf = ToBoolean(Q(Get(Obj, NewValue('configurable'))));
-    desc.Configurable = conf.booleanValue();
+    desc.Configurable = conf.isTrue();
   }
   const hasValue = Q(HasProperty(Obj, NewValue('value')));
   if (hasValue.isTrue()) {
@@ -120,7 +129,7 @@ export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor 
   const hasWritable = Q(HasProperty(Obj, NewValue('writable')));
   if (hasWritable.isTrue()) {
     const writable = ToBoolean(Q(Get(Obj, NewValue('writable'))));
-    desc.Writable = writable.booleanValue();
+    desc.Writable = writable.isTrue();
   }
   const hasGet = Q(HasProperty(Obj, NewValue('get')));
   if (hasGet.isTrue()) {

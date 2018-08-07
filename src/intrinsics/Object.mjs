@@ -5,6 +5,7 @@ import type {
   Value,
   ObjectValue,
 } from '../value.mjs';
+import type { Realm } from '../realm.mjs';
 */
 
 import {
