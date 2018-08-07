@@ -209,6 +209,7 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
       }
     });
   }
+  return NewValue(true);
 }
 
 // #sec-testintegritylevel TestIntegrityLevel

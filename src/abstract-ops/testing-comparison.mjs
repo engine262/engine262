@@ -133,8 +133,8 @@ export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolea
   }
 
   if (Type(x) === 'String') {
-    /* :: x = ((x : any) : StringValue); */
-    /* :: y = ((y : any) : StringValue); */
+    /* :: x = ((x: any): StringValue); */
+    /* :: y = ((y: any): StringValue); */
     if (x.stringValue() === y.stringValue()) {
       return true;
     }
@@ -142,9 +142,9 @@ export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolea
   }
 
   if (Type(x) === 'Boolean') {
-    /* :: x = ((x : any) : BooleanValue); */
-    /* :: y = ((y : any) : BooleanValue); */
-    if (x.booleanValue() === y.booleanValue()) {
+    /* :: x = ((x: any): BooleanValue); */
+    /* :: y = ((y: any): BooleanValue); */
+    if (x.isTrue() === y.isTrue()) {
       return true;
     }
     return false;
