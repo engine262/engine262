@@ -281,6 +281,20 @@ export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], con
 }) => Value;
 */
 
+function nc(fn, realm, args, thisArgument, newTarget) {
+  return fn(realm, new Proxy(args, {
+    get(target, prop, receiver) {
+      if (Reflect.has(target, prop)) {
+        return Reflect.get(target, prop, receiver);
+      }
+      return New(undefined);
+    },
+  }), {
+    thisArgument: thisArgument || New(undefined),
+    NewTarget: newTarget || New(undefined),
+  });
+}
+
 export class BuiltinFunctionValue extends FunctionValue {
   /* ::
   Realm: ?Realm
@@ -311,10 +325,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = this.nativeFunction(calleeRealm, argumentsList, {
-      thisArgument,
-      NewTarget: undefinedValue,
-    });
+    const result = nc(this.nativeFunction, calleeRealm, argumentsList, thisArgument, undefined);
     surroundingAgent.executionContextStack.pop();
 
     return result;
@@ -332,10 +343,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = this.nativeFunction(calleeRealm, argumentsList, {
-      thisArgument: undefinedValue,
-      NewTarget: newTarget,
-    });
+    const result = nc(this.nativeFunction, calleeRealm, argumentsList, undefined, newTarget);
     surroundingAgent.executionContextStack.pop();
     return result;
   }

@@ -85,7 +85,7 @@ export function IsConstructor(argument /* : Value */) /* : boolean */ {
 }
 
 // 7.2.5 IsExtensible
-export function IsExtensible(O /* : ObjectValue */) /* : boolean */ {
+export function IsExtensible(O /* : ObjectValue */) /* : BooleanValue */ {
   Assert(Type(O) === 'Object');
   return O.IsExtensible();
 }

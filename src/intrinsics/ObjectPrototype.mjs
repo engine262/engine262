@@ -1,4 +1,6 @@
 import {
+  UndefinedValue,
+  NullValue,
   StringValue,
   wellKnownSymbols,
   ObjectValue,
@@ -20,53 +22,54 @@ import {
   ToObject,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
+import { Q, X } from '../completion.mjs';
 
 function ObjectHasOwnProperty(realm, [V], { thisArgument }) {
-  const P = ToPropertyKey(V);
-  const O = ToObject(thisArgument);
+  const P = Q(ToPropertyKey(V));
+  const O = Q(ToObject(thisArgument));
   return HasOwnProperty(O, P);
 }
 
 function ObjectIsPrototypeOf(realm, [V], { thisArgument }) {
   if (Type(V) !== 'Object') {
-    return false;
+    return NewValue(false);
   }
-  const O = ToObject(thisArgument);
+  const O = Q(ToObject(thisArgument));
   while (true) {
-    V = V.GetPrototypeOf();
-    if (V.isNull()) {
-      return false;
+    V = Q(V.GetPrototypeOf());
+    if (V instanceof NullValue) {
+      return NewValue(false);
     }
     if (SameValue(O, V) === true) {
-      return true;
+      return NewValue(true);
     }
   }
 }
 
 function ObjectPropertyIsEnumerable(realm, [V], { thisArgument }) {
-  const P = ToPropertyKey(V);
-  const O = ToObject(thisArgument);
-  const desc = O.GetOwnProperty(P);
-  if (desc.isUndefined()) {
-    return false;
+  const P = Q(ToPropertyKey(V));
+  const O = Q(ToObject(thisArgument));
+  const desc = Q(O.GetOwnProperty(P));
+  if (desc instanceof UndefinedValue) {
+    return NewValue(false);
   }
   return desc.Enumerable;
 }
 
 function ObjectToLocaleString(realm, argList, { thisArgument }) {
   const O = thisArgument;
-  return Invoke(O, 'toString');
+  return Q(Invoke(O, 'toString'));
 }
 
 function ObjectToString(realm, argList, { thisArgument }) {
-  if (thisArgument.isUndefined()) {
+  if (thisArgument instanceof UndefinedValue) {
     return NewValue('[object Undefined]');
   }
-  if (thisArgument.isNull()) {
+  if (thisArgument instanceof UndefinedValue) {
     return NewValue('[object Null]');
   }
-  const O = ToObject(thisArgument);
-  const isArray = IsArray(O);
+  const O = X(ToObject(thisArgument));
+  const isArray = Q(IsArray(O));
   let builtinTag;
   if (isArray === true) {
     builtinTag = 'Array';
@@ -89,7 +92,7 @@ function ObjectToString(realm, argList, { thisArgument }) {
   } else {
     builtinTag = 'Object';
   }
-  let tag = Get(O, wellKnownSymbols.toStringTag);
+  let tag = Q(Get(O, wellKnownSymbols.toStringTag));
   if (Type(tag) !== 'String') {
     tag = builtinTag;
   }
@@ -97,7 +100,7 @@ function ObjectToString(realm, argList, { thisArgument }) {
 }
 
 function ObjectValueOf(realm, argList, { thisArgument }) {
-  return ToObject(thisArgument);
+  return Q(ToObject(thisArgument));
 }
 
 export function CreateObjectPrototype(realmRec) {
