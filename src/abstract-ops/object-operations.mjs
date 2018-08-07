@@ -118,6 +118,20 @@ export function DefinePropertyOrThrow(
   return success;
 }
 
+// #sec-deletepropertyorthrow
+export function DeletePropertyOrThrow(
+  O /* : ObjectValue */,
+  P /* : PropertyKey */,
+) {
+  Assert(Type(O) === 'Object');
+  Assert(IsPropertyKey(P));
+  const success = Q(O.Delete(P));
+  if (success.isFalse()) {
+    surroundingAgent.Throw('TypeError');
+  }
+  return success;
+}
+
 // 7.3.9 GetMethod
 export function GetMethod(
   V /* : Value */,

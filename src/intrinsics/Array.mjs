@@ -131,9 +131,9 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   throw new RangeError('ArrayConstructor arguments out of range');
 }
 
-function ArrayFrom(realm, argList, { thisArgument }) {
+function ArrayFrom(realm, argList, { thisValue }) {
   const [items, mapfn, thisArg] = argList;
-  const C = thisArgument;
+  const C = thisValue;
   let mapping;
   let T;
   let A;
@@ -230,10 +230,10 @@ function ArrayIsArray(realm, [arg]) {
   return Q(IsArray(arg));
 }
 
-function ArrayOf(realm, [...items], { thisArgument }) {
+function ArrayOf(realm, [...items], { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
-  const C = thisArgument;
+  const C = thisValue;
   let A;
   if (IsConstructor(C) === true) {
     A = Q(Construct(C, [len]));

@@ -26,16 +26,16 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function BooleanToString(realm, argList, { thisArgument }) {
-  const b = Q(thisBooleanValue(thisArgument));
+function BooleanToString(realm, argList, { thisValue }) {
+  const b = Q(thisBooleanValue(thisValue));
   if (b.isTrue()) {
     return NewValue('true');
   }
   return NewValue('false');
 }
 
-function BooleanValueOf(realm, argList, { thisArgument }) {
-  return Q(thisBooleanValue(thisArgument));
+function BooleanValueOf(realm, argList, { thisValue }) {
+  return Q(thisBooleanValue(thisValue));
 }
 
 export function CreateBooleanPrototype(realmRec) {

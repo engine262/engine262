@@ -274,7 +274,7 @@ export class FunctionValue extends ObjectValue {
 
 /* ::
 export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], contextInfo: {
-  thisArgument: Value,
+  thisValue: Value,
   NewTarget: Value,
 }) => Value;
 */
@@ -290,7 +290,7 @@ function nc(fn, realm, args, thisArgument, newTarget) {
   });
   /* :: argp = ((argp: any): Value[]); */
   return fn(realm, argp, {
-    thisArgument: thisArgument || New(undefined),
+    thisValue: thisArgument || New(undefined),
     NewTarget: newTarget || New(undefined),
   });
 }

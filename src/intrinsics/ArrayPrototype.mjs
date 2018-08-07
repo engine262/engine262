@@ -1,4 +1,17 @@
+/* @flow */
+
+/* ::
+import type {
+  NumberValue,
+  ObjectValue,
+} from '../value.mjs';
+import type {
+  Realm,
+} from '../realm.mjs';
+*/
+
 import {
+  Value,
   UndefinedValue,
   NullValue,
   ArrayValue,
@@ -16,6 +29,7 @@ import {
   CreateBuiltinFunction,
   CreateDataPropertyOrThrow,
   Get,
+  Set,
   GetFunctionRealm,
   HasProperty,
   IsArray,
@@ -24,6 +38,11 @@ import {
   ToLength,
   ToObject,
   ToString,
+  ToInteger,
+  DeletePropertyOrThrow,
+  IsCallable,
+  Call,
+  ToBoolean,
 } from '../abstract-ops/all.mjs';
 import {
   Q, X,
@@ -31,13 +50,13 @@ import {
 
 import { ArrayCreate } from './Array.mjs';
 
-function ArraySpeciesCreate(originalArray, length) {
-  Assert(Type(length) === 'Number' && length.value >= 0);
+function ArraySpeciesCreate(originalArray, length /* : NumberValue */) {
+  Assert(Type(length) === 'Number' && length.numberValue() >= 0);
   const isArray = Q(IsArray(originalArray));
   if (isArray.isFalse()) {
     return Q(ArrayCreate(length));
   }
-  let C = Q(Get(originalArray, 'constructor'));
+  let C = Q(Get(originalArray, NewValue('constructor')));
   if (IsConstructor(C) === true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C));
@@ -48,6 +67,7 @@ function ArraySpeciesCreate(originalArray, length) {
     }
   }
   if (Type(C) === 'Object') {
+    /* :: C = ((C: any): ObjectValue); */
     C = Q(Get(C, wellKnownSymbols.species));
     if (C instanceof NullValue) {
       C = NewValue(undefined);
@@ -62,26 +82,27 @@ function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [length]));
 }
 
-function ArrayConcat(realm, args, { thisArgument }) {
-  const O = Q(ToObject(thisArgument));
-  const A = Q(ArraySpeciesCreate(O, 0));
+function ArrayConcat(realm, args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const A = Q(ArraySpeciesCreate(O, NewValue(0)));
   let n = 0;
   const items = [O, ...args];
   while (items.length) {
     const E = items.shift();
     const spreadable = Q(IsConcatSpreadable(E));
     if (spreadable.isTrue()) {
+      /* :: E = ((E: any): ObjectValue); */
       let k = 0;
-      const len = Q(ToLength(Q(Get(E, 'length'))));
-      if (n + len > (2 ** 53) - 1) {
+      const len = Q(ToLength(Q(Get(E, NewValue('length')))));
+      if (n + len.numberValue() > (2 ** 53) - 1) {
         surroundingAgent.Throw('TypeError');
       }
-      while (k < len) {
-        const P = X(ToString(k));
+      while (k < len.numberValue()) {
+        const P = X(ToString(NewValue(k)));
         const exists = Q(HasProperty(E, P));
         if (exists.isTrue()) {
           const subElement = Q(Get(E, P));
-          Q(CreateDataPropertyOrThrow(A, X(ToString(n)), subElement));
+          Q(CreateDataPropertyOrThrow(A, X(ToString(NewValue(n))), subElement));
         }
         n += 1;
         k += 1;
@@ -90,7 +111,7 @@ function ArrayConcat(realm, args, { thisArgument }) {
       if (n >= (2 ** 53) - 1) {
         surroundingAgent.Throw('TypeError');
       }
-      Q(CreateDataPropertyOrThrow(A, X(ToString(n)), E));
+      Q(CreateDataPropertyOrThrow(A, X(ToString(NewValue(n))), E));
       n += 1;
     }
   }
@@ -98,11 +119,102 @@ function ArrayConcat(realm, args, { thisArgument }) {
   return NewValue(true);
 }
 
-export function CreateArrayPrototype(realmRec) {
+function ArrayCopyWithin(realm, [target, start, end], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length')))));
+  const relativeTarget = Q(ToInteger(target));
+  let to;
+  if (relativeTarget.numberValue() < 0) {
+    to = Math.max(len.numberValue() + relativeTarget.numberValue(), 0);
+  } else {
+    to = Math.min(relativeTarget.numberValue(), len.numberValue());
+  }
+  const relativeStart = Q(ToInteger(start));
+  let from;
+  if (relativeStart.numberValue() < 0) {
+    from = Math.max(len.numberValue() + relativeStart.numberValue(), 0);
+  } else {
+    from = Math.min(relativeStart.numberValue(), len.numberValue());
+  }
+  let relativeEnd;
+  if (end instanceof UndefinedValue) {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(ToInteger(end));
+  }
+  let final;
+  if (relativeEnd.numberValue() < 0) {
+    final = Math.max(len.numberValue() + relativeEnd.numberValue(), 0);
+  } else {
+    final = Math.min(relativeEnd.numberValue(), len.numberValue());
+  }
+  let count = Math.min(final - from, len.numberValue() - to);
+  let direction;
+  if (from < to && to < from + count) {
+    direction = -1;
+    from += count - 1;
+    to += count - 1;
+  } else {
+    direction = 1;
+  }
+  while (count > 0) {
+    const fromKey = X(ToString(NewValue(from)));
+    const toKey = X(ToString(NewValue(to)));
+    const fromPresent = Q(HasProperty(O, fromKey));
+    if (fromPresent.isTrue()) {
+      const fromVal = Q(Get(O, fromKey));
+      Q(Set(O, toKey, fromVal, NewValue(true)));
+    } else {
+      Q(DeletePropertyOrThrow(O, toKey));
+    }
+    from += direction;
+    to += direction;
+    count -= 1;
+  }
+  return O;
+}
+
+function ArrayEntries(realm, args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  return CreateArrayIterator(O, 'key+value');
+}
+
+function ArrayEvery(realm, [callbackFn, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length')))));
+  if (IsCallable(callbackFn).isFalse()) {
+    surroundingAgent.Throw('TypeError');
+  }
+  let T;
+  if (thisArg instanceof Value) {
+    T = thisArg;
+  } else {
+    T = NewValue(undefined);
+  }
+  let k = 0;
+  while (k < len.numberValue()) {
+    const Pk = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      const testResult = ToBoolean(Q(Call(callbackFn, T, [kValue, NewValue(k), O])));
+      if (testResult.isFalse()) {
+        return NewValue(false);
+      }
+    }
+    k += 1;
+  }
+  return NewValue(true);
+}
+
+export function CreateArrayPrototype(realmRec /* : Realm */) {
   const proto = new ArrayValue(realmRec);
 
   [
     ['concat', ArrayConcat],
+    ['copyWithin', ArrayCopyWithin],
+    ['entries', ArrayEntries],
+    ['every', ArrayEvery],
   ].forEach(([name, nativeFunction]) => {
     proto.DefineOwnProperty(NewValue(name), {
       Value: CreateBuiltinFunction(nativeFunction, [], realmRec),
@@ -113,4 +225,6 @@ export function CreateArrayPrototype(realmRec) {
   });
 
   realmRec.Intrinsics['%ArrayPrototype%'] = proto;
+
+  realmRec.Intrinsics['%ArrayProto_entries%'] = proto.Get(NewValue('entries'));
 }
