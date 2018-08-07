@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     'arrow-parens': ['error', 'always'],
     'lines-between-class-members': 'off',
+    'camelcase': 'off',
     'class-methods-use-this': 'off',
     'no-lonely-if': 'off',
     'no-else-return': 'off',

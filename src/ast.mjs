@@ -1,6 +1,6 @@
 // #prod-NullLiteral
 export function isNullLiteral(node) {
-  return node.type === 'Literal' && typeof node.value === 'null';
+  return node.type === 'Literal' && node.value === null;
 }
 
 // #prod-BooleanLiteral
@@ -431,6 +431,25 @@ export function isActualConditionalExpression(node) {
 // #prod-ConditionalExpression
 export function isConditionalExpression(node) {
   return isLogicalORExpression(node) || isActualConditionalExpression(node);
+}
+
+// #prod-YieldExpression
+export function isYieldExpression(node) {
+  return node.type === 'YieldExpression';
+}
+
+// #prod-ArrowFunction
+export function isArrowFunction(node) {
+  return node.type === 'ArrowFunctionExpression'
+         && !node.async
+         && !node.generator;
+}
+
+// #prod-AsyncArrowFunction
+export function isAsyncArrowFunction(node) {
+  return node.type === 'ArrowFunctionExpression'
+         && node.async
+         && !node.generator;
 }
 
 // Used in #prod-AssignmentExpression

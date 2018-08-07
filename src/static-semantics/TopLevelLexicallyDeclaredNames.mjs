@@ -3,6 +3,6 @@
 //
 // (implicit)
 //   StatementList : StatementListItem
-export function TopLevelLexicallyDeclaredNamesStatementList(StatementList) {
+export function TopLevelLexicallyDeclaredNames_StatementList(StatementList) {
   return [];
 }

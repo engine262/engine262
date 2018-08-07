@@ -1,4 +1,4 @@
 // #sec-scripts-static-semantics-varscopeddeclarations
-export function VarScopedDeclarationsScriptBody(ScriptBody) {
+export function VarScopedDeclarations_ScriptBody(ScriptBody) {
   return [];
 }

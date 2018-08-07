@@ -19,7 +19,7 @@ import {
 //   BindingIdentifier : Identifier
 //   BindingIdentifier : `yield`
 //   BindingIdentifier : `await`
-export function BoundNamesBindingIdentifier(BindingIdentifier) {
+export function BoundNames_BindingIdentifier(BindingIdentifier) {
   return [BindingIdentifier.name];
 }
 
@@ -28,12 +28,12 @@ export function BoundNamesBindingIdentifier(BindingIdentifier) {
 //
 // (implicit)
 //   SingleNameBinding : BindingIdentifier
-export function BoundNamesSingleNameBinding(SingleNameBinding) {
+export function BoundNames_SingleNameBinding(SingleNameBinding) {
   switch (true) {
     case isBindingIdentifier(SingleNameBinding):
-      return BoundNamesBindingIdentifier(SingleNameBinding);
+      return BoundNames_BindingIdentifier(SingleNameBinding);
     case isBindingIdentifierAndInitializer(SingleNameBinding):
-      return BoundNamesBindingIdentifier(SingleNameBinding.left);
+      return BoundNames_BindingIdentifier(SingleNameBinding.left);
     default:
       throw new TypeError(`Invalid SingleNameBinding: ${SingleNameBinding.type}`);
   }
@@ -45,14 +45,14 @@ export function BoundNamesSingleNameBinding(SingleNameBinding) {
 // (implicit)
 //   BindingElement : SingleNameBinding
 //   BindingElement : BindingPattern
-export function BoundNamesBindingElement(BindingElement) {
+export function BoundNames_BindingElement(BindingElement) {
   switch (true) {
     case isSingleNameBinding(BindingElement):
-      return BoundNamesSingleNameBinding(BindingElement);
+      return BoundNames_SingleNameBinding(BindingElement);
     case isBindingPattern(BindingElement):
-      return BoundNamesBindingPattern(BindingElement);
+      return BoundNames_BindingPattern(BindingElement);
     case isBindingPatternAndInitializer(BindingElement):
-      return BoundNamesBindingPattern(BindingElement.left);
+      return BoundNames_BindingPattern(BindingElement.left);
     default:
       throw new TypeError(`Invalid BindingElement: ${BindingElement.type}`);
   }
@@ -61,12 +61,12 @@ export function BoundNamesBindingElement(BindingElement) {
 // (implicit)
 //   BindingRestElement : `...` BindingIdentifier
 //   BindingRestElement : `...` BindingPattern
-export function BoundNamesBindingRestElement(BindingRestElement) {
+export function BoundNames_BindingRestElement(BindingRestElement) {
   switch (true) {
     case isBindingIdentifier(BindingRestElement.argument):
-      return BoundNamesBindingIdentifier(BindingRestElement.argument);
+      return BoundNames_BindingIdentifier(BindingRestElement.argument);
     case isBindingPattern(BindingRestElement.argument):
-      return BoundNamesBindingPattern(BindingRestElement.argument);
+      return BoundNames_BindingPattern(BindingRestElement.argument);
     default:
       throw new TypeError(`Invalid binding of BindingRestElement: ${BindingRestElement.argument.type}`);
   }
@@ -79,18 +79,18 @@ export function BoundNamesBindingRestElement(BindingRestElement) {
 //   ArrayBindingPattern : `[` BindingElementList `,` Elision BindingRestElement `]`
 //   BindingElementList : BindingElementList `,` BindingElisionElement
 //   BindingElisionElement : Elision BindingElement
-export function BoundNamesArrayBindingPattern(ArrayBindingPattern) {
+export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
   const names = [];
   for (const BindingElisionElementOrBindingRestElement of ArrayBindingPattern.elements) {
     switch (true) {
       case isBindingElement(BindingElisionElementOrBindingRestElement): {
         const BindingElement = BindingElisionElementOrBindingRestElement;
-        names.push(...BoundNamesBindingElement(BindingElement));
+        names.push(...BoundNames_BindingElement(BindingElement));
         break;
       }
       case isBindingRestElement(BindingElisionElementOrBindingRestElement): {
         const BindingRestElement = BindingElisionElementOrBindingRestElement;
-        names.push(...BoundNamesBindingRestElement(BindingRestElement));
+        names.push(...BoundNames_BindingRestElement(BindingRestElement));
         break;
       }
       default:
@@ -105,12 +105,12 @@ export function BoundNamesArrayBindingPattern(ArrayBindingPattern) {
 //
 // (implicit)
 //   BindingProperty : SingleNameBinding
-export function BoundNamesBindingProperty(BindingProperty) {
+export function BoundNames_BindingProperty(BindingProperty) {
   switch (true) {
     case isSingleNameBinding(BindingProperty.value):
-      return BoundNamesSingleNameBinding(BindingProperty.value);
+      return BoundNames_SingleNameBinding(BindingProperty.value);
     case isBindingElement(BindingProperty.value):
-      return BoundNamesBindingElement(BindingProperty.value);
+      return BoundNames_BindingElement(BindingProperty.value);
     default:
       throw new TypeError(`Invalid BindingProperty: ${BindingProperty.value.type}`);
   }
@@ -118,11 +118,11 @@ export function BoundNamesBindingProperty(BindingProperty) {
 
 // (implicit)
 //   BindingRestProperty : `...` BindingIdentifier
-export function BoundNamesBindingRestProperty(BindingRestProperty) {
+export function BoundNames_BindingRestProperty(BindingRestProperty) {
   if (!isBindingIdentifier(BindingRestProperty.argument)) {
     throw new TypeError(`Invalid binding of BindingRestProperty: ${BindingRestProperty.argument.type}`);
   }
-  return BoundNamesBindingIdentifier(BindingRestProperty.argument);
+  return BoundNames_BindingIdentifier(BindingRestProperty.argument);
 }
 
 // #sec-destructuring-binding-patterns-static-semantics-boundnames
@@ -134,18 +134,18 @@ export function BoundNamesBindingRestProperty(BindingRestProperty) {
 //   ObjectBindingPattern : `{` BindingPropertyList `}`
 //   ObjectBindingPattern : `{` BindingPropertyList `,` `}`
 //   ObjectBindingPattern : `{` BindingPropertyList `,` BindingRestProperty `}`
-function BoundNamesObjectBindingPattern(ObjectBindingPattern) {
+function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
   const names = [];
   for (const BindingPropertyOrBindingRestProperty of ObjectBindingPattern.properties) {
     switch (true) {
       case isBindingProperty(BindingPropertyOrBindingRestProperty): {
         const BindingProperty = BindingPropertyOrBindingRestProperty;
-        names.push(...BoundNamesBindingProperty(BindingProperty));
+        names.push(...BoundNames_BindingProperty(BindingProperty));
         break;
       }
       case isBindingRestProperty(BindingPropertyOrBindingRestProperty): {
         const BindingRestProperty = BindingPropertyOrBindingRestProperty;
-        names.push(...BoundNamesBindingRestProperty(BindingRestProperty));
+        names.push(...BoundNames_BindingRestProperty(BindingRestProperty));
         break;
       }
       default:
@@ -158,12 +158,12 @@ function BoundNamesObjectBindingPattern(ObjectBindingPattern) {
 // (implicit)
 //   BindingPattern : ObjectBindingPattern
 //   BindingPattern : ArrayBindingPattern
-function BoundNamesBindingPattern(BindingPattern) {
+function BoundNames_BindingPattern(BindingPattern) {
   switch (true) {
     case isObjectBindingPattern(BindingPattern):
-      return BoundNamesObjectBindingPattern(BindingPattern);
+      return BoundNames_ObjectBindingPattern(BindingPattern);
     case isArrayBindingPattern(BindingPattern):
-      return BoundNamesArrayBindingPattern(BindingPattern);
+      return BoundNames_ArrayBindingPattern(BindingPattern);
     default:
       throw new TypeError(`Invalid BindingPattern: ${BindingPattern.type}`);
   }
@@ -177,15 +177,15 @@ function BoundNamesBindingPattern(BindingPattern) {
 //
 // (implicit)
 //   BindingList : LexicalBinding
-export function BoundNamesLexicalDeclaration(LexicalDeclaration) {
+export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
   const names = [];
   for (const declarator of LexicalDeclaration.declarations) {
     switch (true) {
       case isBindingIdentifier(declarator.id):
-        names.push(...BoundNamesBindingIdentifier(declarator.id));
+        names.push(...BoundNames_BindingIdentifier(declarator.id));
         break;
       case isBindingPattern(declarator.id):
-        names.push(...BoundNamesBindingPattern(declarator.id));
+        names.push(...BoundNames_BindingPattern(declarator.id));
         break;
       default:
         throw new TypeError(`Invalid LexicalBinding: ${declarator.id.type}`);
@@ -196,8 +196,8 @@ export function BoundNamesLexicalDeclaration(LexicalDeclaration) {
 
 // (implicit)
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function BoundNamesVariableStatement(VariableStatement) {
-  return BoundNamesVariableDeclarationList(VariableStatement.declarations);
+export function BoundNames_VariableStatement(VariableStatement) {
+  return BoundNames_VariableDeclarationList(VariableStatement.declarations);
 }
 
 // #sec-variable-statement-static-semantics-boundnames
@@ -205,10 +205,10 @@ export function BoundNamesVariableStatement(VariableStatement) {
 //
 // (implicit)
 //   VariableDeclarationList : VariableDeclaration
-export function BoundNamesVariableDeclarationList(VariableDeclarationList) {
+export function BoundNames_VariableDeclarationList(VariableDeclarationList) {
   const names = [];
   for (const VariableDeclaration of VariableDeclarationList) {
-    names.push(...BoundNamesVariableDeclaration(VariableDeclaration));
+    names.push(...BoundNames_VariableDeclaration(VariableDeclaration));
   }
   return names;
 }
@@ -216,12 +216,12 @@ export function BoundNamesVariableDeclarationList(VariableDeclarationList) {
 // #sec-variable-statement-static-semantics-boundnames
 //   VariableDeclaration : BindingIdentifier Initializer
 //   VariableDeclaration : BindingPattern Initializer
-export function BoundNamesVariableDeclaration(VariableDeclaration) {
+export function BoundNames_VariableDeclaration(VariableDeclaration) {
   switch (true) {
     case isBindingIdentifier(VariableDeclaration.id):
-      return BoundNamesBindingIdentifier(VariableDeclaration.id);
+      return BoundNames_BindingIdentifier(VariableDeclaration.id);
     case isBindingPattern(VariableDeclaration.id):
-      return BoundNamesBindingPattern(VariableDeclaration.id);
+      return BoundNames_BindingPattern(VariableDeclaration.id);
     default:
       throw new Error(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
   }
@@ -233,13 +233,13 @@ export function BoundNamesVariableDeclaration(VariableDeclaration) {
 // (implicit)
 //   ForBinding : BindingIdentifier
 //   ForBinding : BindingPattern
-export function BoundNamesForDeclaration(ForDeclaration) {
+export function BoundNames_ForDeclaration(ForDeclaration) {
   const ForBinding = ForDeclaration.declarations[0].id;
   switch (true) {
     case isBindingIdentifier(ForBinding):
-      return BoundNamesBindingIdentifier(ForBinding);
+      return BoundNames_BindingIdentifier(ForBinding);
     case isBindingPattern(ForBinding):
-      return BoundNamesBindingPattern(ForBinding);
+      return BoundNames_BindingPattern(ForBinding);
     default:
       throw new TypeError(`Invalid LexicalBinding: ${ForBinding.type}`);
   }
@@ -275,36 +275,36 @@ export function BoundNamesForDeclaration(ForDeclaration) {
 //   HoistableDeclaration : GeneratorDeclaration
 //   HoistableDeclaration : AsyncFunctionDeclaration
 //   HoistableDeclaration : AsyncGeneratorDeclaration
-export function BoundNamesHoistableDeclaration(HoistableDeclaration) {
+export function BoundNames_HoistableDeclaration(HoistableDeclaration) {
   if (HoistableDeclaration.id === null) {
     return ['*default*'];
   }
-  return BoundNamesBindingIdentifier(HoistableDeclaration.id);
+  return BoundNames_BindingIdentifier(HoistableDeclaration.id);
 }
 
-export const BoundNamesFunctionDeclaration = BoundNamesHoistableDeclaration;
-export const BoundNamesGeneratorDeclaration = BoundNamesHoistableDeclaration;
-export const BoundNamesAsyncFunctionDeclaration = BoundNamesHoistableDeclaration;
-export const BoundNamesAsyncGeneratorDeclaration = BoundNamesHoistableDeclaration;
+export const BoundNames_FunctionDeclaration = BoundNames_HoistableDeclaration;
+export const BoundNames_GeneratorDeclaration = BoundNames_HoistableDeclaration;
+export const BoundNames_AsyncFunctionDeclaration = BoundNames_HoistableDeclaration;
+export const BoundNames_AsyncGeneratorDeclaration = BoundNames_HoistableDeclaration;
 
 // #sec-class-definitions-static-semantics-boundnames
 //   ClassDeclaration : `class` BindingIdentifier ClassTail
 //   ClassDeclaration : `class` ClassTail
-export function BoundNamesClassDeclaration(ClassDeclaration) {
+export function BoundNames_ClassDeclaration(ClassDeclaration) {
   if (ClassDeclaration.id === null) {
     return ['*default*'];
   }
-  return BoundNamesBindingIdentifier(ClassDeclaration.id);
+  return BoundNames_BindingIdentifier(ClassDeclaration.id);
 }
 
-export function BoundNamesDeclaration(Declaration) {
+export function BoundNames_Declaration(Declaration) {
   switch (true) {
     case isHoistableDeclaration(Declaration):
-      return BoundNamesHoistableDeclaration(Declaration);
+      return BoundNames_HoistableDeclaration(Declaration);
     case isClassDeclaration(Declaration):
-      return BoundNamesClassDeclaration(Declaration);
+      return BoundNames_ClassDeclaration(Declaration);
     case isLexicalDeclaration(Declaration):
-      return BoundNamesLexicalDeclaration(Declaration);
+      return BoundNames_LexicalDeclaration(Declaration);
     default:
       throw new TypeError(`Unexpected Declaration: ${Declaration.type}`);
   }
