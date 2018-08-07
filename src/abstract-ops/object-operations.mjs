@@ -41,19 +41,22 @@ import {
 import {
   ArrayCreate,
 } from '../intrinsics/Array.mjs';
+import {
+  Q, X,
+} from '../completion.mjs';
 
-// 7.3.1 Get
+// #sec-get-o-p Get
 export function Get(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  return O.Get(P, O);
+  return Q(O.Get(P, O));
 }
 
-// 7.3.2 GetV
+// #sec-getv GetV
 export function GetV(V /* : Value */, P /* : PropertyKey */) {
   Assert(IsPropertyKey(P));
   const O = ToObject(V);
-  return O.Get(V, P);
+  return Q(O.Get(V, P));
 }
 
 // #sec-set-o-p-v-throw Set
@@ -66,7 +69,7 @@ export function Set(
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   Assert(Type(Throw) === 'Boolean');
-  const success = O.Set(P, V, O);
+  const success = Q(O.Set(P, V, O));
   if (success.isFalse() && Throw.isTrue()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -84,7 +87,7 @@ export function CreateDataProperty(O /* : ObjectValue */, P /* : PropertyKey */,
     Enumerable: true,
     Configurable: true,
   };
-  return O.DefineOwnProperty(P, newDesc);
+  return Q(O.DefineOwnProperty(P, newDesc));
 }
 
 // 7.3.6 CreateDataPropertyOrThrow
@@ -93,8 +96,8 @@ export function CreateDataPropertyOrThrow(
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  const success = CreateDataProperty(O, P, V);
-  if (success === false) {
+  const success = Q(CreateDataProperty(O, P, V));
+  if (success.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
   return success;
@@ -108,7 +111,7 @@ export function DefinePropertyOrThrow(
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  const success = O.DefineOwnProperty(P, desc);
+  const success = Q(O.DefineOwnProperty(P, desc));
   if (success.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -121,8 +124,8 @@ export function GetMethod(
   P /* : PropertyKey */,
 ) /* : FunctionValue | UndefinedValue */ {
   Assert(IsPropertyKey(P));
-  const func = GetV(V, P);
-  if (func.isNull() || func.isUndefined()) {
+  const func = Q(GetV(V, P));
+  if (func instanceof NullValue || func instanceof UndefinedValue) {
     return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
@@ -135,18 +138,18 @@ export function GetMethod(
 export function HasProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  return O.HasProperty(P);
+  return Q(O.HasProperty(P));
 }
 
 // 7.3.11 HasOwnProperty
 export function HasOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  const desc = O.GetOwnProperty(P);
-  if (desc.isUndefined()) {
-    return false;
+  const desc = Q(O.GetOwnProperty(P));
+  if (desc instanceof UndefinedValue) {
+    return NewValue(false);
   }
-  return true;
+  return NewValue(true);
 }
 
 // 7.3.12 Call
@@ -159,7 +162,7 @@ export function Call(F /* : FunctionValue */, V /* : Value */, argumentsList /* 
     surroundingAgent.Throw('TypeError');
   }
 
-  return F.Call(V, argumentsList);
+  return Q(F.Call(V, argumentsList));
 }
 
 // 7.3.13 Construct
@@ -176,25 +179,25 @@ export function Construct(
   }
   Assert(IsConstructor(F));
   Assert(IsConstructor(newTarget));
-  return F.Construct(argumentsList, newTarget);
+  return Q(F.Construct(argumentsList, newTarget));
 }
 
 // #sec-setintegritylevel SetIntegrityLevel
 export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
-  const status = O.PreventExtensions();
+  const status = Q(O.PreventExtensions());
   if (status.isFalse()) {
     return NewValue(false);
   }
-  const keys = O.OwnPropertyKeys();
+  const keys = Q(O.OwnPropertyKeys());
   if (level === 'sealed') {
     keys.forEach((k) => {
-      DefinePropertyOrThrow(O, k, { Configurable: false });
+      Q(DefinePropertyOrThrow(O, k, { Configurable: false }));
     });
   } else if (level === 'frozen') {
     keys.forEach((k) => {
-      const currentDesc = O.GetOwnProperty(k);
+      const currentDesc = Q(O.GetOwnProperty(k));
       if (!(currentDesc instanceof UndefinedValue)) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
@@ -202,7 +205,7 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
         } else {
           desc = { Configurable: false, Writable: false };
         }
-        DefinePropertyOrThrow(O, k, desc);
+        Q(DefinePropertyOrThrow(O, k, desc));
       }
     });
   }
@@ -212,34 +215,35 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
 export function TestIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
-  const status = IsExtensible(O);
+  const status = Q(IsExtensible(O));
   if (status.isTrue()) {
-    return falseValue;
+    return NewValue(false);
   }
-  const keys = O.OwnPropertyKeys();
+  const keys = Q(O.OwnPropertyKeys());
   for (const k of keys) {
-    const currentDesc = O.GetOwnProperty(k);
+    const currentDesc = Q(O.GetOwnProperty(k));
     if (!(currentDesc instanceof UndefinedValue)) {
       if (currentDesc.Configurable === true) {
-        return falseValue;
+        return NewValue(false);
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
         if (currentDesc.Writable === true) {
-          return false;
+          return NewValue(false);
         }
       }
     }
   }
+  return NewValue(true);
 }
 
 // 7.3.16 CreateArrayFromList
 export function CreateArrayFromList(elements /* : List<Value> */) {
   Assert(elements.every((e) => e instanceof Value));
-  const array = ArrayCreate(NewValue(0));
+  const array = X(ArrayCreate(NewValue(0)));
   let n = 0;
   elements.forEach((e) => {
-    const status = CreateDataProperty(array, ToString(NewValue(n)), e);
-    Assert(status === true);
+    const status = CreateDataProperty(array, X(ToString(NewValue(n))), e);
+    Assert(status.isTrue());
     n += 1;
   });
   return array;
@@ -251,8 +255,8 @@ export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* 
   if (!argumentsList) {
     argumentsList = [];
   }
-  const func = GetV(V, P);
-  return Call(func, V, argumentsList);
+  const func = Q(GetV(V, P));
+  return Q(Call(func, V, argumentsList));
 }
 
 /* ::
@@ -265,16 +269,16 @@ export function EnumerableOwnPropertyNames(
   kind /* : OwnPropertyNamesKind */,
 ) {
   Assert(Type(O) === 'Object');
-  const ownKeys = O.OwnPropertyKeys();
+  const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
   ownKeys.forEach((key) => {
     if (Type(key) === 'String') {
-      const desc = O.GetOwnProperty(key);
+      const desc = Q(O.GetOwnProperty(key));
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
-          const value = Get(O, key);
+          const value = Q(Get(O, key));
           if (kind === 'value') {
             properties.push(value);
           } else {
@@ -312,7 +316,7 @@ export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
       surroundingAgent.Throw('TypeError');
     }
     const proxyTarget = obj.ProxyTarget;
-    return GetFunctionRealm(proxyTarget);
+    return Q(GetFunctionRealm(proxyTarget));
   }
 
   return surroundingAgent.currentRealmRecord;

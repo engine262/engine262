@@ -46,6 +46,7 @@ import {
   ToString,
   ToUint32,
 } from './all.mjs';
+import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {
@@ -59,10 +60,10 @@ export function OrdinarySetPrototypeOf(O /* : ObjectValue */, V /* : ObjectValue
   const extensible = O.Extensible;
   const current = O.Prototype;
   if (SameValue(V, current) === true) {
-    return true;
+    return NewValue(true);
   }
   if (extensible === false) {
-    return false;
+    return NewValue(false);
   }
   let p = V;
   let done = false;
@@ -102,17 +103,17 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
 
   const D = {};
 
-  const X = O.properties.get(P);
+  const x = O.properties.get(P);
 
-  if (IsDataDescriptor(X)) {
-    D.Value = X.Value;
-    D.Writable = X.Writable;
-  } else if (IsAccessorDescriptor(X)) {
-    D.Get = X.Get;
-    D.Set = X.Set;
+  if (IsDataDescriptor(x)) {
+    D.Value = x.Value;
+    D.Writable = x.Writable;
+  } else if (IsAccessorDescriptor(x)) {
+    D.Get = x.Get;
+    D.Set = x.Set;
   }
-  D.Enumerable = X.Enumerable;
-  D.Configurable = X.Configurable;
+  D.Enumerable = x.Enumerable;
+  D.Configurable = x.Configurable;
 
   return D;
 }
@@ -123,8 +124,8 @@ export function OrdinaryDefineOwnProperty(
   P /* : PropertyKey */,
   Desc /* : PropertyDescriptor */,
 ) {
-  const current = O.GetOwnProperty(P);
-  const extensible = IsExtensible(O);
+  const current = Q(O.GetOwnProperty(P));
+  const extensible = Q(IsExtensible(O));
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
 }
 
@@ -148,7 +149,7 @@ export function ValidateAndApplyPropertyDescriptor(
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, {
-          Value: 'Value' in Desc ? Desc.Value : undefinedValue,
+          Value: 'Value' in Desc ? Desc.Value : NewValue(undefined),
           Writable: 'Writable' in Desc ? Desc.Writable : false,
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
@@ -158,8 +159,8 @@ export function ValidateAndApplyPropertyDescriptor(
       Assert(IsAccessorDescriptor(Desc));
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, {
-          Get: 'Get' in Desc ? Desc.Get : undefinedValue,
-          Set: 'Set' in Desc ? Desc.Set : undefinedValue,
+          Get: 'Get' in Desc ? Desc.Get : NewValue(undefined),
+          Set: 'Set' in Desc ? Desc.Set : NewValue(undefined),
           Enumerable: 'Enumerable' in Desc ? Desc.Enumerable : false,
           Configurable: 'Configurable' in Desc ? Desc.Configurable : false,
         });
@@ -194,15 +195,15 @@ export function ValidateAndApplyPropertyDescriptor(
         const entry = O.properties.get(P);
         delete entry.Value;
         delete entry.Writable;
-        entry.Get = undefinedValue;
-        entry.Set = undefinedValue;
+        entry.Get = NewValue(undefined);
+        entry.Set = NewValue(undefined);
       }
     } else {
       if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         delete entry.Get;
         delete entry.Set;
-        entry.Value = undefinedValue;
+        entry.Value = NewValue(undefined);
         entry.Writable = false;
       }
     }
@@ -243,28 +244,28 @@ export function ValidateAndApplyPropertyDescriptor(
 export function OrdinaryHasProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(IsPropertyKey(P));
 
-  const hasOwn = O.GetOwnProperty(P);
+  const hasOwn = Q(O.GetOwnProperty(P));
   if (!(hasOwn instanceof UndefinedValue)) {
-    return true;
+    return NewValue(true);
   }
-  const parent = O.GetPrototypeOf();
+  const parent = Q(O.GetPrototypeOf());
   if (!parent.isNull()) {
-    return parent.HasOwnProperty(P);
+    return Q(parent.HasOwnProperty(P));
   }
-  return false;
+  return NewValue(false);
 }
 
 // 9.1.8.1
 export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiver /* : Value */) {
   Assert(IsPropertyKey(P));
 
-  const desc = O.GetOwnProperty(P);
-  if (desc === undefined) {
-    const parent = O.GetPrototypeOf();
-    if (parent.isNull()) {
-      return undefinedValue;
+  const desc = Q(O.GetOwnProperty(P));
+  if (desc instanceof UndefinedValue) {
+    const parent = Q(O.GetPrototypeOf());
+    if (parent instanceof NullValue) {
+      return NewValue(undefined);
     }
-    return parent.Get(P, Receiver);
+    return Q(parent.Get(P, Receiver));
   }
   if (IsDataDescriptor(desc)) {
     return desc.Value;
@@ -272,9 +273,9 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
   if (getter instanceof UndefinedValue) {
-    return undefinedValue;
+    return NewValue(undefined);
   }
-  return Call(getter, Receiver);
+  return Q(Call(getter, Receiver));
 }
 
 // 9.1.9.1 OrdinarySet
@@ -285,7 +286,7 @@ export function OrdinarySet(
   Receiver /* : Value */,
 ) {
   Assert(IsPropertyKey(P));
-  const ownDesc = O.GetOwnProperty(P);
+  const ownDesc = Q(O.GetOwnProperty(P));
   return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
@@ -300,12 +301,12 @@ export function OrdinarySetWithOwnDescriptor(
   Assert(IsPropertyKey(P));
 
   if (ownDesc instanceof UndefinedValue) {
-    const parent = O.GetPrototypeOf();
-    if (!parent.isNull()) {
-      return parent.Set(P, V, Receiver);
+    const parent = Q(O.GetPrototypeOf());
+    if (!(parent instanceof NullValue)) {
+      return Q(parent.Set(P, V, Receiver));
     }
     ownDesc = ({
-      Value: undefinedValue,
+      Value: NewValue(undefined),
       Writable: true,
       Enumerable: true,
       Configurable: true,
@@ -314,22 +315,21 @@ export function OrdinarySetWithOwnDescriptor(
 
   if (IsDataDescriptor(ownDesc)) {
     if (ownDesc.Writable === false) {
-      return false;
+      return NewValue(false);
     }
     if (Type(Receiver) !== 'Object') {
-      return false;
+      return NewValue(false);
     }
-    /* :: Receiver = ((Receiver : any) : ObjectValue); */
-    const existingDescriptor = Receiver.GetOwnProperty(P);
+    const existingDescriptor = Q(Receiver.GetOwnProperty(P));
     if (!(existingDescriptor instanceof UndefinedValue)) {
       if (IsAccessorDescriptor(existingDescriptor)) {
-        return false;
+        return NewValue(false);
       }
-      if (!existingDescriptor.writable) {
-        return false;
+      if (existingDescriptor.Writable === false) {
+        return NewValue(false);
       }
       const valueDesc = { Value: V };
-      return Receiver.DefineOwnProperty(P, valueDesc);
+      return Q(Receiver.DefineOwnProperty(P, valueDesc));
     }
     return CreateDataProperty(Receiver, P, V);
   }
@@ -337,24 +337,24 @@ export function OrdinarySetWithOwnDescriptor(
   Assert(IsAccessorDescriptor(ownDesc));
   const setter = ownDesc.Set;
   if (!setter || setter instanceof UndefinedValue) {
-    return false;
+    return NewValue(false);
   }
-  Call(setter, Receiver, [V]);
-  return true;
+  Q(Call(setter, Receiver, [V]));
+  return NewValue(true);
 }
 
 // 9.1.10.1 OrdinaryDelete
 export function OrdinaryDelete(O /* : ObjectValue */, P /* : PropertyKey */) {
   Assert(IsPropertyKey(P));
-  const desc = O.GetOwnProperty(P);
+  const desc = Q(O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
-    return true;
+    return NewValue(true);
   }
   if (desc.Configurable === true) {
     O.properties.delete(P);
-    return true;
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 // 9.1.11.1
@@ -420,7 +420,7 @@ export function OrdinaryCreateFromConstructor(
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
-  const proto = GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
+  const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return ObjectCreate(proto, internalSlotsList);
 }
 
@@ -431,9 +431,9 @@ export function GetPrototypeFromConstructor(
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor));
-  let proto = Get(constructor, NewValue('prototype'));
+  let proto = Q(Get(constructor, NewValue('prototype')));
   if (Type(proto) !== 'Object') {
-    const realm = GetFunctionRealm(constructor);
+    const realm = Q(GetFunctionRealm(constructor));
     proto = realm.Intrinsics[intrinsicDefaultProto];
   }
   return proto;
@@ -479,22 +479,20 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
     return OrdinaryDefineOwnProperty(A, lengthStr, Desc);
   }
   const newLenDesc = { ...Desc };
-  const newLen = ToUint32(Desc.Value);
-  const newLenVal = newLen.numberValue();
-  const numberLen = ToNumber(Desc.Value);
-  if (newLenVal !== numberLen.numberValue()) {
+  const newLen = Q(ToUint32(Desc.Value));
+  const numberLen = Q(ToNumber(Desc.Value));
+  if (newLen.numberValue() !== numberLen.numberValue()) {
     surroundingAgent.Throw('RangeError');
   }
   newLenDesc.Value = newLen;
   const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)/* : any */)/* : PropertyDescriptor */);
   Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
-  const oldLen = oldLenDesc.Value;
-  let oldLenVal = oldLen.numberValue();
-  if (newLenVal > oldLenVal) {
+  let oldLen = oldLenDesc.Value;
+  if (newLen.numberValue() > oldLen.numberValue()) {
     return OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
   }
   if (oldLenDesc.Writable === false) {
-    return false;
+    return NewValue(false);
   }
   let newWritable;
   if (!('Writable' in newLenDesc) || newLenDesc.Writable === true) {
@@ -503,20 +501,20 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
     newWritable = false;
     newLenDesc.Writable = true;
   }
-  const succeeded = OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
-  if (succeeded === false) {
-    return false;
+  const succeeded = X(OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc));
+  if (succeeded.isFalse()) {
+    return NewValue(false);
   }
-  while (newLenVal < oldLenVal) {
-    oldLenVal -= 1;
-    const deleteSucceeded = A.Delete(ToString(NewValue(oldLenVal)));
+  while (newLen.numberValue() < oldLen.numberValue()) {
+    oldLen = NewValue(oldLen.numberValue() - 1);
+    const deleteSucceeded = X(A.Delete(X(ToString(oldLen))));
     if (deleteSucceeded === false) {
-      newLenDesc.Value = NewValue(oldLenVal + 1);
+      newLenDesc.Value = NewValue(oldLen.numberValue() + 1);
       if (newWritable === false) {
         newLenDesc.Writable = false;
       }
-      OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
-      return false;
+      X(OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc));
+      return NewValue(false);
     }
   }
   if (newWritable === false) {
@@ -524,5 +522,5 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
       Writable: false,
     });
   }
-  return true;
+  return NewValue(true);
 }

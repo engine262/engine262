@@ -181,7 +181,11 @@ export class ObjectValue extends PrimitiveValue {
 
     this.Extensible = true;
     this.IsClassPrototype = false;
-    this.properties = new InternalPropertyMap();
+
+    Object.defineProperty(this, 'properties', {
+      value: new InternalPropertyMap(),
+      enumerable: false,
+    });
   }
 
   GetPrototypeOf() {

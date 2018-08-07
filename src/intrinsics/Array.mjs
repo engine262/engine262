@@ -14,7 +14,7 @@ import {
 import {
   AbruptCompletion,
   ThrowCompletion,
-} from '../completions.mjs';
+} from '../completion.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
