@@ -3,27 +3,12 @@ import {
   wellKnownSymbols,
   New as NewValue,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
 } from '../engine.mjs';
-
 import {
   CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
-
-function MathAbs(realm, [x]) {
-  if (Number.isNaN(x.value)) {
-    return NewValue(NaN);
-  }
-  if (Object.is(x.value, -0)) {
-    return NewValue(0);
-  }
-  if (x.value === -Infinity) {
-    return NewValue(Infinity);
-  }
-  return NewValue(x.value >= 0 ? x.value : -x.value);
-}
 
 // 20.2 The Math Object
 export function CreateMath(realmRec) {
@@ -57,7 +42,7 @@ export function CreateMath(realmRec) {
   // 20.2.2 Function Properties of the Math Object
 
   [
-    ['abs', MathAbs],
+    ['abs'],
     ['acos'],
     ['acosh'],
     ['asin'],
@@ -94,11 +79,9 @@ export function CreateMath(realmRec) {
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
     mathObj.DefineOwnProperty(NewValue(name), {
-      Value: nativeMethod
-        ? CreateBuiltinFunction(nativeMethod, [], realmRec)
-        : CreateBuiltinFunction(() => {
-          surroundingAgent.Throw('TypeError');
-        }, [], realmRec),
+      Value: CreateBuiltinFunction(nativeMethod || (() => {
+        surroundingAgent.Throw('TypeError');
+      }), [], realmRec),
       Writable: true,
       Enumerable: false,
       Configurable: true,

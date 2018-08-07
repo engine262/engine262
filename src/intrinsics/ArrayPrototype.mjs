@@ -1,15 +1,15 @@
 import {
+  UndefinedValue,
+  NullValue,
   ArrayValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
   IsConcatSpreadable,
 } from '../engine.mjs';
-
 import {
   Assert,
   Construct,
@@ -25,19 +25,22 @@ import {
   ToObject,
   ToString,
 } from '../abstract-ops/all.mjs';
+import {
+  Q, X,
+} from '../completion.mjs';
 
 import { ArrayCreate } from './Array.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.value >= 0);
-  const isArray = IsArray(originalArray);
-  if (isArray === false) {
-    return ArrayCreate(length);
+  const isArray = Q(IsArray(originalArray));
+  if (isArray.isFalse()) {
+    return Q(ArrayCreate(length));
   }
-  let C = Get(originalArray, 'constructor');
+  let C = Q(Get(originalArray, 'constructor'));
   if (IsConstructor(C) === true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
-    const realmC = GetFunctionRealm(C);
+    const realmC = Q(GetFunctionRealm(C));
     if (thisRealm !== realmC) {
       if (SameValue(C, realmC.Intrinsics['%Array%']) === true) {
         C = NewValue(undefined);
@@ -45,40 +48,40 @@ function ArraySpeciesCreate(originalArray, length) {
     }
   }
   if (Type(C) === 'Object') {
-    C = Get(C, wellKnownSymbols.species);
-    if (C.isNull()) {
+    C = Q(Get(C, wellKnownSymbols.species));
+    if (C instanceof NullValue) {
       C = NewValue(undefined);
     }
   }
-  if (C.isUndefined()) {
-    return ArrayCreate(length);
+  if (C instanceof UndefinedValue) {
+    return Q(ArrayCreate(length));
   }
   if (IsConstructor(C) === false) {
     surroundingAgent.Throw('TypeError');
   }
-  return Construct(C, [length]);
+  return Q(Construct(C, [length]));
 }
 
 function ArrayConcat(realm, args, { thisArgument }) {
-  const O = ToObject(thisArgument);
-  const A = ArraySpeciesCreate(O, 0);
+  const O = Q(ToObject(thisArgument));
+  const A = Q(ArraySpeciesCreate(O, 0));
   let n = 0;
   const items = [O, ...args];
   while (items.length) {
     const E = items.shift();
-    const spreadable = IsConcatSpreadable(E);
-    if (spreadable === true) {
+    const spreadable = Q(IsConcatSpreadable(E));
+    if (spreadable.isTrue()) {
       let k = 0;
-      const len = ToLength(Get(E, 'length'));
+      const len = Q(ToLength(Q(Get(E, 'length'))));
       if (n + len > (2 ** 53) - 1) {
         surroundingAgent.Throw('TypeError');
       }
       while (k < len) {
-        const P = ToString(k);
-        const exists = HasProperty(E, P);
-        if (exists === true) {
-          const subElement = Get(E, P);
-          CreateDataPropertyOrThrow(A, ToString(n), subElement);
+        const P = X(ToString(k));
+        const exists = Q(HasProperty(E, P));
+        if (exists.isTrue()) {
+          const subElement = Q(Get(E, P));
+          Q(CreateDataPropertyOrThrow(A, X(ToString(n)), subElement));
         }
         n += 1;
         k += 1;
@@ -87,12 +90,12 @@ function ArrayConcat(realm, args, { thisArgument }) {
       if (n >= (2 ** 53) - 1) {
         surroundingAgent.Throw('TypeError');
       }
-      CreateDataPropertyOrThrow(A, ToString(n), E);
+      Q(CreateDataPropertyOrThrow(A, X(ToString(n)), E));
       n += 1;
     }
   }
-  Set(A, 'length', n, true);
-  return true;
+  Q(Set(A, NewValue('length'), NewValue(n), NewValue(true)));
+  return NewValue(true);
 }
 
 export function CreateArrayPrototype(realmRec) {
