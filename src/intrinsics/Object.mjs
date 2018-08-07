@@ -1,5 +1,11 @@
 /* @flow */
 
+/* ::
+import type {
+  Value,
+} from '../value.mjs';
+*/
+
 import {
   Type,
   NullValue,
@@ -29,6 +35,7 @@ import {
   CreateDataProperty,
   RequireObjectCoercible,
 } from '../abstract-ops/all.mjs';
+import { Q, X } from '../completion.mjs';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
   if (!(NewTarget instanceof UndefinedValue)
@@ -42,7 +49,7 @@ function ObjectConstructor(realm, [value], { NewTarget }) {
 }
 
 function ObjectAssign(realm, [target, ...sources]) {
-  const to = ToObject(target);
+  const to = Q(ToObject(target));
   if (sources.length === 0) {
     return to;
   }
@@ -53,14 +60,14 @@ function ObjectAssign(realm, [target, ...sources]) {
     if (nextSource instanceof UndefinedValue || nextSource instanceof NullValue) {
       keys = [];
     } else {
-      from = ToObject(nextSource);
-      keys = from.OwnPropertyKeys();
+      from = X(ToObject(nextSource));
+      keys = Q(from.OwnPropertyKeys());
     }
     keys.forEach((nextKey) => {
-      const desc = from.GetOwnProperty(nextKey);
+      const desc = Q(from.GetOwnProperty(nextKey));
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
-        const propValue = Get(from, nextKey);
-        Set(to, nextKey, propValue, NewValue(true));
+        const propValue = Q(Get(from, nextKey));
+        Q(Set(to, nextKey, propValue, NewValue(true)));
       }
     });
   });
@@ -73,13 +80,13 @@ function JSObjectCreate(realm, [O, Properties]) {
   }
   const obj = ObjectCreate(O);
   if (!(Properties instanceof UndefinedValue)) {
-    return ObjectDefineProperties(obj, Properties);
+    return Q(ObjectDefineProperties(obj, Properties));
   }
   return obj;
 }
 
 function JSObjectDefineProperties(realm, [O, Properties]) {
-  return ObjectDefineProperties(O, Properties);
+  return Q(ObjectDefineProperties(O, Properties));
 }
 
 // #sec-objectdefineproperties ObjectDefineProperties
@@ -87,21 +94,21 @@ function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
     surroundingAgent.Throw('TypeError');
   }
-  const props = ToObject(Properties);
-  const keys = props.OwnPropertyKeys();
+  const props = Q(ToObject(Properties));
+  const keys = Q(props.OwnPropertyKeys());
   const descriptors = [];
   keys.forEach((nextKey) => {
-    const propDesc = props.GetOwnProperty(nextKey);
+    const propDesc = Q(props.GetOwnProperty(nextKey));
     if (!(propDesc instanceof UndefinedValue) && propDesc.Enumerable === true) {
-      const descObj = Get(props, nextKey);
-      const desc = ToPropertyDescriptor(descObj);
+      const descObj = Q(Get(props, nextKey));
+      const desc = Q(ToPropertyDescriptor(descObj));
       descriptors.push([nextKey, desc]);
     }
   });
   descriptors.forEach((pair) => {
     const P = pair[0];
     const desc = pair[1];
-    DefinePropertyOrThrow(O, P, desc);
+    Q(DefinePropertyOrThrow(O, P, desc));
   });
   return O;
 }
@@ -110,15 +117,15 @@ function ObjectDefineProperty(realm, [O, P, Attributes]) {
   if (Type(O) !== 'Object') {
     surroundingAgent.Throw('TypeError');
   }
-  const key = ToPropertyKey(P);
-  const desc = ToPropertyDescriptor(Attributes);
-  DefinePropertyOrThrow(O, key, desc);
+  const key = Q(ToPropertyKey(P));
+  const desc = Q(ToPropertyDescriptor(Attributes));
+  Q(DefinePropertyOrThrow(O, key, desc));
   return O;
 }
 
 function ObjectEntries(realm, [O]) {
-  const obj = ToObject(O);
-  const nameList = EnumerableOwnPropertyNames(obj, 'key+value');
+  const obj = Q(ToObject(O));
+  const nameList = Q(EnumerableOwnPropertyNames(obj, 'key+value'));
   return CreateArrayFromList(nameList);
 }
 
@@ -126,7 +133,7 @@ function ObjectFreeze(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  const status = SetIntegrityLevel(O, 'frozen');
+  const status = Q(SetIntegrityLevel(O, 'frozen'));
   if (status.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -134,21 +141,21 @@ function ObjectFreeze(realm, [O]) {
 }
 
 function ObjectGetOwnPropertyDescriptor(realm, [O, P]) {
-  const obj = ToObject(O);
-  const key = ToPropertyKey(P);
-  const desc = obj.GetOwnProperty(key);
+  const obj = Q(ToObject(O));
+  const key = Q(ToPropertyKey(P));
+  const desc = Q(obj.GetOwnProperty(key));
   return FromPropertyDescriptor(desc);
 }
 
 function ObjectGetOwnPropertyDescriptors(realm, [O]) {
-  const obj = ToObject(O);
-  const ownKeys = obj.OwnPropertyKeys();
-  const descriptors = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  const obj = Q(ToObject(O));
+  const ownKeys = Q(obj.OwnPropertyKeys());
+  const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
   ownKeys.forEach((key) => {
-    const desc = obj.GetOwnProperty(key);
-    const descriptor = FromPropertyDescriptor(desc);
+    const desc = Q(obj.GetOwnProperty(key));
+    const descriptor = X(FromPropertyDescriptor(desc));
     if (!(descriptor instanceof UndefinedValue)) {
-      CreateDataProperty(descriptors, key, descriptor);
+      X(CreateDataProperty(descriptors, key, descriptor));
     }
   });
   return descriptors;
@@ -167,16 +174,16 @@ function GetOwnPropertyKeys(O /* : Value */, type /* : string */) {
 }
 
 function ObjectGetOwnPropertyNames(realm, [O]) {
-  return GetOwnPropertyKeys(O, 'String');
+  return Q(GetOwnPropertyKeys(O, 'String'));
 }
 
 function ObjectGetOwnPropertySymbols(realm, [O]) {
-  return GetOwnPropertyKeys(O, 'Symbol');
+  return Q(GetOwnPropertyKeys(O, 'Symbol'));
 }
 
 function ObjectGetPrototypeOf(realm, [O]) {
-  const obj = ToObject(O);
-  return obj.GetPrototypeOf();
+  const obj = Q(ToObject(O));
+  return Q(obj.GetPrototypeOf());
 }
 
 function ObjectIs(realm, [value1, value2]) {
@@ -194,19 +201,19 @@ function ObjectIsFrozen(realm, [O]) {
   if (Type(O) !== 'Object') {
     return NewValue(true);
   }
-  return TestIntegrityLevel(O, 'frozen');
+  return Q(TestIntegrityLevel(O, 'frozen'));
 }
 
 function ObjectIsSealed(realm, [O]) {
   if (Type(O) !== 'Object') {
     return NewValue(true);
   }
-  return TestIntegrityLevel(O, 'sealed');
+  return Q(TestIntegrityLevel(O, 'sealed'));
 }
 
 function ObjectKeys(realm, [O]) {
-  const obj = ToObject(O);
-  const nameList = EnumerableOwnPropertyNames(obj, 'key');
+  const obj = Q(ToObject(O));
+  const nameList = Q(EnumerableOwnPropertyNames(obj, 'key'));
   return CreateArrayFromList(nameList);
 }
 
@@ -214,7 +221,7 @@ function ObjectPreventExtensions(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  const status = O.PreventExtensions();
+  const status = Q(O.PreventExtensions());
   if (status.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -225,7 +232,7 @@ function ObjectSeal(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  const status = SetIntegrityLevel(O, 'sealed');
+  const status = Q(SetIntegrityLevel(O, 'sealed'));
   if (status.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -233,14 +240,14 @@ function ObjectSeal(realm, [O]) {
 }
 
 function ObjectSetPrototypeOf(realm, [O, proto]) {
-  O = RequireObjectCoercible(O);
+  O = Q(RequireObjectCoercible(O));
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
     surroundingAgent.Throw('TypeError');
   }
   if (Type(O) !== 'Object') {
     return O;
   }
-  const status = O.SetPrototypeOf(proto);
+  const status = Q(O.SetPrototypeOf(proto));
   if (status.isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
@@ -248,8 +255,8 @@ function ObjectSetPrototypeOf(realm, [O, proto]) {
 }
 
 function ObjectValues(realm, [O]) {
-  const obj = ToObject(O);
-  const nameList = EnumerableOwnPropertyNames(obj, 'value');
+  const obj = Q(ToObject(O));
+  const nameList = Q(EnumerableOwnPropertyNames(obj, 'value'));
   return CreateArrayFromList(nameList);
 }
 
