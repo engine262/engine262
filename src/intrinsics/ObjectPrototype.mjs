@@ -7,11 +7,6 @@ import {
   New as NewValue,
   Type,
 } from '../value.mjs';
-
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-
 import {
   CreateBuiltinFunction,
   Get,

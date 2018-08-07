@@ -55,9 +55,17 @@ function EvaluateExpressionStatement(ExpressionStatement, envRec) {
 }
 
 // (implicit)
+//   Expression : NullLiteral
 //   Expression : BooleanLiteral
+//   Expression : NumbericLiteral
+//   Expression : StringLiteral
 function EvaluateExpression(Expression, envRec) {
-  if (Expression.type === 'Literal' && typeof Expression.value === 'boolean') {
+  if (Expression.type === 'Literal'
+      && (
+        Expression.value === null
+        || typeof Expression.value === 'boolean'
+        || typeof Expression.value === 'number'
+        || typeof Expression.value === 'string')) {
     return new NormalCompletion(NewValue(Expression.value));
   }
 }

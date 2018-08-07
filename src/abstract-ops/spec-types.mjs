@@ -27,7 +27,7 @@ import {
   CreateDataProperty,
   ObjectCreate,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {
