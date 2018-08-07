@@ -1,3 +1,5 @@
+/* @flow */
+
 import {
   Assert,
   GetMethod,
@@ -13,6 +15,7 @@ import {
   Type,
   UndefinedValue,
   New as NewValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Completion,
@@ -20,9 +23,14 @@ import {
 } from '../completion.mjs';
 
 /* ::
-export type GetIteratorHint = 'sync' | 'async';
+import type {
+  Value,
+  ObjectValue,
+  FunctionValue,
+} from '../value.mjs';
 
-export type IteratorRecord = {
+declare type GetIteratorHint = 'sync' | 'async';
+declare type IteratorRecord = {
   Iterator: ObjectValue,
   NextMethod: FunctionValue,
   Done: boolean,
@@ -33,28 +41,28 @@ export type IteratorRecord = {
 export function GetIterator(
   obj /* : ObjectValue */,
   hint /* : ?GetIteratorHint */,
-  method /* : ?FunctionValue */,
+  method /* : ?Value */,
 ) {
   if (!hint) {
     hint = 'sync';
   }
   if (!method) {
     if (hint === 'async') {
-      method = GetMethod(obj, surroundingAgent.intrinsic('@@asyncIterator'));
+      method = Q(GetMethod(obj, wellKnownSymbols.asyncIterator));
       if (method instanceof UndefinedValue) {
-        const syncMethod = Q(GetMethod(obj, surroundingAgent.intrinsic('@@iterator')));
+        const syncMethod = Q(GetMethod(obj, wellKnownSymbols.iterator));
         const syncIteratorRecord = Q(GetIterator(obj, 'sync', syncMethod));
         return Q(CreateAsyncFromSyncIterator(syncIteratorRecord));
       }
     } else {
-      method = Q(GetMethod(obj, surroundingAgent.intrinsic('@@iterator')));
+      method = Q(GetMethod(obj, wellKnownSymbols.iterator));
     }
   }
-  const iterator = Q(Call(method, obj));
+  const iterator = Q(Call(method, obj, []));
   if (Type(iterator) !== 'Object') {
     surroundingAgent.Throw('TypeError');
   }
-  const nextMethod = Q(GetV(iterator, 'next'));
+  const nextMethod = Q(GetV(iterator, NewValue('next')));
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
@@ -64,7 +72,7 @@ export function GetIterator(
 }
 
 // #sec-iteratornext
-export function IteratorNext(iteratorRecord, value) {
+export function IteratorNext(iteratorRecord /* : IteratorRecord */, value /* : ?Value */) {
   let result;
   if (!value) {
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
@@ -78,19 +86,19 @@ export function IteratorNext(iteratorRecord, value) {
 }
 
 // #sec-iteratorcomplete
-export function IteratorComplete(iterResult) {
+export function IteratorComplete(iterResult /* : ObjectValue */) {
   Assert(Type(iterResult) === 'Object');
   return ToBoolean(Q(Get(iterResult, NewValue('done'))));
 }
 
 // #sec-iteratorvalue
-export function IteratorValue(iterResult) {
+export function IteratorValue(iterResult /* : ObjectValue */) {
   Assert(Type(iterResult) === 'Object');
   return Q(Get(iterResult, NewValue('value')));
 }
 
 // #sec-iteratorstep
-export function IteratorStep(iteratorRecord) {
+export function IteratorStep(iteratorRecord /* : IteratorRecord */) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
   if (done.isTrue()) {
@@ -100,7 +108,10 @@ export function IteratorStep(iteratorRecord) {
 }
 
 // #sec-iteratorclose
-export function IteratorClose(iteratorRecord, completion) {
+export function IteratorClose(
+  iteratorRecord /* : IteratorRecord */,
+  completion /* : Completion */,
+) {
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
   const iterator = iteratorRecord.Iterator;
