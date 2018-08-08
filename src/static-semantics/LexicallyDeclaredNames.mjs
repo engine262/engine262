@@ -67,15 +67,15 @@ export function LexicallyDeclaredNames_LabelledItem(LabelledItem) {
   }
 }
 
-// (implicit)
-//   FunctionBody : FunctionStatementList
-export const LexicallyDeclaredNames_FunctionBody = LexicallyDeclaredNames_FunctionStatementList;
-
-// 14.1.4 #sec-function-definitions-static-semantics-lexicallydeclarednames
+// 14.1.14 #sec-function-definitions-static-semantics-lexicallydeclarednames
 //   FunctionStatementList : [empty]
 //   FunctionStatementList : StatementList
 export const
   LexicallyDeclaredNames_FunctionStatementList = TopLevelLexicallyDeclaredNames_StatementList;
+
+// (implicit)
+//   FunctionBody : FunctionStatementList
+export const LexicallyDeclaredNames_FunctionBody = LexicallyDeclaredNames_FunctionStatementList;
 
 // 14.2.10 #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
 //   ConciseBody : AssignmentExpression
