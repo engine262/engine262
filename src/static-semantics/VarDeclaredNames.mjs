@@ -2,7 +2,7 @@ import {
   TopLevelVarDeclaredNames_StatementList,
 } from './TopLevelVarDeclaredNames.mjs';
 
-// #sec-scripts-static-semantics-vardeclarednames
+// 15.1.5 #sec-scripts-static-semantics-vardeclarednames
 //   ScriptBody : StatementList
 export function VarDeclaredNames_ScriptBody(ScriptBody) {
   return TopLevelVarDeclaredNames_StatementList(ScriptBody);
