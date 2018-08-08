@@ -25,6 +25,8 @@ import { CreateBoolean } from './intrinsics/Boolean.mjs';
 import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
+import { CreatePromise } from './intrinsics/Promise.mjs';
+import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 
 /* ::
 type IntrinsicMap = {
@@ -206,6 +208,9 @@ export function CreateIntrinsics(realmRec) {
 
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);
+
+  CreatePromisePrototype(realmRec);
+  CreatePromise(realmRec);
 
   CreateMath(realmRec);
 

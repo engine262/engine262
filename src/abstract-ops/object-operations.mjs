@@ -23,6 +23,7 @@ import {
   NullValue,
   ProxyValue,
   New as NewValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -191,8 +192,8 @@ export function Construct(
   if (!argumentsList) {
     argumentsList = [];
   }
-  Assert(IsConstructor(F));
-  Assert(IsConstructor(newTarget));
+  Assert(IsConstructor(F).isTrue());
+  Assert(IsConstructor(newTarget).isTrue());
   return Q(F.Construct(argumentsList, newTarget));
 }
 
@@ -311,9 +312,29 @@ export function EnumerableOwnPropertyNames(
   return properties;
 }
 
+// #sec-speciesconstructor
+export function SpeciesConstructor(O /* : ObjectValue */, defaultConstructor /* : Value */) {
+  Assert(Type(O) === 'Object');
+  const C = Q(Get(O, NewValue('constructor')));
+  if (C instanceof UndefinedValue) {
+    return defaultConstructor;
+  }
+  if (Type(C) !== 'Object') {
+    surroundingAgent.Throw('TypeError');
+  }
+  const S = Q(Get(C, wellKnownSymbols.species));
+  if (S instanceof UndefinedValue || S instanceof NullValue) {
+    return defaultConstructor;
+  }
+  if (IsConstructor(S).isTrue()) {
+    return S;
+  }
+  surroundingAgent.Throw('TypeError');
+}
+
 // 7.3.22 GetFunctionRealm
 export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
-  Assert(IsCallable(obj));
+  Assert(IsCallable(obj).isTrue());
   if ('Realm' in obj) {
     // $FlowFixMe
     return obj.Realm;

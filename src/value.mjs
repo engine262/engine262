@@ -325,7 +325,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this.nativeFunction, calleeRealm, argumentsList, thisArgument, undefined);
+    const result = nc(this.nativeFunction.bind(this), calleeRealm, argumentsList, thisArgument, undefined);
     surroundingAgent.executionContextStack.pop();
 
     return result;
@@ -343,7 +343,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this.nativeFunction, calleeRealm, argumentsList, undefined, newTarget);
+    const result = nc(this.nativeFunction.bind(this), calleeRealm, argumentsList, undefined, newTarget);
     surroundingAgent.executionContextStack.pop();
     return result;
   }
