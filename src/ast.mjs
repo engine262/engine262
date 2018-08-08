@@ -697,3 +697,68 @@ export function isClassDeclaration(node) {
 export function isLexicalDeclaration(node) {
   return node.type === 'VariableDeclaration' && (node.kind === 'let' || node.kind === 'const');
 }
+
+// #prod-ImportDeclaration
+export function isImportDeclaration(node) {
+  return node.type === 'ImportDeclaration';
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithStar(node) {
+  return node.type === 'ExportAllDeclaration';
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithExportAndFrom(node) {
+  return node.type === 'ExportNamedDeclaration'
+    && node.declaration === null
+    && node.source !== null;
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithExport(node) {
+  return node.type === 'ExportNamedDeclaration'
+         && node.declaration === null
+         && node.source === null;
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithVariable(node) {
+  return node.type === 'ExportNamedDeclaration'
+         && node.declaration !== null
+         && isVariableStatement(node.declaration);
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithDeclaration(node) {
+  return node.type === 'ExportNamedDeclaration'
+         && node.declaration !== null
+         && isDeclaration(node.declaration);
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithDefaultAndHoistable(node) {
+  return node.type === 'ExportDefaultDeclaration' && isHoistableDeclaration(node.declaration);
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithDefaultAndClass(node) {
+  return node.type === 'ExportDefaultDeclaration' && isClassDeclaration(node.declaration);
+}
+
+// Used in #prod-ExportDeclaration
+export function isExportDeclarationWithDefaultAndExpression(node) {
+  return node.type === 'ExportDefaultDeclaration' && isAssignmentExpression(node.declaration);
+}
+
+// #prod-ExportDeclaration
+export function isExportDeclaration(node) {
+  return isExportDeclarationWithStar(node)
+         || isExportDeclarationWithExportAndFrom(node)
+         || isExportDeclarationWithExport(node)
+         || isExportDeclarationWithVariable(node)
+         || isExportDeclarationWithDeclaration(node)
+         || isExportDeclarationWithDefaultAndHoistable(node)
+         || isExportDeclarationWithDefaultAndClass(node)
+         || isExportDeclarationWithDefaultAndExpression(node);
+}

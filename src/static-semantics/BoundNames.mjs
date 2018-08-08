@@ -48,12 +48,6 @@ export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
   return names;
 }
 
-// (implicit)
-//   VariableStatement : `var` VariableDeclarationList `;`
-export function BoundNames_VariableStatement(VariableStatement) {
-  return BoundNames_VariableDeclarationList(VariableStatement.declarations);
-}
-
 // 13.3.2.1 #sec-variable-statement-static-semantics-boundnames
 //   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
 //
@@ -79,6 +73,12 @@ export function BoundNames_VariableDeclaration(VariableDeclaration) {
     default:
       throw new Error(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
   }
+}
+
+// (implicit)
+//   VariableStatement : `var` VariableDeclarationList `;`
+export function BoundNames_VariableStatement(VariableStatement) {
+  return BoundNames_VariableDeclarationList(VariableStatement.declarations);
 }
 
 // 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
