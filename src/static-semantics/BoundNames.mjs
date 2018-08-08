@@ -15,7 +15,7 @@ import {
   isSingleNameBinding,
 } from '../ast.mjs';
 
-// #sec-identifiers-static-semantics-boundnames
+// 12.1.2 #sec-identifiers-static-semantics-boundnames
 //   BindingIdentifier : Identifier
 //   BindingIdentifier : `yield`
 //   BindingIdentifier : `await`
@@ -23,7 +23,65 @@ export function BoundNames_BindingIdentifier(BindingIdentifier) {
   return [BindingIdentifier.name];
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-boundnames
+// 13.3.1.2 #sec-let-and-const-declarations-static-semantics-boundnames
+//   LexicalDeclaration : LetOrConst BindingList `;`
+//   BindingList : BindingList `,` LexicalBinding
+//   LexicalBinding : BindingIdentifier Initializer
+//   LexicalBinding : BindingPattern Initializer
+//
+// (implicit)
+//   BindingList : LexicalBinding
+export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
+  const names = [];
+  for (const declarator of LexicalDeclaration.declarations) {
+    switch (true) {
+      case isBindingIdentifier(declarator.id):
+        names.push(...BoundNames_BindingIdentifier(declarator.id));
+        break;
+      case isBindingPattern(declarator.id):
+        names.push(...BoundNames_BindingPattern(declarator.id));
+        break;
+      default:
+        throw new TypeError(`Invalid LexicalBinding: ${declarator.id.type}`);
+    }
+  }
+  return names;
+}
+
+// (implicit)
+//   VariableStatement : `var` VariableDeclarationList `;`
+export function BoundNames_VariableStatement(VariableStatement) {
+  return BoundNames_VariableDeclarationList(VariableStatement.declarations);
+}
+
+// 13.3.2.1 #sec-variable-statement-static-semantics-boundnames
+//   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
+//
+// (implicit)
+//   VariableDeclarationList : VariableDeclaration
+export function BoundNames_VariableDeclarationList(VariableDeclarationList) {
+  const names = [];
+  for (const VariableDeclaration of VariableDeclarationList) {
+    names.push(...BoundNames_VariableDeclaration(VariableDeclaration));
+  }
+  return names;
+}
+
+// 13.3.2.1 #sec-variable-statement-static-semantics-boundnames
+//   VariableDeclaration : BindingIdentifier Initializer
+//   VariableDeclaration : BindingPattern Initializer
+export function BoundNames_VariableDeclaration(VariableDeclaration) {
+  switch (true) {
+    case isBindingIdentifier(VariableDeclaration.id):
+      return BoundNames_BindingIdentifier(VariableDeclaration.id);
+    case isBindingPattern(VariableDeclaration.id):
+      return BoundNames_BindingPattern(VariableDeclaration.id);
+    default:
+      throw new Error(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
+  }
+}
+
+// 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
 //   SingleNameBinding : BindingIdentifier Initializer
 //
 // (implicit)
@@ -39,7 +97,7 @@ export function BoundNames_SingleNameBinding(SingleNameBinding) {
   }
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-boundnames
+// 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
 //   BindingElement : BindingPattern Initializer
 //
 // (implicit)
@@ -72,7 +130,7 @@ export function BoundNames_BindingRestElement(BindingRestElement) {
   }
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-boundnames
+// 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
 //   ArrayBindingPattern : `[` Elision `]`
 //   ArrayBindingPattern : `[` Elision BindingRestElement `]`
 //   ArrayBindingPattern : `[` BindingElementList `,` Elision `]`
@@ -100,7 +158,7 @@ export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
   return names;
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-boundnames
+// 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
 //   BindingProperty : PropertyName `:` BindingElement
 //
 // (implicit)
@@ -125,7 +183,7 @@ export function BoundNames_BindingRestProperty(BindingRestProperty) {
   return BoundNames_BindingIdentifier(BindingRestProperty.argument);
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-boundnames
+// 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
 //   ObjectBindingPattern : `{` `}`
 //   ObjectBindingPattern : `{` BindingRestProperty `}`
 //   BindingPropertyList : BindingPropertyList `,` BindingProperty
@@ -169,65 +227,7 @@ function BoundNames_BindingPattern(BindingPattern) {
   }
 }
 
-// #sec-let-and-const-declarations-static-semantics-boundnames
-//   LexicalDeclaration : LetOrConst BindingList `;`
-//   BindingList : BindingList `,` LexicalBinding
-//   LexicalBinding : BindingIdentifier Initializer
-//   LexicalBinding : BindingPattern Initializer
-//
-// (implicit)
-//   BindingList : LexicalBinding
-export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
-  const names = [];
-  for (const declarator of LexicalDeclaration.declarations) {
-    switch (true) {
-      case isBindingIdentifier(declarator.id):
-        names.push(...BoundNames_BindingIdentifier(declarator.id));
-        break;
-      case isBindingPattern(declarator.id):
-        names.push(...BoundNames_BindingPattern(declarator.id));
-        break;
-      default:
-        throw new TypeError(`Invalid LexicalBinding: ${declarator.id.type}`);
-    }
-  }
-  return names;
-}
-
-// (implicit)
-//   VariableStatement : `var` VariableDeclarationList `;`
-export function BoundNames_VariableStatement(VariableStatement) {
-  return BoundNames_VariableDeclarationList(VariableStatement.declarations);
-}
-
-// #sec-variable-statement-static-semantics-boundnames
-//   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
-//
-// (implicit)
-//   VariableDeclarationList : VariableDeclaration
-export function BoundNames_VariableDeclarationList(VariableDeclarationList) {
-  const names = [];
-  for (const VariableDeclaration of VariableDeclarationList) {
-    names.push(...BoundNames_VariableDeclaration(VariableDeclaration));
-  }
-  return names;
-}
-
-// #sec-variable-statement-static-semantics-boundnames
-//   VariableDeclaration : BindingIdentifier Initializer
-//   VariableDeclaration : BindingPattern Initializer
-export function BoundNames_VariableDeclaration(VariableDeclaration) {
-  switch (true) {
-    case isBindingIdentifier(VariableDeclaration.id):
-      return BoundNames_BindingIdentifier(VariableDeclaration.id);
-    case isBindingPattern(VariableDeclaration.id):
-      return BoundNames_BindingPattern(VariableDeclaration.id);
-    default:
-      throw new Error(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
-  }
-}
-
-// #sec-for-in-and-for-of-statements-static-semantics-boundnames
+// 13.7.5.2 #sec-for-in-and-for-of-statements-static-semantics-boundnames
 //   ForDeclaration : LetOrConst ForBinding
 //
 // (implicit)
@@ -245,25 +245,25 @@ export function BoundNames_ForDeclaration(ForDeclaration) {
   }
 }
 
-// #sec-function-definitions-static-semantics-boundnames
+// 14.1.3 #sec-function-definitions-static-semantics-boundnames
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //   FunctionDeclaration :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //
-// #sec-generator-function-definitions-static-semantics-boundnames
+// 14.4.2 #sec-generator-function-definitions-static-semantics-boundnames
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //   GeneratorDeclaration :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //
-// #sec-async-generator-function-definitions-static-semantics-boundnames
+// 14.5.2 #sec-async-generator-function-definitions-static-semantics-boundnames
 //   AsyncGeneratorDeclaration :
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //   AsyncGeneratorDeclaration :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //
-// #sec-async-function-definitions-static-semantics-BoundNames
+// 14.7.2 #sec-async-function-definitions-static-semantics-BoundNames
 //   AsyncFunctionDeclaration :
 //     `async` [no LineTerminator here] `function` BindingIdentifier `(` FormalParameters `)`
 //     `{` AsyncFunctionBody `}`
@@ -287,7 +287,7 @@ export const BoundNames_GeneratorDeclaration = BoundNames_HoistableDeclaration;
 export const BoundNames_AsyncFunctionDeclaration = BoundNames_HoistableDeclaration;
 export const BoundNames_AsyncGeneratorDeclaration = BoundNames_HoistableDeclaration;
 
-// #sec-class-definitions-static-semantics-boundnames
+// 14.6.2 #sec-class-definitions-static-semantics-boundnames
 //   ClassDeclaration : `class` BindingIdentifier ClassTail
 //   ClassDeclaration : `class` ClassTail
 export function BoundNames_ClassDeclaration(ClassDeclaration) {
@@ -297,6 +297,10 @@ export function BoundNames_ClassDeclaration(ClassDeclaration) {
   return BoundNames_BindingIdentifier(ClassDeclaration.id);
 }
 
+// (implicit)
+//   Declaration : HoistableDeclaration
+//   Declaration : ClassDeclaration
+//   Declaration : LexicalDeclaration
 export function BoundNames_Declaration(Declaration) {
   switch (true) {
     case isHoistableDeclaration(Declaration):

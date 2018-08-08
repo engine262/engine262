@@ -1,4 +1,4 @@
-// #sec-scripts-static-semantics-lexicallyscopeddeclarations
+// 15.1.4 #sec-scripts-static-semantics-lexicallyscopeddeclarations
 //   StatementList : StatementList StatementListItem
 //
 // (implicit)

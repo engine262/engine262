@@ -17,31 +17,20 @@ import {
   VarDeclaredNames_StatementListItem,
 } from './VarDeclaredNames.mjs';
 
-// #sec-scripts-static-semantics-lexicallydeclarednames
-//   ScriptBody : StatementList
-export const LexicallyDeclaredNames_ScriptBody = TopLevelLexicallyDeclaredNames_StatementList;
-
-// #sec-labelled-statements-static-semantics-toplevelvardeclarednames
-//   LabelledStatement : LabelIdentifier `:` LabelledItem
-export function LexicallyDeclaredNames_LabelledStatement(LabelledStatement) {
-  return LexicallyDeclaredNames_LabelledItem(LabelledStatement.body);
-}
-
-// #sec-labelled-statements-static-semantics-lexicallydeclarednames
-//   LabelledItem : Statement
-//   LabelledItem : FunctionDeclaration
-export function LexicallyDeclaredNames_LabelledItem(LabelledItem) {
-  switch (true) {
-    case isStatement(LabelledItem):
-      return [];
-    case isFunctionDeclaration(LabelledItem):
-      return BoundNames_FunctionDeclaration(LabelledItem);
-    default:
-      throw new TypeError(`Unexpected LabelledItem: ${LabelledItem.type}`);
+// 13.2.5 #sec-block-static-semantics-lexicallydeclarednames
+//   StatementList : StatementList StatementListItem
+//
+// (implicit)
+//   StatementList : StatementListItem
+export function LexicallyDeclaredNames_StatementList(StatementList) {
+  const names = [];
+  for (const StatementListItem of StatementList) {
+    names.push(...LexicallyDeclaredNames_StatementListItem(StatementListItem));
   }
+  return names;
 }
 
-// #sec-block-static-semantics-lexicallydeclarednames
+// 13.2.5 #sec-block-static-semantics-lexicallydeclarednames
 //   StatementListItem : Statement
 //   StatementListItem : Declaration
 export function LexicallyDeclaredNames_StatementListItem(StatementListItem) {
@@ -58,30 +47,37 @@ export function LexicallyDeclaredNames_StatementListItem(StatementListItem) {
   }
 }
 
-// #sec-block-static-semantics-lexicallydeclarednames
-//   StatementList : StatementList StatementListItem
-//
-// (implicit)
-//   StatementList : StatementListItem
-export function LexicallyDeclaredNames_StatementList(StatementList) {
-  const names = [];
-  for (const StatementListItem of StatementList) {
-    names.push(...LexicallyDeclaredNames_StatementListItem(StatementListItem));
-  }
-  return names;
+// 13.13.6 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
+//   LabelledStatement : LabelIdentifier `:` LabelledItem
+export function LexicallyDeclaredNames_LabelledStatement(LabelledStatement) {
+  return LexicallyDeclaredNames_LabelledItem(LabelledStatement.body);
 }
 
-// #sec-function-definitions-static-semantics-lexicallydeclarednames
-//   FunctionStatementList : [empty]
-//   FunctionStatementList : StatementList
-export const
-  LexicallyDeclaredNames_FunctionStatementList = TopLevelLexicallyDeclaredNames_StatementList;
+// 13.13.6 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
+//   LabelledItem : Statement
+//   LabelledItem : FunctionDeclaration
+export function LexicallyDeclaredNames_LabelledItem(LabelledItem) {
+  switch (true) {
+    case isStatement(LabelledItem):
+      return [];
+    case isFunctionDeclaration(LabelledItem):
+      return BoundNames_FunctionDeclaration(LabelledItem);
+    default:
+      throw new TypeError(`Unexpected LabelledItem: ${LabelledItem.type}`);
+  }
+}
 
 // (implicit)
 //   FunctionBody : FunctionStatementList
 export const LexicallyDeclaredNames_FunctionBody = LexicallyDeclaredNames_FunctionStatementList;
 
-// #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
+// 14.1.4 #sec-function-definitions-static-semantics-lexicallydeclarednames
+//   FunctionStatementList : [empty]
+//   FunctionStatementList : StatementList
+export const
+  LexicallyDeclaredNames_FunctionStatementList = TopLevelLexicallyDeclaredNames_StatementList;
+
+// 14.2.10 #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
 //   ConciseBody : AssignmentExpression
 //
 // (implicit)
@@ -97,10 +93,14 @@ export function LexicallyDeclaredNames_ConciseBody(ConciseBody) {
   }
 }
 
-// #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
+// 14.8.9 #sec-async-arrow-function-definitions-static-semantics-LexicallyDeclaredNames
 //   AsyncConciseBody : [lookahead ≠ `{`] AssignmentExpression
 //
 // (implicit)
 //   AsyncConciseBody : `{` AsyncFunctionBody `}`
 //   AsyncFunctionBody : FunctionBody
 export const LexicallyDeclaredNames_AsyncConciseBody = LexicallyDeclaredNames_ConciseBody;
+
+// 15.1.3 #sec-scripts-static-semantics-lexicallydeclarednames
+//   ScriptBody : StatementList
+export const LexicallyDeclaredNames_ScriptBody = TopLevelLexicallyDeclaredNames_StatementList;

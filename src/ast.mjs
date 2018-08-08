@@ -545,7 +545,7 @@ export function isArrayBindingPattern(node) {
   return node.type === 'ArrayPattern';
 }
 
-// #prod-BlockStatement
+// #prod-Block
 export const isBlock = isBlockStatement;
 
 // #prod-VariableStatement
