@@ -381,6 +381,8 @@ export function HostReportErrors(errorList /* : any[] */) {
   });
 }
 
+export function HostPromiseRejectionTracker(promise, type) {}
+
 // 19.4.3.2.1 SymbolDescriptiveString
 export function SymbolDescriptiveString(sym /* : SymbolValue */) {
   Assert(Type(sym) === 'Symbol');

@@ -167,3 +167,14 @@ export function IsPropertyKey(argument /* : Value */) /* : boolean */ {
   }
   return false;
 }
+
+// #sec-ispromise
+export function IsPromise(x /* : Value */) {
+  if (Type(x) !== 'Object') {
+    return NewValue(false);
+  }
+  if (!('PromiseState' in x)) {
+    return NewValue(false);
+  }
+  return NewValue(true);
+}
