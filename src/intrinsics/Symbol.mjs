@@ -27,7 +27,7 @@ export const GlobalSymbolRegistry = [];
 
 function SymbolConstructor(realm, [description], { NewTarget }) {
   if (NewTarget !== undefined) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const descString = description instanceof UndefinedValue
     ? NewValue(undefined)
@@ -51,7 +51,7 @@ function SymbolFor(realm, [key]) {
 
 function SymbolKeyFor(realm, [sym]) {
   if (Type(sym) !== 'Symbol') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Symbol, sym)) {

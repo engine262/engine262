@@ -102,10 +102,9 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const n = N.stringValue();
     if (!this.bindings.has(n)) {
       if (S === true) {
-        surroundingAgent.Throw('ReferenceError');
+        return surroundingAgent.Throw('ReferenceError');
         envRec.CreateMutableBinding(N, true);
         envRec.InitializeBinding(N, V);
-        return;
       }
     }
 
@@ -116,18 +115,18 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
 
     if (binding.initialized === false) {
-      surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError');
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S === true) {
-      surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError');
     }
   }
 
   GetBindingValue(N /* : StringValue *//* , S */) {
     const binding = this.bindings.get(N.stringValue());
     if (binding.initialized === false) {
-      surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError');
     }
     return binding.value;
   }
@@ -221,7 +220,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return DclRec.CreateMutableBinding(N, D);
   }
@@ -230,7 +229,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return DclRec.CreateImmutableBinding(N, S);
   }

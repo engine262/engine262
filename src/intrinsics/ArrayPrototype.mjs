@@ -77,7 +77,7 @@ function ArraySpeciesCreate(originalArray, length /* : NumberValue */) {
     return Q(ArrayCreate(length));
   }
   if (IsConstructor(C) === false) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return Q(Construct(C, [length]));
 }
@@ -95,7 +95,7 @@ function ArrayConcat(realm, args, { thisValue }) {
       let k = 0;
       const len = Q(ToLength(Q(Get(E, NewValue('length')))));
       if (n + len.numberValue() > (2 ** 53) - 1) {
-        surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError');
       }
       while (k < len.numberValue()) {
         const P = X(ToString(NewValue(k)));
@@ -109,7 +109,7 @@ function ArrayConcat(realm, args, { thisValue }) {
       }
     } else {
       if (n >= (2 ** 53) - 1) {
-        surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError');
       }
       Q(CreateDataPropertyOrThrow(A, X(ToString(NewValue(n))), E));
       n += 1;
@@ -183,7 +183,7 @@ function ArrayEvery(realm, [callbackFn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length')))));
   if (IsCallable(callbackFn).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   let T;
   if (thisArg instanceof Value) {

@@ -57,10 +57,10 @@ function GetCapabilitiesExecutorFunctions(realm, [resolve, reject]) {
 
   const promiseCapability = F.Capability;
   if (promiseCapability.Resolve !== undefined) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   if (promiseCapability.Reject !== undefined) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;
@@ -77,7 +77,7 @@ class PromiseCapabilityRecord {
 
 function NewPromiseCapability(C /* : ObjectValue */) {
   if (IsConstructor(C).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
@@ -85,10 +85,10 @@ function NewPromiseCapability(C /* : ObjectValue */) {
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   if (IsCallable(promiseCapability.Reject).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   promiseCapability.Promise = promise;
   return promiseCapability;
@@ -208,10 +208,10 @@ function CreateResolvingFunctions(promise /* : ObjectValue */) {
 
 function PromiseConstructor(realm, [executor], { NewTarget }) {
   if (NewTarget instanceof UndefinedValue) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   if (IsCallable(executor).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%PromisePrototype%', [
     'PromiseState',
@@ -245,7 +245,7 @@ function PromiseRace() {
 function PromiseReject(realm, [r], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const promiseCapability = NewPromiseCapability(C);
   Q(Call(promiseCapability.Reject, NewValue(undefined), [r]));
@@ -255,7 +255,7 @@ function PromiseReject(realm, [r], { thisValue }) {
 function JSPromiseResolve(realm, [x], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return Q(PromiseResolve(C, x));
 }

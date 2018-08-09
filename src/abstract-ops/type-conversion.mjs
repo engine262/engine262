@@ -58,7 +58,7 @@ export function ToPrimitive(
       if (Type(result) !== 'Object') {
         return result;
       }
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     if (hint.stringValue() === 'default') {
       hint = NewValue('number');

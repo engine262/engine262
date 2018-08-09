@@ -78,7 +78,7 @@ function ObjectAssign(realm, [target, ...sources]) {
 
 function JSObjectCreate(realm, [O, Properties]) {
   if (Type(O) !== 'Object' && Type(O) !== 'Null') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const obj = ObjectCreate(O);
   if (!(Properties instanceof UndefinedValue)) {
@@ -94,7 +94,7 @@ function JSObjectDefineProperties(realm, [O, Properties]) {
 // #sec-objectdefineproperties ObjectDefineProperties
 function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   /* :: O = ((O: any): ObjectValue); */
   const props = Q(ToObject(Properties));
@@ -118,7 +118,7 @@ function ObjectDefineProperties(O, Properties) {
 
 function ObjectDefineProperty(realm, [O, P, Attributes]) {
   if (Type(O) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const key = Q(ToPropertyKey(P));
   const desc = Q(ToPropertyDescriptor(Attributes));
@@ -140,7 +140,7 @@ function ObjectFreeze(realm, [O]) {
   /* :: O = ((O: any): ObjectValue); */
   const status = Q(SetIntegrityLevel(O, 'frozen'));
   if (status.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return O;
 }
@@ -232,7 +232,7 @@ function ObjectPreventExtensions(realm, [O]) {
   /* :: O = ((O: any): ObjectValue); */
   const status = Q(O.PreventExtensions());
   if (status.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return O;
 }
@@ -244,7 +244,7 @@ function ObjectSeal(realm, [O]) {
   /* :: O = ((O: any): ObjectValue); */
   const status = Q(SetIntegrityLevel(O, 'sealed'));
   if (status.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return O;
 }
@@ -252,7 +252,7 @@ function ObjectSeal(realm, [O]) {
 function ObjectSetPrototypeOf(realm, [O, proto]) {
   O = Q(RequireObjectCoercible(O));
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   if (Type(O) !== 'Object') {
     return O;
@@ -260,7 +260,7 @@ function ObjectSetPrototypeOf(realm, [O, proto]) {
   /* :: O = ((O: any): ObjectValue); */
   const status = Q(O.SetPrototypeOf(proto));
   if (status.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return O;
 }

@@ -485,7 +485,7 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
   const newLen = Q(ToUint32(Desc.Value));
   const numberLen = Q(ToNumber(Desc.Value));
   if (newLen.numberValue() !== numberLen.numberValue()) {
-    surroundingAgent.Throw('RangeError');
+    return surroundingAgent.Throw('RangeError');
   }
   newLenDesc.Value = newLen;
   const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)/* : any */)/* : PropertyDescriptor */);

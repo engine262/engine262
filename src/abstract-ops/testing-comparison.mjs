@@ -54,7 +54,7 @@ export function IsArray(argument /* : Value */) /* : BooleanValue */ {
   }
   if (argument instanceof ProxyValue) {
     if (argument.ProxyHandler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     const target = argument.ProxyTarget;
     return IsArray(target);

@@ -185,9 +185,7 @@ export function CreateIntrinsics(realmRec) {
   const objProto = new ObjectValue(realmRec, NewValue(null));
   intrinsics['%ObjectPrototype%'] = objProto;
 
-  const thrower = CreateBuiltinFunction(() => {
-    surroundingAgent.Throw('TypeError');
-  }, [], realmRec, NewValue(null));
+  const thrower = CreateBuiltinFunction(() => surroundingAgent.Throw('TypeError'), [], realmRec, NewValue(null));
   intrinsics['%ThrowTypeError%'] = thrower;
 
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);

@@ -60,7 +60,7 @@ export function GetIterator(
   }
   const iterator = Q(Call(method, obj, []));
   if (Type(iterator) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const nextMethod = Q(GetV(iterator, NewValue('next')));
   const iteratorRecord = {
@@ -80,7 +80,7 @@ export function IteratorNext(iteratorRecord /* : IteratorRecord */, value /* : ?
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
   if (Type(result) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return result;
 }
@@ -127,7 +127,7 @@ export function IteratorClose(
     throw innerResult;
   }
   if (Type(innerResult.Value) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return completion;
 }
