@@ -1,12 +1,12 @@
 import {
   UndefinedValue,
-  SymbolValue,
   ObjectValue,
   New as NewValue,
 } from './value.mjs';
 import {
   CreateBuiltinFunction,
   ObjectCreate,
+  DefinePropertyOrThrow,
 } from './abstract-ops/all.mjs';
 import {
   NewGlobalEnvironment,
@@ -14,6 +14,7 @@ import {
 import {
   surroundingAgent,
 } from './engine.mjs';
+import { Q } from './completion.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
@@ -68,117 +69,6 @@ export function CreateRealm() {
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
-
-  // %Array%
-  // %ArrayBuffer%
-  // %ArrayBufferPrototype%
-  // %ArrayIteratorPrototype%
-  // %ArrayPrototype%
-  // %ArrayProto_entries%
-  // %ArrayProto_forEach%
-  // %ArrayProto_keys%
-  // %ArrayProto_values%
-  // %AsyncFromSyncIteratorPrototype%
-  // %AsyncFunction%
-  // %AsyncFunctionPrototype%
-  // %AsyncGenerator%
-  // %AsyncGeneratorFunction%
-  // %AsyncGeneratorPrototype%
-  // %AsyncIteratorPrototype%
-  // %Atomics%
-  // %Boolean%
-  // %BooleanPrototype%
-  // %DataView%
-  // %DataViewPrototype%
-  // %Date%
-  // %DatePrototype%
-  // %decodeURI%
-  // %decodeURIComponent%
-  // %encodeURI%
-  // %encodeURIComponent%
-  // %Error%
-  // %ErrorPrototype%
-  // %eval%
-  // %EvalError%
-  // %EvalErrorPrototype%
-  // %Float32Array%
-  // %Float32ArrayPrototype%
-  // %Float64Array%
-  // %Float64ArrayPrototype%
-  // %Function%
-  // %FunctionPrototype%
-  // %Generator%
-  // %GeneratorFunction%
-  // %GeneratorPrototype%
-  // %Int8Array%
-  // %Int8ArrayPrototype%
-  // %Int16Array%
-  // %Int16ArrayPrototype%
-  // %Int32Array%
-  // %Int32ArrayPrototype%
-  // %isFinite%
-  // %isNaN%
-  // %IteratorPrototype%
-  // %JSON%
-  // %JSONParse%
-  // %JSONStringify%
-  // %Map%
-  // %MapIteratorPrototype%
-  // %MapPrototype%
-  // %Math%
-  // %Number%
-  // %NumberPrototype%
-  // %Object%
-  // %ObjectPrototype%
-  // %ObjProto_toString%
-  // %ObjProto_valueOf%
-  // %parseFloat%
-  // %parseInt%
-  // %Promise%
-  // %PromisePrototype%
-  // %PromiseProto_then%
-  // %Promise_all%
-  // %Promise_reject%
-  // %Promise_resolve%
-  // %Proxy%
-  // %RangeError%
-  // %RangeErrorPrototype%
-  // %ReferenceError%
-  // %ReferenceErrorPrototype%
-  // %Reflect%
-  // %RegExp%
-  // %RegExpPrototype%
-  // %Set%
-  // %SetIteratorPrototype%
-  // %SetPrototype%
-  // %SharedArrayBuffer%
-  // %SharedArrayBufferPrototype%
-  // %String%
-  // %StringIteratorPrototype%
-  // %StringPrototype%
-  // %Symbol%
-  // %SymbolPrototype%
-  // %SyntaxError%
-  // %SyntaxErrorPrototype%
-  // %ThrowTypeError%
-  // %TypedArray%
-  // %TypedArrayPrototype%
-  // %TypeError%
-  // %TypeErrorPrototype%
-  // %Uint8Array%
-  // %Uint8ArrayPrototype%
-  // %Uint8ClampedArray%
-  // %Uint8ClampedArrayPrototype%
-  // %Uint16Array%
-  // %Uint16ArrayPrototype%
-  // %Uint32Array%
-  // %Uint32ArrayPrototype%
-  // %URIError%
-  // %URIErrorPrototype%
-  // %WeakMap%
-  // %WeakMapPrototype%
-  // %WeakSet%
-  // %WeakSetPrototype%
 
   // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
   // current Realm record yet.
@@ -237,6 +127,63 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
 // 8.2.4 SetDefaultGlobalBindings
 export function SetDefaultGlobalBindings(realmRec) {
   const global = realmRec.GlobalObject;
+
+  // Value Properties of the Global Object
+  [
+    ['Infinity', NewValue(Infinity, realmRec)],
+    ['NaN', NewValue(NaN, realmRec)],
+    ['undefined', NewValue(undefined, realmRec)],
+  ].forEach(([name, value]) => {
+    Q(DefinePropertyOrThrow(global, NewValue(name, realmRec), {
+      Value: value,
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+    }));
+  });
+
+  // Function Properties of the Global Object
+  [
+    ['eval'],
+    ['isFinite'],
+    ['isNaN'],
+    ['parseFloat'],
+    ['parseInt'],
+    ['decodeURI'],
+    ['decodeURIComponent'],
+    ['encodeURI'],
+    ['encodeURIComponent'],
+  ].forEach(([name, value]) => {
+    Q(DefinePropertyOrThrow(global, NewValue(name, realmRec), {
+      Value: value,
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    }));
+  });
+
+  [
+    // Constructor Properties of the Global Object
+    'Array',
+    'Boolean',
+    'Function',
+    'Number',
+    'Object',
+    'Promise',
+    'String',
+    'Symbol',
+    // Other Properties of the Global Object
+    'Math',
+  ].forEach((name) => {
+    Q(DefinePropertyOrThrow(global, NewValue(name, realmRec), {
+      Value: realmRec.Intrinsics[`%${name}%`],
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    }));
+  });
+
+  console.log(global);
 
   return global;
 }

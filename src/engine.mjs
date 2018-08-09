@@ -214,7 +214,6 @@ export function InitializeHostDefinedRealm() {
   SetRealmGlobalObject(realm, global, thisValue);
   const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
-  console.log(globalObj);
 }
 
 // 8.6 RunJobs
