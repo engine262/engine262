@@ -105,7 +105,7 @@ function GetValue(V) {
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression [ Expression ]
 //   CallExpression : CallExpression [ Expression ]
-function EvaluateMemberExpression_Expression(MemberExpression, Expression) {
+function MemberExpression_Expression(MemberExpression, Expression) {
   const baseReference = EvaluateExpression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const propertyNameReference = EvaluateExpression(Expression);
@@ -119,13 +119,22 @@ function EvaluateMemberExpression_Expression(MemberExpression, Expression) {
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression . IdentifierName
 //   CallExpression : CallExpression . CallExpression
-function EvaluateMemberExpression_IdentifierName(MemberExpression, IdentifierName) {
+function MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
   const baseReference = EvaluateExpression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);
   const strict = true;
   return new Reference(bv, propertyNameString, strict);
+}
+
+function Evaluate_MemberExpression(MemberExpression) {
+  if (isMemberExpressionWithBrackets(MemberExpression)) {
+    return MemberExpression_Expression(MemberExpression.object, MemberExpression.property);
+  }
+  if (isMemberExpressionWithDot(MemberExpression)) {
+    return MemberExpression_IdentifierName(MemberExpression.object, MemberExpression.property);
+  }
 }
 
 // #sec-block-runtime-semantics-evaluation
@@ -178,14 +187,13 @@ function EvaluateExpression(Expression, envRec) {
     return NewValue(Expression.value);
   }
 
-  if (isMemberExpressionWithBrackets(Expression)
-      || isCallExpressionWithBrackets(Expression)) {
-    return EvaluateMemberExpression_Expression(Expression.object, Expression.property);
-  }
+  switch (true) {
+    case isMemberExpressionWithBrackets(Expression):
+    case isMemberExpressionWithDot(Expression):
+      return Evaluate_MemberExpression(Expression);
 
-  if (isMemberExpressionWithDot(Expression)
-      || isCallExpressionWithDot(Expression)) {
-    return EvaluateMemberExpression_IdentifierName(Expression.object, Expression.property);
+    default:
+      throw new RangeError('EvaluateExpression unknown expression type');
   }
 }
 
