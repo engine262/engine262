@@ -10,8 +10,8 @@ import type {
 export type List<T> = T[];
 declare type PropertyDescriptor = {
   Value?: Value,
-  Get?: FunctionValue,
-  Set?: FunctionValue,
+  Get?: FunctionValue | UndefinedValue,
+  Set?: FunctionValue | UndefinedValue,
   Writable?: boolean,
   Enumerable?: boolean,
   Configurable?: boolean,
