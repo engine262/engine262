@@ -72,7 +72,7 @@ export function Set(
   Assert(Type(Throw) === 'Boolean');
   const success = Q(O.Set(P, V, O));
   if (success.isFalse() && Throw.isTrue()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return success;
 }
@@ -99,7 +99,7 @@ export function CreateDataPropertyOrThrow(
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
   if (success.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return success;
 }
@@ -114,7 +114,7 @@ export function DefinePropertyOrThrow(
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
   if (success.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return success;
 }
@@ -128,7 +128,7 @@ export function DeletePropertyOrThrow(
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
   if (success.isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return success;
 }
@@ -144,7 +144,7 @@ export function GetMethod(
     return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   return func;
 }
@@ -174,7 +174,7 @@ export function Call(F /* : Value */, V /* : Value */, argumentsList /* : ?List<
   }
 
   if (IsCallable(F) === false) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
 
   return Q(F.Call(V, argumentsList));
@@ -320,7 +320,7 @@ export function SpeciesConstructor(O /* : ObjectValue */, defaultConstructor /* 
     return defaultConstructor;
   }
   if (Type(C) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const S = Q(Get(C, wellKnownSymbols.species));
   if (S instanceof UndefinedValue || S instanceof NullValue) {
@@ -329,7 +329,7 @@ export function SpeciesConstructor(O /* : ObjectValue */, defaultConstructor /* 
   if (IsConstructor(S).isTrue()) {
     return S;
   }
-  surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError');
 }
 
 // 7.3.22 GetFunctionRealm
@@ -349,7 +349,7 @@ export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
 
   if (obj instanceof ProxyValue) {
     if (obj.ProxyHandler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     const proxyTarget = obj.ProxyTarget;
     return Q(GetFunctionRealm(proxyTarget));

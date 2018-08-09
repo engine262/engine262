@@ -306,14 +306,14 @@ export function GlobalDeclarationInstantiation(script /* : Object */, env /* : O
 
   lexNames.forEach((name) => {
     if (envRec.HasVarDeclaration(name)) {
-      surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError');
     }
     if (envRec.HasLexicalDeclaration(name)) {
-      surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError');
     }
     const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
     if (hasRestrictedGlobal) {
-      surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError');
     }
   });
 

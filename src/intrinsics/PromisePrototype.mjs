@@ -58,7 +58,7 @@ function CatchFinallyFunctions(realm, [reason]) {
 function PromiseFinally(realm, [onFinally], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const C = SpeciesConstructor(promise, '%Promise%');
   Assert(IsConstructor(C).isTrue());
@@ -83,7 +83,7 @@ function PromiseFinally(realm, [onFinally], { thisValue }) {
 function PromiseThen(realm, [onFulfilled, onRejected], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise).isFalse()) {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   const C = Q(SpeciesConstructor(promise, '%Promise%'));
   const resultCapability = Q(NewPromiseCapability(C));

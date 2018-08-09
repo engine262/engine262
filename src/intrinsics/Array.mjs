@@ -55,7 +55,7 @@ export function ArrayCreate(length /* : NumberValue */, proto /* : ?Value */) {
     length = NewValue(0);
   }
   if (length.numberValue() > (2 ** 32) - 1) {
-    surroundingAgent.Throw('RangeError');
+    return surroundingAgent.Throw('RangeError');
   }
   if (proto instanceof UndefinedValue) {
     proto = surroundingAgent.intrinsic('%ArrayPrototype%');
@@ -102,7 +102,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     } else {
       intLen = ToUint32(len);
       if (intLen.numberValue() !== len.numberValue()) {
-        surroundingAgent.Throw('RangeError');
+        return surroundingAgent.Throw('RangeError');
       }
     }
     Set(array, NewValue('length'), intLen, NewValue(true));
@@ -141,7 +141,7 @@ function ArrayFrom(realm, argList, { thisValue }) {
     mapping = false;
   } else {
     if (IsCallable(mapfn) === false) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     if (argList.length >= 3) {
       T = thisArg;

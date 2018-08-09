@@ -107,7 +107,7 @@ export function FromPropertyDescriptor(Desc /* : PropertyDescriptor */) {
 // #sec-topropertydescriptor ToPropertyDescriptor
 export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor */ {
   if (Type(Obj) !== 'Object') {
-    surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError');
   }
   /* :: Obj = ((Obj: any): ObjectValue); */
   const desc = {};
@@ -135,7 +135,7 @@ export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor 
   if (hasGet.isTrue()) {
     const getter = Q(Get(Obj, NewValue('get')));
     if (IsCallable(getter).isFalse() && !(getter instanceof UndefinedValue)) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     desc.Get = getter;
   }
@@ -143,13 +143,13 @@ export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor 
   if (hasSet.isTrue()) {
     const setter = Q(Get(Obj, NewValue('set')));
     if (IsCallable(setter).isFalse() && !(setter instanceof UndefinedValue)) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     desc.Set = setter;
   }
   if ('Get' in desc || 'Set' in desc) {
     if ('Value' in desc || 'Writable' in desc) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
   }
   return desc;

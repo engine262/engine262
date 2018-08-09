@@ -371,7 +371,7 @@ export class ProxyValue extends ObjectValue {
 
         const handler = O.ProxyHandler;
         if (handler instanceof NullValue) {
-          surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError');
         }
         Assert(Type(handler) === 'Object');
         const target = O.ProxyTarget;
@@ -390,7 +390,7 @@ export class ProxyValue extends ObjectValue {
 
         const handler = O.ProxyHandler;
         if (handler instanceof NullValue) {
-          surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError');
         }
         Assert(Type(handler) === 'Object');
         const target = O.ProxyTarget;
@@ -402,7 +402,7 @@ export class ProxyValue extends ObjectValue {
         const argArray = CreateArrayFromList(argumentsList);
         const newObj = Call(trap, handler, [target, argArray, newTarget]);
         if (Type(newObj) !== 'Object') {
-          surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError');
         }
         return newObj;
       };
@@ -413,7 +413,7 @@ export class ProxyValue extends ObjectValue {
     const O = this;
     const handler = O.ProxyHandler;
     if (handler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -423,7 +423,7 @@ export class ProxyValue extends ObjectValue {
     }
     const handlerProto = Call(trap, handler, [target]);
     if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     const extensibleTarget = IsExtensible(target);
     if (extensibleTarget === true) {
@@ -431,7 +431,7 @@ export class ProxyValue extends ObjectValue {
     }
     const targetProto = target.GetPrototypeOf();
     if (SameValue(handlerProto, targetProto) === false) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return handlerProto;
   }
@@ -442,7 +442,7 @@ export class ProxyValue extends ObjectValue {
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
     if (handler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -460,7 +460,7 @@ export class ProxyValue extends ObjectValue {
     }
     const targetProto = target.GetPrototypeOf();
     if (SameValue(V, targetProto)) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return true;
   }
@@ -470,7 +470,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -481,7 +481,7 @@ export class ProxyValue extends ObjectValue {
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
     const targetResult = target.IsExtensible();
     if (SameValue(booleanTrapResult, targetResult) === false) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return booleanTrapResult;
   }
@@ -491,7 +491,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -503,7 +503,7 @@ export class ProxyValue extends ObjectValue {
     if (booleanTrapResult.isTrue()) {
       const targetIsExtensible = target.IsExtensible();
       if (targetIsExtensible === true) {
-        surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError');
       }
     }
     return booleanTrapResult;
@@ -525,7 +525,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler instanceof NullValue) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -542,7 +542,7 @@ export class ProxyValue extends ObjectValue {
       return trueValue;
     }
     if (targetDesc.Configurable === false) {
-      surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError');
     }
     return trueValue;
   }

@@ -79,9 +79,7 @@ export function CreateMath(realmRec) {
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
     mathObj.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(nativeMethod || (() => {
-        surroundingAgent.Throw('TypeError');
-      }), [], realmRec),
+      Value: CreateBuiltinFunction(nativeMethod || (() => surroundingAgent.Throw('TypeError')), [], realmRec),
       Writable: true,
       Enumerable: false,
       Configurable: true,
