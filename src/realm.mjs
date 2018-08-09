@@ -22,12 +22,14 @@ import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
 import { CreateArray } from './intrinsics/Array.mjs';
 import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
 import { CreateBoolean } from './intrinsics/Boolean.mjs';
-// import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
+import { CreateNumberPrototype } from './intrinsics/NumberPrototype.mjs';
+import { CreateNumber } from './intrinsics/Number.mjs';
+import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
 import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
-import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
+import { CreatePromise } from './intrinsics/Promise.mjs';
 
 /* ::
 type IntrinsicMap = {
@@ -86,13 +88,16 @@ export function CreateIntrinsics(realmRec) {
   CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
 
+  CreateFunctionPrototype(realmRec);
+
   CreateArrayPrototype(realmRec);
   CreateArray(realmRec);
 
   CreateBooleanPrototype(realmRec);
   CreateBoolean(realmRec);
 
-  // CreateFunctionPrototype(realmRec);
+  CreateNumberPrototype(realmRec);
+  CreateNumber(realmRec);
 
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);
