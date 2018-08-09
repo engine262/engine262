@@ -229,19 +229,22 @@ function BoundNames_BindingPattern(BindingPattern) {
 
 // 13.7.5.2 #sec-for-in-and-for-of-statements-static-semantics-boundnames
 //   ForDeclaration : LetOrConst ForBinding
-//
+export function BoundNames_ForDeclaration(ForDeclaration) {
+  const ForBinding = ForDeclaration.declarations[0].id;
+  return BoundNames_ForBinding(ForBinding);
+}
+
 // (implicit)
 //   ForBinding : BindingIdentifier
 //   ForBinding : BindingPattern
-export function BoundNames_ForDeclaration(ForDeclaration) {
-  const ForBinding = ForDeclaration.declarations[0].id;
+export function BoundNames_ForBinding(ForBinding) {
   switch (true) {
     case isBindingIdentifier(ForBinding):
       return BoundNames_BindingIdentifier(ForBinding);
     case isBindingPattern(ForBinding):
       return BoundNames_BindingPattern(ForBinding);
     default:
-      throw new TypeError(`Invalid LexicalBinding: ${ForBinding.type}`);
+      throw new TypeError(`Invalid ForBinding: ${ForBinding.type}`);
   }
 }
 
