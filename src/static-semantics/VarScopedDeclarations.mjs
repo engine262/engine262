@@ -158,16 +158,15 @@ export function VarScopedDeclarations_IfStatement(IfStatement) {
 //
 // 13.7.5.8 #sec-for-in-and-for-of-statements-static-semantics-varscopeddeclarations
 //   IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
+//   IterationStatement : `for` `(` `var` ForBinding `in` Expression `)` Statement
 //   IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
 //   IterationStatement : `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `(` ForDeclaration `of` Expression `)` Statement
 //   IterationStatement :
 //     `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-//
-//   IterationStatement : `for` `await` `(` ForDeclaration `of` Expression `)` Statement
-//   IterationStatement : `for` `(` `var` ForBinding `in` Expression `)` Statement
 //   IterationStatement : `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
 //   IterationStatement : `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//   IterationStatement : `for` `(` ForDeclaration `of` Expression `)` Statement
+//   IterationStatement : `for` `await` `(` ForDeclaration `of` Expression `)` Statement
 export function VarScopedDeclarations_IterationStatement(IterationStatement) {
   let declarationsFromBinding = [];
   switch (IterationStatement.type) {
@@ -185,7 +184,7 @@ export function VarScopedDeclarations_IterationStatement(IterationStatement) {
     case 'ForInStatement':
     case 'ForOfStatement':
       if (isVariableStatement(IterationStatement.left)) {
-        const ForBinding = IterationStatement.left.declarations[0];
+        const ForBinding = IterationStatement.left.declarations[0].id;
         declarationsFromBinding = [ForBinding];
       }
       break;
