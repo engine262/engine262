@@ -71,7 +71,7 @@ export function BoundNames_VariableDeclaration(VariableDeclaration) {
     case isBindingPattern(VariableDeclaration.id):
       return BoundNames_BindingPattern(VariableDeclaration.id);
     default:
-      throw new Error(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
+      throw new TypeError(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
   }
 }
 
