@@ -5,6 +5,7 @@ import type { Realm } from '../realm.mjs';
 import type {
   Value,
   ObjectValue,
+  FunctionValue,
 } from '../value.mjs';
 */
 import {
@@ -16,6 +17,7 @@ import {
   Type,
   UndefinedValue,
   New as NewValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
@@ -65,15 +67,19 @@ function GetCapabilitiesExecutorFunctions(realm, [resolve, reject]) {
   return NewValue(undefined);
 }
 
+class PromiseCapabilityRecord {
+  /* ::
+  Promise: ObjectValue
+  Resolve: FunctionValue
+  Reject: FunctionValue
+  */
+}
+
 function NewPromiseCapability(C /* : ObjectValue */) {
   if (IsConstructor(C).isFalse()) {
     surroundingAgent.Throw('TypeError');
   }
-  const promiseCapability = {
-    Promise: undefined,
-    Resolve: undefined,
-    Reject: undefined,
-  };
+  const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
   const executor = CreateBuiltinFunction(steps, ['Capability']);
   executor.Capability = promiseCapability;
@@ -228,6 +234,36 @@ function PromiseConstructor(realm, [executor], { NewTarget }) {
   return promise;
 }
 
+function PromiseAll() {
+  return NewValue(undefined);
+}
+
+function PromiseRace() {
+  return NewValue(undefined);
+}
+
+function PromiseReject(realm, [r], { thisValue }) {
+  const C = thisValue;
+  if (Type(C) !== 'Object') {
+    surroundingAgent.Throw('TypeError');
+  }
+  const promiseCapability = NewPromiseCapability(C);
+  Q(Call(promiseCapability.Reject, NewValue(undefined), [r]));
+  return promiseCapability.Promise;
+}
+
+function JSPromiseResolve(realm, [x], { thisValue }) {
+  const C = thisValue;
+  if (Type(C) !== 'Object') {
+    surroundingAgent.Throw('TypeError');
+  }
+  return Q(PromiseResolve(C, x));
+}
+
+function PromiseSymbolSpecies(realm, args, { thisValue }) {
+  return thisValue;
+}
+
 export function CreatePromise(realmRec /* : Realm */) {
   const promiseConstructor = CreateBuiltinFunction(PromiseConstructor, [], realmRec);
 
@@ -245,6 +281,31 @@ export function CreatePromise(realmRec /* : Realm */) {
     Enumerable: false,
     Configurable: true,
   });
+
+  [
+    ['all', PromiseAll],
+    ['race', PromiseRace],
+    ['reject', PromiseReject],
+    ['resolve', JSPromiseResolve],
+  ].forEach(([name, fn]) => {
+    promiseConstructor.DefineOwnProperty(NewValue(name), {
+      Value: CreateBuiltinFunction(fn, [], realmRec),
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    });
+  });
+
+  promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, {
+    Get: CreateBuiltinFunction(PromiseSymbolSpecies, [], realmRec),
+    Set: NewValue(undefined),
+    Enumerable: false,
+    Configurable: true,
+  });
+
+  realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, NewValue('all'));
+  realmRec.Intrinsics['%Promise_reject%'] = Get(promiseConstructor, NewValue('reject'));
+  realmRec.Intrinsics['%Promise_resolve%'] = Get(promiseConstructor, NewValue('resolve'));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }
