@@ -183,7 +183,5 @@ export function SetDefaultGlobalBindings(realmRec) {
     }));
   });
 
-  console.log(global);
-
   return global;
 }

@@ -161,7 +161,7 @@ for (const name of [
 Object.freeze(wellKnownSymbols);
 
 /* :: export type PropertyKey = StringValue | SymbolValue; */
-export class ObjectValue extends PrimitiveValue {
+export class ObjectValue extends Value {
   /* ::
   realm: Realm
   Prototype: NullValue | ObjectValue
@@ -550,6 +550,29 @@ export class ProxyValue extends ObjectValue {
   OwnPropertyKeys() {}
 }
 
+export class Reference {
+  /* ::
+  BaseValue: Value
+  ReferencedName: PropertyKey
+  StrictReference: boolean
+  */
+  constructor(
+    BaseValue /* : Value */,
+    ReferencedName /* : PropertyKey */,
+    StrictReference /* : boolean */,
+  ) {
+    this.BaseValue = BaseValue;
+    this.ReferencedName = ReferencedName;
+    this.StrictReference = StrictReference;
+  }
+}
+
+export class SuperReference extends Reference {
+  /* ::
+  ThisValue: Value
+  */
+}
+
 /* ::
 type symbol = Symbol;
 
@@ -609,6 +632,7 @@ declare function Type(NumberValue): 'Number';
 declare function Type(SymbolValue): 'Symbol';
 declare function Type(ObjectValue): 'Object';
 declare function Type(Value): string;
+declare function Type(Reference): 'Reference';
 */
 
 export function Type(val) {
@@ -638,6 +662,10 @@ export function Type(val) {
 
   if (val instanceof ObjectValue) {
     return 'Object';
+  }
+
+  if (val instanceof Reference) {
+    return 'Reference';
   }
 
   throw new RangeError('Type(val) invalid argument');

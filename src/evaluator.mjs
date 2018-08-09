@@ -1,16 +1,132 @@
 import {
   NormalCompletion,
-  AbruptCompletion,
   UpdateEmpty,
+  Q, X,
+  ReturnIfAbrupt,
 } from './completion.mjs';
-
+import {
+  surroundingAgent,
+} from './engine.mjs';
 import {
   isExpressionStatement,
+  isMemberExpressionWithBrackets,
+  isMemberExpressionWithDot,
+  isCallExpressionWithBrackets,
+  isCallExpressionWithDot,
 } from './ast.mjs';
-
 import {
+  Type,
+  Reference,
+  PrimitiveValue,
+  UndefinedValue,
+  NullValue,
+  ObjectValue,
   New as NewValue,
 } from './value.mjs';
+import {
+  Assert,
+  ToPropertyKey,
+  RequireObjectCoercible,
+  ToObject,
+} from './abstract-ops/all.mjs';
+
+function GetBase(V) {
+  Assert(Type(V) === 'Reference');
+  return V.BaseValue;
+}
+
+function IsUnresolableReference(V) {
+  Assert(Type(V) === 'Reference');
+  if (V.BaseValue instanceof UndefinedValue) {
+    return true;
+  }
+  return false;
+}
+
+function HasPrimitiveBase(V) {
+  Assert(Type(V) === 'Reference');
+  if (V.BaseValue instanceof PrimitiveValue) {
+    return true;
+  }
+  return false;
+}
+
+function IsPropertyReference(V) {
+  Assert(Type(V) === 'Reference');
+  if (V.BaseValue instanceof ObjectValue || HasPrimitiveBase(V)) {
+    return true;
+  }
+  return false;
+}
+
+function GetReferencedName(V) {
+  Assert(Type(V) === 'Reference');
+  return V.ReferencedName;
+}
+
+function IsSuperReference(V) {
+  Assert(Type(V) === 'Reference');
+  return 'ThisValue' in V;
+}
+
+function GetThisValue(V) {
+  Assert(IsPropertyReference(V));
+  if (IsSuperReference(V)) {
+    return V.ThisValue;
+  }
+  return GetBase(V);
+}
+
+function IsStrictReference(V) {
+  Assert(Type(V) === 'Reference');
+  return V.StrictReference;
+}
+
+function GetValue(V) {
+  ReturnIfAbrupt(V);
+  if (Type(V) !== 'Reference') {
+    return V;
+  }
+  let base = GetBase(V);
+  if (IsUnresolableReference(V)) {
+    return surroundingAgent.Throw('ReferenceError');
+  }
+  if (IsPropertyReference(V)) {
+    if (HasPrimitiveBase(V)) {
+      Assert(!(base instanceof UndefinedValue || base instanceof NullValue));
+      base = X(ToObject(base));
+    }
+    return base.Get(GetReferencedName(V), GetThisValue(V));
+  } else {
+    return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
+  }
+}
+
+// #sec-property-accessors-runtime-semantics-evaluation
+//   MemberExpression : MemberExpression [ Expression ]
+//   CallExpression : CallExpression [ Expression ]
+function EvaluateMemberExpression_Expression(MemberExpression, Expression) {
+  const baseReference = EvaluateExpression(MemberExpression);
+  const baseValue = Q(GetValue(baseReference));
+  const propertyNameReference = EvaluateExpression(Expression);
+  const propertyNameValue = Q(GetValue(propertyNameReference));
+  const bv = Q(RequireObjectCoercible(baseValue));
+  const propertyKey = ToPropertyKey(propertyNameValue);
+  const strict = true;
+  return new Reference(bv, propertyKey, strict);
+}
+
+// #sec-property-accessors-runtime-semantics-evaluation
+//   MemberExpression : MemberExpression . IdentifierName
+//   CallExpression : CallExpression . CallExpression
+function EvaluateMemberExpression_IdentifierName(MemberExpression, IdentifierName) {
+  const baseReference = EvaluateExpression(MemberExpression);
+  const baseValue = Q(GetValue(baseReference));
+  const bv = Q(RequireObjectCoercible(baseValue));
+  const propertyNameString = NewValue(IdentifierName.name);
+  const strict = true;
+  return new Reference(bv, propertyNameString, strict);
+}
 
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
@@ -18,23 +134,17 @@ import {
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList, envRec) {
-  let sl = EvaluateStatementListItem(StatementList[0]);
+  const sl = EvaluateStatementListItem(StatementList[0]);
+  ReturnIfAbrupt(sl);
   if (StatementList.length === 1) {
     return sl;
   }
   let s;
   for (const StatementListItem of StatementList.slice(1)) {
-    try {
-      s = EvaluateStatementListItem(StatementListItem);
-    } catch (err) {
-      s = err;
-    }
-    sl = UpdateEmpty(s, sl.Value);
-    if (sl instanceof AbruptCompletion) {
-      throw sl;
-    }
+    s = EvaluateStatementListItem(StatementListItem);
   }
-  return sl;
+  // return UpdateEmpty(s, sl);
+  return s;
 }
 
 // (implicit)
@@ -50,8 +160,7 @@ function EvaluateStatementListItem(StatementListItem, envRec) {
 //   ExpressionStatement : Expression `;`
 function EvaluateExpressionStatement(ExpressionStatement, envRec) {
   const exprRef = EvaluateExpression(ExpressionStatement.expression, envRec);
-  // return GetValue(exprRef);
-  return exprRef;
+  return GetValue(exprRef);
 }
 
 // (implicit)
@@ -66,7 +175,17 @@ function EvaluateExpression(Expression, envRec) {
         || typeof Expression.value === 'boolean'
         || typeof Expression.value === 'number'
         || typeof Expression.value === 'string')) {
-    return new NormalCompletion(NewValue(Expression.value));
+    return NewValue(Expression.value);
+  }
+
+  if (isMemberExpressionWithBrackets(Expression)
+      || isCallExpressionWithBrackets(Expression)) {
+    return EvaluateMemberExpression_Expression(Expression.object, Expression.property);
+  }
+
+  if (isMemberExpressionWithDot(Expression)
+      || isCallExpressionWithDot(Expression)) {
+    return EvaluateMemberExpression_IdentifierName(Expression.object, Expression.property);
   }
 }
 
