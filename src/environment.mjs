@@ -198,6 +198,10 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     }
     return Q(Get(bindings, N));
   }
+
+  HasThisBinding() {
+    return false;
+  }
 }
 
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
@@ -299,11 +303,18 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return true;
   }
 
-  HasThisBinding() {}
+  HasThisBinding() {
+    return true;
+  }
 
   HasSuperBinding() {}
 
   WithBaseObject() {}
+
+  GetThisBinding() {
+    const envRec = this;
+    return this.GlobalThisValue;
+  }
 
   HasVarDeclaration() {}
 

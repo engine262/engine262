@@ -279,17 +279,14 @@ export type BuiltinFunctionCallback = (realm: Realm, argumentsList: Value[], con
 }) => Value;
 */
 
-function nc(fn, realm, args, thisArgument, newTarget) {
-  const argp = new Proxy(args, {
-    get(target, prop, receiver) {
-      if (Reflect.has(target, prop)) {
-        return Reflect.get(target, prop, receiver);
-      }
-      return New(undefined);
-    },
-  });
-  /* :: argp = ((argp: any): Value[]); */
-  return fn(realm, argp, {
+function nc(F, realm, args, thisArgument, newTarget) {
+  if (F.properties.has('length')) {
+    args.length = F.properties.get('length').numberValue();
+  }
+  // $FlowFixMe
+  return F.nativeFunction(realm, new Proxy(args, {
+    get: (t, p, r) => Reflect.get(t, p, r) || New(undefined),
+  }), {
     thisValue: thisArgument || New(undefined),
     NewTarget: newTarget || New(undefined),
   });
@@ -325,7 +322,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this.nativeFunction.bind(this), calleeRealm, argumentsList, thisArgument, undefined);
+    const result = nc(this, calleeRealm, argumentsList, thisArgument, undefined);
     surroundingAgent.executionContextStack.pop();
 
     return result;
@@ -343,7 +340,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this.nativeFunction.bind(this), calleeRealm, argumentsList, undefined, newTarget);
+    const result = nc(this, calleeRealm, argumentsList, undefined, newTarget);
     surroundingAgent.executionContextStack.pop();
     return result;
   }

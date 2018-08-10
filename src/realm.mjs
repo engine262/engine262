@@ -30,6 +30,7 @@ import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
+import { CreateError } from './intrinsics/Error.mjs';
 
 /* ::
 type IntrinsicMap = {
@@ -84,6 +85,8 @@ export function CreateIntrinsics(realmRec) {
   intrinsics['%FunctionPrototype%'] = funcProto;
 
   thrower.SetPrototypeOf(funcProto);
+
+  CreateError(realmRec);
 
   CreateObjectPrototype(realmRec);
   CreateObject(realmRec);

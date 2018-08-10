@@ -19,6 +19,7 @@ import type {
 
 import {
   UndefinedValue,
+  NullValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
@@ -30,6 +31,7 @@ import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
+  Q,
 } from './completion.mjs';
 import {
   EnvironmentRecord,
@@ -210,7 +212,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'Object', hostDefined: undefined },
+    { sourceText: 'Object.keys(this)[0];', hostDefined: undefined },
   ];
 
   const modules = [];
@@ -405,4 +407,25 @@ export function Suspend(WL, W) {
   // EnterCriticalSection(WL);
   // If W was woken explicitly by another agent calling WakeWaiter(WL, W), return true.
   return false;
+}
+
+// #sec-getthisenvironment
+export function GetThisEnvironment() {
+  let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  while (true) {
+    const envRec = lex.EnvironmentRecord;
+    const exists = envRec.HasThisBinding();
+    if (exists) {
+      return envRec;
+    }
+    const outer = envRec.outerEnvironment;
+    Assert(!(outer instanceof NullValue));
+    lex = outer;
+  }
+}
+
+// #sec-resolvethisbinding
+export function ResolveThisBinding() {
+  const envRec = GetThisEnvironment();
+  return Q(envRec.GetThisBinding());
 }
