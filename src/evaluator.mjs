@@ -16,6 +16,7 @@ import {
   isActualAdditiveExpression,
   isAdditiveExpressionWithPlus,
   isAdditiveExpressionWithMinus,
+  isIdentifierReference,
 } from './ast.mjs';
 import {
   Type,
@@ -35,6 +36,9 @@ import {
   ToString,
   ToNumber,
 } from './abstract-ops/all.mjs';
+import {
+  LexicalEnvironment,
+} from './environment.mjs';
 
 function GetBase(V) {
   Assert(Type(V) === 'Reference');
@@ -106,6 +110,31 @@ function GetValue(V) {
   } else {
     return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
   }
+}
+
+function GetIdentifierReference(lex, name, strict) {
+  if (lex instanceof NullValue) {
+    return new Reference(NewValue(undefined), name, strict);
+  }
+  const envRec = lex.EnvironmentRecord;
+  const exists = envRec.HasBinding(name);
+  if (exists) {
+    return new Reference(envRec, name, strict);
+  } else {
+    const outer = lex.outerEnvironment;
+    return GetIdentifierReference(outer, name, strict);
+  }
+}
+
+function ResolveBinding(name, env) {
+  if (!env || env instanceof UndefinedValue) {
+    env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  }
+  Assert(env instanceof LexicalEnvironment);
+  // If the code matching the syntactic production that is being evaluated
+  // is contained in strict mode code, let strict be true, else let strict be false.
+  const strict = true;
+  return GetIdentifierReference(env, name, strict);
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
@@ -181,23 +210,26 @@ function Evaluate_AdditiveExpression(AdditiveExpression) {
   }
 }
 
+function EvaluateExpression_Identifier(Identifier) {
+  return ResolveBinding(NewValue(Identifier.name));
+}
+
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
 //
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList, envRec) {
-  const sl = EvaluateStatementListItem(StatementList[0]);
+  const sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
-  if (StatementList.length === 1) {
+  if (StatementList.length === 0) {
     return sl;
   }
   let s;
-  for (const StatementListItem of StatementList.slice(1)) {
+  for (const StatementListItem of StatementList) {
     s = EvaluateStatementListItem(StatementListItem);
   }
-  // return UpdateEmpty(s, sl);
-  return s;
+  return UpdateEmpty(s, sl);
 }
 
 // (implicit)
@@ -232,6 +264,8 @@ function EvaluateExpression(Expression, envRec) {
   }
 
   switch (true) {
+    case isIdentifierReference(Expression):
+      return EvaluateExpression_Identifier(Expression);
     case isMemberExpressionWithBrackets(Expression):
     case isCallExpressionWithBrackets(Expression): // identical semantics
       return MemberExpression_Expression(Expression.object, Expression.property);
