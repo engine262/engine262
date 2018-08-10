@@ -39,35 +39,20 @@ import {
   SetRealmGlobalObject,
   SetDefaultGlobalBindings,
 } from './realm.mjs';
-
 import {
   Assert,
-} from './abstract-ops/notational-conventions.mjs';
-import {
   Construct,
   Get,
-} from './abstract-ops/object-operations.mjs';
-import {
   IsArray,
   IsPropertyKey,
-} from './abstract-ops/testing-comparison.mjs';
-import {
   ToBoolean,
-} from './abstract-ops/type-conversion.mjs';
-
+} from './abstract-ops/all.mjs';
 import {
   LexicallyDeclaredNames_ScriptBody,
-} from './static-semantics/LexicallyDeclaredNames.mjs';
-import {
   LexicallyScopedDeclarations_ScriptBody,
-} from './static-semantics/LexicallyScopedDeclarations.mjs';
-import {
   VarDeclaredNames_ScriptBody,
-} from './static-semantics/VarDeclaredNames.mjs';
-import {
   VarScopedDeclarations_ScriptBody,
-} from './static-semantics/VarScopedDeclarations.mjs';
-
+} from './static-semantics/all.mjs';
 import {
   EvaluateScript,
 } from './evaluator.mjs';
@@ -162,6 +147,8 @@ export class ExecutionContext {
   Function: ?FunctionValue
   Realm: Realm
   ScriptOrModule: ?Object
+  LexicalEnvironment: LexicalEnvironment
+  VariableEnvironment: LexicalEnvironment
   */
   constructor() {
     this.codeEvaluationState = undefined;
@@ -223,7 +210,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: '1 + 1', hostDefined: undefined },
+    { sourceText: 'Object', hostDefined: undefined },
   ];
 
   const modules = [];

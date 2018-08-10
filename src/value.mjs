@@ -172,16 +172,16 @@ export class ObjectValue extends Value {
   constructor(realm /* : Realm */, Prototype /* : ?(NullValue | ObjectValue) */) {
     super();
 
-    this.realm = realm;
     this.Prototype = Prototype
       || realm.Intrinsics['%ObjectPrototype%']
       || nullValue;
 
     this.Extensible = true;
     this.IsClassPrototype = false;
+    this.properties = new InternalPropertyMap();
 
-    Object.defineProperty(this, 'properties', {
-      value: new InternalPropertyMap(),
+    Object.defineProperty(this, 'realm', {
+      value: realm,
       enumerable: false,
     });
   }

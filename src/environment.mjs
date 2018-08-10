@@ -16,21 +16,19 @@ import type {
 import {
   wellKnownSymbols,
   Type,
+  New as NewValue,
 } from './value.mjs';
 import {
   surroundingAgent,
 } from './engine.mjs';
 import {
   Assert,
-} from './abstract-ops/notational-conventions.mjs';
-import {
   Get,
   HasOwnProperty,
   HasProperty,
-} from './abstract-ops/object-operations.mjs';
-import {
   ToBoolean,
-} from './abstract-ops/type-conversion.mjs';
+} from './abstract-ops/all.mjs';
+import { Q } from './completion.mjs';
 
 export class LexicalEnvironment {
   /* ::
@@ -167,24 +165,38 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     const bindings = envRec.bindingObject;
 
-    const foundBinding = HasProperty(bindings, N);
-    if (foundBinding === false) {
+    const foundBinding = Q(HasProperty(bindings, N));
+    if (foundBinding.isFalse()) {
       return false;
     }
 
     if (this.withEnvironment === false) {
-      return false;
+      return true;
     }
 
-    const unscopables = Get(bindings, wellKnownSymbols.unscopables);
+    const unscopables = Q(Get(bindings, wellKnownSymbols.unscopables));
     if (Type(unscopables) === 'Object') {
-      const blocked = ToBoolean(Get(unscopables, N));
-      if (blocked === true) {
+      const blocked = ToBoolean(Q(Get(unscopables, N)));
+      if (blocked.isTrue()) {
         return false;
       }
     }
 
     return true;
+  }
+
+  GetBindingValue(N /* : Value */, S /* : boolean */) {
+    const envRec = this;
+    const bindings = envRec.bindingObject;
+    const value = Q(HasProperty(bindings, N));
+    if (value.isFalse()) {
+      if (S === false) {
+        return NewValue(undefined);
+      } else {
+        return surroundingAgent.Throw('ReferenceError');
+      }
+    }
+    return Q(Get(bindings, N));
   }
 }
 
