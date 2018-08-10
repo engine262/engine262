@@ -368,11 +368,13 @@ export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) /* : List<Propert
   const strings = [];
   const symbols = [];
   for (const key of O.properties.keys()) {
-    const int = Number.parseInt(key, 10);
-    if (int > 0 && int < (2 ** 53) - 1) {
-      integerIndexes.push(NewValue(key));
-    } else if (typeof key === 'string') {
-      strings.push(NewValue(key));
+    if (typeof key === 'string') {
+      const int = Number.parseInt(key, 10);
+      if (int > 0 && int < (2 ** 53) - 1) {
+        integerIndexes.push(NewValue(key));
+      } else {
+        strings.push(NewValue(key));
+      }
     } else if (Type(key) === 'Symbol') {
       symbols.push(key);
     }
