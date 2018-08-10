@@ -1,11 +1,13 @@
 import {
   NormalCompletion,
+  AbruptCompletion,
   UpdateEmpty,
   Q, X,
   ReturnIfAbrupt,
 } from './completion.mjs';
 import {
   surroundingAgent,
+  ResolveThisBinding,
 } from './engine.mjs';
 import {
   isExpressionStatement,
@@ -17,10 +19,13 @@ import {
   isAdditiveExpressionWithPlus,
   isAdditiveExpressionWithMinus,
   isIdentifierReference,
+  isCallExpression,
+  isPrimaryExpressionWithThis,
 } from './ast.mjs';
 import {
   Type,
   Reference,
+  Value,
   PrimitiveValue,
   UndefinedValue,
   NullValue,
@@ -35,6 +40,8 @@ import {
   ToPrimitive,
   ToString,
   ToNumber,
+  IsCallable,
+  Call,
 } from './abstract-ops/all.mjs';
 import {
   LexicalEnvironment,
@@ -214,6 +221,62 @@ function EvaluateExpression_Identifier(Identifier) {
   return ResolveBinding(NewValue(Identifier.name));
 }
 
+function IsInTailPosition(CallExpression) {
+  return false;
+}
+
+function ArgumentListEvaluation(Arguments) {
+  if (Arguments.length === 0) {
+    return [];
+  }
+  // this is wrong
+  return Arguments.map((Expression) => EvaluateExpression(Expression));
+}
+
+function EvaluateCall(func, ref, args, tailPosition) {
+  let thisValue;
+  if (Type(ref) === 'Reference') {
+    if (IsPropertyReference(ref)) {
+      thisValue = GetThisValue(ref);
+    } else {
+      const refEnv = GetBase(ref);
+      thisValue = refEnv.WithBaseObject();
+    }
+  } else {
+    thisValue = NewValue(undefined);
+  }
+  const argList = ArgumentListEvaluation(args);
+  ReturnIfAbrupt(argList);
+  if (Type(func) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (IsCallable(func).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (tailPosition) {
+    // PrepareForTailCall();
+  }
+  const result = Call(func, thisValue, argList);
+  // Assert: If tailPosition is true, the above call will not return here
+  // but instead evaluation will continue as if the following return has already occurred.
+  if (!(result instanceof AbruptCompletion)) {
+    Assert(result instanceof Value);
+  }
+  return result;
+}
+
+function Evaluate_This() {
+  return Q(ResolveThisBinding());
+}
+
+function Evalute_CallExpressionArguments(CallExpression, Arguments) {
+  const ref = EvaluateExpression(CallExpression);
+  const func = Q(GetValue(ref));
+  const thisCall = undefined; /* this CallExpression */
+  const tailCall = IsInTailPosition(thisCall);
+  return Q(EvaluateCall(func, ref, Arguments, tailCall));
+}
+
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
 //
@@ -274,8 +337,13 @@ function EvaluateExpression(Expression, envRec) {
       return MemberExpression_IdentifierName(Expression.object, Expression.property);
     case isActualAdditiveExpression(Expression):
       return Evaluate_AdditiveExpression(Expression);
+    case isCallExpression(Expression):
+      return Evalute_CallExpressionArguments(Expression.callee, Expression.arguments);
+    case isPrimaryExpressionWithThis(Expression):
+      return Evaluate_This(Expression);
 
     default:
+      console.log(Expression);
       throw new RangeError('EvaluateExpression unknown expression type');
   }
 }

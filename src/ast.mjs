@@ -118,6 +118,8 @@ export function isPrimaryExpression(node) {
          || isTemplateLiteral(node);
 }
 
+export const isPrimaryExpressionWithThis = isThis;
+
 // Used in #prod-MemberExpression
 export function isMemberExpressionWithBrackets(node) {
   return node.type === 'MemberExpression'
