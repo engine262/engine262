@@ -13,6 +13,7 @@ import {
   isMemberExpressionWithDot,
   isCallExpressionWithBrackets,
   isCallExpressionWithDot,
+  isActualAdditiveExpression,
 } from './ast.mjs';
 import {
   Type,
@@ -28,6 +29,9 @@ import {
   ToPropertyKey,
   RequireObjectCoercible,
   ToObject,
+  ToPrimitive,
+  ToString,
+  ToNumber,
 } from './abstract-ops/all.mjs';
 
 function GetBase(V) {
@@ -128,12 +132,47 @@ function MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
   return new Reference(bv, propertyNameString, strict);
 }
 
-function Evaluate_MemberExpression(MemberExpression) {
-  if (isMemberExpressionWithBrackets(MemberExpression)) {
-    return MemberExpression_Expression(MemberExpression.object, MemberExpression.property);
+// #prod-AdditiveExpression
+//    AdditiveExpression : AdditiveExpression + MultiplicativeExpression
+function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, MultiplicativeExpression) {
+  const lref = EvaluateExpression(AdditiveExpression);
+  const lval = Q(GetValue(lref));
+  const rref = EvaluateExpression(MultiplicativeExpression);
+  const rval = Q(GetValue(rref));
+  const lprim = Q(ToPrimitive(lval));
+  const rprim = Q(ToPrimitive(rval));
+  if (Type(lprim) === 'String' || Type(rprim) === 'String') {
+    const lstr = Q(ToString(lprim));
+    const rstr = Q(ToString(rprim));
+    return NewValue(lstr.stringValue() + rstr.stringValue());
   }
-  if (isMemberExpressionWithDot(MemberExpression)) {
-    return MemberExpression_IdentifierName(MemberExpression.object, MemberExpression.property);
+  const lnum = Q(ToNumber(lprim));
+  const rnum = Q(ToNumber(rprim));
+  return NewValue(lnum.numberValue() + rnum.numberValue());
+}
+
+function SubtractiveExpression_MultiplicativeExpression(
+  SubtractiveExpression, MultiplicativeExpression,
+) {
+  const lref = EvaluateExpression(SubtractiveExpression);
+  const lval = Q(GetValue(lref));
+  const rref = EvaluateExpression(MultiplicativeExpression);
+  const rval = Q(GetValue(rref));
+  const lnum = Q(ToNumber(lval));
+  const rnum = Q(ToNumber(rval));
+  return NewValue(lnum.numberValue() + rnum.numberValue());
+}
+
+function Evaluate_AdditiveExpression(AdditiveExpression) {
+  if (AdditiveExpression.operator === '+') {
+    return AdditiveExpression_MultiplicativeExpression(
+      AdditiveExpression.left, AdditiveExpression.right,
+    );
+  }
+  if (AdditiveExpression.operator === '-') {
+    return SubtractiveExpression_MultiplicativeExpression(
+      AdditiveExpression.left, AdditiveExpression.right,
+    );
   }
 }
 
@@ -189,8 +228,13 @@ function EvaluateExpression(Expression, envRec) {
 
   switch (true) {
     case isMemberExpressionWithBrackets(Expression):
+    case isCallExpressionWithBrackets(Expression): // identical semantics
+      return MemberExpression_Expression(Expression.object, Expression.property);
     case isMemberExpressionWithDot(Expression):
-      return Evaluate_MemberExpression(Expression);
+    case isCallExpressionWithDot(Expression): // identical semantics
+      return MemberExpression_IdentifierName(Expression.object, Expression.property);
+    case isActualAdditiveExpression(Expression):
+      return Evaluate_AdditiveExpression(Expression);
 
     default:
       throw new RangeError('EvaluateExpression unknown expression type');
