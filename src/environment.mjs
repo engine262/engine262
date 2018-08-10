@@ -1,34 +1,34 @@
 /* ::
 import type {
   Realm,
-} from './realm.mjs';
+} from './realm';
 
 import type {
   Value,
   StringValue,
   ObjectValue,
-} from './value.mjs';
+} from './value';
 import type {
   List,
-} from './abstract-ops/spec-types.mjs';
+} from './abstract-ops/spec-types';
 */
 
 import {
   wellKnownSymbols,
   Type,
   New as NewValue,
-} from './value.mjs';
+} from './value';
 import {
   surroundingAgent,
-} from './engine.mjs';
+} from './engine';
 import {
   Assert,
   Get,
   HasOwnProperty,
   HasProperty,
   ToBoolean,
-} from './abstract-ops/all.mjs';
-import { Q } from './completion.mjs';
+} from './abstract-ops/all';
+import { Q } from './completion';
 
 export class LexicalEnvironment {
   /* ::

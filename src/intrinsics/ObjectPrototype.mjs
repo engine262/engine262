@@ -6,7 +6,7 @@ import {
   ObjectValue,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 import {
   CreateBuiltinFunction,
   Get,
@@ -16,8 +16,8 @@ import {
   SameValue,
   ToObject,
   ToPropertyKey,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { Q, X } from '../completion';
 
 function ObjectHasOwnProperty(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));

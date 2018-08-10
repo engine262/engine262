@@ -4,16 +4,16 @@ import {
   isHoistableDeclaration,
   isStatement,
   isLabelledStatement,
-} from '../ast.mjs';
+} from '../ast';
 
 import {
   BoundNames_FunctionDeclaration,
   BoundNames_HoistableDeclaration,
-} from './BoundNames.mjs';
+} from './BoundNames';
 
 import {
   VarDeclaredNames_StatementListItem,
-} from './VarDeclaredNames.mjs';
+} from './VarDeclaredNames';
 
 // 13.2.9 #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementList : StatementList StatementListItem

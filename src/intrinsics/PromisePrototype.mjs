@@ -1,9 +1,9 @@
 /* @flow */
 
 /* ::
-import type { Realm } from '../realm.mjs';
+import type { Realm } from '../realm';
 */
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine';
 import {
   CreateBuiltinFunction,
   Invoke,
@@ -13,14 +13,14 @@ import {
   IsCallable,
   Call,
   Get,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   Type,
   ObjectValue,
   New as NewValue,
-} from '../value.mjs';
-import { Q, ThrowCompletion } from '../completion.mjs';
-import { PromiseResolve } from './Promise.mjs';
+} from '../value';
+import { Q, ThrowCompletion } from '../completion';
+import { PromiseResolve } from './Promise';
 
 function PromiseCatch(realm, [onRejected], { thisValue }) {
   const promise = thisValue;
@@ -50,7 +50,7 @@ function CatchFinallyFunctions(realm, [reason]) {
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
   const thrower = CreateBuiltinFunction(() => {
-    throw new ThrowCompletion(reason);
+    return new ThrowCompletion(reason);
   }, []);
   return Q(Invoke(promise, NewValue('then'), [thrower]));
 }

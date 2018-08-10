@@ -2,7 +2,7 @@ import {
   isDeclaration,
   isHoistableDeclaration,
   isStatement,
-} from '../ast.mjs';
+} from '../ast';
 
 // 13.2.8 #sec-block-static-semantics-toplevellexicallyscopeddeclarations
 //   StatementList : StatementList StatementListItem

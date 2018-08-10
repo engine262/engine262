@@ -6,14 +6,14 @@ import type {
   ObjectValue,
   FunctionValue,
   PropertyKey,
-} from '../value.mjs';
+} from '../value';
 import type {
   List,
   PropertyDescriptor,
-} from './spec-types.mjs';
+} from './spec-types';
 import type {
   Realm,
-} from '../realm.mjs';
+} from '../realm';
 */
 
 import {
@@ -24,10 +24,10 @@ import {
   ProxyValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Assert,
   IsCallable,
@@ -38,13 +38,13 @@ import {
   IsAccessorDescriptor,
   IsDataDescriptor,
   IsExtensible,
-} from './all.mjs';
+} from './all';
 import {
   ArrayCreate,
-} from '../intrinsics/Array.mjs';
+} from '../intrinsics/Array';
 import {
   Q, X,
-} from '../completion.mjs';
+} from '../completion';
 
 // #sec-get-o-p Get
 export function Get(O /* : ObjectValue */, P /* : PropertyKey */) {

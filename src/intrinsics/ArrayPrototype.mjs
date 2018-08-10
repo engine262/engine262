@@ -4,10 +4,10 @@
 import type {
   NumberValue,
   ObjectValue,
-} from '../value.mjs';
+} from '../value';
 import type {
   Realm,
-} from '../realm.mjs';
+} from '../realm';
 */
 
 import {
@@ -18,11 +18,11 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
   IsConcatSpreadable,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Assert,
   Construct,
@@ -43,12 +43,12 @@ import {
   IsCallable,
   Call,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   Q, X,
-} from '../completion.mjs';
+} from '../completion';
 
-import { ArrayCreate } from './Array.mjs';
+import { ArrayCreate } from './Array';
 
 function ArraySpeciesCreate(originalArray, length /* : NumberValue */) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);

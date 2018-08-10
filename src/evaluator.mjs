@@ -4,11 +4,11 @@ import {
   UpdateEmpty,
   Q, X,
   ReturnIfAbrupt,
-} from './completion.mjs';
+} from './completion';
 import {
   surroundingAgent,
   ResolveThisBinding,
-} from './engine.mjs';
+} from './engine';
 import {
   isExpressionStatement,
   isMemberExpressionWithBrackets,
@@ -21,7 +21,7 @@ import {
   isIdentifierReference,
   isCallExpression,
   isPrimaryExpressionWithThis,
-} from './ast.mjs';
+} from './ast';
 import {
   Type,
   Reference,
@@ -31,7 +31,7 @@ import {
   NullValue,
   ObjectValue,
   New as NewValue,
-} from './value.mjs';
+} from './value';
 import {
   Assert,
   ToPropertyKey,
@@ -42,10 +42,10 @@ import {
   ToNumber,
   IsCallable,
   Call,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 import {
   LexicalEnvironment,
-} from './environment.mjs';
+} from './environment';
 
 function GetBase(V) {
   Assert(Type(V) === 'Reference');

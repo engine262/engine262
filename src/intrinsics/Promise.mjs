@@ -1,24 +1,24 @@
 /* @flow */
 
 /* ::
-import type { Realm } from '../realm.mjs';
+import type { Realm } from '../realm';
 import type {
   Value,
   ObjectValue,
   FunctionValue,
-} from '../value.mjs';
+} from '../value';
 */
 import {
   surroundingAgent,
   EnqueueJob,
   HostPromiseRejectionTracker,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value';
 import {
   Assert,
   IsCallable,
@@ -30,14 +30,14 @@ import {
   Get,
   IsPromise,
   IsConstructor,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   Q,
   Completion,
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
-} from '../completion.mjs';
+} from '../completion';
 
 export function PromiseResolve(C /* : ObjectValue */, x /* : ObjectValue */) {
   Assert(Type(C) === 'Object');

@@ -10,14 +10,14 @@ import type {
   BuiltinFunctionCallback,
   ArrayValue,
   NumberValue,
-} from '../value.mjs';
+} from '../value';
 import type {
   PropertyDescriptor,
   List,
-} from './spec-types.mjs';
+} from './spec-types';
 import type {
   Realm,
-} from '../realm.mjs';
+} from '../realm';
 */
 
 import {
@@ -26,10 +26,10 @@ import {
   NullValue,
   ObjectValue,
   UndefinedValue,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Assert,
   Call,
@@ -46,8 +46,8 @@ import {
   ToNumber,
   ToString,
   ToUint32,
-} from './all.mjs';
-import { Q, X } from '../completion.mjs';
+} from './all';
+import { Q, X } from '../completion';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {

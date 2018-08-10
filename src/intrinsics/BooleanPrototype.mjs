@@ -3,15 +3,15 @@ import {
   BooleanValue,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Assert,
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { Q } from '../completion';
 
 function thisBooleanValue(value) {
   if (Type(value) === 'Boolean') {

@@ -14,12 +14,12 @@ import type {
   ObjectValue,
   ArrayValue,
   ProxyValue,
-} from './value.mjs';
+} from './value';
 */
 
 import {
   Assert,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 
 export class Completion {
   /* ::
@@ -83,7 +83,7 @@ declare function ReturnIfAbrupt(Completion): Value;
 
 export function ReturnIfAbrupt(argument) {
   if (argument instanceof AbruptCompletion) {
-    throw argument;
+    return argument;
   }
   if (argument instanceof Completion) {
     return argument.Value;

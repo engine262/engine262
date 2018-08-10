@@ -1,24 +1,24 @@
 /* @flow */
 
 /* ::
-import type { Realm } from '../realm.mjs';
+import type { Realm } from '../realm';
 import type {
   NumberValue,
   FunctionValue,
-} from '../value.mjs';
+} from '../value';
 */
 import {
   CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
   ToNumber,
   ToInteger,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
+} from '../value';
+import { Q } from '../completion';
 
 function NumberConstructor(realm, args, { NewTarget }) {
   let n;

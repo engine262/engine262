@@ -8,13 +8,13 @@ import type {
   SymbolValue,
   ObjectValue,
   FunctionValue,
-} from './value.mjs';
+} from './value';
 import type {
   List,
-} from './abstract-ops/spec-types.mjs';
+} from './abstract-ops/spec-types';
 import type {
   Realm,
-} from './realm.mjs';
+} from './realm';
 */
 
 import {
@@ -23,24 +23,24 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from './value.mjs';
+} from './value';
 
-import { ParseScript, ParseModule } from './parse.mjs';
+import { ParseScript, ParseModule } from './parse';
 
 import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
   Q,
-} from './completion.mjs';
+} from './completion';
 import {
   EnvironmentRecord,
-} from './environment.mjs';
+} from './environment';
 import {
   CreateRealm,
   SetRealmGlobalObject,
   SetDefaultGlobalBindings,
-} from './realm.mjs';
+} from './realm';
 import {
   Assert,
   Construct,
@@ -48,16 +48,16 @@ import {
   IsArray,
   IsPropertyKey,
   ToBoolean,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 import {
   LexicallyDeclaredNames_ScriptBody,
   LexicallyScopedDeclarations_ScriptBody,
   VarDeclaredNames_ScriptBody,
   VarScopedDeclarations_ScriptBody,
-} from './static-semantics/all.mjs';
+} from './static-semantics/all';
 import {
   EvaluateScript,
-} from './evaluator.mjs';
+} from './evaluator';
 
 
 /* ::
@@ -136,7 +136,7 @@ export class Agent {
   Throw(type /* : string */, args /* : ?List<Value> */) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, args);
-    throw new ThrowCompletion(error);
+    return new ThrowCompletion(error);
   }
 }
 Agent.Increment = 0;
@@ -212,7 +212,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'Object.keys(this)[0];', hostDefined: undefined },
+    { sourceText: 'Object.keys(this)', hostDefined: undefined },
   ];
 
   const modules = [];
@@ -238,15 +238,11 @@ export function RunJobs() {
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
-    try {
-      const res = nextPending.Job(...nextPending.Arguments);
-      console.log(res);
-    } catch (result) {
-      if (result instanceof AbruptCompletion) {
-        HostReportErrors(result.Value);
-      } else {
-        throw result;
-      }
+    const result = nextPending.Job(...nextPending.Arguments);
+    if (result instanceof AbruptCompletion) {
+      HostReportErrors([result.Value]);
+    } else {
+      console.log(result);
     }
   }
 }

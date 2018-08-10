@@ -1,21 +1,21 @@
 /* @flow */
 
 /* ::
-import type { Realm } from '../realm.mjs';
+import type { Realm } from '../realm';
 */
 import {
   Type,
   UndefinedValue,
   ObjectValue,
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 import {
   CreateBuiltinFunction,
   ToString,
   ToInteger,
-} from '../abstract-ops/all.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { surroundingAgent } from '../engine';
+import { Q, X } from '../completion';
 
 function thisNumberValue(value) {
   if (Type(value) === 'Number') {

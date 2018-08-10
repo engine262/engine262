@@ -5,7 +5,7 @@ import type {
   ObjectValue,
   FunctionValue,
   Value,
-} from '../value.mjs';
+} from '../value';
 
 export type List<T> = T[];
 declare type PropertyDescriptor = {
@@ -21,12 +21,12 @@ export type { PropertyDescriptor };
 
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 import {
   IsCallable,
   Get,
@@ -34,8 +34,8 @@ import {
   ToBoolean,
   CreateDataProperty,
   ObjectCreate,
-} from './all.mjs';
-import { Q } from '../completion.mjs';
+} from './all';
+import { Q } from '../completion';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {

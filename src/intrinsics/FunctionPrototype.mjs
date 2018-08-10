@@ -1,14 +1,14 @@
 /* @flow */
 
 /* ::
-import type { Realm } from '../realm.mjs';
+import type { Realm } from '../realm';
 */
 import {
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 
 export function CreateFunctionPrototype(realmRec /* : Realm */) {
   const proto = CreateBuiltinFunction(() => NewValue(undefined), [], realmRec);

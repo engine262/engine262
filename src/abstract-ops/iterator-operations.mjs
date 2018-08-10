@@ -7,27 +7,27 @@ import {
   GetV,
   Call,
   ToBoolean,
-} from './all.mjs';
+} from './all';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value';
 import {
   Completion,
   Q,
-} from '../completion.mjs';
+} from '../completion';
 
 /* ::
 import type {
   Value,
   ObjectValue,
   FunctionValue,
-} from '../value.mjs';
+} from '../value';
 
 declare type GetIteratorHint = 'sync' | 'async';
 declare type IteratorRecord = {
@@ -121,10 +121,10 @@ export function IteratorClose(
   }
   const innerResult = Call(ret, iterator, []);
   if (completion.Type === 'throw') {
-    throw completion;
+    return completion;
   }
   if (innerResult.Type === 'throw') {
-    throw innerResult;
+    return innerResult;
   }
   if (Type(innerResult.Value) !== 'Object') {
     return surroundingAgent.Throw('TypeError');

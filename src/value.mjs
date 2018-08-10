@@ -3,18 +3,18 @@
 /* ::
 import type {
   Realm,
-} from './realm.mjs';
+} from './realm';
 import type {
   List,
   PropertyDescriptor,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 */
 
 import {
   surroundingAgent,
   ExecutionContext,
   isArrayIndex,
-} from './engine.mjs';
+} from './engine';
 
 import {
   ArraySetLength,
@@ -41,7 +41,7 @@ import {
   SameValue,
   ToBoolean,
   ToUint32,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 
 export class Value {}
 

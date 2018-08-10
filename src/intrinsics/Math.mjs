@@ -2,13 +2,13 @@ import {
   ObjectValue,
   wellKnownSymbols,
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 
 // 20.2 The Math Object
 export function CreateMath(realmRec) {

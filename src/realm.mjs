@@ -2,35 +2,35 @@ import {
   UndefinedValue,
   ObjectValue,
   New as NewValue,
-} from './value.mjs';
+} from './value';
 import {
   CreateBuiltinFunction,
   ObjectCreate,
   DefinePropertyOrThrow,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all';
 import {
   NewGlobalEnvironment,
-} from './environment.mjs';
+} from './environment';
 import {
   surroundingAgent,
-} from './engine.mjs';
-import { Q } from './completion.mjs';
+} from './engine';
+import { Q } from './completion';
 
-import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
-import { CreateObject } from './intrinsics/Object.mjs';
-import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
-import { CreateArray } from './intrinsics/Array.mjs';
-import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
-import { CreateBoolean } from './intrinsics/Boolean.mjs';
-import { CreateNumberPrototype } from './intrinsics/NumberPrototype.mjs';
-import { CreateNumber } from './intrinsics/Number.mjs';
-import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
-import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
-import { CreateSymbol } from './intrinsics/Symbol.mjs';
-import { CreateMath } from './intrinsics/Math.mjs';
-import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
-import { CreatePromise } from './intrinsics/Promise.mjs';
-import { CreateError } from './intrinsics/Error.mjs';
+import { CreateObjectPrototype } from './intrinsics/ObjectPrototype';
+import { CreateObject } from './intrinsics/Object';
+import { CreateArrayPrototype } from './intrinsics/ArrayPrototype';
+import { CreateArray } from './intrinsics/Array';
+import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype';
+import { CreateBoolean } from './intrinsics/Boolean';
+import { CreateNumberPrototype } from './intrinsics/NumberPrototype';
+import { CreateNumber } from './intrinsics/Number';
+import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype';
+import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype';
+import { CreateSymbol } from './intrinsics/Symbol';
+import { CreateMath } from './intrinsics/Math';
+import { CreatePromisePrototype } from './intrinsics/PromisePrototype';
+import { CreatePromise } from './intrinsics/Promise';
+import { CreateError } from './intrinsics/Error';
 
 /* ::
 type IntrinsicMap = {

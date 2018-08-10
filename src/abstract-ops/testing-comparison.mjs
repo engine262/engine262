@@ -7,7 +7,7 @@ import type {
   NumberValue,
   StringValue,
   ObjectValue,
-} from '../value.mjs';
+} from '../value';
 */
 
 import {
@@ -16,15 +16,15 @@ import {
   ArrayValue,
   ProxyValue,
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 
 import {
   Assert,
-} from './notational-conventions.mjs';
+} from './notational-conventions';
 
 // #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument /* : Value */) {
