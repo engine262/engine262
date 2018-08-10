@@ -14,6 +14,8 @@ import {
   isCallExpressionWithBrackets,
   isCallExpressionWithDot,
   isActualAdditiveExpression,
+  isAdditiveExpressionWithPlus,
+  isAdditiveExpressionWithMinus,
 } from './ast.mjs';
 import {
   Type,
@@ -164,15 +166,18 @@ function SubtractiveExpression_MultiplicativeExpression(
 }
 
 function Evaluate_AdditiveExpression(AdditiveExpression) {
-  if (AdditiveExpression.operator === '+') {
-    return AdditiveExpression_MultiplicativeExpression(
-      AdditiveExpression.left, AdditiveExpression.right,
-    );
-  }
-  if (AdditiveExpression.operator === '-') {
-    return SubtractiveExpression_MultiplicativeExpression(
-      AdditiveExpression.left, AdditiveExpression.right,
-    );
+  switch (true) {
+    case isAdditiveExpressionWithPlus(AdditiveExpression):
+      return AdditiveExpression_MultiplicativeExpression(
+        AdditiveExpression.left, AdditiveExpression.right,
+      );
+    case isAdditiveExpressionWithMinus(AdditiveExpression):
+      return SubtractiveExpression_MultiplicativeExpression(
+        AdditiveExpression.left, AdditiveExpression.right,
+      );
+
+    default:
+      throw new RangeError('Unknown AdditiveExpression type');
   }
 }
 

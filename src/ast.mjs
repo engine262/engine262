@@ -324,6 +324,16 @@ export function isAdditiveExpression(node) {
   return isMultiplicativeExpression(node) || isActualAdditiveExpression(node);
 }
 
+// Used in #prod-AdditiveExpression
+export function isAdditiveExpressionWithPlus(node) {
+  return isActualAdditiveExpression(node) && node.operator === '+';
+}
+
+// Used in #prod-AdditiveExpression
+export function isAdditiveExpressionWithMinus(node) {
+  return isActualAdditiveExpression(node) && node.operator === '-';
+}
+
 // Used in #prod-ShiftExpression
 export function isActualShiftExpression(node) {
   return node.type === 'BinaryExpression'
