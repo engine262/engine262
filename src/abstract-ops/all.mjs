@@ -1,9 +1,9 @@
 /* @flow */
 
-export * from './notational-conventions.mjs';
-export * from './objects.mjs';
-export * from './object-operations.mjs';
-export * from './spec-types.mjs';
-export * from './testing-comparison.mjs';
-export * from './type-conversion.mjs';
-export * from './iterator-operations.mjs';
+export * from './notational-conventions';
+export * from './objects';
+export * from './object-operations';
+export * from './spec-types';
+export * from './testing-comparison';
+export * from './type-conversion';
+export * from './iterator-operations';

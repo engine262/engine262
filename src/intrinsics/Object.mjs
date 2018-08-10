@@ -4,8 +4,8 @@
 import type {
   Value,
   ObjectValue,
-} from '../value.mjs';
-import type { Realm } from '../realm.mjs';
+} from '../value';
+import type { Realm } from '../realm';
 */
 
 import {
@@ -13,10 +13,10 @@ import {
   NullValue,
   UndefinedValue,
   New as NewValue,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   SameValue,
   CreateBuiltinFunction,
@@ -36,8 +36,8 @@ import {
   CreateArrayFromList,
   CreateDataProperty,
   RequireObjectCoercible,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { Q, X } from '../completion';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
   if (!(NewTarget instanceof UndefinedValue)

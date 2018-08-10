@@ -3,7 +3,7 @@
 /* ::
 import type {
   Value,
-} from '../value.mjs';
+} from '../value';
 */
 
 import {
@@ -18,11 +18,11 @@ import {
   ObjectValue,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 
 import {
   Assert,
@@ -30,7 +30,7 @@ import {
   Get,
   GetMethod,
   IsCallable,
-} from './all.mjs';
+} from './all';
 
 /* ::
 declare type Hint = 'String' | 'Number';

@@ -13,7 +13,7 @@ import {
   isLexicalDeclaration,
   isObjectBindingPattern,
   isSingleNameBinding,
-} from '../ast.mjs';
+} from '../ast';
 
 // 12.1.2 #sec-identifiers-static-semantics-boundnames
 //   BindingIdentifier : Identifier

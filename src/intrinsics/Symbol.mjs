@@ -3,7 +3,7 @@
 /* ::
 import type {
   Realm,
-} from '../realm.mjs';
+} from '../realm';
 */
 
 import {
@@ -12,16 +12,16 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   CreateBuiltinFunction,
   SameValue,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { Q } from '../completion';
 
 export const GlobalSymbolRegistry = [];
 

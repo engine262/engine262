@@ -21,15 +21,15 @@ import {
   isTryStatement,
   isVariableStatement,
   isWithStatement,
-} from '../ast.mjs';
+} from '../ast';
 import {
   BoundNames_ForBinding,
   BoundNames_VariableDeclarationList,
   BoundNames_VariableStatement,
-} from './BoundNames.mjs';
+} from './BoundNames';
 import {
   TopLevelVarDeclaredNames_StatementList,
-} from './TopLevelVarDeclaredNames.mjs';
+} from './TopLevelVarDeclaredNames';
 
 // 13.1.5 #sec-statement-semantics-static-semantics-vardeclarednames
 //   Statement : EmptyStatement

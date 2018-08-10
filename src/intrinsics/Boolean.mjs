@@ -2,11 +2,11 @@ import {
   CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 import {
   New as NewValue,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
+} from '../value';
+import { Q } from '../completion';
 
 function BooleanConstructor(realm, [value], { NewTarget }) {
   const b = ToBoolean(value);

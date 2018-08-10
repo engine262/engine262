@@ -5,17 +5,17 @@ import type {
   Value,
   NumberValue,
   ObjectValue,
-} from '../value.mjs';
+} from '../value';
 */
 
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine';
 import {
   AbruptCompletion,
   ThrowCompletion,
   X, Q,
-} from '../completion.mjs';
+} from '../completion';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -39,7 +39,7 @@ import {
   IsArray,
   ToUint32,
   OrdinaryDefineOwnProperty,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all';
 
 import {
   Type,
@@ -47,7 +47,7 @@ import {
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value';
 
 export function ArrayCreate(length /* : NumberValue */, proto /* : ?Value */) {
   Assert(length.numberValue() >= 0);
@@ -173,31 +173,17 @@ function ArrayFrom(realm, argList, { thisValue }) {
       const nextValue = IteratorValue(next);
       let mappedValue;
       if (mapping) {
-        // If mappedValue is an abrupt completion,
-        // return ? IteratorClose(iteratorRecord, mappedValue).
-        try {
-          mappedValue = Q(Call(mapfn, T, [nextValue, NewValue(k)]));
-        } catch (e) {
-          if (e instanceof AbruptCompletion) {
-            return Q(IteratorClose(iteratorRecord, e));
-          } else {
-            throw e;
-          }
+        mappedValue = Call(mapfn, T, [nextValue, NewValue(k)]);
+        if (mappedValue instanceof AbruptCompletion) {
+          return Q(IteratorClose(iteratorRecord, mappedValue));
         }
         mappedValue = mappedValue.Value;
       } else {
         mappedValue = nextValue;
       }
-      // If defineStatus is an abrupt completion,
-      // return ? IteratorClose(iteratorRecord, defineStatus).
-      try {
-        CreateDataPropertyOrThrow(A, Pk, mappedValue);
-      } catch (defineStatus) {
-        if (defineStatus instanceof AbruptCompletion) {
-          return Q(IteratorClose(iteratorRecord, defineStatus));
-        } else {
-          throw defineStatus;
-        }
+      const defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
+      if (defineStatus instanceof AbruptCompletion) {
+        return Q(IteratorClose(iteratorRecord, defineStatus));
       }
       k += 1;
     }

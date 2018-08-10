@@ -3,16 +3,16 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from '../value.mjs';
+} from '../value';
 import {
   surroundingAgent,
   SymbolDescriptiveString,
-} from '../engine.mjs';
+} from '../engine';
 import {
   Assert,
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all';
+import { Q } from '../completion';
 
 function thisSymbolValue(value) {
   if (Type(value) === 'Symbol') {

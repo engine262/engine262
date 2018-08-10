@@ -5,11 +5,11 @@ import {
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
-} from '../ast.mjs';
+} from '../ast';
 import {
   TopLevelLexicallyScopedDeclarations_StatementList,
-} from './TopLevelLexicallyScopedDeclarations.mjs';
-import { DeclarationPart_Declaration } from './DeclarationPart.mjs';
+} from './TopLevelLexicallyScopedDeclarations';
+import { DeclarationPart_Declaration } from './DeclarationPart';
 
 // 13.2.6 #sec-block-static-semantics-lexicallyscopeddeclarations
 //   StatementList : StatementList StatementListItem
