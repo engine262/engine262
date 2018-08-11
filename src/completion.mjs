@@ -1,33 +1,9 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-  UndefinedValue,
-  NullValue,
-  BooleanValue,
-  NumberValue,
-  StringValue,
-  SymbolValue,
-  FunctionValue,
-  BuiltinFunctionValue,
-  ObjectValue,
-  ArrayValue,
-  ProxyValue,
-} from './value';
-*/
-
 import {
   Assert,
 } from './abstract-ops/all';
 
 export class Completion {
-  /* ::
-  Type: string
-  Value: Value | void
-  Target: ?Object
-  */
-  constructor(type /* : string */, value /* : Value | void */, target /* : ?Object */) {
+  constructor(type, value, target) {
     this.Type = type;
     this.Value = value;
     this.Target = target;
@@ -35,7 +11,7 @@ export class Completion {
 }
 
 export class NormalCompletion extends Completion {
-  constructor(value /* : Value | void */) {
+  constructor(value) {
     super('normal', value);
   }
 }
@@ -43,30 +19,30 @@ export class NormalCompletion extends Completion {
 export class AbruptCompletion extends Completion {}
 
 export class BreakCompletion extends AbruptCompletion {
-  constructor(target /* : ?Object */) {
+  constructor(target) {
     super('break', undefined, target);
   }
 }
 
 export class ContinueCompletion extends AbruptCompletion {
-  constructor(target /* : ?Object */) {
+  constructor(target) {
     super('continue', undefined, target);
   }
 }
 
 export class ReturnCompletion extends AbruptCompletion {
-  constructor(value /* : Value */) {
+  constructor(value) {
     super('return', value);
   }
 }
 
 export class ThrowCompletion extends AbruptCompletion {
-  constructor(value /* : Value */) {
+  constructor(value) {
     super('throw', value);
   }
 }
 
-export function UpdateEmpty(completionRecord /* : Completion */, value /* : Value */) {
+export function UpdateEmpty(completionRecord, value) {
   if (completionRecord.Type === 'return' || completionRecord.Type === 'throw') {
     Assert(completionRecord.Value !== undefined);
   }
@@ -76,10 +52,6 @@ export function UpdateEmpty(completionRecord /* : Completion */, value /* : Valu
   return new Completion(completionRecord.Type, value, completionRecord.Target);
 }
 
-/* ::
-declare function ReturnIfAbrupt<T>(T): T;
-declare function ReturnIfAbrupt(Completion): Value;
-*/
 
 export function ReturnIfAbrupt(argument) {
   if (argument instanceof AbruptCompletion) {
@@ -96,10 +68,6 @@ export const Q = ReturnIfAbrupt;
 
 // #sec-returnifabrupt-shorthands ! OperationName()
 
-/* ::
-declare function X<T>(T): T;
-declare function X(Completion): Value;
-*/
 
 export function X(val) {
   Assert(!(val instanceof AbruptCompletion));

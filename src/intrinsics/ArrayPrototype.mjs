@@ -1,15 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  NumberValue,
-  ObjectValue,
-} from '../value';
-import type {
-  Realm,
-} from '../realm';
-*/
-
 import {
   Value,
   UndefinedValue,
@@ -50,7 +38,7 @@ import {
 
 import { ArrayCreate } from './Array';
 
-function ArraySpeciesCreate(originalArray, length /* : NumberValue */) {
+function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);
   const isArray = Q(IsArray(originalArray));
   if (isArray.isFalse()) {
@@ -67,7 +55,6 @@ function ArraySpeciesCreate(originalArray, length /* : NumberValue */) {
     }
   }
   if (Type(C) === 'Object') {
-    /* :: C = ((C: any): ObjectValue); */
     C = Q(Get(C, wellKnownSymbols.species));
     if (C instanceof NullValue) {
       C = NewValue(undefined);
@@ -91,7 +78,6 @@ function ArrayConcat(realm, args, { thisValue }) {
     const E = items.shift();
     const spreadable = Q(IsConcatSpreadable(E));
     if (spreadable.isTrue()) {
-      /* :: E = ((E: any): ObjectValue); */
       let k = 0;
       const len = Q(ToLength(Q(Get(E, NewValue('length')))));
       if (n + len.numberValue() > (2 ** 53) - 1) {
@@ -207,7 +193,7 @@ function ArrayEvery(realm, [callbackFn, thisArg], { thisValue }) {
   return NewValue(true);
 }
 
-export function CreateArrayPrototype(realmRec /* : Realm */) {
+export function CreateArrayPrototype(realmRec) {
   const proto = new ArrayValue(realmRec);
 
   [

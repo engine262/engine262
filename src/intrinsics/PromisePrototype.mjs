@@ -1,8 +1,3 @@
-/* @flow */
-
-/* ::
-import type { Realm } from '../realm';
-*/
 import { surroundingAgent } from '../engine';
 import {
   CreateBuiltinFunction,
@@ -49,9 +44,7 @@ function CatchFinallyFunctions(realm, [reason]) {
   const C = F.Constructor;
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
-  const thrower = CreateBuiltinFunction(() => {
-    return new ThrowCompletion(reason);
-  }, []);
+  const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
   return Q(Invoke(promise, NewValue('then'), [thrower]));
 }
 
@@ -90,7 +83,7 @@ function PromiseThen(realm, [onFulfilled, onRejected], { thisValue }) {
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
 }
 
-export function CreatePromisePrototype(realmRec /* : Realm */) {
+export function CreatePromisePrototype(realmRec) {
   const proto = new ObjectValue(realmRec);
 
   [

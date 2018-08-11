@@ -1,13 +1,3 @@
-/* @flow */
-
-/* ::
-import type { Realm } from '../realm';
-import type {
-  Value,
-  ObjectValue,
-  FunctionValue,
-} from '../value';
-*/
 import {
   surroundingAgent,
   EnqueueJob,
@@ -39,7 +29,7 @@ import {
   ThrowCompletion,
 } from '../completion';
 
-export function PromiseResolve(C /* : ObjectValue */, x /* : ObjectValue */) {
+export function PromiseResolve(C, x) {
   Assert(Type(C) === 'Object');
   if (IsPromise(x).isTrue()) {
     const xConstructor = Q(Get(x, NewValue('constructor')));
@@ -68,14 +58,10 @@ function GetCapabilitiesExecutorFunctions(realm, [resolve, reject]) {
 }
 
 class PromiseCapabilityRecord {
-  /* ::
-  Promise: ObjectValue
-  Resolve: FunctionValue
-  Reject: FunctionValue
-  */
+
 }
 
-function NewPromiseCapability(C /* : ObjectValue */) {
+function NewPromiseCapability(C) {
   if (IsConstructor(C).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -177,7 +163,7 @@ function PromiseResolveFunctions(realm, [resolution]) {
   if (Type(resolution) !== 'Object') {
     return FulfillPromise(promise, resolution);
   }
-  /* :: resolution = ((resolution: any): ObjectValue) */
+
   const then = Get(resolution, NewValue('then'));
   if (then instanceof AbruptCompletion) {
     return RejectPromise(promise, then.Value);
@@ -190,7 +176,7 @@ function PromiseResolveFunctions(realm, [resolution]) {
   return NewValue(undefined);
 }
 
-function CreateResolvingFunctions(promise /* : ObjectValue */) {
+function CreateResolvingFunctions(promise) {
   const alreadyResolved = { Value: false };
   const stepsResolve = PromiseResolveFunctions;
   const resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
@@ -264,7 +250,7 @@ function PromiseSymbolSpecies(realm, args, { thisValue }) {
   return thisValue;
 }
 
-export function CreatePromise(realmRec /* : Realm */) {
+export function CreatePromise(realmRec) {
   const promiseConstructor = CreateBuiltinFunction(PromiseConstructor, [], realmRec);
 
   const proto = realmRec.Intrinsics['%PromisePrototype%'];

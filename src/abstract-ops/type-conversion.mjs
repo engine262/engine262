@@ -1,11 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-} from '../value';
-*/
-
 import {
   PrimitiveValue,
   UndefinedValue,
@@ -32,17 +24,13 @@ import {
   IsCallable,
 } from './all';
 
-/* ::
-declare type Hint = 'String' | 'Number';
-*/
 
 // 7.1.1 ToPrimitive
 export function ToPrimitive(
-  input /* : Value */,
-  preferredType /* : ?Hint */,
-) /* : PrimitiveValue */ {
+  input,
+  preferredType,
+) {
   if (Type(input) === 'Object') {
-    /* :: input = ((input : any) : ObjectValue ); */
     let hint;
     if (preferredType === undefined) {
       hint = NewValue('default');
@@ -65,15 +53,15 @@ export function ToPrimitive(
     }
     return OrdinaryToPrimitive(input, hint);
   }
-  /* :: input = ((input : any) : PrimitiveValue ); */
+
   Assert(input instanceof PrimitiveValue);
   return input;
 }
 
 // 7.1.1.1 OrdinaryToPrimitive
 export function OrdinaryToPrimitive(
-  O /* : ObjectValue */, hint /* : StringValue */,
-) /* : PrimitiveValue */ {
+  O, hint,
+) {
   Assert(Type(O) === 'Object');
   Assert(Type(hint) === 'String'
          && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
@@ -96,7 +84,7 @@ export function OrdinaryToPrimitive(
 }
 
 // 7.1.2 ToBoolean
-export function ToBoolean(argument /* : Value */) /* : BooleanValue */ {
+export function ToBoolean(argument) {
   if (argument instanceof UndefinedValue) {
     return NewValue(false);
   }
@@ -135,7 +123,7 @@ export function ToBoolean(argument /* : Value */) /* : BooleanValue */ {
 }
 
 // 7.1.3 ToNumber
-export function ToNumber(argument /* : Value */) /* : NumberValue */ {
+export function ToNumber(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -148,7 +136,7 @@ export function ToNumber(argument /* : Value */) /* : NumberValue */ {
       }
       return NewValue(0);
     case 'Number':
-      /* :: argument = ((argument : any) : NumberValue); */
+
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
@@ -162,7 +150,7 @@ export function ToNumber(argument /* : Value */) /* : NumberValue */ {
 }
 
 // 7.1.4 ToInteger
-export function ToInteger(argument /* : Value */) {
+export function ToInteger(argument) {
   const number = ToNumber(argument);
   if (number.isNaN()) {
     return NewValue(0);
@@ -178,7 +166,7 @@ export function ToInteger(argument /* : Value */) {
 }
 
 // 7.1.6 ToUint32
-export function ToUint32(argument /* : Value */) {
+export function ToUint32(argument) {
   const number = ToNumber(argument);
   if (number.numberValue() === 0 // || number.value === -0
       || number.numberValue() === Infinity
@@ -191,7 +179,7 @@ export function ToUint32(argument /* : Value */) {
 }
 
 // 7.1.12 ToString
-export function ToString(argument /* : Value */) /* : StringValue */ {
+export function ToString(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -199,18 +187,17 @@ export function ToString(argument /* : Value */) /* : StringValue */ {
     case 'Null':
       return NewValue('null');
     case 'Boolean':
-      /* :: argument = ((argument : any) : BooleanValue); */
+
       return NewValue(argument.isTrue() ? 'true' : 'false');
     case 'Number':
-      /* :: argument = ((argument : any) : NumberValue); */
+
       return NumberToString(argument);
     case 'String':
-      /* :: argument = ((argument : any) : StringValue); */
+
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
-      /* :: argument = ((argument : any) : ObjectValue); */
       const primValue = ToPrimitive(argument, 'String');
       return ToString(primValue);
     }
@@ -220,7 +207,7 @@ export function ToString(argument /* : Value */) /* : StringValue */ {
 }
 
 // 7.1.12.1 NumberToString
-export function NumberToString(m /* : NumberValue */) {
+export function NumberToString(m) {
   if (m.isNaN()) {
     return NewValue('NaN');
   }
@@ -239,7 +226,7 @@ export function NumberToString(m /* : NumberValue */) {
 }
 
 // 7.1.13 ToObject
-export function ToObject(argument /* : Value */) /* : ObjectValue */{
+export function ToObject(argument) {
   const type = Type(argument);
   const realm = surroundingAgent.currentRealmRecord;
   switch (type) {
@@ -248,31 +235,27 @@ export function ToObject(argument /* : Value */) /* : ObjectValue */{
     case 'Null':
       return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
-      /* :: argument = ((argument : any) : BooleanValue); */
       const obj = new ObjectValue(realm, realm.Intrinsics['%BooleanPrototype%']);
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      /* :: argument = ((argument : any) : NumberValue); */
       const obj = new ObjectValue(realm, realm.Intrinsics['%NumberPrototype%']);
       obj.NumberData = argument;
       return obj;
     }
     case 'String': {
-      /* :: argument = ((argument : any) : StringValue); */
       const obj = new ObjectValue(realm, realm.Intrinsics['%StringPrototype%']);
       obj.StringData = argument;
       return obj;
     }
     case 'Symbol': {
-      /* :: argument = ((argument : any) : SymbolValue); */
       const obj = new ObjectValue(realm, realm.Intrinsics['%SymbolPrototype%']);
       obj.SymbolData = argument;
       return obj;
     }
     case 'Object':
-      /* :: argument = ((argument : any) : ObjectValue); */
+
       return argument;
     default:
       throw new RangeError('ToObject(argument) unknown type');
@@ -280,7 +263,7 @@ export function ToObject(argument /* : Value */) /* : ObjectValue */{
 }
 
 // 7.1.14 ToPropertyKey
-export function ToPropertyKey(argument /* : Value */) {
+export function ToPropertyKey(argument) {
   const key = ToPrimitive(argument, 'String');
   if (Type(key) === 'Symbol') {
     return key;
@@ -289,7 +272,7 @@ export function ToPropertyKey(argument /* : Value */) {
 }
 
 // 7.1.15 ToLength
-export function ToLength(argument /* : Value */) {
+export function ToLength(argument) {
   const len = ToInteger(argument);
   if (len.numberValue() <= 0) {
     return NewValue(0);

@@ -1,12 +1,3 @@
-/* @flow */
-
-/* ::
-import type { Realm } from '../realm';
-import type {
-  NumberValue,
-  FunctionValue,
-} from '../value';
-*/
 import {
   CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
@@ -30,9 +21,8 @@ function NumberConstructor(realm, args, { NewTarget }) {
   if (NewTarget instanceof UndefinedValue) {
     return n;
   }
-  /* :: NewTarget = ((NewTarget: any): FunctionValue); */
+
   const O = OrdinaryCreateFromConstructor(NewTarget, '%NumberPrototype%', ['NumberData']);
-  // $FlowFixMe
   O.NumberData = n;
   return O;
 }
@@ -41,7 +31,7 @@ function NumberIsFinite(realm, [number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }
-  /* :: number = ((number: any): NumberValue); */
+
   if (number.isNaN() || number.isInfinity()) {
     return NewValue(false);
   }
@@ -52,7 +42,7 @@ function NumberIsInteger(realm, [number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }
-  /* :: number = ((number: any): NumberValue); */
+
   if (number.isNaN() || number.isInfinity()) {
     return NewValue(false);
   }
@@ -67,14 +57,14 @@ function NumberIsNaN(realm, [number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }
-  /* :: number = ((number: any): NumberValue); */
+
   if (number.isNaN()) {
     return NewValue(true);
   }
   return NewValue(false);
 }
 
-export function CreateNumber(realmRec /* : Realm */) {
+export function CreateNumber(realmRec) {
   const numberConstructor = CreateBuiltinFunction(NumberConstructor, [], realmRec);
 
   const proto = realmRec.Intrinsics['%NumberPrototype%'];

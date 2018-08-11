@@ -1,21 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  BooleanValue,
-  ObjectValue,
-  FunctionValue,
-  PropertyKey,
-} from '../value';
-import type {
-  List,
-  PropertyDescriptor,
-} from './spec-types';
-import type {
-  Realm,
-} from '../realm';
-*/
-
 import {
   Type,
   Value,
@@ -47,14 +29,14 @@ import {
 } from '../completion';
 
 // #sec-get-o-p Get
-export function Get(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return Q(O.Get(P, O));
 }
 
 // #sec-getv GetV
-export function GetV(V /* : Value */, P /* : PropertyKey */) {
+export function GetV(V, P) {
   Assert(IsPropertyKey(P));
   const O = ToObject(V);
   return Q(O.Get(V, P));
@@ -62,10 +44,10 @@ export function GetV(V /* : Value */, P /* : PropertyKey */) {
 
 // #sec-set-o-p-v-throw Set
 export function Set(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
-  V /* : Value */,
-  Throw /* : BooleanValue */,
+  O,
+  P,
+  V,
+  Throw,
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -78,7 +60,7 @@ export function Set(
 }
 
 // 7.3.4 CreateDataProperty
-export function CreateDataProperty(O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */) {
+export function CreateDataProperty(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
 
@@ -93,7 +75,7 @@ export function CreateDataProperty(O /* : ObjectValue */, P /* : PropertyKey */,
 
 // 7.3.6 CreateDataPropertyOrThrow
 export function CreateDataPropertyOrThrow(
-  O /* : ObjectValue */, P /* : PropertyKey */, V /* : Value */,
+  O, P, V,
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -106,9 +88,9 @@ export function CreateDataPropertyOrThrow(
 
 // #sec-definepropertyorthrow DefinePropertyOrThrow
 export function DefinePropertyOrThrow(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
-  desc /* : PropertyDescriptor */,
+  O,
+  P,
+  desc,
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -121,8 +103,8 @@ export function DefinePropertyOrThrow(
 
 // #sec-deletepropertyorthrow
 export function DeletePropertyOrThrow(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
+  O,
+  P,
 ) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -135,9 +117,9 @@ export function DeletePropertyOrThrow(
 
 // 7.3.9 GetMethod
 export function GetMethod(
-  V /* : Value */,
-  P /* : PropertyKey */,
-) /* : FunctionValue | UndefinedValue */ {
+  V,
+  P,
+) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
   if (func instanceof NullValue || func instanceof UndefinedValue) {
@@ -150,14 +132,14 @@ export function GetMethod(
 }
 
 // 7.3.10 HasProperty
-export function HasProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function HasProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return Q(O.HasProperty(P));
 }
 
 // 7.3.11 HasOwnProperty
-export function HasOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function HasOwnProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
@@ -168,7 +150,7 @@ export function HasOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
 }
 
 // 7.3.12 Call
-export function Call(F /* : Value */, V /* : Value */, argumentsList /* : ?List<Value> */) {
+export function Call(F, V, argumentsList) {
   if (!argumentsList) {
     argumentsList = [];
   }
@@ -182,9 +164,9 @@ export function Call(F /* : Value */, V /* : Value */, argumentsList /* : ?List<
 
 // 7.3.13 Construct
 export function Construct(
-  F /* : FunctionValue */,
-  argumentsList /* : List<Value> */,
-  newTarget /* : ?FunctionValue */,
+  F,
+  argumentsList,
+  newTarget,
 ) {
   if (!newTarget) {
     newTarget = F;
@@ -198,7 +180,7 @@ export function Construct(
 }
 
 // #sec-setintegritylevel SetIntegrityLevel
-export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
+export function SetIntegrityLevel(O, level) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(O.PreventExtensions());
@@ -228,7 +210,7 @@ export function SetIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
 }
 
 // #sec-testintegritylevel TestIntegrityLevel
-export function TestIntegrityLevel(O /* : ObjectValue */, level /* : string */) {
+export function TestIntegrityLevel(O, level) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(IsExtensible(O));
@@ -253,7 +235,7 @@ export function TestIntegrityLevel(O /* : ObjectValue */, level /* : string */) 
 }
 
 // 7.3.16 CreateArrayFromList
-export function CreateArrayFromList(elements /* : List<Value> */) {
+export function CreateArrayFromList(elements) {
   Assert(elements.every((e) => e instanceof Value));
   const array = X(ArrayCreate(NewValue(0)));
   let n = 0;
@@ -266,7 +248,7 @@ export function CreateArrayFromList(elements /* : List<Value> */) {
 }
 
 // 7.3.18 Invoke
-export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* : List<Value> */) {
+export function Invoke(V, P, argumentsList) {
   Assert(IsPropertyKey(P));
   if (!argumentsList) {
     argumentsList = [];
@@ -275,14 +257,11 @@ export function Invoke(V /* : Value */, P /* : PropertyKey */, argumentsList /* 
   return Q(Call(func, V, argumentsList));
 }
 
-/* ::
-export type OwnPropertyNamesKind = 'key' | 'value' | 'key+value';
-*/
 
 // #sec-enumerableownpropertynames EnumerableOwnPropertyNames
 export function EnumerableOwnPropertyNames(
-  O /* : ObjectValue */,
-  kind /* : OwnPropertyNamesKind */,
+  O,
+  kind,
 ) {
   Assert(Type(O) === 'Object');
   const ownKeys = Q(O.OwnPropertyKeys());
@@ -313,7 +292,7 @@ export function EnumerableOwnPropertyNames(
 }
 
 // #sec-speciesconstructor
-export function SpeciesConstructor(O /* : ObjectValue */, defaultConstructor /* : Value */) {
+export function SpeciesConstructor(O, defaultConstructor) {
   Assert(Type(O) === 'Object');
   const C = Q(Get(O, NewValue('constructor')));
   if (C instanceof UndefinedValue) {
@@ -333,19 +312,12 @@ export function SpeciesConstructor(O /* : ObjectValue */, defaultConstructor /* 
 }
 
 // 7.3.22 GetFunctionRealm
-export function GetFunctionRealm(obj /* : Value */) /* : Realm */ {
+export function GetFunctionRealm(obj) {
   Assert(IsCallable(obj).isTrue());
   if ('Realm' in obj) {
-    // $FlowFixMe
     return obj.Realm;
   }
 
-  /*
-  if (IsBoundFunctionExoticObject(obj)) {
-    const target = obj.BoundTargetFunction;
-    return GetFunctionRealm(target);
-  }
-  */
 
   if (obj instanceof ProxyValue) {
     if (obj.ProxyHandler instanceof NullValue) {

@@ -1,13 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-  ObjectValue,
-} from '../value';
-import type { Realm } from '../realm';
-*/
-
 import {
   Type,
   NullValue,
@@ -96,7 +86,7 @@ function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   const props = Q(ToObject(Properties));
   const keys = Q(props.OwnPropertyKeys());
   const descriptors = [];
@@ -122,7 +112,7 @@ function ObjectDefineProperty(realm, [O, P, Attributes]) {
   }
   const key = Q(ToPropertyKey(P));
   const desc = Q(ToPropertyDescriptor(Attributes));
-  /* :: O = ((O: any): ObjectValue); */
+
   Q(DefinePropertyOrThrow(O, key, desc));
   return O;
 }
@@ -137,7 +127,7 @@ function ObjectFreeze(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   const status = Q(SetIntegrityLevel(O, 'frozen'));
   if (status.isFalse()) {
     return surroundingAgent.Throw('TypeError');
@@ -166,7 +156,7 @@ function ObjectGetOwnPropertyDescriptors(realm, [O]) {
   return descriptors;
 }
 
-function GetOwnPropertyKeys(O /* : Value */, type /* : string */) {
+function GetOwnPropertyKeys(O, type) {
   const obj = ToObject(O);
   const keys = obj.OwnPropertyKeys();
   const nameList = [];
@@ -199,7 +189,7 @@ function ObjectIsExtensible(realm, [O]) {
   if (Type(O) !== 'Object') {
     return NewValue(false);
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   return IsExtensible(O);
 }
 
@@ -207,7 +197,7 @@ function ObjectIsFrozen(realm, [O]) {
   if (Type(O) !== 'Object') {
     return NewValue(true);
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   return Q(TestIntegrityLevel(O, 'frozen'));
 }
 
@@ -215,7 +205,7 @@ function ObjectIsSealed(realm, [O]) {
   if (Type(O) !== 'Object') {
     return NewValue(true);
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   return Q(TestIntegrityLevel(O, 'sealed'));
 }
 
@@ -229,7 +219,7 @@ function ObjectPreventExtensions(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   const status = Q(O.PreventExtensions());
   if (status.isFalse()) {
     return surroundingAgent.Throw('TypeError');
@@ -241,7 +231,7 @@ function ObjectSeal(realm, [O]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   const status = Q(SetIntegrityLevel(O, 'sealed'));
   if (status.isFalse()) {
     return surroundingAgent.Throw('TypeError');
@@ -257,7 +247,7 @@ function ObjectSetPrototypeOf(realm, [O, proto]) {
   if (Type(O) !== 'Object') {
     return O;
   }
-  /* :: O = ((O: any): ObjectValue); */
+
   const status = Q(O.SetPrototypeOf(proto));
   if (status.isFalse()) {
     return surroundingAgent.Throw('TypeError');
@@ -271,7 +261,7 @@ function ObjectValues(realm, [O]) {
   return CreateArrayFromList(nameList);
 }
 
-export function CreateObject(realmRec /* : Realm */) {
+export function CreateObject(realmRec) {
   const objectConstructor = CreateBuiltinFunction(
     ObjectConstructor, [], realmRec,
     realmRec.Intrinsics['%FunctionPrototype%'],

@@ -1,18 +1,3 @@
-/* ::
-import type {
-  Realm,
-} from './realm';
-
-import type {
-  Value,
-  StringValue,
-  ObjectValue,
-} from './value';
-import type {
-  List,
-} from './abstract-ops/spec-types';
-*/
-
 import {
   wellKnownSymbols,
   Type,
@@ -31,9 +16,6 @@ import {
 import { Q } from './completion';
 
 export class LexicalEnvironment {
-  /* ::
-  EnvironmentRecord: ?EnvironmentRecord
-  */
   constructor() {
     this.EnvironmentRecord = undefined;
   }
@@ -41,34 +23,21 @@ export class LexicalEnvironment {
 
 export class EnvironmentRecord {}
 
-/* ::
-declare type Binding = {
-  initialized: boolean,
-  mutable: boolean,
-  strict: ?boolean,
-  deletable: boolean,
-  value: ?Value,
-};
-*/
-
 // https://tc39.github.io/ecma262/#sec-lexical-environments
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  /* ::
-  bindings: Map<string, Binding>
-  */
   constructor() {
     super();
     this.bindings = new Map();
   }
 
-  HasBinding(N /* : StringValue */) {
+  HasBinding(N) {
     if (this.bindings.has(N.stringValue())) {
       return true;
     }
     return false;
   }
 
-  CreateMutableBinding(N /* : StringValue */, D /* : boolean */) {
+  CreateMutableBinding(N, D) {
     this.bindings.set(N.stringValue(), {
       initialized: false,
       mutable: true,
@@ -78,7 +47,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     });
   }
 
-  CreateImmutableBinding(N /* : StringValue */, S /* : boolean */) {
+  CreateImmutableBinding(N, S) {
     this.bindings.set(N.stringValue(), {
       initialized: false,
       mutable: false,
@@ -88,14 +57,14 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     });
   }
 
-  InitializeBinding(N /* : StringValue */, V /* : Value */) {
-    const binding = ((this.bindings.get(N.stringValue()) /* : any */) /* : Binding */);
+  InitializeBinding(N, V) {
+    const binding = ((this.bindings.get(N.stringValue())));
     Assert(binding !== undefined);
     binding.value = V;
     binding.initialized = true;
   }
 
-  SetMutableBinding(N /* : StringValue */, V /* : Value */, S /* : boolean */) {
+  SetMutableBinding(N, V, S) {
     const envRec = this;
     const n = N.stringValue();
     if (!this.bindings.has(n)) {
@@ -121,7 +90,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
   }
 
-  GetBindingValue(N /* : StringValue *//* , S */) {
+  GetBindingValue(N) {
     const binding = this.bindings.get(N.stringValue());
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError');
@@ -129,7 +98,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     return binding.value;
   }
 
-  DeleteBinding(N /* : StringValue */) {
+  DeleteBinding(N) {
     const n = N.stringValue();
     const binding = this.bindings.get(n);
     if (binding.deletable === false) {
@@ -161,7 +130,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     this.withEnvironment = false;
   }
 
-  HasBinding(N /* : StringValue */) {
+  HasBinding(N) {
     const envRec = this;
     const bindings = envRec.bindingObject;
 
@@ -185,7 +154,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     return true;
   }
 
-  GetBindingValue(N /* : Value */, S /* : boolean */) {
+  GetBindingValue(N, S) {
     const envRec = this;
     const bindings = envRec.bindingObject;
     const value = Q(HasProperty(bindings, N));
@@ -205,24 +174,15 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 }
 
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
-  /* ::
-  ObjectRecord: ObjectEnvironmentRecord
-  GlobalThisValue: ObjectValue
-  DeclarativeRecord: DeclarativeEnvironmentRecord
-  VarNames: List<string>
-  */
   constructor() {
     super();
-    // $FlowFixMe
     this.ObjectRecord = undefined;
-    // $FlowFixMe
     this.GlobalThisValue = undefined;
-    // $FlowFixMe
     this.DeclarativeRecord = undefined;
     this.VarNames = [];
   }
 
-  HasBinding(N /* : StringValue */) {
+  HasBinding(N) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -232,7 +192,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.HasBinding(N);
   }
 
-  CreateMutableBinding(N /* : StringValue */, D /* : boolean */) {
+  CreateMutableBinding(N, D) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -241,7 +201,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateMutableBinding(N, D);
   }
 
-  CreateImmutableBinding(N /* : StringValue */, S /* : boolean */) {
+  CreateImmutableBinding(N, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -250,7 +210,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateImmutableBinding(N, S);
   }
 
-  InitializeBinding(N /* : StringValue */, V /* : Value */) {
+  InitializeBinding(N, V) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -260,7 +220,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.InitializeBinding(N, V);
   }
 
-  SetMutableBinding(N /* : StringValue */, V /* : Value */, S /* : boolean */) {
+  SetMutableBinding(N, V, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -270,7 +230,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.SetMutableBinding(N, V, S);
   }
 
-  GetBindingValue(N /* : StringValue */, S /* : boolean */) {
+  GetBindingValue(N, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {
@@ -280,7 +240,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return ObjRec.GetBindingValue(N, S);
   }
 
-  DeleteBinding(N /* : StringValue */) {
+  DeleteBinding(N) {
     const envRec = this;
     const DclRec = this.DeclarativeRecord;
     if (DclRec.HasBinding(N)) {

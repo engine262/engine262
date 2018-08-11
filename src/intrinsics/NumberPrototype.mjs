@@ -1,8 +1,3 @@
-/* @flow */
-
-/* ::
-import type { Realm } from '../realm';
-*/
 import {
   Type,
   UndefinedValue,
@@ -22,7 +17,6 @@ function thisNumberValue(value) {
     return value;
   }
   if (Type(value) === 'Object' && 'NumberData' in value) {
-    // $FlowFixMe
     return value.NumberData;
   }
   return surroundingAgent.Throw('TypeError');
@@ -51,7 +45,7 @@ function NumberToString(realm, args, { thisValue }) {
   return NewValue(42);
 }
 
-export function CreateNumberPrototype(realmRec /* : Realm */) {
+export function CreateNumberPrototype(realmRec) {
   const proto = new ObjectValue(realmRec);
 
   [

@@ -1,13 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-  NumberValue,
-  ObjectValue,
-} from '../value';
-*/
-
 import {
   surroundingAgent,
 } from '../engine';
@@ -49,7 +39,7 @@ import {
   wellKnownSymbols,
 } from '../value';
 
-export function ArrayCreate(length /* : NumberValue */, proto /* : ?Value */) {
+export function ArrayCreate(length, proto) {
   Assert(length.numberValue() >= 0);
   if (Object.is(length.numberValue(), -0)) {
     length = NewValue(0);
@@ -237,7 +227,7 @@ function ArrayOf(realm, [...items], { thisValue }) {
   return A;
 }
 
-export function CreateArray(realmRec /* : Realm */) {
+export function CreateArray(realmRec) {
   const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);
 
   constructor.DefineOwnProperty(NewValue('constructor'), {

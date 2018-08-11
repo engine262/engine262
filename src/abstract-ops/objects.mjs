@@ -1,25 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  BooleanValue,
-  PropertyKey,
-  Value,
-  FunctionValue,
-  BuiltinFunctionValue,
-  BuiltinFunctionCallback,
-  ArrayValue,
-  NumberValue,
-} from '../value';
-import type {
-  PropertyDescriptor,
-  List,
-} from './spec-types';
-import type {
-  Realm,
-} from '../realm';
-*/
-
 import {
   Type,
   New as NewValue,
@@ -50,12 +28,12 @@ import {
 import { Q, X } from '../completion';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
-export function OrdinaryGetPrototypeOf(O /* : ObjectValue */) {
+export function OrdinaryGetPrototypeOf(O) {
   return O.Prototype;
 }
 
 // 9.1.2.1 OrdinarySetPrototypeOf
-export function OrdinarySetPrototypeOf(O /* : ObjectValue */, V /* : ObjectValue | NullValue */) {
+export function OrdinarySetPrototypeOf(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
 
   const extensible = O.Extensible;
@@ -84,18 +62,18 @@ export function OrdinarySetPrototypeOf(O /* : ObjectValue */, V /* : ObjectValue
 }
 
 // 9.1.3.1 OrdinaryIsExtensible
-export function OrdinaryIsExtensible(O /* : ObjectValue */) {
+export function OrdinaryIsExtensible(O) {
   return NewValue(O.Extensible);
 }
 
 // 9.1.4.1 OrdinaryPreventExtensions
-export function OrdinaryPreventExtensions(O /* : ObjectValue */) {
+export function OrdinaryPreventExtensions(O) {
   O.Extensible = false;
   return NewValue(true);
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
-export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function OrdinaryGetOwnProperty(O, P) {
   Assert(IsPropertyKey(P));
 
   if (!O.properties.has(P)) {
@@ -121,9 +99,9 @@ export function OrdinaryGetOwnProperty(O /* : ObjectValue */, P /* : PropertyKey
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
 export function OrdinaryDefineOwnProperty(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
-  Desc /* : PropertyDescriptor */,
+  O,
+  P,
+  Desc,
 ) {
   const current = Q(O.GetOwnProperty(P));
   const extensible = Q(IsExtensible(O));
@@ -132,12 +110,12 @@ export function OrdinaryDefineOwnProperty(
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 export function ValidateAndApplyPropertyDescriptor(
-  O /* : UndefinedValue | ObjectValue */,
-  P /* : UndefinedValue | PropertyKey */,
-  extensible /* : BooleanValue */,
-  Desc /* : PropertyDescriptor */,
-  current /* : PropertyDescriptor */,
-) /* : BooleanValue */ {
+  O,
+  P,
+  extensible,
+  Desc,
+  current,
+) {
   Assert(O instanceof UndefinedValue || IsPropertyKey(P));
 
   if (current instanceof UndefinedValue) {
@@ -234,7 +212,6 @@ export function ValidateAndApplyPropertyDescriptor(
   if (!(O instanceof UndefinedValue)) {
     O.properties.set(P, current);
     Object.keys(Desc).forEach((field) => {
-      // $FlowFixMe
       current[field] = Desc[field];
     });
   }
@@ -243,7 +220,7 @@ export function ValidateAndApplyPropertyDescriptor(
 }
 
 // 9.1.7.1 OrdinaryHasProperty
-export function OrdinaryHasProperty(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function OrdinaryHasProperty(O, P) {
   Assert(IsPropertyKey(P));
 
   const hasOwn = Q(O.GetOwnProperty(P));
@@ -258,7 +235,7 @@ export function OrdinaryHasProperty(O /* : ObjectValue */, P /* : PropertyKey */
 }
 
 // 9.1.8.1
-export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiver /* : Value */) {
+export function OrdinaryGet(O, P, Receiver) {
   Assert(IsPropertyKey(P));
 
   const desc = Q(O.GetOwnProperty(P));
@@ -282,10 +259,10 @@ export function OrdinaryGet(O /* : ObjectValue */, P /* : PropertyKey */, Receiv
 
 // 9.1.9.1 OrdinarySet
 export function OrdinarySet(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
-  V /* : Value */,
-  Receiver /* : Value */,
+  O,
+  P,
+  V,
+  Receiver,
 ) {
   Assert(IsPropertyKey(P));
   const ownDesc = Q(O.GetOwnProperty(P));
@@ -294,11 +271,11 @@ export function OrdinarySet(
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
 export function OrdinarySetWithOwnDescriptor(
-  O /* : ObjectValue */,
-  P /* : PropertyKey */,
-  V /* : Value */,
-  Receiver /* : Value */,
-  ownDesc /* : PropertyDescriptor | UndefinedValue */,
+  O,
+  P,
+  V,
+  Receiver,
+  ownDesc,
 ) {
   Assert(IsPropertyKey(P));
 
@@ -312,7 +289,7 @@ export function OrdinarySetWithOwnDescriptor(
       Writable: true,
       Enumerable: true,
       Configurable: true,
-    } /* : PropertyDescriptor */);
+    });
   }
 
   if (IsDataDescriptor(ownDesc)) {
@@ -322,7 +299,7 @@ export function OrdinarySetWithOwnDescriptor(
     if (Type(Receiver) !== 'Object') {
       return NewValue(false);
     }
-    /* :: Receiver = ((Receiver: any): ObjectValue); */
+
     const existingDescriptor = Q(Receiver.GetOwnProperty(P));
     if (!(existingDescriptor instanceof UndefinedValue)) {
       if (IsAccessorDescriptor(existingDescriptor)) {
@@ -347,7 +324,7 @@ export function OrdinarySetWithOwnDescriptor(
 }
 
 // 9.1.10.1 OrdinaryDelete
-export function OrdinaryDelete(O /* : ObjectValue */, P /* : PropertyKey */) {
+export function OrdinaryDelete(O, P) {
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
@@ -361,7 +338,7 @@ export function OrdinaryDelete(O /* : ObjectValue */, P /* : PropertyKey */) {
 }
 
 // 9.1.11.1
-export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) /* : List<PropertyKey> */ {
+export function OrdinaryOwnPropertyKeys(O) {
   const keys = [];
 
   const integerIndexes = [];
@@ -397,9 +374,9 @@ export function OrdinaryOwnPropertyKeys(O /* : ObjectValue */) /* : List<Propert
 
 // 9.1.12 ObjectCreate
 export function ObjectCreate(
-  proto /* : ObjectValue | NullValue */,
-  internalSlotsList /* : ?List<string> */,
-) /* : ObjectValue */ {
+  proto,
+  internalSlotsList,
+) {
   if (!internalSlotsList) {
     internalSlotsList = [];
   }
@@ -419,9 +396,9 @@ export function ObjectCreate(
 
 // 9.1.13 OrdinaryCreateFromConstructor
 export function OrdinaryCreateFromConstructor(
-  constructor /* : FunctionValue */,
-  intrinsicDefaultProto /* : string */,
-  internalSlotsList /* : ?List<string> */,
+  constructor,
+  intrinsicDefaultProto,
+  internalSlotsList,
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
@@ -431,7 +408,7 @@ export function OrdinaryCreateFromConstructor(
 
 // 9.1.14 GetPrototypeFromConstructor
 export function GetPrototypeFromConstructor(
-  constructor /* : FunctionValue */, intrinsicDefaultProto /* : string */,
+  constructor, intrinsicDefaultProto,
 ) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
@@ -446,11 +423,11 @@ export function GetPrototypeFromConstructor(
 
 // 9.3.3 CreateBuiltinFunction
 export function CreateBuiltinFunction(
-  steps /* : BuiltinFunctionCallback */,
-  internalSlotsList /* : string[] */,
-  realm /* : ?Realm */,
-  prototype /* : ?ObjectValue | ?NullValue */,
-) /* : BuiltinFunctionValue */ {
+  steps,
+  internalSlotsList,
+  realm,
+  prototype,
+) {
   if (!realm) {
     // If realm is not present, set realm to the current Realm Record.
     realm = surroundingAgent.currentRealmRecord;
@@ -465,7 +442,6 @@ export function CreateBuiltinFunction(
   const func = NewValue(steps, realm);
 
   internalSlotsList.forEach((slot) => {
-    // $FlowFixMe
     func[slot] = undefined;
   });
 
@@ -478,7 +454,7 @@ export function CreateBuiltinFunction(
 }
 
 // 9.4.2.4 ArraySetLength
-export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescriptor */) {
+export function ArraySetLength(A, Desc) {
   const lengthStr = NewValue('length');
   if ('Value' in Desc === false) {
     return OrdinaryDefineOwnProperty(A, lengthStr, Desc);
@@ -490,10 +466,10 @@ export function ArraySetLength(A /* : ArrayValue */, Desc /* : PropertyDescripto
     return surroundingAgent.Throw('RangeError');
   }
   newLenDesc.Value = newLen;
-  const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)/* : any */)/* : PropertyDescriptor */);
+  const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)));
   Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
   let oldLen = oldLenDesc.Value;
-  /* :: oldLen = ((oldLen: any): NumberValue); */
+
   if (newLen.numberValue() > oldLen.numberValue()) {
     return OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
   }

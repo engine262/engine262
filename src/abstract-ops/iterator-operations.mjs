@@ -1,5 +1,3 @@
-/* @flow */
-
 import {
   Assert,
   GetMethod,
@@ -22,26 +20,12 @@ import {
   Q,
 } from '../completion';
 
-/* ::
-import type {
-  Value,
-  ObjectValue,
-  FunctionValue,
-} from '../value';
-
-declare type GetIteratorHint = 'sync' | 'async';
-declare type IteratorRecord = {
-  Iterator: ObjectValue,
-  NextMethod: FunctionValue,
-  Done: boolean,
-};
-*/
 
 // #sec-getiterator
 export function GetIterator(
-  obj /* : ObjectValue */,
-  hint /* : ?GetIteratorHint */,
-  method /* : ?Value */,
+  obj,
+  hint,
+  method,
 ) {
   if (!hint) {
     hint = 'sync';
@@ -72,7 +56,7 @@ export function GetIterator(
 }
 
 // #sec-iteratornext
-export function IteratorNext(iteratorRecord /* : IteratorRecord */, value /* : ?Value */) {
+export function IteratorNext(iteratorRecord, value) {
   let result;
   if (!value) {
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
@@ -86,19 +70,19 @@ export function IteratorNext(iteratorRecord /* : IteratorRecord */, value /* : ?
 }
 
 // #sec-iteratorcomplete
-export function IteratorComplete(iterResult /* : ObjectValue */) {
+export function IteratorComplete(iterResult) {
   Assert(Type(iterResult) === 'Object');
   return ToBoolean(Q(Get(iterResult, NewValue('done'))));
 }
 
 // #sec-iteratorvalue
-export function IteratorValue(iterResult /* : ObjectValue */) {
+export function IteratorValue(iterResult) {
   Assert(Type(iterResult) === 'Object');
   return Q(Get(iterResult, NewValue('value')));
 }
 
 // #sec-iteratorstep
-export function IteratorStep(iteratorRecord /* : IteratorRecord */) {
+export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
   if (done.isTrue()) {
@@ -109,8 +93,8 @@ export function IteratorStep(iteratorRecord /* : IteratorRecord */) {
 
 // #sec-iteratorclose
 export function IteratorClose(
-  iteratorRecord /* : IteratorRecord */,
-  completion /* : Completion */,
+  iteratorRecord,
+  completion,
 ) {
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);

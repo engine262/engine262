@@ -1,15 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-  BooleanValue,
-  NumberValue,
-  StringValue,
-  ObjectValue,
-} from '../value';
-*/
-
 import {
   Type,
   NullValue,
@@ -27,7 +15,7 @@ import {
 } from './notational-conventions';
 
 // #sec-requireobjectcoercible
-export function RequireObjectCoercible(argument /* : Value */) {
+export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -45,7 +33,7 @@ export function RequireObjectCoercible(argument /* : Value */) {
 }
 
 // 7.2.2 IsArray
-export function IsArray(argument /* : Value */) /* : BooleanValue */ {
+export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return NewValue(false);
   }
@@ -63,7 +51,7 @@ export function IsArray(argument /* : Value */) /* : BooleanValue */ {
 }
 
 // 7.2.3 IsCallable
-export function IsCallable(argument /* : Value */) {
+export function IsCallable(argument) {
   if (Type(argument) !== 'Object') {
     return NewValue(false);
   }
@@ -74,7 +62,7 @@ export function IsCallable(argument /* : Value */) {
 }
 
 // 7.2.4 IsConstructor
-export function IsConstructor(argument /* : Value */) {
+export function IsConstructor(argument) {
   if (Type(argument) !== 'Object') {
     return NewValue(false);
   }
@@ -85,20 +73,18 @@ export function IsConstructor(argument /* : Value */) {
 }
 
 // 7.2.5 IsExtensible
-export function IsExtensible(O /* : ObjectValue */) /* : BooleanValue */ {
+export function IsExtensible(O) {
   Assert(Type(O) === 'Object');
   return O.IsExtensible();
 }
 
 // 7.2.10 SameValue
-export function SameValue(x /* : Value */, y /* : Value */) /* : boolean */ {
+export function SameValue(x, y) {
   if (Type(x) !== Type(y)) {
     return false;
   }
 
   if (Type(x) === 'Number') {
-    /* :: x = ((x : any) : NumberValue); */
-    /* :: y = ((y : any) : NumberValue); */
     if (x.isNaN() && y.isNaN()) {
       return true;
     }
@@ -120,7 +106,7 @@ export function SameValue(x /* : Value */, y /* : Value */) /* : boolean */ {
 }
 
 // 7.2.12 SameValueNonNumber
-export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolean */ {
+export function SameValueNonNumber(x, y) {
   Assert(Type(x) !== 'Number');
   Assert(Type(x) === Type(y));
 
@@ -133,8 +119,6 @@ export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolea
   }
 
   if (Type(x) === 'String') {
-    /* :: x = ((x: any): StringValue); */
-    /* :: y = ((y: any): StringValue); */
     if (x.stringValue() === y.stringValue()) {
       return true;
     }
@@ -142,8 +126,6 @@ export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolea
   }
 
   if (Type(x) === 'Boolean') {
-    /* :: x = ((x: any): BooleanValue); */
-    /* :: y = ((y: any): BooleanValue); */
     if (x.isTrue() === y.isTrue()) {
       return true;
     }
@@ -158,7 +140,7 @@ export function SameValueNonNumber(x /* : Value */, y /* : Value */) /* : boolea
 }
 
 // 7.2.7 IsPropertyKey
-export function IsPropertyKey(argument /* : Value */) /* : boolean */ {
+export function IsPropertyKey(argument) {
   if (Type(argument) === 'String') {
     return true;
   }
@@ -169,7 +151,7 @@ export function IsPropertyKey(argument /* : Value */) /* : boolean */ {
 }
 
 // #sec-ispromise
-export function IsPromise(x /* : Value */) {
+export function IsPromise(x) {
   if (Type(x) !== 'Object') {
     return NewValue(false);
   }

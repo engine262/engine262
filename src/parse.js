@@ -1,7 +1,7 @@
 const acorn = require('acorn');
 
 function ParseScript(
-  sourceText /* : string */, realm /* : Realm */, hostDefined /* :?Object */,
+  sourceText, realm, hostDefined,
 ) {
   const body = acorn.parse(sourceText, {
     sourceType: 'script',

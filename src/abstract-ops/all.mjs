@@ -1,5 +1,3 @@
-/* @flow */
-
 export * from './notational-conventions';
 export * from './objects';
 export * from './object-operations';

@@ -1,6 +1,4 @@
-/* @flow */
-
-export function Assert(invariant /* : boolean */) {
+export function Assert(invariant) {
   if (!invariant) {
     throw new TypeError('Assert failed');
   }

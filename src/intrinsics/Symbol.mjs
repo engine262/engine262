@@ -1,11 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Realm,
-} from '../realm';
-*/
-
 import {
   UndefinedValue,
   SymbolValue,
@@ -61,7 +53,7 @@ function SymbolKeyFor(realm, [sym]) {
   return NewValue(undefined);
 }
 
-export function CreateSymbol(realmRec /* : Realm */) {
+export function CreateSymbol(realmRec) {
   const symbolConstructor = CreateBuiltinFunction(SymbolConstructor, [], realmRec);
 
   [

@@ -272,7 +272,7 @@ function Evaluate_This() {
 function Evalute_CallExpressionArguments(CallExpression, Arguments) {
   const ref = EvaluateExpression(CallExpression);
   const func = Q(GetValue(ref));
-  const thisCall = undefined; /* this CallExpression */
+  const thisCall = undefined;
   const tailCall = IsInTailPosition(thisCall);
   return Q(EvaluateCall(func, ref, Arguments, tailCall));
 }

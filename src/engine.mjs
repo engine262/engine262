@@ -1,22 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  Value,
-  PrimitiveValue,
-  StringValue,
-  SymbolValue,
-  ObjectValue,
-  FunctionValue,
-} from './value';
-import type {
-  List,
-} from './abstract-ops/spec-types';
-import type {
-  Realm,
-} from './realm';
-*/
-
 import {
   UndefinedValue,
   NullValue,
@@ -59,29 +40,7 @@ import {
   EvaluateScript,
 } from './evaluator';
 
-
-/* ::
-declare type Job = {
-  Job: function,
-  Arguments: List<any>,
-  Realm: Realm,
-  ScriptOrModule: ?Object,
-  HostDefined: ?Object,
-};
-*/
-
 export class Agent {
-  /* ::
-  static Increment: number
-  LittleEndian: boolean
-  CanBlock: boolean
-  Signifier: number
-  IsLockFree1: boolean
-  IsLockFree2: boolean
-  CandidateExecution: ?Object
-  executionContextStack: List<ExecutionContext>
-  jobQueues: Map<string, List<Job>>
-  */
   constructor() {
     this.LittleEndian = false;
     this.CanBlock = true;
@@ -102,7 +61,7 @@ export class Agent {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
 
-  get currentRealmRecordOrUndefined() /* : Realm | void */ {
+  get currentRealmRecordOrUndefined() {
     const currentCtx = this.runningExecutionContext;
     if (currentCtx !== undefined) {
       return currentCtx.Realm;
@@ -110,7 +69,7 @@ export class Agent {
     return undefined;
   }
 
-  get currentRealmRecord() /* : Realm */ {
+  get currentRealmRecord() {
     const currentRealmRecord = this.currentRealmRecordOrUndefined;
     Assert(currentRealmRecord !== undefined);
     return currentRealmRecord;
@@ -129,11 +88,11 @@ export class Agent {
     return undefined;
   }
 
-  intrinsic(name /* : string */) {
+  intrinsic(name) {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
-  Throw(type /* : string */, args /* : ?List<Value> */) {
+  Throw(type, args) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, args);
     return new ThrowCompletion(error);
@@ -144,30 +103,21 @@ Agent.Increment = 0;
 export const surroundingAgent = new Agent();
 
 export class ExecutionContext {
-  /* ::
-  codeEvaluationState: ?boolean
-  Function: ?FunctionValue
-  Realm: Realm
-  ScriptOrModule: ?Object
-  LexicalEnvironment: LexicalEnvironment
-  VariableEnvironment: LexicalEnvironment
-  */
   constructor() {
     this.codeEvaluationState = undefined;
     this.Function = undefined;
-    // $FlowFixMe
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
   }
 }
 
-export function isArrayIndex(P /* : Value */) {
+export function isArrayIndex(P) {
   Assert(IsPropertyKey(P));
   const type = Type(P);
   if (type === 'Symbol') {
     return false;
   }
-  /* :: P = ((P: any): StringValue); */
+
   const index = Number.parseInt(P.stringValue(), 10);
   if (index >= 0 && index < (2 ** 32) - 1) {
     return true;
@@ -176,7 +126,7 @@ export function isArrayIndex(P /* : Value */) {
 }
 
 // 8.4.1 EnqueueJob
-export function EnqueueJob(queueName /* : string */, job /* : function */, args /* : List<any> */) {
+export function EnqueueJob(queueName, job, args) {
   const callerContext = surroundingAgent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
   const callerScriptOrModule = callerContext.ScriptOrModule;
@@ -254,7 +204,7 @@ export function AgentSignifier() {
 }
 
 // 15.1.10 ScriptEvaluation
-export function ScriptEvaluation(scriptRecord /* : Object */) {
+export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
   scriptCtx.Function = null;
@@ -281,7 +231,7 @@ export function ScriptEvaluation(scriptRecord /* : Object */) {
 }
 
 // 15.1.11 GlobalDeclarationInstantiation
-export function GlobalDeclarationInstantiation(script /* : Object */, env /* : Object */) {
+export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
@@ -344,14 +294,14 @@ export function GlobalDeclarationInstantiation(script /* : Object */, env /* : O
 }
 
 // 15.1.12 ScriptEvaluationJob
-export function ScriptEvaluationJob(sourceText /* : string */, hostDefined /* : any */) {
+export function ScriptEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
   return ScriptEvaluation(s);
 }
 
 // 15.2.1.19
-export function TopLevelModuleEvaluationJob(sourceText /* : string */, hostDefined /* : any */) {
+export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
   m.Instantiate();
@@ -359,7 +309,7 @@ export function TopLevelModuleEvaluationJob(sourceText /* : string */, hostDefin
 }
 
 // 16.1 HostReportErrors
-export function HostReportErrors(errorList /* : any[] */) {
+export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
     console.log(error);
   });
@@ -368,7 +318,7 @@ export function HostReportErrors(errorList /* : any[] */) {
 export function HostPromiseRejectionTracker(promise, type) {}
 
 // 19.4.3.2.1 SymbolDescriptiveString
-export function SymbolDescriptiveString(sym /* : SymbolValue */) {
+export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
   if (desc instanceof UndefinedValue) {
@@ -378,7 +328,7 @@ export function SymbolDescriptiveString(sym /* : SymbolValue */) {
 }
 
 // 22.1.3.1 IsConcatSpreadable
-export function IsConcatSpreadable(O /* : Value */) {
+export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {
     return NewValue(false);
   }

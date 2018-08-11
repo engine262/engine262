@@ -32,24 +32,10 @@ import { CreatePromisePrototype } from './intrinsics/PromisePrototype';
 import { CreatePromise } from './intrinsics/Promise';
 import { CreateError } from './intrinsics/Error';
 
-/* ::
-type IntrinsicMap = {
- [string]: Value,
-};
-*/
-
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms
 export class Realm {
-  /* ::
-  Intrinsics: IntrinsicMap
-  GlobalObject: ?ObjectValue
-  GlobalEnv: ?EnvironmentRecord
-  TemplateMap: ?Object
-  HostDefined: ?Object
-  */
   constructor() {
-    // $FlowFixMe
     this.Intrinsics = undefined;
     this.GlobalObject = undefined;
     this.GlobalEnv = undefined;

@@ -1,24 +1,3 @@
-/* @flow */
-
-/* ::
-import type {
-  ObjectValue,
-  FunctionValue,
-  Value,
-} from '../value';
-
-export type List<T> = T[];
-declare type PropertyDescriptor = {
-  Value?: Value,
-  Get?: FunctionValue | UndefinedValue,
-  Set?: FunctionValue | UndefinedValue,
-  Writable?: boolean,
-  Enumerable?: boolean,
-  Configurable?: boolean,
-};
-export type { PropertyDescriptor };
-*/
-
 import {
   surroundingAgent,
 } from '../engine';
@@ -38,7 +17,7 @@ import {
 import { Q } from '../completion';
 
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {
+export function IsAccessorDescriptor(Desc) {
   if (Desc === undefined) {
     return false;
   }
@@ -51,7 +30,7 @@ export function IsAccessorDescriptor(Desc /* : PropertyDescriptor */) {
 }
 
 // 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc /* : PropertyDescriptor */) {
+export function IsDataDescriptor(Desc) {
   if (Desc === undefined) {
     return false;
   }
@@ -64,7 +43,7 @@ export function IsDataDescriptor(Desc /* : PropertyDescriptor */) {
 }
 
 // 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc /* : PropertyDescriptor */) {
+export function IsGenericDescriptor(Desc) {
   if (Desc === undefined) {
     return false;
   }
@@ -77,7 +56,7 @@ export function IsGenericDescriptor(Desc /* : PropertyDescriptor */) {
 }
 
 // #sec-frompropertydescriptor FromPropertyDescriptor
-export function FromPropertyDescriptor(Desc /* : PropertyDescriptor */) {
+export function FromPropertyDescriptor(Desc) {
   if (Desc instanceof UndefinedValue) {
     return NewValue(undefined);
   }
@@ -105,11 +84,11 @@ export function FromPropertyDescriptor(Desc /* : PropertyDescriptor */) {
 }
 
 // #sec-topropertydescriptor ToPropertyDescriptor
-export function ToPropertyDescriptor(Obj /* : Value */) /* : PropertyDescriptor */ {
+export function ToPropertyDescriptor(Obj) {
   if (Type(Obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  /* :: Obj = ((Obj: any): ObjectValue); */
+
   const desc = {};
   const hasEnumerable = Q(HasProperty(Obj, NewValue('enumerable')));
   if (hasEnumerable.isTrue()) {
