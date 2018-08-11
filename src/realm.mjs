@@ -30,6 +30,8 @@ import { CreateSymbol } from './intrinsics/Symbol';
 import { CreateMath } from './intrinsics/Math';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype';
 import { CreatePromise } from './intrinsics/Promise';
+import { CreateStringPrototype } from './intrinsics/StringPrototype';
+import { CreateString } from './intrinsics/String';
 import { CreateError } from './intrinsics/Error';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
@@ -78,6 +80,9 @@ export function CreateIntrinsics(realmRec) {
   CreateObject(realmRec);
 
   CreateFunctionPrototype(realmRec);
+
+  CreateStringPrototype(realmRec);
+  CreateString(realmRec);
 
   CreateArrayPrototype(realmRec);
   CreateArray(realmRec);

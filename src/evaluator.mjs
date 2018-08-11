@@ -1,6 +1,7 @@
 import {
   NormalCompletion,
   AbruptCompletion,
+  ThrowCompletion,
   UpdateEmpty,
   Q, X,
   ReturnIfAbrupt,
@@ -11,6 +12,7 @@ import {
 } from './engine';
 import {
   isExpressionStatement,
+  isThrowStatement,
   isMemberExpressionWithBrackets,
   isMemberExpressionWithDot,
   isCallExpressionWithBrackets,
@@ -286,7 +288,7 @@ function EvaluateStatementList(StatementList, envRec) {
   const sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
-    return sl;
+    return new NormalCompletion(sl);
   }
   let s;
   for (const StatementListItem of StatementList) {
@@ -295,12 +297,26 @@ function EvaluateStatementList(StatementList, envRec) {
   return UpdateEmpty(s, sl);
 }
 
+//  ThrowStatement : throw Expression ;
+function EvaluateThrowStatement(Expression) {
+  const exprRef = EvaluateExpression(Expression);
+  const exprValue = Q(GetValue(exprRef));
+  return new ThrowCompletion(exprValue);
+}
+
 // (implicit)
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
 function EvaluateStatementListItem(StatementListItem, envRec) {
-  if (isExpressionStatement(StatementListItem)) {
-    return EvaluateExpressionStatement(StatementListItem, envRec);
+  switch (true) {
+    case isExpressionStatement(StatementListItem):
+      return EvaluateExpressionStatement(StatementListItem, envRec);
+    case isThrowStatement(StatementListItem):
+      return EvaluateThrowStatement(StatementListItem.argument);
+
+    default:
+      console.log(StatementListItem);
+      throw new RangeError('unknown StatementListItem type');
   }
 }
 

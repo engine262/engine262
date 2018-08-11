@@ -1,8 +1,6 @@
-const acorn = require('acorn');
+import acorn from 'acorn';
 
-function ParseScript(
-  sourceText, realm, hostDefined,
-) {
+export function ParseScript(sourceText, realm, hostDefined) {
   const body = acorn.parse(sourceText, {
     sourceType: 'script',
   });
@@ -15,9 +13,4 @@ function ParseScript(
   };
 }
 
-function ParseModule() {}
-
-module.exports = {
-  ParseScript,
-  ParseModule,
-};
+export function ParseModule() {}

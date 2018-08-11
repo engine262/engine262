@@ -23,7 +23,7 @@ ReturnIfAbrupt(AbstractOp());
 (do {
   const hygenicTemp = a();
   if (hygenicTemp instanceof AbruptCompletion) {
-    return _;
+    return hygenicTemp;
   }
   if (hygenicTemp instanceof Completion) {
     hygenicTemp.Value;

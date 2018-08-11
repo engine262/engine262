@@ -1,8 +1,6 @@
 {
   "plugins": [
+    "@babel/plugin-proposal-object-rest-spread",
     "./transform.js"
-  ],
-  "presets": [
-    "@babel/preset-env"
   ]
 }

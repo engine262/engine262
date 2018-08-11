@@ -173,7 +173,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'print(1 + 1);', hostDefined: undefined },
+    { sourceText: 'throw 5;', hostDefined: undefined },
   ];
 
   const modules = [];
@@ -320,7 +320,7 @@ export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
 // 16.1 HostReportErrors
 export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
-    console.log(error);
+    console.log('[HostReportErrors]', error);
   });
 }
 

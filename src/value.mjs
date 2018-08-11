@@ -3,7 +3,6 @@ import {
   ExecutionContext,
   isArrayIndex,
 } from './engine';
-
 import {
   ArraySetLength,
   Assert,
@@ -30,6 +29,7 @@ import {
   ToBoolean,
   ToUint32,
 } from './abstract-ops/all';
+import { Q, X } from './completion';
 
 export class Value {}
 
@@ -498,6 +498,40 @@ export class ProxyValue extends ObjectValue {
   }
 
   OwnPropertyKeys() {}
+}
+
+export class StringExoticValue extends ObjectValue {
+  GetOwnProperty(P) {
+    const S = this;
+    Assert(IsPropertyKey(P).isTrue());
+    const desc = OrdinaryGetOwnProperty(S, P);
+    if (!(desc instanceof UndefinedValue)) {
+      return desc;
+    }
+    return X(StringGetOwnProperty(S, P));
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const S = this;
+    Assert(IsPropertyKey(P).isTrue());
+    const stringDesc = X(StringGetOwnProperty(S, P));
+    if (!(stringDesc instanceof UndefinedValue)) {
+      const extensible = S.Extensible;
+      return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
+    }
+    return X(OrdinaryDefineOwnProperty(S, P, Desc));
+  }
+
+  OwnPropertyKeys() {
+    const O = this;
+    const keys = [];
+    const str = O.StringData.stringValue();
+    const len = str.length;
+    for (let i = 0; i < len; i += 1) {
+      keys.push(X(ToString(NewValue(i))));
+    }
+    // more
+  }
 }
 
 export class Reference {
