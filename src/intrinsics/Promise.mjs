@@ -23,7 +23,6 @@ import {
 } from '../abstract-ops/all';
 import {
   Q,
-  Completion,
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
@@ -57,11 +56,9 @@ function GetCapabilitiesExecutorFunctions(realm, [resolve, reject]) {
   return NewValue(undefined);
 }
 
-class PromiseCapabilityRecord {
+class PromiseCapabilityRecord {}
 
-}
-
-function NewPromiseCapability(C) {
+export function NewPromiseCapability(C) {
   if (IsConstructor(C).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -80,7 +77,7 @@ function NewPromiseCapability(C) {
   return promiseCapability;
 }
 
-function PromiseReactionJob(reaction, argument) {
+export function PromiseReactionJob(reaction, argument) {
   // Assert: reaction is a PromiseReaction Record.
   const promiseCapability = reaction.Capability;
   const type = reaction.Type;
@@ -102,7 +99,7 @@ function PromiseReactionJob(reaction, argument) {
   } else {
     status = Call(promiseCapability.Resolve, NewValue(undefined), [handlerResult.Value]);
   }
-  return new Completion(status);
+  return status;
 }
 
 function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
@@ -112,9 +109,9 @@ function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
   ]);
   if (thenCallResult instanceof AbruptCompletion) {
     const status = Call(resolvingFunctions.Reject, NewValue(undefined), [thenCallResult.Value]);
-    return new Completion(status);
+    return status;
   }
-  return new Completion(thenCallResult);
+  return thenCallResult;
 }
 
 function TriggerPromiseReactions(reactions, argument) {
@@ -174,6 +171,18 @@ function PromiseResolveFunctions(realm, [resolution]) {
   }
   EnqueueJob('PromiseJobs', PromiseResolveTheableJob, [promise, resolution, thenAction]);
   return NewValue(undefined);
+}
+
+function PromiseRejectFunctions(realm, [reason]) {
+  const F = this;
+  Assert('Promise' in F && Type(F.Promise) === 'Object');
+  const promise = F.Promise;
+  const alreadyResolved = F.AlreadyResolved;
+  if (alreadyResolved.Value === true) {
+    return NewValue(undefined);
+  }
+  alreadyResolved.Value = true;
+  return RejectPromise(promise, reason);
 }
 
 function CreateResolvingFunctions(promise) {

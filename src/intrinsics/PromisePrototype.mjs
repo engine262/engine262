@@ -1,4 +1,8 @@
-import { surroundingAgent } from '../engine';
+import {
+  surroundingAgent,
+  EnqueueJob,
+  HostPromiseRejectionTracker,
+} from '../engine';
 import {
   CreateBuiltinFunction,
   Invoke,
@@ -8,6 +12,7 @@ import {
   IsCallable,
   Call,
   Get,
+  IsPromise,
 } from '../abstract-ops/all';
 import {
   Type,
@@ -15,7 +20,11 @@ import {
   New as NewValue,
 } from '../value';
 import { Q, ThrowCompletion } from '../completion';
-import { PromiseResolve } from './Promise';
+import {
+  PromiseResolve,
+  NewPromiseCapability,
+  PromiseReactionJob,
+} from './Promise';
 
 function PromiseCatch(realm, [onRejected], { thisValue }) {
   const promise = thisValue;
@@ -53,7 +62,7 @@ function PromiseFinally(realm, [onFinally], { thisValue }) {
   if (Type(promise) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  const C = SpeciesConstructor(promise, '%Promise%');
+  const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   Assert(IsConstructor(C).isTrue());
   let thenFinally;
   let catchFinally;
@@ -73,12 +82,53 @@ function PromiseFinally(realm, [onFinally], { thisValue }) {
   return Q(Invoke(promise, NewValue('then'), [thenFinally, catchFinally]));
 }
 
+function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+  Assert(IsPromise(promise).isTrue());
+  if (resultCapability) {
+    // Assert: resultCapability is a PromiseCapability Record.
+  } else {
+    resultCapability = NewValue(undefined);
+  }
+  if (IsCallable(onFulfilled).isFalse()) {
+    onFulfilled = NewValue(undefined);
+  }
+  if (IsCallable(onRejected).isFalse()) {
+    onRejected = NewValue(undefined);
+  }
+  const fulfillReaction = {
+    Capability: resultCapability,
+    Type: 'Fulfill',
+    Handler: onFulfilled,
+  };
+  const rejectReaction = {
+    Capability: resultCapability,
+    Type: 'Reject',
+    Handler: onRejected,
+  };
+  if (promise.PromiseState === 'pending') {
+    promise.PromiseFulfillReactions.push(fulfillReaction);
+    promise.PromiseRejectReactions.push(rejectReaction);
+  } else if (promise.PromiseState === 'fulfilled') {
+    const value = promise.PromiseResult;
+    EnqueueJob('PromiseJobs', PromiseReactionJob, [fulfillReaction, value]);
+  } else {
+    Assert(promise.PromiseState === 'rejected');
+    const reason = promise.PromiseResult;
+    if (promise.PromiseIsHandled === false) {
+      HostPromiseRejectionTracker(promise, 'handler');
+    }
+    EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
+  }
+  promise.PromiseIsHandled = true;
+  return resultCapability.Promise;
+}
+
 function PromiseThen(realm, [onFulfilled, onRejected], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
-  const C = Q(SpeciesConstructor(promise, '%Promise%'));
+  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   const resultCapability = Q(NewPromiseCapability(C));
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
 }
