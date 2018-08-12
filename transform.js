@@ -1,45 +1,50 @@
+'use strict';
+
 const path = require('path');
 const COMPLETION_PATH = path.resolve('./src/completion.mjs');
 
-module.exports = ({ types: t }) => {
-  const C = (state) => {
-    const r = path.relative(state.file.opts.filename, COMPLETION_PATH).replace('../', './');
-    return t.ImportDeclaration([
-      t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
-      t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-    ], t.StringLiteral(r));
-  };
+module.exports = ({ types: t, template }) => {
+  function createImportCompletion(file) {
+    const r = path.relative(file.opts.filename, COMPLETION_PATH).replace('../', './');
+    return template.ast(`
+      import { Completion, AbruptCompletion } from "${r}";
+    `);
+  }
 
   return {
     visitor: {
-      Program(path, state) {
-        if (state.file.opts.filename === COMPLETION_PATH) {
-          return;
-        }
-        let found = false;
-        path.traverse({
-          ImportDeclaration(path) {
-            if (path.node.source.value.includes('completion')) {
-              found = true;
-              if (!path.node.specifiers.find((s) => s.local.name === 'Completion')) {
-                path.node.specifiers.push(
-                  t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
-                );
-              }
-              if (!path.node.specifiers.find((s) => s.local.name === 'AbruptCompletion')) {
-                path.node.specifiers.push(
-                  t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-                );
-              }
-            }
-          },
-        });
-        if (!found) {
-          path.node.body.unshift(C(state));
+      Program: {
+        enter(path, state) {
+          if (state.file.opts.filename === COMPLETION_PATH) {
+            return;
+          }
+          state.foundCompletion = false;
+          state.needCompletion = false;
+        },
+        exit(path, state) {
+          if (!state.foundCompletion && state.needCompletion) {
+            path.node.body.unshift(createImportCompletion(state.file));
+          }
+        },
+      },
+      ImportDeclaration(path, state) {
+        if (path.node.source.value.endsWith('completion')) {
+          state.foundCompletion = true;
+          if (!path.node.specifiers.find((s) => s.local.name === 'Completion')) {
+            path.node.specifiers.push(
+              t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
+            );
+          }
+          if (!path.node.specifiers.find((s) => s.local.name === 'AbruptCompletion')) {
+            path.node.specifiers.push(
+              t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
+            );
+          }
         }
       },
-      CallExpression(path) {
+      CallExpression(path, state) {
         if (path.node.callee.name === 'Q' || path.node.callee.name === 'ReturnIfAbrupt') {
+          state.needCompletion = true;
           const [argument] = path.node.arguments;
           if (t.isCallExpression(argument)) {
             // ReturnIfAbrupt(AbstractOperation())
@@ -77,6 +82,7 @@ module.exports = ({ types: t }) => {
             ])));
           }
         } else if (path.node.callee.name === 'X') {
+          state.needCompletion = true;
           const [argument] = path.node.arguments;
           const val = path.scope.generateUidIdentifier('val');
           path.replaceWith(t.DoExpression(t.BlockStatement([
