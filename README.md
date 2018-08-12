@@ -16,12 +16,37 @@ Non-Goals
 We run a source transform:
 
 ```js
+// ReturnIfAbrupt(AbstractOp()).
 ReturnIfAbrupt(AbstractOp());
+
+// ... or equivalently ...
+
+// Perform ? AbstractOp().
+Q(AbstractOp());
 
 // Becomes...
 
-(do {
-  const hygenicTemp = a();
+{
+  const hygenicTemp = AbstractOp();
+  if (hygenicTemp instanceof AbruptCompletion) {
+    return hygenicTemp;
+  }
+}
+```
+
+```js
+// Let result be ReturnIfAbrupt(AbstractOp()).
+const result = ReturnIfAbrupt(AbstractOp());
+
+// ... or equivalently ...
+
+// Let result be ? AbstractOp().
+const result = Q(AbstractOp());
+
+// Becomes...
+
+const result = do {
+  const hygenicTemp = AbstractOp();
   if (hygenicTemp instanceof AbruptCompletion) {
     return hygenicTemp;
   }
@@ -30,7 +55,7 @@ ReturnIfAbrupt(AbstractOp());
   } else {
     hygenicTemp;
   }
-});
+};
 ```
 
 ```js
@@ -50,6 +75,4 @@ const a = do {
     val;
   }
 };
-
 ```
-

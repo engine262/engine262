@@ -13,7 +13,6 @@ module.exports = ({ types: t, template }) => {
   }
 
   function createImportAssert(file) {
-    console.log(file.opts.filename);
     const r = path.relative(file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
     return template.ast(`
       import { Assert } from "${r}";
@@ -30,15 +29,6 @@ module.exports = ({ types: t, template }) => {
     }
   `, { plugins: ['doExpressions'] });
 
-  const returnIfAbruptTemplateIdentifier = template.expression(`
-    do {
-      if (ARG instanceof AbruptCompletion) {
-        return ARG;
-      }
-      ARG instanceof Completion ? ARG.Value : ARG;
-    }
-  `, { plugins: ['doExpressions'] });
-
   const returnIfAbruptAssertTemplate = template.expression(`
     do {
       const val = ARG;
@@ -46,6 +36,13 @@ module.exports = ({ types: t, template }) => {
       val instanceof Completion ? val.Value : val;
     }
   `, { plugins: ['doExpressions'] });
+
+  function findParentStatementPath(path) {
+    while (path && !path.isStatement()) {
+      path = path.parentPath;
+    }
+    return path;
+  }
 
   return {
     visitor: {
@@ -95,17 +92,49 @@ module.exports = ({ types: t, template }) => {
           const [argument] = path.node.arguments;
           if (t.isIdentifier(argument)) {
             // ReturnIfAbrupt(argument)
-            path.replaceWith(returnIfAbruptTemplateIdentifier({ ARG: argument }));
+            const parentStatement = findParentStatementPath(path);
+            parentStatement.insertBefore(template.statements.ast`
+              if (${argument} instanceof AbruptCompletion) {
+                return ${argument};
+              }
+              if (${argument} instanceof Completion) {
+                ${argument} = ${argument}.Value;
+              }
+            `);
+            if (path.parentPath.isExpressionStatement()) {
+              // We don't care about the result.
+              path.remove();
+            } else {
+              path.replaceWith(argument);
+            }
           } else {
             // ReturnIfAbrupt(AbstractOperation())
-            path.replaceWith(returnIfAbruptTemplateGeneric({ ARG: argument }));
+            if (path.parentPath.isExpressionStatement()) {
+              // We don't care about the result.
+              path.parentPath.replaceWith(template.statement.ast`
+                {
+                  const hygenicTemp = ${argument};
+                  if (hygenicTemp instanceof AbruptCompletion) {
+                    return hygenicTemp;
+                  }
+                }
+              `);
+            } else {
+              path.replaceWith(returnIfAbruptTemplateGeneric({ ARG: argument }));
+            }
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;
           state.needAssert = true;
           const [argument] = path.node.arguments;
-          const val = path.scope.generateUidIdentifier('val');
-          path.replaceWith(returnIfAbruptAssertTemplate({ ARG: argument }));
+          if (path.parentPath.isExpressionStatement()) {
+            // We don't care about the result.
+            path.parentPath.replaceWith(template.statement.ast`
+              Assert(!(${argument} instanceof AbruptCompletion));
+            `);
+          } else {
+            path.replaceWith(returnIfAbruptAssertTemplate({ ARG: argument }));
+          }
         }
       },
     },
