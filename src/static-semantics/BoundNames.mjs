@@ -16,9 +16,10 @@ import {
 } from '../ast.mjs';
 
 // 12.1.2 #sec-identifiers-static-semantics-boundnames
-//   BindingIdentifier : Identifier
-//   BindingIdentifier : `yield`
-//   BindingIdentifier : `await`
+//   BindingIdentifier :
+//     Identifier
+//     `yield`
+//     `await`
 export function BoundNames_BindingIdentifier(BindingIdentifier) {
   return [BindingIdentifier.name];
 }
@@ -26,8 +27,9 @@ export function BoundNames_BindingIdentifier(BindingIdentifier) {
 // 13.3.1.2 #sec-let-and-const-declarations-static-semantics-boundnames
 //   LexicalDeclaration : LetOrConst BindingList `;`
 //   BindingList : BindingList `,` LexicalBinding
-//   LexicalBinding : BindingIdentifier Initializer
-//   LexicalBinding : BindingPattern Initializer
+//   LexicalBinding :
+//     BindingIdentifier Initializer
+//     BindingPattern Initializer
 //
 // (implicit)
 //   BindingList : LexicalBinding
@@ -62,8 +64,9 @@ export function BoundNames_VariableDeclarationList(VariableDeclarationList) {
 }
 
 // 13.3.2.1 #sec-variable-statement-static-semantics-boundnames
-//   VariableDeclaration : BindingIdentifier Initializer
-//   VariableDeclaration : BindingPattern Initializer
+//   VariableDeclaration :
+//     BindingIdentifier Initializer
+//     BindingPattern Initializer
 export function BoundNames_VariableDeclaration(VariableDeclaration) {
   switch (true) {
     case isBindingIdentifier(VariableDeclaration.id):
@@ -101,8 +104,9 @@ export function BoundNames_SingleNameBinding(SingleNameBinding) {
 //   BindingElement : BindingPattern Initializer
 //
 // (implicit)
-//   BindingElement : SingleNameBinding
-//   BindingElement : BindingPattern
+//   BindingElement :
+//     SingleNameBinding
+//     BindingPattern
 export function BoundNames_BindingElement(BindingElement) {
   switch (true) {
     case isSingleNameBinding(BindingElement):
@@ -117,8 +121,9 @@ export function BoundNames_BindingElement(BindingElement) {
 }
 
 // (implicit)
-//   BindingRestElement : `...` BindingIdentifier
-//   BindingRestElement : `...` BindingPattern
+//   BindingRestElement :
+//     `...` BindingIdentifier
+//     `...` BindingPattern
 export function BoundNames_BindingRestElement(BindingRestElement) {
   switch (true) {
     case isBindingIdentifier(BindingRestElement.argument):
@@ -131,10 +136,11 @@ export function BoundNames_BindingRestElement(BindingRestElement) {
 }
 
 // 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
-//   ArrayBindingPattern : `[` Elision `]`
-//   ArrayBindingPattern : `[` Elision BindingRestElement `]`
-//   ArrayBindingPattern : `[` BindingElementList `,` Elision `]`
-//   ArrayBindingPattern : `[` BindingElementList `,` Elision BindingRestElement `]`
+//   ArrayBindingPattern :
+//     `[` Elision `]`
+//     `[` Elision BindingRestElement `]`
+//     `[` BindingElementList `,` Elision `]`
+//     `[` BindingElementList `,` Elision BindingRestElement `]`
 //   BindingElementList : BindingElementList `,` BindingElisionElement
 //   BindingElisionElement : Elision BindingElement
 export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
@@ -184,14 +190,16 @@ export function BoundNames_BindingRestProperty(BindingRestProperty) {
 }
 
 // 13.3.3.1 #sec-destructuring-binding-patterns-static-semantics-boundnames
-//   ObjectBindingPattern : `{` `}`
-//   ObjectBindingPattern : `{` BindingRestProperty `}`
+//   ObjectBindingPattern :
+//     `{` `}`
+//     `{` BindingRestProperty `}`
 //   BindingPropertyList : BindingPropertyList `,` BindingProperty
 //
 // (implicit)
-//   ObjectBindingPattern : `{` BindingPropertyList `}`
-//   ObjectBindingPattern : `{` BindingPropertyList `,` `}`
-//   ObjectBindingPattern : `{` BindingPropertyList `,` BindingRestProperty `}`
+//   ObjectBindingPattern :
+//     `{` BindingPropertyList `}`
+//     `{` BindingPropertyList `,` `}`
+//     `{` BindingPropertyList `,` BindingRestProperty `}`
 function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
   const names = [];
   for (const BindingPropertyOrBindingRestProperty of ObjectBindingPattern.properties) {
@@ -214,8 +222,9 @@ function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
 }
 
 // (implicit)
-//   BindingPattern : ObjectBindingPattern
-//   BindingPattern : ArrayBindingPattern
+//   BindingPattern :
+//     ObjectBindingPattern
+//     ArrayBindingPattern
 function BoundNames_BindingPattern(BindingPattern) {
   switch (true) {
     case isObjectBindingPattern(BindingPattern):
@@ -251,15 +260,17 @@ function BoundNames_BindingIdentifierOrBindingPattern(
 }
 
 // (implicit)
-//   ForBinding : BindingIdentifier
-//   ForBinding : BindingPattern
+//   ForBinding :
+//     BindingIdentifier
+//     BindingPattern
 export function BoundNames_ForBinding(node) {
   return BoundNames_BindingIdentifierOrBindingPattern('ForBinding', node);
 }
 
 // (implicit)
-//   CatchParameter : BindingIdentifier
-//   CatchParameter : BindingPattern
+//   CatchParameter :
+//     BindingIdentifier
+//     BindingPattern
 export function BoundNames_CatchParameter(node) {
   return BoundNames_BindingIdentifierOrBindingPattern('CatchParameter', node);
 }
@@ -267,33 +278,31 @@ export function BoundNames_CatchParameter(node) {
 // 14.1.3 #sec-function-definitions-static-semantics-boundnames
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-//   FunctionDeclaration :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //
 // 14.4.2 #sec-generator-function-definitions-static-semantics-boundnames
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-//   GeneratorDeclaration :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //
 // 14.5.2 #sec-async-generator-function-definitions-static-semantics-boundnames
 //   AsyncGeneratorDeclaration :
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-//   AsyncGeneratorDeclaration :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //
 // 14.7.2 #sec-async-function-definitions-static-semantics-BoundNames
 //   AsyncFunctionDeclaration :
 //     `async` [no LineTerminator here] `function` BindingIdentifier `(` FormalParameters `)`
-//     `{` AsyncFunctionBody `}`
-//   AsyncFunctionDeclaration : `async` [no LineTerminator here] `function` `(` FormalParameters `)`
-//     `{` AsyncFunctionBody `}`
+//       `{` AsyncFunctionBody `}`
+//     `async` [no LineTerminator here] `function` `(` FormalParameters `)`
+//       `{` AsyncFunctionBody `}`
 //
 // (implicit)
-//   HoistableDeclaration : FunctionDeclaration
-//   HoistableDeclaration : GeneratorDeclaration
-//   HoistableDeclaration : AsyncFunctionDeclaration
-//   HoistableDeclaration : AsyncGeneratorDeclaration
+//   HoistableDeclaration :
+//     FunctionDeclaration
+//     GeneratorDeclaration
+//     AsyncFunctionDeclaration
+//     AsyncGeneratorDeclaration
 export function BoundNames_HoistableDeclaration(HoistableDeclaration) {
   if (HoistableDeclaration.id === null) {
     return ['*default*'];
@@ -307,8 +316,9 @@ export const BoundNames_AsyncFunctionDeclaration = BoundNames_HoistableDeclarati
 export const BoundNames_AsyncGeneratorDeclaration = BoundNames_HoistableDeclaration;
 
 // 14.6.2 #sec-class-definitions-static-semantics-boundnames
-//   ClassDeclaration : `class` BindingIdentifier ClassTail
-//   ClassDeclaration : `class` ClassTail
+//   ClassDeclaration :
+//     `class` BindingIdentifier ClassTail
+//     `class` ClassTail
 export function BoundNames_ClassDeclaration(ClassDeclaration) {
   if (ClassDeclaration.id === null) {
     return ['*default*'];
@@ -317,9 +327,10 @@ export function BoundNames_ClassDeclaration(ClassDeclaration) {
 }
 
 // (implicit)
-//   Declaration : HoistableDeclaration
-//   Declaration : ClassDeclaration
-//   Declaration : LexicalDeclaration
+//   Declaration :
+//     HoistableDeclaration
+//     ClassDeclaration
+//     LexicalDeclaration
 export function BoundNames_Declaration(Declaration) {
   switch (true) {
     case isHoistableDeclaration(Declaration):

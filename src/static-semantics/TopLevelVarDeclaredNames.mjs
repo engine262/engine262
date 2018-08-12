@@ -24,8 +24,9 @@ export function TopLevelVarDeclaredNames_StatementList(StatementList) {
 }
 
 // 13.2.9 #sec-block-static-semantics-toplevelvardeclarednames
-//   StatementListItem : Declaration
-//   StatementListItem : Statement
+//   StatementListItem :
+//     Declaration
+//     Statement
 export function TopLevelVarDeclaredNames_StatementListItem(StatementListItem) {
   switch (true) {
     case isDeclaration(StatementListItem):
@@ -50,8 +51,9 @@ export function TopLevelVarDeclaredNames_LabelledStatement(LabelledStatement) {
 }
 
 // 13.13.10 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
-//   LabelledItem : Statement
-//   LabelledItem : FunctionDeclaration
+//   LabelledItem :
+//     Statement
+//     FunctionDeclaration
 export function TopLevelVarDeclaredNames_LabelledItem(LabelledItem) {
   switch (true) {
     case isStatement(LabelledItem):

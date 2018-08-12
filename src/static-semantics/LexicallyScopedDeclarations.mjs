@@ -25,8 +25,9 @@ export function LexicallyScopedDeclarations_StatementList(StatementList) {
 }
 
 // 13.2.6 #sec-block-static-semantics-lexicallyscopeddeclarations
-//   StatementListItem : Statement
-//   StatementListItem : Declaration
+//   StatementListItem :
+//     Statement
+//     Declaration
 export function LexicallyScopedDeclarations_StatementListItem(StatementListItem) {
   switch (true) {
     case isStatement(StatementListItem):
@@ -48,8 +49,9 @@ export function LexicallyScopedDeclarations_LabelledStatement(LabelledStatement)
 }
 
 // 13.13.7 #sec-labelled-statements-static-semantics-lexicallyscopeddeclarations
-//   LabelledItem : Statement
-//   LabelledItem : FunctionDeclaration
+//   LabelledItem :
+//     Statement
+//     FunctionDeclaration
 export function LexicallyScopedDeclarations_LabelledItem(LabelledItem) {
   switch (true) {
     case isStatement(LabelledItem):
@@ -62,8 +64,9 @@ export function LexicallyScopedDeclarations_LabelledItem(LabelledItem) {
 }
 
 // 14.1.15 #sec-function-definitions-static-semantics-lexicallydeclarednames
-//   FunctionStatementList : [empty]
-//   FunctionStatementList : StatementList
+//   FunctionStatementList :
+//     [empty]
+//     StatementList
 export const // eslint-disable-next-line max-len
   LexicallyScopedDeclarations_FunctionStatementList = TopLevelLexicallyScopedDeclarations_StatementList;
 

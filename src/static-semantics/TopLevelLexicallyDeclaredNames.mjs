@@ -21,8 +21,9 @@ export function TopLevelLexicallyDeclaredNames_StatementList(StatementList) {
 }
 
 // 13.2.7 #sec-block-static-semantics-toplevellexicallydeclarednames
-//   StatementListItem : Statement
-//   StatementListItem : Declaration
+//   StatementListItem :
+//     Statement
+//     Declaration
 export function TopLevelLexicallyDeclaredNames_StatementListItem(StatementListItem) {
   switch (true) {
     case isStatement(StatementListItem):

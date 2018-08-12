@@ -1,10 +1,12 @@
 // 13.1.4 #sec-static-semantics-declarationpart
-//   HoistableDeclaration : FunctionDeclaration
-//   HoistableDeclaration : GeneratorDeclaration
-//   HoistableDeclaration : AsyncFunctionDeclaration
-//   HoistableDeclaration : AsyncGeneratorDeclaration
-//   Declaration : ClassDeclaration
-//   Declaration : LexicalDeclaration
+//   HoistableDeclaration :
+//     FunctionDeclaration
+//     GeneratorDeclaration
+//     AsyncFunctionDeclaration
+//     AsyncGeneratorDeclaration
+//   Declaration :
+//     ClassDeclaration
+//     LexicalDeclaration
 //
 // (implicit)
 //   Declaration : HoistableDeclaration

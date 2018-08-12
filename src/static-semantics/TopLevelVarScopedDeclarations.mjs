@@ -20,8 +20,9 @@ export function TopLevelVarScopedDeclarations_StatementList(StatementList) {
 }
 
 // 13.2.10 #sec-block-static-semantics-toplevelvarscopeddeclarations
-//   StatementListItem : Statement
-//   StatementListItem : Declaration
+//   StatementListItem :
+//     Statement
+//     Declaration
 export function TopLevelVarScopedDeclarations_StatementListItem(StatementListItem) {
   switch (true) {
     case isStatement(StatementListItem):
@@ -46,8 +47,9 @@ export function TopLevelVarScopedDeclarations_LabelledStatement(LabelledStatemen
 }
 
 // 13.13.11 #sec-labelled-statements-static-semantics-toplevelvarscopeddeclarations
-//   LabelledItem : Statement
-//   LabelledItem : FunctionDeclaration
+//   LabelledItem :
+//     Statement
+//     FunctionDeclaration
 export function TopLevelVarScopedDeclarations_LabelledItem(LabelledItem) {
   switch (true) {
     case isStatement(LabelledItem):

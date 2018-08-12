@@ -31,8 +31,9 @@ export function LexicallyDeclaredNames_StatementList(StatementList) {
 }
 
 // 13.2.5 #sec-block-static-semantics-lexicallydeclarednames
-//   StatementListItem : Statement
-//   StatementListItem : Declaration
+//   StatementListItem :
+//     Statement
+//     Declaration
 export function LexicallyDeclaredNames_StatementListItem(StatementListItem) {
   switch (true) {
     case isStatement(StatementListItem):
@@ -54,8 +55,9 @@ export function LexicallyDeclaredNames_LabelledStatement(LabelledStatement) {
 }
 
 // 13.13.6 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
-//   LabelledItem : Statement
-//   LabelledItem : FunctionDeclaration
+//   LabelledItem :
+//     Statement
+//     FunctionDeclaration
 export function LexicallyDeclaredNames_LabelledItem(LabelledItem) {
   switch (true) {
     case isStatement(LabelledItem):
@@ -68,8 +70,9 @@ export function LexicallyDeclaredNames_LabelledItem(LabelledItem) {
 }
 
 // 14.1.14 #sec-function-definitions-static-semantics-lexicallydeclarednames
-//   FunctionStatementList : [empty]
-//   FunctionStatementList : StatementList
+//   FunctionStatementList :
+//     [empty]
+//     StatementList
 export const
   LexicallyDeclaredNames_FunctionStatementList = TopLevelLexicallyDeclaredNames_StatementList;
 

@@ -27,24 +27,27 @@ import {
 } from './TopLevelVarScopedDeclarations.mjs';
 
 // 13.1.6 #sec-statement-semantics-static-semantics-varscopeddeclarations
-//   Statement : EmptyStatement
-//   Statement : ExpressionStatement
-//   Statement : ContinueStatement
-//   Statement : BreakStatement
-//   Statement : ReturnStatement
-//   Statement : ThrowStatement
-//   Statement : DebuggerStatement
+//   Statement :
+//     EmptyStatement
+//     ExpressionStatement
+//     ContinueStatement
+//     BreakStatement
+//     ReturnStatement
+//     ThrowStatement
+//     DebuggerStatement
 //
 // (implicit)
-//   Statement : BlockStatement
-//   Statement : VariableStatement
-//   Statement : IfStatement
-//   Statement : BreakableStatement
-//   Statement : WithStatement
-//   Statement : LabelledStatement
-//   Statement : TryStatement
-//   BreakableStatement : IterationStatement
-//   BreakableStatement : SwitchStatement
+//   Statement :
+//     BlockStatement
+//     VariableStatement
+//     IfStatement
+//     BreakableStatement
+//     WithStatement
+//     LabelledStatement
+//     TryStatement
+//   BreakableStatement :
+//     IterationStatement
+//     SwitchStatement
 export function VarScopedDeclarations_Statement(Statement) {
   switch (true) {
     case isEmptyStatement(Statement):
@@ -121,8 +124,9 @@ export function VarScopedDeclarations_StatementListItem(StatementListItem) {
 }
 
 // 13.3.2.3 #sec-variable-statement-static-semantics-varscopeddeclarations
-//   VariableDeclarationList : VariableDeclaration
-//   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
+//   VariableDeclarationList :
+//     VariableDeclaration
+//     VariableDeclarationList `,` VariableDeclaration
 export function VarScopedDeclarations_VariableDeclarationList(VariableDeclarationList) {
   return VariableDeclarationList;
 }
@@ -134,8 +138,9 @@ export function VarScopedDeclarations_VariableStatement(VariableStatement) {
 }
 
 // 13.6.6 #sec-if-statement-static-semantics-varscopeddeclarations
-//   IfStatement : `if` `(` Expression `)` Statement `else` Statement
-//   IfStatement : `if` `(` Expression `)` Statement
+//   IfStatement :
+//     `if` `(` Expression `)` Statement `else` Statement
+//     `if` `(` Expression `)` Statement
 export function VarScopedDeclarations_IfStatement(IfStatement) {
   if (IfStatement.alternate) {
     return [
@@ -153,22 +158,22 @@ export function VarScopedDeclarations_IfStatement(IfStatement) {
 //   IterationStatement : `while` `(` Expression `)` Statement
 //
 // 13.7.4.6 #sec-for-statement-static-semantics-varscopeddeclarations
-//   IterationStatement : `for` `(` Expression `;` Expression `;` Expression `)` Statement
 //   IterationStatement :
+//     `for` `(` Expression `;` Expression `;` Expression `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression `;` Expression `)` Statement
-//   IterationStatement : `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
+//     `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
 //
 // 13.7.5.8 #sec-for-in-and-for-of-statements-static-semantics-varscopeddeclarations
-//   IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
-//   IterationStatement : `for` `(` `var` ForBinding `in` Expression `)` Statement
-//   IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
-//   IterationStatement : `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   IterationStatement :
+//     `for` `(` LeftHandSideExpression `in` Expression `)` Statement
+//     `for` `(` `var` ForBinding `in` Expression `)` Statement
+//     `for` `(` ForDeclaration `in` Expression `)` Statement
+//     `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //     `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `(` ForDeclaration `of` Expression `)` Statement
-//   IterationStatement : `for` `await` `(` ForDeclaration `of` Expression `)` Statement
+//     `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//     `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//     `for` `(` ForDeclaration `of` Expression `)` Statement
+//     `for` `await` `(` ForDeclaration `of` Expression `)` Statement
 export function VarScopedDeclarations_IterationStatement(IterationStatement) {
   let declarationsFromBinding = [];
   switch (IterationStatement.type) {
@@ -212,8 +217,9 @@ export function VarScopedDeclarations_SwitchStatement(SwitchStatement) {
 }
 
 // 13.12.8 #sec-switch-statement-static-semantics-varscopeddeclarations
-//   CaseBlock : `{` `}`
-//   CaseBlock : `{` CaseClauses_opt DefaultClause CaseClauses_opt `}`
+//   CaseBlock :
+//     `{` `}`
+//     `{` CaseClauses_opt DefaultClause CaseClauses_opt `}`
 //   CaseClauses : CaseClauses CaseClause
 //   CaseClause : `case` Expression `:` StatementList_opt
 //   DefaultClause : `default` `:` StatementList_opt
@@ -248,9 +254,10 @@ export function VarScopedDeclarations_LabelledStatement(LabelledStatement) {
 }
 
 // 13.15.6 #sec-try-statement-static-semantics-varscopeddeclarations
-//   TryStatement : `try` Block Catch
-//   TryStatement : `try` Block Finally
-//   TryStatement : `try` Block Catch Finally
+//   TryStatement :
+//     `try` Block Catch
+//     `try` Block Finally
+//     `try` Block Catch Finally
 //   Catch : `catch` `(` CatchParameter `)` Block
 //
 // (implicit)
@@ -270,8 +277,9 @@ export function VarScopedDeclarations_TryStatement(TryStatement) {
 }
 
 // 14.1.17 #sec-function-definitions-static-semantics-varscopeddeclarations
-//   FunctionStatementList : [empty]
-//   FunctionStatementList : StatementList
+//   FunctionStatementList :
+//     [empty]
+//     StatementList
 export const
   VarScopedDeclarations_FunctionStatementList = TopLevelVarScopedDeclarations_StatementList;
 
@@ -309,8 +317,9 @@ export const VarScopedDeclarations_AsyncConciseBody = VarScopedDeclarations_Conc
 export const VarScopedDeclarations_ScriptBody = TopLevelVarScopedDeclarations_StatementList;
 
 // (implicit)
-//   Script : [empty]
-//   Script : ScriptBody
+//   Script :
+//     [empty]
+//     ScriptBody
 export const VarScopedDeclarations_Script = VarScopedDeclarations_ScriptBody;
 
 // 15.2.1.14 #sec-module-semantics-static-semantics-varscopeddeclarations
@@ -338,8 +347,9 @@ export const VarScopedDeclarations_ModuleBody = VarScopedDeclarations_ModuleItem
 export const VarScopedDeclarations_Module = VarScopedDeclarations_ModuleBody;
 
 // 15.2.1.14 #sec-module-semantics-static-semantics-varscopeddeclarations
-//   ModuleItem : ImportDeclaration
-//   ModuleItem : ExportDeclaration
+//   ModuleItem :
+//     ImportDeclaration
+//     ExportDeclaration
 //
 // (implicit)
 //   ModuleItem : StatementListItem

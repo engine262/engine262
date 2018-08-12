@@ -18,8 +18,9 @@ export function TopLevelLexicallyScopedDeclarations_StatementList(StatementList)
 }
 
 // 13.2.8 #sec-block-static-semantics-toplevellexicallyscopeddeclarations
-//   StatementListItem : Statement
-//   StatementListItem : Declaration
+//   StatementListItem :
+//     Statement
+//     Declaration
 export function TopLevelLexicallyScopedDeclarations_StatementListItem(StatementListItem) {
   switch (true) {
     case isStatement(StatementListItem):

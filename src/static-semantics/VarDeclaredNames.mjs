@@ -32,25 +32,28 @@ import {
 } from './TopLevelVarDeclaredNames.mjs';
 
 // 13.1.5 #sec-statement-semantics-static-semantics-vardeclarednames
-//   Statement : EmptyStatement
-//   Statement : ExpressionStatement
-//   Statement : ContinueStatement
-//   Statement : ContinueStatement
-//   Statement : BreakStatement
-//   Statement : ReturnStatement
-//   Statement : ThrowStatement
-//   Statement : DebuggerStatement
+//   Statement :
+//     EmptyStatement
+//     ExpressionStatement
+//     ContinueStatement
+//     ContinueStatement
+//     BreakStatement
+//     ReturnStatement
+//     ThrowStatement
+//     DebuggerStatement
 //
 // (implicit)
-//   Statement : BlockStatement
-//   Statement : VariableStatement
-//   Statement : IfStatement
-//   Statement : BreakableStatement
-//   Statement : WithStatement
-//   Statement : LabelledStatement
-//   Statement : TryStatement
-//   BreakableStatement : IterationStatement
-//   BreakableStatement : SwitchStatement
+//   Statement :
+//     BlockStatement
+//     VariableStatement
+//     IfStatement
+//     BreakableStatement
+//     WithStatement
+//     LabelledStatement
+//     TryStatement
+//   BreakableStatement :
+//     IterationStatement
+//     SwitchStatement
 export function VarDeclaredNames_Statement(Statement) {
   switch (true) {
     case isEmptyStatement(Statement):
@@ -131,8 +134,9 @@ export function VarDeclaredNames_StatementListItem(StatementListItem) {
 export const VarDeclaredNames_VariableStatement = BoundNames_VariableStatement;
 
 // 13.6.5 #sec-if-statement-static-semantics-vardeclarednames
-//   IfStatement : `if` `(` Expression `)` Statement `else` Statement
-//   IfStatement : `if` `(` Expression `)` Statement
+//   IfStatement :
+//     `if` `(` Expression `)` Statement `else` Statement
+//     `if` `(` Expression `)` Statement
 export function VarDeclaredNames_IfStatement(IfStatement) {
   if (IfStatement.alternate) {
     return [
@@ -150,22 +154,22 @@ export function VarDeclaredNames_IfStatement(IfStatement) {
 //   IterationStatement : `while` `(` Expression `)` Statement
 //
 // 13.7.4.5 #sec-for-statement-static-semantics-vardeclarednames
-//   IterationStatement : `for` `(` Expression `;` Expression `;` Expression `)` Statement
 //   IterationStatement :
+//     `for` `(` Expression `;` Expression `;` Expression `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression `;` Expression `)` Statement
-//   IterationStatement : `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
+//     `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
 //
 // 13.7.5.7 #sec-for-in-and-for-of-statements-static-semantics-vardeclarednames
-//   IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
-//   IterationStatement : `for` `(` `var` ForBinding `in` Expression `)` Statement
-//   IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
-//   IterationStatement : `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   IterationStatement :
+//     `for` `(` LeftHandSideExpression `in` Expression `)` Statement
+//     `for` `(` `var` ForBinding `in` Expression `)` Statement
+//     `for` `(` ForDeclaration `in` Expression `)` Statement
+//     `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //     `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-//   IterationStatement : `for` `(` ForDeclaration `of` Expression `)` Statement
-//   IterationStatement : `for` `await` `(` ForDeclaration `of` Expression `)` Statement
+//     `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//     `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//     `for` `(` ForDeclaration `of` Expression `)` Statement
+//     `for` `await` `(` ForDeclaration `of` Expression `)` Statement
 export function VarDeclaredNames_IterationStatement(IterationStatement) {
   let namesFromBinding = [];
   switch (IterationStatement.type) {
@@ -209,8 +213,9 @@ export function VarDeclaredNames_SwitchStatement(SwitchStatement) {
 }
 
 // 13.12.7 #sec-switch-statement-static-semantics-vardeclarednames
-//   CaseBlock : `{` `}`
-//   CaseBlock : `{` CaseClauses_opt DefaultClause CaseClauses_opt `}`
+//   CaseBlock :
+//     `{` `}`
+//     `{` CaseClauses_opt DefaultClause CaseClauses_opt `}`
 //   CaseClauses : CaseClauses CaseClause
 //   CaseClause : `case` Expression `:` StatementList_opt
 //   DefaultClause : `default` `:` StatementList_opt
@@ -245,9 +250,10 @@ export function VarDeclaredNames_LabelledStatement(LabelledStatement) {
 }
 
 // 13.15.5 #sec-try-statement-static-semantics-vardeclarednames
-//   TryStatement : `try` Block Catch
-//   TryStatement : `try` Block Finally
-//   TryStatement : `try` Block Catch Finally
+//   TryStatement :
+//     `try` Block Catch
+//     `try` Block Finally
+//     `try` Block Catch Finally
 //   Catch : `catch` `(` CatchParameter `)` Block
 //
 // (implicit)
@@ -267,8 +273,9 @@ export function VarDeclaredNames_TryStatement(TryStatement) {
 }
 
 // 14.1.16 #sec-function-definitions-static-semantics-vardeclarednames
-//   FunctionStatementList : [empty]
-//   FunctionStatementList : StatementList
+//   FunctionStatementList :
+//     [empty]
+//     StatementList
 export const VarDeclaredNames_FunctionStatementList = TopLevelVarDeclaredNames_StatementList;
 
 // (implicit)
@@ -304,8 +311,9 @@ export const VarDeclaredNames_AsyncConciseBody = VarDeclaredNames_ConciseBody;
 export const VarDeclaredNames_ScriptBody = TopLevelVarDeclaredNames_StatementList;
 
 // (implicit)
-//   Script : [empty]
-//   Script : ScriptBody
+//   Script :
+//     [empty]
+//     ScriptBody
 export const VarDeclaredNames_Script = VarDeclaredNames_ScriptBody;
 
 // 15.2.1.13 #sec-module-semantics-static-semantics-vardeclarednames
@@ -333,8 +341,9 @@ export const VarDeclaredNames_ModuleBody = VarDeclaredNames_ModuleItemList;
 export const VarDeclaredNames_Module = VarDeclaredNames_ModuleBody;
 
 // 15.2.1.13 #sec-module-semantics-static-semantics-vardeclarednames
-//   ModuleItem : ImportDeclaration
-//   ModuleItem : ExportDeclaration
+//   ModuleItem :
+//     ImportDeclaration
+//     ExportDeclaration
 //
 // (implicit)
 //   ModuleItem : StatementListItem
