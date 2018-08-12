@@ -11,6 +11,33 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
+  const returnIfAbruptTemplateGeneric = template.expression(`
+    do {
+      const hygenicTemp = ARG;
+      if (hygenicTemp instanceof AbruptCompletion) {
+        return hygenicTemp;
+      }
+      hygenicTemp instanceof Completion ? hygenicTemp.Value : hygenicTemp;
+    }
+  `, { plugins: ['doExpressions'] });
+
+  const returnIfAbruptTemplateIdentifier = template.expression(`
+    do {
+      if (ARG instanceof AbruptCompletion) {
+        return ARG;
+      }
+      ARG instanceof Completion ? ARG.Value : ARG;
+    }
+  `, { plugins: ['doExpressions'] });
+
+  const returnIfAbruptAssertTemplate = template.expression(`
+    do {
+      const val = ARG;
+      Assert(!(val instanceof AbruptCompletion));
+      val instanceof Completion ? val.Value : val;
+    }
+  `, { plugins: ['doExpressions'] });
+
   return {
     visitor: {
       Program: {
@@ -46,65 +73,18 @@ module.exports = ({ types: t, template }) => {
         if (path.node.callee.name === 'Q' || path.node.callee.name === 'ReturnIfAbrupt') {
           state.needCompletion = true;
           const [argument] = path.node.arguments;
-          if (t.isCallExpression(argument)) {
-            // ReturnIfAbrupt(AbstractOperation())
-            const hygenicTemp = path.scope.generateUidIdentifier('hygenicTemp');
-            path.replaceWith(t.DoExpression(t.BlockStatement([
-              t.VariableDeclaration('const', [
-                t.VariableDeclarator(hygenicTemp, argument),
-              ]),
-              t.IfStatement(
-                t.BinaryExpression('instanceof', hygenicTemp, t.Identifier('AbruptCompletion')),
-                t.ReturnStatement(hygenicTemp),
-              ),
-              t.IfStatement(
-                t.BinaryExpression('instanceof', hygenicTemp, t.Identifier('Completion')),
-                t.ExpressionStatement(
-                  t.MemberExpression(hygenicTemp, t.Identifier('Value')),
-                ),
-                t.ExpressionStatement(hygenicTemp),
-              ),
-            ])));
+          if (t.isIdentifier(argument)) {
+            // ReturnIfAbrupt(argument)
+            path.replaceWith(returnIfAbruptTemplateIdentifier({ ARG: argument }));
           } else {
-            // ReturnIfAbrupt(argument);
-            path.replaceWith(t.DoExpression(t.BlockStatement([
-              t.IfStatement(
-                t.BinaryExpression('instanceof', argument, t.Identifier('AbruptCompletion')),
-                t.ReturnStatement(argument),
-                t.ifStatement(
-                  t.BinaryExpression('instanceof', argument, t.Identifier('Completion')),
-                  t.ExpressionStatement(
-                    t.MemberExpression(argument, t.Identifier('Value')),
-                  ),
-                  t.ExpressionStatement(argument),
-                ),
-              ),
-            ])));
+            // ReturnIfAbrupt(AbstractOperation())
+            path.replaceWith(returnIfAbruptTemplateGeneric({ ARG: argument }));
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;
           const [argument] = path.node.arguments;
           const val = path.scope.generateUidIdentifier('val');
-          path.replaceWith(t.DoExpression(t.BlockStatement([
-            t.VariableDeclaration('const', [
-              t.VariableDeclarator(val, argument),
-            ]),
-            t.IfStatement(
-              t.BinaryExpression('instanceof', val, t.Identifier('AbruptCompletion')),
-              t.ThrowStatement(
-                t.NewExpression(t.Identifier('Error'), [
-                  t.StringLiteral('AssertionError'),
-                ]),
-              ),
-            ),
-            t.IfStatement(
-              t.BinaryExpression('instanceof', val, t.Identifier('Completion')),
-              t.ExpressionStatement(
-                t.MemberExpression(val, t.Identifier('Value')),
-              ),
-              t.ExpressionStatement(val),
-            ),
-          ])));
+          path.replaceWith(returnIfAbruptAssertTemplate({ ARG: argument }));
         }
       },
     },
