@@ -19,15 +19,56 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
-  const returnIfAbruptTemplateGeneric = template.expression(`
-    do {
-      const hygenicTemp = ARG;
-      if (hygenicTemp instanceof AbruptCompletion) {
-        return hygenicTemp;
-      }
-      hygenicTemp instanceof Completion ? hygenicTemp.Value : hygenicTemp;
+  // Take care not to evaluate ARGUMENT multiple times.
+  const templates = {
+    Q: {
+      dontCare: template.statement(`
+        {
+          const hygenicTemp = ARGUMENT;
+          if (hygenicTemp instanceof AbruptCompletion) {
+            return hygenicTemp;
+          }
+        }
+      `),
+      newVariable: template.statements(`
+        let ID = ARGUMENT;
+        if (ID instanceof AbruptCompletion) {
+          return ID;
+        }
+        if (ID instanceof Completion) {
+          ID = ID.Value;
+        }
+      `),
+      existingVariable: template.statements(`
+        ID = ARGUMENT;
+        if (ID instanceof AbruptCompletion) {
+          return ID;
+        }
+        if (ID instanceof Completion) {
+          ID = ID.Value;
+        }
+      `),
+    },
+    X: {
+      dontCare: template.statement(`
+        Assert(!(ARGUMENT instanceof AbruptCompletion));
+      `),
+      newVariable: template.statements(`
+        let ID = ARGUMENT;
+        Assert(!(ID instanceof AbruptCompletion));
+        if (ID instanceof Completion) {
+          ID = ID.Value;
+        }
+      `),
+      existingVariable: template.statements(`
+        ID = ARGUMENT;
+        Assert(!(ID instanceof AbruptCompletion));
+        if (ID instanceof Completion) {
+          ID = ID.Value;
+        }
+      `),
     }
-  `, { plugins: ['doExpressions'] });
+  };
 
   function findParentStatementPath(path) {
     while (path && !path.isStatement()) {
@@ -109,29 +150,19 @@ module.exports = ({ types: t, template }) => {
             }
           } else {
             // ReturnIfAbrupt(AbstractOperation())
-            if (t.isExpressionStatement(path.parent)) {
-              // We don't care about the result.
-              path.parentPath.replaceWith(template.statement.ast`
-                {
-                  const hygenicTemp = ${argument};
-                  if (hygenicTemp instanceof AbruptCompletion) {
-                    return hygenicTemp;
-                  }
-                }
-              `);
-            } else {
-              path.replaceWith(returnIfAbruptTemplateGeneric({ ARG: argument }));
-            }
+            replace(templates.Q, 'hygenicTemp');
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;
           state.needAssert = true;
-          const [argument] = path.node.arguments;
+          replace(templates.X, 'val');
+        }
+
+        function replace(templateObj, temporaryVariableName) {
+          const [ARGUMENT] = path.node.arguments;
           if (t.isExpressionStatement(path.parent)) {
             // We don't care about the result.
-            path.parentPath.replaceWith(template.statement.ast`
-              Assert(!(${argument} instanceof AbruptCompletion));
-            `);
+            path.parentPath.replaceWith(templateObj.dontCare({ ARGUMENT }));
           } else if (
             t.isVariableDeclarator(path.parent)
             && t.isIdentifier(path.parent.id)
@@ -140,13 +171,8 @@ module.exports = ({ types: t, template }) => {
             // The result is assigned to a new variable, verbatim.
             const declarator = path.parentPath;
             const declaration = declarator.parentPath;
-            declaration.insertBefore(template.statements.ast`
-              let ${declarator.node.id} = ${argument};
-              Assert(!(${declarator.node.id} instanceof AbruptCompletion));
-              if (${declarator.node.id} instanceof Completion) {
-                ${declarator.node.id} = ${declarator.node.id}.Value;
-              }
-            `);
+            const ID = declarator.node.id;
+            declaration.insertBefore(templateObj.newVariable({ ID, ARGUMENT }));
             if (declaration.node.declarations.length === 1) {
               declaration.remove();
             } else {
@@ -158,26 +184,15 @@ module.exports = ({ types: t, template }) => {
             && t.isExpressionStatement(path.parentPath.parent)
           ) {
             // The result is assigned to an existing variable, verbatim.
-            const parentStatement = path.parentPath.parentPath;
-            parentStatement.replaceWithMultiple(template.statements.ast`
-              ${path.parent.left} = ${argument};
-              Assert(!(${path.parent.left} instanceof AbruptCompletion));
-              if (${path.parent.left} instanceof Completion) {
-                ${path.parent.left} = ${path.parent.left}.Value;
-              }
-            `);
+            const assignmentStatement = path.parentPath.parentPath;
+            const ID = path.parent.left;
+            assignmentStatement.replaceWithMultiple(templateObj.newVariable({ ID, ARGUMENT }));
           } else {
             // Ugliest variant that covers everything else.
             const parentStatement = findParentStatementPath(path);
-            const val = parentStatement.scope.generateUidIdentifier('val');
-            parentStatement.insertBefore(template.statements.ast`
-              let ${val} = ${argument};
-              Assert(!(${val} instanceof AbruptCompletion));
-              if (${val} instanceof Completion) {
-                ${val} = ${val}.Value;
-              }
-            `);
-            path.replaceWith(val);
+            const ID = parentStatement.scope.generateUidIdentifier(temporaryVariableName);
+            parentStatement.insertBefore(templateObj.newVariable({ ID, ARGUMENT }));
+            path.replaceWith(ID);
           }
         }
       },
