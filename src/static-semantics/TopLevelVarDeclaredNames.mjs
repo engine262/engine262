@@ -11,9 +11,7 @@ import {
   BoundNames_HoistableDeclaration,
 } from './BoundNames.mjs';
 
-import {
-  VarDeclaredNames_StatementListItem,
-} from './VarDeclaredNames.mjs';
+import { VarDeclaredNames_Statement } from './VarDeclaredNames.mjs';
 
 // 13.2.9 #sec-block-static-semantics-toplevelvardeclarednames
 //   StatementList : StatementList StatementListItem
@@ -39,7 +37,7 @@ export function TopLevelVarDeclaredNames_StatementListItem(StatementListItem) {
       if (isLabelledStatement(StatementListItem)) {
         return TopLevelVarDeclaredNames_LabelledStatement(StatementListItem);
       }
-      return VarDeclaredNames_StatementListItem(StatementListItem);
+      return VarDeclaredNames_Statement(StatementListItem);
     default:
       throw new TypeError(`Unexpected StatementListItem: ${StatementListItem.type}`);
   }
@@ -60,7 +58,7 @@ export function TopLevelVarDeclaredNames_LabelledItem(LabelledItem) {
       if (isLabelledStatement(LabelledItem)) {
         return TopLevelVarDeclaredNames_LabelledItem(LabelledItem.body);
       }
-      return VarDeclaredNames_StatementListItem(LabelledItem);
+      return VarDeclaredNames_Statement(LabelledItem);
     case isFunctionDeclaration(LabelledItem):
       return BoundNames_FunctionDeclaration(LabelledItem);
     default:
