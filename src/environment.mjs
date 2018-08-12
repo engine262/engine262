@@ -2,18 +2,18 @@ import {
   wellKnownSymbols,
   Type,
   New as NewValue,
-} from './value';
+} from './value.mjs';
 import {
   surroundingAgent,
-} from './engine';
+} from './engine.mjs';
 import {
   Assert,
   Get,
   HasOwnProperty,
   HasProperty,
   ToBoolean,
-} from './abstract-ops/all';
-import { Q } from './completion';
+} from './abstract-ops/all.mjs';
+import { Q } from './completion.mjs';
 
 export class LexicalEnvironment {
   constructor() {

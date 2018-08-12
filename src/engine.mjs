@@ -4,24 +4,24 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from './value';
+} from './value.mjs';
 
-import { ParseScript, ParseModule } from './parse';
+import { ParseScript, ParseModule } from './parse.mjs';
 
 import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
   Q,
-} from './completion';
+} from './completion.mjs';
 import {
   EnvironmentRecord,
-} from './environment';
+} from './environment.mjs';
 import {
   CreateRealm,
   SetRealmGlobalObject,
   SetDefaultGlobalBindings,
-} from './realm';
+} from './realm.mjs';
 import {
   Assert,
   Construct,
@@ -30,16 +30,16 @@ import {
   IsPropertyKey,
   ToBoolean,
   CreateBuiltinFunction,
-} from './abstract-ops/all';
+} from './abstract-ops/all.mjs';
 import {
   LexicallyDeclaredNames_ScriptBody,
   LexicallyScopedDeclarations_ScriptBody,
   VarDeclaredNames_ScriptBody,
   VarScopedDeclarations_ScriptBody,
-} from './static-semantics/all';
+} from './static-semantics/all.mjs';
 import {
   EvaluateScript,
-} from './evaluator';
+} from './evaluator.mjs';
 
 export class Agent {
   constructor() {

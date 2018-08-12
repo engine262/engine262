@@ -2,10 +2,10 @@ import {
   isDeclaration,
   isHoistableDeclaration,
   isStatement,
-} from '../ast';
+} from '../ast.mjs';
 import {
   BoundNames_Declaration,
-} from './BoundNames';
+} from './BoundNames.mjs';
 
 // 13.2.7 #sec-block-static-semantics-toplevellexicallydeclarednames
 //   StatementList : StatementList StatementListItem

@@ -3,13 +3,13 @@ import {
   OrdinaryCreateFromConstructor,
   ToNumber,
   ToInteger,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
-} from '../value';
-import { Q } from '../completion';
+} from '../value.mjs';
+import { Q } from '../completion.mjs';
 
 function NumberConstructor(realm, args, { NewTarget }) {
   let n;

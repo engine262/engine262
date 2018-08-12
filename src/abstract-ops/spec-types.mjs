@@ -1,11 +1,11 @@
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
-} from '../value';
+} from '../value.mjs';
 import {
   IsCallable,
   Get,
@@ -13,8 +13,8 @@ import {
   ToBoolean,
   CreateDataProperty,
   ObjectCreate,
-} from './all';
-import { Q } from '../completion';
+} from './all.mjs';
+import { Q } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {

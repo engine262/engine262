@@ -3,13 +3,13 @@ import {
   ToString,
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   UndefinedValue,
   New as NewValue,
-} from '../value';
-import { Q, X } from '../completion';
-import { surroundingAgent } from '../engine';
+} from '../value.mjs';
+import { Q, X } from '../completion.mjs';
+import { surroundingAgent } from '../engine.mjs';
 
 function ErrorConstructor(realm, [message], { NewTarget }) {
   let newTarget;

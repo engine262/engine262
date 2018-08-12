@@ -4,10 +4,10 @@ import {
   NullValue,
   ObjectValue,
   UndefinedValue,
-} from '../value';
+} from '../value.mjs';
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Assert,
   Call,
@@ -24,8 +24,8 @@ import {
   ToNumber,
   ToString,
   ToUint32,
-} from './all';
-import { Q, X } from '../completion';
+} from './all.mjs';
+import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O) {

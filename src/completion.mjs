@@ -1,6 +1,6 @@
 import {
   Assert,
-} from './abstract-ops/all';
+} from './abstract-ops/all.mjs';
 
 export class Completion {
   constructor(type, value, target) {

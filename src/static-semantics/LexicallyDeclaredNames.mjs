@@ -5,17 +5,17 @@ import {
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
-} from '../ast';
+} from '../ast.mjs';
 import {
   TopLevelLexicallyDeclaredNames_StatementList,
-} from './TopLevelLexicallyDeclaredNames';
+} from './TopLevelLexicallyDeclaredNames.mjs';
 import {
   BoundNames_Declaration,
   BoundNames_FunctionDeclaration,
-} from './BoundNames';
+} from './BoundNames.mjs';
 import {
   VarDeclaredNames_StatementListItem,
-} from './VarDeclaredNames';
+} from './VarDeclaredNames.mjs';
 
 // 13.2.5 #sec-block-static-semantics-lexicallydeclarednames
 //   StatementList : StatementList StatementListItem

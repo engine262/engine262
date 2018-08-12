@@ -1,9 +1,9 @@
 import {
   CreateBuiltinFunction,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   New as NewValue,
-} from '../value';
+} from '../value.mjs';
 
 export function CreateFunctionPrototype(realmRec) {
   const proto = CreateBuiltinFunction(() => NewValue(undefined), [], realmRec);

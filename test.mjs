@@ -1,3 +1,3 @@
-import { RunJobs } from './lib/engine';
+import { RunJobs } from './lib/engine.mjs';
 
 RunJobs();

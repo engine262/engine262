@@ -21,10 +21,10 @@ import {
   isTryStatement,
   isVariableStatement,
   isWithStatement,
-} from '../ast';
+} from '../ast.mjs';
 import {
   TopLevelVarScopedDeclarations_StatementList,
-} from './TopLevelVarScopedDeclarations';
+} from './TopLevelVarScopedDeclarations.mjs';
 
 // 13.1.6 #sec-statement-semantics-static-semantics-varscopeddeclarations
 //   Statement : EmptyStatement

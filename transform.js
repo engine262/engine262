@@ -28,7 +28,7 @@ module.exports = ({ types: t, template }) => {
         },
       },
       ImportDeclaration(path, state) {
-        if (path.node.source.value.endsWith('completion')) {
+        if (path.node.source.value.endsWith('completion.mjs')) {
           state.foundCompletion = true;
           if (!path.node.specifiers.find((s) => s.local.name === 'Completion')) {
             path.node.specifiers.push(

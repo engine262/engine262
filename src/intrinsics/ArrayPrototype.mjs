@@ -6,11 +6,11 @@ import {
   wellKnownSymbols,
   New as NewValue,
   Type,
-} from '../value';
+} from '../value.mjs';
 import {
   surroundingAgent,
   IsConcatSpreadable,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Assert,
   Construct,
@@ -31,12 +31,12 @@ import {
   IsCallable,
   Call,
   ToBoolean,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   Q, X,
-} from '../completion';
+} from '../completion.mjs';
 
-import { ArrayCreate } from './Array';
+import { ArrayCreate } from './Array.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);

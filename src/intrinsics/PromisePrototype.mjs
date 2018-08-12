@@ -2,7 +2,7 @@ import {
   surroundingAgent,
   EnqueueJob,
   HostPromiseRejectionTracker,
-} from '../engine';
+} from '../engine.mjs';
 import {
   CreateBuiltinFunction,
   Invoke,
@@ -13,18 +13,18 @@ import {
   Call,
   Get,
   IsPromise,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   Type,
   ObjectValue,
   New as NewValue,
-} from '../value';
-import { Q, ThrowCompletion } from '../completion';
+} from '../value.mjs';
+import { Q, ThrowCompletion } from '../completion.mjs';
 import {
   PromiseResolve,
   NewPromiseCapability,
   PromiseReactionJob,
-} from './Promise';
+} from './Promise.mjs';
 
 function PromiseCatch(realm, [onRejected], { thisValue }) {
   const promise = thisValue;

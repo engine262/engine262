@@ -2,37 +2,37 @@ import {
   UndefinedValue,
   ObjectValue,
   New as NewValue,
-} from './value';
+} from './value.mjs';
 import {
   CreateBuiltinFunction,
   ObjectCreate,
   DefinePropertyOrThrow,
-} from './abstract-ops/all';
+} from './abstract-ops/all.mjs';
 import {
   NewGlobalEnvironment,
-} from './environment';
+} from './environment.mjs';
 import {
   surroundingAgent,
-} from './engine';
-import { Q } from './completion';
+} from './engine.mjs';
+import { Q } from './completion.mjs';
 
-import { CreateObjectPrototype } from './intrinsics/ObjectPrototype';
-import { CreateObject } from './intrinsics/Object';
-import { CreateArrayPrototype } from './intrinsics/ArrayPrototype';
-import { CreateArray } from './intrinsics/Array';
-import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype';
-import { CreateBoolean } from './intrinsics/Boolean';
-import { CreateNumberPrototype } from './intrinsics/NumberPrototype';
-import { CreateNumber } from './intrinsics/Number';
-import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype';
-import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype';
-import { CreateSymbol } from './intrinsics/Symbol';
-import { CreateMath } from './intrinsics/Math';
-import { CreatePromisePrototype } from './intrinsics/PromisePrototype';
-import { CreatePromise } from './intrinsics/Promise';
-import { CreateStringPrototype } from './intrinsics/StringPrototype';
-import { CreateString } from './intrinsics/String';
-import { CreateError } from './intrinsics/Error';
+import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
+import { CreateObject } from './intrinsics/Object.mjs';
+import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
+import { CreateArray } from './intrinsics/Array.mjs';
+import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
+import { CreateBoolean } from './intrinsics/Boolean.mjs';
+import { CreateNumberPrototype } from './intrinsics/NumberPrototype.mjs';
+import { CreateNumber } from './intrinsics/Number.mjs';
+import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
+import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
+import { CreateSymbol } from './intrinsics/Symbol.mjs';
+import { CreateMath } from './intrinsics/Math.mjs';
+import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
+import { CreatePromise } from './intrinsics/Promise.mjs';
+import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
+import { CreateString } from './intrinsics/String.mjs';
+import { CreateError } from './intrinsics/Error.mjs';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms

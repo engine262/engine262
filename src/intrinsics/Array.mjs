@@ -1,11 +1,11 @@
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   AbruptCompletion,
   ThrowCompletion,
   X, Q,
-} from '../completion';
+} from '../completion.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -29,7 +29,7 @@ import {
   IsArray,
   ToUint32,
   OrdinaryDefineOwnProperty,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 
 import {
   Type,
@@ -37,7 +37,7 @@ import {
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value';
+} from '../value.mjs';
 
 export function ArrayCreate(length, proto) {
   Assert(length.numberValue() >= 0);

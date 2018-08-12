@@ -5,20 +5,20 @@ import {
   GetV,
   Call,
   ToBoolean,
-} from './all';
+} from './all.mjs';
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value';
+} from '../value.mjs';
 import {
   Completion,
   Q,
-} from '../completion';
+} from '../completion.mjs';
 
 
 // #sec-getiterator

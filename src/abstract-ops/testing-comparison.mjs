@@ -4,15 +4,15 @@ import {
   ArrayValue,
   ProxyValue,
   New as NewValue,
-} from '../value';
+} from '../value.mjs';
 
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 
 import {
   Assert,
-} from './notational-conventions';
+} from './notational-conventions.mjs';
 
 // #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {

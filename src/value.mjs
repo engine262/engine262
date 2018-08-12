@@ -2,7 +2,7 @@ import {
   surroundingAgent,
   ExecutionContext,
   isArrayIndex,
-} from './engine';
+} from './engine.mjs';
 import {
   ArraySetLength,
   Assert,
@@ -28,8 +28,8 @@ import {
   SameValue,
   ToBoolean,
   ToUint32,
-} from './abstract-ops/all';
-import { Q, X } from './completion';
+} from './abstract-ops/all.mjs';
+import { Q, X } from './completion.mjs';
 
 export class Value {}
 

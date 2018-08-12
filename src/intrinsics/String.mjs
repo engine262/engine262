@@ -2,12 +2,12 @@ import {
   CreateBuiltinFunction,
   ToString,
   GetPrototypeFromConstructor,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   New as NewValue,
   UndefinedValue,
-} from '../value';
-import { Q } from '../completion';
+} from '../value.mjs';
+import { Q } from '../completion.mjs';
 
 function StringConstructor(realm, args, { NewTarget }) {
   let s;

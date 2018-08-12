@@ -10,11 +10,11 @@ import {
   ObjectValue,
   New as NewValue,
   Type,
-} from '../value';
+} from '../value.mjs';
 
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 
 import {
   Assert,
@@ -22,7 +22,7 @@ import {
   Get,
   GetMethod,
   IsCallable,
-} from './all';
+} from './all.mjs';
 
 
 // 7.1.1 ToPrimitive

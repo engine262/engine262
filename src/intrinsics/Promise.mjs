@@ -2,13 +2,13 @@ import {
   surroundingAgent,
   EnqueueJob,
   HostPromiseRejectionTracker,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Type,
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value';
+} from '../value.mjs';
 import {
   Assert,
   IsCallable,
@@ -20,13 +20,13 @@ import {
   Get,
   IsPromise,
   IsConstructor,
-} from '../abstract-ops/all';
+} from '../abstract-ops/all.mjs';
 import {
   Q,
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
-} from '../completion';
+} from '../completion.mjs';
 
 export function PromiseResolve(C, x) {
   Assert(Type(C) === 'Object');

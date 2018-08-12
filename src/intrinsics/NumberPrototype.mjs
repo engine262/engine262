@@ -3,14 +3,14 @@ import {
   UndefinedValue,
   ObjectValue,
   New as NewValue,
-} from '../value';
+} from '../value.mjs';
 import {
   CreateBuiltinFunction,
   ToString,
   ToInteger,
-} from '../abstract-ops/all';
-import { surroundingAgent } from '../engine';
-import { Q, X } from '../completion';
+} from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Q, X } from '../completion.mjs';
 
 function thisNumberValue(value) {
   if (Type(value) === 'Number') {

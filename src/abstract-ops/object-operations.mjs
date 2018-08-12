@@ -6,10 +6,10 @@ import {
   ProxyValue,
   New as NewValue,
   wellKnownSymbols,
-} from '../value';
+} from '../value.mjs';
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   Assert,
   IsCallable,
@@ -20,13 +20,13 @@ import {
   IsAccessorDescriptor,
   IsDataDescriptor,
   IsExtensible,
-} from './all';
+} from './all.mjs';
 import {
   ArrayCreate,
-} from '../intrinsics/Array';
+} from '../intrinsics/Array.mjs';
 import {
   Q, X,
-} from '../completion';
+} from '../completion.mjs';
 
 // #sec-get-o-p Get
 export function Get(O, P) {

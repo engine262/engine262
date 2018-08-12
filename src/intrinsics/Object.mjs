@@ -3,10 +3,10 @@ import {
   NullValue,
   UndefinedValue,
   New as NewValue,
-} from '../value';
+} from '../value.mjs';
 import {
   surroundingAgent,
-} from '../engine';
+} from '../engine.mjs';
 import {
   SameValue,
   CreateBuiltinFunction,
@@ -26,8 +26,8 @@ import {
   CreateArrayFromList,
   CreateDataProperty,
   RequireObjectCoercible,
-} from '../abstract-ops/all';
-import { Q, X } from '../completion';
+} from '../abstract-ops/all.mjs';
+import { Q, X } from '../completion.mjs';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
   if (!(NewTarget instanceof UndefinedValue)
