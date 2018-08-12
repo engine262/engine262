@@ -29,19 +29,19 @@ module.exports = ({ types: t, template }) => {
     }
   `, { plugins: ['doExpressions'] });
 
-  const returnIfAbruptAssertTemplate = template.expression(`
-    do {
-      const val = ARG;
-      Assert(!(val instanceof AbruptCompletion));
-      val instanceof Completion ? val.Value : val;
-    }
-  `, { plugins: ['doExpressions'] });
-
   function findParentStatementPath(path) {
     while (path && !path.isStatement()) {
       path = path.parentPath;
     }
     return path;
+  }
+
+  // Return false for when the VariableDeclaration appears as a loop binding.
+  function isActualVariableDeclaration(path) {
+    return (
+      !(t.isForInStatement(path.parent) && path.parentKey === 'left')
+      && !(t.isForStatement(path.parent) && path.parentKey === 'init')
+    );
   }
 
   return {
@@ -101,7 +101,7 @@ module.exports = ({ types: t, template }) => {
                 ${argument} = ${argument}.Value;
               }
             `);
-            if (path.parentPath.isExpressionStatement()) {
+            if (t.isExpressionStatement(path.parent)) {
               // We don't care about the result.
               path.remove();
             } else {
@@ -109,7 +109,7 @@ module.exports = ({ types: t, template }) => {
             }
           } else {
             // ReturnIfAbrupt(AbstractOperation())
-            if (path.parentPath.isExpressionStatement()) {
+            if (t.isExpressionStatement(path.parent)) {
               // We don't care about the result.
               path.parentPath.replaceWith(template.statement.ast`
                 {
@@ -127,13 +127,57 @@ module.exports = ({ types: t, template }) => {
           state.needCompletion = true;
           state.needAssert = true;
           const [argument] = path.node.arguments;
-          if (path.parentPath.isExpressionStatement()) {
+          if (t.isExpressionStatement(path.parent)) {
             // We don't care about the result.
             path.parentPath.replaceWith(template.statement.ast`
               Assert(!(${argument} instanceof AbruptCompletion));
             `);
+          } else if (
+            t.isVariableDeclarator(path.parent)
+            && t.isIdentifier(path.parent.id)
+            && isActualVariableDeclaration(path.parentPath.parentPath)
+          ) {
+            // The result is assigned to a new variable, verbatim.
+            const declarator = path.parentPath;
+            const declaration = declarator.parentPath;
+            declaration.insertBefore(template.statements.ast`
+              let ${declarator.node.id} = ${argument};
+              Assert(!(${declarator.node.id} instanceof AbruptCompletion));
+              if (${declarator.node.id} instanceof Completion) {
+                ${declarator.node.id} = ${declarator.node.id}.Value;
+              }
+            `);
+            if (declaration.node.declarations.length === 1) {
+              declaration.remove();
+            } else {
+              declarator.remove();
+            }
+          } else if (
+            t.isAssignmentExpression(path.parent)
+            && t.isIdentifier(path.parent.left)
+            && t.isExpressionStatement(path.parentPath.parent)
+          ) {
+            // The result is assigned to an existing variable, verbatim.
+            const parentStatement = path.parentPath.parentPath;
+            parentStatement.replaceWithMultiple(template.statements.ast`
+              ${path.parent.left} = ${argument};
+              Assert(!(${path.parent.left} instanceof AbruptCompletion));
+              if (${path.parent.left} instanceof Completion) {
+                ${path.parent.left} = ${path.parent.left}.Value;
+              }
+            `);
           } else {
-            path.replaceWith(returnIfAbruptAssertTemplate({ ARG: argument }));
+            // Ugliest variant that covers everything else.
+            const parentStatement = findParentStatementPath(path);
+            const val = parentStatement.scope.generateUidIdentifier('val');
+            parentStatement.insertBefore(template.statements.ast`
+              let ${val} = ${argument};
+              Assert(!(${val} instanceof AbruptCompletion));
+              if (${val} instanceof Completion) {
+                ${val} = ${val}.Value;
+              }
+            `);
+            path.replaceWith(val);
           }
         }
       },
