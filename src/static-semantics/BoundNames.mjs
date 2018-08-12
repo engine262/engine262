@@ -234,18 +234,34 @@ export function BoundNames_ForDeclaration(ForDeclaration) {
   return BoundNames_ForBinding(ForBinding);
 }
 
+function BoundNames_BindingIdentifierOrBindingPattern(
+  targetTypeForErrorMessage,
+  BindingIdentifierOrBindingPattern,
+) {
+  switch (true) {
+    case isBindingIdentifier(BindingIdentifierOrBindingPattern):
+      return BoundNames_BindingIdentifier(BindingIdentifierOrBindingPattern);
+    case isBindingPattern(BindingIdentifierOrBindingPattern):
+      return BoundNames_BindingPattern(BindingIdentifierOrBindingPattern);
+    default:
+      throw new TypeError(
+        `Invalid ${targetTypeForErrorMessage}: ${BindingIdentifierOrBindingPattern.type}`,
+      );
+  }
+}
+
 // (implicit)
 //   ForBinding : BindingIdentifier
 //   ForBinding : BindingPattern
-export function BoundNames_ForBinding(ForBinding) {
-  switch (true) {
-    case isBindingIdentifier(ForBinding):
-      return BoundNames_BindingIdentifier(ForBinding);
-    case isBindingPattern(ForBinding):
-      return BoundNames_BindingPattern(ForBinding);
-    default:
-      throw new TypeError(`Invalid ForBinding: ${ForBinding.type}`);
-  }
+export function BoundNames_ForBinding(node) {
+  return BoundNames_BindingIdentifierOrBindingPattern('ForBinding', node);
+}
+
+// (implicit)
+//   CatchParameter : BindingIdentifier
+//   CatchParameter : BindingPattern
+export function BoundNames_CatchParameter(node) {
+  return BoundNames_BindingIdentifierOrBindingPattern('CatchParameter', node);
 }
 
 // 14.1.3 #sec-function-definitions-static-semantics-boundnames
