@@ -24,9 +24,9 @@ module.exports = ({ types: t, template }) => {
     Q: {
       dontCare: template.statement(`
         {
-          const hygenicTemp = ARGUMENT;
-          if (hygenicTemp instanceof AbruptCompletion) {
-            return hygenicTemp;
+          const hygienicTemp = ARGUMENT;
+          if (hygienicTemp instanceof AbruptCompletion) {
+            return hygienicTemp;
           }
         }
       `),
@@ -150,7 +150,7 @@ module.exports = ({ types: t, template }) => {
             }
           } else {
             // ReturnIfAbrupt(AbstractOperation())
-            replace(templates.Q, 'hygenicTemp');
+            replace(templates.Q, 'hygienicTemp');
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;

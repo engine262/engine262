@@ -27,9 +27,9 @@ Q(AbstractOp());
 // Becomes...
 
 {
-  const hygenicTemp = AbstractOp();
-  if (hygenicTemp instanceof AbruptCompletion) {
-    return hygenicTemp;
+  const hygienicTemp = AbstractOp();
+  if (hygienicTemp instanceof AbruptCompletion) {
+    return hygienicTemp;
   }
 }
 ```
@@ -45,17 +45,13 @@ const result = Q(AbstractOp());
 
 // Becomes...
 
-const result = do {
-  const hygenicTemp = AbstractOp();
-  if (hygenicTemp instanceof AbruptCompletion) {
-    return hygenicTemp;
-  }
-  if (hygenicTemp instanceof Completion) {
-    hygenicTemp.Value;
-  } else {
-    hygenicTemp;
-  }
-};
+let result = AbstractOp();
+if (result instanceof AbruptCompletion) {
+  return result;
+}
+if (result instanceof Completion) {
+  result = result.Value;
+}
 ```
 
 ```js
@@ -64,15 +60,9 @@ const a = X(AbstractOp());
 
 // Becomes...
 
-const a = do {
-  const val = AbstractOp();
-  if (val instanceof AbruptCompletion) {
-    throw new TypeError();
-  }
-  if (val instanceof Completion) {
-    val.Value;
-  } else {
-    val;
-  }
-};
+let a = AbstractOp();
+Assert(!(a instanceof AbruptCompletion));
+if (a instanceof Completion) {
+  a = a.Value;
+}
 ```
