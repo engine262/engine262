@@ -102,7 +102,9 @@ export function VarDeclaredNames_StatementList(StatementList) {
 //
 // (implicit)
 //   Block : `{` StatementList `}`
-export const VarDeclaredNames_Block = VarDeclaredNames_StatementList;
+export function VarDeclaredNames_Block(Block) {
+  return VarDeclaredNames_StatementList(Block.body);
+}
 
 // (implicit)
 //   BlockStatement : Block

@@ -96,7 +96,9 @@ export function VarScopedDeclarations_StatementList(StatementList) {
 //
 // (implicit)
 //   Block : `{` StatementList `}`
-export const VarScopedDeclarations_Block = VarScopedDeclarations_StatementList;
+export function VarScopedDeclarations_Block(Block) {
+  return VarScopedDeclarations_StatementList(Block.body);
+}
 
 // (implicit)
 //   BlockStatement : Block
