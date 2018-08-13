@@ -29,7 +29,8 @@ import {
   ToBoolean,
   ToUint32,
 } from './abstract-ops/all.mjs';
-import { Q, X } from './completion.mjs';
+import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
+import { X } from './completion.mjs';
 
 export class Value {}
 
@@ -246,8 +247,8 @@ export class FunctionValue extends ObjectValue {
 }
 
 function nc(F, realm, args, thisArgument, newTarget) {
-  if (F.properties.has('length')) {
-    args.length = F.properties.get('length').numberValue();
+  if (F.properties.has(New('length'))) {
+    args.length = F.properties.get(New('length')).numberValue();
   }
   return F.nativeFunction(realm, new Proxy(args, {
     get: (t, p, r) => Reflect.get(t, p, r) || New(undefined),
@@ -616,6 +617,14 @@ export function Type(val) {
 
   if (val instanceof Reference) {
     return 'Reference';
+  }
+
+  if (val instanceof EnvironmentRecord) {
+    return 'EnvironmentRecord';
+  }
+
+  if (val instanceof LexicalEnvironment) {
+    return 'LexicalEnvironment';
   }
 
   if ('Configurable' in val && 'Enumerable' in val

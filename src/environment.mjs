@@ -13,7 +13,7 @@ import {
   HasProperty,
   ToBoolean,
 } from './abstract-ops/all.mjs';
-import { Q } from './completion.mjs';
+import { Q, NormalCompletion } from './completion.mjs';
 
 export class LexicalEnvironment {
   constructor() {
@@ -73,6 +73,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       }
       envRec.CreateMutableBinding(N, true);
       envRec.InitializeBinding(N, V);
+      return new NormalCompletion(undefined);
     }
 
     const binding = this.bindings.get(n);
@@ -88,6 +89,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     } else if (S === true) {
       return surroundingAgent.Throw('ReferenceError');
     }
+    return new NormalCompletion(undefined);
   }
 
   GetBindingValue(N) {
@@ -289,6 +291,15 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   CreateGlobalVarBinding() {}
 
   CreateGlobalFunctionBinding() {}
+}
+
+// #sec-newdeclarativeenvironment
+export function NewDeclarativeEnvironment(E) {
+  const env = new LexicalEnvironment();
+  const envRec = new DeclarativeEnvironmentRecord();
+  env.EnvironmentRecord = envRec;
+  env.outerLexicalEnvironment = E;
+  return env;
 }
 
 // 8.1.2.5 NewGlobalEnvironment

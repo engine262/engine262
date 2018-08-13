@@ -18,6 +18,7 @@ import {
   IsAccessorDescriptor,
   IsDataDescriptor,
   IsExtensible,
+  SameValue,
 } from './all.mjs';
 import {
   ArrayCreate,
@@ -325,4 +326,31 @@ export function GetFunctionRealm(obj) {
   }
 
   return surroundingAgent.currentRealmRecord;
+}
+
+// #sec-copydataproperties
+export function CopyDataProperties(target, source, excludedItems) {
+  Assert(Type(target) === 'Object');
+  Assert(excludedItems.every((i) => IsPropertyKey(i)));
+  if (Type(source) === 'Undefined' || Type(source) === 'Null') {
+    return target;
+  }
+  const from = X(ToObject(source));
+  const keys = from.OwnPropertyKeys();
+  for (const nextKey of keys) {
+    let excluded = false;
+    for (const e of excludedItems) {
+      if (SameValue(e, nextKey).isTrue()) {
+        excluded = true;
+      }
+    }
+    if (excluded === false) {
+      const desc = Q(from.GetOwnProperty(nextKey));
+      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
+        const propValue = Q(Get(from, nextKey));
+        X(CreateDataProperty(target, nextKey, propValue));
+      }
+    }
+  }
+  return target;
 }

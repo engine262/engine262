@@ -552,6 +552,28 @@ export function isObjectBindingPattern(node) {
   return node.type === 'ObjectPattern';
 }
 
+export function isEmptyObjectBindingPattern(node) {
+  return isObjectBindingPattern(node) && node.properties.length === 0;
+}
+
+export function isObjectBindingPatternWithBindingPropertyList(node) {
+  return isObjectBindingPattern(node)
+    && node.properties.length > 0
+    && !isBindingRestProperty(node.properties[node.properties.length - 1]);
+}
+
+export function isObjectBindingPatternWithSingleBindingRestProperty(node) {
+  return isObjectBindingPattern(node)
+    && node.properties.length === 1
+    && isBindingRestProperty(node.properties[0]);
+}
+
+export function isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty(node) {
+  return isObjectBindingPattern(node)
+    && node.properties.length >= 2
+    && isBindingRestProperty(node.properties[node.properties.length - 1]);
+}
+
 // #prod-ArrayBindingPattern
 export function isArrayBindingPattern(node) {
   return node.type === 'ArrayPattern';
@@ -633,6 +655,16 @@ export function isThrowStatement(node) {
 // #prod-TryStatement
 export function isTryStatement(node) {
   return node.type === 'TryStatement';
+}
+
+// Used in #prod-TryStatement
+export function isTryStatementWithCatch(node) {
+  return isTryStatement(node) && node.handler !== null;
+}
+
+// Used in #prod-TryStatement
+export function isTryStatementWithFinally(node) {
+  return isTryStatement(node) && node.finalizer !== null;
 }
 
 // #prod-DebuggerStatement

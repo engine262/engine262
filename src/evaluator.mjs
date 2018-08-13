@@ -9,10 +9,15 @@ import {
 import {
   surroundingAgent,
   ResolveThisBinding,
+  GetGlobalObject,
 } from './engine.mjs';
 import {
   isExpressionStatement,
   isThrowStatement,
+  isTryStatement,
+  isTryStatementWithCatch,
+  isTryStatementWithFinally,
+  isBlockStatement,
   isMemberExpressionWithBrackets,
   isMemberExpressionWithDot,
   isCallExpressionWithBrackets,
@@ -24,6 +29,12 @@ import {
   isCallExpression,
   isPrimaryExpressionWithThis,
 } from './ast.mjs';
+import {
+  BoundNames_CatchParameter,
+} from './static-semantics/all.mjs';
+import {
+  BindingInitialization,
+} from './runtime-semantics/all.mjs';
 import {
   Type,
   Reference,
@@ -44,14 +55,15 @@ import {
 } from './abstract-ops/all.mjs';
 import {
   LexicalEnvironment,
+  NewDeclarativeEnvironment,
 } from './environment.mjs';
 
-function GetBase(V) {
+export function GetBase(V) {
   Assert(Type(V) === 'Reference');
   return V.BaseValue;
 }
 
-function IsUnresolableReference(V) {
+export function IsUnresolvableReference(V) {
   Assert(Type(V) === 'Reference');
   if (Type(V.BaseValue) === 'Undefined') {
     return true;
@@ -75,7 +87,7 @@ function IsPropertyReference(V) {
   return false;
 }
 
-function GetReferencedName(V) {
+export function GetReferencedName(V) {
   Assert(Type(V) === 'Reference');
   return V.ReferencedName;
 }
@@ -93,18 +105,20 @@ function GetThisValue(V) {
   return GetBase(V);
 }
 
+// #sec-isstrictreference
 function IsStrictReference(V) {
   Assert(Type(V) === 'Reference');
   return V.StrictReference;
 }
 
+// #sec-getvalue
 function GetValue(V) {
   ReturnIfAbrupt(V);
   if (Type(V) !== 'Reference') {
     return V;
   }
   let base = GetBase(V);
-  if (IsUnresolableReference(V)) {
+  if (IsUnresolvableReference(V)) {
     return surroundingAgent.Throw('ReferenceError');
   }
   if (IsPropertyReference(V)) {
@@ -118,6 +132,35 @@ function GetValue(V) {
   }
 }
 
+// #sec-putvalue
+export function PutValue(V, W) {
+  ReturnIfAbrupt(V);
+  ReturnIfAbrupt(W);
+  if (Type(V) !== 'Reference') {
+    return surroundingAgent.Throw('ReferenceError');
+  }
+  let base = GetBase(V);
+  if (IsUnresolvableReference(V)) {
+    if (IsStrictReference(V)) {
+      return surroundingAgent.Throw('ReferenceError');
+    }
+    const globalObj = GetGlobalObject();
+    return Q(Set(globalObj, GetReferencedName(V), W, NewValue(false)));
+  } else if (IsPropertyReference(V)) {
+    if (HasPrimitiveBase(V)) {
+      Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
+      base = X(ToObject(base));
+    }
+    const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
+    if (succeeded.isFalse() && IsStrictReference(V)) {
+      return surroundingAgent.Throw('TypeError');
+    }
+    return new NormalCompletion(undefined);
+  } else {
+    return Q(base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V)));
+  }
+}
+
 function GetIdentifierReference(lex, name, strict) {
   if (Type(lex) === 'Null') {
     return new Reference(NewValue(undefined), name, strict);
@@ -127,12 +170,12 @@ function GetIdentifierReference(lex, name, strict) {
   if (exists) {
     return new Reference(envRec, name, strict);
   } else {
-    const outer = lex.outerEnvironment;
+    const outer = lex.outerLexicalEnvironment;
     return GetIdentifierReference(outer, name, strict);
   }
 }
 
-function ResolveBinding(name, env) {
+export function ResolveBinding(name, env) {
   if (!env || Type(env) === 'Undefined') {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
@@ -217,7 +260,7 @@ function Evaluate_AdditiveExpression(AdditiveExpression) {
 }
 
 function EvaluateExpression_Identifier(Identifier) {
-  return ResolveBinding(NewValue(Identifier.name));
+  return Q(ResolveBinding(NewValue(Identifier.name)));
 }
 
 function IsInTailPosition(CallExpression) {
@@ -229,7 +272,7 @@ function ArgumentListEvaluation(Arguments) {
     return [];
   }
   // this is wrong
-  return Arguments.map((Expression) => EvaluateExpression(Expression));
+  return Arguments.map((Expression) => GetValue(EvaluateExpression(Expression)));
 }
 
 function EvaluateCall(func, ref, args, tailPosition) {
@@ -276,13 +319,98 @@ function Evalute_CallExpressionArguments(CallExpression, Arguments) {
   return Q(EvaluateCall(func, ref, Arguments, tailCall));
 }
 
+//  ThrowStatement : throw Expression ;
+function EvaluateThrowStatement(Expression) {
+  const exprRef = EvaluateExpression(Expression);
+  const exprValue = Q(GetValue(exprRef));
+  return new ThrowCompletion(exprValue);
+}
+
+// #sec-runtime-semantics-catchclauseevaluation
+//    Catch : catch ( CatchParameter ) Block
+//    With parameter thrownValue.
+function CatchClauseEvaluation(Catch, thrownValue) {
+  const CatchParameter = Catch.param;
+  const Block = Catch.body;
+  const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const catchEnv = NewDeclarativeEnvironment(oldEnv);
+  const catchEnvRec = catchEnv.EnvironmentRecord;
+  for (const argName of BoundNames_CatchParameter(CatchParameter)) {
+    X(catchEnvRec.CreateMutableBinding(NewValue(argName), false));
+  }
+  surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
+  const status = BindingInitialization(CatchParameter, thrownValue, catchEnv);
+  if (status instanceof AbruptCompletion) {
+    surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
+    return status;
+  }
+  const B = EvaluateStatement(Block);
+  surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
+  return B;
+}
+
+function EvaluateTryStatement_Catch(Block, Catch) {
+  const B = EvaluateStatement(Block);
+  let C;
+  if (B.Type === 'throw') {
+    C = CatchClauseEvaluation(Catch, B.Value);
+  } else {
+    C = B;
+  }
+  return UpdateEmpty(C, NewValue(undefined));
+}
+
+function EvaluateTryStatement_Finally(Block, Finally) {
+  const B = EvaluateExpression(Block);
+  let F = EvaluateExpression(Finally);
+  if (F.Type === 'normal') {
+    F = B;
+  }
+  return UpdateEmpty(F, NewValue(undefined));
+}
+
+function EvaluateTryStatement_CatchFinally(Block, Catch, Finally) {
+  const B = EvaluateStatement(Block);
+  let C;
+  if (B.Type === 'throw') {
+    C = CatchClauseEvaluation(Catch, B.Value);
+  } else {
+    C = B;
+  }
+  let F = EvaluateStatement(Finally);
+  if (F.Type === 'normal') {
+    F = C;
+  }
+  return UpdateEmpty(F, NewValue(undefined));
+}
+
+// #sec-try-statement-runtime-semantics-evaluation
+function EvaluateTryStatement(Expression) {
+  switch (true) {
+    // TryStatement : try Block Catch Finally
+    case isTryStatementWithCatch(Expression) && isTryStatementWithFinally(Expression):
+      return EvaluateTryStatement_CatchFinally(
+        Expression.block, Expression.handler, Expression.finalizer,
+      );
+    // TryStatement : try Block Catch
+    case isTryStatementWithCatch(Expression):
+      return EvaluateTryStatement_Catch(Expression.block, Expression.handler);
+    // TryStatement : try Block Finally
+    case isTryStatementWithFinally(Expression):
+      return EvaluateTryStatement_Finally(Expression.block, Expression.finalizer);
+
+    default:
+      throw new RangeError('EvaluateTryStatement');
+  }
+}
+
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
 //
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList, envRec) {
-  const sl = EvaluateStatementListItem(StatementList.shift());
+  let sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
     return new NormalCompletion(sl);
@@ -294,27 +422,27 @@ function EvaluateStatementList(StatementList, envRec) {
   return UpdateEmpty(s, sl);
 }
 
-//  ThrowStatement : throw Expression ;
-function EvaluateThrowStatement(Expression) {
-  const exprRef = EvaluateExpression(Expression);
-  const exprValue = Q(GetValue(exprRef));
-  return new ThrowCompletion(exprValue);
-}
-
 // (implicit)
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
 function EvaluateStatementListItem(StatementListItem, envRec) {
   switch (true) {
+    case isBlockStatement(StatementListItem):
+      return EvaluateStatementList(StatementListItem.body);
     case isExpressionStatement(StatementListItem):
       return EvaluateExpressionStatement(StatementListItem, envRec);
     case isThrowStatement(StatementListItem):
       return EvaluateThrowStatement(StatementListItem.argument);
+    case isTryStatement(StatementListItem):
+      return EvaluateTryStatement(StatementListItem);
 
     default:
       console.log(StatementListItem);
       throw new RangeError('unknown StatementListItem type');
   }
+}
+function EvaluateStatement(...args) {
+  return EvaluateStatementListItem(...args);
 }
 
 // #sec-expression-statement-runtime-semantics-evaluation

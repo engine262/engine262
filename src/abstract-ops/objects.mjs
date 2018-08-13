@@ -226,7 +226,7 @@ export function OrdinaryHasProperty(O, P) {
     return NewValue(true);
   }
   const parent = Q(O.GetPrototypeOf());
-  if (!parent.isNull()) {
+  if (Type(parent) !== 'Null') {
     return Q(parent.HasOwnProperty(P));
   }
   return NewValue(false);

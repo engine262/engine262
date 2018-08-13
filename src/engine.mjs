@@ -169,7 +169,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'throw 5;', hostDefined: undefined },
+    { sourceText: 'try { throw 5; } catch (e) { print(e); }', hostDefined: undefined },
   ];
 
   const modules = [];
@@ -369,7 +369,7 @@ export function GetThisEnvironment() {
     if (exists) {
       return envRec;
     }
-    const outer = envRec.outerEnvironment;
+    const outer = envRec.outerLexicalEnvironment;
     Assert(Type(outer) !== 'Null');
     lex = outer;
   }
@@ -379,4 +379,11 @@ export function GetThisEnvironment() {
 export function ResolveThisBinding() {
   const envRec = GetThisEnvironment();
   return Q(envRec.GetThisBinding());
+}
+
+// #sec-getglobalobject
+export function GetGlobalObject() {
+  const ctx = surroundingAgent.runningExecutionContext;
+  const currentRealm = ctx.Realm;
+  return currentRealm.GlobalObject;
 }
