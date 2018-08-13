@@ -29,9 +29,6 @@ import {
   Reference,
   Value,
   PrimitiveValue,
-  UndefinedValue,
-  NullValue,
-  ObjectValue,
   New as NewValue,
 } from './value.mjs';
 import {
@@ -56,7 +53,7 @@ function GetBase(V) {
 
 function IsUnresolableReference(V) {
   Assert(Type(V) === 'Reference');
-  if (V.BaseValue instanceof UndefinedValue) {
+  if (Type(V.BaseValue) === 'Undefined') {
     return true;
   }
   return false;
@@ -72,7 +69,7 @@ function HasPrimitiveBase(V) {
 
 function IsPropertyReference(V) {
   Assert(Type(V) === 'Reference');
-  if (V.BaseValue instanceof ObjectValue || HasPrimitiveBase(V)) {
+  if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V)) {
     return true;
   }
   return false;
@@ -112,7 +109,7 @@ function GetValue(V) {
   }
   if (IsPropertyReference(V)) {
     if (HasPrimitiveBase(V)) {
-      Assert(!(base instanceof UndefinedValue || base instanceof NullValue));
+      Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
       base = X(ToObject(base));
     }
     return base.Get(GetReferencedName(V), GetThisValue(V));
@@ -122,7 +119,7 @@ function GetValue(V) {
 }
 
 function GetIdentifierReference(lex, name, strict) {
-  if (lex instanceof NullValue) {
+  if (Type(lex) === 'Null') {
     return new Reference(NewValue(undefined), name, strict);
   }
   const envRec = lex.EnvironmentRecord;
@@ -136,7 +133,7 @@ function GetIdentifierReference(lex, name, strict) {
 }
 
 function ResolveBinding(name, env) {
-  if (!env || env instanceof UndefinedValue) {
+  if (!env || Type(env) === 'Undefined') {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
   Assert(env instanceof LexicalEnvironment);

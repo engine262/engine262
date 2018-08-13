@@ -47,7 +47,7 @@ export function ArrayCreate(length, proto) {
   if (length.numberValue() > (2 ** 32) - 1) {
     return surroundingAgent.Throw('RangeError');
   }
-  if (proto instanceof UndefinedValue) {
+  if (Type(proto) === 'Undefined') {
     proto = surroundingAgent.intrinsic('%ArrayPrototype%');
   }
   const A = new ArrayValue(surroundingAgent.currentRealmRecord);
@@ -70,7 +70,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
-    if (NewTarget instanceof UndefinedValue) {
+    if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
@@ -79,7 +79,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     // #sec-array-len Array ( len )
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
-    if (NewTarget instanceof UndefinedValue) {
+    if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
@@ -100,7 +100,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   } else if (numberOfArgs >= 2) {
     // #sec-array-items Array ( ...items )
     Assert(numberOfArgs >= 2);
-    if (NewTarget instanceof UndefinedValue) {
+    if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
@@ -127,7 +127,7 @@ function ArrayFrom(realm, argList, { thisValue }) {
   let mapping;
   let T;
   let A;
-  if (mapfn instanceof UndefinedValue) {
+  if (Type(mapfn) === 'Undefined') {
     mapping = false;
   } else {
     if (IsCallable(mapfn) === false) {
@@ -141,7 +141,7 @@ function ArrayFrom(realm, argList, { thisValue }) {
     mapping = true;
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
-  if (!(usingIterator instanceof UndefinedValue)) {
+  if (Type(usingIterator) !== 'Undefined') {
     if (IsConstructor(C) === true) {
       A = Q(Construct(C));
     } else {

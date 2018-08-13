@@ -4,8 +4,8 @@ import {
   GetPrototypeFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
+  Type,
   New as NewValue,
-  UndefinedValue,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
@@ -19,7 +19,7 @@ function StringConstructor(realm, args, { NewTarget }) {
     const [value] = args;
     s = Q(ToString(value));
   }
-  if (NewTarget instanceof UndefinedValue) {
+  if (Type(NewTarget) === 'Undefined') {
     return s;
   }
   return StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%')));
@@ -27,7 +27,7 @@ function StringConstructor(realm, args, { NewTarget }) {
 
 export function CreateString(realmRec) {
   const stringConstructor = CreateBuiltinFunction(StringConstructor, [], realmRec);
-  stringConstructor.properties.set('length', NewValue(1));
+  stringConstructor.properties.set(NewValue('length'), NewValue(1));
 
   realmRec.Intrinsics['%String%'] = stringConstructor;
 }

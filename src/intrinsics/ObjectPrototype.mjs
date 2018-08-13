@@ -1,7 +1,4 @@
 import {
-  UndefinedValue,
-  NullValue,
-  StringValue,
   wellKnownSymbols,
   ObjectValue,
   New as NewValue,
@@ -32,7 +29,7 @@ function ObjectIsPrototypeOf(realm, [V], { thisValue }) {
   const O = Q(ToObject(thisValue));
   while (true) {
     V = Q(V.GetPrototypeOf());
-    if (V instanceof NullValue) {
+    if (Type(V) === 'Null') {
       return NewValue(false);
     }
     if (SameValue(O, V) === true) {
@@ -45,7 +42,7 @@ function ObjectPropertyIsEnumerable(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
-  if (desc instanceof UndefinedValue) {
+  if (Type(desc) === 'Undefined') {
     return NewValue(false);
   }
   return desc.Enumerable;
@@ -57,10 +54,10 @@ function ObjectToLocaleString(realm, argList, { thisValue }) {
 }
 
 function ObjectToString(realm, argList, { thisValue }) {
-  if (thisValue instanceof UndefinedValue) {
+  if (Type(thisValue) === 'Undefined') {
     return NewValue('[object Undefined]');
   }
-  if (thisValue instanceof UndefinedValue) {
+  if (Type(thisValue) === 'Undefined') {
     return NewValue('[object Null]');
   }
   const O = X(ToObject(thisValue));
@@ -68,7 +65,7 @@ function ObjectToString(realm, argList, { thisValue }) {
   let builtinTag;
   if (isArray === true) {
     builtinTag = 'Array';
-  } else if (O instanceof StringValue) {
+  } else if (Type(O) === 'String') {
     builtinTag = 'String';
   } else if ('ParameterMap' in O) {
     builtinTag = 'Arguments';

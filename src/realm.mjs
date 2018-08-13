@@ -1,5 +1,5 @@
 import {
-  UndefinedValue,
+  Type,
   ObjectValue,
   New as NewValue,
 } from './value.mjs';
@@ -106,12 +106,12 @@ export function CreateIntrinsics(realmRec) {
 
 // 8.2.3 SetRealmGlobalObject
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
-  if (globalObj instanceof UndefinedValue) {
+  if (Type(globalObj) === 'Undefined') {
     const intrinsics = realmRec.Intrinsics;
     globalObj = ObjectCreate(intrinsics.ObjectPrototype);
   }
 
-  if (thisValue instanceof UndefinedValue) {
+  if (Type(thisValue) === 'Undefined') {
     thisValue = globalObj;
   }
 

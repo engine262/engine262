@@ -1,6 +1,5 @@
 import {
   ObjectValue,
-  BooleanValue,
   New as NewValue,
   Type,
 } from '../value.mjs';
@@ -19,7 +18,7 @@ function thisBooleanValue(value) {
   }
 
   if (Type(value) === 'Object' && 'BooleanData' in value) {
-    Assert(value.BooleanData instanceof BooleanValue);
+    Assert(Type(value.BooleanData) === 'Boolean');
     return value.BooleanData;
   }
 

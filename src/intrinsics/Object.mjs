@@ -1,7 +1,5 @@
 import {
   Type,
-  NullValue,
-  UndefinedValue,
   New as NewValue,
 } from '../value.mjs';
 import {
@@ -30,11 +28,11 @@ import {
 import { Q, X } from '../completion.mjs';
 
 function ObjectConstructor(realm, [value], { NewTarget }) {
-  if (!(NewTarget instanceof UndefinedValue)
+  if (Type(NewTarget) !== 'Undefined'
       && NewTarget !== surroundingAgent.activeFunctionObject) {
     return OrdinaryCreateFromConstructor(NewTarget, '%ObjectPrototype%');
   }
-  if (value instanceof NullValue || value instanceof UndefinedValue) {
+  if (Type(value) === 'Null' || Type(value) === 'Undefined') {
     return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%ObjectPrototype%']);
   }
   return ToObject(value);
@@ -49,7 +47,7 @@ function ObjectAssign(realm, [target, ...sources]) {
   sources.forEach((nextSource) => {
     let keys;
     let from;
-    if (nextSource instanceof UndefinedValue || nextSource instanceof NullValue) {
+    if (Type(nextSource) === 'Undefined' || Type(nextSource) === 'Null') {
       keys = [];
     } else {
       from = X(ToObject(nextSource));
@@ -57,7 +55,7 @@ function ObjectAssign(realm, [target, ...sources]) {
     }
     keys.forEach((nextKey) => {
       const desc = Q(from.GetOwnProperty(nextKey));
-      if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
+      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
         const propValue = Q(Get(from, nextKey));
         Q(Set(to, nextKey, propValue, NewValue(true)));
       }
@@ -71,7 +69,7 @@ function JSObjectCreate(realm, [O, Properties]) {
     return surroundingAgent.Throw('TypeError');
   }
   const obj = ObjectCreate(O);
-  if (!(Properties instanceof UndefinedValue)) {
+  if (Type(Properties) !== 'Undefined') {
     return Q(ObjectDefineProperties(obj, Properties));
   }
   return obj;
@@ -92,7 +90,7 @@ function ObjectDefineProperties(O, Properties) {
   const descriptors = [];
   keys.forEach((nextKey) => {
     const propDesc = Q(props.GetOwnProperty(nextKey));
-    if (!(propDesc instanceof UndefinedValue) && propDesc.Enumerable === true) {
+    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable === true) {
       const descObj = Q(Get(props, nextKey));
       const desc = Q(ToPropertyDescriptor(descObj));
       descriptors.push([nextKey, desc]);
@@ -149,7 +147,7 @@ function ObjectGetOwnPropertyDescriptors(realm, [O]) {
   ownKeys.forEach((key) => {
     const desc = Q(obj.GetOwnProperty(key));
     const descriptor = X(FromPropertyDescriptor(desc));
-    if (!(descriptor instanceof UndefinedValue)) {
+    if (Type(descriptor) !== 'Undefined') {
       X(CreateDataProperty(descriptors, key, descriptor));
     }
   });
@@ -304,7 +302,7 @@ export function CreateObject(realmRec) {
     ['values', ObjectValues, 1],
   ].forEach(([name, fn, len]) => {
     const fnv = CreateBuiltinFunction(fn, [], realmRec);
-    fnv.properties.set('length', NewValue(len));
+    fnv.properties.set(NewValue('length'), NewValue(len));
     objectConstructor.DefineOwnProperty(NewValue(name), {
       Value: fnv,
       Writable: true,

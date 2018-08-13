@@ -93,14 +93,14 @@ export class SymbolValue extends PrimitiveValue {
 
 class InternalPropertyMap extends Map {
   get(name) {
-    if (name instanceof StringValue) {
+    if (Type(name) === 'String') {
       name = name.stringValue();
     }
     return super.get(name);
   }
 
   set(name, value) {
-    if (name instanceof StringValue) {
+    if (Type(name) === 'String') {
       name = name.stringValue();
     }
 
@@ -108,7 +108,7 @@ class InternalPropertyMap extends Map {
   }
 
   has(name) {
-    if (name instanceof StringValue) {
+    if (Type(name) === 'String') {
       name = name.stringValue();
     }
 
@@ -116,7 +116,7 @@ class InternalPropertyMap extends Map {
   }
 
   delete(name) {
-    if (name instanceof StringValue) {
+    if (Type(name) === 'String') {
       name = name.stringValue();
     }
 
@@ -213,12 +213,12 @@ export class ArrayValue extends ObjectValue {
     const A = this;
 
     Assert(IsPropertyKey(P));
-    if (P instanceof StringValue && P.stringValue() === 'length') {
+    if (Type(P) === 'String' && P.stringValue() === 'length') {
       return ArraySetLength(A, Desc);
     }
     if (isArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, New('length'));
-      Assert(!(oldLenDesc instanceof UndefinedValue) && !IsAccessorDescriptor(oldLenDesc));
+      Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = ToUint32(P);
       if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
@@ -315,18 +315,18 @@ export class ProxyValue extends ObjectValue {
     this.ProxyTarget = ProxyTarget;
     this.ProxyHandler = ProxyHandler;
 
-    if (ProxyTarget instanceof FunctionValue) {
+    if (Type(ProxyTarget) === 'Function') {
       this.Call = (thisArgument, argumentsList) => {
         const O = this;
 
         const handler = O.ProxyHandler;
-        if (handler instanceof NullValue) {
+        if (Type(handler) === 'Null') {
           return surroundingAgent.Throw('TypeError');
         }
         Assert(Type(handler) === 'Object');
         const target = O.ProxyTarget;
         const trap = GetMethod(handler, New('apply'));
-        if (trap instanceof UndefinedValue) {
+        if (Type(trap) === 'Undefined') {
           return Call(target, thisArgument, argumentsList);
         }
         const argArray = CreateArrayFromList(argumentsList);
@@ -339,13 +339,13 @@ export class ProxyValue extends ObjectValue {
         const O = this;
 
         const handler = O.ProxyHandler;
-        if (handler instanceof NullValue) {
+        if (Type(handler) === 'Null') {
           return surroundingAgent.Throw('TypeError');
         }
         Assert(Type(handler) === 'Object');
         const target = O.ProxyTarget;
         const trap = GetMethod(handler, New('construct'));
-        if (trap instanceof UndefinedValue) {
+        if (Type(trap) === 'Undefined') {
           Assert(IsConstructor(target).isTrue());
           return Construct(target, argumentsList, newTarget);
         }
@@ -362,13 +362,13 @@ export class ProxyValue extends ObjectValue {
   GetPrototypeOf() {
     const O = this;
     const handler = O.ProxyHandler;
-    if (handler instanceof NullValue) {
+    if (Type(handler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, New('getPrototypeOf'));
-    if (trap instanceof UndefinedValue) {
+    if (Type(trap) === 'Undefined') {
       return target.GetPrototypeOf();
     }
     const handlerProto = Call(trap, handler, [target]);
@@ -391,13 +391,13 @@ export class ProxyValue extends ObjectValue {
 
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
-    if (handler instanceof NullValue) {
+    if (Type(handler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, New('setPrototypeOf'));
-    if (trap instanceof UndefinedValue) {
+    if (Type(trap) === 'Undefined') {
       return target.SetPrototypeOf(V);
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, V]));
@@ -419,13 +419,13 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler instanceof NullValue) {
+    if (Type(handler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, New('isExtensible'));
-    if (trap instanceof UndefinedValue) {
+    if (Type(trap) === 'Undefined') {
       return target.IsExtensible();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
@@ -440,13 +440,13 @@ export class ProxyValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (handler instanceof NullValue) {
+    if (Type(handler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, New('preventExtensions'));
-    if (trap instanceof UndefinedValue) {
+    if (Type(trap) === 'Undefined') {
       return target.PreventExtensions();
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
@@ -474,13 +474,13 @@ export class ProxyValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (handler instanceof NullValue) {
+    if (Type(handler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = GetMethod(handler, New('deleteProperty'));
-    if (trap instanceof UndefinedValue) {
+    if (Type(trap) === 'Undefined') {
       return target.Delete(P);
     }
     const booleanTrapResult = ToBoolean(Call(trap, handler, [target, P]));
@@ -488,7 +488,7 @@ export class ProxyValue extends ObjectValue {
       return falseValue;
     }
     const targetDesc = target.GetOwnProperty(P);
-    if (targetDesc instanceof UndefinedValue) {
+    if (Type(targetDesc) === 'Undefined') {
       return trueValue;
     }
     if (targetDesc.Configurable === false) {
@@ -505,7 +505,7 @@ export class StringExoticValue extends ObjectValue {
     const S = this;
     Assert(IsPropertyKey(P).isTrue());
     const desc = OrdinaryGetOwnProperty(S, P);
-    if (!(desc instanceof UndefinedValue)) {
+    if (Type(desc) !== 'Undefined') {
       return desc;
     }
     return X(StringGetOwnProperty(S, P));
@@ -515,7 +515,7 @@ export class StringExoticValue extends ObjectValue {
     const S = this;
     Assert(IsPropertyKey(P).isTrue());
     const stringDesc = X(StringGetOwnProperty(S, P));
-    if (!(stringDesc instanceof UndefinedValue)) {
+    if (Type(stringDesc) !== 'Undefined') {
       const extensible = S.Extensible;
       return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
     }
@@ -528,7 +528,7 @@ export class StringExoticValue extends ObjectValue {
     const str = O.StringData.stringValue();
     const len = str.length;
     for (let i = 0; i < len; i += 1) {
-      keys.push(X(ToString(NewValue(i))));
+      keys.push(X(ToString(New(i))));
     }
     // more
   }
@@ -616,6 +616,11 @@ export function Type(val) {
 
   if (val instanceof Reference) {
     return 'Reference';
+  }
+
+  if ('Configurable' in val && 'Enumerable' in val
+      && ('Value' in val || 'Get' in val || 'Set' in val)) {
+    return 'Descriptor';
   }
 
   throw new RangeError('Type(val) invalid argument');

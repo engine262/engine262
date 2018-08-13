@@ -6,7 +6,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Type,
-  UndefinedValue,
   New as NewValue,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -18,7 +17,7 @@ function NumberConstructor(realm, args, { NewTarget }) {
   } else {
     n = Q(ToNumber(args[0]));
   }
-  if (NewTarget instanceof UndefinedValue) {
+  if (Type(NewTarget) === 'Undefined') {
     return n;
   }
 

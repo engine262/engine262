@@ -70,9 +70,9 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     if (!this.bindings.has(n)) {
       if (S === true) {
         return surroundingAgent.Throw('ReferenceError');
-        envRec.CreateMutableBinding(N, true);
-        envRec.InitializeBinding(N, V);
       }
+      envRec.CreateMutableBinding(N, true);
+      envRec.InitializeBinding(N, V);
     }
 
     const binding = this.bindings.get(n);
@@ -273,7 +273,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 
   GetThisBinding() {
     const envRec = this;
-    return this.GlobalThisValue;
+    return envRec.GlobalThisValue;
   }
 
   HasVarDeclaration() {}

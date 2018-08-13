@@ -1,7 +1,5 @@
 import {
   Value,
-  UndefinedValue,
-  NullValue,
   ArrayValue,
   wellKnownSymbols,
   New as NewValue,
@@ -56,11 +54,11 @@ function ArraySpeciesCreate(originalArray, length) {
   }
   if (Type(C) === 'Object') {
     C = Q(Get(C, wellKnownSymbols.species));
-    if (C instanceof NullValue) {
+    if (Type(C) === 'Null') {
       C = NewValue(undefined);
     }
   }
-  if (C instanceof UndefinedValue) {
+  if (Type(C) === 'Undefined') {
     return Q(ArrayCreate(length));
   }
   if (IsConstructor(C) === false) {
@@ -123,7 +121,7 @@ function ArrayCopyWithin(realm, [target, start, end], { thisValue }) {
     from = Math.min(relativeStart.numberValue(), len.numberValue());
   }
   let relativeEnd;
-  if (end instanceof UndefinedValue) {
+  if (Type(end) === 'Undefined') {
     relativeEnd = len;
   } else {
     relativeEnd = Q(ToInteger(end));

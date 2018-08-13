@@ -1,13 +1,9 @@
 import {
-  UndefinedValue,
-  NullValue,
   wellKnownSymbols,
   New as NewValue,
   Type,
 } from './value.mjs';
-
 import { ParseScript, ParseModule } from './parse.mjs';
-
 import {
   AbruptCompletion,
   ThrowCompletion,
@@ -330,7 +326,7 @@ export function HostPromiseRejectionTracker(promise, type) {}
 export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
-  if (desc instanceof UndefinedValue) {
+  if (Type(desc) === 'Undefined') {
     desc = NewValue('');
   }
   return NewValue(`Symbol(${desc.stringValue()})`);
@@ -374,7 +370,7 @@ export function GetThisEnvironment() {
       return envRec;
     }
     const outer = envRec.outerEnvironment;
-    Assert(!(outer instanceof NullValue));
+    Assert(Type(outer) !== 'Null');
     lex = outer;
   }
 }

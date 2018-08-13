@@ -5,7 +5,6 @@ import {
 } from '../engine.mjs';
 import {
   Type,
-  UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -83,7 +82,7 @@ export function PromiseReactionJob(reaction, argument) {
   const type = reaction.Type;
   const handler = reaction.Handler;
   let handlerResult;
-  if (handler instanceof UndefinedValue) {
+  if (Type(handler) === 'Undefined') {
     if (type === 'Fulfill') {
       handlerResult = new NormalCompletion(argument);
     } else {
@@ -202,7 +201,7 @@ function CreateResolvingFunctions(promise) {
 }
 
 function PromiseConstructor(realm, [executor], { NewTarget }) {
-  if (NewTarget instanceof UndefinedValue) {
+  if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError');
   }
   if (IsCallable(executor).isFalse()) {

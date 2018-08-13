@@ -5,7 +5,7 @@ import {
   DefinePropertyOrThrow,
 } from '../abstract-ops/all.mjs';
 import {
-  UndefinedValue,
+  Type,
   New as NewValue,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -13,13 +13,13 @@ import { surroundingAgent } from '../engine.mjs';
 
 function ErrorConstructor(realm, [message], { NewTarget }) {
   let newTarget;
-  if (NewTarget instanceof UndefinedValue) {
+  if (Type(NewTarget) === 'Undefined') {
     newTarget = surroundingAgent.activeFunctionObject;
   } else {
     newTarget = NewTarget;
   }
   const O = Q(OrdinaryCreateFromConstructor(newTarget, '%ErrorPrototype%', ['ErrorData']));
-  if (!(message instanceof UndefinedValue)) {
+  if (Type(message) !== 'Undefined') {
     const msg = Q(ToString(message));
     const msgDesc = {
       Value: msg,
@@ -34,7 +34,7 @@ function ErrorConstructor(realm, [message], { NewTarget }) {
 
 export function CreateError(realmRec) {
   const error = CreateBuiltinFunction(ErrorConstructor, [], realmRec);
-  error.properties.set('length', NewValue(1));
+  error.properties.set(NewValue('length'), NewValue(1));
 
   realmRec.Intrinsics['%Error%'] = error;
 }

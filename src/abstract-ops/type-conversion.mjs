@@ -1,21 +1,13 @@
 import {
-  PrimitiveValue,
-  UndefinedValue,
-  NullValue,
-  BooleanValue,
-  StringValue,
-  NumberValue,
-  SymbolValue,
   wellKnownSymbols,
+  PrimitiveValue,
   ObjectValue,
   New as NewValue,
   Type,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
 } from '../engine.mjs';
-
 import {
   Assert,
   Call,
@@ -41,7 +33,7 @@ export function ToPrimitive(
       hint = NewValue('number');
     }
     const exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
-    if (!(exoticToPrim instanceof UndefinedValue)) {
+    if (Type(exoticToPrim) !== 'Undefined') {
       const result = Call(exoticToPrim, input, [hint]);
       if (Type(result) !== 'Object') {
         return result;
@@ -85,37 +77,37 @@ export function OrdinaryToPrimitive(
 
 // 7.1.2 ToBoolean
 export function ToBoolean(argument) {
-  if (argument instanceof UndefinedValue) {
+  if (Type(argument) === 'Undefined') {
     return NewValue(false);
   }
 
-  if (argument instanceof NullValue) {
+  if (Type(argument) === 'Null') {
     return NewValue(false);
   }
 
-  if (argument instanceof BooleanValue) {
+  if (Type(argument) === 'Boolean') {
     return argument;
   }
 
-  if (argument instanceof NumberValue) {
+  if (Type(argument) === 'Number') {
     if (argument.numberValue() === 0 || argument.isNaN()) {
       return NewValue(false);
     }
     return NewValue(true);
   }
 
-  if (argument instanceof StringValue) {
+  if (Type(argument) === 'String') {
     if (argument.stringValue().length > 0) {
       return NewValue(true);
     }
     return NewValue(false);
   }
 
-  if (argument instanceof SymbolValue) {
+  if (Type(argument) === 'Symbol') {
     return NewValue(true);
   }
 
-  if (argument instanceof ObjectValue) {
+  if (Type(argument) === 'Object') {
     return NewValue(true);
   }
 

@@ -11,7 +11,6 @@ import {
 } from '../engine.mjs';
 import {
   Type,
-  UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -33,7 +32,7 @@ export function GetIterator(
   if (!method) {
     if (hint === 'async') {
       method = Q(GetMethod(obj, wellKnownSymbols.asyncIterator));
-      if (method instanceof UndefinedValue) {
+      if (Type(method) === 'Undefined') {
         const syncMethod = Q(GetMethod(obj, wellKnownSymbols.iterator));
         const syncIteratorRecord = Q(GetIterator(obj, 'sync', syncMethod));
         return Q(CreateAsyncFromSyncIterator(syncIteratorRecord));
@@ -100,7 +99,7 @@ export function IteratorClose(
   Assert(completion instanceof Completion);
   const iterator = iteratorRecord.Iterator;
   const ret = Q(GetMethod(iterator, NewValue('return')));
-  if (ret instanceof UndefinedValue) {
+  if (Type(ret) === 'Undefined') {
     return completion;
   }
   const innerResult = Call(ret, iterator, []);

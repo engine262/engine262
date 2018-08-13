@@ -1,5 +1,4 @@
 import {
-  UndefinedValue,
   SymbolValue,
   wellKnownSymbols,
   New as NewValue,
@@ -21,7 +20,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
   if (NewTarget !== undefined) {
     return surroundingAgent.Throw('TypeError');
   }
-  const descString = description instanceof UndefinedValue
+  const descString = Type(description) === 'Undefined'
     ? NewValue(undefined)
     : Q(ToString(description));
 

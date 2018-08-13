@@ -1,15 +1,11 @@
 import {
   Type,
-  NullValue,
-  ArrayValue,
   ProxyValue,
   New as NewValue,
 } from '../value.mjs';
-
 import {
   surroundingAgent,
 } from '../engine.mjs';
-
 import {
   Assert,
 } from './notational-conventions.mjs';
@@ -37,11 +33,11 @@ export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return NewValue(false);
   }
-  if (argument instanceof ArrayValue) {
+  if (Type(argument) === 'Array') {
     return NewValue(true);
   }
   if (argument instanceof ProxyValue) {
-    if (argument.ProxyHandler instanceof NullValue) {
+    if (Type(argument.ProxyHandler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     const target = argument.ProxyTarget;

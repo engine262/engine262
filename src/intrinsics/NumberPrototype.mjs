@@ -1,6 +1,5 @@
 import {
   Type,
-  UndefinedValue,
   ObjectValue,
   New as NewValue,
 } from '../value.mjs';
@@ -26,7 +25,7 @@ function NumberToString(realm, args, { thisValue }) {
   const [radix] = args;
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
-  if (args.length === 0 || radix instanceof UndefinedValue) {
+  if (args.length === 0 || Type(radix) === 'Undefined') {
     radixNumber = 10;
   } else {
     radixNumber = Q(ToInteger(radix)).numberValue();

@@ -3,7 +3,6 @@ import {
 } from '../engine.mjs';
 import {
   Type,
-  UndefinedValue,
   New as NewValue,
 } from '../value.mjs';
 import {
@@ -57,7 +56,7 @@ export function IsGenericDescriptor(Desc) {
 
 // #sec-frompropertydescriptor FromPropertyDescriptor
 export function FromPropertyDescriptor(Desc) {
-  if (Desc instanceof UndefinedValue) {
+  if (Type(Desc) === 'Undefined') {
     return NewValue(undefined);
   }
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
@@ -113,7 +112,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasGet = Q(HasProperty(Obj, NewValue('get')));
   if (hasGet.isTrue()) {
     const getter = Q(Get(Obj, NewValue('get')));
-    if (IsCallable(getter).isFalse() && !(getter instanceof UndefinedValue)) {
+    if (IsCallable(getter).isFalse() && Type(getter) !== 'Undefined') {
       return surroundingAgent.Throw('TypeError');
     }
     desc.Get = getter;
@@ -121,7 +120,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasSet = Q(HasProperty(Obj, NewValue('set')));
   if (hasSet.isTrue()) {
     const setter = Q(Get(Obj, NewValue('set')));
-    if (IsCallable(setter).isFalse() && !(setter instanceof UndefinedValue)) {
+    if (IsCallable(setter).isFalse() && Type(setter) !== 'Undefined') {
       return surroundingAgent.Throw('TypeError');
     }
     desc.Set = setter;

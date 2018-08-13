@@ -1,8 +1,6 @@
 import {
   Type,
   Value,
-  UndefinedValue,
-  NullValue,
   ProxyValue,
   New as NewValue,
   wellKnownSymbols,
@@ -122,7 +120,7 @@ export function GetMethod(
 ) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
-  if (func instanceof NullValue || func instanceof UndefinedValue) {
+  if (Type(func) === 'Null' || Type(func) === 'Undefined') {
     return NewValue(undefined);
   }
   if (IsCallable(func) === false) {
@@ -143,7 +141,7 @@ export function HasOwnProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
-  if (desc instanceof UndefinedValue) {
+  if (Type(desc) === 'Undefined') {
     return NewValue(false);
   }
   return NewValue(true);
@@ -195,7 +193,7 @@ export function SetIntegrityLevel(O, level) {
   } else if (level === 'frozen') {
     keys.forEach((k) => {
       const currentDesc = Q(O.GetOwnProperty(k));
-      if (!(currentDesc instanceof UndefinedValue)) {
+      if (Type(currentDesc) !== 'Undefined') {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
           desc = { Configurable: false };
@@ -220,7 +218,7 @@ export function TestIntegrityLevel(O, level) {
   const keys = Q(O.OwnPropertyKeys());
   for (const k of keys) {
     const currentDesc = Q(O.GetOwnProperty(k));
-    if (!(currentDesc instanceof UndefinedValue)) {
+    if (Type(currentDesc) !== 'Undefined') {
       if (currentDesc.Configurable === true) {
         return NewValue(false);
       }
@@ -269,7 +267,7 @@ export function EnumerableOwnPropertyNames(
   ownKeys.forEach((key) => {
     if (Type(key) === 'String') {
       const desc = Q(O.GetOwnProperty(key));
-      if (!(desc instanceof UndefinedValue) && desc.Enumerable === true) {
+      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
@@ -295,14 +293,14 @@ export function EnumerableOwnPropertyNames(
 export function SpeciesConstructor(O, defaultConstructor) {
   Assert(Type(O) === 'Object');
   const C = Q(Get(O, NewValue('constructor')));
-  if (C instanceof UndefinedValue) {
+  if (Type(C) === 'Undefined') {
     return defaultConstructor;
   }
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
   const S = Q(Get(C, wellKnownSymbols.species));
-  if (S instanceof UndefinedValue || S instanceof NullValue) {
+  if (Type(S) === 'Undefined' || Type(S) === 'Null') {
     return defaultConstructor;
   }
   if (IsConstructor(S).isTrue()) {
@@ -318,9 +316,8 @@ export function GetFunctionRealm(obj) {
     return obj.Realm;
   }
 
-
   if (obj instanceof ProxyValue) {
-    if (obj.ProxyHandler instanceof NullValue) {
+    if (Type(obj.ProxyHandler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
     const proxyTarget = obj.ProxyTarget;
