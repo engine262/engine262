@@ -267,12 +267,20 @@ function IsInTailPosition(CallExpression) {
   return false;
 }
 
-function ArgumentListEvaluation(Arguments) {
-  if (Arguments.length === 0) {
+// #sec-argument-lists-runtime-semantics-argumentlistevaluation
+function ArgumentListEvaluation(ArgumentList) {
+  // Arguments : ( )
+  if (ArgumentList.length === 0) {
     return [];
   }
-  // this is wrong
-  return Arguments.map((Expression) => GetValue(EvaluateExpression(Expression)));
+
+  // ArgumentList : ArgumentList , AssignmentExpression
+  let preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
+  ReturnIfAbrupt(preceedingArgs);
+  const ref = EvaluateExpression(ArgumentList[ArgumentList.length - 1]);
+  const arg = Q(GetValue(ref));
+  preceedingArgs.push(arg);
+  return preceedingArgs;
 }
 
 function EvaluateCall(func, ref, args, tailPosition) {
