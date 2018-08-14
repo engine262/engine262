@@ -8,7 +8,8 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-} from './notational-conventions.mjs';
+  ValidateAndApplyPropertyDescriptor,
+} from './all.mjs';
 
 // #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {
@@ -155,4 +156,25 @@ export function IsPromise(x) {
     return NewValue(false);
   }
   return NewValue(true);
+}
+
+// #sec-isinteger
+export function IsInteger(argument) {
+  if (Type(argument) !== 'Number') {
+    return false;
+  }
+  if (argument.isNaN() || argument.isInfinity()) {
+    return false;
+  }
+  if (Math.floor(Math.abs(argument.numberValue())) !== argument.numberValue()) {
+    return false;
+  }
+  return true;
+}
+
+// #sec-iscompatiblepropertydescriptor
+export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
+  return ValidateAndApplyPropertyDescriptor(
+    NewValue(undefined), NewValue(undefined), Extensible, Desc, Current,
+  );
 }

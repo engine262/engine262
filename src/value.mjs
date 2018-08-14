@@ -28,6 +28,10 @@ import {
   SameValue,
   ToBoolean,
   ToUint32,
+  IsCompatiblePropertyDescriptor,
+  ToString,
+  IsInteger,
+  CanonicalNumericIndexString,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { X } from './completion.mjs';
@@ -501,10 +505,40 @@ export class ProxyValue extends ObjectValue {
   OwnPropertyKeys() {}
 }
 
+function StringGetOwnProperty(S, P) {
+  Assert(Type(S) === 'Object' && 'StringData' in S);
+  Assert(IsPropertyKey(P));
+  if (Type(P) !== 'String') {
+    return undefinedValue;
+  }
+  const index = X(CanonicalNumericIndexString(P));
+  if (Type(index) === 'Undefined') {
+    return undefinedValue;
+  }
+  if (IsInteger(index).isFalse()) {
+    return undefinedValue;
+  }
+  if (Object.is(index.numberValue(), -0)) {
+    return undefinedValue;
+  }
+  const str = S.StringData;
+  const len = str.stringValue().length;
+  if (index.numberValue() < 0 || len <= index.numberValue()) {
+    return undefinedValue;
+  }
+  const resultStr = str.stringValue()[index.numberValue()];
+  return {
+    Value: New(resultStr),
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
+  };
+}
+
 export class StringExoticValue extends ObjectValue {
   GetOwnProperty(P) {
     const S = this;
-    Assert(IsPropertyKey(P).isTrue());
+    Assert(IsPropertyKey(P));
     const desc = OrdinaryGetOwnProperty(S, P);
     if (Type(desc) !== 'Undefined') {
       return desc;
@@ -514,7 +548,7 @@ export class StringExoticValue extends ObjectValue {
 
   DefineOwnProperty(P, Desc) {
     const S = this;
-    Assert(IsPropertyKey(P).isTrue());
+    Assert(IsPropertyKey(P));
     const stringDesc = X(StringGetOwnProperty(S, P));
     if (Type(stringDesc) !== 'Undefined') {
       const extensible = S.Extensible;

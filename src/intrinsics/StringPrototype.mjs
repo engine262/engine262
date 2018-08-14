@@ -56,7 +56,7 @@ function StringProto_valueOf(realm, args, { thisValue }) {
 }
 
 export function CreateStringPrototype(realmRec) {
-  const proto = new StringExoticValue();
+  const proto = new StringExoticValue(realmRec);
   proto.StringData = NewValue('');
 
   [
@@ -64,7 +64,7 @@ export function CreateStringPrototype(realmRec) {
     ['charCodeAt', StringProto_charCodeAt, 1],
     ['toString', StringProto_toString, 0],
     ['valueOf', StringProto_valueOf, 0],
-  ].forEach((name, fn, length) => {
+  ].forEach(([name, fn, length]) => {
     const n = CreateBuiltinFunction(fn, [], realmRec);
     n.properties.set(NewValue('length'), {
       Value: NewValue(length),

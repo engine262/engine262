@@ -12,6 +12,8 @@ import {
   GetGlobalObject,
 } from './engine.mjs';
 import {
+  isExpression,
+  isStatement,
   isExpressionStatement,
   isThrowStatement,
   isTryStatement,
@@ -189,9 +191,7 @@ export function ResolveBinding(name, env) {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
   Assert(env instanceof LexicalEnvironment);
-  // If the code matching the syntactic production that is being evaluated
-  // is contained in strict mode code, let strict be true, else let strict be false.
-  const strict = true;
+  const strict = surroundingAgent.isStrictCode;
   return GetIdentifierReference(env, name, strict);
 }
 
@@ -199,13 +199,13 @@ export function ResolveBinding(name, env) {
 //   MemberExpression : MemberExpression [ Expression ]
 //   CallExpression : CallExpression [ Expression ]
 function MemberExpression_Expression(MemberExpression, Expression) {
-  const baseReference = EvaluateExpression(MemberExpression);
+  const baseReference = Evaluate(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
-  const propertyNameReference = EvaluateExpression(Expression);
+  const propertyNameReference = Evaluate(Expression);
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = ToPropertyKey(propertyNameValue);
-  const strict = true;
+  const strict = surroundingAgent.isStrictCode;
   return new Reference(bv, propertyKey, strict);
 }
 
@@ -213,7 +213,7 @@ function MemberExpression_Expression(MemberExpression, Expression) {
 //   MemberExpression : MemberExpression . IdentifierName
 //   CallExpression : CallExpression . CallExpression
 function MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
-  const baseReference = EvaluateExpression(MemberExpression);
+  const baseReference = Evaluate(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);
@@ -224,9 +224,9 @@ function MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
 // #prod-AdditiveExpression
 //    AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, MultiplicativeExpression) {
-  const lref = EvaluateExpression(AdditiveExpression);
+  const lref = Evaluate(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = EvaluateExpression(MultiplicativeExpression);
+  const rref = Evaluate(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   const lprim = Q(ToPrimitive(lval));
   const rprim = Q(ToPrimitive(rval));
@@ -243,9 +243,9 @@ function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, Multipl
 function SubtractiveExpression_MultiplicativeExpression(
   SubtractiveExpression, MultiplicativeExpression,
 ) {
-  const lref = EvaluateExpression(SubtractiveExpression);
+  const lref = Evaluate(SubtractiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = EvaluateExpression(MultiplicativeExpression);
+  const rref = Evaluate(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   const lnum = Q(ToNumber(lval));
   const rnum = Q(ToNumber(rval));
@@ -286,7 +286,7 @@ function ArgumentListEvaluation(ArgumentList) {
   // ArgumentList : ArgumentList , AssignmentExpression
   let preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
   ReturnIfAbrupt(preceedingArgs);
-  const ref = EvaluateExpression(ArgumentList[ArgumentList.length - 1]);
+  const ref = Evaluate(ArgumentList[ArgumentList.length - 1]);
   const arg = Q(GetValue(ref));
   preceedingArgs.push(arg);
   return preceedingArgs;
@@ -329,7 +329,7 @@ function Evaluate_This() {
 }
 
 function Evalute_CallExpressionArguments(CallExpression, Arguments) {
-  const ref = EvaluateExpression(CallExpression);
+  const ref = Evaluate(CallExpression);
   const func = Q(GetValue(ref));
   const thisCall = undefined;
   const tailCall = IsInTailPosition(thisCall);
@@ -338,7 +338,7 @@ function Evalute_CallExpressionArguments(CallExpression, Arguments) {
 
 //  ThrowStatement : throw Expression ;
 function EvaluateThrowStatement(Expression) {
-  const exprRef = EvaluateExpression(Expression);
+  const exprRef = Evaluate(Expression);
   const exprValue = Q(GetValue(exprRef));
   return new ThrowCompletion(exprValue);
 }
@@ -361,13 +361,13 @@ function CatchClauseEvaluation(Catch, thrownValue) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     return status;
   }
-  const B = EvaluateStatement(Block);
+  const B = Evaluate(Block);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return B;
 }
 
 function EvaluateTryStatement_Catch(Block, Catch) {
-  const B = EvaluateStatement(Block);
+  const B = Evaluate(Block);
   let C;
   if (B.Type === 'throw') {
     C = CatchClauseEvaluation(Catch, B.Value);
@@ -378,8 +378,8 @@ function EvaluateTryStatement_Catch(Block, Catch) {
 }
 
 function EvaluateTryStatement_Finally(Block, Finally) {
-  const B = EvaluateExpression(Block);
-  let F = EvaluateExpression(Finally);
+  const B = Evaluate(Block);
+  let F = Evaluate(Finally);
   if (F.Type === 'normal') {
     F = B;
   }
@@ -387,14 +387,14 @@ function EvaluateTryStatement_Finally(Block, Finally) {
 }
 
 function EvaluateTryStatement_CatchFinally(Block, Catch, Finally) {
-  const B = EvaluateStatement(Block);
+  const B = Evaluate(Block);
   let C;
   if (B.Type === 'throw') {
     C = CatchClauseEvaluation(Catch, B.Value);
   } else {
     C = B;
   }
-  let F = EvaluateStatement(Finally);
+  let F = Evaluate(Finally);
   if (F.Type === 'normal') {
     F = C;
   }
@@ -441,7 +441,7 @@ function Evaluate_NewExpression(NewExpression) {
 function EvaluateNew(constructExpr, args) {
   Assert(isNewExpression(constructExpr) || isMemberExpression(constructExpr));
   Assert(args === undefined || Array.isArray(args));
-  const ref = EvaluateExpression(constructExpr);
+  const ref = Evaluate(constructExpr);
   const constructor = Q(GetValue(ref));
   let argList;
   if (args === undefined) {
@@ -582,6 +582,22 @@ function EvaluateExpression(Expression, envRec) {
       console.log(Expression);
       throw new RangeError('EvaluateExpression unknown expression type');
   }
+}
+
+function Evaluate(node) {
+  if (isExpression(node)) {
+    surroundingAgent.nodeStack.push(node);
+    const r = EvaluateExpression(node);
+    surroundingAgent.nodeStack.pop();
+    return r;
+  } else if (isStatement(node)) {
+    surroundingAgent.nodeStack.push(node);
+    const r = EvaluateStatement(node);
+    surroundingAgent.nodeStack.pop();
+    return r;
+  }
+  console.log(node);
+  throw new RangeError();
 }
 
 // #sec-script-semantics-runtime-semantics-evaluation

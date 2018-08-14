@@ -14,8 +14,9 @@ import {
   Get,
   GetMethod,
   IsCallable,
+  SameValue,
 } from './all.mjs';
-
+import { X } from '../completion.mjs';
 
 // 7.1.1 ToPrimitive
 export function ToPrimitive(
@@ -128,8 +129,10 @@ export function ToNumber(argument) {
       }
       return NewValue(0);
     case 'Number':
-
       return argument;
+    case 'String':
+      // FIXME(devsnek): https://tc39.github.io/ecma262/#sec-runtime-semantics-mv-s
+      return NewValue(+(argument.stringValue()));
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
@@ -137,7 +140,7 @@ export function ToNumber(argument) {
       return ToNumber(primValue);
     }
     default:
-      throw new RangeError('ToNumber(argument) unknown type');
+      throw new RangeError(`ToNumber(argument) unknown type ${Type(argument)}`);
   }
 }
 
@@ -270,4 +273,17 @@ export function ToLength(argument) {
     return NewValue(0);
   }
   return NewValue(Math.min(len.numberValue(), (2 ** 53) - 1));
+}
+
+// #sec-canonicalnumericindexstring
+export function CanonicalNumericIndexString(argument) {
+  Assert(Type(argument) === 'String');
+  if (argument.stringValue() === '-0') {
+    return -0;
+  }
+  const n = X(ToNumber(argument));
+  if (SameValue(X(ToString(n)), argument) === false) {
+    return NewValue(undefined);
+  }
+  return n;
 }
