@@ -18,6 +18,10 @@ import {
   isTryStatementWithCatch,
   isTryStatementWithFinally,
   isBlockStatement,
+  isNewExpression,
+  isNewExpressionWithArguments,
+  isNewExpressionWithoutArguments,
+  isMemberExpression,
   isMemberExpressionWithBrackets,
   isMemberExpressionWithDot,
   isCallExpressionWithBrackets,
@@ -31,6 +35,8 @@ import {
 } from './ast.mjs';
 import {
   BoundNames_CatchParameter,
+  BoundNames_Declaration,
+  LexicallyScopedDeclarations_StatementList,
 } from './static-semantics/all.mjs';
 import {
   BindingInitialization,
@@ -52,10 +58,13 @@ import {
   ToNumber,
   IsCallable,
   Call,
+  IsConstructor,
+  Construct,
 } from './abstract-ops/all.mjs';
 import {
   LexicalEnvironment,
   NewDeclarativeEnvironment,
+  DeclarativeEnvironmentRecord,
 } from './environment.mjs';
 
 export function GetBase(V) {
@@ -263,7 +272,7 @@ function EvaluateExpression_Identifier(Identifier) {
   return Q(ResolveBinding(NewValue(Identifier.name)));
 }
 
-function IsInTailPosition(CallExpression) {
+function IsInTailPosition() {
   return false;
 }
 
@@ -275,7 +284,7 @@ function ArgumentListEvaluation(ArgumentList) {
   }
 
   // ArgumentList : ArgumentList , AssignmentExpression
-  let preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
+  const preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
   ReturnIfAbrupt(preceedingArgs);
   const ref = EvaluateExpression(ArgumentList[ArgumentList.length - 1]);
   const arg = Q(GetValue(ref));
@@ -412,13 +421,88 @@ function EvaluateTryStatement(Expression) {
   }
 }
 
+// #sec-new-operator-runtime-semantics-evaluation
+// NewExpression :
+//   new NewExpression
+//   new MemberExpression Arguments
+function Evaluate_NewExpression(NewExpression) {
+  switch (true) {
+    case isNewExpressionWithoutArguments(NewExpression):
+      return EvaluateNew(NewExpression.callee, undefined);
+    case isNewExpressionWithArguments(NewExpression):
+      return EvaluateNew(NewExpression.callee, NewExpression.arguments);
+
+    default:
+      throw new RangeError();
+  }
+}
+
+// #sec-evaluatenew
+function EvaluateNew(constructExpr, args) {
+  Assert(isNewExpression(constructExpr) || isMemberExpression(constructExpr));
+  Assert(args === undefined || Array.isArray(args));
+  const ref = EvaluateExpression(constructExpr);
+  const constructor = Q(GetValue(ref));
+  let argList;
+  if (args === undefined) {
+    argList = [];
+  } else {
+    argList = ArgumentListEvaluation(args);
+    ReturnIfAbrupt(argList);
+  }
+  if (IsConstructor(constructor).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  return Q(Construct(constructor, argList));
+}
+
+// #sec-block-runtime-semantics-evaluation
+// Block :
+//   { }
+//   { StatementList }
+function Evaluate_BlockStatement(BlockStatement) {
+  const StatementList = BlockStatement.body;
+
+  if (StatementList.length === 0) {
+    return new NormalCompletion(undefined);
+  }
+
+  const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  BlockDeclarationInstantiation(StatementList, blockEnv);
+  surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
+  const blockValue = EvaluateStatementList(StatementList);
+  surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
+  return blockValue;
+}
+
+// #sec-blockdeclarationinstantiation
+function BlockDeclarationInstantiation(code, env) {
+  const envRec = env.EnvironmentRecord;
+  Assert(envRec instanceof DeclarativeEnvironmentRecord);
+  const declarations = LexicallyScopedDeclarations_StatementList(code);
+  for (const d of declarations) {
+    for (const dn of BoundNames_Declaration(d)) {
+      // If IsConstantDeclaration of d is true, then
+      //   Perform ! envRec.CreateImmutableBinding(dn, true).
+      // Else,
+      //   Perform ! envRec.CreateMutableBinding(dn, false).
+      // If d is a FunctionDeclaration, a GeneratorDeclaration,
+      // an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
+      //   Let fn be the sole element of the BoundNames of d.
+      //   Let fo be the result of performing InstantiateFunctionObject for d with argument env.
+      //   Perform envRec.InitializeBinding(fn, fo).
+    }
+  }
+}
+
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
 //
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList, envRec) {
-  let sl = EvaluateStatementListItem(StatementList.shift());
+  const sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
     return new NormalCompletion(sl);
@@ -436,7 +520,7 @@ function EvaluateStatementList(StatementList, envRec) {
 function EvaluateStatementListItem(StatementListItem, envRec) {
   switch (true) {
     case isBlockStatement(StatementListItem):
-      return EvaluateStatementList(StatementListItem.body);
+      return Evaluate_BlockStatement(StatementListItem);
     case isExpressionStatement(StatementListItem):
       return EvaluateExpressionStatement(StatementListItem, envRec);
     case isThrowStatement(StatementListItem):
@@ -449,6 +533,7 @@ function EvaluateStatementListItem(StatementListItem, envRec) {
       throw new RangeError('unknown StatementListItem type');
   }
 }
+
 function EvaluateStatement(...args) {
   return EvaluateStatementListItem(...args);
 }
@@ -490,6 +575,8 @@ function EvaluateExpression(Expression, envRec) {
       return Evalute_CallExpressionArguments(Expression.callee, Expression.arguments);
     case isPrimaryExpressionWithThis(Expression):
       return Evaluate_This(Expression);
+    case isNewExpression(Expression):
+      return Evaluate_NewExpression(Expression);
 
     default:
       console.log(Expression);

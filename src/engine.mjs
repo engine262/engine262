@@ -169,7 +169,7 @@ export function RunJobs() {
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
   const scripts = [
-    { sourceText: 'try { throw 5; } catch (e) { print(e); }', hostDefined: undefined },
+    { sourceText: 'try { throw new Error("hi!"); } catch (e) { print(e.message); }', hostDefined: undefined },
   ];
 
   const modules = [];

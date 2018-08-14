@@ -251,10 +251,10 @@ function nc(F, realm, args, thisArgument, newTarget) {
     args.length = F.properties.get(New('length')).numberValue();
   }
   return F.nativeFunction(realm, new Proxy(args, {
-    get: (t, p, r) => Reflect.get(t, p, r) || New(undefined),
+    get: (t, p, r) => Reflect.get(t, p, r) || undefinedValue,
   }), {
-    thisValue: thisArgument || New(undefined),
-    NewTarget: newTarget || New(undefined),
+    thisValue: thisArgument || undefinedValue,
+    NewTarget: newTarget || undefinedValue,
   });
 }
 

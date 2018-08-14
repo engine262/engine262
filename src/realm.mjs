@@ -33,6 +33,7 @@ import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
 import { CreateString } from './intrinsics/String.mjs';
 import { CreateError } from './intrinsics/Error.mjs';
+import { CreateNativeError } from './intrinsics/NativeError.mjs';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms
@@ -75,6 +76,7 @@ export function CreateIntrinsics(realmRec) {
   thrower.SetPrototypeOf(funcProto);
 
   CreateError(realmRec);
+  CreateNativeError(realmRec);
 
   CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
@@ -171,6 +173,13 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Promise',
     'String',
     'Symbol',
+    'Error',
+    'EvalError',
+    'RangeError',
+    'ReferenceError',
+    'SyntaxError',
+    'TypeError',
+    'URIError',
     // Other Properties of the Global Object
     'Math',
   ].forEach((name) => {

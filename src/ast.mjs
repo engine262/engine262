@@ -178,6 +178,16 @@ export function isNewExpression(node) {
   return node.type === 'NewExpression' || isMemberExpression(node);
 }
 
+// Used in #prod-NewExpression
+export function isNewExpressionWithArguments(node) {
+  return isNewExpression(node) && node.arguments.length > 0;
+}
+
+// Used in #prod-NewExpression
+export function isNewExpressionWithoutArguments(node) {
+  return isNewExpression(node) && node.arguments.length === 0;
+}
+
 // #prod-CallMemberExpression
 export function isCallMemberExpression(node) {
   return node.type === 'CallExpression' && isMemberExpression(node.callee);

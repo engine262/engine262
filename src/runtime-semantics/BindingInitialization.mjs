@@ -3,10 +3,10 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-  RequireObjectCoercible,
   GetIterator,
   IteratorClose,
   ObjectCreate,
+  CopyDataProperties,
 } from '../abstract-ops/all.mjs';
 import {
   isIdentifier,
@@ -122,19 +122,25 @@ function BindingInitialization_ArrayBindingPattern(ArrayBindingPattern, value, e
 // ObjectBindingPattern :
 //   { BindingPropertyList }
 //   { BindingPropertyList , }
-function BindingInitialization_ObjectBindingPattern_BindingPropertyList(BindingPropertyList, value, environment) {
+function BindingInitialization_ObjectBindingPattern_BindingPropertyList(
+  BindingPropertyList, value, environment,
+) {
   Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
   return new NormalCompletion(undefined);
 }
 
 // ObjectBindingPattern : { BindingRestProperty }
-function BindingInitialization_ObjectBindingPattern_BindingRestProperty(BindingRestProperty, value, environment) {
+function BindingInitialization_ObjectBindingPattern_BindingRestProperty(
+  BindingRestProperty, value, environment,
+) {
   const excludedNames = [];
   return RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
 }
 
 // ObjectBindingPattern : { BindingPropertyList , BindingRestProperty }
-function BindingInitialization_ObjectBindingPattern_BindingPropertyList_BindingRestProperty(BindingPropertyList, BindingRestProperty, value, environment) {
+function BindingInitialization_ObjectBindingPattern_BindingPropertyList_BindingRestProperty(
+  BindingPropertyList, BindingRestProperty, value, environment,
+) {
   const excludedNames = Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
   return RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
 }
