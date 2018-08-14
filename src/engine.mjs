@@ -170,6 +170,7 @@ export function RunJobs() {
 
   const scripts = [
     { sourceText: 'try { throw new Error("hi!"); } catch (e) { print(e.message); }', hostDefined: undefined },
+    { sourceText: 'print(ReferenceError.name);', hostDefined: undefined },
   ];
 
   const modules = [];

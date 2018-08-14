@@ -43,7 +43,19 @@ export function CreateNativeError(realmRec) {
       }
       return O;
     }, [], realmRec);
-    cons.properties.set(NewValue('length'), NewValue(1));
+    cons.Prototype = realmRec.Intrinsics['%Error%'];
+    cons.properties.set(NewValue('length'), {
+      Value: NewValue(1),
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+    });
+    cons.properties.set(NewValue('name'), {
+      Value: NewValue(name),
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+    });
 
     const proto = new ObjectValue(realmRec);
     proto.Prototype = realmRec.Intrinsics['%ErrorPrototype%'];

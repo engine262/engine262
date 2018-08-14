@@ -284,7 +284,7 @@ function ArgumentListEvaluation(ArgumentList) {
   }
 
   // ArgumentList : ArgumentList , AssignmentExpression
-  const preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
+  let preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
   ReturnIfAbrupt(preceedingArgs);
   const ref = EvaluateExpression(ArgumentList[ArgumentList.length - 1]);
   const arg = Q(GetValue(ref));
@@ -304,7 +304,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
   } else {
     thisValue = NewValue(undefined);
   }
-  const argList = ArgumentListEvaluation(args);
+  let argList = ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -502,7 +502,7 @@ function BlockDeclarationInstantiation(code, env) {
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList, envRec) {
-  const sl = EvaluateStatementListItem(StatementList.shift());
+  let sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
     return new NormalCompletion(sl);
