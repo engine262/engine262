@@ -34,6 +34,8 @@ import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
 import { CreateString } from './intrinsics/String.mjs';
 import { CreateError } from './intrinsics/Error.mjs';
 import { CreateNativeError } from './intrinsics/NativeError.mjs';
+import { CreateIteratorPrototype } from './intrinsics/IteratorPrototype.mjs';
+import { CreateAsyncIteratorPrototype } from './intrinsics/AsyncIteratorPrototype.mjs';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms
@@ -82,6 +84,9 @@ export function CreateIntrinsics(realmRec) {
   CreateObject(realmRec);
 
   CreateFunctionPrototype(realmRec);
+
+  CreateIteratorPrototype(realmRec);
+  CreateAsyncIteratorPrototype(realmRec);
 
   CreateStringPrototype(realmRec);
   CreateString(realmRec);
