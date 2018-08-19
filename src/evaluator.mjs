@@ -62,6 +62,7 @@ import {
   Call,
   IsConstructor,
   Construct,
+  PrepareForTailCall,
 } from './abstract-ops/all.mjs';
 import {
   LexicalEnvironment,
@@ -313,7 +314,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
     return surroundingAgent.Throw('TypeError');
   }
   if (tailPosition) {
-    // PrepareForTailCall();
+    PrepareForTailCall();
   }
   const result = Call(func, thisValue, argList);
   // Assert: If tailPosition is true, the above call will not return here

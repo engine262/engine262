@@ -1,4 +1,8 @@
 import {
+  surroundingAgent,
+  Suspend,
+} from '../engine.mjs';
+import {
   Assert,
   IsExtensible,
   HasOwnProperty,
@@ -46,4 +50,13 @@ export function SetFunctionLength(F, length) {
     Enumerable: false,
     Configurable: false,
   }));
+}
+
+// #sec-PrepareForTailCall
+export function PrepareForTailCall() {
+  const leafContext = surroundingAgent.runningExecutionContext;
+  Suspend(leafContext);
+  surroundingAgent.executionContextStack.pop();
+  // Assert: leafContext has no further use. It will never
+  // be activated as the running execution context.
 }

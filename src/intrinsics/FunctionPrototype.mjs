@@ -16,6 +16,7 @@ import {
   SameValue,
   Construct,
   OrdinaryHasInstance,
+  PrepareForTailCall,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -30,11 +31,11 @@ function FunctionProto_apply(realm, [thisArg, argArray], { thisValue: func }) {
     return surroundingAgent.Throw('TypeError');
   }
   if (Type(argArray) === 'Undefined' || Type(argArray) === 'Null') {
-    // PrepareForTailCall();
+    PrepareForTailCall();
     return Q(Call(func, thisArg));
   }
   const argList = CreateListFromArrayLike(argArray);
-  // PrepareForTailCall();
+  PrepareForTailCall();
   return Q(Call(func, thisArg, argList));
 }
 
