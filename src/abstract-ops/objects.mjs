@@ -23,6 +23,9 @@ import {
   ToString,
   ToUint32,
 } from './all.mjs';
+import {
+  InstanceofOperator,
+} from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
@@ -503,4 +506,31 @@ export function ArraySetLength(A, Desc) {
     });
   }
   return NewValue(true);
+}
+
+// #sec-OrdinaryHasInstance
+export function OrdinaryHasInstance(C, O) {
+  if (IsCallable(C).isFalse()) {
+    return NewValue(false);
+  }
+  if ('BoundTargetFunction' in C) {
+    const BC = C.BoundTargetFunction;
+    return Q(InstanceofOperator(O, BC));
+  }
+  if (Type(O) !== 'Object') {
+    return NewValue(false);
+  }
+  const P = Q(Get(C, NewValue('prototype')));
+  if (Type(P) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  while (true) {
+    O = Q(O.GetPrototypeOf());
+    if (Type(O) === 'Null') {
+      return NewValue(false);
+    }
+    if (SameValue(P, O)) {
+      return NewValue(true);
+    }
+  }
 }

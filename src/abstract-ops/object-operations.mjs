@@ -19,6 +19,7 @@ import {
   IsDataDescriptor,
   IsExtensible,
   SameValue,
+  ToLength,
 } from './all.mjs';
 import {
   ArrayCreate,
@@ -353,4 +354,27 @@ export function CopyDataProperties(target, source, excludedItems) {
     }
   }
   return target;
+}
+
+// #sec-CreateListFromArrayLike
+export function CreateListFromArrayLike(obj, elementTypes) {
+  if (elementTypes === undefined) {
+    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
+  }
+  if (Type(obj) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const len = Q(ToLength(Q(Get(obj, NewValue('length')))));
+  const list = [];
+  let index = 0;
+  while (index < len.numberValue()) {
+    const indexName = X(ToString(NewValue(index)));
+    const next = Q(Get(obj, indexName));
+    if (!elementTypes.includes(Type(next))) {
+      return surroundingAgent.Throw('TypeError');
+    }
+    list.push(next);
+    index += 1;
+  }
+  return list;
 }

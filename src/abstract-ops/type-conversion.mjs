@@ -155,9 +155,10 @@ export function ToInteger(argument) {
       || number.numberValue() === -Infinity) {
     return number;
   }
-  return NewValue(
-    Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1,
-  );
+  // Return the number value that is the same sign
+  // as number and whose magnitude is floor(abs(number)).
+  const mag = Math.floor(Math.abs(number.numberValue()));
+  return NewValue(number.numberValue() >= 0 ? mag : -mag);
 }
 
 // 7.1.6 ToUint32

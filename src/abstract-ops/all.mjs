@@ -5,3 +5,4 @@ export * from './spec-types.mjs';
 export * from './testing-comparison.mjs';
 export * from './type-conversion.mjs';
 export * from './iterator-operations.mjs';
+export * from './function-operations.mjs';
