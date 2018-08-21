@@ -7,6 +7,8 @@ import {
   ToString,
   ToInteger,
   CreateBuiltinFunction,
+  SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   StringExoticValue,
@@ -66,18 +68,8 @@ export function CreateStringPrototype(realmRec) {
     ['valueOf', StringProto_valueOf, 0],
   ].forEach(([name, fn, length]) => {
     const n = CreateBuiltinFunction(fn, [], realmRec);
-    n.properties.set(NewValue('length'), {
-      Value: NewValue(length),
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
-    n.properties.set(NewValue('name'), {
-      Value: NewValue(name),
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
+    SetFunctionName(n, NewValue(name));
+    SetFunctionLength(n, NewValue(length));
     proto.DefineOwnProperty(NewValue(name), {
       Value: n,
       Writable: true,

@@ -1,6 +1,7 @@
 import {
   wellKnownSymbols,
   Type,
+  Reference,
   New as NewValue,
 } from './value.mjs';
 import {
@@ -316,7 +317,22 @@ export function NewGlobalEnvironment(G, thisValue) {
 
   env.EnvironmentRecord = globalRec;
 
-  env.outerLexicalEnvironment = null;
+  env.outerLexicalEnvironment = NewValue(null);
 
   return env;
+}
+
+// #sec-getidentifierreference
+export function GetIdentifierReference(lex, name, strict) {
+  if (Type(lex) === 'Null') {
+    return new Reference(NewValue(undefined), name, strict);
+  }
+  const envRec = lex.EnvironmentRecord;
+  const exists = envRec.HasBinding(name);
+  if (exists) {
+    return new Reference(envRec, name, strict);
+  } else {
+    const outer = lex.outerLexicalEnvironment;
+    return GetIdentifierReference(outer, name, strict);
+  }
 }

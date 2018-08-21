@@ -10,7 +10,9 @@ export function ParseScript(sourceText, realm, hostDefined) {
     let strictMode = false;
     const parent = ancestors.reverse().find((n) => n.type === 'Program' || n.type === 'FunctionDeclaration');
     if (parent) {
-      const directive = parent.body.find((n) => n.directive !== undefined);
+      const directive = parent.type === 'FunctionDeclaration'
+        ? parent.body.body.find((n) => n.directive !== undefined)
+        : parent.body.find((n) => n.directive !== undefined);
       if (directive && directive.slice(1, -1) === 'use strict') {
         strictMode = true;
       }

@@ -2,6 +2,8 @@ import {
   CreateBuiltinFunction,
   ToString,
   GetPrototypeFromConstructor,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -27,7 +29,8 @@ function StringConstructor(realm, args, { NewTarget }) {
 
 export function CreateString(realmRec) {
   const stringConstructor = CreateBuiltinFunction(StringConstructor, [], realmRec);
-  stringConstructor.properties.set(NewValue('length'), NewValue(1));
+  SetFunctionName(stringConstructor, NewValue('String'));
+  SetFunctionLength(stringConstructor, NewValue(1));
 
   realmRec.Intrinsics['%String%'] = stringConstructor;
 }

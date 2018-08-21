@@ -1,5 +1,6 @@
 import {
   surroundingAgent,
+  ResolveBinding,
 } from '../engine.mjs';
 import {
   Assert,
@@ -18,12 +19,11 @@ import {
   isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty,
 } from '../ast.mjs';
 import {
-  ResolveBinding,
   GetBase,
   IsUnresolvableReference,
   GetReferencedName,
   PutValue,
-} from '../evaluator.mjs';
+} from './all.mjs';
 import {
   Type,
   New as NewValue,

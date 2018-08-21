@@ -24,6 +24,8 @@ import {
   CreateArrayFromList,
   CreateDataProperty,
   RequireObjectCoercible,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
@@ -302,7 +304,8 @@ export function CreateObject(realmRec) {
     ['values', ObjectValues, 1],
   ].forEach(([name, fn, len]) => {
     const fnv = CreateBuiltinFunction(fn, [], realmRec);
-    fnv.properties.set(NewValue('length'), NewValue(len));
+    SetFunctionName(fnv, NewValue(name));
+    SetFunctionLength(fnv, NewValue(len));
     objectConstructor.DefineOwnProperty(NewValue(name), {
       Value: fnv,
       Writable: true,

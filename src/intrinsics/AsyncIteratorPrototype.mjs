@@ -5,6 +5,7 @@ import {
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 
 export function CreateAsyncIteratorPrototype(realmRec) {
@@ -12,12 +13,7 @@ export function CreateAsyncIteratorPrototype(realmRec) {
   proto.Prototype = realmRec.Intrinsics['%IteratorPrototype%'];
 
   const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);
-  fn.properties.set(NewValue('name'), {
-    Value: NewValue('[Symbol.asyncIterator]'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
+  SetFunctionName(fn, NewValue('[Symbol.asyncIterator]'));
 
   proto.DefineOwnProperty(wellKnownSymbols.asyncIterator, {
     Value: fn,

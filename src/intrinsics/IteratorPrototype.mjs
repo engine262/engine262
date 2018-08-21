@@ -5,18 +5,14 @@ import {
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 
 export function CreateIteratorPrototype(realmRec) {
   const proto = new ObjectValue(realmRec);
 
   const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);
-  fn.properties.set(NewValue('name'), {
-    Value: NewValue('[Symbol.iterator]'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
+  SetFunctionName(fn, NewValue('[Symbol.iterator]'));
 
   proto.DefineOwnProperty(wellKnownSymbols.iterator, {
     Value: fn,

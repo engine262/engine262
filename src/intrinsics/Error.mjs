@@ -3,6 +3,8 @@ import {
   ToString,
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -34,7 +36,8 @@ function ErrorConstructor(realm, [message], { NewTarget }) {
 
 export function CreateError(realmRec) {
   const error = CreateBuiltinFunction(ErrorConstructor, [], realmRec);
-  error.properties.set(NewValue('length'), NewValue(1));
+  SetFunctionName(error, NewValue('Error'));
+  SetFunctionLength(error, NewValue(1));
 
   realmRec.Intrinsics['%Error%'] = error;
 }

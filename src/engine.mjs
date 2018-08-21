@@ -12,6 +12,8 @@ import {
 } from './completion.mjs';
 import {
   EnvironmentRecord,
+  LexicalEnvironment,
+  GetIdentifierReference,
 } from './environment.mjs';
 import {
   CreateRealm,
@@ -366,6 +368,29 @@ export function Suspend(WL, W) {
   // EnterCriticalSection(WL);
   // If W was woken explicitly by another agent calling WakeWaiter(WL, W), return true.
   return false;
+}
+
+// #sec-getactivescriptormodule
+export function GetCurrentScriptOrModule() {
+  if (surroundingAgent.executionContextStack.length === 0) {
+    return NewValue(null);
+  }
+  const ec = surroundingAgent.executionContextStack
+    .reverse().find((e) => Type(e.ScriptOrModule) !== 'Null');
+  if (!ec) {
+    return NewValue(null);
+  }
+  return ec.ScriptOrModule;
+}
+
+// #sec-resolvebinding
+export function ResolveBinding(name, env) {
+  if (!env || Type(env) === 'Undefined') {
+    env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  }
+  Assert(env instanceof LexicalEnvironment);
+  const strict = surroundingAgent.isStrictCode;
+  return GetIdentifierReference(env, name, strict);
 }
 
 // #sec-getthisenvironment

@@ -6,6 +6,8 @@ import {
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
   ToString,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -44,18 +46,8 @@ export function CreateNativeError(realmRec) {
       return O;
     }, [], realmRec);
     cons.Prototype = realmRec.Intrinsics['%Error%'];
-    cons.properties.set(NewValue('length'), {
-      Value: NewValue(1),
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
-    cons.properties.set(NewValue('name'), {
-      Value: NewValue(name),
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
+    SetFunctionLength(cons, NewValue(1));
+    SetFunctionName(cons, NewValue(name));
 
     const proto = new ObjectValue(realmRec);
     proto.Prototype = realmRec.Intrinsics['%ErrorPrototype%'];

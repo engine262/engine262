@@ -8,3 +8,4 @@ export * from './TopLevelVarDeclaredNames.mjs';
 export * from './TopLevelVarScopedDeclarations.mjs';
 export * from './VarDeclaredNames.mjs';
 export * from './VarScopedDeclarations.mjs';
+export * from './IsConstantDeclaration.mjs';
