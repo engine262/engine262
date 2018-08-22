@@ -11,7 +11,6 @@ import {
   Q,
 } from './completion.mjs';
 import {
-  EnvironmentRecord,
   LexicalEnvironment,
   GetIdentifierReference,
 } from './environment.mjs';
@@ -30,11 +29,8 @@ import {
   CreateBuiltinFunction,
 } from './abstract-ops/all.mjs';
 import {
-  LexicallyDeclaredNames_ScriptBody,
-  LexicallyScopedDeclarations_ScriptBody,
-  VarDeclaredNames_ScriptBody,
-  VarScopedDeclarations_ScriptBody,
-} from './static-semantics/all.mjs';
+  GlobalDeclarationInstantiation,
+} from './runtime-semantics/all.mjs';
 import {
   EvaluateScript,
 } from './evaluator.mjs';
@@ -161,8 +157,8 @@ export function InitializeHostDefinedRealm() {
   const globalObj = SetDefaultGlobalBindings(realm);
   // Create any implementation-defined global object properties on globalObj.
   globalObj.DefineOwnProperty(NewValue('print'), {
-    Value: CreateBuiltinFunction((realm, args) => {
-      console.log('[GLOBAL PRINT]', ...args);
+    Value: CreateBuiltinFunction((r, args) => {
+      console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
       return NewValue(undefined);
     }, [], realm),
     Writable: true,
@@ -245,69 +241,6 @@ export function ScriptEvaluation(scriptRecord) {
   return result;
 }
 
-// 15.1.11 GlobalDeclarationInstantiation
-export function GlobalDeclarationInstantiation(script, env) {
-  const envRec = env.EnvironmentRecord;
-  Assert(envRec instanceof EnvironmentRecord);
-
-  const lexNames = LexicallyDeclaredNames_ScriptBody(script);
-  const varNames = VarDeclaredNames_ScriptBody(script);
-
-  lexNames.forEach((name) => {
-    if (envRec.HasVarDeclaration(name)) {
-      return surroundingAgent.Throw('SyntaxError');
-    }
-    if (envRec.HasLexicalDeclaration(name)) {
-      return surroundingAgent.Throw('SyntaxError');
-    }
-    const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
-    if (hasRestrictedGlobal) {
-      return surroundingAgent.Throw('SyntaxError');
-    }
-  });
-
-  varNames.forEach((name) => {
-    if (envRec.HasLexicalDeclaration(name)) {
-      envRec.Realm.execption.SyntaxError();
-    }
-  });
-
-  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
-
-  const functionsToInitialize = [];
-  // const declaredFunctionNames = [];
-
-  varDeclarations.reverse().forEach(() => {
-    // stuff
-  });
-
-  const declaredVarNames = [];
-
-  varDeclarations.forEach(() => {
-    // stuff
-  });
-
-  const strict = script.IsStrict;
-  if (strict === false) {
-    // annex b
-  }
-
-  const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
-  lexDeclarations.forEach(() => {
-    // stuff
-  });
-
-  functionsToInitialize.forEach(() => {
-    // stuff
-  });
-
-  declaredVarNames.forEach((vn) => {
-    envRec.CreateGlobalVarBinding(vn, false);
-  });
-
-  return new NormalCompletion();
-}
-
 // 15.1.12 ScriptEvaluationJob
 export function ScriptEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
@@ -326,11 +259,11 @@ export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
 // 16.1 HostReportErrors
 export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
-    console.log('[HostReportErrors]', error);
+    console.log('[HostReportErrors]', error); // eslint-disable-line no-console
   });
 }
 
-export function HostPromiseRejectionTracker(promise, type) {}
+export function HostPromiseRejectionTracker() {}
 
 // 19.4.3.2.1 SymbolDescriptiveString
 export function SymbolDescriptiveString(sym) {
@@ -396,7 +329,7 @@ export function ResolveBinding(name, env) {
 // #sec-getthisenvironment
 export function GetThisEnvironment() {
   let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  while (true) {
+  while (true) { // eslint-disable-line no-constant-condition
     const envRec = lex.EnvironmentRecord;
     const exists = envRec.HasThisBinding();
     if (exists) {
