@@ -13,7 +13,9 @@ import {
   VarDeclaredNames_ScriptBody,
   VarScopedDeclarations_ScriptBody,
   IsConstantDeclaration,
-  BoundNames,
+  BoundNames_FunctionDeclaration,
+  BoundNames_LexicalDeclaration,
+  BoundNames_VariableDeclaration,
 } from '../static-semantics/all.mjs';
 import {
   InstantiateFunctionObject,
@@ -71,7 +73,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
       Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d)
              || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
-      const fn = BoundNames(d)[0];
+      const fn = BoundNames_FunctionDeclaration(d)[0];
       if (!declaredFunctionNames.includes(fn)) {
         const fnDefinable = Q(envRec.CanDeclareGlobalFunction(d));
         if (fnDefinable.isFalse()) {
@@ -87,7 +89,7 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   for (const d of varDeclarations) {
     if (isVariableDeclaration(d) || isForBinding(d) || isBindingIdentifier(d)) {
-      for (const vn of BoundNames(d)) {
+      for (const vn of BoundNames_VariableDeclaration(d)) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           if (vnDefinable.isFalse()) {
@@ -106,7 +108,7 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames(d)) {
+    for (const dn of BoundNames_LexicalDeclaration(d)) {
       if (IsConstantDeclaration(dn)) {
         Q(envRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {
@@ -116,7 +118,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   }
 
   for (const f of functionsToInitialize) {
-    const fn = BoundNames(f)[0];
+    const fn = BoundNames_FunctionDeclaration(f)[0];
     const fo = InstantiateFunctionObject(f, env);
     Q(envRec.CreateGlobalFunctionBinding(fn, fo, NewValue(false)));
   }

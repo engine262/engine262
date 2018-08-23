@@ -1,3 +1,8 @@
-import { RunJobs } from './lib/engine.mjs';
+import { NonSpecRunScript } from './lib/engine.mjs';
 
-RunJobs();
+[
+  'try { throw new Error("hi!"); } catch (e) { print(e.message); }',
+  'print(ReferenceError.name);',
+].forEach((sourceText) => {
+  NonSpecRunScript(sourceText);
+});

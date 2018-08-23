@@ -597,6 +597,10 @@ export function isVariableStatement(node) {
   return node.type === 'VariableDeclaration' && node.kind === 'var';
 }
 
+export function isVariableDeclaration(node) {
+  return node.type === 'VariableDeclaration';
+}
+
 // #prod-EmptyStatement
 export function isEmptyStatement(node) {
   return node.type === 'EmptyStatement';
@@ -625,6 +629,10 @@ export function isIterationStatement(node) {
          || node.type === 'ForStatement'
          || node.type === 'ForInStatement'
          || node.type === 'ForOfStatement';
+}
+
+export function isForBinding() {
+  return false;
 }
 
 // #prod-SwitchStatement

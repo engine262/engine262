@@ -173,10 +173,7 @@ export function RunJobs() {
 
   // In an implementation-dependent manner, obtain the ECMAScript source texts
 
-  const scripts = [
-    { sourceText: 'try { throw new Error("hi!"); } catch (e) { print(e.message); }', hostDefined: undefined },
-    { sourceText: 'print(ReferenceError.name);', hostDefined: undefined },
-  ];
+  const scripts = [];
 
   const modules = [];
 
@@ -206,6 +203,49 @@ export function RunJobs() {
       HostReportErrors([result.Value]);
     }
   }
+}
+
+export function NonSpecRunScript(sourceText) {
+  InitializeHostDefinedRealm();
+
+  const callerContext = surroundingAgent.runningExecutionContext;
+  const callerRealm = callerContext.Realm;
+  const callerScriptOrModule = callerContext.ScriptOrModule;
+
+  const newContext = new ExecutionContext();
+  newContext.Function = null;
+  newContext.Realm = callerRealm;
+  newContext.ScriptOrModule = callerScriptOrModule;
+
+  surroundingAgent.executionContextStack.push(newContext);
+
+  const realm = surroundingAgent.currentRealmRecord;
+  const s = ParseScript(sourceText, realm, undefined);
+  const res = ScriptEvaluation(s);
+
+  while (true) { // eslint-disable-line no-constant-condition
+    surroundingAgent.executionContextStack.pop();
+    const nextQueue = surroundingAgent.pickQueue();
+    // host specific behaviour
+    if (!nextQueue) {
+      break;
+    }
+    const nextPending = nextQueue.shift();
+    const newContext = new ExecutionContext();
+    newContext.Function = null;
+    newContext.Realm = nextPending.Realm;
+    newContext.ScriptOrModule = nextPending.ScriptOrModule;
+    surroundingAgent.executionContextStack.push(newContext);
+    const result = nextPending.Job(...nextPending.Arguments);
+    if (result instanceof AbruptCompletion) {
+      HostReportErrors([result.Value]);
+    }
+  }
+
+  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop();
+
+  return res;
 }
 
 // 8.7.1 AgentSignifier
