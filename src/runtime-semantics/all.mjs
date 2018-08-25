@@ -4,4 +4,6 @@ export * from './TryStatement.mjs';
 export * from './FunctionCalls.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './InstantiateFunctionObject.mjs';
+export * from './MakeConstructor.mjs';
+export * from './EvaluateBody.mjs';
 export * from './reference-operations.mjs';

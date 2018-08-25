@@ -344,7 +344,7 @@ export function Suspend(WL, W) {
 }
 
 // #sec-getactivescriptormodule
-export function GetCurrentScriptOrModule() {
+export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
     return NewValue(null);
   }

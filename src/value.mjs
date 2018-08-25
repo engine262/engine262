@@ -236,7 +236,7 @@ export class ArrayValue extends ObjectValue {
       if (index.numberValue() >= oldLen.numberValue()) {
         oldLenDesc.Value = New(index.numberValue() + 1);
         const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc);
-        Assert(succeeded === true);
+        Assert(succeeded.isTrue());
       }
       return true;
     }
@@ -244,11 +244,7 @@ export class ArrayValue extends ObjectValue {
   }
 }
 
-export class FunctionValue extends ObjectValue {
-  Call(thisArgument, argumentsList) {
-    throw new TypeError('This function object does not have [[Call]] implemented');
-  }
-}
+export class FunctionValue extends ObjectValue {}
 
 function nc(F, realm, args, thisArgument, newTarget) {
   if (F.properties.has(New('length'))) {
