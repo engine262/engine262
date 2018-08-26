@@ -32,9 +32,13 @@ import {
   ToString,
   IsInteger,
   CanonicalNumericIndexString,
+  ToPropertyDescriptor,
+  CompletePropertyDescriptor,
+  FromPropertyDescriptor,
+  IsDataDescriptor,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import { X } from './completion.mjs';
+import { Q, X } from './completion.mjs';
 
 export class Value {}
 
@@ -235,7 +239,7 @@ export class ArrayValue extends ObjectValue {
       }
       if (index.numberValue() >= oldLen.numberValue()) {
         oldLenDesc.Value = New(index.numberValue() + 1);
-        const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc);
+        const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc); // eslint-disable-line no-shadow
         Assert(succeeded.isTrue());
       }
       return true;
@@ -273,7 +277,7 @@ export class BuiltinFunctionValue extends FunctionValue {
   Call(thisArgument, argumentsList) {
     const F = this;
 
-    const callerContext = surroundingAgent.runningExecutionContext;
+    // const callerContext = surroundingAgent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
@@ -291,7 +295,7 @@ export class BuiltinFunctionValue extends FunctionValue {
   Construct(argumentsList, newTarget) {
     const F = this;
 
-    const callerContext = surroundingAgent.runningExecutionContext;
+    // const callerContext = surroundingAgent.runningExecutionContext;
     // If callerContext is not already suspended, suspend callerContext.
     const calleeContext = new ExecutionContext();
     calleeContext.Function = F;
@@ -368,19 +372,19 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('getPrototypeOf'));
+    const trap = Q(GetMethod(handler, New('getPrototypeOf')));
     if (Type(trap) === 'Undefined') {
-      return target.GetPrototypeOf();
+      return Q(target.GetPrototypeOf());
     }
-    const handlerProto = Call(trap, handler, [target]);
+    const handlerProto = Q(Call(trap, handler, [target]));
     if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
-    const extensibleTarget = IsExtensible(target);
+    const extensibleTarget = Q(IsExtensible(target));
     if (extensibleTarget === true) {
       return handlerProto;
     }
-    const targetProto = target.GetPrototypeOf();
+    const targetProto = Q(target.GetPrototypeOf());
     if (SameValue(handlerProto, targetProto) === false) {
       return surroundingAgent.Throw('TypeError');
     }
@@ -397,19 +401,19 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('setPrototypeOf'));
+    const trap = Q(GetMethod(handler, New('setPrototypeOf')));
     if (Type(trap) === 'Undefined') {
-      return target.SetPrototypeOf(V);
+      return Q(target.SetPrototypeOf(V));
     }
-    const booleanTrapResult = ToBoolean(Call(trap, handler, [target, V]));
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, V])));
     if (booleanTrapResult.isFalse()) {
       return false;
     }
-    const extensibleTarget = IsExtensible(target);
+    const extensibleTarget = Q(IsExtensible(target));
     if (extensibleTarget === true) {
       return true;
     }
-    const targetProto = target.GetPrototypeOf();
+    const targetProto = Q(target.GetPrototypeOf());
     if (SameValue(V, targetProto)) {
       return surroundingAgent.Throw('TypeError');
     }
@@ -425,12 +429,12 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('isExtensible'));
+    const trap = Q(GetMethod(handler, New('isExtensible')));
     if (Type(trap) === 'Undefined') {
-      return target.IsExtensible();
+      return Q(target.IsExtensible());
     }
-    const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
-    const targetResult = target.IsExtensible();
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
+    const targetResult = Q(target.IsExtensible());
     if (SameValue(booleanTrapResult, targetResult) === false) {
       return surroundingAgent.Throw('TypeError');
     }
@@ -446,13 +450,13 @@ export class ProxyValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('preventExtensions'));
+    const trap = Q(GetMethod(handler, New('preventExtensions')));
     if (Type(trap) === 'Undefined') {
-      return target.PreventExtensions();
+      return Q(target.PreventExtensions());
     }
-    const booleanTrapResult = ToBoolean(Call(trap, handler, [target]));
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
     if (booleanTrapResult.isTrue()) {
-      const targetIsExtensible = target.IsExtensible();
+      const targetIsExtensible = Q(target.IsExtensible());
       if (targetIsExtensible === true) {
         return surroundingAgent.Throw('TypeError');
       }
@@ -460,15 +464,193 @@ export class ProxyValue extends ObjectValue {
     return booleanTrapResult;
   }
 
-  GetOwnProperty(P) {}
+  GetOwnProperty(P) {
+    const O = this;
 
-  DefineOwnProperty(P, Desc) {}
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(handler, New('getOwnPropertyDescriptor')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.GetOwnProperty(P));
+    }
+    const trapResultObj = Q(Call(trap, handler, [target, P]));
+    if (Type(trapResultObj) !== 'Object' || Type(trapResultObj) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    const targetDesc = Q(target.GetOwnProperty(P));
+    if (Type(trapResultObj) === 'Undefined') {
+      if (Type(targetDesc) === 'Undefined') {
+        return New(undefined);
+      }
+      if (targetDesc.Configurable === false) {
+        return surroundingAgent.Throw('TypeError');
+      }
+      const extensibleTarget = Q(IsExtensible(target));
+      Assert(Type(extensibleTarget) === 'Boolean');
+      if (extensibleTarget.isFalse()) {
+        return surroundingAgent.Throw('TypeError');
+      }
+      return New(undefined);
+    }
+    const extensibleTarget = Q(IsExtensible(target));
+    const resultDesc = Q(ToPropertyDescriptor(trapResultObj));
+    CompletePropertyDescriptor(resultDesc);
+    const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
+    if (valid.isFalse()) {
+      return surroundingAgent.Throw('TypeError');
+    }
+    if (resultDesc.Configurable === false) {
+      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable === true) {
+        return surroundingAgent.Throw('TypeError');
+      }
+    }
+    return resultDesc;
+  }
 
-  HasProperty(P) {}
+  DefineOwnProperty(P, Desc) {
+    const O = this;
 
-  Get(P, Receiver) {}
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(handler, New('defineProperty')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.DefineOwnProperty(P, Desc));
+    }
+    const descObj = FromPropertyDescriptor(Desc);
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, descObj])));
+    if (booleanTrapResult.isFalse()) {
+      return New(false);
+    }
+    const targetDesc = Q(target.GetOwnProperty(P));
+    const extensibleTarget = Q(IsExtensible(target));
+    let settingConfigFalse;
+    if ('Configurable' in Desc && Desc.Configurable === false) {
+      settingConfigFalse = true;
+    } else {
+      settingConfigFalse = false;
+    }
+    if (Type(targetDesc) === 'Undefined') {
+      if (extensibleTarget.isFalse()) {
+        return surroundingAgent.Throw('TypeError');
+      }
+      if (settingConfigFalse) {
+        return surroundingAgent.Throw('TypeError');
+      }
+    } else if (Type(targetDesc) !== 'Undefined') {
+      if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc).isFalse()) {
+        return surroundingAgent.Throw('TypeError');
+      }
+      if (settingConfigFalse && targetDesc.Configurable === true) {
+        return surroundingAgent.Throw('TypeError');
+      }
+    }
+    return New(true);
+  }
 
-  Set(P, V, Receiver) {}
+  HasProperty(P) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(target, New('has')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.HasProperty(P));
+    }
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
+    if (booleanTrapResult.isFalse()) {
+      const targetDesc = Q(target.GetOwnProperty(P));
+      if (Type(targetDesc) !== 'Undefined') {
+        if (targetDesc.Configurable === false) {
+          return surroundingAgent.Throw('TypeError');
+        }
+        const extensibleTarget = Q(IsExtensible(target));
+        if (extensibleTarget.isFalse()) {
+          return surroundingAgent.Throw('TypeError');
+        }
+      }
+    }
+    return booleanTrapResult;
+  }
+
+  Get(P, Receiver) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(handler, New('get')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.Get(P, Receiver));
+    }
+    const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
+    const targetDesc = Q(target.GetOwnProperty(P));
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === false) {
+      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable === false) {
+        if (SameValue(trapResult, targetDesc.Value) === false) {
+          return surroundingAgent.Throw('TypeError');
+        }
+      }
+      if (IsAccessorDescriptor(targetDesc).isTrue() && Type(targetDesc.Get) === 'Undefined') {
+        if (Type(trapResult) === 'Undefined') {
+          return surroundingAgent.Throw('TypeError');
+        }
+      }
+    }
+    return trapResult;
+  }
+
+  Set(P, V, Receiver) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(handler, New('set')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.Set(P, V, Receiver));
+    }
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, Receiver])));
+    if (booleanTrapResult.isFalse()) {
+      return New(false);
+    }
+    const targetDesc = Q(target.GetOwnProperty(P));
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === false) {
+      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable === false) {
+        if (SameValue(V, targetDesc.Value) === false) {
+          return surroundingAgent.Throw('TypeError');
+        }
+      }
+      if (IsAccessorDescriptor(targetDesc).isTrue()) {
+        if (Type(targetDesc.Set) === 'Undefined') {
+          return surroundingAgent.Throw('TypeError');
+        }
+      }
+    }
+    return New(true);
+  }
 
   Delete(P) {
     const O = this;
@@ -562,6 +744,152 @@ export class StringExoticValue extends ObjectValue {
       keys.push(X(ToString(New(i))));
     }
     // more
+  }
+}
+
+// #sec-set-immutable-prototype
+function SetImmutablePrototype(O, V) {
+  Assert(Type(V) === 'Object' || Type(V) === 'Null');
+  const current = Q(O.GetPrototypeOf());
+  if (SameValue(V, current)) {
+    return New(true);
+  }
+  return New(false);
+}
+
+export class ModuleNamespaceExoticObjectValue extends ObjectValue {
+  constructor() {
+    super();
+    this.Module = null;
+    this.Exports = [];
+    this.Prototype = New(null);
+  }
+
+  SetPrototypeOf(V) {
+    const O = this;
+
+    return Q(SetImmutablePrototype(O, V));
+  }
+
+  IsExtensible() {
+    return New(false);
+  }
+
+  PreventExtensions() {
+    return New(true);
+  }
+
+  GetOwnProperty(P) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryGetOwnProperty(O, P);
+    }
+    const exports = O.Exports;
+    if (!exports.includes(P)) {
+      return New(undefined);
+    }
+    const value = Q(O.Get(P, O));
+    return {
+      Value: value,
+      Writable: true,
+      Enumerable: true,
+      Configurable: true,
+    };
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryDefineOwnProperty(O, P, Desc);
+    }
+
+    const current = O.GetOwnProperty(P);
+    if (Type(current) === 'Undefined') {
+      return New(false);
+    }
+    if (IsAccessorDescriptor(Desc).isTrue()) {
+      return New(false);
+    }
+    if ('Writable' in Desc && Desc.Writable === false) {
+      return New(false);
+    }
+    if ('Enumerable' in Desc && Desc.Enumerable === false) {
+      return New(false);
+    }
+    if ('Configurable' in Desc && Desc.Configurable === true) {
+      return New(true);
+    }
+    if ('Value' in Desc && SameValue(Desc.Value, current.Value)) {
+      return New(false);
+    }
+    return New(true);
+  }
+
+  HasProperty(P) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryHasProperty(O, P);
+    }
+    const exports = O.Exports;
+    if (exports.includes(P)) {
+      return New(true);
+    } else {
+      return New(false);
+    }
+  }
+
+  Get(P, Receiver) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'Symbol') {
+      return OrdinaryGet(O, P, Receiver);
+    }
+    const exports = O.Exports;
+    if (!exports.includes(P)) {
+      return New(undefined);
+    }
+    const m = O.Module;
+    const binding = m.ResolveExport(P, []);
+    // Assert: binding is a ResolvedBinding Record.
+    const targetModule = binding.Module;
+    Assert(Type(targetModule) !== 'Undefined');
+    const targetEnv = targetModule.Environment;
+    if (Type(targetEnv) === 'Undefined') {
+      return surroundingAgent.Throw('ReferenceError');
+    }
+    const targetEnvRec = targetEnv.EnvironmentRecord;
+    return Q(targetEnvRec.GetBindingValue(binding.BindingName, New(true)));
+  }
+
+  Set() {
+    return New(false);
+  }
+
+  Delete(P) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'Symbol') {
+      return OrdinaryDelete(O, P);
+    }
+    const exports = O.Exports;
+    if (exports.includes(P)) {
+      return New(false);
+    }
+    return New(true);
+  }
+
+  OwnPropertyKeys() {
+    const O = this;
+
+    const exports = [...O.Exports];
+    const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
+    exports.push(...symbolKeys);
+    return exports;
   }
 }
 

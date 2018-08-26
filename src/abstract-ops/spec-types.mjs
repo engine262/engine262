@@ -132,3 +132,38 @@ export function ToPropertyDescriptor(Obj) {
   }
   return desc;
 }
+
+// #sec-completepropertydescriptor
+export function CompletePropertyDescriptor(Desc) {
+  // Assert: Desc is a Property Descriptor.
+  const like = {
+    Value: NewValue(undefined),
+    Writable: false,
+    Get: NewValue(undefined),
+    Set: NewValue(undefined),
+    Enumerable: false,
+    Configurable: false,
+  };
+  if (IsGenericDescriptor(Desc).isTrue() || IsDataDescriptor(Desc).isTrue()) {
+    if (!('Value' in Desc)) {
+      Desc.Value = like.Value;
+    }
+    if (!('Writable' in Desc)) {
+      Desc.Writable = like.Writable;
+    }
+  } else {
+    if (!('Get' in Desc)) {
+      Desc.Get = like.Get;
+    }
+    if (!('Set' in Desc)) {
+      Desc.Set = like.Set;
+    }
+  }
+  if (!('Enumerable' in Desc)) {
+    Desc.Enumerable = like.Enumerable;
+  }
+  if (!('Configurable' in Desc)) {
+    Desc.Configurable = like.Configurable;
+  }
+  return Desc;
+}
