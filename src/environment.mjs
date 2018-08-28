@@ -3,6 +3,8 @@ import {
   Type,
   Reference,
   New as NewValue,
+  InternalPropertyMap,
+  InternalPropertyList,
 } from './value.mjs';
 import {
   surroundingAgent,
@@ -13,6 +15,10 @@ import {
   HasOwnProperty,
   HasProperty,
   ToBoolean,
+  IsExtensible,
+  IsDataDescriptor,
+  DefinePropertyOrThrow,
+  Set,
 } from './abstract-ops/all.mjs';
 import { Q, NormalCompletion } from './completion.mjs';
 
@@ -28,18 +34,18 @@ export class EnvironmentRecord {}
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   constructor() {
     super();
-    this.bindings = new Map();
+    this.bindings = new InternalPropertyMap();
   }
 
   HasBinding(N) {
-    if (this.bindings.has(N.stringValue())) {
-      return true;
+    if (this.bindings.has(N)) {
+      return NewValue(true);
     }
-    return false;
+    return NewValue(false);
   }
 
   CreateMutableBinding(N, D) {
-    this.bindings.set(N.stringValue(), {
+    this.bindings.set(N, {
       initialized: false,
       mutable: true,
       strict: undefined,
@@ -49,7 +55,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateImmutableBinding(N, S) {
-    this.bindings.set(N.stringValue(), {
+    this.bindings.set(N, {
       initialized: false,
       mutable: false,
       strict: S,
@@ -59,7 +65,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   InitializeBinding(N, V) {
-    const binding = ((this.bindings.get(N.stringValue())));
+    const binding = this.bindings.get(N);
     Assert(binding !== undefined);
     binding.value = V;
     binding.initialized = true;
@@ -67,9 +73,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
   SetMutableBinding(N, V, S) {
     const envRec = this;
-    const n = N.stringValue();
-    if (!this.bindings.has(n)) {
-      if (S === true) {
+    if (!this.bindings.has(N)) {
+      if (S.isTrue()) {
         return surroundingAgent.Throw('ReferenceError');
       }
       envRec.CreateMutableBinding(N, true);
@@ -77,24 +82,24 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       return new NormalCompletion(undefined);
     }
 
-    const binding = this.bindings.get(n);
+    const binding = this.bindings.get(N);
 
     if (binding.strict === true) {
-      S = true;
+      S = NewValue(true);
     }
 
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError');
     } else if (binding.mutable === true) {
       binding.value = V;
-    } else if (S === true) {
+    } else if (S.isTrue()) {
       return surroundingAgent.Throw('ReferenceError');
     }
     return new NormalCompletion(undefined);
   }
 
   GetBindingValue(N) {
-    const binding = this.bindings.get(N.stringValue());
+    const binding = this.bindings.get(N);
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError');
     }
@@ -102,27 +107,26 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   DeleteBinding(N) {
-    const n = N.stringValue();
-    const binding = this.bindings.get(n);
+    const binding = this.bindings.get(N);
     if (binding.deletable === false) {
-      return false;
+      return NewValue(false);
     }
 
-    this.bindings.delete(n);
+    this.bindings.delete(N);
 
-    return true;
+    return NewValue(true);
   }
 
   HasThisBinding() {
-    return false;
+    return NewValue(false);
   }
 
   HasSuperBinding() {
-    return false;
+    return NewValue(false);
   }
 
   WithBaseObject() {
-    return undefined;
+    return NewValue(undefined);
   }
 }
 
@@ -139,22 +143,22 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
     const foundBinding = Q(HasProperty(bindings, N));
     if (foundBinding.isFalse()) {
-      return false;
+      return NewValue(false);
     }
 
     if (this.withEnvironment === false) {
-      return true;
+      return NewValue(true);
     }
 
     const unscopables = Q(Get(bindings, wellKnownSymbols.unscopables));
     if (Type(unscopables) === 'Object') {
       const blocked = ToBoolean(Q(Get(unscopables, N)));
       if (blocked.isTrue()) {
-        return false;
+        return NewValue(false);
       }
     }
 
-    return true;
+    return NewValue(true);
   }
 
   GetBindingValue(N, S) {
@@ -162,7 +166,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     const bindings = envRec.bindingObject;
     const value = Q(HasProperty(bindings, N));
     if (value.isFalse()) {
-      if (S === false) {
+      if (S.isFalse()) {
         return NewValue(undefined);
       } else {
         return surroundingAgent.Throw('ReferenceError');
@@ -172,7 +176,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   HasThisBinding() {
-    return false;
+    return NewValue(false);
   }
 }
 
@@ -182,14 +186,14 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     this.ObjectRecord = undefined;
     this.GlobalThisValue = undefined;
     this.DeclarativeRecord = undefined;
-    this.VarNames = [];
+    this.VarNames = undefined;
   }
 
   HasBinding(N) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
-      return true;
+    if (DclRec.HasBinding(N).isTrue()) {
+      return NewValue(true);
     }
     const ObjRec = envRec.ObjectRecord;
     return ObjRec.HasBinding(N);
@@ -198,7 +202,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   CreateMutableBinding(N, D) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
+    if (DclRec.HasBinding(N).isTrue()) {
       return surroundingAgent.Throw('TypeError');
     }
     return DclRec.CreateMutableBinding(N, D);
@@ -207,7 +211,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   CreateImmutableBinding(N, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
+    if (DclRec.HasBinding(N).isTrue()) {
       return surroundingAgent.Throw('TypeError');
     }
     return DclRec.CreateImmutableBinding(N, S);
@@ -216,7 +220,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   InitializeBinding(N, V) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
+    if (DclRec.HasBinding(N).isTrue()) {
       return DclRec.InitializeBinding(N, V);
     }
     const ObjRec = envRec.ObjectRecord;
@@ -226,7 +230,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   SetMutableBinding(N, V, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
+    if (DclRec.HasBinding(N).isTrue()) {
       return DclRec.SetMutableBinding(N, V, S);
     }
     const ObjRec = envRec.ObjectRecord;
@@ -236,7 +240,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   GetBindingValue(N, S) {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
+    if (DclRec.HasBinding(N).isTrue()) {
       return DclRec.GetBindingValue(N, S);
     }
     const ObjRec = envRec.ObjectRecord;
@@ -246,52 +250,145 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   DeleteBinding(N) {
     const envRec = this;
     const DclRec = this.DeclarativeRecord;
-    if (DclRec.HasBinding(N)) {
-      return DclRec.DeleteBinding(N);
+    if (DclRec.HasBinding(N).isTrue()) {
+      return Q(DclRec.DeleteBinding(N));
     }
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
-    const existingProp = HasOwnProperty(globalObject, N);
-    if (existingProp === true) {
-      const status = ObjRec.DeleteBinding(N);
-      if (status === true) {
+    const existingProp = Q(HasOwnProperty(globalObject, N));
+    if (existingProp.isTrue()) {
+      const status = Q(ObjRec.DeleteBinding(N));
+      if (status.isTrue()) {
         const varNames = envRec.VarNames;
-        const idx = varNames.indexOf(N.stringValue());
-        if (idx >= 0) {
-          varNames.splice(idx, 1);
+        if (varNames.has(N)) {
+          varNames.delete(N);
         }
       }
       return status;
     }
-    return true;
+    return NewValue(true);
   }
 
   HasThisBinding() {
-    return true;
+    return NewValue(true);
   }
 
-  HasSuperBinding() {}
+  HasSuperBinding() {
+    return NewValue(false);
+  }
 
-  WithBaseObject() {}
+  WithBaseObject() {
+    return NewValue(false);
+  }
 
   GetThisBinding() {
     const envRec = this;
     return envRec.GlobalThisValue;
   }
 
-  HasVarDeclaration() {}
+  HasVarDeclaration(N) {
+    const envRec = this;
+    const varDeclaredNames = envRec.VarNames;
+    if (varDeclaredNames.has(N)) {
+      return NewValue(true);
+    }
+    return NewValue(false);
+  }
 
-  HasLexicalDeclaration() {}
+  HasLexicalDeclaration(N) {
+    const envRec = this;
+    const DclRec = envRec.DeclarativeRecord;
+    return DclRec.HasBinding(N);
+  }
 
-  HasRestrictedGlobalProperty() {}
+  HasRestrictedGlobalProperty(N) {
+    const envRec = this;
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const existingProp = Q(globalObject.GetOwnProperty(N));
+    if (Type(existingProp) === 'Undefined') {
+      return NewValue(false);
+    }
+    if (existingProp.Configurable) {
+      return NewValue(false);
+    }
+    return NewValue(true);
+  }
 
-  CanDeclareGlobalVar() {}
+  CanDeclareGlobalVar(N) {
+    const envRec = this;
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const hasProperty = Q(HasOwnProperty(globalObject, N));
+    if (hasProperty.isTrue()) {
+      return NewValue(true);
+    }
+    return Q(IsExtensible(globalObject));
+  }
 
-  CanDeclareGlobalFunction() {}
+  CanDeclareGlobalFunction(N) {
+    const envRec = this;
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const existingProp = Q(globalObject.GetOwnProperty(N));
+    if (Type(existingProp) === 'Undefined') {
+      return Q(IsExtensible(globalObject));
+    }
+    if (existingProp.Configurable) {
+      return NewValue(true);
+    }
+    if (IsDataDescriptor(existingProp).isTrue()
+        && existingProp.Writable === true
+        && existingProp.Enumerable === true) {
+      return NewValue(true);
+    }
+    return NewValue(false);
+  }
 
-  CreateGlobalVarBinding() {}
+  CreateGlobalVarBinding(N, D) {
+    const envRec = this;
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const hasProperty = Q(HasOwnProperty(globalObject, N));
+    const extensible = Q(IsExtensible(globalObject));
+    if (hasProperty.isFalse() && extensible.isTrue()) {
+      Q(ObjRec.CreateMutableBinding(N, D));
+      Q(ObjRec.InitializeBinding(N, NewValue(undefined)));
+    }
+    const varDeclaredNames = envRec.VarNames;
+    if (!varDeclaredNames.has(N)) {
+      varDeclaredNames.add(N);
+    }
+    return new NormalCompletion(undefined);
+  }
 
-  CreateGlobalFunctionBinding() {}
+  CreateGlobalFunctionBinding(N, V, D) {
+    const envRec = this;
+    const ObjRec = envRec.ObjectRecord;
+    const globalObject = ObjRec.bindingObject;
+    const existingProp = Q(globalObject.GetOwnProperty(N));
+    let desc;
+    if (Type(existingProp) === 'Undefined' || existingProp.Configurable === true) {
+      desc = {
+        Value: V,
+        Writable: true,
+        Enumerable: true,
+        Configurable: D,
+      };
+    } else {
+      desc = {
+        Value: V,
+      };
+    }
+    Q(DefinePropertyOrThrow(globalObject, N, desc));
+    // Record that the binding for N in ObjRec has been initialized.
+    Q(Set(globalObject, N, V, NewValue(false)));
+    const varDeclaredNames = envRec.VarNames;
+    if (!varDeclaredNames.has(N)) {
+      varDeclaredNames.add(N);
+    }
+    return new NormalCompletion(undefined);
+  }
 }
 
 // #sec-newdeclarativeenvironment
@@ -313,7 +410,7 @@ export function NewGlobalEnvironment(G, thisValue) {
   globalRec.ObjectRecord = objRec;
   globalRec.GlobalThisValue = thisValue;
   globalRec.DeclarativeRecord = dclRec;
-  globalRec.VarNames = [];
+  globalRec.VarNames = new InternalPropertyList();
 
   env.EnvironmentRecord = globalRec;
 
@@ -329,7 +426,7 @@ export function GetIdentifierReference(lex, name, strict) {
   }
   const envRec = lex.EnvironmentRecord;
   const exists = envRec.HasBinding(name);
-  if (exists) {
+  if (exists.isTrue()) {
     return new Reference(envRec, name, strict);
   } else {
     const outer = lex.outerLexicalEnvironment;

@@ -42,29 +42,29 @@ export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
-  const lexNames = LexicallyDeclaredNames_ScriptBody(script);
-  const varNames = VarDeclaredNames_ScriptBody(script);
+  const lexNames = LexicallyDeclaredNames_ScriptBody(script).map(NewValue);
+  const varNames = VarDeclaredNames_ScriptBody(script).map(NewValue);
 
   for (const name of lexNames) {
-    if (envRec.HasVarDeclaration(name)) {
+    if (envRec.HasVarDeclaration(name).isTrue()) {
       return surroundingAgent.Throw('SyntaxError');
     }
-    if (envRec.HasLexicalDeclaration(name)) {
+    if (envRec.HasLexicalDeclaration(name).isTrue()) {
       return surroundingAgent.Throw('SyntaxError');
     }
     const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
-    if (hasRestrictedGlobal) {
+    if (hasRestrictedGlobal.isTrue()) {
       return surroundingAgent.Throw('SyntaxError');
     }
   }
 
   for (const name of varNames) {
-    if (envRec.HasLexicalDeclaration(name)) {
+    if (envRec.HasLexicalDeclaration(name).isTrue()) {
       return surroundingAgent.Throw('SyntaxError');
     }
   }
 
-  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
+  const varDeclarations = VarScopedDeclarations_ScriptBody(script).map(NewValue);
 
   const functionsToInitialize = [];
   const declaredFunctionNames = [];

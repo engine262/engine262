@@ -100,7 +100,7 @@ export class SymbolValue extends PrimitiveValue {
   }
 }
 
-class InternalPropertyMap extends Map {
+export class InternalPropertyMap extends Map {
   get(name) {
     if (Type(name) === 'String') {
       name = name.stringValue();
@@ -130,6 +130,32 @@ class InternalPropertyMap extends Map {
     }
 
     return super.delete(name);
+  }
+}
+
+export class InternalPropertyList extends Set {
+  add(name) {
+    if (Type(name) === 'String') {
+      name = name.stringValue();
+    }
+
+    return super.has(name);
+  }
+
+  has(name) {
+    if (Type(name) === 'String') {
+      name = name.stringValue();
+    }
+
+    return super.has(name);
+  }
+
+  delete(name) {
+    if (Type(name) === 'String') {
+      name = name.stringValue();
+    }
+
+    return super.has(name);
   }
 }
 
@@ -941,6 +967,7 @@ export function New(value, realm) {
     return new BuiltinFunctionValue(realm, value);
   }
 
+  console.error(value); // eslint-disable no-console
   throw new RangeError('NewValue type out of range');
 }
 
@@ -985,10 +1012,13 @@ export function Type(val) {
     return 'LexicalEnvironment';
   }
 
-  if ('Configurable' in val && 'Enumerable' in val
+  if (typeof val === 'object'
+      && 'Configurable' in val
+      && 'Enumerable' in val
       && ('Value' in val || 'Get' in val || 'Set' in val)) {
     return 'Descriptor';
   }
 
+  console.error(val); // eslint-disable-line no-console
   throw new RangeError('Type(val) invalid argument');
 }
