@@ -8,6 +8,10 @@ import {
   IteratorClose,
   ObjectCreate,
   CopyDataProperties,
+  GetBase,
+  IsUnresolvableReference,
+  GetReferencedName,
+  PutValue,
 } from '../abstract-ops/all.mjs';
 import {
   isIdentifier,
@@ -18,12 +22,6 @@ import {
   isObjectBindingPatternWithSingleBindingRestProperty,
   isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty,
 } from '../ast.mjs';
-import {
-  GetBase,
-  IsUnresolvableReference,
-  GetReferencedName,
-  PutValue,
-} from './all.mjs';
 import {
   Type,
   New as NewValue,

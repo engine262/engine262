@@ -11,12 +11,13 @@ import {
   IsCallable,
   PrepareForTailCall,
   Call,
-} from '../abstract-ops/all.mjs';
-import {
   IsPropertyReference,
   GetThisValue,
   GetBase,
   GetValue,
+} from '../abstract-ops/all.mjs';
+import {
+  ArgumentListEvaluation,
 } from './all.mjs';
 import {
   Q,
@@ -27,21 +28,6 @@ import {
   Evaluate,
 } from '../evaluator.mjs';
 
-// #sec-argument-lists-runtime-semantics-argumentlistevaluation
-export function ArgumentListEvaluation(ArgumentList) {
-  // Arguments : ( )
-  if (ArgumentList.length === 0) {
-    return [];
-  }
-
-  // ArgumentList : ArgumentList , AssignmentExpression
-  let preceedingArgs = ArgumentListEvaluation(ArgumentList.slice(0, -1));
-  ReturnIfAbrupt(preceedingArgs);
-  const ref = Evaluate(ArgumentList[ArgumentList.length - 1]);
-  const arg = Q(GetValue(ref));
-  preceedingArgs.push(arg);
-  return preceedingArgs;
-}
 
 function IsInTailPosition() {
   return false;
@@ -79,10 +65,17 @@ function EvaluateCall(func, ref, args, tailPosition) {
   return result;
 }
 
-export function Evaluate_CallExpression_Arguments(CallExpression, Arguments) {
+function Evaluate_CallExpression_Arguments(CallExpression, Arguments) {
   const ref = Evaluate(CallExpression);
   const func = Q(GetValue(ref));
   const thisCall = undefined;
   const tailCall = IsInTailPosition(thisCall);
   return Q(EvaluateCall(func, ref, Arguments, tailCall));
+}
+
+// #sec-function-calls-runtime-semantics-evaluation
+// CallExpression :
+//   CallExpression Arguments
+export function Evaluate_CallExpression(Expression) {
+  return Evaluate_CallExpression_Arguments(Expression.callee, Expression.arguments);
 }

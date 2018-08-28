@@ -1,6 +1,5 @@
 import {
   NormalCompletion,
-  ThrowCompletion,
   UpdateEmpty,
   Q, X,
   ReturnIfAbrupt,
@@ -8,7 +7,6 @@ import {
 import {
   surroundingAgent,
   ResolveBinding,
-  ResolveThisBinding,
 } from './engine.mjs';
 import {
   isExpression,
@@ -18,9 +16,6 @@ import {
   isTryStatement,
   isBlockStatement,
   isNewExpression,
-  isNewExpressionWithArguments,
-  isNewExpressionWithoutArguments,
-  isMemberExpression,
   isMemberExpressionWithBrackets,
   isMemberExpressionWithDot,
   isCallExpressionWithBrackets,
@@ -40,9 +35,10 @@ import {
 } from './static-semantics/all.mjs';
 import {
   Evaluate_TryStatement,
-  Evaluate_CallExpression_Arguments,
-  GetValue,
-  ArgumentListEvaluation,
+  Evaluate_CallExpression,
+  Evaluate_ThrowStatement,
+  Evaluate_ThisExpression,
+  Evaluate_NewExpression,
 } from './runtime-semantics/all.mjs';
 import {
   Type,
@@ -56,8 +52,7 @@ import {
   ToPrimitive,
   ToString,
   ToNumber,
-  IsConstructor,
-  Construct,
+  GetValue,
 } from './abstract-ops/all.mjs';
 import {
   NewDeclarativeEnvironment,
@@ -141,52 +136,6 @@ function EvaluateExpression_Identifier(Identifier) {
   return Q(ResolveBinding(NewValue(Identifier.name)));
 }
 
-function Evaluate_This() {
-  return Q(ResolveThisBinding());
-}
-
-//  ThrowStatement : throw Expression ;
-function Evaluate_ThrowStatement(Expression) {
-  const exprRef = Evaluate(Expression);
-  const exprValue = Q(GetValue(exprRef));
-  return new ThrowCompletion(exprValue);
-}
-
-// #sec-new-operator-runtime-semantics-evaluation
-// NewExpression :
-//   new NewExpression
-//   new MemberExpression Arguments
-function Evaluate_NewExpression(NewExpression) {
-  switch (true) {
-    case isNewExpressionWithoutArguments(NewExpression):
-      return EvaluateNew(NewExpression.callee, undefined);
-    case isNewExpressionWithArguments(NewExpression):
-      return EvaluateNew(NewExpression.callee, NewExpression.arguments);
-
-    default:
-      throw new RangeError();
-  }
-}
-
-// #sec-evaluatenew
-function EvaluateNew(constructExpr, args) {
-  Assert(isNewExpression(constructExpr) || isMemberExpression(constructExpr));
-  Assert(args === undefined || Array.isArray(args));
-  const ref = Evaluate(constructExpr);
-  const constructor = Q(GetValue(ref));
-  let argList;
-  if (args === undefined) {
-    argList = [];
-  } else {
-    argList = ArgumentListEvaluation(args);
-    ReturnIfAbrupt(argList);
-  }
-  if (IsConstructor(constructor).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
-  }
-  return Q(Construct(constructor, argList));
-}
-
 // #sec-function-definitions-runtime-semantics-evaluation<Paste>
 // FunctionDeclaration :
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
@@ -242,7 +191,7 @@ function BlockDeclarationInstantiation(code, env) {
 //
 // (implicit)
 //   StatementList : StatementListItem
-function EvaluateStatementList(StatementList, envRec) {
+function EvaluateStatementList(StatementList) {
   let sl = EvaluateStatementListItem(StatementList.shift());
   ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
@@ -258,12 +207,12 @@ function EvaluateStatementList(StatementList, envRec) {
 // (implicit)
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
-function EvaluateStatementListItem(StatementListItem, envRec) {
+function EvaluateStatementListItem(StatementListItem) {
   switch (true) {
     case isBlockStatement(StatementListItem):
       return Evaluate_BlockStatement(StatementListItem);
     case isExpressionStatement(StatementListItem):
-      return Evaluate_ExpressionStatement(StatementListItem, envRec);
+      return Evaluate_ExpressionStatement(StatementListItem);
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);
     case isTryStatement(StatementListItem):
@@ -272,7 +221,7 @@ function EvaluateStatementListItem(StatementListItem, envRec) {
       return Evaluate_FunctionDeclaration(StatementListItem);
 
     default:
-      console.log(StatementListItem);
+      console.error(StatementListItem);
       throw new RangeError('unknown StatementListItem type');
   }
 }
@@ -283,8 +232,8 @@ function EvaluateStatement(...args) {
 
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
-function Evaluate_ExpressionStatement(ExpressionStatement, envRec) {
-  const exprRef = EvaluateExpression(ExpressionStatement.expression, envRec);
+function Evaluate_ExpressionStatement(ExpressionStatement) {
+  const exprRef = EvaluateExpression(ExpressionStatement.expression);
   return GetValue(exprRef);
 }
 
@@ -293,7 +242,7 @@ function Evaluate_ExpressionStatement(ExpressionStatement, envRec) {
 //   Expression : BooleanLiteral
 //   Expression : NumbericLiteral
 //   Expression : StringLiteral
-function EvaluateExpression(Expression, envRec) {
+function EvaluateExpression(Expression) {
   if (Expression.type === 'Literal'
       && (
         Expression.value === null
@@ -315,9 +264,9 @@ function EvaluateExpression(Expression, envRec) {
     case isActualAdditiveExpression(Expression):
       return Evaluate_AdditiveExpression(Expression);
     case isCallExpression(Expression):
-      return Evaluate_CallExpression_Arguments(Expression.callee, Expression.arguments);
+      return Evaluate_CallExpression(Expression);
     case isPrimaryExpressionWithThis(Expression):
-      return Evaluate_This(Expression);
+      return Evaluate_ThisExpression(Expression);
     case isNewExpression(Expression):
       return Evaluate_NewExpression(Expression);
 

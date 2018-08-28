@@ -6,3 +6,4 @@ export * from './testing-comparison.mjs';
 export * from './type-conversion.mjs';
 export * from './iterator-operations.mjs';
 export * from './function-operations.mjs';
+export * from './reference-operations.mjs';

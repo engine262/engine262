@@ -89,7 +89,7 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   for (const d of varDeclarations) {
     if (isVariableDeclaration(d) || isForBinding(d) || isBindingIdentifier(d)) {
-      for (const vn of BoundNames_VariableDeclaration(d)) {
+      for (const vn of BoundNames_VariableDeclaration(d).map(NewValue)) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           if (vnDefinable.isFalse()) {
@@ -108,7 +108,7 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration(d)) {
+    for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
       if (IsConstantDeclaration(dn)) {
         Q(envRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {

@@ -5,7 +5,7 @@ import {
 import {
   Assert,
   ToObject,
-} from '../abstract-ops/all.mjs';
+} from './all.mjs';
 import {
   Type,
   PrimitiveValue,
