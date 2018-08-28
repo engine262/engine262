@@ -27,6 +27,7 @@ import {
   isCallExpression,
   isPrimaryExpressionWithThis,
   isFunctionDeclaration,
+  isLexicalDeclaration,
 } from './ast.mjs';
 import {
   BoundNames_Declaration,
@@ -39,6 +40,7 @@ import {
   Evaluate_ThrowStatement,
   Evaluate_ThisExpression,
   Evaluate_NewExpression,
+  Evaluate_LexicalDeclaration,
 } from './runtime-semantics/all.mjs';
 import {
   Type,
@@ -219,6 +221,8 @@ function EvaluateStatementListItem(StatementListItem) {
       return Evaluate_TryStatement(StatementListItem);
     case isFunctionDeclaration(StatementListItem):
       return Evaluate_FunctionDeclaration(StatementListItem);
+    case isLexicalDeclaration(StatementListItem):
+      return Evaluate_LexicalDeclaration(StatementListItem);
 
     default:
       console.error(StatementListItem);
@@ -277,12 +281,18 @@ function EvaluateExpression(Expression) {
 }
 
 export function Evaluate(node) {
+  if (Array.isArray(node)) {
+    return EvaluateStatementList(node);
+  }
+
   if (isExpression(node)) {
     surroundingAgent.nodeStack.push(node);
     const r = EvaluateExpression(node);
     surroundingAgent.nodeStack.pop();
     return r;
-  } else if (isStatement(node)) {
+  }
+
+  if (isStatement(node)) {
     surroundingAgent.nodeStack.push(node);
     const r = EvaluateStatement(node);
     surroundingAgent.nodeStack.pop();

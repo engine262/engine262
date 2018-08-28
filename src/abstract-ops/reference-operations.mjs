@@ -26,25 +26,25 @@ export function GetBase(V) {
 export function IsUnresolvableReference(V) {
   Assert(Type(V) === 'Reference');
   if (Type(V.BaseValue) === 'Undefined') {
-    return true;
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 export function HasPrimitiveBase(V) {
   Assert(Type(V) === 'Reference');
   if (V.BaseValue instanceof PrimitiveValue) {
-    return true;
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 export function IsPropertyReference(V) {
   Assert(Type(V) === 'Reference');
-  if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V)) {
-    return true;
+  if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V).isTrue()) {
+    return NewValue(true);
   }
-  return false;
+  return NewValue(false);
 }
 
 export function GetReferencedName(V) {
@@ -58,8 +58,8 @@ export function IsSuperReference(V) {
 }
 
 export function GetThisValue(V) {
-  Assert(IsPropertyReference(V));
-  if (IsSuperReference(V)) {
+  Assert(IsPropertyReference(V).isTrue());
+  if (IsSuperReference(V).isTrue()) {
     return V.ThisValue;
   }
   return GetBase(V);
@@ -78,11 +78,11 @@ export function GetValue(V) {
     return V;
   }
   let base = GetBase(V);
-  if (IsUnresolvableReference(V)) {
+  if (IsUnresolvableReference(V).isTrue()) {
     return surroundingAgent.Throw('ReferenceError');
   }
-  if (IsPropertyReference(V)) {
-    if (HasPrimitiveBase(V)) {
+  if (IsPropertyReference(V).isTrue()) {
+    if (HasPrimitiveBase(V).isTrue()) {
       Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
       base = X(ToObject(base));
     }
@@ -100,13 +100,13 @@ export function PutValue(V, W) {
     return surroundingAgent.Throw('ReferenceError');
   }
   let base = GetBase(V);
-  if (IsUnresolvableReference(V)) {
-    if (IsStrictReference(V)) {
+  if (IsUnresolvableReference(V).isTrue()) {
+    if (IsStrictReference(V).isTrue()) {
       return surroundingAgent.Throw('ReferenceError');
     }
     const globalObj = GetGlobalObject();
     return Q(Set(globalObj, GetReferencedName(V), W, NewValue(false)));
-  } else if (IsPropertyReference(V)) {
+  } else if (IsPropertyReference(V).isTrue()) {
     if (HasPrimitiveBase(V)) {
       Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
       base = X(ToObject(base));
@@ -119,4 +119,15 @@ export function PutValue(V, W) {
   } else {
     return Q(base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V)));
   }
+}
+
+// #sec-initializereferencedbinding
+export function InitializeReferencedBinding(V, W) {
+  ReturnIfAbrupt(V);
+  ReturnIfAbrupt(W);
+  Assert(Type(V) === 'Reference');
+  Assert(IsUnresolvableReference(V).isFalse());
+  const base = GetBase(V);
+  Assert(Type(base) === 'EnvironmentRecord');
+  return base.InitializeBinding(GetReferencedName(V), W);
 }

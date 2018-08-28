@@ -760,6 +760,10 @@ export function isLexicalDeclaration(node) {
   return node.type === 'VariableDeclaration' && (node.kind === 'let' || node.kind === 'const');
 }
 
+export function isLexicalBindingWithBindingIdentifierAndInitializer(node) {
+  return node.type === 'VariableDeclarator' && isBindingIdentifier(node.id) && node.init;
+}
+
 // #prod-ImportDeclaration
 export function isImportDeclaration(node) {
   return node.type === 'ImportDeclaration';

@@ -4,6 +4,7 @@ export * from './CallExpression.mjs';
 export * from './EvaluateBody.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './InstantiateFunctionObject.mjs';
+export * from './LexicalDeclaration.mjs';
 export * from './MakeConstructor.mjs';
 export * from './NewExpression.mjs';
 export * from './RelationalOperators.mjs';

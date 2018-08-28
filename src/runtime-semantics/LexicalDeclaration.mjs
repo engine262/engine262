@@ -1,28 +1,34 @@
-// LexicalDeclaration : LetOrConst BindingList ;
-export function LexicalDeclaration_LetOrConst_BindingList(LetOrConst, BindingList) {
+import { Evaluate } from '../evaluator.mjs';
+import {
+  ReturnIfAbrupt,
+  NormalCompletion,
+  Q,
+} from '../completion.mjs';
+import {
+  isLexicalBindingWithBindingIdentifierAndInitializer,
+} from '../ast.mjs';
+import {
+  New as NewValue,
+} from '../value.mjs';
+import {
+  ResolveBinding,
+} from '../engine.mjs';
+import {
+  SetFunctionName,
+  GetValue,
+  HasOwnProperty,
+  InitializeReferencedBinding,
+  IsAnonymousFunctionDefinition,
+} from '../abstract-ops/all.mjs';
+
+export function Evaluate_LexicalDeclaration({ declarations: BindingList }) {
   let next = Evaluate(BindingList);
   ReturnIfAbrupt(next);
   return new NormalCompletion(undefined);
 }
 
-// BindingList : BindingList , LexicalBinding
-export function BindingList_BindingList_LexicalBinding(BindingList, LexicalBinding) {
-  let next = Evaluate(BindingList);
-  ReturnIfAbrupt(next);
-  return Evaluate(LexicalBinding);
-}
-
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
-// LexicalBinding : BindingIdentifier
-export function LexicalBinding_BindingIdentifier(BindingIdentifier) {
-  const lhs = ResolveBinding(NewValue(BindingIdentifier.name));
-  return InitializeReferencedBinding(lhs, NewValue(undefined));
-}
-
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
-// LexicalBinding : BindingIdentifier Initializer
-export function LexicalBinding_BindingIdentifier_Initializer(BindingIdentifier, Initializer) {
-  const bindingId = NewValue(BindingIdentifier.name);
+function LexicalBinding_BindingIdentifier_Initializer(BindingIdentifier, Initializer) {
+  const bindingId = NewValue(BindingIdentifier);
   const lhs = ResolveBinding(bindingId);
   const rhs = Evaluate(Initializer);
   const value = Q(GetValue(rhs));
@@ -33,4 +39,21 @@ export function LexicalBinding_BindingIdentifier_Initializer(BindingIdentifier, 
     }
   }
   return InitializeReferencedBinding(lhs, value);
+}
+
+// #sec-let-and-const-declarations-runtime-semantics-evaluation
+// LexicalBinding :
+//   BindingList , LexicalBinding
+//   BindingIdentifier
+//   BindingIdentifier Initializer
+export function Evaluate_LexicalBinding(LexicalBinding) {
+  switch (true) {
+    case isLexicalBindingWithBindingIdentifierAndInitializer(LexicalBinding):
+      return LexicalBinding_BindingIdentifier_Initializer(
+        LexicalBinding.id.name, LexicalBinding.init,
+      );
+
+    default:
+      throw new RangeError();
+  }
 }

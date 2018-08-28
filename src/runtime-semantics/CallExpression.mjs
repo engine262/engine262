@@ -36,7 +36,7 @@ function IsInTailPosition() {
 function EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
   if (Type(ref) === 'Reference') {
-    if (IsPropertyReference(ref)) {
+    if (IsPropertyReference(ref).isTrue()) {
       thisValue = GetThisValue(ref);
     } else {
       const refEnv = GetBase(ref);
