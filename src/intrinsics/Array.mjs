@@ -149,7 +149,7 @@ function ArrayFrom(realm, argList, { thisValue }) {
     }
     const iteratorRecord = Q(GetIterator(items, 'sync', usingIterator));
     let k = 0;
-    while (true) {
+    while (true) { // eslint-disable-line no-constant-condition
       if (k > (2 ** 53) - 1) {
         const error = new ThrowCompletion(Construct(surroundingAgent.intrinsic('%TypeError%')));
         return Q(IteratorClose(iteratorRecord, error));

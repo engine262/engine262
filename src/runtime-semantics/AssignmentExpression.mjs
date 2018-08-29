@@ -30,7 +30,8 @@ export function Evaluate_AssignmentExpression(node) {
       ReturnIfAbrupt(lref);
       const rref = Evaluate(AssignmentExpression);
       const rval = Q(GetValue(rref));
-      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      if (IsAnonymousFunctionDefinition(AssignmentExpression)
+          && IsIdentifierRef(LeftHandSideExpression)) {
         const hasNameProperty = Q(HasOwnProperty(rval, NewValue('name')));
         if (hasNameProperty.isFalse()) {
           SetFunctionName(rval, GetReferencedName(lref));

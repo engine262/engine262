@@ -143,8 +143,23 @@ function BindingInitialization_ObjectBindingPattern_BindingPropertyList_BindingR
   return RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
 }
 
-function PropertyBindingInitialization(PropertyBindingList, value, environment) {
+// #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
+// BindingPropertyList : BindingPropertyList , BindingProperty
+// BindingProperty :
+//   SingleNameBinding
+//   PropertyName : BindingElement
+function PropertyBindingInitialization(BindingPropertyList, value, environment) {
+  if (Array.isArray(BindingPropertyList)) {
+    const BindingProperty = BindingPropertyList.shift();
 
+    const boundNames = Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
+    const nextNames = Q(PropertyBindingInitialization(BindingProperty, value, environment));
+    return [...boundNames, ...nextNames];
+  } else {
+    // const SingleNameBinding = BindingPropertyList;
+
+    // const name = BoundNames_(SingleNameBinding);
+  }
 }
 
 function RestBindingInitialization(BindingIdentifier, value, environment, excludedNames) {
@@ -166,7 +181,7 @@ function RestBindingInitialization(BindingIdentifier, value, environment, exclud
 //   [ BindingElementList , ]
 //   [ BindingElementList , Elision ]
 //   [ BindingElementList , Elision BindingRestElement ]
-function IteratorBindingInitialization(ArrayBindingPattern, iteratorRecord, environment) {
+function IteratorBindingInitialization() {
   switch (true) {
     default:
       throw new RangeError();

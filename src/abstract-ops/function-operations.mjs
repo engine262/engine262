@@ -117,11 +117,13 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   if (F.FunctionKind === 'classConstructor') {
     return surroundingAgent.Throw('TypeError');
   }
-  const callerContext = surroundingAgent.runningExecutionContext;
+  // const callerContext = surroundingAgent.runningExecutionContext;
   const calleeContext = PrepareForOrdinaryCall(F, NewValue(undefined));
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   let result = OrdinaryCallEvaluateBody(F, argumentsList);
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();
   if (result.Type === 'return') {
     return new NormalCompletion(result.Value);
@@ -135,7 +137,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 
   Assert(F instanceof FunctionValue);
   Assert(Type(newTarget) === 'Object');
-  const callerContext = surroundingAgent.runningExecutionContext;
+  // const callerContext = surroundingAgent.runningExecutionContext;
   const kind = F.ConstructorKind;
   let thisArgument;
   if (kind === 'base') {
@@ -149,6 +151,9 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
   let result = OrdinaryCallEvaluateBody(F, argumentsList);
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop();
   if (result.Type === 'return') {
     if (Type(result.Value) === 'Object') {
       return new NormalCompletion(result.Value);
