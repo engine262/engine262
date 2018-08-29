@@ -12,6 +12,7 @@ export * from './InstantiateFunctionObject.mjs';
 export * from './LexicalDeclaration.mjs';
 export * from './MakeConstructor.mjs';
 export * from './MemberExpression.mjs';
+export * from './MultiplicativeExpression.mjs';
 export * from './NewExpression.mjs';
 export * from './RelationalOperators.mjs';
 export * from './TryStatement.mjs';

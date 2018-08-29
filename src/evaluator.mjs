@@ -17,6 +17,7 @@ import {
   isMemberExpression,
   isCallExpression,
   isActualAdditiveExpression,
+  isActualMultiplicativeExpression,
   isIdentifierReference,
   isPrimaryExpressionWithThis,
   isFunctionDeclaration,
@@ -37,10 +38,13 @@ import {
   Evaluate_BlockStatement,
   Evaluate_Identifier,
   Evaluate_AdditiveExpression,
+  Evaluate_MultiplicativeExpression,
   Evaluate_MemberExpression,
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
+  Value,
+  Reference,
 } from './value.mjs';
 import {
   GetValue,
@@ -132,6 +136,8 @@ function EvaluateExpression(Expression) {
         return Evaluate_CallExpression(Expression);
       case isActualAdditiveExpression(Expression):
         return Evaluate_AdditiveExpression(Expression);
+      case isActualMultiplicativeExpression(Expression):
+        return Evaluate_MultiplicativeExpression(Expression);
       case isPrimaryExpressionWithThis(Expression):
         return Evaluate_ThisExpression(Expression);
       case isNewExpression(Expression):
@@ -149,6 +155,10 @@ function EvaluateExpression(Expression) {
 }
 
 export function Evaluate(node) {
+  if (node instanceof Value || node instanceof Reference) {
+    return node;
+  }
+
   if (Array.isArray(node)) {
     return EvaluateStatementList(node);
   }

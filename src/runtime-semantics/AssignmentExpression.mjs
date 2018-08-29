@@ -49,7 +49,15 @@ export function Evaluate_AssignmentExpression(node) {
     const rval = Q(GetValue(rref));
     // Let op be the @ where AssignmentOperator is @=.
     const op = AssignmentOperator.slice(0, -1);
-    const r = NewValue(42); // Evaluate_BinaryExpression(op, lval, rval);
+    // Let r be the result of applying op to lval and rval
+    // as if evaluating the expression lval op rval.
+    const r = Evaluate({
+      type: 'BinaryExpression',
+      left: lval,
+      operator: op,
+      right: rval,
+      IsStrict: node.IsStrict,
+    });
     Q(PutValue(lref, r));
     return r;
   }

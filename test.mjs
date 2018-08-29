@@ -13,6 +13,7 @@ const completion = NonSpecRunScript(`
 'use strict';
 
 const a = 1;
+let b = 3;
 
 try {
   a = 2;
@@ -20,9 +21,10 @@ try {
   print(e.name);
 }
 
-print(a);
+b += 3;
 
-42;
+print(a);
+print(b);
 `);
 
 console.log(completion);
