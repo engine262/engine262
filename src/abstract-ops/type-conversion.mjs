@@ -16,7 +16,7 @@ import {
   IsCallable,
   SameValue,
 } from './all.mjs';
-import { X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 
 // 7.1.1 ToPrimitive
 export function ToPrimitive(
@@ -35,7 +35,7 @@ export function ToPrimitive(
     }
     const exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
     if (Type(exoticToPrim) !== 'Undefined') {
-      const result = Call(exoticToPrim, input, [hint]);
+      const result = Q(Call(exoticToPrim, input, [hint]));
       if (Type(result) !== 'Object') {
         return result;
       }
@@ -44,7 +44,7 @@ export function ToPrimitive(
     if (hint.stringValue() === 'default') {
       hint = NewValue('number');
     }
-    return OrdinaryToPrimitive(input, hint);
+    return Q(OrdinaryToPrimitive(input, hint));
   }
 
   Assert(input instanceof PrimitiveValue);
@@ -146,7 +146,7 @@ export function ToNumber(argument) {
 
 // 7.1.4 ToInteger
 export function ToInteger(argument) {
-  const number = ToNumber(argument);
+  const number = Q(ToNumber(argument));
   if (number.isNaN()) {
     return NewValue(0);
   }
@@ -161,9 +161,23 @@ export function ToInteger(argument) {
   return NewValue(number.numberValue() >= 0 ? mag : -mag);
 }
 
+// #sec-toint32
+export function ToInt32(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+    return NewValue(0);
+  }
+  const int = Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1;
+  const int32bit = int % (2 ** 32);
+  if (int32bit > (2 ** 31)) {
+    return int32bit - (2 ** 32);
+  }
+  return int32bit;
+}
+
 // 7.1.6 ToUint32
 export function ToUint32(argument) {
-  const number = ToNumber(argument);
+  const number = Q(ToNumber(argument));
   if (number.numberValue() === 0 // || number.value === -0
       || number.numberValue() === Infinity
       || number.numberValue() === -Infinity) {
@@ -260,7 +274,7 @@ export function ToObject(argument) {
 
 // 7.1.14 ToPropertyKey
 export function ToPropertyKey(argument) {
-  const key = ToPrimitive(argument, 'String');
+  const key = Q(ToPrimitive(argument, 'String'));
   if (Type(key) === 'Symbol') {
     return key;
   }
@@ -269,7 +283,7 @@ export function ToPropertyKey(argument) {
 
 // 7.1.15 ToLength
 export function ToLength(argument) {
-  const len = ToInteger(argument);
+  const len = Q(ToInteger(argument));
   if (len.numberValue() <= 0) {
     return NewValue(0);
   }

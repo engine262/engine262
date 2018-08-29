@@ -302,7 +302,7 @@ export function isUnaryExpression(node) {
 
 // Used in #prod-ExponentiationExpression
 export function isActualExponentiationExpression(node) {
-  return node.type === 'ExponentiationExpression';
+  return node.type === 'BinaryExpression' && node.operator === '**';
 }
 
 // #prod-ExponentiationExpression

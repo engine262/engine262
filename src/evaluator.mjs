@@ -24,6 +24,8 @@ import {
   isLexicalDeclaration,
   isLexicalBinding,
   isAssignmentExpression,
+  isActualExponentiationExpression,
+  isActualShiftExpression,
 } from './ast.mjs';
 import {
   Evaluate_AssignmentExpression,
@@ -38,8 +40,10 @@ import {
   Evaluate_BlockStatement,
   Evaluate_Identifier,
   Evaluate_AdditiveExpression,
+  Evaluate_ExponentiationExpression,
   Evaluate_MultiplicativeExpression,
   Evaluate_MemberExpression,
+  Evaluate_ShiftExpression,
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
@@ -134,10 +138,14 @@ function EvaluateExpression(Expression) {
         return Evaluate_MemberExpression(Expression);
       case isCallExpression(Expression):
         return Evaluate_CallExpression(Expression);
-      case isActualAdditiveExpression(Expression):
-        return Evaluate_AdditiveExpression(Expression);
+      case isActualExponentiationExpression(Expression):
+        return Evaluate_ExponentiationExpression(Expression);
       case isActualMultiplicativeExpression(Expression):
         return Evaluate_MultiplicativeExpression(Expression);
+      case isActualAdditiveExpression(Expression):
+        return Evaluate_AdditiveExpression(Expression);
+      case isActualShiftExpression(Expression):
+        return Evaluate_ShiftExpression(Expression);
       case isPrimaryExpressionWithThis(Expression):
         return Evaluate_ThisExpression(Expression);
       case isNewExpression(Expression):

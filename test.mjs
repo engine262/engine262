@@ -21,7 +21,7 @@ try {
   print(e.name);
 }
 
-b += 3;
+b **= '3';
 
 print(a);
 print(b);
