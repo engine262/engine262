@@ -363,7 +363,7 @@ export function ResolveBinding(name, env) {
   }
   Assert(env instanceof LexicalEnvironment);
   const strict = surroundingAgent.isStrictCode;
-  return GetIdentifierReference(env, name, strict);
+  return GetIdentifierReference(env, name, NewValue(strict));
 }
 
 // #sec-getthisenvironment

@@ -1,4 +1,5 @@
 export * from './ArgumentListEvaluation.mjs';
+export * from './AssignmentExpression.mjs';
 export * from './BindingInitialization.mjs';
 export * from './CallExpression.mjs';
 export * from './EvaluateBody.mjs';

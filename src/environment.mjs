@@ -58,7 +58,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     this.bindings.set(N, {
       initialized: false,
       mutable: false,
-      strict: S,
+      strict: S.isTrue(),
       deletable: false,
       value: undefined,
     });
@@ -93,7 +93,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S.isTrue()) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('TypeError');
     }
     return new NormalCompletion(undefined);
   }
@@ -234,7 +234,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       return DclRec.SetMutableBinding(N, V, S);
     }
     const ObjRec = envRec.ObjectRecord;
-    return ObjRec.SetMutableBinding(N, V, S);
+    return Q(ObjRec.SetMutableBinding(N, V, S));
   }
 
   GetBindingValue(N, S) {

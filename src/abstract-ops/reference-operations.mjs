@@ -54,7 +54,7 @@ export function GetReferencedName(V) {
 
 export function IsSuperReference(V) {
   Assert(Type(V) === 'Reference');
-  return 'ThisValue' in V;
+  return NewValue('ThisValue' in V);
 }
 
 export function GetThisValue(V) {
@@ -107,12 +107,12 @@ export function PutValue(V, W) {
     const globalObj = GetGlobalObject();
     return Q(Set(globalObj, GetReferencedName(V), W, NewValue(false)));
   } else if (IsPropertyReference(V).isTrue()) {
-    if (HasPrimitiveBase(V)) {
+    if (HasPrimitiveBase(V).isTrue()) {
       Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
       base = X(ToObject(base));
     }
     const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
-    if (succeeded.isFalse() && IsStrictReference(V)) {
+    if (succeeded.isFalse() && IsStrictReference(V).isTrue()) {
       return surroundingAgent.Throw('TypeError');
     }
     return new NormalCompletion(undefined);

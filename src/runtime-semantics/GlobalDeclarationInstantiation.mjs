@@ -109,7 +109,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
-      if (IsConstantDeclaration(dn)) {
+      if (IsConstantDeclaration(d)) {
         Q(envRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {
         Q(envRec.CreateMutableBinding(dn, NewValue(false)));

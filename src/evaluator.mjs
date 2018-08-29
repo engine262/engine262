@@ -29,6 +29,7 @@ import {
   isFunctionDeclaration,
   isLexicalDeclaration,
   isLexicalBinding,
+  isAssignmentExpression,
 } from './ast.mjs';
 import {
   BoundNames_Declaration,
@@ -36,6 +37,7 @@ import {
   IsConstantDeclaration,
 } from './static-semantics/all.mjs';
 import {
+  Evaluate_AssignmentExpression,
   Evaluate_TryStatement,
   Evaluate_CallExpression,
   Evaluate_ThrowStatement,
@@ -74,7 +76,7 @@ function MemberExpression_Expression(MemberExpression, Expression) {
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = ToPropertyKey(propertyNameValue);
   const strict = surroundingAgent.isStrictCode;
-  return new Reference(bv, propertyKey, strict);
+  return new Reference(bv, propertyKey, NewValue(strict));
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
@@ -86,7 +88,7 @@ function MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);
   const strict = true;
-  return new Reference(bv, propertyNameString, strict);
+  return new Reference(bv, propertyNameString, NewValue(strict));
 }
 
 // #prod-AdditiveExpression
@@ -204,6 +206,7 @@ function EvaluateStatementList(StatementList) {
   let s;
   for (const StatementListItem of StatementList) {
     s = EvaluateStatementListItem(StatementListItem);
+    ReturnIfAbrupt(s);
   }
   return UpdateEmpty(s, sl);
 }
@@ -284,6 +287,8 @@ function EvaluateExpression(Expression) {
         return Evaluate_ThisExpression(Expression);
       case isNewExpression(Expression):
         return Evaluate_NewExpression(Expression);
+      case isAssignmentExpression(Expression):
+        return Evaluate_AssignmentExpression(Expression);
 
       default:
         console.error(Expression);

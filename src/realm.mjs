@@ -32,6 +32,7 @@ import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
 import { CreateString } from './intrinsics/String.mjs';
+import { CreateErrorPrototype } from './intrinsics/ErrorPrototype.mjs';
 import { CreateError } from './intrinsics/Error.mjs';
 import { CreateNativeError } from './intrinsics/NativeError.mjs';
 import { CreateIteratorPrototype } from './intrinsics/IteratorPrototype.mjs';
@@ -77,6 +78,7 @@ export function CreateIntrinsics(realmRec) {
 
   thrower.SetPrototypeOf(funcProto);
 
+  CreateErrorPrototype(realmRec);
   CreateError(realmRec);
   CreateNativeError(realmRec);
 

@@ -66,6 +66,19 @@ export function CreateNativeError(realmRec) {
       Configurable: true,
     });
 
+    proto.DefineOwnProperty(NewValue('message'), {
+      Value: NewValue(''),
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    });
+    proto.DefineOwnProperty(NewValue('name'), {
+      Value: NewValue(name),
+      Writable: true,
+      Enumerable: false,
+      Configurable: true,
+    });
+
     realmRec.Intrinsics[`%${name}Prototype%`] = proto;
     realmRec.Intrinsics[`%${name}%`] = cons;
   });
