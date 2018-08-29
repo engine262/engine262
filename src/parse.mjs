@@ -13,7 +13,7 @@ export function ParseScript(sourceText, realm, hostDefined) {
       const directive = parent.type === 'FunctionDeclaration'
         ? parent.body.body.find((n) => n.directive !== undefined)
         : parent.body.find((n) => n.directive !== undefined);
-      if (directive && directive.slice(1, -1) === 'use strict') {
+      if (directive && directive.directive === 'use strict') {
         strictMode = true;
       }
     }

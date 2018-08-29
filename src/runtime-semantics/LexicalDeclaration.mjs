@@ -18,8 +18,10 @@ import {
   GetValue,
   HasOwnProperty,
   InitializeReferencedBinding,
-  IsAnonymousFunctionDefinition,
 } from '../abstract-ops/all.mjs';
+import {
+  IsAnonymousFunctionDefinition,
+} from '../static-semantics/all.mjs';
 
 export function Evaluate_LexicalDeclaration({ declarations: BindingList }) {
   let next = Evaluate(BindingList);
@@ -32,7 +34,7 @@ function LexicalBinding_BindingIdentifier_Initializer(BindingIdentifier, Initial
   const lhs = ResolveBinding(bindingId);
   const rhs = Evaluate(Initializer);
   const value = Q(GetValue(rhs));
-  if (IsAnonymousFunctionDefinition(Initializer).isTrue()) {
+  if (IsAnonymousFunctionDefinition(Initializer)) {
     const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
     if (hasNameProperty.isFalse()) {
       SetFunctionName(value, bindingId);

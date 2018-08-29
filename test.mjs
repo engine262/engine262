@@ -10,6 +10,8 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 */
 
 NonSpecRunScript(`
+'use strict';
+
 const a = 1;
 
 print(a);

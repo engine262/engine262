@@ -10,3 +10,6 @@ export * from './TopLevelVarScopedDeclarations.mjs';
 export * from './VarDeclaredNames.mjs';
 export * from './VarScopedDeclarations.mjs';
 export * from './IsConstantDeclaration.mjs';
+export * from './IsAnonymousFunctionDefinition.mjs';
+export * from './HasName.mjs';
+export * from './IsFunctionDefinition.mjs';

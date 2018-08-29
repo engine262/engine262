@@ -760,8 +760,14 @@ export function isLexicalDeclaration(node) {
   return node.type === 'VariableDeclaration' && (node.kind === 'let' || node.kind === 'const');
 }
 
+// #prod-LexicalBinding
+export function isLexicalBinding(node) {
+  return node.type === 'VariableDeclarator';
+}
+
+// LexicalBinding : Binding Initializer
 export function isLexicalBindingWithBindingIdentifierAndInitializer(node) {
-  return node.type === 'VariableDeclarator' && isBindingIdentifier(node.id) && node.init;
+  return isLexicalBinding(node) && isBindingIdentifier(node.id) && node.init !== null;
 }
 
 // #prod-ImportDeclaration

@@ -28,6 +28,7 @@ import {
   isPrimaryExpressionWithThis,
   isFunctionDeclaration,
   isLexicalDeclaration,
+  isLexicalBinding,
 } from './ast.mjs';
 import {
   BoundNames_Declaration,
@@ -41,6 +42,7 @@ import {
   Evaluate_ThisExpression,
   Evaluate_NewExpression,
   Evaluate_LexicalDeclaration,
+  Evaluate_LexicalBinding,
 } from './runtime-semantics/all.mjs';
 import {
   Type,
@@ -210,23 +212,30 @@ function EvaluateStatementList(StatementList) {
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
 function EvaluateStatementListItem(StatementListItem) {
-  switch (true) {
-    case isBlockStatement(StatementListItem):
-      return Evaluate_BlockStatement(StatementListItem);
-    case isExpressionStatement(StatementListItem):
-      return Evaluate_ExpressionStatement(StatementListItem);
-    case isThrowStatement(StatementListItem):
-      return Evaluate_ThrowStatement(StatementListItem.argument);
-    case isTryStatement(StatementListItem):
-      return Evaluate_TryStatement(StatementListItem);
-    case isFunctionDeclaration(StatementListItem):
-      return Evaluate_FunctionDeclaration(StatementListItem);
-    case isLexicalDeclaration(StatementListItem):
-      return Evaluate_LexicalDeclaration(StatementListItem);
+  surroundingAgent.nodeStack.push(StatementListItem);
+  try {
+    switch (true) {
+      case isBlockStatement(StatementListItem):
+        return Evaluate_BlockStatement(StatementListItem);
+      case isExpressionStatement(StatementListItem):
+        return Evaluate_ExpressionStatement(StatementListItem);
+      case isThrowStatement(StatementListItem):
+        return Evaluate_ThrowStatement(StatementListItem.argument);
+      case isTryStatement(StatementListItem):
+        return Evaluate_TryStatement(StatementListItem);
+      case isFunctionDeclaration(StatementListItem):
+        return Evaluate_FunctionDeclaration(StatementListItem);
+      case isLexicalDeclaration(StatementListItem):
+        return Evaluate_LexicalDeclaration(StatementListItem);
+      case isLexicalBinding(StatementListItem):
+        return Evaluate_LexicalBinding(StatementListItem);
 
-    default:
-      console.error(StatementListItem);
-      throw new RangeError('unknown StatementListItem type');
+      default:
+        console.error(StatementListItem);
+        throw new RangeError('unknown StatementListItem type');
+    }
+  } finally {
+    surroundingAgent.nodeStack.pop();
   }
 }
 
@@ -247,36 +256,41 @@ function Evaluate_ExpressionStatement(ExpressionStatement) {
 //   Expression : NumbericLiteral
 //   Expression : StringLiteral
 function EvaluateExpression(Expression) {
-  if (Expression.type === 'Literal'
-      && (
-        Expression.value === null
-        || typeof Expression.value === 'boolean'
-        || typeof Expression.value === 'number'
-        || typeof Expression.value === 'string')) {
-    return NewValue(Expression.value);
-  }
+  surroundingAgent.nodeStack.push(Expression);
+  try {
+    if (Expression.type === 'Literal'
+        && (
+          Expression.value === null
+          || typeof Expression.value === 'boolean'
+          || typeof Expression.value === 'number'
+          || typeof Expression.value === 'string')) {
+      return NewValue(Expression.value);
+    }
 
-  switch (true) {
-    case isIdentifierReference(Expression):
-      return EvaluateExpression_Identifier(Expression);
-    case isMemberExpressionWithBrackets(Expression):
-    case isCallExpressionWithBrackets(Expression): // identical semantics
-      return MemberExpression_Expression(Expression.object, Expression.property);
-    case isMemberExpressionWithDot(Expression):
-    case isCallExpressionWithDot(Expression): // identical semantics
-      return MemberExpression_IdentifierName(Expression.object, Expression.property);
-    case isActualAdditiveExpression(Expression):
-      return Evaluate_AdditiveExpression(Expression);
-    case isCallExpression(Expression):
-      return Evaluate_CallExpression(Expression);
-    case isPrimaryExpressionWithThis(Expression):
-      return Evaluate_ThisExpression(Expression);
-    case isNewExpression(Expression):
-      return Evaluate_NewExpression(Expression);
+    switch (true) {
+      case isIdentifierReference(Expression):
+        return EvaluateExpression_Identifier(Expression);
+      case isMemberExpressionWithBrackets(Expression):
+      case isCallExpressionWithBrackets(Expression): // identical semantics
+        return MemberExpression_Expression(Expression.object, Expression.property);
+      case isMemberExpressionWithDot(Expression):
+      case isCallExpressionWithDot(Expression): // identical semantics
+        return MemberExpression_IdentifierName(Expression.object, Expression.property);
+      case isActualAdditiveExpression(Expression):
+        return Evaluate_AdditiveExpression(Expression);
+      case isCallExpression(Expression):
+        return Evaluate_CallExpression(Expression);
+      case isPrimaryExpressionWithThis(Expression):
+        return Evaluate_ThisExpression(Expression);
+      case isNewExpression(Expression):
+        return Evaluate_NewExpression(Expression);
 
-    default:
-      console.error(Expression);
-      throw new RangeError('EvaluateExpression unknown expression type');
+      default:
+        console.error(Expression);
+        throw new RangeError('EvaluateExpression unknown expression type');
+    }
+  } finally {
+    surroundingAgent.nodeStack.pop();
   }
 }
 
@@ -286,17 +300,11 @@ export function Evaluate(node) {
   }
 
   if (isExpression(node)) {
-    surroundingAgent.nodeStack.push(node);
-    const r = EvaluateExpression(node);
-    surroundingAgent.nodeStack.pop();
-    return r;
+    return EvaluateExpression(node);
   }
 
   if (isStatement(node)) {
-    surroundingAgent.nodeStack.push(node);
-    const r = EvaluateStatement(node);
-    surroundingAgent.nodeStack.pop();
-    return r;
+    return EvaluateStatement(node);
   }
   console.error(node);
   throw new RangeError('unknown node type');
