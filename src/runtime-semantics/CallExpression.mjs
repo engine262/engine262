@@ -18,7 +18,16 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   ArgumentListEvaluation,
+  Evaluate_MemberExpression_IdentifierName,
+  Evaluate_MemberExpression_Expression,
 } from './all.mjs';
+import {
+  isCallExpressionWithBrackets,
+  isCallExpressionWithDot,
+  isCallExpressionWithTaggedTemplate,
+  isCallExpressionWithCall,
+  isCallExpression,
+} from '../ast.mjs';
 import {
   Q,
   ReturnIfAbrupt,
@@ -75,7 +84,24 @@ function Evaluate_CallExpression_Arguments(CallExpression, Arguments) {
 
 // #sec-function-calls-runtime-semantics-evaluation
 // CallExpression :
-//   CallExpression Arguments
-export function Evaluate_CallExpression(Expression) {
-  return Evaluate_CallExpression_Arguments(Expression.callee, Expression.arguments);
+//   CallExpression : CallExpression Arguments
+//   CallExpression : CallExpression [ Expression ]
+//   CallExpression : CallExpression . IdentifierName
+export function Evaluate_CallExpression(CallExpression) {
+  switch (true) {
+    case isCallExpressionWithBrackets(CallExpression):
+      return Evaluate_MemberExpression_Expression(CallExpression.object, CallExpression.property);
+    case isCallExpressionWithDot(CallExpression):
+      return Evaluate_MemberExpression_IdentifierName(
+        CallExpression.object, CallExpression.property,
+      );
+    case isCallExpressionWithTaggedTemplate(CallExpression):
+    case isCallExpressionWithCall(CallExpression):
+      throw new RangeError();
+    case isCallExpression(CallExpression):
+      return Evaluate_CallExpression_Arguments(CallExpression.callee, CallExpression.arguments);
+
+    default:
+      throw new RangeError();
+  }
 }
