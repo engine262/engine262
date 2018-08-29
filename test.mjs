@@ -21,6 +21,8 @@ try {
 }
 
 print(a);
+
+42;
 `);
 
 console.log(completion);

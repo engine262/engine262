@@ -27,6 +27,9 @@ import {
   isCallExpression,
   isPrimaryExpressionWithThis,
   isFunctionDeclaration,
+  isGeneratorDeclaration,
+  isAsyncFunctionDeclaration,
+  isAsyncGeneratorDeclaration,
   isLexicalDeclaration,
   isLexicalBinding,
   isAssignmentExpression,
@@ -45,6 +48,7 @@ import {
   Evaluate_NewExpression,
   Evaluate_LexicalDeclaration,
   Evaluate_LexicalBinding,
+  InstantiateFunctionObject,
 } from './runtime-semantics/all.mjs';
 import {
   Type,
@@ -119,7 +123,7 @@ function SubtractiveExpression_MultiplicativeExpression(
   const rval = Q(GetValue(rref));
   const lnum = Q(ToNumber(lval));
   const rnum = Q(ToNumber(rval));
-  return NewValue(lnum.numberValue() + rnum.numberValue());
+  return NewValue(lnum.numberValue() - rnum.numberValue());
 }
 
 function Evaluate_AdditiveExpression(AdditiveExpression) {
@@ -165,7 +169,7 @@ function Evaluate_BlockStatement(BlockStatement) {
   const blockEnv = NewDeclarativeEnvironment(oldEnv);
   BlockDeclarationInstantiation(StatementList, blockEnv);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  const blockValue = EvaluateStatementList(StatementList);
+  const blockValue = Evaluate(StatementList);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return blockValue;
 }
@@ -183,10 +187,10 @@ function BlockDeclarationInstantiation(code, env) {
         X(envRec.CreateMutableBinding(dn, NewValue(false)));
       }
       if (isFunctionDeclaration(d) || isGeneratorDeclaration(d)
-          || isAsyncFunctionDeclaration || isAsyncGeneratorDeclaration) {
-        //   Let fn be the sole element of the BoundNames of d.
-        //   Let fo be the result of performing InstantiateFunctionObject for d with argument env.
-        //   Perform envRec.InitializeBinding(fn, fo).
+          || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
+        const fn = BoundNames_Declaration(d)[0];
+        const fo = InstantiateFunctionObject(d, env);
+        envRec.InitializeBinding(fn, fo);
       }
     }
   }
@@ -198,16 +202,15 @@ function BlockDeclarationInstantiation(code, env) {
 // (implicit)
 //   StatementList : StatementListItem
 function EvaluateStatementList(StatementList) {
-  let sl = EvaluateStatementListItem(StatementList.shift());
-  ReturnIfAbrupt(sl);
   if (StatementList.length === 0) {
-    return new NormalCompletion(sl);
+    return new NormalCompletion(undefined);
   }
-  let s;
-  for (const StatementListItem of StatementList) {
-    s = EvaluateStatementListItem(StatementListItem);
-    ReturnIfAbrupt(s);
-  }
+
+  const StatementListItem = StatementList.shift();
+
+  let sl = EvaluateStatementListItem(StatementListItem);
+  ReturnIfAbrupt(sl);
+  const s = Evaluate(StatementList);
   return UpdateEmpty(s, sl);
 }
 
@@ -234,7 +237,7 @@ function EvaluateStatementListItem(StatementListItem) {
         return Evaluate_LexicalBinding(StatementListItem);
 
       default:
-        console.error(StatementListItem);
+        console.error(StatementListItem); // eslint-disable-line no-console
         throw new RangeError('unknown StatementListItem type');
     }
   } finally {
@@ -291,7 +294,7 @@ function EvaluateExpression(Expression) {
         return Evaluate_AssignmentExpression(Expression);
 
       default:
-        console.error(Expression);
+        console.error(Expression); // eslint-disable-line no-console
         throw new RangeError('EvaluateExpression unknown expression type');
     }
   } finally {
@@ -311,7 +314,7 @@ export function Evaluate(node) {
   if (isStatement(node)) {
     return EvaluateStatement(node);
   }
-  console.error(node);
+  console.error(node); // eslint-disable-line no-console
   throw new RangeError('unknown node type');
 }
 
