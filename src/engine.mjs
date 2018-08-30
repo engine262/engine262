@@ -32,7 +32,7 @@ import {
   GlobalDeclarationInstantiation,
 } from './runtime-semantics/all.mjs';
 import {
-  EvaluateScript,
+  Evaluate_Script,
 } from './evaluator.mjs';
 
 export class Agent {
@@ -268,7 +268,7 @@ export function ScriptEvaluation(scriptRecord) {
   const scriptBody = scriptRecord.ECMAScriptCode.body;
   let result = GlobalDeclarationInstantiation(scriptBody, globalEnv);
   if (result.Type === 'normal') {
-    result = EvaluateScript(scriptBody, globalEnv);
+    result = Evaluate_Script(scriptBody, globalEnv);
   }
 
   if (result.Type === 'normal' && !result.Value) {

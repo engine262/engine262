@@ -1,5 +1,4 @@
 import {
-  isAssignmentExpression,
   isBlockStatement,
   isBreakStatement,
   isContinueStatement,
@@ -8,6 +7,7 @@ import {
   isEmptyStatement,
   isExportDeclaration,
   isExportDeclarationWithVariable,
+  isExpression,
   isExpressionStatement,
   isFunctionDeclaration,
   isIfStatement,
@@ -289,7 +289,7 @@ export const VarDeclaredNames_FunctionBody = VarDeclaredNames_FunctionStatementL
 //   ConciseBody : `{` FunctionBody `}`
 export function VarDeclaredNames_ConciseBody(ConciseBody) {
   switch (true) {
-    case isAssignmentExpression(ConciseBody):
+    case isExpression(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return VarDeclaredNames_FunctionBody(ConciseBody.body);

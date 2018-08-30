@@ -1,7 +1,7 @@
 import {
-  isAssignmentExpression,
   isBlockStatement,
   isDeclaration,
+  isExpression,
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
@@ -82,7 +82,7 @@ export const
 //   ConciseBody : `{` FunctionBody `}`
 export function LexicallyScopedDeclarations_ConciseBody(ConciseBody) {
   switch (true) {
-    case isAssignmentExpression(ConciseBody):
+    case isExpression(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return LexicallyScopedDeclarations_FunctionBody(ConciseBody.body);

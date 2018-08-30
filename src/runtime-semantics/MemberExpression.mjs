@@ -2,15 +2,15 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  isMemberExpressionWithDot,
-  isMemberExpressionWithBrackets,
+  isActualMemberExpressionWithDot,
+  isActualMemberExpressionWithBrackets,
 } from '../ast.mjs';
 import {
   GetValue,
   RequireObjectCoercible,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
   New as NewValue,
@@ -18,40 +18,45 @@ import {
 } from '../value.mjs';
 
 // #sec-property-accessors-runtime-semantics-evaluation
-//   MemberExpression : MemberExpression [ Expression ]
+//   MemberExpression : MemberExpression `[` Expression `]`
+//   CallExpression : CallExpression `[` Expression `]`
 export function Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
-  const baseReference = Evaluate(MemberExpression);
+  const baseReference = Q(Evaluate_Expression(MemberExpression));
   const baseValue = Q(GetValue(baseReference));
-  const propertyNameReference = Evaluate(Expression);
+  const propertyNameReference = Q(Evaluate_Expression(Expression));
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
-  const propertyKey = ToPropertyKey(propertyNameValue);
+  const propertyKey = Q(ToPropertyKey(propertyNameValue));
   const strict = surroundingAgent.isStrictCode;
   return new Reference(bv, propertyKey, NewValue(strict));
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
-//   MemberExpression : MemberExpression . IdentifierName
+//   MemberExpression : MemberExpression `.` IdentifierName
+//   CallExpression : CallExpression `.` IdentifierName
 export function Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
-  const baseReference = Evaluate(MemberExpression);
+  const baseReference = Q(Evaluate_Expression(MemberExpression));
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);
-  const strict = true;
+  const strict = true; // TODO(IsStrict)
   return new Reference(bv, propertyNameString, NewValue(strict));
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
-// MemberExpression :
-//   MemberExpression [ Expression ]
-//   MemberEXpression . IdentifierName
+//   MemberExpression :
+//     MemberExpression `[` Expression `]`
+//     MemberEXpression `.` IdentifierName
+//   CallExpression :
+//     CallExpression `[` Expression `]`
+//     CallExpression `.` IdentifierName
 export function Evaluate_MemberExpression(MemberExpression) {
   switch (true) {
-    case isMemberExpressionWithBrackets(MemberExpression):
+    case isActualMemberExpressionWithBrackets(MemberExpression):
       return Evaluate_MemberExpression_Expression(
         MemberExpression.object, MemberExpression.property,
       );
-    case isMemberExpressionWithDot(MemberExpression):
+    case isActualMemberExpressionWithDot(MemberExpression):
       return Evaluate_MemberExpression_IdentifierName(
         MemberExpression.object, MemberExpression.property,
       );

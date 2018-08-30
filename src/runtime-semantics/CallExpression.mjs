@@ -12,22 +12,14 @@ import {
   PrepareForTailCall,
   Call,
   IsPropertyReference,
+  GetReferencedName,
   GetThisValue,
   GetBase,
   GetValue,
 } from '../abstract-ops/all.mjs';
 import {
   ArgumentListEvaluation,
-  Evaluate_MemberExpression_IdentifierName,
-  Evaluate_MemberExpression_Expression,
 } from './all.mjs';
-import {
-  isCallExpressionWithBrackets,
-  isCallExpressionWithDot,
-  isCallExpressionWithTaggedTemplate,
-  isCallExpressionWithCall,
-  isCallExpression,
-} from '../ast.mjs';
 import {
   Q,
   ReturnIfAbrupt,
@@ -74,34 +66,19 @@ function EvaluateCall(func, ref, args, tailPosition) {
   return result;
 }
 
-function Evaluate_CallExpression_Arguments(CallExpression, Arguments) {
-  const ref = Evaluate(CallExpression);
-  const func = Q(GetValue(ref));
-  const thisCall = undefined;
-  const tailCall = IsInTailPosition(thisCall);
-  return Q(EvaluateCall(func, ref, Arguments, tailCall));
-}
-
 // #sec-function-calls-runtime-semantics-evaluation
 // CallExpression :
-//   CallExpression : CallExpression Arguments
-//   CallExpression : CallExpression [ Expression ]
-//   CallExpression : CallExpression . IdentifierName
+//   CoverCallExpressionAndAsyncArrowHead
+//   CallExpression Arguments
 export function Evaluate_CallExpression(CallExpression) {
-  switch (true) {
-    case isCallExpressionWithBrackets(CallExpression):
-      return Evaluate_MemberExpression_Expression(CallExpression.object, CallExpression.property);
-    case isCallExpressionWithDot(CallExpression):
-      return Evaluate_MemberExpression_IdentifierName(
-        CallExpression.object, CallExpression.property,
-      );
-    case isCallExpressionWithTaggedTemplate(CallExpression):
-    case isCallExpressionWithCall(CallExpression):
-      throw new RangeError();
-    case isCallExpression(CallExpression):
-      return Evaluate_CallExpression_Arguments(CallExpression.callee, CallExpression.arguments);
-
-    default:
-      throw new RangeError();
+  const ref = Q(Evaluate(CallExpression.callee));
+  const func = Q(GetValue(ref));
+  if (Type(ref) === 'Reference' && !IsPropertyReference(ref)
+    && (Type(GetReferencedName(ref)) === 'String'
+      && GetReferencedName(ref).stringValue() === 'eval')) {
+    // TODO: direct eval
   }
+  const thisCall = CallExpression;
+  const tailCall = IsInTailPosition(thisCall);
+  return Q(EvaluateCall(func, ref, CallExpression.arguments, tailCall));
 }

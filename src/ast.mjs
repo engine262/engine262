@@ -102,42 +102,19 @@ export function isTemplateLiteral(node) {
   return node.type === 'TemplateLiteral';
 }
 
-// #prod-PrimaryExpression
-export function isPrimaryExpression(node) {
-  return isThis(node)
-         || isIdentifierReference(node)
-         || isLiteral(node)
-         || isArrayLiteral(node)
-         || isObjectLiteral(node)
-         || isFunctionExpression(node)
-         || isClassExpression(node)
-         || isGeneratorExpression(node)
-         || isAsyncFunctionExpression(node)
-         || isAsyncGeneratorExpression(node)
-         || isRegularExpressionLiteral(node)
-         || isTemplateLiteral(node);
+// Used in #prod-MemberExpression and #prod-CallExpression
+export function isActualMemberExpression(node) {
+  return node.type === 'MemberExpression' && node.object.type !== 'Super';
 }
 
-export const isPrimaryExpressionWithThis = isThis;
-
-// Used in #prod-MemberExpression
-export function isMemberExpressionWithBrackets(node) {
-  return node.type === 'MemberExpression'
-         && node.computed
-         && isMemberExpression(node.object);
+// Used in #prod-MemberExpression and #prod-CallExpression
+export function isActualMemberExpressionWithBrackets(node) {
+  return isActualMemberExpression(node) && node.computed;
 }
 
-// Used in #prod-MemberExpression
-export function isMemberExpressionWithDot(node) {
-  return node.type === 'MemberExpression'
-         && !node.computed
-         && isMemberExpression(node.object);
-}
-
-// Used in #prod-MemberExpression
-export function isMemberExpressionWithTaggedTemplate(node) {
-  return node.type === 'TaggedTemplateExpression'
-         && isMemberExpression(node.tag);
+// Used in #prod-MemberExpression and #prod-CallExpression
+export function isActualMemberExpressionWithDot(node) {
+  return isActualMemberExpression(node) && !node.computed;
 }
 
 // #prod-SuperProperty
@@ -157,40 +134,14 @@ export function isNewTarget(node) {
          && node.property.name === 'target';
 }
 
-// Used in #prod-MemberExpression
-export function isMemberExpressionWithNew(node) {
+// Used in #prod-MemberExpression and #prod-NewExpression
+export function isActualNewExpression(node) {
   return node.type === 'NewExpression';
 }
 
-// #prod-MemberExpression
-export function isMemberExpression(node) {
-  return isPrimaryExpression(node)
-         || isMemberExpressionWithBrackets(node)
-         || isMemberExpressionWithDot(node)
-         || isMemberExpressionWithTaggedTemplate(node)
-         || isSuperProperty(node)
-         || isMetaProperty(node)
-         || isMemberExpressionWithNew(node);
-}
-
-// #prod-NewExpression
-export function isNewExpression(node) {
-  return node.type === 'NewExpression' || isMemberExpression(node);
-}
-
-// Used in #prod-NewExpression
-export function isNewExpressionWithArguments(node) {
-  return isNewExpression(node) && node.arguments.length > 0;
-}
-
-// Used in #prod-NewExpression
-export function isNewExpressionWithoutArguments(node) {
-  return isNewExpression(node) && node.arguments.length === 0;
-}
-
-// #prod-CallMemberExpression
-export function isCallMemberExpression(node) {
-  return node.type === 'CallExpression' && isMemberExpression(node.callee);
+// Used in #prod-CallExpression and #prod-CallMemberExpression
+export function isActualCallExpression(node) {
+  return node.type === 'CallExpression' && node.callee.type !== 'Super';
 }
 
 // #prod-SuperCall
@@ -198,54 +149,9 @@ export function isSuperCall(node) {
   return node.type === 'CallExpression' && node.callee.type === 'Super';
 }
 
-// Used in #prod-CallExpression
-export function isCallExpressionWithCall(node) {
-  return node.type === 'CallExpression' && isCallExpression(node.callee);
-}
-
-// Used in #prod-CallExpression
-export function isCallExpressionWithBrackets(node) {
-  return node.type === 'MemberExpression'
-         && node.computed
-         && isCallExpression(node.object);
-}
-
-// Used in #prod-CallExpression
-export function isCallExpressionWithDot(node) {
-  return node.type === 'MemberExpression'
-         && !node.computed
-         && isCallExpression(node.object);
-}
-
-// Used in #prod-CallExpression
-export function isCallExpressionWithTaggedTemplate(node) {
-  return node.type === 'TaggedTemplateExpression'
-         && isCallExpression(node.tag);
-}
-
-// #prod-CallExpression
-export function isCallExpression(node) {
-  return isCallMemberExpression(node)
-         || isSuperCall(node)
-         || isCallExpressionWithCall(node)
-         || isCallExpressionWithBrackets(node)
-         || isCallExpressionWithDot(node)
-         || isCallExpressionWithTaggedTemplate(node);
-}
-
-// #prod-LeftHandSideExpression
-export function isLeftHandSideExpression(node) {
-  return isNewExpression(node) || isCallExpression(node);
-}
-
 // Used in #prod-UpdateExpression
 export function isActualUpdateExpression(node) {
   return node.type === 'UpdateExpression';
-}
-
-// #prod-UpdateExpression
-export function isUpdateExpression(node) {
-  return isLeftHandSideExpression(node) || isActualUpdateExpression(node);
 }
 
 // Used in #prod-UnaryExpression
@@ -293,21 +199,9 @@ export function isAwaitExpression(node) {
   return node.type === 'AwaitExpression';
 }
 
-// #prod-UnaryExpression
-export function isUnaryExpression(node) {
-  return isUpdateExpression(node)
-         || isActualUnaryExpression(node)
-         || isAwaitExpression(node);
-}
-
 // Used in #prod-ExponentiationExpression
 export function isActualExponentiationExpression(node) {
   return node.type === 'BinaryExpression' && node.operator === '**';
-}
-
-// #prod-ExponentiationExpression
-export function isExponentiationExpression(node) {
-  return isUnaryExpression(node) || isActualExponentiationExpression(node);
 }
 
 // Used in #prod-MultiplicativeExpression
@@ -320,20 +214,10 @@ export function isActualMultiplicativeExpression(node) {
          );
 }
 
-// #prod-MultiplicativeExpression
-export function isMultiplicativeExpression(node) {
-  return isExponentiationExpression(node) || isActualMultiplicativeExpression(node);
-}
-
 // Used in #prod-AdditiveExpression
 export function isActualAdditiveExpression(node) {
   return node.type === 'BinaryExpression'
          && (node.operator === '+' || node.operator === '-');
-}
-
-// #prod-AdditiveExpression
-export function isAdditiveExpression(node) {
-  return isMultiplicativeExpression(node) || isActualAdditiveExpression(node);
 }
 
 // Used in #prod-AdditiveExpression
@@ -356,11 +240,6 @@ export function isActualShiftExpression(node) {
          );
 }
 
-// #prod-ShiftExpression
-export function isShiftExpression(node) {
-  return isAdditiveExpression(node) || isActualShiftExpression(node);
-}
-
 // Used in #prod-RelationalExpression
 export function isActualRelationalExpression(node) {
   return node.type === 'BinaryExpression'
@@ -374,11 +253,6 @@ export function isActualRelationalExpression(node) {
          );
 }
 
-// #prod-RelationalExpression
-export function isRelationalExpression(node) {
-  return isShiftExpression(node) || isActualRelationalExpression(node);
-}
-
 // Used in #prod-EqualityExpression
 export function isActualEqualityExpression(node) {
   return node.type === 'BinaryExpression'
@@ -390,19 +264,9 @@ export function isActualEqualityExpression(node) {
          );
 }
 
-// #prod-EqualityExpression
-export function isEqualityExpression(node) {
-  return isRelationalExpression(node) || isActualEqualityExpression(node);
-}
-
 // Used in #prod-BitwiseANDExpression
 export function isActualBitwiseANDExpression(node) {
   return node.type === 'BinaryExpression' && node.operator === '&';
-}
-
-// #prod-BitwiseANDExpression
-export function isBitwiseANDExpression(node) {
-  return isEqualityExpression(node) || isActualBitwiseANDExpression(node);
 }
 
 // Used in #prod-BitwiseXORExpression
@@ -410,19 +274,9 @@ export function isActualBitwiseXORExpression(node) {
   return node.type === 'BinaryExpression' && node.operator === '^';
 }
 
-// #prod-BitwiseXORExpression
-export function isBitwiseXORExpression(node) {
-  return isBitwiseANDExpression(node) || isActualBitwiseXORExpression(node);
-}
-
 // Used in #prod-BitwiseORExpression
 export function isActualBitwiseORExpression(node) {
   return node.type === 'BinaryExpression' && node.operator === '|';
-}
-
-// #prod-BitwiseORExpression
-export function isBitwiseORExpression(node) {
-  return isBitwiseXORExpression(node) || isActualBitwiseORExpression(node);
 }
 
 // Used in #prod-LogicalANDExpression
@@ -430,29 +284,14 @@ export function isActualLogicalANDExpression(node) {
   return node.type === 'LogicalExpression' && node.operator === '&&';
 }
 
-// #prod-LogicalANDExpression
-export function isLogicalANDExpression(node) {
-  return isBitwiseORExpression(node) || isActualLogicalANDExpression(node);
-}
-
 // Used in #prod-LogicalORExpression
 export function isActualLogicalORExpression(node) {
   return node.type === 'LogicalExpression' && node.operator === '||';
 }
 
-// #prod-LogicalORExpression
-export function isLogicalORExpression(node) {
-  return isLogicalANDExpression(node) || isActualLogicalORExpression(node);
-}
-
 // Used in #prod-ConditionalExpression
 export function isActualConditionalExpression(node) {
   return node.type === 'ConditionalExpression';
-}
-
-// #prod-ConditionalExpression
-export function isConditionalExpression(node) {
-  return isLogicalORExpression(node) || isActualConditionalExpression(node);
 }
 
 // #prod-YieldExpression
@@ -489,15 +328,6 @@ export function isAssignmentExpressionWithAssignmentOperator(node) {
   return isActualAssignmentExpression(node) && node.operator !== '=';
 }
 
-// #prod-AssignmentExpression
-export function isAssignmentExpression(node) {
-  return isConditionalExpression(node)
-         || isYieldExpression(node)
-         || isArrowFunction(node)
-         || isAsyncArrowFunction(node)
-         || isActualAssignmentExpression(node);
-}
-
 // Used in #prod-Expression
 export function isExpressionWithComma(node) {
   return node.type === 'SequenceExpression';
@@ -505,8 +335,81 @@ export function isExpressionWithComma(node) {
 
 // #prod-Expression
 export function isExpression(node) {
-  return isAssignmentExpression(node)
-         || isExpressionWithComma(node);
+  return (
+    // PrimaryExpression except CoverParenthesizedExpressionAndArrowParameterList
+    isThis(node)
+      || isIdentifierReference(node)
+      || isLiteral(node)
+      || isArrayLiteral(node)
+      || isObjectLiteral(node)
+      || isFunctionExpression(node)
+      || isClassExpression(node)
+      || isGeneratorExpression(node)
+      || isAsyncFunctionExpression(node)
+      || isAsyncGeneratorExpression(node)
+      || isRegularExpressionLiteral(node)
+      || isTemplateLiteral(node)
+
+    // LeftHandSideExpression (including MemberExpression, NewExpression, and
+    // CallExpression)
+      || isActualMemberExpression(node)
+      || isSuperProperty(node)
+      || isMetaProperty(node)
+      || isActualNewExpression(node)
+      || isActualCallExpression(node)
+
+    // UpdateExpression
+      || isActualUpdateExpression(node)
+
+    // UnaryExpression
+      || isActualUnaryExpression(node)
+      || isAwaitExpression(node)
+
+    // ExponentiationExpression
+      || isActualExponentiationExpression(node)
+
+    // MultiplicativeExpression
+      || isActualMultiplicativeExpression(node)
+
+    // AdditiveExpression
+      || isActualAdditiveExpression(node)
+
+    // ShiftExpression
+      || isActualShiftExpression(node)
+
+    // RelationalExpression
+      || isActualRelationalExpression(node)
+
+    // EqualityExpression
+      || isActualEqualityExpression(node)
+
+    // BitwiseANDExpression
+      || isActualBitwiseANDExpression(node)
+
+    // BitwiseXORExpression
+      || isActualBitwiseXORExpression(node)
+
+    // BitwiseORExpression
+      || isActualBitwiseORExpression(node)
+
+    // LogicalANDExpression
+      || isActualLogicalANDExpression(node)
+
+    // LogicalORExpression
+      || isActualLogicalORExpression(node)
+
+    // ConditionalExpression
+      || isActualConditionalExpression(node)
+
+    // AssignmentExpression
+      || isYieldExpression(node)
+      || isArrowFunction(node)
+      || isAsyncArrowFunction(node)
+      || isActualAssignmentExpression(node)
+
+    // Expression
+      || isExpressionWithComma(node)
+  );
 }
 
 // Used in #prod-SingleNameBinding
@@ -820,7 +723,7 @@ export function isExportDeclarationWithDefaultAndClass(node) {
 
 // Used in #prod-ExportDeclaration
 export function isExportDeclarationWithDefaultAndExpression(node) {
-  return node.type === 'ExportDefaultDeclaration' && isAssignmentExpression(node.declaration);
+  return node.type === 'ExportDefaultDeclaration' && isExpression(node.declaration);
 }
 
 // #prod-ExportDeclaration
