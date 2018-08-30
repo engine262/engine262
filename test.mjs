@@ -24,7 +24,7 @@ try {
 b **= '3';
 
 print(a);
-print(b);
+print(\`0 \${a} 2 ${3}\`);
 `);
 
 console.log(completion);

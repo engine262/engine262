@@ -186,7 +186,7 @@ module.exports = ({ types: t, template }) => {
             // The result is assigned to an existing variable, verbatim.
             const assignmentStatement = path.parentPath.parentPath;
             const ID = path.parent.left;
-            assignmentStatement.replaceWithMultiple(templateObj.newVariable({ ID, ARGUMENT }));
+            assignmentStatement.replaceWithMultiple(templateObj.existingVariable({ ID, ARGUMENT }));
           } else {
             // Ugliest variant that covers everything else.
             const parentStatement = findParentStatementPath(path);

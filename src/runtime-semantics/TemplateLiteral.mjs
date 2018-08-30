@@ -1,0 +1,34 @@
+import { New as NewValue } from '../value.mjs';
+import { Q } from '../completion.mjs';
+import {
+  GetValue,
+  ToString,
+} from '../abstract-ops/all.mjs';
+import { Evaluate_Expression } from '../evaluator.mjs';
+
+// #sec-template-literals-runtime-semantics-evaluation
+//   TemplateLiteral : NoSubstitutionTemplate
+//   SubstitutionTemplate : TemplateHead Expression TemplateSpans
+//   TemplateSpans : TemplateTail
+//   TemplateSpans : TemplateMiddleList TemplateTail
+//   TemplateMiddleList : TemplateMiddle Expression
+//   TemplateMiddleList : TemplateMiddleList TemplateMiddle Expression
+//
+// (implicit)
+//   TemplateLiteral : SubstitutionTemplate
+export function Evaluate_TemplateLiteral(TemplateLiteral) {
+  let str = '';
+  for (let i = 0; i < TemplateLiteral.quasis.length - 1; i += 1) {
+    const TemplateHead = TemplateLiteral.quasis[i];
+    const Expression = TemplateLiteral.expressions[i];
+    const head = TemplateHead.value.cooked;
+    let sub = Q(Evaluate_Expression(Expression));
+    sub = Q(GetValue(sub));
+    const middle = Q(ToString(sub));
+    str += head;
+    str += middle.stringValue();
+  }
+  const TemplateTail = TemplateLiteral.quasis[TemplateLiteral.quasis.length - 1];
+  const tail = TemplateTail.value.cooked;
+  return NewValue(str + tail);
+}
