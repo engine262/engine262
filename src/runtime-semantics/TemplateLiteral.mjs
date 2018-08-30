@@ -22,9 +22,9 @@ export function Evaluate_TemplateLiteral(TemplateLiteral) {
     const TemplateHead = TemplateLiteral.quasis[i];
     const Expression = TemplateLiteral.expressions[i];
     const head = TemplateHead.value.cooked;
-    let sub = Q(Evaluate_Expression(Expression));
     // https://github.com/tc39/ecma262/issues/935
-    sub = Q(GetValue(sub));
+    const subRef = Evaluate_Expression(Expression);
+    const sub = Q(GetValue(subRef));
     const middle = Q(ToString(sub));
     str += head;
     str += middle.stringValue();
