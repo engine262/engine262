@@ -2,6 +2,7 @@ export * from './AdditiveExpression.mjs';
 export * from './ArgumentListEvaluation.mjs';
 export * from './AssignmentExpression.mjs';
 export * from './BindingInitialization.mjs';
+export * from './BitwiseOperators.mjs';
 export * from './BlockStatement.mjs';
 export * from './CallExpression.mjs';
 export * from './EvaluateBody.mjs';

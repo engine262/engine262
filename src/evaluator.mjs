@@ -11,6 +11,9 @@ import {
   isActualAssignmentExpression,
   isActualCallExpression,
   isActualEqualityExpression,
+  isActualBitwiseANDExpression,
+  isActualBitwiseXORExpression,
+  isActualBitwiseORExpression,
   isActualExponentiationExpression,
   isActualMemberExpression,
   isActualMultiplicativeExpression,
@@ -31,11 +34,15 @@ import {
 import {
   EvaluateBinopValues_AdditiveExpression_Minus,
   EvaluateBinopValues_AdditiveExpression_Plus,
+  EvaluateBinopValues_BitwiseANDExpression,
+  EvaluateBinopValues_BitwiseXORExpression,
+  EvaluateBinopValues_BitwiseORExpression,
   EvaluateBinopValues_ExponentiationExpression,
   EvaluateBinopValues_MultiplicativeExpression,
   EvaluateBinopValues_ShiftExpression,
   Evaluate_AdditiveExpression,
   Evaluate_AssignmentExpression,
+  Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
   Evaluate_CallExpression,
   Evaluate_EqualityExpression,
@@ -143,15 +150,18 @@ export function EvaluateBinopValues(operator, lval, rval) {
     case '>>>':
       return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
 
-    // case '&':
-    // case '^':
-    // case '|':
+    case '&':
+      return EvaluateBinopValues_BitwiseANDExpression(lval, rval);
+    case '^':
+      return EvaluateBinopValues_BitwiseXORExpression(lval, rval);
+    case '|':
+      return EvaluateBinopValues_BitwiseORExpression(lval, rval);
 
     case '**':
       return EvaluateBinopValues_ExponentiationExpression(lval, rval);
 
     default:
-      throw outOfRange('EvaluateBinopValues', operator)
+      throw outOfRange('EvaluateBinopValues', operator);
   }
 }
 
@@ -235,14 +245,10 @@ export function Evaluate_Expression(Expression) {
       case isActualEqualityExpression(Expression):
         return Evaluate_EqualityExpression(Expression);
 
-      // case isActualBitwiseANDExpression(Expression):
-      //   return Evaluate_BitwiseANDExpression(Expression);
-
-      // case isActualBitwiseXORExpression(Expression):
-      //   return Evaluate_BitwiseXORExpression(Expression);
-
-      // case isActualBitwiseORExpression(Expression):
-      //   return Evaluate_BitwiseORExpression(Expression);
+      case isActualBitwiseANDExpression(Expression):
+      case isActualBitwiseXORExpression(Expression):
+      case isActualBitwiseORExpression(Expression):
+        return Evaluate_BinaryBitwiseExpression(Expression);
 
       // case isActualLogicalANDExpression(Expression):
       //   return Evaluate_LogicalANDExpression(Expression);
