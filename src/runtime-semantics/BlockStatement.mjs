@@ -29,7 +29,7 @@ import {
   X,
   NormalCompletion,
 } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate_StatementList } from '../evaluator.mjs';
 
 // #sec-blockdeclarationinstantiation
 function BlockDeclarationInstantiation(code, env) {
@@ -54,11 +54,11 @@ function BlockDeclarationInstantiation(code, env) {
 }
 
 // #sec-block-runtime-semantics-evaluation
-// Block :
-//   { }
-//   { StatementList }
-export function Evaluate_BlockStatement(BlockStatement) {
-  const StatementList = BlockStatement.body;
+//   Block :
+//     `{` `}`
+//     `{` StatementList `}`
+export function Evaluate_Block(Block) {
+  const StatementList = Block.body;
 
   if (StatementList.length === 0) {
     return new NormalCompletion(undefined);
@@ -68,7 +68,9 @@ export function Evaluate_BlockStatement(BlockStatement) {
   const blockEnv = NewDeclarativeEnvironment(oldEnv);
   BlockDeclarationInstantiation(StatementList, blockEnv);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  const blockValue = Evaluate(StatementList);
+  const blockValue = Evaluate_StatementList(StatementList);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return blockValue;
 }
+
+export const Evaluate_BlockStatement = Evaluate_Block;

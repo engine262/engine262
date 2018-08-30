@@ -2,7 +2,7 @@ import {
   GetValue,
   ToNumber,
 } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
   New as NewValue,
@@ -13,9 +13,9 @@ export function Evaluate_MultiplicativeExpression({
   operator: MultiplicativeOperator,
   right: ExponentiationExpression,
 }) {
-  const left = Evaluate(MultiplicativeExpression);
+  const left = Evaluate_Expression(MultiplicativeExpression);
   const leftValue = Q(GetValue(left));
-  const right = Evaluate(ExponentiationExpression);
+  const right = Evaluate_Expression(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
   const lnum = Q(ToNumber(leftValue));
   const rnum = Q(ToNumber(rightValue));

@@ -668,11 +668,6 @@ export function isLexicalBinding(node) {
   return node.type === 'VariableDeclarator';
 }
 
-// LexicalBinding : Binding Initializer
-export function isLexicalBindingWithBindingIdentifierAndInitializer(node) {
-  return isLexicalBinding(node) && isBindingIdentifier(node.id) && node.init !== null;
-}
-
 // #prod-ImportDeclaration
 export function isImportDeclaration(node) {
   return node.type === 'ImportDeclaration';

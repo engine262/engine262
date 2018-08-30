@@ -16,35 +16,33 @@ import {
   isActualNewExpression,
   isActualShiftExpression,
   isBlockStatement,
-  isExpression,
   isExpressionStatement,
   isFunctionDeclaration,
   isIdentifierReference,
   isLexicalBinding,
   isLexicalDeclaration,
   isLiteral,
-  isStatement,
   isThis,
   isThrowStatement,
   isTryStatement,
 } from './ast.mjs';
 import {
-  Evaluate_AssignmentExpression,
-  Evaluate_TryStatement,
-  Evaluate_CallExpression,
-  Evaluate_ThrowStatement,
-  Evaluate_ThisExpression,
-  Evaluate_NewExpression,
-  Evaluate_LexicalDeclaration,
-  Evaluate_LexicalBinding,
-  Evaluate_FunctionDeclaration,
-  Evaluate_BlockStatement,
-  Evaluate_Identifier,
   Evaluate_AdditiveExpression,
+  Evaluate_AssignmentExpression,
+  Evaluate_BlockStatement,
+  Evaluate_CallExpression,
   Evaluate_ExponentiationExpression,
-  Evaluate_MultiplicativeExpression,
+  Evaluate_FunctionDeclaration,
+  Evaluate_Identifier,
+  Evaluate_LexicalBinding,
+  Evaluate_LexicalDeclaration,
   Evaluate_MemberExpression,
+  Evaluate_MultiplicativeExpression,
+  Evaluate_NewExpression,
   Evaluate_ShiftExpression,
+  Evaluate_ThisExpression,
+  Evaluate_ThrowStatement,
+  Evaluate_TryStatement,
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
@@ -60,7 +58,7 @@ import {
 //
 // (implicit)
 //   StatementList : StatementListItem
-function Evaluate_StatementList(StatementList) {
+export function Evaluate_StatementList(StatementList) {
   if (StatementList.length === 0) {
     return new NormalCompletion(undefined);
   }
@@ -69,7 +67,7 @@ function Evaluate_StatementList(StatementList) {
 
   let sl = Evaluate_StatementListItem(StatementListItem);
   ReturnIfAbrupt(sl);
-  const s = Evaluate(StatementList);
+  const s = Evaluate_StatementList(StatementList);
   return UpdateEmpty(s, sl);
 }
 
@@ -244,26 +242,6 @@ export function Evaluate_Expression(Expression) {
   } finally {
     surroundingAgent.nodeStack.pop();
   }
-}
-
-export function Evaluate(node) {
-  if (node instanceof Value || node instanceof Reference) {
-    return node;
-  }
-
-  if (Array.isArray(node)) {
-    return Evaluate_StatementList(node);
-  }
-
-  if (isExpression(node)) {
-    return Evaluate_Expression(node);
-  }
-
-  if (isStatement(node)) {
-    return Evaluate_Statement(node);
-  }
-  console.error(node); // eslint-disable-line no-console
-  throw new RangeError('unknown node type');
 }
 
 // #sec-script-semantics-runtime-semantics-evaluation

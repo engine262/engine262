@@ -26,7 +26,7 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 import {
-  Evaluate,
+  Evaluate_Expression,
 } from '../evaluator.mjs';
 
 
@@ -71,7 +71,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
 export function Evaluate_CallExpression(CallExpression) {
-  const ref = Q(Evaluate(CallExpression.callee));
+  const ref = Q(Evaluate_Expression(CallExpression.callee));
   const func = Q(GetValue(ref));
   if (Type(ref) === 'Reference' && !IsPropertyReference(ref)
     && (Type(GetReferencedName(ref)) === 'String'

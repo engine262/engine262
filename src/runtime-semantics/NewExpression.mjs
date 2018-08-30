@@ -14,7 +14,7 @@ import {
   ArgumentListEvaluation,
 } from './all.mjs';
 import {
-  Evaluate,
+  Evaluate_Expression,
 } from '../evaluator.mjs';
 import {
   Q,
@@ -25,7 +25,7 @@ import {
 function EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = Q(Evaluate(constructExpr));
+  const ref = Q(Evaluate_Expression(constructExpr));
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
   let argList = ArgumentListEvaluation(args);

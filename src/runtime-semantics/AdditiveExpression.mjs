@@ -8,7 +8,7 @@ import {
   ToNumber,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
   Type,
@@ -18,9 +18,9 @@ import {
 // #sec-addition-operator-plus-runtime-semantics-evaluation
 //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, MultiplicativeExpression) {
-  const lref = Evaluate(AdditiveExpression);
+  const lref = Evaluate_Expression(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate(MultiplicativeExpression);
+  const rref = Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   const lprim = Q(ToPrimitive(lval));
   const rprim = Q(ToPrimitive(rval));
@@ -38,9 +38,9 @@ function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, Multipl
 function SubtractiveExpression_MultiplicativeExpression(
   SubtractiveExpression, MultiplicativeExpression,
 ) {
-  const lref = Evaluate(SubtractiveExpression);
+  const lref = Evaluate_Expression(SubtractiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate(MultiplicativeExpression);
+  const rref = Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   const lnum = Q(ToNumber(lval));
   const rnum = Q(ToNumber(rval));

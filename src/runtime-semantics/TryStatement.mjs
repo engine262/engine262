@@ -17,18 +17,16 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 import {
-  Evaluate,
-} from '../evaluator.mjs';
-import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import {
   BindingInitialization,
+  Evaluate_Block,
 } from './all.mjs';
 
 // #sec-runtime-semantics-catchclauseevaluation
-//    Catch : catch ( CatchParameter ) Block
 //    With parameter thrownValue.
+//    Catch : catch `(` CatchParameter `)` Block
 function CatchClauseEvaluation(Catch, thrownValue) {
   const CatchParameter = Catch.param;
   const Block = Catch.body;
@@ -44,13 +42,19 @@ function CatchClauseEvaluation(Catch, thrownValue) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     return status;
   }
-  const B = Evaluate(Block);
+  const B = Evaluate_Block(Block);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return B;
 }
 
+// (implicit)
+//   Finally : `finally` Block
+const Evaluate_Finally = Evaluate_Block;
+
+// #sec-try-statement-runtime-semantics-evaluation
+//   TryStatement : `try` Block Catch
 function Evaluate_TryStatement_Catch(Block, Catch) {
-  const B = Evaluate(Block);
+  const B = Evaluate_Block(Block);
   let C;
   if (B.Type === 'throw') {
     C = CatchClauseEvaluation(Catch, B.Value);
@@ -60,24 +64,28 @@ function Evaluate_TryStatement_Catch(Block, Catch) {
   return UpdateEmpty(C, NewValue(undefined));
 }
 
+// #sec-try-statement-runtime-semantics-evaluation
+//   TryStatement : `try` Block Finally
 function Evaluate_TryStatement_Finally(Block, Finally) {
-  const B = Evaluate(Block);
-  let F = Evaluate(Finally);
+  const B = Evaluate_Block(Block);
+  let F = Evaluate_Finally(Finally);
   if (F.Type === 'normal') {
     F = B;
   }
   return UpdateEmpty(F, NewValue(undefined));
 }
 
+// #sec-try-statement-runtime-semantics-evaluation
+//   TryStatement : `try` Block Catch Finally
 function Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
-  const B = Evaluate(Block);
+  const B = Evaluate_Block(Block);
   let C;
   if (B.Type === 'throw') {
     C = CatchClauseEvaluation(Catch, B.Value);
   } else {
     C = B;
   }
-  let F = Evaluate(Finally);
+  let F = Evaluate_Finally(Finally);
   if (F.Type === 'normal') {
     F = C;
   }
@@ -87,15 +95,12 @@ function Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
 // #sec-try-statement-runtime-semantics-evaluation
 export function Evaluate_TryStatement(Expression) {
   switch (true) {
-    // TryStatement : try Block Catch Finally
     case isTryStatementWithCatch(Expression) && isTryStatementWithFinally(Expression):
       return Evaluate_TryStatement_CatchFinally(
         Expression.block, Expression.handler, Expression.finalizer,
       );
-    // TryStatement : try Block Catch
     case isTryStatementWithCatch(Expression):
       return Evaluate_TryStatement_Catch(Expression.block, Expression.handler);
-    // TryStatement : try Block Finally
     case isTryStatementWithFinally(Expression):
       return Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
