@@ -26,6 +26,10 @@ b **= '3';
 print(a);
 print(\`0
 \${a}\\n2\\x0a\${3}\`);
+
+
+print(a === 1);
+print(a == '1');
 `);
 
 console.log(completion);

@@ -10,6 +10,7 @@ import {
   isActualAdditiveExpression,
   isActualAssignmentExpression,
   isActualCallExpression,
+  isActualEqualityExpression,
   isActualExponentiationExpression,
   isActualMemberExpression,
   isActualMultiplicativeExpression,
@@ -37,6 +38,7 @@ import {
   Evaluate_AssignmentExpression,
   Evaluate_BlockStatement,
   Evaluate_CallExpression,
+  Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_FunctionDeclaration,
   Evaluate_Identifier,
@@ -230,8 +232,8 @@ export function Evaluate_Expression(Expression) {
       // case isActualRelationalExpression(Expression):
       //   return Evaluate_RelationalExpression(Expression);
 
-      // case isActualEqualityExpression(Expression):
-      //   return Evaluate_EqualityExpression(Expression);
+      case isActualEqualityExpression(Expression):
+        return Evaluate_EqualityExpression(Expression);
 
       // case isActualBitwiseANDExpression(Expression):
       //   return Evaluate_BitwiseANDExpression(Expression);

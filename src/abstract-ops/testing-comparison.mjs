@@ -9,7 +9,10 @@ import {
 import {
   Assert,
   ValidateAndApplyPropertyDescriptor,
+  ToNumber,
+  ToPrimitive,
 } from './all.mjs';
+import { X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-requireobjectcoercible
@@ -178,4 +181,59 @@ export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
   return ValidateAndApplyPropertyDescriptor(
     NewValue(undefined), NewValue(undefined), Extensible, Desc, Current,
   );
+}
+
+// #sec-abstract-equality-comparison
+export function AbstractEqualityComparison(x, y) {
+  if (Type(x) === Type(y)) {
+    return StrictEqualityComparision(x, y);
+  }
+  if (Type(x) === 'Null' && Type(y) === 'Undefined') {
+    return NewValue(true);
+  }
+  if (Type(x) === 'Undefined' && Type(y) === 'Null') {
+    return NewValue(true);
+  }
+  if (Type(x) === 'Number' && Type(y) === 'String') {
+    return AbstractEqualityComparison(x, X(ToNumber(y)));
+  }
+  if (Type(x) === 'String' && Type(y) === 'Number') {
+    return AbstractEqualityComparison(X(ToNumber(x)), y);
+  }
+  if (Type(x) === 'Boolean') {
+    return AbstractEqualityComparison(X(ToNumber(x)), y);
+  }
+  if (Type(y) === 'Boolean') {
+    return AbstractEqualityComparison(x, X(ToNumber(y)));
+  }
+  if (['String', 'Number', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
+    return AbstractEqualityComparison(x, ToPrimitive(y));
+  }
+  if (Type(x) === 'Object' && ['String', 'Number', 'Symbol'].includes(Type(y))) {
+    return AbstractEqualityComparison(ToPrimitive(x), y);
+  }
+  return NewValue(false);
+}
+
+// #sec-strict-equality-comparison
+export function StrictEqualityComparision(x, y) {
+  if (Type(x) !== Type(y)) {
+    return NewValue(false);
+  }
+  if (Type(x) === 'Number') {
+    if (x.isNaN()) {
+      return NewValue(false);
+    }
+    if (y.isNaN()) {
+      return NewValue(false);
+    }
+    // If x is the same Number value as y, return true.
+    // If x is +0 and y is -0, return true.
+    // If x is -0 and y is +0, return true.
+    if (x.numberValue() === y.numberValue()) {
+      return NewValue(true);
+    }
+    return NewValue(false);
+  }
+  return SameValueNonNumber(x, y);
 }

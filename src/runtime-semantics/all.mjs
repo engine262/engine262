@@ -5,6 +5,7 @@ export * from './BindingInitialization.mjs';
 export * from './BlockStatement.mjs';
 export * from './CallExpression.mjs';
 export * from './EvaluateBody.mjs';
+export * from './EqualityExpression.mjs';
 export * from './ExponentiationExpression.mjs';
 export * from './FunctionDeclaration.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
