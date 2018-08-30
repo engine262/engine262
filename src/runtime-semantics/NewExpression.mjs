@@ -28,7 +28,7 @@ function EvaluateNew(constructExpr, args = []) {
   const ref = Q(Evaluate(constructExpr));
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
-  const argList = ArgumentListEvaluation(args);
+  let argList = ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (IsConstructor(constructor).isFalse()) {
     return surroundingAgent.Throw('TypeError');
