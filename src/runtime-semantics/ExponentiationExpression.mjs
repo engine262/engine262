@@ -3,6 +3,12 @@ import { Q } from '../completion.mjs';
 import { GetValue, ToNumber } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 
+export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
+  const base = Q(ToNumber(lval));
+  const exponent = Q(ToNumber(rval));
+  return NewValue(base.numberValue() ** exponent.numberValue());
+}
+
 // #sec-exp-operator-runtime-semantics-evaluation
 // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
 export function Evaluate_ExponentiationExpression({
@@ -13,7 +19,5 @@ export function Evaluate_ExponentiationExpression({
   const leftValue = Q(GetValue(left));
   const right = Evaluate_Expression(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
-  const base = Q(ToNumber(leftValue));
-  const exponent = Q(ToNumber(rightValue));
-  return NewValue(base.numberValue() ** exponent.numberValue());
+  return EvaluateBinopValues_ExponentiationExpression(leftValue, rightValue);
 }

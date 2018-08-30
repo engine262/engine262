@@ -27,6 +27,11 @@ import {
   isTryStatement,
 } from './ast.mjs';
 import {
+  EvaluateBinopValues_AdditiveExpression_Minus,
+  EvaluateBinopValues_AdditiveExpression_Plus,
+  EvaluateBinopValues_ExponentiationExpression,
+  EvaluateBinopValues_MultiplicativeExpression,
+  EvaluateBinopValues_ShiftExpression,
   Evaluate_AdditiveExpression,
   Evaluate_AssignmentExpression,
   Evaluate_BlockStatement,
@@ -120,6 +125,36 @@ function Evaluate_ExpressionStatement(ExpressionStatement) {
 //   Literal : StringLiteral
 function Evaluate_Literal(Literal) {
   return NewValue(Literal.value);
+}
+
+export function EvaluateBinopValues(operator, lval, rval) {
+  switch (operator) {
+    case '*':
+    case '/':
+    case '%':
+      return EvaluateBinopValues_MultiplicativeExpression(operator, lval, rval);
+
+    case '+':
+      return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
+
+    case '-':
+      return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
+
+    case '<<':
+    case '>>':
+    case '>>>':
+      return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
+
+    // case '&':
+    // case '^':
+    // case '|':
+
+    case '**':
+      return EvaluateBinopValues_ExponentiationExpression(lval, rval);
+
+    default:
+      throw new RangeError(`Invalid binary operation: ${operator}`);
+  }
 }
 
 // (implicit)

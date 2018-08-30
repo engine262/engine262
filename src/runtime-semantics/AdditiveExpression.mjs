@@ -15,13 +15,7 @@ import {
   New as NewValue,
 } from '../value.mjs';
 
-// #sec-addition-operator-plus-runtime-semantics-evaluation
-//  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
-function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, MultiplicativeExpression) {
-  const lref = Evaluate_Expression(AdditiveExpression);
-  const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(MultiplicativeExpression);
-  const rval = Q(GetValue(rref));
+export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   const lprim = Q(ToPrimitive(lval));
   const rprim = Q(ToPrimitive(rval));
   if (Type(lprim) === 'String' || Type(rprim) === 'String') {
@@ -34,27 +28,41 @@ function AdditiveExpression_MultiplicativeExpression(AdditiveExpression, Multipl
   return NewValue(lnum.numberValue() + rnum.numberValue());
 }
 
-// #sec-subtraction-operator-minus-runtime-semantics-evaluation
-function SubtractiveExpression_MultiplicativeExpression(
-  SubtractiveExpression, MultiplicativeExpression,
-) {
-  const lref = Evaluate_Expression(SubtractiveExpression);
+// #sec-addition-operator-plus-runtime-semantics-evaluation
+//  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
+function Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
+  const lref = Q(Evaluate_Expression(AdditiveExpression));
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(MultiplicativeExpression);
+  const rref = Q(Evaluate_Expression(MultiplicativeExpression));
   const rval = Q(GetValue(rref));
+  return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
+}
+
+export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
   const lnum = Q(ToNumber(lval));
   const rnum = Q(ToNumber(rval));
   return NewValue(lnum.numberValue() - rnum.numberValue());
 }
 
+// #sec-subtraction-operator-minus-runtime-semantics-evaluation
+function Evaluate_AdditiveExpression_Minus(
+  AdditiveExpression, MultiplicativeExpression,
+) {
+  const lref = Q(Evaluate_Expression(AdditiveExpression));
+  const lval = Q(GetValue(lref));
+  const rref = Q(Evaluate_Expression(MultiplicativeExpression));
+  const rval = Q(GetValue(rref));
+  return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
+}
+
 export function Evaluate_AdditiveExpression(AdditiveExpression) {
   switch (true) {
     case isAdditiveExpressionWithPlus(AdditiveExpression):
-      return AdditiveExpression_MultiplicativeExpression(
+      return Evaluate_AdditiveExpression_Plus(
         AdditiveExpression.left, AdditiveExpression.right,
       );
     case isAdditiveExpressionWithMinus(AdditiveExpression):
-      return SubtractiveExpression_MultiplicativeExpression(
+      return Evaluate_AdditiveExpression_Minus(
         AdditiveExpression.left, AdditiveExpression.right,
       );
 

@@ -8,17 +8,9 @@ import {
   New as NewValue,
 } from '../value.mjs';
 
-export function Evaluate_MultiplicativeExpression({
-  left: MultiplicativeExpression,
-  operator: MultiplicativeOperator,
-  right: ExponentiationExpression,
-}) {
-  const left = Evaluate_Expression(MultiplicativeExpression);
-  const leftValue = Q(GetValue(left));
-  const right = Evaluate_Expression(ExponentiationExpression);
-  const rightValue = Q(GetValue(right));
-  const lnum = Q(ToNumber(leftValue));
-  const rnum = Q(ToNumber(rightValue));
+export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
+  const lnum = Q(ToNumber(lval));
+  const rnum = Q(ToNumber(rval));
 
   // Return the result of applying the MultiplicativeOperator (*, /, or %)
   // to lnum and rnum as specified in 12.7.3.1, 12.7.3.2, or 12.7.3.3.
@@ -33,4 +25,18 @@ export function Evaluate_MultiplicativeExpression({
     default:
       throw new RangeError(`${MultiplicativeOperator}`);
   }
+}
+
+export function Evaluate_MultiplicativeExpression({
+  left: MultiplicativeExpression,
+  operator: MultiplicativeOperator,
+  right: ExponentiationExpression,
+}) {
+  const left = Evaluate_Expression(MultiplicativeExpression);
+  const leftValue = Q(GetValue(left));
+  const right = Evaluate_Expression(ExponentiationExpression);
+  const rightValue = Q(GetValue(right));
+  return EvaluateBinopValues_MultiplicativeExpression(
+    MultiplicativeOperator, leftValue, rightValue,
+  );
 }

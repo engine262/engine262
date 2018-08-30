@@ -5,21 +5,9 @@ import { New as NewValue } from '../value.mjs';
 
 /* eslint-disable no-bitwise */
 
-// ShiftExpression :
-//   ShiftExpression << AdditiveExpression
-//   ShiftExpression >> AdditiveExpression
-//   ShiftExpression >>> AdditiveExpression
-export function Evaluate_ShiftExpression({
-  left: ShiftExpression,
-  operator,
-  right: AdditiveExpression,
-}) {
+export function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
   switch (operator) {
     case '<<': {
-      const lref = Evaluate_Expression(ShiftExpression);
-      const lval = Q(GetValue(lref));
-      const rref = Evaluate_Expression(AdditiveExpression);
-      const rval = Q(GetValue(rref));
       const lnum = Q(ToInt32(lval));
       const rnum = Q(ToUint32(rval));
       const shiftCount = rnum.numberValue() & 0x1F;
@@ -27,10 +15,6 @@ export function Evaluate_ShiftExpression({
     }
 
     case '>>': {
-      const lref = Evaluate_Expression(ShiftExpression);
-      const lval = Q(GetValue(lref));
-      const rref = Evaluate_Expression(AdditiveExpression);
-      const rval = Q(GetValue(rref));
       const lnum = Q(ToInt32(lval));
       const rnum = Q(ToUint32(rval));
       const shiftCount = rnum.numberValue() & 0x1F;
@@ -38,10 +22,6 @@ export function Evaluate_ShiftExpression({
     }
 
     case '>>>': {
-      const lref = Evaluate_Expression(ShiftExpression);
-      const lval = Q(GetValue(lref));
-      const rref = Evaluate_Expression(AdditiveExpression);
-      const rval = Q(GetValue(rref));
       const lnum = Q(ToUint32(lval));
       const rnum = Q(ToUint32(rval));
       const shiftCount = rnum.numberValue() & 0x1F;
@@ -51,4 +31,20 @@ export function Evaluate_ShiftExpression({
     default:
       throw new RangeError(operator);
   }
+}
+
+// ShiftExpression :
+//   ShiftExpression << AdditiveExpression
+//   ShiftExpression >> AdditiveExpression
+//   ShiftExpression >>> AdditiveExpression
+export function Evaluate_ShiftExpression({
+  left: ShiftExpression,
+  operator,
+  right: AdditiveExpression,
+}) {
+  const lref = Q(Evaluate_Expression(ShiftExpression));
+  const lval = Q(GetValue(lref));
+  const rref = Q(Evaluate_Expression(AdditiveExpression));
+  const rval = Q(GetValue(rref));
+  return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
 }
