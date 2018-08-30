@@ -27,9 +27,9 @@ print(a);
 print(\`0
 \${a}\\n2\\x0a\${3}\`);
 
+const c = { ...({ b }) };
 
-print(a === 1);
-print(a == '1');
+print('c.b', c.b);
 `);
 
-console.log(completion);
+console.log(completion); // eslint-disable-line no-console

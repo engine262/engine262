@@ -26,6 +26,7 @@ import {
   isLexicalBinding,
   isLexicalDeclaration,
   isLiteral,
+  isObjectLiteral,
   isTemplateLiteral,
   isThis,
   isThrowStatement,
@@ -54,6 +55,7 @@ import {
   Evaluate_MemberExpression,
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
+  Evaluate_ObjectLiteral,
   Evaluate_ShiftExpression,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
@@ -182,8 +184,8 @@ export function Evaluate_Expression(Expression) {
       // case isArrayLiteral(Expression):
       //   return Evaluate_ArrayLiteral(Expression);
 
-      // case isObjectLiteral(Expression):
-      //   return Evaluate_ObjectLiteral(Expression);
+      case isObjectLiteral(Expression):
+        return Evaluate_ObjectLiteral(Expression);
 
       // case isFunctionExpression(Expression):
       //   return Evaluate_FunctionExpression(Expression);

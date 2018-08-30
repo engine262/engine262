@@ -337,7 +337,7 @@ export function CopyDataProperties(target, source, excludedItems) {
     return target;
   }
   const from = X(ToObject(source));
-  const keys = from.OwnPropertyKeys();
+  const keys = Q(from.OwnPropertyKeys());
   for (const nextKey of keys) {
     let excluded = false;
     for (const e of excludedItems) {

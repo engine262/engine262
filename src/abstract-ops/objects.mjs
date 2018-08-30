@@ -346,12 +346,12 @@ export function OrdinaryOwnPropertyKeys(O) {
   const strings = [];
   const symbols = [];
   for (const key of O.properties.keys()) {
-    if (typeof key === 'string') {
-      const int = Number.parseInt(key, 10);
+    if (Type(key) === 'String') {
+      const int = Number.parseInt(key.stringValue(), 10);
       if (int > 0 && int < (2 ** 53) - 1) {
-        integerIndexes.push(NewValue(key));
+        integerIndexes.push(key);
       } else {
-        strings.push(NewValue(key));
+        strings.push(key);
       }
     } else if (Type(key) === 'Symbol') {
       symbols.push(key);

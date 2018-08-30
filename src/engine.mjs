@@ -231,7 +231,7 @@ export function NonSpecRunScript(sourceText) {
       break;
     }
     const nextPending = nextQueue.shift();
-    const newContext = new ExecutionContext();
+    const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
     newContext.Function = null;
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;

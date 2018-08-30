@@ -4,6 +4,7 @@ import walk from 'acorn/dist/walk';
 export function ParseScript(sourceText, realm, hostDefined) {
   const body = acorn.parse(sourceText, {
     sourceType: 'script',
+    ecmaVersion: 2019,
   });
 
   walk.fullAncestor(body, (node, ancestors) => {

@@ -17,6 +17,7 @@ export * from './MakeConstructor.mjs';
 export * from './MemberExpression.mjs';
 export * from './MultiplicativeExpression.mjs';
 export * from './NewExpression.mjs';
+export * from './ObjectLiteral.mjs';
 export * from './RelationalOperators.mjs';
 export * from './ShiftExpression.mjs';
 export * from './TemplateLiteral.mjs';
