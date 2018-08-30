@@ -34,7 +34,7 @@ export function ToPrimitive(
       Assert(preferredType === 'Number');
       hint = NewValue('number');
     }
-    const exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
+    const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
     if (Type(exoticToPrim) !== 'Undefined') {
       const result = Q(Call(exoticToPrim, input, [hint]));
       if (Type(result) !== 'Object') {
@@ -47,7 +47,6 @@ export function ToPrimitive(
     }
     return Q(OrdinaryToPrimitive(input, hint));
   }
-
   Assert(input instanceof PrimitiveValue);
   return input;
 }
@@ -66,9 +65,9 @@ export function OrdinaryToPrimitive(
     methodNames = [NewValue('valueOf'), NewValue('toString')];
   }
   for (const name of methodNames) {
-    const method = Get(O, name);
-    if (IsCallable(method) === true) {
-      const result = Call(method, O);
+    const method = Q(Get(O, name));
+    if (IsCallable(method).isTrue()) {
+      const result = Q(Call(method, O));
       if (Type(result) !== 'Object') {
         return result;
       }
@@ -137,8 +136,8 @@ export function ToNumber(argument) {
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
-      const primValue = ToPrimitive(argument, 'Number');
-      return ToNumber(primValue);
+      const primValue = Q(ToPrimitive(argument, 'Number'));
+      return Q(ToNumber(primValue));
     }
     default:
       throw outOfRange('ToNumber', argument);
@@ -198,19 +197,16 @@ export function ToString(argument) {
     case 'Null':
       return NewValue('null');
     case 'Boolean':
-
       return NewValue(argument.isTrue() ? 'true' : 'false');
     case 'Number':
-
       return NumberToString(argument);
     case 'String':
-
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
-      const primValue = ToPrimitive(argument, 'String');
-      return ToString(primValue);
+      const primValue = Q(ToPrimitive(argument, 'String'));
+      return Q(ToString(primValue));
     }
     default:
       throw outOfRange('ToString', argument);

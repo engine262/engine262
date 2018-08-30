@@ -13,16 +13,18 @@ import {
   SameValue,
   ToObject,
   ToPropertyKey,
+  SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-function ObjectHasOwnProperty(realm, [V], { thisValue }) {
+function ObjectProto_hasOwnProperty(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   return HasOwnProperty(O, P);
 }
 
-function ObjectIsPrototypeOf(realm, [V], { thisValue }) {
+function ObjectProto_isPrototypeOf(realm, [V], { thisValue }) {
   if (Type(V) !== 'Object') {
     return NewValue(false);
   }
@@ -38,7 +40,7 @@ function ObjectIsPrototypeOf(realm, [V], { thisValue }) {
   }
 }
 
-function ObjectPropertyIsEnumerable(realm, [V], { thisValue }) {
+function ObjectProto_propertyIsEnumerable(realm, [V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
@@ -48,12 +50,12 @@ function ObjectPropertyIsEnumerable(realm, [V], { thisValue }) {
   return desc.Enumerable;
 }
 
-function ObjectToLocaleString(realm, argList, { thisValue }) {
+function ObjectProto_toLocaleString(realm, argList, { thisValue }) {
   const O = thisValue;
   return Q(Invoke(O, 'toString'));
 }
 
-function ObjectToString(realm, argList, { thisValue }) {
+function ObjectProto_toString(realm, argList, { thisValue }) {
   if (Type(thisValue) === 'Undefined') {
     return NewValue('[object Undefined]');
   }
@@ -63,7 +65,7 @@ function ObjectToString(realm, argList, { thisValue }) {
   const O = X(ToObject(thisValue));
   const isArray = Q(IsArray(O));
   let builtinTag;
-  if (isArray === true) {
+  if (isArray.isTrue()) {
     builtinTag = 'Array';
   } else if (Type(O) === 'String') {
     builtinTag = 'String';
@@ -91,7 +93,7 @@ function ObjectToString(realm, argList, { thisValue }) {
   return NewValue(`[object ${tag}]`);
 }
 
-function ObjectValueOf(realm, argList, { thisValue }) {
+function ObjectProto_valueOf(realm, argList, { thisValue }) {
   return Q(ToObject(thisValue));
 }
 
@@ -99,15 +101,18 @@ export function CreateObjectPrototype(realmRec) {
   const proto = new ObjectValue(realmRec);
 
   [
-    ['hasOwnProperty', ObjectHasOwnProperty],
-    ['isPrototypeOf', ObjectIsPrototypeOf],
-    ['propertyIsEnumerable', ObjectPropertyIsEnumerable],
-    ['toLocaleString', ObjectToLocaleString],
-    ['toString', ObjectToString],
-    ['valueOf', ObjectValueOf],
-  ].forEach(([name, fn]) => {
+    ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],
+    ['isPrototypeOf', ObjectProto_isPrototypeOf, 1],
+    ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1],
+    ['toLocaleString', ObjectProto_toLocaleString, 0],
+    ['toString', ObjectProto_toString, 0],
+    ['valueOf', ObjectProto_valueOf, 0],
+  ].forEach(([name, fn, length]) => {
+    fn = CreateBuiltinFunction(fn, [], realmRec);
+    SetFunctionName(fn, NewValue(name));
+    SetFunctionLength(fn, NewValue(length));
     proto.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(fn, [], realmRec),
+      Value: fn,
       Writable: true,
       Enumerable: false,
       Configurable: true,

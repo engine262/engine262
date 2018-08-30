@@ -39,7 +39,7 @@ export function Get(O, P) {
 export function GetV(V, P) {
   Assert(IsPropertyKey(P));
   const O = ToObject(V);
-  return Q(O.Get(V, P));
+  return Q(O.Get(P, V));
 }
 
 // #sec-set-o-p-v-throw Set

@@ -30,6 +30,8 @@ print(\`0
 const c = { ...({ b }) };
 
 print('c.b', c.b);
+
+print({ a: 1 });
 `);
 
 console.log(completion); // eslint-disable-line no-console

@@ -33,6 +33,9 @@ export function isIdentifier(node) {
 // #prod-IdentifierReference
 export const isIdentifierReference = isIdentifier;
 
+// #prod-IdentifierName
+export const isIdentifierName = isIdentifier;
+
 // #prod-BindingIdentifier
 export const isBindingIdentifier = isIdentifier;
 

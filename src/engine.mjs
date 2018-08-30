@@ -8,7 +8,7 @@ import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
-  Q,
+  Q, X,
 } from './completion.mjs';
 import {
   LexicalEnvironment,
@@ -27,6 +27,7 @@ import {
   IsPropertyKey,
   ToBoolean,
   CreateBuiltinFunction,
+  ToString,
 } from './abstract-ops/all.mjs';
 import {
   GlobalDeclarationInstantiation,
@@ -158,6 +159,9 @@ export function InitializeHostDefinedRealm() {
   // Create any implementation-defined global object properties on globalObj.
   globalObj.DefineOwnProperty(NewValue('print'), {
     Value: CreateBuiltinFunction((r, args) => {
+      for (let i = 0; i < args.length; i += 1) {
+        args[i] = Q(ToString(args[i])).stringValue();
+      }
       console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
       return NewValue(undefined);
     }, [], realm),
