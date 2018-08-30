@@ -24,7 +24,8 @@ try {
 b **= '3';
 
 print(a);
-print(\`0 \${a} 2 ${3}\`);
+print(\`0
+\${a}\\n2\\x0a\${3}\`);
 `);
 
 console.log(completion);
