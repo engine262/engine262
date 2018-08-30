@@ -23,6 +23,7 @@ import {
   BindingInitialization,
   Evaluate_Block,
 } from './all.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.
@@ -105,6 +106,6 @@ export function Evaluate_TryStatement(Expression) {
       return Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
     default:
-      throw new RangeError('EvaluateTryStatement');
+      throw outOfRange('Evaluate_TryStatement', Expression);
   }
 }

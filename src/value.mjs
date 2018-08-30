@@ -39,6 +39,7 @@ import {
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Q, X } from './completion.mjs';
+import { outOfRange } from './helpers.mjs';
 
 export class Value {}
 
@@ -100,65 +101,6 @@ export class SymbolValue extends PrimitiveValue {
   }
 }
 
-export class InternalPropertyMap extends Map {
-  get(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-    return super.get(name);
-  }
-
-  set(name, value) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.set(name, value);
-  }
-
-  has(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.has(name);
-  }
-
-  delete(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.delete(name);
-  }
-}
-
-export class InternalPropertyList extends Set {
-  add(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.has(name);
-  }
-
-  has(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.has(name);
-  }
-
-  delete(name) {
-    if (Type(name) === 'String') {
-      name = name.stringValue();
-    }
-
-    return super.has(name);
-  }
-}
-
 export const wellKnownSymbols = Object.create(null);
 for (const name of [
   'asyncIterator',
@@ -190,7 +132,7 @@ export class ObjectValue extends Value {
 
     this.Extensible = true;
     this.IsClassPrototype = false;
-    this.properties = new InternalPropertyMap();
+    this.properties = new Map();
 
     Object.defineProperty(this, 'realm', {
       value: realm,
@@ -938,6 +880,10 @@ const nullValue = new NullValue();
 const trueValue = new BooleanValue(true);
 const falseValue = new BooleanValue(false);
 
+// TODO(devsnek): clean this up somehow
+const stringMap = new Map();
+const numberMap = new Map();
+
 export function New(value, realm) {
   if (value === null) {
     return nullValue;
@@ -948,11 +894,21 @@ export function New(value, realm) {
   }
 
   if (typeof value === 'string') {
-    return new StringValue(value);
+    if (stringMap.has(value)) {
+      return stringMap.get(value);
+    }
+    const s = new StringValue(value);
+    stringMap.set(value, s);
+    return s;
   }
 
   if (typeof value === 'number') {
-    return new NumberValue(value);
+    if (numberMap.has(value)) {
+      return numberMap.get(value);
+    }
+    const s = new NumberValue(value);
+    numberMap.set(value, s);
+    return s;
   }
 
   if (typeof value === 'boolean') {
@@ -967,8 +923,7 @@ export function New(value, realm) {
     return new BuiltinFunctionValue(realm, value);
   }
 
-  console.error(value); // eslint-disable no-console
-  throw new RangeError('NewValue type out of range');
+  throw outOfRange('NewValue', value);
 }
 
 export function Type(val) {
@@ -1019,6 +974,5 @@ export function Type(val) {
     return 'Descriptor';
   }
 
-  console.error(val); // eslint-disable-line no-console
-  throw new RangeError('Type(val) invalid argument');
+  throw outOfRange('Type', val);
 }

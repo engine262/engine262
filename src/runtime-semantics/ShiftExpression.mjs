@@ -2,6 +2,7 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToInt32, ToUint32 } from '../abstract-ops/all.mjs';
 import { New as NewValue } from '../value.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 /* eslint-disable no-bitwise */
 
@@ -29,7 +30,7 @@ export function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
     }
 
     default:
-      throw new RangeError(operator);
+      throw outOfRange('EvaluateBinopValues_ShiftExpression', operator);
   }
 }
 

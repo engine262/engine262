@@ -30,7 +30,6 @@ import {
   ToUint32,
   OrdinaryDefineOwnProperty,
 } from '../abstract-ops/all.mjs';
-
 import {
   Type,
   ArrayValue,
@@ -38,6 +37,7 @@ import {
   New as NewValue,
   wellKnownSymbols,
 } from '../value.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 export function ArrayCreate(length, proto) {
   Assert(length.numberValue() >= 0);
@@ -118,7 +118,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
     return array;
   }
 
-  throw new RangeError('ArrayConstructor arguments out of range');
+  throw outOfRange('ArrayConstructor', numberOfArgs);
 }
 
 function ArrayFrom(realm, argList, { thisValue }) {

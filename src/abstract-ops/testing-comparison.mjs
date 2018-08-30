@@ -10,6 +10,7 @@ import {
   Assert,
   ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {
@@ -25,7 +26,7 @@ export function RequireObjectCoercible(argument) {
     case 'Object':
       return argument;
     default:
-      throw new RangeError('RequireObjectCoercible: unknown type');
+      throw outOfRange('RequireObjectCoercible', argument);
   }
 }
 

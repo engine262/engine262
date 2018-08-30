@@ -34,6 +34,7 @@ import {
   NormalCompletion,
   ReturnIfAbrupt,
 } from '../completion.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 function InitializeReferencedBinding(V, W) {
   ReturnIfAbrupt(V);
@@ -77,7 +78,7 @@ export function BindingInitialization(node, value, environment) {
       return BindingInitialization_ArrayBindingPattern(node, value, environment);
 
     default:
-      throw new RangeError();
+      throw outOfRange('BindingInitialization', node);
   }
 }
 
@@ -103,7 +104,7 @@ function BindingInitialization_ObjectBindingPattern(BindingPattern, value, envir
         BindingPattern.properties, value, environment,
       );
     default:
-      throw new RangeError();
+      throw outOfRange('BindingInitialization_ObjectBindingPattern', BindingPattern);
   }
 }
 
@@ -181,9 +182,9 @@ function RestBindingInitialization(BindingIdentifier, value, environment, exclud
 //   [ BindingElementList , ]
 //   [ BindingElementList , Elision ]
 //   [ BindingElementList , Elision BindingRestElement ]
-function IteratorBindingInitialization() {
+function IteratorBindingInitialization(node) {
   switch (true) {
     default:
-      throw new RangeError();
+      throw outOfRange('IteratorBindingInitialization', node);
   }
 }

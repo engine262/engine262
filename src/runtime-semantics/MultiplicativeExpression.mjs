@@ -7,6 +7,7 @@ import { Q } from '../completion.mjs';
 import {
   New as NewValue,
 } from '../value.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
   const lnum = Q(ToNumber(lval));
@@ -23,7 +24,7 @@ export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOpera
       return NewValue(lnum.numberValue() % rnum.numberValue());
 
     default:
-      throw new RangeError(`${MultiplicativeOperator}`);
+      throw outOfRange('EvaluateBinopValues_MultiplicativeExpression', MultiplicativeOperator);
   }
 }
 

@@ -53,12 +53,11 @@ import {
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
-  Value,
-  Reference,
 } from './value.mjs';
 import {
   GetValue,
 } from './abstract-ops/all.mjs';
+import { outOfRange } from './helpers.mjs';
 
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
@@ -101,16 +100,11 @@ function Evaluate_StatementListItem(StatementListItem) {
         return Evaluate_LexicalBinding(StatementListItem);
 
       default:
-        console.error(StatementListItem); // eslint-disable-line no-console
-        throw new RangeError('unknown StatementListItem type');
+        throw outOfRange('Evaluate_StatementListItem', StatementListItem);
     }
   } finally {
     surroundingAgent.nodeStack.pop();
   }
-}
-
-function Evaluate_Statement(...args) {
-  return Evaluate_StatementListItem(...args);
 }
 
 // #sec-expression-statement-runtime-semantics-evaluation
@@ -155,7 +149,7 @@ export function EvaluateBinopValues(operator, lval, rval) {
       return EvaluateBinopValues_ExponentiationExpression(lval, rval);
 
     default:
-      throw new RangeError(`Invalid binary operation: ${operator}`);
+      throw outOfRange('EvaluateBinopValues', operator)
   }
 }
 
@@ -273,8 +267,7 @@ export function Evaluate_Expression(Expression) {
       //   return Evaluate_ExpressionWithComma(Expression);
 
       default:
-        console.error(Expression); // eslint-disable-line no-console
-        throw new RangeError('Evaluate_Expression unknown expression type');
+        throw outOfRange('Evaluate_Expression', Expression);
     }
   } finally {
     surroundingAgent.nodeStack.pop();

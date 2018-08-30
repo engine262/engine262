@@ -3,8 +3,6 @@ import {
   Type,
   Reference,
   New as NewValue,
-  InternalPropertyMap,
-  InternalPropertyList,
 } from './value.mjs';
 import {
   surroundingAgent,
@@ -34,7 +32,7 @@ export class EnvironmentRecord {}
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   constructor() {
     super();
-    this.bindings = new InternalPropertyMap();
+    this.bindings = new Map();
   }
 
   HasBinding(N) {
@@ -410,7 +408,7 @@ export function NewGlobalEnvironment(G, thisValue) {
   globalRec.ObjectRecord = objRec;
   globalRec.GlobalThisValue = thisValue;
   globalRec.DeclarativeRecord = dclRec;
-  globalRec.VarNames = new InternalPropertyList();
+  globalRec.VarNames = new global.Set();
 
   env.EnvironmentRecord = globalRec;
 

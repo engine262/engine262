@@ -16,6 +16,7 @@ import {
   New as NewValue,
   Reference,
 } from '../value.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`
@@ -61,6 +62,6 @@ export function Evaluate_MemberExpression(MemberExpression) {
         MemberExpression.object, MemberExpression.property,
       );
     default:
-      throw new RangeError();
+      throw outOfRange('Evaluate_MemberExpression', MemberExpression);
   }
 }

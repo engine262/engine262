@@ -26,6 +26,7 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import { BindingInitialization } from './all.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :
@@ -70,7 +71,7 @@ export function Evaluate_LexicalBinding(LexicalBinding) {
       return Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
     default:
-      throw new RangeError(`LexicalBinding's LHS is not valid: ${LexicalBinding.id.type}`);
+      throw outOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
   }
 }
 

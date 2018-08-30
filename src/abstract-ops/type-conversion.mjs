@@ -17,6 +17,7 @@ import {
   SameValue,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // 7.1.1 ToPrimitive
 export function ToPrimitive(
@@ -112,7 +113,7 @@ export function ToBoolean(argument) {
     return NewValue(true);
   }
 
-  throw new RangeError('ToBoolean(argument) unknown type');
+  throw outOfRange('ToBoolean', argument);
 }
 
 // 7.1.3 ToNumber
@@ -140,7 +141,7 @@ export function ToNumber(argument) {
       return ToNumber(primValue);
     }
     default:
-      throw new RangeError(`ToNumber(argument) unknown type ${Type(argument)}`);
+      throw outOfRange('ToNumber', argument);
   }
 }
 
@@ -212,7 +213,7 @@ export function ToString(argument) {
       return ToString(primValue);
     }
     default:
-      throw new RangeError('ToString(argument) unknown type');
+      throw outOfRange('ToString', argument);
   }
 }
 
@@ -268,7 +269,7 @@ export function ToObject(argument) {
 
       return argument;
     default:
-      throw new RangeError('ToObject(argument) unknown type');
+      throw outOfRange('ToObject', argument);
   }
 }
 
