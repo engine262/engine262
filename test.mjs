@@ -32,6 +32,8 @@ const c = { ...({ b }) };
 print('c.b', c.b);
 
 print({ a: 1 });
+
+print(Object.prototype.toString.call(1));
 `);
 
 console.log(completion); // eslint-disable-line no-console

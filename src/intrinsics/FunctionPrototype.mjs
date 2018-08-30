@@ -109,7 +109,25 @@ function FunctionProto_bind(realm, [thisArg, ...args], { thisValue }) {
   return F;
 }
 
-function FunctionProto_toString() {
+function FunctionProto_call(realm, [thisArg, ...args], { thisValue: func }) {
+  if (IsCallable(func).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const argList = [];
+  for (const arg of args) {
+    argList.push(arg);
+  }
+  PrepareForTailCall();
+  return Q(Call(func, thisArg, argList));
+}
+
+function FunctionProto_toString(realm, args, { thisValue: func }) {
+  if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
+    return NewValue('function() { [native code] }');
+  }
+  if ('ECMAScriptCode' in func) {
+    return NewValue(`function() { /* WIP */ }`);
+  }
   return surroundingAgent.Throw('TypeError');
 }
 
@@ -119,12 +137,13 @@ function FunctionProto_hasInstance(realm, [V], { thisValue }) {
 }
 
 export function CreateFunctionPrototype(realmRec) {
-  const proto = CreateBuiltinFunction(() => NewValue(undefined), [], realmRec);
-  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  Assert(realmRec.Intrinsics['%FunctionPrototype%']);
+  const proto = realmRec.Intrinsics['%FunctionPrototype%'];
 
   [
     ['apply', FunctionProto_apply, 2],
     ['bind', FunctionProto_bind, 1],
+    ['call', FunctionProto_call, 1],
     ['toString', FunctionProto_toString, 0],
     [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1],
   ].forEach(([name, fn, length]) => {
@@ -141,6 +160,4 @@ export function CreateFunctionPrototype(realmRec) {
       Configurable: true,
     });
   });
-
-  realmRec.Intrinsics['%FunctionPrototype%'] = proto;
 }

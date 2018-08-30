@@ -4,6 +4,7 @@ import {
   New as NewValue,
 } from './value.mjs';
 import {
+  Assert,
   CreateBuiltinFunction,
   ObjectCreate,
   DefinePropertyOrThrow,
@@ -14,7 +15,7 @@ import {
 import {
   surroundingAgent,
 } from './engine.mjs';
-import { Q } from './completion.mjs';
+import { Q, X } from './completion.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
@@ -60,6 +61,23 @@ export function CreateRealm() {
   return realmRec;
 }
 
+function AddRestrictedFunctionProperties(F, realm) {
+  Assert(realm.Intrinsics['%ThrowTypeError%']);
+  const thrower = realm.Intrinsics['%ThrowTypeError'];
+  X(DefinePropertyOrThrow(F, NewValue('caller'), {
+    Get: thrower,
+    Set: thrower,
+    Enumerable: false,
+    Configurable: true,
+  }));
+  X(DefinePropertyOrThrow(F, NewValue('arguments'), {
+    Get: thrower,
+    Set: thrower,
+    Enumerable: false,
+    Configurable: true,
+  }));
+}
+
 // 8.2.2 CreateIntrinsics
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
@@ -77,6 +95,8 @@ export function CreateIntrinsics(realmRec) {
   intrinsics['%FunctionPrototype%'] = funcProto;
 
   thrower.SetPrototypeOf(funcProto);
+
+  AddRestrictedFunctionProperties(funcProto, realmRec);
 
   CreateErrorPrototype(realmRec);
   CreateError(realmRec);

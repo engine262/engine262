@@ -8,7 +8,7 @@ import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
-  Q, X,
+  Q,
 } from './completion.mjs';
 import {
   LexicalEnvironment,
@@ -332,20 +332,7 @@ export function IsConcatSpreadable(O) {
 }
 
 // 24.4.1.9 Suspend
-export function Suspend(WL, W) {
-  // Assert: The calling agent is in the critical section for WL.
-  Assert(W === AgentSignifier());
-  // LeaveCriticalSection(WL);
-  // suspend W for up to timeout milliseconds, performing the
-  // combined operation in such a way that a wakeup that arrives
-  // after the critical section is exited but before the suspension
-  // takes effect is not lost. W can wake up either because the
-  // timeout expired or because it was woken explicitly by another
-  // agent calling WakeWaiter(WL, W), and not for any other reasons at all.
-  // EnterCriticalSection(WL);
-  // If W was woken explicitly by another agent calling WakeWaiter(WL, W), return true.
-  return false;
-}
+export function Suspend() {}
 
 // #sec-getactivescriptormodule
 export function GetActiveScriptOrModule() {
