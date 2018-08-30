@@ -126,7 +126,7 @@ function FunctionProto_toString(realm, args, { thisValue: func }) {
     return NewValue('function() { [native code] }');
   }
   if ('ECMAScriptCode' in func) {
-    return NewValue(`function() { /* WIP */ }`);
+    return NewValue('function() { /* WIP */ }');
   }
   return surroundingAgent.Throw('TypeError');
 }

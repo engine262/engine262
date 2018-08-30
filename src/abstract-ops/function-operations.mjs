@@ -29,6 +29,7 @@ import {
 } from '../runtime-semantics/all.mjs';
 import {
   GlobalEnvironmentRecord,
+  FunctionEnvironmentRecord,
 } from '../environment.mjs';
 
 // #sec-SetFunctionName
@@ -75,6 +76,11 @@ export function PrepareForTailCall() {
   surroundingAgent.executionContextStack.pop();
   // Assert: leafContext has no further use. It will never
   // be activated as the running execution context.
+}
+
+// #sec-prepareforordinarycall
+function PrepareForOrdinaryCall() {
+  // TODO(devsnek)
 }
 
 function OrdinaryCallBindThis(F, calleeContext, thisArgument) {

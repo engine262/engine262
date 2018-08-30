@@ -178,6 +178,47 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
+export class FunctionEnvironmentRecord extends EnvironmentRecord {
+  BindThisValue(V) {
+    const envRec = this;
+    Assert(envRec.ThisBindingStatus !== 'lexical');
+    if (envRec.ThisBindingStatus === 'initialized') {
+      return surroundingAgent.Throw('ReferenceError');
+    }
+    envRec.ThisValue = V;
+    envRec.ThisBindingStatus = 'initialized';
+    return V;
+  }
+
+  HasThisBinding() {
+    const envRec = this;
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return NewValue(false);
+    } else {
+      return NewValue(true);
+    }
+  }
+
+  GetThisBinding() {
+    const envRec = this;
+    Assert(envRec.ThisBindingStatus !== 'lexical');
+    if (envRec.ThisBindingStatus === 'uninitialized') {
+      return surroundingAgent.Throw('ReferenceError');
+    }
+    return envRec.ThisValue;
+  }
+
+  GetSuperBase() {
+    const envRec = this;
+    const home = envRec.HomeObject;
+    if (Type(home) === 'Undefined') {
+      return NewValue(undefined);
+    }
+    Assert(Type(home) === 'Object');
+    return Q(home.GetPrototypeOf());
+  }
+}
+
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
   constructor() {
     super();

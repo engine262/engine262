@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     // TODO: turn back on after we fix out ReturnIfAbrupt transform
     'prefer-const': 'off',
+    'prefer-destructuring': 'off',
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
     'arrow-parens': ['error', 'always'],
     'lines-between-class-members': 'off',
