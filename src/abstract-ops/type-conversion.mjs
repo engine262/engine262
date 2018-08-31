@@ -167,7 +167,7 @@ export function ToInt32(argument) {
   if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
     return NewValue(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1;
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
   if (int32bit > (2 ** 31)) {
     return int32bit - (2 ** 32);
@@ -183,7 +183,7 @@ export function ToUint32(argument) {
       || number.numberValue() === -Infinity) {
     return NewValue(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * number.numberValue() > 0 ? 1 : -1;
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
   return NewValue(int32bit);
 }

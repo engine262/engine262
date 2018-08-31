@@ -4,6 +4,7 @@ import {
   GetPrototypeFromConstructor,
   SetFunctionName,
   SetFunctionLength,
+  StringCreate,
 } from '../abstract-ops/all.mjs';
 import {
   Type,

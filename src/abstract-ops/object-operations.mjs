@@ -41,12 +41,7 @@ export function GetV(V, P) {
 }
 
 // #sec-set-o-p-v-throw Set
-export function Set(
-  O,
-  P,
-  V,
-  Throw,
-) {
+export function Set(O, P, V, Throw) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   Assert(Type(Throw) === 'Boolean');
@@ -72,9 +67,7 @@ export function CreateDataProperty(O, P, V) {
 }
 
 // 7.3.6 CreateDataPropertyOrThrow
-export function CreateDataPropertyOrThrow(
-  O, P, V,
-) {
+export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
@@ -85,11 +78,7 @@ export function CreateDataPropertyOrThrow(
 }
 
 // #sec-definepropertyorthrow DefinePropertyOrThrow
-export function DefinePropertyOrThrow(
-  O,
-  P,
-  desc,
-) {
+export function DefinePropertyOrThrow(O, P, desc) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
@@ -100,10 +89,7 @@ export function DefinePropertyOrThrow(
 }
 
 // #sec-deletepropertyorthrow
-export function DeletePropertyOrThrow(
-  O,
-  P,
-) {
+export function DeletePropertyOrThrow(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
@@ -151,7 +137,7 @@ export function Call(F, V, argumentsList) {
   }
 
   if (IsCallable(F).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
 
   return Q(F.Call(V, argumentsList));

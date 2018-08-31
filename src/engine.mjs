@@ -8,7 +8,7 @@ import {
   AbruptCompletion,
   ThrowCompletion,
   NormalCompletion,
-  Q,
+  Q, X,
 } from './completion.mjs';
 import {
   LexicalEnvironment,
@@ -96,9 +96,9 @@ export class Agent {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
-  Throw(type, args) {
+  Throw(type, message) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    const error = Construct(cons, args);
+    const error = Construct(cons, message ? [NewValue(message)] : []);
     return new ThrowCompletion(error);
   }
 }
@@ -160,7 +160,37 @@ export function InitializeHostDefinedRealm() {
   globalObj.DefineOwnProperty(NewValue('print'), {
     Value: CreateBuiltinFunction((r, args) => {
       for (let i = 0; i < args.length; i += 1) {
-        args[i] = Q(ToString(args[i])).stringValue();
+        const arg = args[i];
+        const type = Type(arg);
+        if (type === 'Undefined') {
+          args[i] = 'undefined';
+        } else if (type === 'Null') {
+          args[i] = 'null';
+        } else if (type === 'String' || type === 'Number' || type === 'Boolean') {
+          args[i] = X(ToString(arg)).stringValue();
+        } else if (type === 'Symbol') {
+          args[i] = `Symbol(${arg.Description.stringValue()})`;
+        } else if (type === 'Object') {
+          const funcToString = X(Get(r.Intrinsics['%FunctionPrototype%'], NewValue('toString')));
+          const errorToString = X(Get(r.Intrinsics['%ErrorPrototype%'], NewValue('toString')));
+          const objectToString = r.Intrinsics['%ObjProto_toString%'];
+          const toString = X(Get(arg, NewValue('toString')));
+          if (toString === errorToString
+              || toString === objectToString
+              || toString === funcToString) {
+            args[i] = X(toString.Call(arg, [])).stringValue();
+          } else {
+            const ctor = X(Get(arg, NewValue('constructor')));
+            const ctorName = X(Get(ctor, NewValue('name'))).stringValue();
+            if (ctorName !== '') {
+              args[i] = `#<${ctorName.stringValue()}>`;
+            } else {
+              args[i] = '[objectUnknown]';
+            }
+          }
+        } else {
+          throw new RangeError();
+        }
       }
       console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
       return NewValue(undefined);

@@ -17,7 +17,7 @@ import { Q } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
-  if (Desc === undefined) {
+  if (Type(Desc) === 'Undefined') {
     return false;
   }
 
@@ -30,7 +30,7 @@ export function IsAccessorDescriptor(Desc) {
 
 // 6.2.5.2 IsDataDescriptor
 export function IsDataDescriptor(Desc) {
-  if (Desc === undefined) {
+  if (Type(Desc) === 'Undefined') {
     return false;
   }
 
@@ -43,7 +43,7 @@ export function IsDataDescriptor(Desc) {
 
 // 6.2.5.3 IsGenericDescriptor
 export function IsGenericDescriptor(Desc) {
-  if (Desc === undefined) {
+  if (Type(Desc) === 'Undefined') {
     return false;
   }
 

@@ -12,16 +12,15 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-const a = [1, { a: 1 }, 2];
+const a = [1, 2, { a: 1 }];
 
-print(a[0]);
-print(a[1]);
-print(a.length);
+try {
+  a.length = 3;
 
-// const b = [2, ...a];
-// print(b[1]);
-
-({ a: 1 });
+  print(a[0], a[1], a[2], a.length);
+} catch (e) {
+  print(e);
+}
 `);
 
 console.log(completion); // eslint-disable-line no-console

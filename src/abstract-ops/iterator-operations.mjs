@@ -5,6 +5,8 @@ import {
   GetV,
   Call,
   ToBoolean,
+  ObjectCreate,
+  CreateDataProperty,
 } from './all.mjs';
 import {
   surroundingAgent,
@@ -18,7 +20,6 @@ import {
   Completion,
   Q,
 } from '../completion.mjs';
-
 
 // #sec-getiterator
 export function GetIterator(obj, hint, method) {
@@ -109,4 +110,13 @@ export function IteratorClose(
     return surroundingAgent.Throw('TypeError');
   }
   return completion;
+}
+
+// #sec-createiterresultobject
+export function CreateIterResultObject(value, done) {
+  Assert(Type(done) === 'Boolean');
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  CreateDataProperty(obj, NewValue('value'), value);
+  CreateDataProperty(obj, NewValue('done'), done);
+  return obj;
 }

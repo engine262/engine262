@@ -11,7 +11,7 @@ import {
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  StringExoticValue,
+  StringExoticObject,
   Type,
   New as NewValue,
 } from '../value.mjs';
@@ -58,7 +58,7 @@ function StringProto_valueOf(realm, args, { thisValue }) {
 }
 
 export function CreateStringPrototype(realmRec) {
-  const proto = new StringExoticValue(realmRec);
+  const proto = new StringExoticObject(realmRec);
   proto.StringData = NewValue('');
 
   [

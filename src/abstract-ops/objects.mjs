@@ -19,14 +19,11 @@ import {
   IsExtensible,
   IsPropertyKey,
   SameValue,
-  ToNumber,
-  ToString,
-  ToUint32,
 } from './all.mjs';
 import {
   InstanceofOperator,
 } from '../runtime-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O) {
@@ -285,12 +282,12 @@ export function OrdinarySetWithOwnDescriptor(
     if (Type(parent) !== 'Null') {
       return Q(parent.Set(P, V, Receiver));
     }
-    ownDesc = ({
+    ownDesc = {
       Value: NewValue(undefined),
       Writable: true,
       Enumerable: true,
       Configurable: true,
-    });
+    };
   }
 
   if (IsDataDescriptor(ownDesc)) {
@@ -452,60 +449,6 @@ export function CreateBuiltinFunction(
   func.ScriptOrModule = null;
 
   return func;
-}
-
-// 9.4.2.4 ArraySetLength
-export function ArraySetLength(A, Desc) {
-  const lengthStr = NewValue('length');
-  if ('Value' in Desc === false) {
-    return OrdinaryDefineOwnProperty(A, lengthStr, Desc);
-  }
-  const newLenDesc = { ...Desc };
-  const newLen = Q(ToUint32(Desc.Value));
-  const numberLen = Q(ToNumber(Desc.Value));
-  if (newLen.numberValue() !== numberLen.numberValue()) {
-    return surroundingAgent.Throw('RangeError');
-  }
-  newLenDesc.Value = newLen;
-  const oldLenDesc = ((OrdinaryGetOwnProperty(A, lengthStr)));
-  Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
-  let oldLen = oldLenDesc.Value;
-
-  if (newLen.numberValue() > oldLen.numberValue()) {
-    return OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc);
-  }
-  if (oldLenDesc.Writable === false) {
-    return NewValue(false);
-  }
-  let newWritable;
-  if (!('Writable' in newLenDesc) || newLenDesc.Writable === true) {
-    newWritable = true;
-  } else {
-    newWritable = false;
-    newLenDesc.Writable = true;
-  }
-  const succeeded = X(OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc));
-  if (succeeded.isFalse()) {
-    return NewValue(false);
-  }
-  while (newLen.numberValue() < oldLen.numberValue()) {
-    oldLen = NewValue(oldLen.numberValue() - 1);
-    const deleteSucceeded = X(A.Delete(X(ToString(oldLen))));
-    if (deleteSucceeded === false) {
-      newLenDesc.Value = NewValue(oldLen.numberValue() + 1);
-      if (newWritable === false) {
-        newLenDesc.Writable = false;
-      }
-      X(OrdinaryDefineOwnProperty(A, lengthStr, newLenDesc));
-      return NewValue(false);
-    }
-  }
-  if (newWritable === false) {
-    return OrdinaryDefineOwnProperty(A, lengthStr, {
-      Writable: false,
-    });
-  }
-  return NewValue(true);
 }
 
 // #sec-OrdinaryHasInstance

@@ -28,7 +28,7 @@ function ErrorProto_toString(realm, args, { thisValue }) {
   if (Type(msg) === 'Undefined') {
     msg = NewValue('');
   } else {
-    msg = Q(ToString(name));
+    msg = Q(ToString(msg));
   }
   if (name.stringValue() === '') {
     return msg;

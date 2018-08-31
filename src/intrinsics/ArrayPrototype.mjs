@@ -193,6 +193,11 @@ function ArrayProto_every(realm, [callbackFn, thisArg], { thisValue }) {
   return NewValue(true);
 }
 
+function ArrayProto_values(realm, args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  return CreateArrayIterator(O, 'value');
+}
+
 export function CreateArrayPrototype(realmRec) {
   const proto = new ArrayValue(realmRec);
 
@@ -201,6 +206,7 @@ export function CreateArrayPrototype(realmRec) {
     ['copyWithin', ArrayProto_copyWithin, 2],
     ['entries', ArrayProto_entries, 0],
     ['every', ArrayProto_every, 1],
+    ['values', ArrayProto_values, 0],
   ].forEach(([name, nativeFunction, length]) => {
     const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
     SetFunctionName(fn, NewValue(name));
@@ -213,12 +219,7 @@ export function CreateArrayPrototype(realmRec) {
     });
   });
 
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, {
-    Value: proto.GetOwnProperty(NewValue('values')),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(NewValue('values')));
 
   realmRec.Intrinsics['%ArrayPrototype%'] = proto;
 

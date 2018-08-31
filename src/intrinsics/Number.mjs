@@ -74,7 +74,7 @@ export function CreateNumber(realmRec) {
     Enumerable: false,
   });
   proto.DefineOwnProperty(NewValue('constructor'), {
-    value: numberConstructor,
+    Value: numberConstructor,
     Writable: false,
     Configurable: false,
     Enumerable: false,

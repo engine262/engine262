@@ -93,9 +93,7 @@ function PropertyDefinitionEvaluation_PropertyDefinitionList(
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : `...` AssignmentExpression
-function PropertyDefinitionEvaluation_PropertyDefinition_Spread(
-  PropertyDefinition, object, enumerable,
-) {
+function PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
   const AssignmentExpression = PropertyDefinition.argument;
 
   const exprValue = Evaluate_Expression(AssignmentExpression);
@@ -150,9 +148,9 @@ function PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, obj
         PropertyDefinition, object, enumerable,
       );
 
-    // case isPropertyDefinitionMethodDefinition(PropertyDefinition):
-    //   return PropertyDefinitionEvaluation_MethodDefinition(
-    //     PropertyDefinition., object, enumerable);
+      // case isPropertyDefinitionMethodDefinition(PropertyDefinition):
+      //   return PropertyDefinitionEvaluation_MethodDefinition(
+      //     PropertyDefinition., object, enumerable);
 
     case isPropertyDefinitionSpread(PropertyDefinition):
       return PropertyDefinitionEvaluation_PropertyDefinition_Spread(

@@ -30,12 +30,11 @@ import {
   ToUint32,
   IsCompatiblePropertyDescriptor,
   ToString,
-  IsInteger,
-  CanonicalNumericIndexString,
   ToPropertyDescriptor,
   CompletePropertyDescriptor,
   FromPropertyDescriptor,
   IsDataDescriptor,
+  StringGetOwnProperty,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Q, X } from './completion.mjs';
@@ -191,18 +190,18 @@ export class ArrayValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     if (Type(P) === 'String' && P.stringValue() === 'length') {
-      return ArraySetLength(A, Desc);
+      return Q(ArraySetLength(A, Desc));
     }
     if (isArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, New('length'));
       Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
-      const index = ToUint32(P);
+      const index = X(ToUint32(P));
       if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
         return New(false);
       }
-      const succeeded = OrdinaryDefineOwnProperty(A, P, Desc);
-      if (succeeded === false) {
+      const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
+      if (succeeded.isFalse()) {
         return New(false);
       }
       if (index.numberValue() >= oldLen.numberValue()) {
@@ -258,6 +257,8 @@ export class BuiltinFunctionValue extends FunctionValue {
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = nativeCall(this, calleeRealm, argumentsList, thisArgument, undefined);
+    // Remove calleeContext from the execution context stack and
+    // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop();
     return result;
   }
@@ -653,37 +654,7 @@ export class ProxyValue extends ObjectValue {
   OwnPropertyKeys() {}
 }
 
-function StringGetOwnProperty(S, P) {
-  Assert(Type(S) === 'Object' && 'StringData' in S);
-  Assert(IsPropertyKey(P));
-  if (Type(P) !== 'String') {
-    return undefinedValue;
-  }
-  const index = X(CanonicalNumericIndexString(P));
-  if (Type(index) === 'Undefined') {
-    return undefinedValue;
-  }
-  if (IsInteger(index).isFalse()) {
-    return undefinedValue;
-  }
-  if (Object.is(index.numberValue(), -0)) {
-    return undefinedValue;
-  }
-  const str = S.StringData;
-  const len = str.stringValue().length;
-  if (index.numberValue() < 0 || len <= index.numberValue()) {
-    return undefinedValue;
-  }
-  const resultStr = str.stringValue()[index.numberValue()];
-  return {
-    Value: New(resultStr),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  };
-}
-
-export class StringExoticValue extends ObjectValue {
+export class StringExoticObject extends ObjectValue {
   GetOwnProperty(P) {
     const S = this;
     Assert(IsPropertyKey(P));
@@ -713,7 +684,18 @@ export class StringExoticValue extends ObjectValue {
     for (let i = 0; i < len; i += 1) {
       keys.push(X(ToString(New(i))));
     }
-    // more
+    for (const key of O.properties.keys()) {
+      if (Type(key) === 'String') {
+        const int = Number.parseInt(key.stringValue(), 10);
+        if (int > 0 && int < (2 ** 53) - 1) {
+          // nothing
+        } else {
+          keys.push(key);
+        }
+      } else if (Type(key) === 'Symbol') {
+        keys.push(key);
+      }
+    }
   }
 }
 
@@ -973,6 +955,10 @@ export function Type(val) {
       && 'Configurable' in val
       && 'Enumerable' in val
       && ('Value' in val || 'Get' in val || 'Set' in val)) {
+    return 'Descriptor';
+  }
+
+  if (Object.keys(val).length === 1 && 'Value' in val) {
     return 'Descriptor';
   }
 

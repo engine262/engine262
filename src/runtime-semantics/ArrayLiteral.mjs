@@ -14,63 +14,61 @@ import {
   isExpression,
   isSpreadElement,
 } from '../ast.mjs';
-import { New as NewValue } from '../value.mjs';
-import {
-  Q,
-  X,
-  ReturnIfAbrupt,
-} from '../completion.mjs';
+import { New as NewValue, Type } from '../value.mjs';
+import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 
+function ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
+  const spreadRef = Evaluate_Expression(SpreadElement.argument);
+  const spreadObj = Q(GetValue(spreadRef));
+  const iteratorRecord = Q(GetIterator(spreadObj));
+  while (true) {
+    const next = Q(IteratorStep(iteratorRecord));
+    if (Type(next) === 'Boolean' && next.isFalse()) {
+      return nextIndex;
+    }
+    const nextValue = Q(IteratorValue(next));
+    const status = CreateDataProperty(
+      array, ToString(ToUint32(NewValue(nextIndex))), nextValue,
+    );
+    Assert(status.isTrue());
+    nextIndex += 1;
+  }
+}
+
+function ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
+  const initResult = Evaluate_Expression(AssignmentExpression);
+  const initValue = Q(GetValue(initResult));
+  const created = CreateDataProperty(
+    array, ToString(ToUint32(NewValue(nextIndex))), initValue,
+  );
+  Assert(created.isTrue());
+  return nextIndex + 1;
+}
+
 function ArrayAccumulation(ElementList, array, nextIndex) {
-  if (!ElementList || ElementList.length === 0) {
-    return nextIndex;
-  }
-  const arg = ElementList.pop();
+  let postIndex = nextIndex;
+  for (const element of ElementList) {
+    switch (true) {
+      case !element:
+        // Elision
+        postIndex += 1;
+        break;
 
-  switch (true) {
-    // (implicit) Elision
-    case !arg:
-      return nextIndex + 1;
-    // Elision AssignmentExpression
-    case isExpression(arg): {
-      const AssignmentExpression = arg;
+      case isExpression(element):
+        postIndex = ArrayAccumulation_AssignmentExpression(element, array, postIndex);
+        break;
 
-      let postIndex = ArrayAccumulation(ElementList, array, nextIndex);
-      ReturnIfAbrupt(postIndex);
-      const padding = 0;
-      const initResult = Evaluate_Expression(AssignmentExpression);
-      const initValue = Q(GetValue(initResult));
-      const created = CreateDataProperty(
-        array, ToString(ToUint32(NewValue(postIndex + padding))), initValue,
-      );
-      Assert(created.isTrue());
-      return postIndex + padding + 1;
+      case isSpreadElement(element):
+        postIndex = ArrayAccumulation_SpreadElement(element, array, postIndex);
+        break;
+
+      default:
+        throw outOfRange('ArrayAccumulation', element);
     }
-    case isSpreadElement(arg): {
-      const AssignmentExpression = arg.argument;
-
-      const spreadRef = Evaluate_Expression(AssignmentExpression);
-      const spreadObj = Q(GetValue(spreadRef));
-      const iteratorRecord = Q(GetIterator(spreadObj));
-      while (true) { // eslint-disable-line no-constant-condition
-        const next = Q(IteratorStep(iteratorRecord));
-        if (next.isFalse()) {
-          return nextIndex;
-        }
-        const nextValue = Q(IteratorValue(next));
-        const status = CreateDataProperty(
-          array, ToString(ToUint32(NewValue(nextIndex))), nextValue,
-        );
-        Assert(status.isTrue());
-        nextIndex += 1;
-      }
-    }
-
-    default:
-      throw outOfRange('ArrayAccumulation', arg);
   }
+  return postIndex;
 }
 
 // #sec-array-initializer-runtime-semantics-evaluation

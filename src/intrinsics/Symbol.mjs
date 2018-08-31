@@ -17,7 +17,7 @@ import { Q } from '../completion.mjs';
 export const GlobalSymbolRegistry = [];
 
 function SymbolConstructor(realm, [description], { NewTarget }) {
-  if (NewTarget !== undefined) {
+  if (Type(NewTarget) !== 'Undefined') {
     return surroundingAgent.Throw('TypeError');
   }
   const descString = Type(description) === 'Undefined'
