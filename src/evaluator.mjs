@@ -2,6 +2,7 @@ import {
   NormalCompletion,
   UpdateEmpty,
   ReturnIfAbrupt,
+  EnsureCompletion,
 } from './completion.mjs';
 import {
   surroundingAgent,
@@ -82,12 +83,21 @@ export function Evaluate_StatementList(StatementList) {
     return new NormalCompletion(undefined);
   }
 
-  const StatementListItem = StatementList.shift();
+  let sl = Evaluate_StatementListItem(StatementList[0]);
+  if (StatementList.length === 1) {
+    return sl;
+  }
 
-  let sl = Evaluate_StatementListItem(StatementListItem);
-  ReturnIfAbrupt(sl);
-  const s = Evaluate_StatementList(StatementList);
-  return UpdateEmpty(s, sl);
+  for (const StatementListItem of StatementList.slice(1)) {
+    ReturnIfAbrupt(sl);
+    let s = Evaluate_StatementListItem(StatementListItem);
+    // We don't always return a Completion value, but here we actually need it
+    // to be a Completion.
+    s = EnsureCompletion(s);
+    sl = UpdateEmpty(s, sl);
+  }
+
+  return sl;
 }
 
 // (implicit)

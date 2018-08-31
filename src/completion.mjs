@@ -79,3 +79,10 @@ export function X(val) {
   }
   return val;
 }
+
+export function EnsureCompletion(val) {
+  if (val instanceof Completion) {
+    return val;
+  }
+  return new NormalCompletion(val);
+}
