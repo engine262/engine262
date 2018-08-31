@@ -71,6 +71,30 @@ export function isObjectLiteral(node) {
   return node.type === 'ObjectExpression';
 }
 
+// Used in #prod-PropertyDefinition
+export function isPropertyDefinitionIdentifierReference(node) {
+  return node.type === 'Property' && node.shorthand && !node.method && !node.computed;
+}
+
+// Used in #prod-PropertyDefinition
+export function isPropertyDefinitionKeyValue(node) {
+  return node.type === 'Property' && !node.shorthand && !node.method;
+}
+
+// Used in #prod-PropertyDefinition
+// Note: ESTree makes a distinction between MethodDefinition in a
+// PropertyDefinition and that in a ClassElement. However, the sort of
+// MethodDefinition in a PropertyDefinition is largely compatible with the
+// latter.
+export function isPropertyDefinitionMethodDefinition(node) {
+  return node.type === 'Property' && !node.shorthand && node.method;
+}
+
+// Used in #prod-PropertyDefinition
+export function isPropertyDefinitionSpread(node) {
+  return node.type === 'SpreadElement';
+}
+
 // #prod-FunctionExpression
 export function isFunctionExpression(node) {
   return node.type === 'FunctionExpression'

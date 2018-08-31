@@ -1,23 +1,13 @@
 import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
-  Assert,
-  ObjectCreate,
-  GetValue,
-  CopyDataProperties,
-  CreateDataPropertyOrThrow,
-  HasOwnProperty,
-  SetFunctionName,
-  ToString,
-} from '../abstract-ops/all.mjs';
-import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
-  isStringLiteral,
-  isNumericLiteral,
   isIdentifierName,
+  isNumericLiteral,
+  isPropertyDefinitionIdentifierReference,
+  isPropertyDefinitionKeyValue,
+  isPropertyDefinitionSpread,
+  isStringLiteral,
 } from '../ast.mjs';
 import { New as NewValue } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
@@ -28,87 +18,139 @@ import {
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
-function Evaluate_LiteralPropertyName(PropertyName) {
+// #sec-object-initializer-runtime-semantics-evaluation
+//   LiteralPropertyName :
+//     IdentifierName
+//     StringLiteral
+//     NumericLiteral
+function Evaluate_LiteralPropertyName(LiteralPropertyName) {
   switch (true) {
-    case isStringLiteral(PropertyName):
-      return NewValue(PropertyName.value);
-    case isNumericLiteral(PropertyName): {
-      const nbr = NewValue(PropertyName.value);
+    case isIdentifierName(LiteralPropertyName):
+      return NewValue(LiteralPropertyName.name);
+    case isStringLiteral(LiteralPropertyName):
+      return NewValue(LiteralPropertyName.value);
+    case isNumericLiteral(LiteralPropertyName): {
+      const nbr = NewValue(LiteralPropertyName.value);
       return X(ToString(nbr));
     }
-    case isIdentifierName(PropertyName):
-      return NewValue(PropertyName.name);
 
     default:
-      throw outOfRange('Evaluate_LiteralPropertyName', PropertyName);
+      throw outOfRange('Evaluate_LiteralPropertyName', LiteralPropertyName);
   }
 }
 
-function PropertyDefinitionEvaluation(arg, object, enumerable) {
-  if (Array.isArray(arg)) {
-    if (arg.length === 0) {
-      return new NormalCompletion(undefined);
+// #sec-object-initializer-runtime-semantics-evaluation
+//   ComputedPropertyName : `[` AssignmentExpression `]`
+function Evaluate_ComputedPropertyName(ComputedPropertyName) {
+  const AssignmentExpression = ComputedPropertyName;
+  const exprValue = Evaluate_Expression(AssignmentExpression);
+  const propName = Q(GetValue(exprValue));
+  return Q(ToPropertyKey(propName));
+}
+
+// #sec-object-initializer-runtime-semantics-evaluation
+//   PropertyName :
+//     LiteralPropertyName
+//     ComputedPropertyName
+//
+// Note: We need some out-of-band information on whether the PropertyName is
+// computed.
+function Evaluate_PropertyName(PropertyName, computed) {
+  return computed
+    ? Evaluate_ComputedPropertyName(PropertyName)
+    : Evaluate_LiteralPropertyName(PropertyName);
+}
+
+// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+//   PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition
+//
+// (implicit)
+//   PropertyDefinitionList : PropertyDefinition
+function PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
+  Assert(PropertyDefinitionList.length > 0);
+
+  let lastReturn;
+  for (const PropertyDefinition of PropertyDefinitionList) {
+    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefintion, object, enumerable));
+  }
+  return lastReturn;
+}
+
+// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+//   PropertyDefinition : `...` AssignmentExpression
+function PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object, enumerable) {
+  const AssignmentExpression = PropertyDefinition.argument;
+
+  const exprValue = Evaluate_Expression(AssignmentExpression);
+  const fromValue = Q(GetValue(exprValue));
+  const excludedNames = [];
+  return Q(CopyDataProperties(object, fromValue, excludedNames));
+}
+
+// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+//   PropertyDefinition : IdentifierReference
+function PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
+  PropertyDefinition, object, enumerable,
+) {
+  const IdentifierReference = PropertyDefinition.key;
+  const propName = NewValue(IdentifierReference.name);
+  const exprValue = Evaluate_Expression(IdentifierReference);
+  const propValue = Q(GetValue(exprValue));
+  Assert(enumerable);
+  return CreateDataPropertyOrThrow(object, propName, propValue);
+}
+
+// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+//   PropertyDefinition : PropertyName `:` AssignmentExpression
+function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable) {
+  const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
+  let propKey = Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
+  ReturnIfAbrupt(propKey);
+  const exprValueRef = Evaluate_Expression(AssignmentExpression);
+  const propValue = Q(GetValue(exprValueRef));
+  if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
+    const hasNameProperty = Q(HasOwnProperty(propValue, NewValue('name')));
+    if (hasNameProperty.isFalse()) {
+      X(SetFunctionName(propValue, propKey));
     }
+  }
+  Assert(enumerable);
+  return CreateDataPropertyOrThrow(object, propKey, propValue);
+}
 
-    // PropertyDefinitionList : PropertyDefinitionList , PropertyDefinition
-    const PropertyDefintionList = arg;
-    const PropertyDefinition = PropertyDefintionList.pop();
+// Note: PropertyDefinition : CoverInitializedName is an early error.
+function PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+  switch (true) {
+    case isPropertyDefinitionIdentifierReference(PropertyDefinition):
+      return PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
+        PropertyDefinition, object, enumerable,
+      );
 
-    Q(PropertyDefinitionEvaluation(PropertyDefintionList, object, enumerable));
-    return PropertyDefinitionEvaluation(PropertyDefinition, object, enumerable);
-  } else {
-    // PropertyDefinition :
-    //   `...` AssignmentExpression
-    //   IdentifierReference
-    //   PropertyName `:` AssignmentExpression
-    const PropertyDefinition = arg;
+    case isPropertyDefinitionKeyValue(PropertyDefinition):
+      return PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
+        PropertyDefinition, object, enumerable,
+      );
 
-    // `...` AssignmentExpression
-    if (PropertyDefinition.type === 'SpreadElement') {
-      const AssignmentExpression = PropertyDefinition.argument;
+    // case isPropertyDefinitionMethodDefinition(PropertyDefinition):
+    //   return PropertyDefinitionEvaluation_MethodDefinition(
+    //     PropertyDefinition., object, enumerable);
 
-      const exprValue = Evaluate_Expression(AssignmentExpression);
-      const fromValue = Q(GetValue(exprValue));
-      const excludedNames = [];
-      return Q(CopyDataProperties(object, fromValue, excludedNames));
-    }
+    case isPropertyDefinitionSpread(PropertyDefinition):
+      return PropertyDefinitionEvaluation_PropertyDefinition_Spread(
+        PropertyDefinition, object, enumerable,
+      );
 
-    // IdentifierReference
-    if (PropertyDefinition.shorthand) {
-      const IdentifierReference = PropertyDefinition.key;
-
-      const propName = NewValue(IdentifierReference.name);
-      const exprValue = Evaluate_Expression(IdentifierReference);
-      const propValue = GetValue(exprValue);
-      Assert(enumerable);
-      return CreateDataPropertyOrThrow(object, propName, propValue);
-    }
-
-    if (PropertyDefinition.key) {
-      // PropertyName `:` AssignmentExpression
-      const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
-      let propKey = PropertyDefinition.computed
-        ? Evaluate_Expression(PropertyName)
-        : Evaluate_LiteralPropertyName(PropertyName);
-      ReturnIfAbrupt(propKey);
-      const exprValueRef = Evaluate_Expression(AssignmentExpression);
-      const propValue = Q(GetValue(exprValueRef));
-      if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
-        const hasNameProperty = Q(HasOwnProperty(propValue, NewValue('name')));
-        if (hasNameProperty.isFalse()) {
-          SetFunctionName(propValue, propKey);
-        }
-      }
-      Assert(enumerable);
-      return CreateDataPropertyOrThrow(object, propKey, propValue);
-    }
-
-    throw outOfRange('PropertyDefinitionEvaluation', PropertyDefinition);
+    default:
+      throw outOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
   }
 }
 
+// #sec-object-initializer-runtime-semantics-evaluation
+//   ObjectLiteral :
+//     `{` `}`
+//     `{` PropertyDefintionList `}`
+//     `{` PropertyDefintionList `,` `}`
 export function Evaluate_ObjectLiteral(ObjectLiteral) {
-  // ObjectLiteral : `{` `}`
   if (ObjectLiteral.properties.length === 0) {
     return ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   }
@@ -116,6 +158,6 @@ export function Evaluate_ObjectLiteral(ObjectLiteral) {
   const PropertyDefintionList = ObjectLiteral.properties;
 
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  Q(PropertyDefinitionEvaluation(PropertyDefintionList, obj, true));
+  Q(PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true));
   return obj;
 }
