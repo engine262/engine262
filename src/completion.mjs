@@ -2,6 +2,7 @@ import {
   Assert,
 } from './abstract-ops/all.mjs';
 
+// #sec-completion-record-specification-type
 export class Completion {
   constructor(type, value, target) {
     this.Type = type;
@@ -10,6 +11,7 @@ export class Completion {
   }
 }
 
+// #sec-normalcompletion
 export class NormalCompletion extends Completion {
   constructor(value) {
     super('normal', value);
@@ -30,18 +32,21 @@ export class ContinueCompletion extends AbruptCompletion {
   }
 }
 
+// #sec-normalcompletion
 export class ReturnCompletion extends AbruptCompletion {
   constructor(value) {
     super('return', value);
   }
 }
 
+// #sec-throwcompletion
 export class ThrowCompletion extends AbruptCompletion {
   constructor(value) {
     super('throw', value);
   }
 }
 
+// #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
   if (completionRecord.Type === 'return' || completionRecord.Type === 'throw') {
     Assert(completionRecord.Value !== undefined);
@@ -52,7 +57,7 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion(completionRecord.Type, value, completionRecord.Target);
 }
 
-
+// #sec-returnifabrupt
 export function ReturnIfAbrupt(argument) {
   if (argument instanceof AbruptCompletion) {
     return argument;
@@ -67,8 +72,6 @@ export function ReturnIfAbrupt(argument) {
 export const Q = ReturnIfAbrupt;
 
 // #sec-returnifabrupt-shorthands ! OperationName()
-
-
 export function X(val) {
   Assert(!(val instanceof AbruptCompletion));
   if (val instanceof Completion) {
