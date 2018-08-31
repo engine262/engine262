@@ -20,6 +20,8 @@ print(a.length);
 
 // const b = [2, ...a];
 // print(b[1]);
+
+({ a: 1 });
 `);
 
 console.log(completion); // eslint-disable-line no-console

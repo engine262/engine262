@@ -9,12 +9,23 @@ import {
   isPropertyDefinitionSpread,
   isStringLiteral,
 } from '../ast.mjs';
+import {
+  Assert,
+  CopyDataProperties,
+  CreateDataPropertyOrThrow,
+  GetValue,
+  HasOwnProperty,
+  ObjectCreate,
+  SetFunctionName,
+  ToPropertyKey,
+  ToString,
+} from '../abstract-ops/all.mjs';
 import { New as NewValue } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Q, X,
   ReturnIfAbrupt,
-  NormalCompletion,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
@@ -71,7 +82,7 @@ function PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionL
 
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
-    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefintion, object, enumerable));
+    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }
   return lastReturn;
 }
