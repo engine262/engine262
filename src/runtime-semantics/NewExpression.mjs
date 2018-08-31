@@ -25,13 +25,13 @@ import {
 function EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = Q(Evaluate_Expression(constructExpr));
+  const ref = Q(Evaluate_Expression(constructExpr.callee));
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
   let argList = ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (IsConstructor(constructor).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
   return Q(Construct(constructor, argList));
 }
@@ -41,5 +41,5 @@ function EvaluateNew(constructExpr, args = []) {
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
 export function Evaluate_NewExpression(NewExpression) {
-  return EvaluateNew(NewExpression.callee, NewExpression.arguments);
+  return EvaluateNew(NewExpression, NewExpression.arguments);
 }

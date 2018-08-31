@@ -958,7 +958,7 @@ export function Type(val) {
     return 'Descriptor';
   }
 
-  if (Object.keys(val).length === 1 && 'Value' in val) {
+  if (typeof val === 'object' && Object.keys(val).length === 1 && 'Value' in val) {
     return 'Descriptor';
   }
 
