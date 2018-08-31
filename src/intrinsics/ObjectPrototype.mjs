@@ -98,7 +98,7 @@ function ObjectProto_valueOf(realm, argList, { thisValue }) {
 }
 
 export function CreateObjectPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],

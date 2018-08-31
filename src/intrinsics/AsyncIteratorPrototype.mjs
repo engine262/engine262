@@ -9,7 +9,7 @@ import {
 } from '../abstract-ops/all.mjs';
 
 export function CreateAsyncIteratorPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
   proto.Prototype = realmRec.Intrinsics['%IteratorPrototype%'];
 
   const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);

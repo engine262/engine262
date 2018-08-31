@@ -65,18 +65,12 @@ export class Agent {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
 
-  get currentRealmRecordOrUndefined() {
+  get currentRealmRecord() {
     const currentCtx = this.runningExecutionContext;
     if (currentCtx !== undefined) {
       return currentCtx.Realm;
     }
     return undefined;
-  }
-
-  get currentRealmRecord() {
-    const currentRealmRecord = this.currentRealmRecordOrUndefined;
-    Assert(currentRealmRecord !== undefined);
-    return currentRealmRecord;
   }
 
   get activeFunctionObject() {
@@ -370,7 +364,8 @@ export function GetActiveScriptOrModule() {
     return NewValue(null);
   }
   const ec = surroundingAgent.executionContextStack
-    .reverse().find((e) => Type(e.ScriptOrModule) !== 'Null');
+    .reverse()
+    .find((e) => e.ScriptOrModule !== undefined);
   if (!ec) {
     return NewValue(null);
   }

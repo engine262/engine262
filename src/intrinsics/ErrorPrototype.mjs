@@ -40,7 +40,7 @@ function ErrorProto_toString(realm, args, { thisValue }) {
 }
 
 export function CreateErrorPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   proto.DefineOwnProperty(NewValue('toString'), {
     Value: CreateBuiltinFunction(ErrorProto_toString, [], realmRec),

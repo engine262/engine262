@@ -199,7 +199,7 @@ function ArrayProto_values(realm, args, { thisValue }) {
 }
 
 export function CreateArrayPrototype(realmRec) {
-  const proto = new ArrayValue(realmRec);
+  const proto = new ArrayValue(undefined, realmRec);
 
   [
     ['concat', ArrayProto_concat, 1],

@@ -12,7 +12,7 @@ import {
 
 // 20.2 The Math Object
 export function CreateMath(realmRec) {
-  const mathObj = new ObjectValue(realmRec, realmRec.Intrinsics['%ObjectPrototype%']);
+  const mathObj = new ObjectValue(undefined, realmRec);
 
   // 20.2.1 Value Properties of the Math Object
   [

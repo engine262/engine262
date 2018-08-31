@@ -379,7 +379,7 @@ export function ObjectCreate(
     internalSlotsList = [];
   }
 
-  const obj = new ObjectValue(surroundingAgent.currentRealmRecord, proto);
+  const obj = new ObjectValue(proto);
 
   // The following steps happen in ObjectValue constructor:
   //

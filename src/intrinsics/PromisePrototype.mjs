@@ -135,7 +135,7 @@ function PromiseProto_then(realm, [onFulfilled, onRejected], { thisValue }) {
 }
 
 export function CreatePromisePrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   [
     ['catch', PromiseProto_catch, 1],

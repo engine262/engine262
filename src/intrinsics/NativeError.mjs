@@ -49,7 +49,7 @@ export function CreateNativeError(realmRec) {
     SetFunctionLength(cons, NewValue(1));
     SetFunctionName(cons, NewValue(name));
 
-    const proto = new ObjectValue(realmRec);
+    const proto = new ObjectValue(undefined, realmRec);
     proto.Prototype = realmRec.Intrinsics['%ErrorPrototype%'];
 
     cons.DefineOwnProperty(NewValue('prototype'), {

@@ -45,7 +45,7 @@ function NumberToString(realm, args, { thisValue }) {
 }
 
 export function CreateNumberPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   [
     ['toString', NumberToString],

@@ -2,6 +2,7 @@ import {
   surroundingAgent,
   // Suspend,
   GetActiveScriptOrModule,
+  ExecutionContext,
 } from '../engine.mjs';
 import {
   Assert,
@@ -30,6 +31,7 @@ import {
 import {
   GlobalEnvironmentRecord,
   FunctionEnvironmentRecord,
+  NewFunctionEnvironment,
 } from '../environment.mjs';
 
 // #sec-SetFunctionName
@@ -79,40 +81,20 @@ export function PrepareForTailCall() {
 }
 
 // #sec-prepareforordinarycall
-function PrepareForOrdinaryCall() {
-  // TODO(devsnek)
-}
-
-function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
-  const thisMode = F.ThisMode;
-  if (thisMode === 'lexical') {
-    return new NormalCompletion(NewValue(undefined));
-  }
+function PrepareForOrdinaryCall(F, newTarget) {
+  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  const callerContext = surroundingAgent.runningExecutionContext;
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = F;
   const calleeRealm = F.Realm;
-  const localEnv = calleeContext.LexicalEnvironment;
-  let thisValue;
-  if (thisMode === 'strict') {
-    thisValue = thisArgument;
-  } else {
-    if (Type(thisArgument) === 'Undefined' || Type(thisArgument) === 'Null') {
-      const globalEnv = calleeRealm.GlobalEnv;
-      const globalEnvRec = globalEnv.EnvironmentRecord;
-      Assert(globalEnvRec instanceof GlobalEnvironmentRecord);
-      thisValue = globalEnvRec.GlobalThisValue;
-    } else {
-      thisValue = X(ToObject(thisArgument));
-      // NOTE: ToObject produces wrapper objects using calleeRealm.<Paste>
-    }
-  }
-  const envRec = localEnv.EnvironmentRecord;
-  Assert(envRec instanceof FunctionEnvironmentRecord);
-  Assert(envRec.ThisBindingStatus === 'initialized');
-  return envRec.BindThisValue(thisValue);
-}
-
-// #sec-ordinarycallevaluatebody
-export function OrdinaryCallEvaluateBody(F, argumentsList) {
-  return EvaluateBody(F, argumentsList);
+  calleeContext.Realm = calleeRealm;
+  calleeContext.ScriptOrModule = F.ScriptOrModule;
+  const localEnv = NewFunctionEnvironment(F, newTarget);
+  calleeContext.LexicalEnvironment = localEnv;
+  calleeContext.VariableEnvironment = localEnv;
+  // Suspend(callerContext);
+  surroundingAgent.executionContextStack.push(calleeContext);
+  return calleeContext;
 }
 
 // #sec-ecmascript-function-objects-call-thisargument-argumentslist
@@ -176,6 +158,38 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   return Q(envRec.GetThisBinding());
 }
 
+function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+  const thisMode = F.ThisMode;
+  if (thisMode === 'lexical') {
+    return new NormalCompletion(NewValue(undefined));
+  }
+  const calleeRealm = F.Realm;
+  const localEnv = calleeContext.LexicalEnvironment;
+  let thisValue;
+  if (thisMode === 'strict') {
+    thisValue = thisArgument;
+  } else {
+    if (Type(thisArgument) === 'Undefined' || Type(thisArgument) === 'Null') {
+      const globalEnv = calleeRealm.GlobalEnv;
+      const globalEnvRec = globalEnv.EnvironmentRecord;
+      Assert(globalEnvRec instanceof GlobalEnvironmentRecord);
+      thisValue = globalEnvRec.GlobalThisValue;
+    } else {
+      thisValue = X(ToObject(thisArgument));
+      // NOTE: ToObject produces wrapper objects using calleeRealm.<Paste>
+    }
+  }
+  const envRec = localEnv.EnvironmentRecord;
+  Assert(envRec instanceof FunctionEnvironmentRecord);
+  Assert(envRec.ThisBindingStatus !== 'initialized');
+  return envRec.BindThisValue(thisValue);
+}
+
+// #sec-ordinarycallevaluatebody
+export function OrdinaryCallEvaluateBody(F, argumentsList) {
+  return EvaluateBody(F, argumentsList);
+}
+
 function FunctionAllocate(functionPrototype, strict, functionKind) {
   Assert(Type(functionPrototype) === 'Object');
   Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
@@ -184,7 +198,7 @@ function FunctionAllocate(functionPrototype, strict, functionKind) {
   if (functionKind === 'non-constructor') {
     functionKind = 'normal';
   }
-  const F = new FunctionValue();
+  const F = new FunctionValue(functionPrototype);
   F.Call = FunctionCallSlot;
   if (needsConstruct) {
     F.Construct = FunctionConstructSlot;
@@ -199,7 +213,7 @@ function FunctionAllocate(functionPrototype, strict, functionKind) {
 }
 
 function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
-  const len = ExpectedArgumentCount(ParameterList.length);
+  const len = ExpectedArgumentCount(ParameterList);
   X(SetFunctionLength(F, NewValue(len)));
   const Strict = F.Strict;
   F.Environment = Scope;

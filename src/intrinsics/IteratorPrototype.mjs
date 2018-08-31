@@ -9,7 +9,7 @@ import {
 } from '../abstract-ops/all.mjs';
 
 export function CreateIteratorPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);
   SetFunctionName(fn, NewValue('[Symbol.iterator]'));

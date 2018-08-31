@@ -43,7 +43,7 @@ function SymbolToStringTag() {
 }
 
 export function CreateSymbolPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   [
     ['toString', SymbolToString],

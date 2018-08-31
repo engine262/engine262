@@ -62,7 +62,7 @@ function ArrayIteratorPrototype_next(realm, args, { thisValue }) {
 }
 
 export function CreateArrayIteratorPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
   proto.Prototype = realmRec.Intrinsics['%IteratorPrototype%'];
 
   proto.DefineOwnProperty(NewValue('next'), {

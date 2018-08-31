@@ -86,7 +86,7 @@ export function CreateIntrinsics(realmRec) {
 
   // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
   // current Realm record yet.
-  const objProto = new ObjectValue(realmRec, NewValue(null));
+  const objProto = new ObjectValue(NewValue(null), realmRec);
   intrinsics['%ObjectPrototype%'] = objProto;
 
   const thrower = CreateBuiltinFunction(() => surroundingAgent.Throw('TypeError'), [], realmRec, NewValue(null));

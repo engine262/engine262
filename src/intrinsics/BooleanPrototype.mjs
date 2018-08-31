@@ -25,7 +25,7 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function BooleanToString(realm, argList, { thisValue }) {
+function BooleanProto_toString(realm, argList, { thisValue }) {
   const b = Q(thisBooleanValue(thisValue));
   if (b.isTrue()) {
     return NewValue('true');
@@ -33,16 +33,16 @@ function BooleanToString(realm, argList, { thisValue }) {
   return NewValue('false');
 }
 
-function BooleanValueOf(realm, argList, { thisValue }) {
+function BooleanProto_valueOf(realm, argList, { thisValue }) {
   return Q(thisBooleanValue(thisValue));
 }
 
 export function CreateBooleanPrototype(realmRec) {
-  const proto = new ObjectValue(realmRec);
+  const proto = new ObjectValue(undefined, realmRec);
 
   [
-    ['toString', BooleanToString],
-    ['valueOf', BooleanValueOf],
+    ['toString', BooleanProto_toString],
+    ['valueOf', BooleanProto_valueOf],
   ].forEach(([name, nativeFunction]) => {
     proto.DefineOwnProperty(NewValue(name), {
       Value: CreateBuiltinFunction(nativeFunction, [], realmRec),

@@ -3,6 +3,7 @@ import {
   Type,
   Reference,
   New as NewValue,
+  FunctionValue,
 } from './value.mjs';
 import {
   surroundingAgent,
@@ -436,6 +437,26 @@ export function NewDeclarativeEnvironment(E) {
   const envRec = new DeclarativeEnvironmentRecord();
   env.EnvironmentRecord = envRec;
   env.outerLexicalEnvironment = E;
+  return env;
+}
+
+// #sec-newfunctionenvironment
+export function NewFunctionEnvironment(F, newTarget) {
+  Assert(F instanceof FunctionValue);
+  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  const env = new LexicalEnvironment();
+  const envRec = new FunctionEnvironmentRecord();
+  envRec.FunctionObject = F;
+  if (F.ThisMode === 'lexical') {
+    envRec.ThisBindingStatus = 'lexical';
+  } else {
+    envRec.ThisBindingStatus = 'uninitialized';
+  }
+  const home = F.HomeObject;
+  envRec.HomeObject = home;
+  envRec.NewTarget = newTarget;
+  env.EnvironmentRecord = envRec;
+  env.outerLexicalEnvironment = F.Environment;
   return env;
 }
 

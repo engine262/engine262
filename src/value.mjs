@@ -122,7 +122,7 @@ Object.freeze(wellKnownSymbols);
 
 
 export class ObjectValue extends Value {
-  constructor(realm, Prototype) {
+  constructor(Prototype, realm = surroundingAgent.currentRealmRecord) {
     super();
 
     this.Prototype = Prototype
@@ -132,11 +132,6 @@ export class ObjectValue extends Value {
     this.Extensible = true;
     this.IsClassPrototype = false;
     this.properties = new Map();
-
-    Object.defineProperty(this, 'realm', {
-      value: realm,
-      enumerable: false,
-    });
   }
 
   GetPrototypeOf() {
@@ -233,11 +228,11 @@ function nativeCall(F, realm, args, thisArgument, newTarget) {
 }
 
 export class BuiltinFunctionValue extends FunctionValue {
-  constructor(realm, nativeFunction) {
+  constructor(nativeFunction, realm) {
     // Unless otherwise specified every built-in function object has the
     // %FunctionPrototype% object as the initial value of its [[Prototype]]
     // internal slot.
-    super(realm, realm.Intrinsics['%FunctionPrototype%']);
+    super(realm.Intrinsics['%FunctionPrototype%'], realm);
     this.nativeFunction = nativeFunction;
     // Will be filled in CreateBuiltinFunction.
     this.Realm = undefined;
@@ -904,7 +899,7 @@ export function New(value, realm) {
   }
 
   if (typeof value === 'function') {
-    return new BuiltinFunctionValue(realm, value);
+    return new BuiltinFunctionValue(value, realm);
   }
 
   throw outOfRange('NewValue', value);

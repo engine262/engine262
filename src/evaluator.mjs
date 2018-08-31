@@ -21,6 +21,7 @@ import {
   isActualNewExpression,
   isActualShiftExpression,
   isArrayLiteral,
+  isArrowFunction,
   isBlockStatement,
   isExpressionStatement,
   isFunctionDeclaration,
@@ -45,6 +46,7 @@ import {
   EvaluateBinopValues_ShiftExpression,
   Evaluate_AdditiveExpression,
   Evaluate_ArrayLiteral,
+  Evaluate_ArrowFunction,
   Evaluate_AssignmentExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
@@ -276,8 +278,8 @@ export function Evaluate_Expression(Expression) {
         // case isYieldExpression(Expression):
         //   return Evaluate_YieldExpression(Expression);
 
-        // case isArrowFunction(Expression):
-        //   return Evaluate_ArrowFunction(Expression);
+      case isArrowFunction(Expression):
+        return Evaluate_ArrowFunction(Expression);
 
         // case isAsyncArrowFunction(Expression):
         //   return Evaluate_AsyncArrowFunction(Expression);

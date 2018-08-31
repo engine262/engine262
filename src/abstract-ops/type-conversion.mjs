@@ -150,9 +150,9 @@ export function ToInteger(argument) {
   if (number.isNaN()) {
     return NewValue(0);
   }
-  if (number.numberValue() === 0 // || number.value === -0
-      || number.numberValue() === Infinity
-      || number.numberValue() === -Infinity) {
+  if (number.numberValue() === 0
+  //  || number.value === -0
+      || number.isInfinity()) {
     return number;
   }
   // Return the number value that is the same sign
@@ -235,34 +235,32 @@ export function NumberToString(m) {
 // 7.1.13 ToObject
 export function ToObject(argument) {
   const type = Type(argument);
-  const realm = surroundingAgent.currentRealmRecord;
   switch (type) {
     case 'Undefined':
       return surroundingAgent.Throw('TypeError');
     case 'Null':
       return surroundingAgent.Throw('TypeError');
     case 'Boolean': {
-      const obj = new ObjectValue(realm, realm.Intrinsics['%BooleanPrototype%']);
+      const obj = new ObjectValue(surroundingAgent.intrinsic('%BooleanPrototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      const obj = new ObjectValue(realm, realm.Intrinsics['%NumberPrototype%']);
+      const obj = new ObjectValue(surroundingAgent.intrinsic('%NumberPrototype%'));
       obj.NumberData = argument;
       return obj;
     }
     case 'String': {
-      const obj = new ObjectValue(realm, realm.Intrinsics['%StringPrototype%']);
+      const obj = new ObjectValue(surroundingAgent.intrinsic('%StringPrototyep%'));
       obj.StringData = argument;
       return obj;
     }
     case 'Symbol': {
-      const obj = new ObjectValue(realm, realm.Intrinsics['%SymbolPrototype%']);
+      const obj = new ObjectValue(surroundingAgent.intrinsic('%SymbolPrototype%'));
       obj.SymbolData = argument;
       return obj;
     }
     case 'Object':
-
       return argument;
     default:
       throw outOfRange('ToObject', argument);
