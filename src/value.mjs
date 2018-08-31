@@ -218,13 +218,16 @@ export class ArrayValue extends ObjectValue {
 
 export class FunctionValue extends ObjectValue {}
 
-function nc(F, realm, args, thisArgument, newTarget) {
+function nativeCall(F, realm, args, thisArgument, newTarget) {
   if (F.properties.has(New('length'))) {
-    args.length = F.properties.get(New('length')).Value.numberValue();
+    const length = F.properties.get(New('length')).Value.numberValue();
+    for (let i = 0; i < length; i += 1) {
+      if (!args[i]) {
+        args[i] = undefinedValue;
+      }
+    }
   }
-  return F.nativeFunction(realm, new Proxy(args, {
-    get: (t, p, r) => Reflect.get(t, p, r) || undefinedValue,
-  }), {
+  return F.nativeFunction(realm, args, {
     thisValue: thisArgument || undefinedValue,
     NewTarget: newTarget || undefinedValue,
   });
@@ -254,9 +257,8 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this, calleeRealm, argumentsList, thisArgument, undefined);
+    const result = nativeCall(this, calleeRealm, argumentsList, thisArgument, undefined);
     surroundingAgent.executionContextStack.pop();
-
     return result;
   }
 
@@ -272,7 +274,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nc(this, calleeRealm, argumentsList, undefined, newTarget);
+    const result = nativeCall(this, calleeRealm, argumentsList, undefined, newTarget);
     surroundingAgent.executionContextStack.pop();
     return result;
   }

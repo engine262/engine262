@@ -27,11 +27,11 @@ print(a);
 print(\`0
 \${a}\\n2\\x0a\${3}\`);
 
-const c = { ...({ b }) };
+const c = { ...({ b, d: { a: 1 } }) };
 
 print('c.b', c.b);
 
-print({ a: 1 });
+print(c.d);
 
 print(Object.prototype.toString.call(1));
 `);

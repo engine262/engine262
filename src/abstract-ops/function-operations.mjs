@@ -1,6 +1,6 @@
 import {
   surroundingAgent,
-  Suspend,
+  // Suspend,
   GetActiveScriptOrModule,
 } from '../engine.mjs';
 import {
@@ -71,9 +71,9 @@ export function SetFunctionLength(F, length) {
 
 // #sec-PrepareForTailCall
 export function PrepareForTailCall() {
-  const leafContext = surroundingAgent.runningExecutionContext;
-  Suspend(leafContext);
-  surroundingAgent.executionContextStack.pop();
+  // const leafContext = surroundingAgent.runningExecutionContext;
+  // Suspend(leafContext);
+  // surroundingAgent.executionContextStack.pop();
   // Assert: leafContext has no further use. It will never
   // be activated as the running execution context.
 }
