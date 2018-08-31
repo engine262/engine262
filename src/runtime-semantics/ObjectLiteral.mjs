@@ -77,19 +77,25 @@ function Evaluate_PropertyName(PropertyName, computed) {
 //
 // (implicit)
 //   PropertyDefinitionList : PropertyDefinition
-function PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
+function PropertyDefinitionEvaluation_PropertyDefinitionList(
+  PropertyDefinitionList, object, enumerable,
+) {
   Assert(PropertyDefinitionList.length > 0);
 
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
-    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
+    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(
+      PropertyDefinition, object, enumerable,
+    ));
   }
   return lastReturn;
 }
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : `...` AssignmentExpression
-function PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object, enumerable) {
+function PropertyDefinitionEvaluation_PropertyDefinition_Spread(
+  PropertyDefinition, object, enumerable,
+) {
   const AssignmentExpression = PropertyDefinition.argument;
 
   const exprValue = Evaluate_Expression(AssignmentExpression);
@@ -113,7 +119,9 @@ function PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : PropertyName `:` AssignmentExpression
-function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable) {
+function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
+  PropertyDefinition, object, enumerable,
+) {
   const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
   let propKey = Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
   ReturnIfAbrupt(propKey);
