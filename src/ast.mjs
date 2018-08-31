@@ -18,6 +18,10 @@ export function isStringLiteral(node) {
   return node.type === 'Literal' && typeof node.value === 'string';
 }
 
+export function isSpreadElement(node) {
+  return node.type === 'SpreadElement';
+}
+
 // #prod-RegularExpressionLiteral
 export function isRegularExpressionLiteral(node) {
   return node.type === 'Literal' && typeof node.regex === 'object';

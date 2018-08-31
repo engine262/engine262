@@ -20,10 +20,8 @@ import {
   IsExtensible,
   SameValue,
   ToLength,
-} from './all.mjs';
-import {
   ArrayCreate,
-} from '../intrinsics/Array.mjs';
+} from './all.mjs';
 import {
   Q, X,
 } from '../completion.mjs';
@@ -116,10 +114,7 @@ export function DeletePropertyOrThrow(
 }
 
 // 7.3.9 GetMethod
-export function GetMethod(
-  V,
-  P,
-) {
+export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
   if (Type(func) === 'Null' || Type(func) === 'Undefined') {
@@ -155,7 +150,7 @@ export function Call(F, V, argumentsList) {
     argumentsList = [];
   }
 
-  if (IsCallable(F) === false) {
+  if (IsCallable(F).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
 

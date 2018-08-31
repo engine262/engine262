@@ -19,6 +19,7 @@ import {
   isActualMultiplicativeExpression,
   isActualNewExpression,
   isActualShiftExpression,
+  isArrayLiteral,
   isBlockStatement,
   isExpressionStatement,
   isFunctionDeclaration,
@@ -42,6 +43,7 @@ import {
   EvaluateBinopValues_MultiplicativeExpression,
   EvaluateBinopValues_ShiftExpression,
   Evaluate_AdditiveExpression,
+  Evaluate_ArrayLiteral,
   Evaluate_AssignmentExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
@@ -181,8 +183,8 @@ export function Evaluate_Expression(Expression) {
       case isLiteral(Expression):
         return Evaluate_Literal(Expression);
 
-        // case isArrayLiteral(Expression):
-        //   return Evaluate_ArrayLiteral(Expression);
+      case isArrayLiteral(Expression):
+        return Evaluate_ArrayLiteral(Expression);
 
       case isObjectLiteral(Expression):
         return Evaluate_ObjectLiteral(Expression);

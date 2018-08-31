@@ -1,5 +1,6 @@
 export * from './AdditiveExpression.mjs';
 export * from './ArgumentListEvaluation.mjs';
+export * from './ArrayLiteral.mjs';
 export * from './AssignmentExpression.mjs';
 export * from './BindingInitialization.mjs';
 export * from './BitwiseOperators.mjs';

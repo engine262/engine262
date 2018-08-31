@@ -29,12 +29,14 @@ import {
   IsCallable,
   Call,
   ToBoolean,
+  ArrayCreate,
+  SetFunctionLength,
+  SetFunctionName,
+  CreateArrayIterator,
 } from '../abstract-ops/all.mjs';
 import {
   Q, X,
 } from '../completion.mjs';
-
-import { ArrayCreate } from './Array.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);
@@ -67,7 +69,7 @@ function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [length]));
 }
 
-function ArrayConcat(realm, args, { thisValue }) {
+function ArrayProto_concat(realm, args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, NewValue(0)));
   let n = 0;
@@ -103,7 +105,7 @@ function ArrayConcat(realm, args, { thisValue }) {
   return NewValue(true);
 }
 
-function ArrayCopyWithin(realm, [target, start, end], { thisValue }) {
+function ArrayProto_copyWithin(realm, [target, start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length')))));
   const relativeTarget = Q(ToInteger(target));
@@ -158,12 +160,12 @@ function ArrayCopyWithin(realm, [target, start, end], { thisValue }) {
   return O;
 }
 
-function ArrayEntries(realm, args, { thisValue }) {
+function ArrayProto_entries(realm, args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
-function ArrayEvery(realm, [callbackFn, thisArg], { thisValue }) {
+function ArrayProto_every(realm, [callbackFn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length')))));
   if (IsCallable(callbackFn).isFalse()) {
@@ -195,17 +197,27 @@ export function CreateArrayPrototype(realmRec) {
   const proto = new ArrayValue(realmRec);
 
   [
-    ['concat', ArrayConcat],
-    ['copyWithin', ArrayCopyWithin],
-    ['entries', ArrayEntries],
-    ['every', ArrayEvery],
-  ].forEach(([name, nativeFunction]) => {
+    ['concat', ArrayProto_concat, 1],
+    ['copyWithin', ArrayProto_copyWithin, 2],
+    ['entries', ArrayProto_entries, 0],
+    ['every', ArrayProto_every, 1],
+  ].forEach(([name, nativeFunction, length]) => {
+    const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
+    SetFunctionName(fn, NewValue(name));
+    SetFunctionLength(fn, NewValue(length));
     proto.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(nativeFunction, [], realmRec),
+      Value: fn,
       Writable: true,
       Enumerable: false,
       Configurable: true,
     });
+  });
+
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, {
+    Value: proto.GetOwnProperty(NewValue('values')),
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
   });
 
   realmRec.Intrinsics['%ArrayPrototype%'] = proto;

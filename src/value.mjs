@@ -199,18 +199,18 @@ export class ArrayValue extends ObjectValue {
       const oldLen = oldLenDesc.Value;
       const index = ToUint32(P);
       if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
-        return false;
+        return New(false);
       }
       const succeeded = OrdinaryDefineOwnProperty(A, P, Desc);
       if (succeeded === false) {
-        return false;
+        return New(false);
       }
       if (index.numberValue() >= oldLen.numberValue()) {
         oldLenDesc.Value = New(index.numberValue() + 1);
         const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc); // eslint-disable-line no-shadow
         Assert(succeeded.isTrue());
       }
-      return true;
+      return New(true);
     }
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }

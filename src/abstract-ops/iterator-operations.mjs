@@ -21,11 +21,7 @@ import {
 
 
 // #sec-getiterator
-export function GetIterator(
-  obj,
-  hint,
-  method,
-) {
+export function GetIterator(obj, hint, method) {
   if (!hint) {
     hint = 'sync';
   }
@@ -41,7 +37,7 @@ export function GetIterator(
       method = Q(GetMethod(obj, wellKnownSymbols.iterator));
     }
   }
-  const iterator = Q(Call(method, obj, []));
+  const iterator = Q(Call(method, obj));
   if (Type(iterator) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }

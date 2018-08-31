@@ -28,42 +28,15 @@ import {
   ToLength,
   IsArray,
   ToUint32,
-  OrdinaryDefineOwnProperty,
+  ArrayCreate,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
-  ArrayValue,
   UndefinedValue,
   New as NewValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
-
-export function ArrayCreate(length, proto) {
-  Assert(length.numberValue() >= 0);
-  if (Object.is(length.numberValue(), -0)) {
-    length = NewValue(0);
-  }
-  if (length.numberValue() > (2 ** 32) - 1) {
-    return surroundingAgent.Throw('RangeError');
-  }
-  if (Type(proto) === 'Undefined') {
-    proto = surroundingAgent.intrinsic('%ArrayPrototype%');
-  }
-  const A = new ArrayValue(surroundingAgent.currentRealmRecord);
-
-  // Set A's essential internal methods except for [[DefineOwnProperty]]
-  // to the default ordinary object definitions specified in 9.1.
-
-  X(OrdinaryDefineOwnProperty(A, NewValue('length'), {
-    Value: length,
-    Writable: true,
-    Enumerable: false,
-    Configurable: false,
-  }));
-
-  return A;
-}
 
 function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   const numberOfArgs = argumentsList.length;

@@ -1,3 +1,4 @@
+export * from './array-objects.mjs';
 export * from './notational-conventions.mjs';
 export * from './objects.mjs';
 export * from './object-operations.mjs';
