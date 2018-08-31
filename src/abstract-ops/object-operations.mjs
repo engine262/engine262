@@ -184,11 +184,11 @@ export function SetIntegrityLevel(O, level) {
   }
   const keys = Q(O.OwnPropertyKeys());
   if (level === 'sealed') {
-    keys.forEach((k) => {
+    for (const k of keys) {
       Q(DefinePropertyOrThrow(O, k, { Configurable: false }));
-    });
+    }
   } else if (level === 'frozen') {
-    keys.forEach((k) => {
+    for (const k of keys) {
       const currentDesc = Q(O.GetOwnProperty(k));
       if (Type(currentDesc) !== 'Undefined') {
         let desc;
@@ -199,7 +199,7 @@ export function SetIntegrityLevel(O, level) {
         }
         Q(DefinePropertyOrThrow(O, k, desc));
       }
-    });
+    }
   }
   return NewValue(true);
 }
