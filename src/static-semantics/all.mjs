@@ -1,6 +1,7 @@
 export * from './BoundNames.mjs';
 export * from './DeclarationPart.mjs';
 export * from './ExpectedArgumentCount.mjs';
+export * from './HasInitializer.mjs';
 export * from './LexicallyDeclaredNames.mjs';
 export * from './LexicallyScopedDeclarations.mjs';
 export * from './TopLevelLexicallyDeclaredNames.mjs';

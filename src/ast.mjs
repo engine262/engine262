@@ -470,6 +470,9 @@ export function isBindingRestElement(node) {
   return node.type === 'RestElement';
 }
 
+// #prod-FunctionRestParameter
+export const isFunctionRestParameter = isBindingRestElement;
+
 // #prod-BindingProperty
 export function isBindingProperty(node) {
   // ESTree puts the SingleNameBinding in node.value.

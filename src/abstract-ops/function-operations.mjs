@@ -23,7 +23,8 @@ import {
   NormalCompletion,
 } from '../completion.mjs';
 import {
-  ExpectedArgumentCount,
+  ExpectedArgumentCount_ArrowParameters,
+  ExpectedArgumentCount_FormalParameters,
 } from '../static-semantics/all.mjs';
 import {
   EvaluateBody,
@@ -33,6 +34,7 @@ import {
   FunctionEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
+import { outOfRange } from '../helpers.mjs';
 
 // #sec-SetFunctionName
 export function SetFunctionName(F, name, prefix) {
@@ -213,14 +215,27 @@ function FunctionAllocate(functionPrototype, strict, functionKind) {
 }
 
 function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
-  const len = ExpectedArgumentCount(ParameterList);
+  let len;
+  switch (kind) {
+    case 'Normal':
+    case 'Method':
+      len = ExpectedArgumentCount_FormalParameters(ParameterList);
+      break;
+
+    case 'Arrow':
+      len = ExpectedArgumentCount_ArrowParameters(ParameterList);
+      break;
+
+    default:
+      throw outOfRange('FunctionInitialize kind', kind);
+  }
   X(SetFunctionLength(F, NewValue(len)));
   const Strict = F.Strict;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;
   F.ScriptOrModule = GetActiveScriptOrModule();
-  if (kind === 'arrow') {
+  if (kind === 'Arrow') {
     F.ThisMode = 'lexical';
   } else if (Strict) {
     F.ThisMode = 'strict';

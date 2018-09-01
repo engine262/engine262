@@ -14,6 +14,8 @@ const completion = NonSpecRunScript(`
 
 Promise.reject('before').catch(print);
 print('after');
+
+print(((a, b = 2, ...abc) => {}).length);
 `);
 
 console.log(completion); // eslint-disable-line no-console
