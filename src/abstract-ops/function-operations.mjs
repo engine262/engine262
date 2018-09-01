@@ -85,7 +85,7 @@ export function PrepareForTailCall() {
 // #sec-prepareforordinarycall
 function PrepareForOrdinaryCall(F, newTarget) {
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
-  const callerContext = surroundingAgent.runningExecutionContext;
+  // const callerContext = surroundingAgent.runningExecutionContext;
   const calleeContext = new ExecutionContext();
   calleeContext.Function = F;
   const calleeRealm = F.Realm;
@@ -189,7 +189,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 
 // #sec-ordinarycallevaluatebody
 export function OrdinaryCallEvaluateBody(F, argumentsList) {
-  return EvaluateBody(F, argumentsList);
+  return EvaluateBody(F.ECMAScriptCode, argumentsList);
 }
 
 function FunctionAllocate(functionPrototype, strict, functionKind) {
