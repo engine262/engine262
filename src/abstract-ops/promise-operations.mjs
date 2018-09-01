@@ -1,28 +1,28 @@
 import {
-  surroundingAgent,
-  HostPromiseRejectionTracker,
   EnqueueJob,
+  HostPromiseRejectionTracker,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import {
   Assert,
-  SameValue,
-  IsPromise,
   Call,
-  IsConstructor,
+  Construct,
+  CreateBuiltinFunction,
   Get,
   IsCallable,
-  CreateBuiltinFunction,
-  Construct,
+  IsConstructor,
+  IsPromise,
+  SameValue,
   SetFunctionLength,
 } from './all.mjs';
 import {
-  Q,
-  NormalCompletion,
   AbruptCompletion,
+  NormalCompletion,
+  Q,
   ThrowCompletion,
 } from '../completion.mjs';
 

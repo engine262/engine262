@@ -2,8 +2,8 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  isActualMemberExpressionWithDot,
   isActualMemberExpressionWithBrackets,
+  isActualMemberExpressionWithDot,
 } from '../ast.mjs';
 import {
   GetValue,

@@ -1,37 +1,37 @@
 import {
-  surroundingAgent,
   ResolveBinding,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,
-  GetIterator,
-  IteratorClose,
-  ObjectCreate,
   CopyDataProperties,
   GetBase,
-  IsUnresolvableReference,
+  GetIterator,
   GetReferencedName,
+  IsUnresolvableReference,
+  IteratorClose,
+  ObjectCreate,
   PutValue,
 } from '../abstract-ops/all.mjs';
 import {
-  isIdentifier,
-  isObjectBindingPattern,
   isArrayBindingPattern,
   isEmptyObjectBindingPattern,
+  isIdentifier,
+  isObjectBindingPattern,
   isObjectBindingPatternWithBindingPropertyList,
-  isObjectBindingPatternWithSingleBindingRestProperty,
   isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty,
+  isObjectBindingPatternWithSingleBindingRestProperty,
 } from '../ast.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import {
   EnvironmentRecord,
 } from '../environment.mjs';
 import {
-  Q,
   NormalCompletion,
+  Q,
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';

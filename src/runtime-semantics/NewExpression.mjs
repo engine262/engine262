@@ -6,9 +6,9 @@ import {
 } from '../ast.mjs';
 import {
   Assert,
-  IsConstructor,
   Construct,
   GetValue,
+  IsConstructor,
 } from '../abstract-ops/all.mjs';
 import {
   ArgumentListEvaluation,

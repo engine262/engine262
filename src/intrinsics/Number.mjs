@@ -1,12 +1,12 @@
 import {
   CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
-  ToNumber,
   ToInteger,
+  ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 

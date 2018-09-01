@@ -1,4 +1,5 @@
 export * from './BoundNames.mjs';
+export * from './ContainsExpression.mjs';
 export * from './ContainsUseStrict.mjs';
 export * from './DeclarationPart.mjs';
 export * from './ExpectedArgumentCount.mjs';
@@ -13,6 +14,7 @@ export * from './VarDeclaredNames.mjs';
 export * from './VarScopedDeclarations.mjs';
 export * from './IsConstantDeclaration.mjs';
 export * from './IsAnonymousFunctionDefinition.mjs';
+export * from './IsSimpleParameterList.mjs';
 export * from './HasName.mjs';
 export * from './IsFunctionDefinition.mjs';
 export * from './IsIdentifierRef.mjs';

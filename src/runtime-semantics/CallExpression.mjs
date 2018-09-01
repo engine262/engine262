@@ -2,28 +2,28 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  New as NewValue,
   Type,
   Value,
-  New as NewValue,
 } from '../value.mjs';
 import {
   Assert,
-  IsCallable,
-  PrepareForTailCall,
   Call,
-  IsPropertyReference,
+  GetBase,
   GetReferencedName,
   GetThisValue,
-  GetBase,
   GetValue,
+  IsCallable,
+  IsPropertyReference,
+  PrepareForTailCall,
 } from '../abstract-ops/all.mjs';
 import {
   ArgumentListEvaluation,
 } from './all.mjs';
 import {
+  AbruptCompletion,
   Q,
   ReturnIfAbrupt,
-  AbruptCompletion,
 } from '../completion.mjs';
 import {
   Evaluate_Expression,

@@ -1,16 +1,16 @@
 import {
-  Type,
-  ProxyValue,
   New as NewValue,
+  ProxyValue,
+  Type,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,
-  ValidateAndApplyPropertyDescriptor,
   ToNumber,
   ToPrimitive,
+  ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
 import { X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';

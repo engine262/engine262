@@ -1,8 +1,8 @@
 import {
-  wellKnownSymbols,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
   Type,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
@@ -11,10 +11,10 @@ import {
   Invoke,
   IsArray,
   SameValue,
-  ToObject,
-  ToPropertyKey,
   SetFunctionLength,
   SetFunctionName,
+  ToObject,
+  ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 

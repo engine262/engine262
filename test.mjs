@@ -12,10 +12,9 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-Promise.reject('before').catch(print);
-print('after');
-
-print(((a, b = 2, ...abc) => {}).length);
+(() => {
+  print('heck');
+})();
 `);
 
 console.log(completion); // eslint-disable-line no-console

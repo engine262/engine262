@@ -1,8 +1,8 @@
 import {
-  NormalCompletion,
-  UpdateEmpty,
-  ReturnIfAbrupt,
   EnsureCompletion,
+  NormalCompletion,
+  ReturnIfAbrupt,
+  UpdateEmpty,
 } from './completion.mjs';
 import {
   surroundingAgent,
@@ -10,11 +10,11 @@ import {
 import {
   isActualAdditiveExpression,
   isActualAssignmentExpression,
+  isActualBitwiseANDExpression,
+  isActualBitwiseORExpression,
+  isActualBitwiseXORExpression,
   isActualCallExpression,
   isActualEqualityExpression,
-  isActualBitwiseANDExpression,
-  isActualBitwiseXORExpression,
-  isActualBitwiseORExpression,
   isActualExponentiationExpression,
   isActualMemberExpression,
   isActualMultiplicativeExpression,
@@ -39,8 +39,8 @@ import {
   EvaluateBinopValues_AdditiveExpression_Minus,
   EvaluateBinopValues_AdditiveExpression_Plus,
   EvaluateBinopValues_BitwiseANDExpression,
-  EvaluateBinopValues_BitwiseXORExpression,
   EvaluateBinopValues_BitwiseORExpression,
+  EvaluateBinopValues_BitwiseXORExpression,
   EvaluateBinopValues_ExponentiationExpression,
   EvaluateBinopValues_MultiplicativeExpression,
   EvaluateBinopValues_ShiftExpression,

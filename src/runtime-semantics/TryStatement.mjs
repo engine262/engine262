@@ -12,9 +12,9 @@ import {
   New as NewValue,
 } from '../value.mjs';
 import {
-  X,
-  UpdateEmpty,
   AbruptCompletion,
+  UpdateEmpty,
+  X,
 } from '../completion.mjs';
 import {
   NewDeclarativeEnvironment,

@@ -2,11 +2,11 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  Call,
   GetMethod,
-  ToBoolean,
   IsCallable,
   OrdinaryHasInstance,
-  Call,
+  ToBoolean,
 } from '../abstract-ops/all.mjs';
 import {
   Type,

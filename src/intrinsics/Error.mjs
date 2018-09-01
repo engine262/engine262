@@ -1,14 +1,14 @@
 import {
   CreateBuiltinFunction,
-  ToString,
-  OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
-  SetFunctionName,
+  OrdinaryCreateFromConstructor,
   SetFunctionLength,
+  SetFunctionName,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';

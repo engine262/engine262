@@ -1,31 +1,31 @@
 import {
-  surroundingAgent,
   EnqueueJob,
   HostPromiseRejectionTracker,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
-  CreateBuiltinFunction,
-  Invoke,
-  SpeciesConstructor,
   Assert,
-  IsConstructor,
-  IsCallable,
   Call,
+  CreateBuiltinFunction,
   Get,
+  Invoke,
+  IsCallable,
+  IsConstructor,
   IsPromise,
-  PromiseResolve,
   NewPromiseCapability,
-  PromiseReactionJob,
-  SetFunctionName,
-  SetFunctionLength,
   PromiseCapabilityRecord,
+  PromiseReactionJob,
+  PromiseResolve,
+  SetFunctionLength,
+  SetFunctionName,
+  SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
+  Type,
 } from '../value.mjs';
-import { Q, X, ThrowCompletion } from '../completion.mjs';
+import { Q, ThrowCompletion, X } from '../completion.mjs';
 
 function PromiseProto_catch(realm, [onRejected], { thisValue }) {
   const promise = thisValue;

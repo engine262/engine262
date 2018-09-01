@@ -1,17 +1,23 @@
 import {
-  surroundingAgent,
   ExecutionContext,
   isArrayIndex,
+  surroundingAgent,
 } from './engine.mjs';
 import {
   ArraySetLength,
   Assert,
   Call,
+  CompletePropertyDescriptor,
   Construct,
   CreateArrayFromList,
+  FromPropertyDescriptor,
+  Get,
   GetMethod,
+  HasOwnProperty,
   IsAccessorDescriptor,
+  IsCompatiblePropertyDescriptor,
   IsConstructor,
+  IsDataDescriptor,
   IsExtensible,
   IsPropertyKey,
   OrdinaryDefineOwnProperty,
@@ -26,15 +32,11 @@ import {
   OrdinarySet,
   OrdinarySetPrototypeOf,
   SameValue,
-  ToBoolean,
-  ToUint32,
-  IsCompatiblePropertyDescriptor,
-  ToString,
-  ToPropertyDescriptor,
-  CompletePropertyDescriptor,
-  FromPropertyDescriptor,
-  IsDataDescriptor,
   StringGetOwnProperty,
+  ToBoolean,
+  ToPropertyDescriptor,
+  ToString,
+  ToUint32,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Q, X } from './completion.mjs';
@@ -649,7 +651,7 @@ export class ProxyValue extends ObjectValue {
   OwnPropertyKeys() {}
 }
 
-export class StringExoticObject extends ObjectValue {
+export class StringExoticObjectValue extends ObjectValue {
   GetOwnProperty(P) {
     const S = this;
     Assert(IsPropertyKey(P));
@@ -838,6 +840,65 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     exports.push(...symbolKeys);
     return exports;
   }
+}
+
+export class ArgumentsExoticObjectValue extends ObjectValue {
+  constructor(...args) {
+    super(...args);
+
+    this.ParameterMap = undefined;
+  }
+
+  GetOwnProperty(P) {
+    const args = this;
+    const desc = OrdinaryGetOwnProperty(args, P);
+    if (Type(desc) === 'Undefined') {
+      return desc;
+    }
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    if (isMapped.isTrue()) {
+      desc.Value = Get(map, P);
+    }
+    return desc;
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = HasOwnProperty(map, P);
+    let newArgDesc = Desc;
+    if (isMapped.isTrue() && IsDataDescriptor(Desc).isTrue()) {
+      if (!('Value' in Desc) && 'Writable' in Desc && Desc.Writable === false) {
+        newArgDesc = { ...Desc };
+        newArgDesc.Value = Get(map, P);
+      }
+    }
+    const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
+    if (allowed.isFalse()) {
+      return New(false);
+    }
+    if (isMapped.isTrue()) {
+      if (IsAccessorDescriptor(Desc).isTrue()) {
+        map.Delete(P);
+      } else {
+        if ('Value' in Desc) {
+          const setStatus = Set(map, P, Desc.Value, New(false));
+          Assert(setStatus.isTrue());
+        }
+        if ('Writable' in Desc && Desc.Writable === false) {
+          map.Delete(P);
+        }
+      }
+    }
+    return New(true);
+  }
+
+  Get() {}
+
+  Set() {}
+
+  Delete() {}
 }
 
 export class Reference {

@@ -3,17 +3,17 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-  RequireObjectCoercible,
-  ToString,
-  ToInteger,
   CreateBuiltinFunction,
+  RequireObjectCoercible,
   SetFunctionLength,
   SetFunctionName,
+  ToInteger,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  StringExoticObject,
-  Type,
   New as NewValue,
+  StringExoticObjectValue,
+  Type,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
@@ -58,7 +58,7 @@ function StringProto_valueOf(realm, args, { thisValue }) {
 }
 
 export function CreateStringPrototype(realmRec) {
-  const proto = new StringExoticObject(realmRec);
+  const proto = new StringExoticObjectValue(realmRec);
   proto.StringData = NewValue('');
 
   [

@@ -1,6 +1,6 @@
 import {
-  GetValue,
   AbstractEqualityComparison,
+  GetValue,
   StrictEqualityComparision,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';

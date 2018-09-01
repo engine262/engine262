@@ -1,6 +1,6 @@
 import {
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
   Type,
 } from '../value.mjs';
 import {

@@ -1,31 +1,31 @@
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  SameValue,
-  CreateBuiltinFunction,
-  ObjectCreate,
-  DefinePropertyOrThrow,
-  OrdinaryCreateFromConstructor,
-  IsExtensible,
-  ToPropertyDescriptor,
-  FromPropertyDescriptor,
-  EnumerableOwnPropertyNames,
-  ToPropertyKey,
-  ToObject,
-  Get,
-  Set,
-  TestIntegrityLevel,
-  SetIntegrityLevel,
   CreateArrayFromList,
+  CreateBuiltinFunction,
   CreateDataProperty,
+  DefinePropertyOrThrow,
+  EnumerableOwnPropertyNames,
+  FromPropertyDescriptor,
+  Get,
+  IsExtensible,
+  ObjectCreate,
+  OrdinaryCreateFromConstructor,
   RequireObjectCoercible,
-  SetFunctionName,
+  SameValue,
+  Set,
   SetFunctionLength,
+  SetFunctionName,
+  SetIntegrityLevel,
+  TestIntegrityLevel,
+  ToObject,
+  ToPropertyDescriptor,
+  ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 

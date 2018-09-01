@@ -1,9 +1,9 @@
 import {
-  wellKnownSymbols,
-  PrimitiveValue,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
+  PrimitiveValue,
   Type,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   surroundingAgent,

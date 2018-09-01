@@ -1,12 +1,12 @@
 import {
-  ObjectValue,
-  wellKnownSymbols,
   New as NewValue,
+  ObjectValue,
   Type,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
-  surroundingAgent,
   SymbolDescriptiveString,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,

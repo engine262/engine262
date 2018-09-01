@@ -2,16 +2,16 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import {
-  IsCallable,
+  CreateDataProperty,
   Get,
   HasProperty,
-  ToBoolean,
-  CreateDataProperty,
+  IsCallable,
   ObjectCreate,
+  ToBoolean,
 } from './all.mjs';
 import { Q } from '../completion.mjs';
 

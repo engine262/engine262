@@ -1,6 +1,6 @@
 import {
-  SetFunctionName,
   FunctionCreate,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   MakeConstructor,

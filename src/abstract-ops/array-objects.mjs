@@ -1,18 +1,18 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  ArrayValue,
   New as NewValue,
   Type,
-  ArrayValue,
 } from '../value.mjs';
 import {
   Assert,
-  OrdinaryDefineOwnProperty,
-  ObjectCreate,
-  ToUint32,
-  ToNumber,
-  OrdinaryGetOwnProperty,
-  ToString,
   IsAccessorDescriptor,
+  ObjectCreate,
+  OrdinaryDefineOwnProperty,
+  OrdinaryGetOwnProperty,
+  ToNumber,
+  ToString,
+  ToUint32,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 

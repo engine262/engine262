@@ -1,13 +1,13 @@
 import {
-  StringExoticObject,
   New as NewValue,
+  StringExoticObjectValue,
   Type,
 } from '../value.mjs';
 import {
   Assert,
+  CanonicalNumericIndexString,
   DefinePropertyOrThrow,
   IsInteger,
-  CanonicalNumericIndexString,
   IsPropertyKey,
 } from './all.mjs';
 import { X } from '../completion.mjs';
@@ -15,7 +15,7 @@ import { X } from '../completion.mjs';
 // #sec-stringcreate
 export function StringCreate(value, prototype) {
   Assert(Type(value) === 'String');
-  const S = new StringExoticObject();
+  const S = new StringExoticObjectValue();
   S.StringData = value;
   S.Prototype = prototype;
   S.Extensible = true;

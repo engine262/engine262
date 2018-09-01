@@ -1,21 +1,21 @@
 import {
-  surroundingAgent,
   GetGlobalObject,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,
   ToObject,
 } from './all.mjs';
 import {
-  Type,
-  PrimitiveValue,
   New as NewValue,
+  PrimitiveValue,
+  Type,
 } from '../value.mjs';
 import {
-  X,
+  NormalCompletion,
   Q,
   ReturnIfAbrupt,
-  NormalCompletion,
+  X,
 } from '../completion.mjs';
 
 export function GetBase(V) {

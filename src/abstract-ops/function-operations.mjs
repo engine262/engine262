@@ -6,21 +6,21 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-  IsExtensible,
-  HasOwnProperty,
   DefinePropertyOrThrow,
+  HasOwnProperty,
+  IsExtensible,
+  OrdinaryCreateFromConstructor,
   ToInteger,
   ToObject,
-  OrdinaryCreateFromConstructor,
 } from './all.mjs';
 import {
-  Type,
   FunctionValue,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import {
-  Q, X, ReturnIfAbrupt,
-  NormalCompletion,
+  NormalCompletion, Q, ReturnIfAbrupt,
+  X,
 } from '../completion.mjs';
 import {
   ExpectedArgumentCount_ArrowParameters,
@@ -30,8 +30,8 @@ import {
   EvaluateBody,
 } from '../runtime-semantics/all.mjs';
 import {
-  GlobalEnvironmentRecord,
   FunctionEnvironmentRecord,
+  GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -107,14 +107,18 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   if (F.FunctionKind === 'classConstructor') {
     return surroundingAgent.Throw('TypeError');
   }
+
   // const callerContext = surroundingAgent.runningExecutionContext;
   const calleeContext = PrepareForOrdinaryCall(F, NewValue(undefined));
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
+
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   let result = OrdinaryCallEvaluateBody(F, argumentsList);
+
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();
+
   if (result.Type === 'return') {
     return new NormalCompletion(result.Value);
   }
@@ -189,7 +193,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 
 // #sec-ordinarycallevaluatebody
 export function OrdinaryCallEvaluateBody(F, argumentsList) {
-  return EvaluateBody(F.ECMAScriptCode, argumentsList);
+  return EvaluateBody(F.ECMAScriptCode, F, argumentsList);
 }
 
 function FunctionAllocate(functionPrototype, strict, functionKind) {

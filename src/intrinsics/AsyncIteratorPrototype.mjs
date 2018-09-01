@@ -1,7 +1,7 @@
 import {
-  wellKnownSymbols,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,

@@ -1,21 +1,21 @@
 import {
-  Assert,
   ArrayCreate,
-  ToUint32,
-  ToString,
+  Assert,
   CreateDataProperty,
+  GetIterator,
   GetValue,
-  Set,
   IteratorStep,
   IteratorValue,
-  GetIterator,
+  Set,
+  ToString,
+  ToUint32,
 } from '../abstract-ops/all.mjs';
 import {
   isExpression,
   isSpreadElement,
 } from '../ast.mjs';
 import { New as NewValue, Type } from '../value.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
+import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 

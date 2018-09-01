@@ -15,6 +15,22 @@ import {
   isSingleNameBinding,
 } from '../ast.mjs';
 
+// #sec-function-definitions-static-semantics-boundnames
+export function BoundNames_FormalParameterList(FormalParameterList) {
+  const names = [];
+  for (const FormalParameter of FormalParameterList) {
+    switch (true) {
+      case isBindingElement(FormalParameter):
+        names.push(...BoundNames_BindingElement(FormalParameter));
+        break;
+
+      default:
+        throw TypeError('BoundNames_FormalParameterList');
+    }
+  }
+  return names;
+}
+
 // 12.1.2 #sec-identifiers-static-semantics-boundnames
 //   BindingIdentifier :
 //     Identifier

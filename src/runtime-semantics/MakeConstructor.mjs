@@ -3,16 +3,16 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
+  DefinePropertyOrThrow,
   IsConstructor,
   IsExtensible,
-  DefinePropertyOrThrow,
   ObjectCreate,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
   FunctionValue,
+  New as NewValue,
 } from '../value.mjs';
-import { X, NormalCompletion } from '../completion.mjs';
+import { NormalCompletion, X } from '../completion.mjs';
 
 // #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {

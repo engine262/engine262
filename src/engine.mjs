@@ -1,32 +1,32 @@
 import {
-  wellKnownSymbols,
   New as NewValue,
   Type,
+  wellKnownSymbols,
 } from './value.mjs';
-import { ParseScript, ParseModule } from './parse.mjs';
+import { ParseModule, ParseScript } from './parse.mjs';
 import {
   AbruptCompletion,
-  ThrowCompletion,
   NormalCompletion,
-  Q, X,
+  Q,
+  ThrowCompletion, X,
 } from './completion.mjs';
 import {
-  LexicalEnvironment,
   GetIdentifierReference,
+  LexicalEnvironment,
 } from './environment.mjs';
 import {
   CreateRealm,
-  SetRealmGlobalObject,
   SetDefaultGlobalBindings,
+  SetRealmGlobalObject,
 } from './realm.mjs';
 import {
   Assert,
   Construct,
+  CreateBuiltinFunction,
   Get,
   IsArray,
   IsPropertyKey,
   ToBoolean,
-  CreateBuiltinFunction,
   ToString,
 } from './abstract-ops/all.mjs';
 import {
@@ -106,6 +106,7 @@ export class ExecutionContext {
     this.Function = undefined;
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
+    this.LexicalEnvironment = undefined;
   }
 }
 
@@ -143,13 +144,15 @@ export function EnqueueJob(queueName, job, args) {
 export function InitializeHostDefinedRealm() {
   const realm = CreateRealm();
   const newContext = new ExecutionContext();
-  newContext.Function = null;
+  newContext.Function = NewValue(null);
   newContext.Realm = realm;
+  newContext.ScriptOrModule = NewValue(null);
   surroundingAgent.executionContextStack.push(newContext);
   const global = NewValue(undefined);
   const thisValue = NewValue(undefined);
   SetRealmGlobalObject(realm, global, thisValue);
   const globalObj = SetDefaultGlobalBindings(realm);
+
   // Create any implementation-defined global object properties on globalObj.
   globalObj.DefineOwnProperty(NewValue('print'), {
     Value: CreateBuiltinFunction((r, args) => {
@@ -222,7 +225,7 @@ export function RunJobs() {
     }
     const nextPending = nextQueue.shift();
     const newContext = new ExecutionContext();
-    newContext.Function = null;
+    newContext.Function = NewValue(null);
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
@@ -241,7 +244,7 @@ export function NonSpecRunScript(sourceText) {
   const callerScriptOrModule = callerContext.ScriptOrModule;
 
   const newContext = new ExecutionContext();
-  newContext.Function = null;
+  newContext.Function = NewValue(null);
   newContext.Realm = callerRealm;
   newContext.ScriptOrModule = callerScriptOrModule;
 
@@ -260,7 +263,7 @@ export function NonSpecRunScript(sourceText) {
     }
     const nextPending = nextQueue.shift();
     const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
-    newContext.Function = null;
+    newContext.Function = NewValue(null);
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);

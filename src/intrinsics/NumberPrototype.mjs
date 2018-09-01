@@ -1,12 +1,12 @@
 import {
-  Type,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
+  Type,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
-  ToString,
   ToInteger,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';

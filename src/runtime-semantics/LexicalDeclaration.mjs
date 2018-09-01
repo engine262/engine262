@@ -1,8 +1,8 @@
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
-  ReturnIfAbrupt,
   NormalCompletion,
   Q,
+  ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
 import {
@@ -13,14 +13,14 @@ import {
   New as NewValue,
 } from '../value.mjs';
 import {
-  surroundingAgent,
   ResolveBinding,
+  surroundingAgent,
 } from '../engine.mjs';
 import {
-  SetFunctionName,
   GetValue,
   HasOwnProperty,
   InitializeReferencedBinding,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,

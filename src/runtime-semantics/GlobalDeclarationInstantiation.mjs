@@ -8,33 +8,33 @@ import {
   Assert,
 } from '../abstract-ops/all.mjs';
 import {
+  BoundNames_FunctionDeclaration,
+  BoundNames_LexicalDeclaration,
+  BoundNames_VariableDeclaration,
+  IsConstantDeclaration,
   LexicallyDeclaredNames_ScriptBody,
   LexicallyScopedDeclarations_ScriptBody,
   VarDeclaredNames_ScriptBody,
   VarScopedDeclarations_ScriptBody,
-  IsConstantDeclaration,
-  BoundNames_FunctionDeclaration,
-  BoundNames_LexicalDeclaration,
-  BoundNames_VariableDeclaration,
 } from '../static-semantics/all.mjs';
 import {
   InstantiateFunctionObject,
 } from './all.mjs';
 import {
-  isBindingIdentifier,
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
   isAsyncFunctionDeclaration,
   isAsyncGeneratorDeclaration,
-  isVariableDeclaration,
+  isBindingIdentifier,
   isForBinding,
+  isFunctionDeclaration,
+  isGeneratorDeclaration,
+  isVariableDeclaration,
 } from '../ast.mjs';
 import {
   New as NewValue,
 } from '../value.mjs';
 import {
-  Q,
   NormalCompletion,
+  Q,
 } from '../completion.mjs';
 
 // 15.1.11 GlobalDeclarationInstantiation
@@ -64,7 +64,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     }
   }
 
-  const varDeclarations = VarScopedDeclarations_ScriptBody(script).map(NewValue);
+  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
 
   const functionsToInitialize = [];
   const declaredFunctionNames = [];

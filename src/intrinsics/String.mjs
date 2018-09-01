@@ -1,14 +1,14 @@
 import {
   CreateBuiltinFunction,
-  ToString,
   GetPrototypeFromConstructor,
-  SetFunctionName,
   SetFunctionLength,
+  SetFunctionName,
   StringCreate,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 

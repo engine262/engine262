@@ -2,8 +2,8 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
   Type,
 } from '../value.mjs';
 import {

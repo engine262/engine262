@@ -3,16 +3,16 @@ import {
 } from '../engine.mjs';
 import {
   CreateBuiltinFunction,
-  OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
-  ToString,
-  SetFunctionName,
+  OrdinaryCreateFromConstructor,
   SetFunctionLength,
+  SetFunctionName,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
-  ObjectValue,
   New as NewValue,
+  ObjectValue,
+  Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 

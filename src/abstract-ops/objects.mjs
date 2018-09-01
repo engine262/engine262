@@ -1,7 +1,7 @@
 import {
-  Type,
   New as NewValue,
   ObjectValue,
+  Type,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -13,10 +13,10 @@ import {
   Get,
   GetFunctionRealm,
   IsAccessorDescriptor,
-  IsDataDescriptor,
-  IsGenericDescriptor,
   IsCallable,
+  IsDataDescriptor,
   IsExtensible,
+  IsGenericDescriptor,
   IsPropertyKey,
   SameValue,
 } from './all.mjs';

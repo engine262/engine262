@@ -2,8 +2,8 @@ import {
   isDeclaration,
   isFunctionDeclaration,
   isHoistableDeclaration,
-  isStatement,
   isLabelledStatement,
+  isStatement,
 } from '../ast.mjs';
 
 import {

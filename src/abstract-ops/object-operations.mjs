@@ -1,26 +1,26 @@
 import {
+  New as NewValue,
+  ProxyValue,
   Type,
   Value,
-  ProxyValue,
-  New as NewValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  ArrayCreate,
   Assert,
+  IsAccessorDescriptor,
   IsCallable,
   IsConstructor,
-  IsPropertyKey,
-  ToObject,
-  ToString,
-  IsAccessorDescriptor,
   IsDataDescriptor,
   IsExtensible,
+  IsPropertyKey,
   SameValue,
   ToLength,
-  ArrayCreate,
+  ToObject,
+  ToString,
 } from './all.mjs';
 import {
   Q, X,

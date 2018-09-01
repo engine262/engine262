@@ -2,25 +2,25 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  IsCallable,
-  CreateBuiltinFunction,
   Call,
-  OrdinaryCreateFromConstructor,
-  Get,
-  SetFunctionName,
-  SetFunctionLength,
+  CreateBuiltinFunction,
   CreateResolvingFunctions,
+  Get,
+  IsCallable,
   NewPromiseCapability,
+  OrdinaryCreateFromConstructor,
   PromiseResolve,
+  SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Q,
   AbruptCompletion,
+  Q,
 } from '../completion.mjs';
 
 

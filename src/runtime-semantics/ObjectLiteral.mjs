@@ -24,8 +24,8 @@ import { New as NewValue } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Q, X,
-  ReturnIfAbrupt,
+  Q, ReturnIfAbrupt,
+  X,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 

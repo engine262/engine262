@@ -1,25 +1,25 @@
 import {
-  wellKnownSymbols,
-  Type,
-  Reference,
-  New as NewValue,
   FunctionValue,
+  New as NewValue,
+  Reference,
+  Type,
+  wellKnownSymbols,
 } from './value.mjs';
 import {
   surroundingAgent,
 } from './engine.mjs';
 import {
   Assert,
+  DefinePropertyOrThrow,
   Get,
   HasOwnProperty,
   HasProperty,
-  ToBoolean,
-  IsExtensible,
   IsDataDescriptor,
-  DefinePropertyOrThrow,
+  IsExtensible,
   Set,
+  ToBoolean,
 } from './abstract-ops/all.mjs';
-import { Q, NormalCompletion } from './completion.mjs';
+import { NormalCompletion, Q } from './completion.mjs';
 
 export class LexicalEnvironment {
   constructor() {
@@ -179,7 +179,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
-export class FunctionEnvironmentRecord extends EnvironmentRecord {
+export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   BindThisValue(V) {
     const envRec = this;
     Assert(envRec.ThisBindingStatus !== 'lexical');

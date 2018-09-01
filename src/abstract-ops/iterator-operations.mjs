@@ -1,19 +1,20 @@
 import {
   Assert,
-  GetMethod,
-  Get,
-  GetV,
   Call,
-  ToBoolean,
-  ObjectCreate,
+  CreateBuiltinFunction,
   CreateDataProperty,
+  Get,
+  GetMethod,
+  GetV,
+  ObjectCreate,
+  ToBoolean,
 } from './all.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Type,
   New as NewValue,
+  Type,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
@@ -119,4 +120,35 @@ export function CreateIterResultObject(value, done) {
   CreateDataProperty(obj, NewValue('value'), value);
   CreateDataProperty(obj, NewValue('done'), done);
   return obj;
+}
+
+function ListIteratorNextSteps(realm, args, { thisValue }) {
+  const O = thisValue;
+  Assert(Type(O) === 'Object');
+  Assert('IteratedList' in O);
+  const list = O.IteratedList;
+  const index = O.ListIteratorNextIndex;
+  const len = list.length;
+  if (index >= len) {
+    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+  }
+  O.ListIteratorNextIndex += 1;
+  return CreateIterResultObject(list[index], NewValue(false));
+}
+
+// #sec-createlistiteratorRecord
+export function CreateListIteratorRecord(list) {
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
+    'IteratedList',
+    'ListIteratorNextIndex',
+  ]);
+  iterator.IteratedList = list;
+  iterator.ListIteratorNextIndex = 0;
+  const steps = ListIteratorNextSteps;
+  const next = CreateBuiltinFunction(steps, []);
+  return {
+    Iterator: iterator,
+    NextMethod: next,
+    Done: false,
+  };
 }

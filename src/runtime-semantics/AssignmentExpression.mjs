@@ -1,20 +1,20 @@
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import {
-  GetValue,
-  PutValue,
   GetReferencedName,
-  SetFunctionName,
+  GetValue,
   HasOwnProperty,
+  PutValue,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
 import {
-  isObjectLiteral,
   isArrayLiteral,
+  isObjectLiteral,
 } from '../ast.mjs';
-import { Evaluate_Expression, EvaluateBinopValues } from '../evaluator.mjs';
+import { EvaluateBinopValues, Evaluate_Expression } from '../evaluator.mjs';
 import { New as NewValue } from '../value.mjs';
 
 // #sec-assignment-operators-runtime-semantics-evaluation

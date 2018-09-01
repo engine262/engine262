@@ -3,14 +3,14 @@ import {
 } from '../engine.mjs';
 import {
   BoundNames_Declaration,
-  LexicallyScopedDeclarations_StatementList,
   IsConstantDeclaration,
+  LexicallyScopedDeclarations_StatementList,
 } from '../static-semantics/all.mjs';
 import {
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
   isAsyncFunctionDeclaration,
   isAsyncGeneratorDeclaration,
+  isFunctionDeclaration,
+  isGeneratorDeclaration,
 } from '../ast.mjs';
 import {
   Assert,
@@ -19,15 +19,15 @@ import {
   InstantiateFunctionObject,
 } from './all.mjs';
 import {
-  NewDeclarativeEnvironment,
   DeclarativeEnvironmentRecord,
+  NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import {
   New as NewValue,
 } from '../value.mjs';
 import {
-  X,
   NormalCompletion,
+  X,
 } from '../completion.mjs';
 import { Evaluate_StatementList } from '../evaluator.mjs';
 
