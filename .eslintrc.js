@@ -15,6 +15,7 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-restricted-syntax': 'off',
     'no-use-before-define': 'off',
+    'no-continue': 'off',
     'import/no-cycle': 'off',
     'import/prefer-default-export': 'off',
     'import/no-unresolved': 'off',

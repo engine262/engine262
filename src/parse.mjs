@@ -1,5 +1,4 @@
 import acorn from 'acorn';
-import walk from 'acorn/dist/walk';
 
 function deepFreeze(obj) {
   Object.freeze(obj);
@@ -7,7 +6,7 @@ function deepFreeze(obj) {
     let childObj;
     try {
       childObj = obj[key];
-    } catch {
+    } catch (e) {
       continue;
     }
     if (Object(childObj) === childObj) {
@@ -23,20 +22,6 @@ export function ParseScript(sourceText, realm, hostDefined) {
   });
 
   deepFreeze(body);
-
-  // walk.fullAncestor(body, (node, ancestors) => {
-  //   let strictMode = false;
-  //   const parent = ancestors.reverse().find((n) => n.type === 'Program' || n.type === 'FunctionDeclaration');
-  //   if (parent) {
-  //     const directive = parent.type === 'FunctionDeclaration'
-  //       ? parent.body.body.find((n) => n.directive !== undefined)
-  //       : parent.body.find((n) => n.directive !== undefined);
-  //     if (directive && directive.directive === 'use strict') {
-  //       strictMode = true;
-  //     }
-  //   }
-  //   node.IsStrict = strictMode;
-  // });
 
   return {
     Realm: realm,
