@@ -49,10 +49,10 @@ function EvaluateCall(func, ref, args, tailPosition) {
   let argList = ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
   if (IsCallable(func).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
   if (tailPosition) {
     PrepareForTailCall();

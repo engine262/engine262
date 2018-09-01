@@ -3,6 +3,7 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   Assert,
   CreateListIteratorRecord,
+  CreateUnmappedArgumentsObject,
   GetValue,
 } from '../abstract-ops/all.mjs';
 import {
@@ -118,8 +119,8 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     parameterBindings = parameterNames;
   }
 
-  /*
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
+  /*
   if (hasDuplicates) {
     Q(IteratorBindingInitialization(formals, iteratorRecord, NewValue(undefined)));
   } else {

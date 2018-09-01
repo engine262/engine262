@@ -74,7 +74,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     if (!this.bindings.has(N)) {
       if (S.isTrue()) {
-        return surroundingAgent.Throw('ReferenceError');
+        return surroundingAgent.Throw('ReferenceError', `${N.stringValue()} is not defined`);
       }
       envRec.CreateMutableBinding(N, true);
       envRec.InitializeBinding(N, V);
@@ -88,11 +88,11 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
 
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', `${N.stringValue()} is not defined`);
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S.isTrue()) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'assignment to a constant variable');
     }
     return new NormalCompletion(undefined);
   }
@@ -100,7 +100,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   GetBindingValue(N) {
     const binding = this.bindings.get(N);
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', `${N.stringValue()} is not defined`);
     }
     return binding.value;
   }

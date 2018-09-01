@@ -273,6 +273,8 @@ export class BuiltinFunctionValue extends FunctionValue {
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = nativeCall(this, calleeRealm, argumentsList, undefined, newTarget);
+    // Remove calleeContext from the execution context stack and
+    // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop();
     return result;
   }
@@ -894,11 +896,44 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     return New(true);
   }
 
-  Get() {}
+  Get(P, Receiver) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    if (isMapped.isFalse()) {
+      return Q(OrdinaryGet(args, P, Receiver));
+    } else {
+      return Get(map, P);
+    }
+  }
 
-  Set() {}
+  Set(P, V, Receiver) {
+    const args = this;
+    let isMapped;
+    let map;
+    if (SameValue(args, Receiver) === false) {
+      isMapped = false;
+    } else {
+      map = args.ParameterMap;
+      isMapped = X(HasOwnProperty(map, P)).isTrue();
+    }
+    if (isMapped) {
+      const setStatus = Set(map, P, V, New(false));
+      Assert(setStatus.isTrue());
+    }
+    return Q(OrdinarySet(args, P, V, Receiver));
+  }
 
-  Delete() {}
+  Delete(P) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    const result = Q(OrdinaryDelete(map, P));
+    if (result.isTrue() && isMapped.isTrue()) {
+      map.Delete(P);
+    }
+    return result;
+  }
 }
 
 export class Reference {
