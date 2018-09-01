@@ -1,3 +1,5 @@
+import { Assert } from './abstract-ops/notational-conventions.mjs';
+
 // #prod-NullLiteral
 export function isNullLiteral(node) {
   return node.type === 'Literal' && node.value === null;
@@ -765,4 +767,20 @@ export function isExportDeclaration(node) {
          || isExportDeclarationWithDefaultAndHoistable(node)
          || isExportDeclarationWithDefaultAndClass(node)
          || isExportDeclarationWithDefaultAndExpression(node);
+}
+
+// #sec-directive-prologues-and-the-use-strict-directive
+export function directivePrologueContainsUseStrictDirective(nodes) {
+  for (const node of nodes) {
+    if (isExpressionStatement(node) && isStringLiteral(node.expression)) {
+      Assert(typeof node.directive === 'string');
+      if (node.directive === 'use strict') {
+        return true;
+      }
+    } else {
+      Assert(typeof node.directive !== 'string');
+      return false;
+    }
+  }
+  return false;
 }

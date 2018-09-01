@@ -1,4 +1,5 @@
 export * from './BoundNames.mjs';
+export * from './ContainsUseStrict.mjs';
 export * from './DeclarationPart.mjs';
 export * from './ExpectedArgumentCount.mjs';
 export * from './HasInitializer.mjs';
