@@ -182,7 +182,7 @@ function RestBindingInitialization(BindingIdentifier, value, environment, exclud
 //   [ BindingElementList , ]
 //   [ BindingElementList , Elision ]
 //   [ BindingElementList , Elision BindingRestElement ]
-function IteratorBindingInitialization(node) {
+export function IteratorBindingInitialization(node) {
   switch (true) {
     default:
       throw outOfRange('IteratorBindingInitialization', node);
