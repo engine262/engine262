@@ -12,11 +12,7 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-try {
-  ((a) => { print(a); })('aaa');
-} catch (e) {
-  print(e);
-}
+[1, 2, 3].forEach(print);
 `);
 
 console.log(completion); // eslint-disable-line no-console

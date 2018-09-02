@@ -193,6 +193,122 @@ function ArrayProto_every(realm, [callbackFn, thisArg], { thisValue }) {
   return NewValue(true);
 }
 
+function ArrayProto_fill(realm, [value, start, end], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const relativeStart = Q(ToInteger(start)).numberValue();
+  let k;
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (Type(end) === 'Undefined') {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(ToInteger(end)).numberValue();
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
+  while (k < final) {
+    const Pk = X(ToString(k));
+    Q(Set(O, Pk, value, NewValue(true)));
+    k += 1;
+  }
+  return O;
+}
+
+function ArrayProto_filter(realm, [callbackfn, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+  }
+  const T = thisArg || NewValue(undefined);
+  const A = Q(ArraySpeciesCreate(O, 0));
+  let k = 0;
+  let to = 0;
+  while (k < len) {
+    const Pk = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      const selected = ToBoolean(Q(Call(callbackfn, T, [kValue, NewValue(k), O])));
+      if (selected.isTrue()) {
+        Q(CreateDataPropertyOrThrow(A, ToString(NewValue(to)), kValue));
+        to += 1;
+      }
+    }
+    k += 1;
+  }
+  return A;
+}
+
+function ArrayProto_find(realm, [predicate, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (IsCallable(predicate).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+  }
+  const T = thisArg || NewValue(undefined);
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(NewValue(k)));
+    const kValue = Q(Get(O, Pk));
+    const testResult = ToBoolean(Q(Call(predicate, T, [kValue, NewValue(k), O])));
+    if (testResult.isTrue()) {
+      return kValue;
+    }
+    k += 1;
+  }
+  return NewValue(undefined);
+}
+
+function ArrayProto_findIndex(realm, [predicate, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (IsCallable(predicate).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+  }
+  const T = thisArg || NewValue(undefined);
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(NewValue(k)));
+    const kValue = Q(Get(O, Pk));
+    const testResult = ToBoolean(Q(Call(predicate, T, [kValue, NewValue(k), O])));
+    if (testResult.isTrue()) {
+      return NewValue(k);
+    }
+    k += 1;
+  }
+  return NewValue(-1);
+}
+
+function ArrayProto_forEach(realm, [callbackfn, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+  }
+  const T = thisArg || NewValue(undefined);
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      Q(Call(callbackfn, T, [kValue, NewValue(k), O]));
+    }
+    k += 1;
+  }
+  return NewValue(undefined);
+}
+
 function ArrayProto_values(realm, args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
@@ -206,6 +322,11 @@ export function CreateArrayPrototype(realmRec) {
     ['copyWithin', ArrayProto_copyWithin, 2],
     ['entries', ArrayProto_entries, 0],
     ['every', ArrayProto_every, 1],
+    ['fill', ArrayProto_fill, 1],
+    ['filter', ArrayProto_filter, 1],
+    ['find', ArrayProto_find, 1],
+    ['findIndex', ArrayProto_findIndex, 1],
+    ['forEach', ArrayProto_forEach, 1],
     ['values', ArrayProto_values, 0],
   ].forEach(([name, nativeFunction, length]) => {
     const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
