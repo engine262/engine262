@@ -16,12 +16,20 @@ function deepFreeze(obj) {
 }
 
 export function ParseScript(sourceText, realm, hostDefined) {
-  const body = acorn.parse(sourceText, {
-    sourceType: 'script',
-    ecmaVersion: 2019,
-  });
+  let body;
+  try {
+    body = acorn.parse(sourceText, {
+      sourceType: 'script',
+      ecmaVersion: 2019,
+    });
+    deepFreeze(body);
+  } catch (e) {
+    body = [e];
+  }
 
-  deepFreeze(body);
+  if (Array.isArray(body)) {
+    return body;
+  }
 
   return {
     Realm: realm,

@@ -92,7 +92,7 @@ export class Agent {
 
   Throw(type, message) {
     if (!message) {
-      console.trace(type);
+      console.trace(type); // eslint-disable-line no-console
     }
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, message ? [NewValue(message)] : []);
@@ -171,8 +171,8 @@ export function InitializeHostDefinedRealm() {
         } else if (type === 'Symbol') {
           args[i] = `Symbol(${arg.Description.stringValue()})`;
         } else if (type === 'Object') {
-          const funcToString = X(Get(r.Intrinsics['%FunctionPrototype%'], NewValue('toString')));
-          const errorToString = X(Get(r.Intrinsics['%ErrorPrototype%'], NewValue('toString')));
+          const funcToString = r.Intrinsics['%FunctionPrototype%'].properties.get(NewValue('toString'));
+          const errorToString = r.Intrinsics['%ErrorPrototype%'].properties.get(NewValue('toString'));
           const objectToString = r.Intrinsics['%ObjProto_toString%'];
           const toString = X(Get(arg, NewValue('toString')));
           if (toString === errorToString
@@ -183,7 +183,7 @@ export function InitializeHostDefinedRealm() {
             const ctor = X(Get(arg, NewValue('constructor')));
             const ctorName = X(Get(ctor, NewValue('name'))).stringValue();
             if (ctorName !== '') {
-              args[i] = `#<${ctorName.stringValue()}>`;
+              args[i] = `#<${ctorName}>`;
             } else {
               args[i] = '[objectUnknown]';
             }
@@ -335,6 +335,10 @@ export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
     console.log('[HostReportErrors]', error); // eslint-disable-line no-console
   });
+}
+
+export function HostEnsureCanCompileStrings() {
+  return new NormalCompletion(undefined);
 }
 
 export function HostPromiseRejectionTracker() {}

@@ -267,6 +267,9 @@ export function CreateObject(realmRec) {
     realmRec.Intrinsics['%FunctionPrototype%'],
   );
 
+  SetFunctionName(objectConstructor, NewValue('Object'));
+  SetFunctionLength(objectConstructor, NewValue(1));
+
   const proto = realmRec.Intrinsics['%ObjectPrototype%'];
   objectConstructor.DefineOwnProperty(NewValue('prototype'), {
     Value: proto,

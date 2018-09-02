@@ -25,6 +25,8 @@ import {
   IteratorStep,
   IteratorValue,
   Set,
+  SetFunctionLength,
+  SetFunctionName,
   ToLength,
   ToObject,
   ToString,
@@ -202,6 +204,8 @@ function ArrayOf(realm, [...items], { thisValue }) {
 
 export function CreateArray(realmRec) {
   const constructor = CreateBuiltinFunction(ArrayConstructor, [], realmRec);
+  SetFunctionName(constructor, NewValue('Array'));
+  SetFunctionLength(constructor, NewValue(1));
 
   constructor.DefineOwnProperty(NewValue('constructor'), {
     Value: realmRec.Intrinsics['%ArrayPrototype%'],
@@ -220,12 +224,15 @@ export function CreateArray(realmRec) {
   );
 
   [
-    ['from', ArrayFrom],
-    ['isArray', ArrayIsArray],
-    ['of', ArrayOf],
-  ].forEach(([name, fn]) => {
+    ['from', ArrayFrom, 1],
+    ['isArray', ArrayIsArray, 1],
+    ['of', ArrayOf, 0],
+  ].forEach(([name, fn, len]) => {
+    fn = CreateBuiltinFunction(fn, [], realmRec);
+    SetFunctionName(fn, NewValue(name));
+    SetFunctionLength(fn, NewValue(len));
     constructor.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(fn, [], realmRec),
+      Value: fn,
       Writable: true,
       Enumerable: false,
       Configurable: true,

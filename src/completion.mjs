@@ -5,6 +5,9 @@ import {
 // #sec-completion-record-specification-type
 export class Completion {
   constructor(type, value, target) {
+    if (type instanceof Completion) {
+      return type;
+    }
     this.Type = type;
     this.Value = value;
     this.Target = target;

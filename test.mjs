@@ -12,9 +12,9 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-const d = Reflect.getOwnPropertyDescriptor(this, 'print');
-
-print(d.value);
+print({
+  toString: () => 'hi',
+});
 `);
 
 console.log(completion); // eslint-disable-line no-console
