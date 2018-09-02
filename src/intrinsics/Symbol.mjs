@@ -10,6 +10,8 @@ import {
 import {
   CreateBuiltinFunction,
   SameValue,
+  SetFunctionLength,
+  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
@@ -27,7 +29,7 @@ function SymbolConstructor([description], { NewTarget }) {
   return new SymbolValue(descString);
 }
 
-function SymbolFor([key]) {
+function Symbol_for([key]) {
   const stringKey = ToString(key);
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Key, stringKey)) {
@@ -40,7 +42,7 @@ function SymbolFor([key]) {
   return newSymbol;
 }
 
-function SymbolKeyFor([sym]) {
+function Symbol_keyFor([sym]) {
   if (Type(sym) !== 'Symbol') {
     return surroundingAgent.Throw('TypeError');
   }
@@ -54,11 +56,16 @@ function SymbolKeyFor([sym]) {
 
 export function CreateSymbol(realmRec) {
   const symbolConstructor = CreateBuiltinFunction(SymbolConstructor, [], realmRec);
+  SetFunctionName(symbolConstructor, NewValue('Symbol'));
+  SetFunctionLength(symbolConstructor, NewValue(0));
 
   [
-    ['for', SymbolFor],
-    ['keyFor', SymbolKeyFor],
-  ].forEach(([name, fn]) => {
+    ['for', Symbol_for, 1],
+    ['keyFor', Symbol_keyFor, 1],
+  ].forEach(([name, fn, len]) => {
+    fn = CreateBuiltinFunction(fn, [], realmRec);
+    SetFunctionName(fn, NewValue(name));
+    SetFunctionLength(fn, NewValue(len));
     symbolConstructor.DefineOwnProperty(NewValue(name), {
       Value: CreateBuiltinFunction(fn, [], realmRec),
       Writable: true,
