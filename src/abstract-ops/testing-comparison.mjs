@@ -20,8 +20,9 @@ export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
+      return surroundingAgent.Throw('TypeError', 'undefined cannot be convered to an object');
     case 'Null':
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'null cannot be converted to an object');
     case 'Boolean':
     case 'Number':
     case 'String':

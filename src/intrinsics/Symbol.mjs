@@ -67,7 +67,7 @@ export function CreateSymbol(realmRec) {
     SetFunctionName(fn, NewValue(name));
     SetFunctionLength(fn, NewValue(len));
     symbolConstructor.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(fn, [], realmRec),
+      Value: fn,
       Writable: true,
       Enumerable: false,
       Configurable: true,
@@ -82,6 +82,13 @@ export function CreateSymbol(realmRec) {
       Configurable: false,
     });
   }
+
+  symbolConstructor.DefineOwnProperty(NewValue('prototype'), {
+    Value: realmRec.Intrinsics['%SymbolPrototype%'],
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
+  });
 
   realmRec.Intrinsics['%SymbolPrototype%'].DefineOwnProperty(
     NewValue('constructor'), {

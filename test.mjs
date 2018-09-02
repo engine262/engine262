@@ -12,9 +12,11 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-print({
-  toString: () => 'hi',
-});
+try {
+  print(Symbol.prototype[Symbol.toStringTag]());
+} catch (e) {
+  print(e);
+}
 `);
 
 console.log(completion); // eslint-disable-line no-console

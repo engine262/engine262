@@ -171,8 +171,8 @@ export function InitializeHostDefinedRealm() {
         } else if (type === 'Symbol') {
           args[i] = `Symbol(${arg.Description.stringValue()})`;
         } else if (type === 'Object') {
-          const funcToString = surroundingAgent.intrinsic('%FunctionPrototype%').properties.get(NewValue('toString'));
-          const errorToString = surroundingAgent.intrinsic('%ErrorPrototype%').properties.get(NewValue('toString'));
+          const funcToString = surroundingAgent.intrinsic('%FunctionPrototype%').properties.get(NewValue('toString')).Value;
+          const errorToString = surroundingAgent.intrinsic('%ErrorPrototype%').properties.get(NewValue('toString')).Value;
           const objectToString = surroundingAgent.intrinsic('%ObjProto_toString%');
           const toString = X(Get(arg, NewValue('toString')));
           if (toString === errorToString
