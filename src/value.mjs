@@ -214,21 +214,6 @@ export class ArrayValue extends ObjectValue {
 
 export class FunctionValue extends ObjectValue {}
 
-function nativeCall(F, realm, args, thisArgument, newTarget) {
-  if (F.properties.has(New('length'))) {
-    const length = F.properties.get(New('length')).Value.numberValue();
-    for (let i = 0; i < length; i += 1) {
-      if (!args[i]) {
-        args[i] = undefinedValue;
-      }
-    }
-  }
-  return F.nativeFunction(realm, args, {
-    thisValue: thisArgument || undefinedValue,
-    NewTarget: newTarget || undefinedValue,
-  });
-}
-
 export class BuiltinFunctionValue extends FunctionValue {
   constructor(nativeFunction, realm) {
     // Unless otherwise specified every built-in function object has the
@@ -253,7 +238,10 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nativeCall(this, calleeRealm, argumentsList, thisArgument, undefined);
+    const result = this.nativeFunction(calleeRealm, argumentsList, {
+      thisValue: thisArgument,
+      newTarget: undefinedValue,
+    });
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop();
@@ -272,7 +260,10 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nativeCall(this, calleeRealm, argumentsList, undefined, newTarget);
+    const result = this.nativeFunction(calleeRealm, argumentsList, {
+      thisValue: undefinedValue,
+      newTarget,
+    });
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop();
