@@ -25,7 +25,7 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function BooleanProto_toString(realm, argList, { thisValue }) {
+function BooleanProto_toString(argList, { thisValue }) {
   const b = Q(thisBooleanValue(thisValue));
   if (b.isTrue()) {
     return NewValue('true');
@@ -33,7 +33,7 @@ function BooleanProto_toString(realm, argList, { thisValue }) {
   return NewValue('false');
 }
 
-function BooleanProto_valueOf(realm, argList, { thisValue }) {
+function BooleanProto_valueOf(argList, { thisValue }) {
   return Q(thisBooleanValue(thisValue));
 }
 

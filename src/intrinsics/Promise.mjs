@@ -24,7 +24,7 @@ import {
 } from '../completion.mjs';
 
 
-function PromiseConstructor(realm, [executor], { NewTarget }) {
+function PromiseConstructor([executor], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
@@ -60,7 +60,7 @@ function Promise_race() {
   return NewValue(undefined);
 }
 
-function Promise_reject(realm, [r], { thisValue }) {
+function Promise_reject([r], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -70,7 +70,7 @@ function Promise_reject(realm, [r], { thisValue }) {
   return promiseCapability.Promise;
 }
 
-function Promise_resolve(realm, [x], { thisValue }) {
+function Promise_resolve([x], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -78,7 +78,7 @@ function Promise_resolve(realm, [x], { thisValue }) {
   return Q(PromiseResolve(C, x));
 }
 
-function Promise_symbolSpecies(realm, args, { thisValue }) {
+function Promise_symbolSpecies(args, { thisValue }) {
   return thisValue;
 }
 

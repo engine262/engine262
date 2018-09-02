@@ -26,7 +26,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
-function FunctionProto_apply(realm, [thisArg, argArray], { thisValue: func }) {
+function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
   if (IsCallable(func).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -79,7 +79,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
-function FunctionProto_bind(realm, [thisArg, ...args], { thisValue }) {
+function FunctionProto_bind([thisArg, ...args], { thisValue }) {
   const Target = thisValue;
   if (IsCallable(Target).isFalse()) {
     return surroundingAgent.Throw('TypeError');
@@ -109,7 +109,7 @@ function FunctionProto_bind(realm, [thisArg, ...args], { thisValue }) {
   return F;
 }
 
-function FunctionProto_call(realm, [thisArg, ...args], { thisValue: func }) {
+function FunctionProto_call([thisArg, ...args], { thisValue: func }) {
   if (IsCallable(func).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -121,7 +121,7 @@ function FunctionProto_call(realm, [thisArg, ...args], { thisValue: func }) {
   return Q(Call(func, thisArg, argList));
 }
 
-function FunctionProto_toString(realm, args, { thisValue: func }) {
+function FunctionProto_toString(args, { thisValue: func }) {
   if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
     return NewValue('function() { [native code] }');
   }
@@ -131,7 +131,7 @@ function FunctionProto_toString(realm, args, { thisValue: func }) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function FunctionProto_hasInstance(realm, [V], { thisValue }) {
+function FunctionProto_hasInstance([V], { thisValue }) {
   const F = thisValue;
   return Q(OrdinaryHasInstance(F, V));
 }

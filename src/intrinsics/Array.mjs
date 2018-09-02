@@ -40,7 +40,7 @@ import {
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 
-function ArrayConstructor(realm, argumentsList, { NewTarget }) {
+function ArrayConstructor(argumentsList, { NewTarget }) {
   const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
@@ -96,7 +96,7 @@ function ArrayConstructor(realm, argumentsList, { NewTarget }) {
   throw outOfRange('ArrayConstructor', numberOfArgs);
 }
 
-function ArrayFrom(realm, argList, { thisValue }) {
+function ArrayFrom(argList, { thisValue }) {
   const [items, mapfn, thisArg] = argList;
   const C = thisValue;
   let mapping;
@@ -177,11 +177,11 @@ function ArrayFrom(realm, argList, { thisValue }) {
   return A;
 }
 
-function ArrayIsArray(realm, [arg]) {
+function ArrayIsArray([arg]) {
   return Q(IsArray(arg));
 }
 
-function ArrayOf(realm, [...items], { thisValue }) {
+function ArrayOf([...items], { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
   const C = thisValue;

@@ -221,7 +221,7 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
     }
   }
 
-  return F.nativeFunction(F.Realm, argumentsList, {
+  return F.nativeFunction(argumentsList, {
     thisValue: thisArgument || undefinedValue,
     NewTarget: newTarget || undefinedValue,
   });

@@ -16,7 +16,7 @@ import { Q } from '../completion.mjs';
 
 export const GlobalSymbolRegistry = [];
 
-function SymbolConstructor(realm, [description], { NewTarget }) {
+function SymbolConstructor([description], { NewTarget }) {
   if (Type(NewTarget) !== 'Undefined') {
     return surroundingAgent.Throw('TypeError');
   }
@@ -27,7 +27,7 @@ function SymbolConstructor(realm, [description], { NewTarget }) {
   return new SymbolValue(descString);
 }
 
-function SymbolFor(realm, [key]) {
+function SymbolFor([key]) {
   const stringKey = ToString(key);
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Key, stringKey)) {
@@ -40,7 +40,7 @@ function SymbolFor(realm, [key]) {
   return newSymbol;
 }
 
-function SymbolKeyFor(realm, [sym]) {
+function SymbolKeyFor([sym]) {
   if (Type(sym) !== 'Symbol') {
     return surroundingAgent.Throw('TypeError');
   }

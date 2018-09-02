@@ -1,6 +1,8 @@
 import {
   Assert,
+  Call,
 } from './abstract-ops/all.mjs';
+import { New as NewValue } from './value.mjs';
 
 // #sec-completion-record-specification-type
 export class Completion {
@@ -81,6 +83,19 @@ export function X(val) {
     return val.Value;
   }
   return val;
+}
+
+// #sec-ifabruptrejectpromise
+export function IfAbruptRejectPromise(value, capability) {
+  if (value instanceof AbruptCompletion) {
+    const hygenicTemp = Call(capability.Reject, NewValue(undefined), [value.Value]);
+    if (hygenicTemp instanceof AbruptCompletion) {
+      return hygenicTemp;
+    }
+    return capability.Promise;
+  } else if (value instanceof Completion) {
+    value = value.Value;
+  }
 }
 
 export function EnsureCompletion(val) {

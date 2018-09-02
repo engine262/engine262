@@ -63,7 +63,7 @@ function MakeArgGetter(name, env) {
   return getter;
 }
 
-function ArgSetterSteps(realm, [value]) {
+function ArgSetterSteps([value]) {
   const f = this;
   const name = f.Name;
   const env = f.Env;

@@ -18,7 +18,7 @@ import {
 import { New as NewValue, Type } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-function Reflect_apply(realm, [target, thisArgument, argumentsList]) {
+function Reflect_apply([target, thisArgument, argumentsList]) {
   if (IsCallable(target).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'target is not callable');
   }
@@ -27,7 +27,7 @@ function Reflect_apply(realm, [target, thisArgument, argumentsList]) {
   return Q(Call(target, thisArgument, args));
 }
 
-function Reflect_construct(realm, [target, argumentsList, newTarget]) {
+function Reflect_construct([target, argumentsList, newTarget]) {
   if (IsConstructor(target).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'target is not a constructor');
   }
@@ -40,7 +40,7 @@ function Reflect_construct(realm, [target, argumentsList, newTarget]) {
   return Q(Construct(target, args, newTarget));
 }
 
-function Reflect_defineProperty(realm, [target, propertyKey, attributes]) {
+function Reflect_defineProperty([target, propertyKey, attributes]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -49,7 +49,7 @@ function Reflect_defineProperty(realm, [target, propertyKey, attributes]) {
   return Q(target.DefineOwnProperty(key, desc));
 }
 
-function Reflect_deleteProperty(realm, [target, propertyKey]) {
+function Reflect_deleteProperty([target, propertyKey]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -57,7 +57,7 @@ function Reflect_deleteProperty(realm, [target, propertyKey]) {
   return Q(target.Delete(key));
 }
 
-function Reflect_get(realm, [target, propertyKey, receiver]) {
+function Reflect_get([target, propertyKey, receiver]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -68,7 +68,7 @@ function Reflect_get(realm, [target, propertyKey, receiver]) {
   return Q(target.Get(key, receiver));
 }
 
-function Reflect_getOwnPropertyDescriptor(realm, [target, propertyKey]) {
+function Reflect_getOwnPropertyDescriptor([target, propertyKey]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -77,14 +77,14 @@ function Reflect_getOwnPropertyDescriptor(realm, [target, propertyKey]) {
   return FromPropertyDescriptor(desc);
 }
 
-function Reflect_getPrototypeOf(realm, [target]) {
+function Reflect_getPrototypeOf([target]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.GetPrototypeOf());
 }
 
-function Reflect_has(realm, [target, propertyKey]) {
+function Reflect_has([target, propertyKey]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -92,14 +92,14 @@ function Reflect_has(realm, [target, propertyKey]) {
   return Q(target.HasProperty(key));
 }
 
-function Reflect_isExtensible(realm, [target]) {
+function Reflect_isExtensible([target]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.IsExtensible());
 }
 
-function Reflect_ownKeys(realm, [target]) {
+function Reflect_ownKeys([target]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -107,14 +107,14 @@ function Reflect_ownKeys(realm, [target]) {
   return CreateArrayFromList(keys);
 }
 
-function Reflect_preventExtensions(realm, [target]) {
+function Reflect_preventExtensions([target]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.PreventExtensions());
 }
 
-function Reflect_set(realm, [target, propertyKey, V, receiver]) {
+function Reflect_set([target, propertyKey, V, receiver]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -125,7 +125,7 @@ function Reflect_set(realm, [target, propertyKey, V, receiver]) {
   return Q(target.Set(key, V, receiver));
 }
 
-function Reflect_setPrototypeOf(realm, [target, proto]) {
+function Reflect_setPrototypeOf([target, proto]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }

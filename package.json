@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "node test.js",
+    "lint": "eslint test.mjs transform.js src/ --ext=js,mjs",
     "build": "babel src -d lib --keep-file-extension"
   },
   "repository": {

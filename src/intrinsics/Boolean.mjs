@@ -8,7 +8,7 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-function BooleanConstructor(realm, [value], { NewTarget }) {
+function BooleanConstructor([value], { NewTarget }) {
   const b = ToBoolean(value);
   if (NewTarget.value === undefined) {
     return b;

@@ -10,7 +10,7 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-function NumberConstructor(realm, args, { NewTarget }) {
+function NumberConstructor(args, { NewTarget }) {
   let n;
   if (args.length === 0) {
     n = NewValue(0);
@@ -26,7 +26,7 @@ function NumberConstructor(realm, args, { NewTarget }) {
   return O;
 }
 
-function NumberIsFinite(realm, [number]) {
+function NumberIsFinite([number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }
@@ -37,7 +37,7 @@ function NumberIsFinite(realm, [number]) {
   return NewValue(true);
 }
 
-function NumberIsInteger(realm, [number]) {
+function NumberIsInteger([number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }
@@ -52,7 +52,7 @@ function NumberIsInteger(realm, [number]) {
   return NewValue(true);
 }
 
-function NumberIsNaN(realm, [number]) {
+function NumberIsNaN([number]) {
   if (Type(number) !== 'Number') {
     return NewValue(false);
   }

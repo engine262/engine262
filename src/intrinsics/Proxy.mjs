@@ -86,7 +86,7 @@ function ProxyCreate(target, handler) {
   return P;
 }
 
-function ProxyConstructor(realm, [target, handler], { NewTarget }) {
+function ProxyConstructor([target, handler], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'costructor Proxy requires new');
   }
@@ -107,7 +107,7 @@ function ProxyRevocationFunctions() {
   return NewValue(undefined);
 }
 
-function Proxy_revocable(realm, [target, handler]) {
+function Proxy_revocable([target, handler]) {
   const p = Q(ProxyCreate(target, handler));
   const steps = ProxyRevocationFunctions;
   const revoker = CreateBuiltinFunction(steps, ['RevocableProxy']);

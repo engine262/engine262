@@ -11,7 +11,7 @@ import {
 export function CreateAsyncIteratorPrototype(realmRec) {
   const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
 
-  const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);
+  const fn = CreateBuiltinFunction((args, { thisValue }) => thisValue, [], realmRec);
   SetFunctionName(fn, NewValue('[Symbol.asyncIterator]'));
 
   proto.DefineOwnProperty(wellKnownSymbols.asyncIterator, {

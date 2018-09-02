@@ -39,7 +39,7 @@ export function PromiseResolve(C, x) {
   return promiseCapability.Promise;
 }
 
-function GetCapabilitiesExecutorFunctions(realm, [resolve, reject]) {
+function GetCapabilitiesExecutorFunctions([resolve, reject]) {
   const F = this;
 
   const promiseCapability = F.Capability;
@@ -148,7 +148,7 @@ function RejectPromise(promise, reason) {
   return TriggerPromiseReactions(reactions, reason);
 }
 
-function PromiseResolveFunctions(realm, [resolution]) {
+function PromiseResolveFunctions([resolution]) {
   const F = this;
   Assert('Promise' in F && Type(F.Promise) === 'Object');
   const promise = F.Promise;
@@ -177,7 +177,7 @@ function PromiseResolveFunctions(realm, [resolution]) {
   return NewValue(undefined);
 }
 
-function PromiseRejectFunctions(realm, [reason]) {
+function PromiseRejectFunctions([reason]) {
   const F = this;
   Assert('Promise' in F && Type(F.Promise) === 'Object');
   const promise = F.Promise;

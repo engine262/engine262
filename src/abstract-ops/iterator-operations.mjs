@@ -19,8 +19,17 @@ import {
 } from '../value.mjs';
 import {
   Completion,
-  Q,
+  Q, X,
 } from '../completion.mjs';
+
+// #sec-createasyncfromsynciterator
+export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
+  const asyncIterator = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
+    'SyncIteratorRecord',
+  ]));
+  asyncIterator.SyncIteratorRecord = syncIteratorRecord;
+  return Q(GetIterator(asyncIterator, 'async'));
+}
 
 // #sec-getiterator
 export function GetIterator(obj, hint, method) {
@@ -122,7 +131,7 @@ export function CreateIterResultObject(value, done) {
   return obj;
 }
 
-function ListIteratorNextSteps(realm, args, { thisValue }) {
+function ListIteratorNextSteps(args, { thisValue }) {
   const O = thisValue;
   Assert(Type(O) === 'Object');
   Assert('IteratedList' in O);

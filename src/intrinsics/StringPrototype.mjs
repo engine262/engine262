@@ -28,7 +28,7 @@ function thisStringValue(value) {
   return surroundingAgent.TypeError('TypeError');
 }
 
-function StringProto_charAt(realm, [pos], { thisValue }) {
+function StringProto_charAt([pos], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const position = Q(ToInteger(pos)).numberValue();
@@ -39,7 +39,7 @@ function StringProto_charAt(realm, [pos], { thisValue }) {
   return NewValue(S.stringValue()[position]);
 }
 
-function StringProto_charCodeAt(realm, [pos], { thisValue }) {
+function StringProto_charCodeAt([pos], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const position = Q(ToInteger(pos)).numberValue();
@@ -50,10 +50,10 @@ function StringProto_charCodeAt(realm, [pos], { thisValue }) {
   return S.stringValue().charCodeAt(position);
 }
 
-function StringProto_toString(realm, args, { thisValue }) {
+function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
-function StringProto_valueOf(realm, args, { thisValue }) {
+function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 

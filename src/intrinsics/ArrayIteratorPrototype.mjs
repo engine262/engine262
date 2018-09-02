@@ -18,7 +18,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-function ArrayIteratorPrototype_next(realm, args, { thisValue }) {
+function ArrayIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', '%ArrayIteratorPrototype%.next called on a non-object');

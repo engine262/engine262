@@ -158,7 +158,7 @@ export function InitializeHostDefinedRealm() {
 
   // Create any implementation-defined global object properties on globalObj.
   globalObj.DefineOwnProperty(NewValue('print'), {
-    Value: CreateBuiltinFunction((r, args) => {
+    Value: CreateBuiltinFunction((args) => {
       for (let i = 0; i < args.length; i += 1) {
         const arg = args[i];
         const type = Type(arg);
@@ -171,9 +171,9 @@ export function InitializeHostDefinedRealm() {
         } else if (type === 'Symbol') {
           args[i] = `Symbol(${arg.Description.stringValue()})`;
         } else if (type === 'Object') {
-          const funcToString = r.Intrinsics['%FunctionPrototype%'].properties.get(NewValue('toString'));
-          const errorToString = r.Intrinsics['%ErrorPrototype%'].properties.get(NewValue('toString'));
-          const objectToString = r.Intrinsics['%ObjProto_toString%'];
+          const funcToString = surroundingAgent.intrinsic('%FunctionPrototype%').properties.get(NewValue('toString'));
+          const errorToString = surroundingAgent.intrinsic('%ErrorPrototype%').properties.get(NewValue('toString'));
+          const objectToString = surroundingAgent.intrinsic('%ObjProto_toString%');
           const toString = X(Get(arg, NewValue('toString')));
           if (toString === errorToString
               || toString === objectToString

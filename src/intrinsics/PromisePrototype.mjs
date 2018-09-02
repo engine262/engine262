@@ -27,12 +27,12 @@ import {
 } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 
-function PromiseProto_catch(realm, [onRejected], { thisValue }) {
+function PromiseProto_catch([onRejected], { thisValue }) {
   const promise = thisValue;
   return Q(Invoke(promise, NewValue('then'), [NewValue(undefined), onRejected]));
 }
 
-function ThenFinallyFunctions(realm, [value]) {
+function ThenFinallyFunctions([value]) {
   const F = this;
 
   const onFinally = F.OnFinally;
@@ -45,7 +45,7 @@ function ThenFinallyFunctions(realm, [value]) {
   return Q(Invoke(promise, NewValue('then'), [valueThunk]));
 }
 
-function CatchFinallyFunctions(realm, [reason]) {
+function CatchFinallyFunctions([reason]) {
   const F = this;
 
   const onFinally = F.OnFinally;
@@ -58,7 +58,7 @@ function CatchFinallyFunctions(realm, [reason]) {
   return Q(Invoke(promise, NewValue('then'), [thrower]));
 }
 
-function PromiseProto_finally(realm, [onFinally], { thisValue }) {
+function PromiseProto_finally([onFinally], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -83,7 +83,7 @@ function PromiseProto_finally(realm, [onFinally], { thisValue }) {
   return Q(Invoke(promise, NewValue('then'), [thenFinally, catchFinally]));
 }
 
-function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   Assert(IsPromise(promise).isTrue());
   if (resultCapability) {
     Assert(resultCapability instanceof PromiseCapabilityRecord);
@@ -124,7 +124,7 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
   return resultCapability.Promise;
 }
 
-function PromiseProto_then(realm, [onFulfilled, onRejected], { thisValue }) {
+function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise).isFalse()) {
     return surroundingAgent.Throw('TypeError');

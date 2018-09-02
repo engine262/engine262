@@ -1,8 +1,15 @@
 module.exports = {
   extends: 'airbnb',
+  overrides: [
+    {
+      files: ['*.js'],
+      parserOptions: { sourceType: 'script' },
+    },
+  ],
   rules: {
     // TODO: turn back on after we fix out ReturnIfAbrupt transform
     'prefer-const': 'off',
+    'strict': ['error', 'global'],
     'prefer-destructuring': 'off',
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
     'arrow-parens': ['error', 'always'],

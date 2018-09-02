@@ -21,7 +21,7 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function NumberToString(realm, args, { thisValue }) {
+function NumberToString(args, { thisValue }) {
   const [radix] = args;
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;

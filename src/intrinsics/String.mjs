@@ -12,7 +12,7 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-function StringConstructor(realm, args, { NewTarget }) {
+function StringConstructor(args, { NewTarget }) {
   let s;
   if (args.length === 0) {
     // String ( )

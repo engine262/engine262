@@ -25,7 +25,7 @@ export function CreateNativeError(realmRec) {
     'TypeError',
     'URIError',
   ].forEach((name) => {
-    const cons = CreateBuiltinFunction((realm, [message = NewValue(undefined)], { NewTarget }) => {
+    const cons = CreateBuiltinFunction(([message = NewValue(undefined)], { NewTarget }) => {
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
         newTarget = surroundingAgent.activeFunctionObject;

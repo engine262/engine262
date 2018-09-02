@@ -1,21 +1,22 @@
 'use strict';
 
-const path = require('path');
-const COMPLETION_PATH = path.resolve('./src/completion.mjs');
-const NOTATIONAL_CONVENTIONS_PATH = path.resolve('./src/abstract-ops/notational-conventions.mjs');
+const { relative, resolve } = require('path');
+
+const COMPLETION_PATH = resolve('./src/completion.mjs');
+const NOTATIONAL_CONVENTIONS_PATH = resolve('./src/abstract-ops/all.mjs');
 
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
-    const r = path.relative(file.opts.filename, COMPLETION_PATH).replace('../', './');
+    const r = relative(file.opts.filename, COMPLETION_PATH).replace('../', './');
     return template.ast(`
       import { Completion, AbruptCompletion } from "${r}";
     `);
   }
 
-  function createImportAssert(file) {
-    const r = path.relative(file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
+  function createImportAssertAndCall(file) {
+    const r = relative(file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
     return template.ast(`
-      import { Assert } from "${r}";
+      import { Assert, Call } from "${r}";
     `);
   }
 
@@ -67,7 +68,18 @@ module.exports = ({ types: t, template }) => {
           ID = ID.Value;
         }
       `),
-    }
+    },
+    Promise: {
+      dontCare: template.statement(`
+        if (ID instanceof AbruptCompletion) {
+          const hygenicTemp2 = Call(CAPABILITY.Reject, NewValue(undefined), [ID.Value]);
+          if (hygenicTemp2 instanceof AbruptCompletion) {
+            return hygenicTemp2;
+          }
+          return CAPABILITY.Promise;
+        }
+      `),
+    },
   };
 
   function findParentStatementPath(path) {
@@ -96,13 +108,15 @@ module.exports = ({ types: t, template }) => {
           state.needCompletion = false;
           state.foundAssert = false;
           state.needAssert = false;
+          state.foundCall = false;
+          state.needCall = false;
         },
         exit(path, state) {
           if (!state.foundCompletion && state.needCompletion) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
-          if (!state.foundAssert && state.needAssert) {
-            path.node.body.unshift(createImportAssert(state.file));
+          if ((!state.foundAssert && state.needAssert) || (!state.foundCall && state.needCall)) {
+            path.node.body.unshift(createImportAssertAndCall(state.file));
           }
         },
       },
@@ -122,6 +136,9 @@ module.exports = ({ types: t, template }) => {
         }
         if (path.node.specifiers.find((s) => s.local.name === 'Assert')) {
           state.foundAssert = true;
+        }
+        if (path.node.specifiers.find((s) => s.local.name === 'Call')) {
+          state.foundCall = true;
         }
       },
       CallExpression(path, state) {
@@ -156,6 +173,11 @@ module.exports = ({ types: t, template }) => {
           state.needCompletion = true;
           state.needAssert = true;
           replace(templates.X, 'val');
+        } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
+          state.needCompletion = true;
+          state.needCall = true;
+          const [ID, CAPABILITY] = path.node.arguments;
+          path.parentPath.replaceWith(templates.Promise.dontCare({ ID, CAPABILITY }));
         }
 
         function replace(templateObj, temporaryVariableName) {

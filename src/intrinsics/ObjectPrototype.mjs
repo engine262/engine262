@@ -18,13 +18,13 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-function ObjectProto_hasOwnProperty(realm, [V], { thisValue }) {
+function ObjectProto_hasOwnProperty([V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   return HasOwnProperty(O, P);
 }
 
-function ObjectProto_isPrototypeOf(realm, [V], { thisValue }) {
+function ObjectProto_isPrototypeOf([V], { thisValue }) {
   if (Type(V) !== 'Object') {
     return NewValue(false);
   }
@@ -40,7 +40,7 @@ function ObjectProto_isPrototypeOf(realm, [V], { thisValue }) {
   }
 }
 
-function ObjectProto_propertyIsEnumerable(realm, [V], { thisValue }) {
+function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
@@ -50,12 +50,12 @@ function ObjectProto_propertyIsEnumerable(realm, [V], { thisValue }) {
   return desc.Enumerable;
 }
 
-function ObjectProto_toLocaleString(realm, argList, { thisValue }) {
+function ObjectProto_toLocaleString(argList, { thisValue }) {
   const O = thisValue;
   return Q(Invoke(O, 'toString'));
 }
 
-function ObjectProto_toString(realm, argList, { thisValue }) {
+function ObjectProto_toString(argList, { thisValue }) {
   if (Type(thisValue) === 'Undefined') {
     return NewValue('[object Undefined]');
   }
@@ -93,7 +93,7 @@ function ObjectProto_toString(realm, argList, { thisValue }) {
   return NewValue(`[object ${tag}]`);
 }
 
-function ObjectProto_valueOf(realm, argList, { thisValue }) {
+function ObjectProto_valueOf(argList, { thisValue }) {
   return Q(ToObject(thisValue));
 }
 

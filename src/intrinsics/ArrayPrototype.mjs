@@ -72,7 +72,7 @@ function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [length]));
 }
 
-function ArrayProto_concat(realm, args, { thisValue }) {
+function ArrayProto_concat(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, NewValue(0)));
   let n = 0;
@@ -108,7 +108,7 @@ function ArrayProto_concat(realm, args, { thisValue }) {
   return NewValue(true);
 }
 
-function ArrayProto_copyWithin(realm, [target, start, end], { thisValue }) {
+function ArrayProto_copyWithin([target, start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length')))));
   const relativeTarget = Q(ToInteger(target));
@@ -163,12 +163,12 @@ function ArrayProto_copyWithin(realm, [target, start, end], { thisValue }) {
   return O;
 }
 
-function ArrayProto_entries(realm, args, { thisValue }) {
+function ArrayProto_entries(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
-function ArrayProto_every(realm, [callbackFn, thisArg], { thisValue }) {
+function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length')))));
   if (IsCallable(callbackFn).isFalse()) {
@@ -196,7 +196,7 @@ function ArrayProto_every(realm, [callbackFn, thisArg], { thisValue }) {
   return NewValue(true);
 }
 
-function ArrayProto_fill(realm, [value, start, end], { thisValue }) {
+function ArrayProto_fill([value, start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
@@ -226,7 +226,7 @@ function ArrayProto_fill(realm, [value, start, end], { thisValue }) {
   return O;
 }
 
-function ArrayProto_filter(realm, [callbackfn, thisArg], { thisValue }) {
+function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
@@ -252,7 +252,7 @@ function ArrayProto_filter(realm, [callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
-function ArrayProto_find(realm, [predicate, thisArg], { thisValue }) {
+function ArrayProto_find([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (IsCallable(predicate).isFalse()) {
@@ -272,7 +272,7 @@ function ArrayProto_find(realm, [predicate, thisArg], { thisValue }) {
   return NewValue(undefined);
 }
 
-function ArrayProto_findIndex(realm, [predicate, thisArg], { thisValue }) {
+function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (IsCallable(predicate).isFalse()) {
@@ -292,7 +292,7 @@ function ArrayProto_findIndex(realm, [predicate, thisArg], { thisValue }) {
   return NewValue(-1);
 }
 
-function ArrayProto_forEach(realm, [callbackfn, thisArg], { thisValue }) {
+function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
@@ -312,7 +312,7 @@ function ArrayProto_forEach(realm, [callbackfn, thisArg], { thisValue }) {
   return NewValue(undefined);
 }
 
-function ArrayProto_includes(realm, [searchElement, fromIndex], { thisValue }) {
+function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (len === 0) {
@@ -338,12 +338,12 @@ function ArrayProto_includes(realm, [searchElement, fromIndex], { thisValue }) {
   return NewValue(false);
 }
 
-function ArrayProto_keys(realm, args, { thisValue }) {
+function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
 }
 
-function ArrayProto_map(realm, [callbackfn, thisArg], { thisValue }) {
+function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
@@ -365,7 +365,7 @@ function ArrayProto_map(realm, [callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
-function ArrayProto_values(realm, args, { thisValue }) {
+function ArrayProto_values(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
 }

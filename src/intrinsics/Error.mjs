@@ -13,7 +13,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 
-function ErrorConstructor(realm, [message], { NewTarget }) {
+function ErrorConstructor([message], { NewTarget }) {
   let newTarget;
   if (Type(NewTarget) === 'Undefined') {
     newTarget = surroundingAgent.activeFunctionObject;

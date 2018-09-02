@@ -13,7 +13,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-function ErrorProto_toString(realm, args, { thisValue }) {
+function ErrorProto_toString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError');

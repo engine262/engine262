@@ -25,16 +25,16 @@ function thisSymbolValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function SymbolToString(realm, argList, { thisValue }) {
+function SymbolToString(argList, { thisValue }) {
   const sym = Q(thisSymbolValue(thisValue));
   return SymbolDescriptiveString(sym);
 }
 
-function SymbolValueOf(realm, argList, { thisValue }) {
+function SymbolValueOf(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
-function SymbolToPrimitive(realm, argList, { thisValue }) {
+function SymbolToPrimitive(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
