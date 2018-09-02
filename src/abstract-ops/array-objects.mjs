@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  ArrayValue,
+  ArrayExoticObjectValue,
   New as NewValue,
   Type,
 } from '../value.mjs';
@@ -27,7 +27,7 @@ export function ArrayCreate(length, proto) {
   if (proto === undefined) {
     proto = surroundingAgent.intrinsic('%ArrayPrototype%');
   }
-  const A = new ArrayValue();
+  const A = new ArrayExoticObjectValue();
 
   // Set A's essential internal methods except for [[DefineOwnProperty]]
   // to the default ordinary object definitions specified in 9.1.

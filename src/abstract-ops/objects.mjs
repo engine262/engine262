@@ -379,15 +379,15 @@ export function ObjectCreate(
     internalSlotsList = [];
   }
 
-  const obj = new ObjectValue(proto);
+  const obj = new ObjectValue();
 
   // The following steps happen in ObjectValue constructor:
   //
   // Set obj's essential internal methods to the default ordinary
   // object definitions specified in 9.1.
-  //
-  // Set obj.[[Prototype]] to proto.
-  // Set obj.[[Extensible]] to true.
+
+  obj.Prototype = proto;
+  obj.Extensible = true;
 
   return obj;
 }

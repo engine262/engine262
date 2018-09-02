@@ -13,6 +13,7 @@ import {
   IsConstructor,
   IsPromise,
   NewPromiseCapability,
+  ObjectCreate,
   PromiseCapabilityRecord,
   PromiseReactionJob,
   PromiseResolve,
@@ -22,7 +23,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
@@ -135,7 +135,7 @@ function PromiseProto_then(realm, [onFulfilled, onRejected], { thisValue }) {
 }
 
 export function CreatePromisePrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
 
   [
     ['catch', PromiseProto_catch, 1],

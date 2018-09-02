@@ -4,6 +4,7 @@ import {
 import {
   CreateBuiltinFunction,
   DefinePropertyOrThrow,
+  ObjectCreate,
   OrdinaryCreateFromConstructor,
   SetFunctionLength,
   SetFunctionName,
@@ -11,7 +12,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -25,7 +25,7 @@ export function CreateNativeError(realmRec) {
     'TypeError',
     'URIError',
   ].forEach((name) => {
-    const cons = CreateBuiltinFunction((realm, [message], { NewTarget }) => {
+    const cons = CreateBuiltinFunction((realm, [message = NewValue(undefined)], { NewTarget }) => {
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
         newTarget = surroundingAgent.activeFunctionObject;
@@ -49,8 +49,7 @@ export function CreateNativeError(realmRec) {
     SetFunctionLength(cons, NewValue(1));
     SetFunctionName(cons, NewValue(name));
 
-    const proto = new ObjectValue(undefined, realmRec);
-    proto.Prototype = realmRec.Intrinsics['%ErrorPrototype%'];
+    const proto = ObjectCreate(realmRec.Intrinsics['%ErrorPrototype%']);
 
     cons.DefineOwnProperty(NewValue('prototype'), {
       Value: proto,

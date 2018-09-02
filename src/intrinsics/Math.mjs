@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
@@ -8,11 +7,12 @@ import {
 } from '../engine.mjs';
 import {
   CreateBuiltinFunction,
+  ObjectCreate,
 } from '../abstract-ops/all.mjs';
 
 // 20.2 The Math Object
 export function CreateMath(realmRec) {
-  const mathObj = new ObjectValue(undefined, realmRec);
+  const mathObj = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
 
   // 20.2.1 Value Properties of the Math Object
   [

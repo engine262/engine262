@@ -7,16 +7,14 @@ import {
   ArraySetLength,
   Assert,
   Call,
+  CreateListFromArrayLike,
   CompletePropertyDescriptor,
-  Construct,
-  CreateArrayFromList,
   FromPropertyDescriptor,
   Get,
   GetMethod,
   HasOwnProperty,
   IsAccessorDescriptor,
   IsCompatiblePropertyDescriptor,
-  IsConstructor,
   IsDataDescriptor,
   IsExtensible,
   IsPropertyKey,
@@ -124,14 +122,11 @@ Object.freeze(wellKnownSymbols);
 
 
 export class ObjectValue extends Value {
-  constructor(Prototype, realm = surroundingAgent.currentRealmRecord) {
+  constructor() {
     super();
 
-    this.Prototype = Prototype
-      || realm.Intrinsics['%ObjectPrototype%']
-      || nullValue;
-
-    this.Extensible = true;
+    this.Prototype = undefined;
+    this.Extensible = undefined;
     this.IsClassPrototype = false;
     this.properties = new Map();
   }
@@ -181,7 +176,7 @@ export class ObjectValue extends Value {
   }
 }
 
-export class ArrayValue extends ObjectValue {
+export class ArrayExoticObjectValue extends ObjectValue {
   DefineOwnProperty(P, Desc) {
     const A = this;
 
@@ -215,11 +210,11 @@ export class ArrayValue extends ObjectValue {
 export class FunctionValue extends ObjectValue {}
 
 export class BuiltinFunctionValue extends FunctionValue {
-  constructor(nativeFunction, realm) {
+  constructor(nativeFunction) {
     // Unless otherwise specified every built-in function object has the
     // %FunctionPrototype% object as the initial value of its [[Prototype]]
     // internal slot.
-    super(realm.Intrinsics['%FunctionPrototype%'], realm);
+    super();
     this.nativeFunction = nativeFunction;
     // Will be filled in CreateBuiltinFunction.
     this.Realm = undefined;
@@ -240,7 +235,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisValue: thisArgument,
-      newTarget: undefinedValue,
+      NewTarget: undefinedValue,
     });
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
@@ -262,7 +257,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = this.nativeFunction(calleeRealm, argumentsList, {
       thisValue: undefinedValue,
-      newTarget,
+      NewTarget: newTarget,
     });
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
@@ -271,65 +266,19 @@ export class BuiltinFunctionValue extends FunctionValue {
   }
 }
 
-export class ProxyValue extends ObjectValue {
-  constructor(
-    ProxyTarget,
-    ProxyHandler,
-  ) {
+export class ProxyExoticObjectValue extends ObjectValue {
+  constructor() {
     super();
 
-    this.ProxyTarget = ProxyTarget;
-    this.ProxyHandler = ProxyHandler;
-
-    if (Type(ProxyTarget) === 'Function') {
-      this.Call = (thisArgument, argumentsList) => {
-        const O = this;
-
-        const handler = O.ProxyHandler;
-        if (Type(handler) === 'Null') {
-          return surroundingAgent.Throw('TypeError');
-        }
-        Assert(Type(handler) === 'Object');
-        const target = O.ProxyTarget;
-        const trap = GetMethod(handler, New('apply'));
-        if (Type(trap) === 'Undefined') {
-          return Call(target, thisArgument, argumentsList);
-        }
-        const argArray = CreateArrayFromList(argumentsList);
-        return Call(trap, handler, [target, thisArgument, argArray]);
-      };
-    }
-
-    if ('Construct' in ProxyTarget) {
-      this.Construct = (argumentsList, newTarget) => {
-        const O = this;
-
-        const handler = O.ProxyHandler;
-        if (Type(handler) === 'Null') {
-          return surroundingAgent.Throw('TypeError');
-        }
-        Assert(Type(handler) === 'Object');
-        const target = O.ProxyTarget;
-        const trap = GetMethod(handler, New('construct'));
-        if (Type(trap) === 'Undefined') {
-          Assert(IsConstructor(target).isTrue());
-          return Construct(target, argumentsList, newTarget);
-        }
-        const argArray = CreateArrayFromList(argumentsList);
-        const newObj = Call(trap, handler, [target, argArray, newTarget]);
-        if (Type(newObj) !== 'Object') {
-          return surroundingAgent.Throw('TypeError');
-        }
-        return newObj;
-      };
-    }
+    this.ProxyTarget = undefined;
+    this.ProxyHandler = undefined;
   }
 
   GetPrototypeOf() {
     const O = this;
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform getPrototypeOf on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -358,7 +307,7 @@ export class ProxyValue extends ObjectValue {
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform setPrototypeOf on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -386,7 +335,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform isExtensible on proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -407,7 +356,7 @@ export class ProxyValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform preventExtensions on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -431,7 +380,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform getOwnPropertyDescriptor on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -479,7 +428,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform defineProperty on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -524,7 +473,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform has on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -554,7 +503,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform get on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -585,7 +534,7 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform set on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -619,19 +568,19 @@ export class ProxyValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (Type(handler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot perform deleteProperty on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = GetMethod(handler, New('deleteProperty'));
+    const trap = Q(GetMethod(handler, New('deleteProperty')));
     if (Type(trap) === 'Undefined') {
-      return target.Delete(P);
+      return Q(target.Delete(P));
     }
-    const booleanTrapResult = ToBoolean(Call(trap, handler, [target, P]));
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
     if (booleanTrapResult.isFalse()) {
       return falseValue;
     }
-    const targetDesc = target.GetOwnProperty(P);
+    const targetDesc = Q(target.GetOwnProperty(P));
     if (Type(targetDesc) === 'Undefined') {
       return trueValue;
     }
@@ -641,7 +590,59 @@ export class ProxyValue extends ObjectValue {
     return trueValue;
   }
 
-  OwnPropertyKeys() {}
+  OwnPropertyKeys() {
+    const O = this;
+
+    const handler = O.ProxyHandler;
+    if (Type(handler) === 'Null') {
+      return surroundingAgent.Throw('TypeError', 'cannot perform ownKeys on a proxy that has been revoked');
+    }
+    Assert(Type(handler) === 'Object');
+    const target = O.ProxyTarget;
+    const trap = Q(GetMethod(handler, New('ownKeys')));
+    if (Type(trap) === 'Undefined') {
+      return Q(target.OwnPropertyKeys());
+    }
+    const trapResultArray = Q(Call(trap, handler, [target]));
+    const trapResult = Q(CreateListFromArrayLike(trapResultArray, ['String', 'Symbol']));
+    if (trapResult.some((e) => trapResult.indexOf(e) !== trapResult.lastIndexOf(e))) {
+      return surroundingAgent.Throw('TypeError');
+    }
+    const extensibleTarget = Q(IsExtensible(target));
+    const targetKeys = Q(target.OwnPropertyKeys());
+    // Assert: targetKeys is a List containing only String and Symbol values.
+    // Assert: targetKeys contains no duplicate entries.
+    const targetConfigurableKeys = [];
+    const targetNonconfigurableKeys = [];
+    for (const key of targetKeys) {
+      const desc = Q(target.GetOwnProperty(key));
+      if (Type(desc) !== 'Undefined' && desc.Configurable === false) {
+        targetNonconfigurableKeys.push(key);
+      } else {
+        targetConfigurableKeys.push(key);
+      }
+    }
+    if (extensibleTarget.isTrue() && targetNonconfigurableKeys.length === 0) {
+      return trapResultArray;
+    }
+    const uncheckedResultKeys = [...trapResult];
+    for (const key of targetNonconfigurableKeys) {
+      if (!uncheckedResultKeys.includes(key)) {
+        return surroundingAgent.Throw('TypeError', 'ownKeys trap result does not include non-configurable key');
+      }
+      uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
+    }
+    if (extensibleTarget.isTrue()) {
+      return trapResultArray;
+    }
+    for (const key of targetConfigurableKeys) {
+      if (!uncheckedResultKeys.includes(key)) {
+        return surroundingAgent.Throw('TypeError');
+      }
+      uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
+    }
+    return trapResultArray;
+  }
 }
 
 export class StringExoticObjectValue extends ObjectValue {
@@ -801,7 +802,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     Assert(Type(targetModule) !== 'Undefined');
     const targetEnv = targetModule.Environment;
     if (Type(targetEnv) === 'Undefined') {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
     }
     const targetEnvRec = targetEnv.EnvironmentRecord;
     return Q(targetEnvRec.GetBindingValue(binding.BindingName, New(true)));
@@ -950,7 +951,7 @@ const falseValue = new BooleanValue(false);
 const stringMap = new Map();
 const numberMap = new Map();
 
-export function New(value, realm) {
+export function New(value) {
   if (value === null) {
     return nullValue;
   }
@@ -986,7 +987,7 @@ export function New(value, realm) {
   }
 
   if (typeof value === 'function') {
-    return new BuiltinFunctionValue(value, realm);
+    return new BuiltinFunctionValue(value);
   }
 
   throw outOfRange('NewValue', value);

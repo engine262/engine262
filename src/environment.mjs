@@ -168,7 +168,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       if (S.isFalse()) {
         return NewValue(undefined);
       } else {
-        return surroundingAgent.Throw('ReferenceError');
+        return surroundingAgent.Throw('ReferenceError', `${N.stringValue()} is not defined`);
       }
     }
     return Q(Get(bindings, N));
@@ -184,7 +184,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     const envRec = this;
     Assert(envRec.ThisBindingStatus !== 'lexical');
     if (envRec.ThisBindingStatus === 'initialized') {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', 'this is not defined');
     }
     envRec.ThisValue = V;
     envRec.ThisBindingStatus = 'initialized';
@@ -204,7 +204,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     const envRec = this;
     Assert(envRec.ThisBindingStatus !== 'lexical');
     if (envRec.ThisBindingStatus === 'uninitialized') {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', 'this is not defined');
     }
     return envRec.ThisValue;
   }

@@ -1,16 +1,15 @@
 import {
   New as NewValue,
-  ObjectValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
+  ObjectCreate,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 
 export function CreateAsyncIteratorPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
-  proto.Prototype = realmRec.Intrinsics['%IteratorPrototype%'];
+  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
 
   const fn = CreateBuiltinFunction((realm, args, { thisValue }) => thisValue, [], realmRec);
   SetFunctionName(fn, NewValue('[Symbol.asyncIterator]'));

@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from '../value.mjs';
 import {
@@ -9,6 +8,7 @@ import {
 import {
   Assert,
   CreateBuiltinFunction,
+  ObjectCreate,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
@@ -38,7 +38,8 @@ function BooleanProto_valueOf(realm, argList, { thisValue }) {
 }
 
 export function CreateBooleanPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
+  proto.BooleanData = NewValue(false);
 
   [
     ['toString', BooleanProto_toString],

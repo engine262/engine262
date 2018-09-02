@@ -3,7 +3,6 @@ import {
 } from '../engine.mjs';
 import {
   New as NewValue,
-  ObjectValue,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -13,6 +12,7 @@ import {
   CreateBuiltinFunction,
   CreateIterResultObject,
   Get,
+  ObjectCreate,
   ToLength,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -62,8 +62,7 @@ function ArrayIteratorPrototype_next(realm, args, { thisValue }) {
 }
 
 export function CreateArrayIteratorPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
-  proto.Prototype = realmRec.Intrinsics['%IteratorPrototype%'];
+  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype']);
 
   proto.DefineOwnProperty(NewValue('next'), {
     Value: CreateBuiltinFunction(ArrayIteratorPrototype_next, [], realmRec),

@@ -1,6 +1,6 @@
 import {
   New as NewValue,
-  ProxyValue,
+  ProxyExoticObjectValue,
   Type,
 } from '../value.mjs';
 import {
@@ -41,7 +41,7 @@ export function IsArray(argument) {
   if (Type(argument) === 'Array') {
     return NewValue(true);
   }
-  if (argument instanceof ProxyValue) {
+  if (argument instanceof ProxyExoticObjectValue) {
     if (Type(argument.ProxyHandler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }
@@ -103,6 +103,26 @@ export function SameValue(x, y) {
     return false;
   }
 
+  return SameValueNonNumber(x, y);
+}
+
+// #sec-samevaluezero
+export function SameValueZero(x, y) {
+  if (Type(x) !== Type(y)) {
+    return false;
+  }
+  if (Type(x) === 'Number') {
+    if (x.isNaN() && y.isNaN()) {
+      return true;
+    }
+    // If x is +0 and y is -0, return true.
+    // If x is -0 and y is +0, return true.
+    // If x is the same Number value as y, return true.
+    if (x.numberValue() === y.numberValue()) {
+      return true;
+    }
+    return false;
+  }
   return SameValueNonNumber(x, y);
 }
 

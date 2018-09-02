@@ -12,7 +12,15 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-[1, 2, 3].forEach(print);
+const p = Proxy.revocable({}, {});
+
+p.revoke();
+
+try {
+  p.proxy.a;
+} catch (e) {
+  print(e);
+}
 `);
 
 console.log(completion); // eslint-disable-line no-console

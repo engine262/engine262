@@ -1,5 +1,5 @@
 import {
-  ArrayValue,
+  ArrayExoticObjectValue,
   New as NewValue,
   Type,
   Value,
@@ -16,6 +16,7 @@ import {
   Construct,
   CreateArrayIterator,
   CreateBuiltinFunction,
+  CreateDataProperty,
   CreateDataPropertyOrThrow,
   DeletePropertyOrThrow,
   Get,
@@ -24,7 +25,9 @@ import {
   IsArray,
   IsCallable,
   IsConstructor,
+  ObjectCreate,
   SameValue,
+  SameValueZero,
   Set,
   SetFunctionLength,
   SetFunctionName,
@@ -309,13 +312,74 @@ function ArrayProto_forEach(realm, [callbackfn, thisArg], { thisValue }) {
   return NewValue(undefined);
 }
 
+function ArrayProto_includes(realm, [searchElement, fromIndex], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (len === 0) {
+    return NewValue(false);
+  }
+  const n = fromIndex ? Q(ToInteger(fromIndex)) : 0;
+  let k;
+  if (n >= 0) {
+    k = n;
+  } else {
+    k = len + n;
+    if (k < 0) {
+      k = 0;
+    }
+  }
+  while (k < len) {
+    const elementK = Q(Get(O, X(ToString(NewValue(k)))));
+    if (SameValueZero(searchElement, elementK)) {
+      return NewValue(true);
+    }
+    k += 1;
+  }
+  return NewValue(false);
+}
+
+function ArrayProto_keys(realm, args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  return CreateArrayIterator(O, 'key');
+}
+
+function ArrayProto_map(realm, [callbackfn, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+  }
+  const T = thisArg || NewValue(undefined);
+  const A = Q(ArraySpeciesCreate(O, 0));
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      const mappedValue = Q(Call(callbackfn, T, [kValue, NewValue(k), O]));
+      Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
+    }
+    k += 1;
+  }
+  return A;
+}
+
 function ArrayProto_values(realm, args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
 }
 
 export function CreateArrayPrototype(realmRec) {
-  const proto = new ArrayValue(undefined, realmRec);
+  const proto = new ArrayExoticObjectValue();
+  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  proto.Extensible = true;
+  proto.properties.set(NewValue('length'), {
+    Value: NewValue(0),
+    Writable: true,
+    Enumerable: false,
+    Configurable: false,
+  });
 
   [
     ['concat', ArrayProto_concat, 1],
@@ -327,6 +391,25 @@ export function CreateArrayPrototype(realmRec) {
     ['find', ArrayProto_find, 1],
     ['findIndex', ArrayProto_findIndex, 1],
     ['forEach', ArrayProto_forEach, 1],
+    ['includes', ArrayProto_includes, 1],
+    // indexOf
+    // join
+    ['keys', ArrayProto_keys, 0],
+    // lastIndexOf
+    ['map', ArrayProto_map, 1],
+    // pop
+    // push
+    // reduce
+    // reduceRight
+    // reverse
+    // shift
+    // slice
+    // some
+    // sort
+    // splice
+    // toLocaleString
+    // toString
+    // unshift
     ['values', ArrayProto_values, 0],
   ].forEach(([name, nativeFunction, length]) => {
     const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
@@ -342,7 +425,26 @@ export function CreateArrayPrototype(realmRec) {
 
   proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(NewValue('values')));
 
+  {
+    const unscopableList = ObjectCreate(NewValue(null));
+    CreateDataProperty(unscopableList, NewValue('copyWithin'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('entries'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('fill'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('find'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('findIndex'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('includes'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('keys'), NewValue(true));
+    CreateDataProperty(unscopableList, NewValue('values'), NewValue(true));
+    proto.DefineOwnProperty(wellKnownSymbols.unscopables, {
+      Value: unscopableList,
+      Writable: false,
+      Enumerable: false,
+      Configurable: false,
+    });
+  }
+
   realmRec.Intrinsics['%ArrayPrototype%'] = proto;
 
-  realmRec.Intrinsics['%ArrayProto_entries%'] = proto.Get(NewValue('entries'));
+  realmRec.Intrinsics['%ArrayProto_keys%'] = proto.Get(NewValue('keys'), proto);
+  realmRec.Intrinsics['%ArrayProto_entries%'] = proto.Get(NewValue('entries'), proto);
 }

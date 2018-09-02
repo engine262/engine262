@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from './value.mjs';
 import {
@@ -31,6 +30,7 @@ import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
+import { CreateProxy } from './intrinsics/Proxy.mjs';
 import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
 import { CreateString } from './intrinsics/String.mjs';
 import { CreateErrorPrototype } from './intrinsics/ErrorPrototype.mjs';
@@ -84,9 +84,7 @@ export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  // Use ObjectValue() constructor instead of ObjectCreate as we don't have a
-  // current Realm record yet.
-  const objProto = new ObjectValue(NewValue(null), realmRec);
+  const objProto = ObjectCreate(NewValue(null));
   intrinsics['%ObjectPrototype%'] = objProto;
 
   const thrower = CreateBuiltinFunction(
@@ -135,6 +133,8 @@ export function CreateIntrinsics(realmRec) {
   CreatePromisePrototype(realmRec);
   CreatePromise(realmRec);
 
+  CreateProxy(realmRec);
+
   CreateMath(realmRec);
 
   return intrinsics;
@@ -144,7 +144,7 @@ export function CreateIntrinsics(realmRec) {
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   if (Type(globalObj) === 'Undefined') {
     const intrinsics = realmRec.Intrinsics;
-    globalObj = ObjectCreate(intrinsics.ObjectPrototype);
+    globalObj = ObjectCreate(intrinsics['%ObjectPrototype%']);
   }
 
   if (Type(thisValue) === 'Undefined') {
@@ -205,6 +205,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Number',
     'Object',
     'Promise',
+    'Proxy',
     'String',
     'Symbol',
     'Error',

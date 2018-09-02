@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   PrimitiveValue,
   Type,
   wellKnownSymbols,
@@ -14,6 +13,7 @@ import {
   Get,
   GetMethod,
   IsCallable,
+  ObjectCreate,
   SameValue,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -237,26 +237,26 @@ export function ToObject(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot convert undefined to object');
     case 'Null':
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'cannot convert null to object');
     case 'Boolean': {
-      const obj = new ObjectValue(surroundingAgent.intrinsic('%BooleanPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%BooleanPrototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      const obj = new ObjectValue(surroundingAgent.intrinsic('%NumberPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%NumberPrototype%'));
       obj.NumberData = argument;
       return obj;
     }
     case 'String': {
-      const obj = new ObjectValue(surroundingAgent.intrinsic('%StringPrototyep%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%StringPrototype%'));
       obj.StringData = argument;
       return obj;
     }
     case 'Symbol': {
-      const obj = new ObjectValue(surroundingAgent.intrinsic('%SymbolPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%SymbolPrototype%'));
       obj.SymbolData = argument;
       return obj;
     }

@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -11,6 +10,7 @@ import {
 import {
   Assert,
   CreateBuiltinFunction,
+  ObjectCreate,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
@@ -43,7 +43,7 @@ function SymbolToStringTag() {
 }
 
 export function CreateSymbolPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
 
   [
     ['toString', SymbolToString],

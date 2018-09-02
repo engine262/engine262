@@ -3,12 +3,12 @@ import {
 } from '../engine.mjs';
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
   Get,
+  ObjectCreate,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
@@ -40,7 +40,7 @@ function ErrorProto_toString(realm, args, { thisValue }) {
 }
 
 export function CreateErrorPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
 
   proto.DefineOwnProperty(NewValue('toString'), {
     Value: CreateBuiltinFunction(ErrorProto_toString, [], realmRec),

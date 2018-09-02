@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  ObjectValue,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -10,6 +9,7 @@ import {
   HasOwnProperty,
   Invoke,
   IsArray,
+  ObjectCreate,
   SameValue,
   SetFunctionLength,
   SetFunctionName,
@@ -98,7 +98,8 @@ function ObjectProto_valueOf(realm, argList, { thisValue }) {
 }
 
 export function CreateObjectPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  // FIXME(devsnek): this should be an immutable prototype object
+  const proto = ObjectCreate(NewValue(null));
 
   [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],

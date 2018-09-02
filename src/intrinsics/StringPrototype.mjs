@@ -58,7 +58,9 @@ function StringProto_valueOf(realm, args, { thisValue }) {
 }
 
 export function CreateStringPrototype(realmRec) {
-  const proto = new StringExoticObjectValue(realmRec);
+  const proto = new StringExoticObjectValue();
+  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  proto.Extensible = true;
   proto.StringData = NewValue('');
 
   [

@@ -1,6 +1,6 @@
 import {
   New as NewValue,
-  ProxyValue,
+  ProxyExoticObjectValue,
   Type,
   Value,
   wellKnownSymbols,
@@ -299,7 +299,7 @@ export function GetFunctionRealm(obj) {
     return obj.Realm;
   }
 
-  if (obj instanceof ProxyValue) {
+  if (obj instanceof ProxyExoticObjectValue) {
     if (Type(obj.ProxyHandler) === 'Null') {
       return surroundingAgent.Throw('TypeError');
     }

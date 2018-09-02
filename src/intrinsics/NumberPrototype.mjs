@@ -1,10 +1,10 @@
 import {
   New as NewValue,
-  ObjectValue,
   Type,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
+  ObjectCreate,
   ToInteger,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -45,7 +45,8 @@ function NumberToString(realm, args, { thisValue }) {
 }
 
 export function CreateNumberPrototype(realmRec) {
-  const proto = new ObjectValue(undefined, realmRec);
+  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
+  proto.NumberData = NewValue(0);
 
   [
     ['toString', NumberToString],
