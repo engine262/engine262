@@ -623,7 +623,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       }
     }
     if (extensibleTarget.isTrue() && targetNonconfigurableKeys.length === 0) {
-      return trapResultArray;
+      return trapResult;
     }
     const uncheckedResultKeys = [...trapResult];
     for (const key of targetNonconfigurableKeys) {
@@ -633,7 +633,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
     }
     if (extensibleTarget.isTrue()) {
-      return trapResultArray;
+      return trapResult;
     }
     for (const key of targetConfigurableKeys) {
       if (!uncheckedResultKeys.includes(key)) {
@@ -641,7 +641,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       }
       uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
     }
-    return trapResultArray;
+    return trapResult;
   }
 }
 

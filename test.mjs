@@ -12,15 +12,9 @@ import { NonSpecRunScript } from './lib/engine.mjs';
 const completion = NonSpecRunScript(`
 'use strict';
 
-const p = Proxy.revocable({}, {});
+const d = Reflect.getOwnPropertyDescriptor(this, 'print');
 
-p.revoke();
-
-try {
-  p.proxy.a;
-} catch (e) {
-  print(e);
-}
+print(d.value);
 `);
 
 console.log(completion); // eslint-disable-line no-console

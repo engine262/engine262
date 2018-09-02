@@ -31,6 +31,7 @@ import { CreateMath } from './intrinsics/Math.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreateProxy } from './intrinsics/Proxy.mjs';
+import { CreateReflect } from './intrinsics/Reflect.mjs';
 import { CreateStringPrototype } from './intrinsics/StringPrototype.mjs';
 import { CreateString } from './intrinsics/String.mjs';
 import { CreateErrorPrototype } from './intrinsics/ErrorPrototype.mjs';
@@ -135,6 +136,8 @@ export function CreateIntrinsics(realmRec) {
 
   CreateProxy(realmRec);
 
+  CreateReflect(realmRec);
+
   CreateMath(realmRec);
 
   return intrinsics;
@@ -206,6 +209,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Object',
     'Promise',
     'Proxy',
+    'Reflect',
     'String',
     'Symbol',
     'Error',
