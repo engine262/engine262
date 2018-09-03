@@ -9,7 +9,9 @@ import {
   DefinePropertyOrThrow,
   HasOwnProperty,
   IsExtensible,
+  ObjectCreate,
   OrdinaryCreateFromConstructor,
+  IsConstructor,
   ToInteger,
   ToObject,
 } from './all.mjs';
@@ -202,7 +204,7 @@ function FunctionAllocate(functionPrototype, strict, functionKind) {
     .includes(functionKind));
   const needsConstruct = functionKind === 'normal';
   if (functionKind === 'non-constructor') {
-    functionKind = 'normal';
+    functionKind = 'Normal';
   }
   const F = new FunctionValue(functionPrototype);
   F.Call = FunctionCallSlot;
@@ -257,4 +259,30 @@ export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototy
   const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
   const F = FunctionAllocate(prototype, Strict, allocKind);
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
+}
+
+// #sec-makeconstructor
+export function MakeConstructor(F, writablePrototype, prototype) {
+  Assert(F instanceof FunctionValue);
+  Assert(IsConstructor(F).isTrue());
+  Assert(X(IsExtensible(F)).isTrue() && X(HasOwnProperty(F, NewValue('prototype')).isFalse()));
+  if (writablePrototype === undefined) {
+    writablePrototype = true;
+  }
+  if (prototype === undefined) {
+    prototype = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+    X(DefinePropertyOrThrow(prototype, NewValue('constructor'), {
+      Value: F,
+      Writable: writablePrototype,
+      Enumerable: false,
+      Configurable: true,
+    }));
+  }
+  X(DefinePropertyOrThrow(F, NewValue('prototype'), {
+    Value: prototype,
+    Writable: writablePrototype,
+    Enumerable: false,
+    Configurable: true,
+  }));
+  return new NormalCompletion(NewValue(undefined));
 }

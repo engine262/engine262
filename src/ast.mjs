@@ -104,6 +104,10 @@ export function isFunctionExpression(node) {
          && !node.async;
 }
 
+export function isFunctionExpressionWithBindingIdentifier(node) {
+  return isFunctionExpression(node) && node.id !== null;
+}
+
 // #prod-ClassExpression
 export function isClassExpression(node) {
   return node.type === 'ClassExpression';

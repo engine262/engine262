@@ -25,6 +25,7 @@ import {
   isBlockStatement,
   isExpressionStatement,
   isFunctionDeclaration,
+  isFunctionExpression,
   isIdentifierReference,
   isLexicalBinding,
   isLexicalDeclaration,
@@ -54,6 +55,7 @@ import {
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_FunctionDeclaration,
+  Evaluate_FunctionExpression,
   Evaluate_Identifier,
   Evaluate_LexicalBinding,
   Evaluate_LexicalDeclaration,
@@ -201,8 +203,8 @@ export function Evaluate_Expression(Expression) {
       case isObjectLiteral(Expression):
         return Evaluate_ObjectLiteral(Expression);
 
-        // case isFunctionExpression(Expression):
-        //   return Evaluate_FunctionExpression(Expression);
+      case isFunctionExpression(Expression):
+        return Evaluate_FunctionExpression(Expression);
 
         // case isClassExpression(Expression):
         //   return Evaluate_ClassExpression(Expression);

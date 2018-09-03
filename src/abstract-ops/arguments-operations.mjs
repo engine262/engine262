@@ -41,7 +41,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   X(DefinePropertyOrThrow(obj, NewValue('callee'), {
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Eumerable: false,
+    Enumerable: false,
     Configurable: false,
   }));
   return obj;
@@ -132,7 +132,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   X(DefinePropertyOrThrow(obj, NewValue('callee'), {
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Eumerable: false,
+    Enumerable: false,
     Configurable: false,
   }));
   return obj;

@@ -11,6 +11,7 @@ export * from './EqualityExpression.mjs';
 export * from './EvaluateBody.mjs';
 export * from './ExponentiationExpression.mjs';
 export * from './FunctionDeclaration.mjs';
+export * from './FunctionExpression.mjs';
 export * from './FunctionStatementList.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './Identifier.mjs';
