@@ -1,40 +1,34 @@
 import {
   ResolveBinding,
-  surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,
-  CopyDataProperties,
-  GetBase,
   GetIterator,
-  GetReferencedName,
-  InitializeReferencedBinding,
   IteratorClose,
-  ObjectCreate,
   PutValue,
+  RequireObjectCoercible,
 } from '../abstract-ops/all.mjs';
 import {
   isArrayBindingPattern,
-  isEmptyObjectBindingPattern,
-  isIdentifier,
+  isBindingIdentifier,
+  isBindingPattern,
+  isBindingRestProperty,
   isObjectBindingPattern,
-  isObjectBindingPatternWithBindingPropertyList,
-  isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty,
-  isObjectBindingPatternWithSingleBindingRestProperty,
 } from '../ast.mjs';
 import {
   New as NewValue,
   Type,
 } from '../value.mjs';
 import {
-  EnvironmentRecord,
-} from '../environment.mjs';
-import {
   NormalCompletion,
   Q,
-  ReturnIfAbrupt,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
+import {
+  IteratorBindingInitialization_ArrayBindingPattern,
+  PropertyBindingInitialization_BindingPropertyList,
+  RestBindingInitialization_BindingRestProperty,
+} from './all.mjs';
 
 // #sec-initializeboundname
 function InitializeBoundName(name, value, environment) {
@@ -49,132 +43,83 @@ function InitializeBoundName(name, value, environment) {
   }
 }
 
-// BindingIdentifier :
-//   Identifier
-//   yield
-//   await
-// BindingPattern :
-//   ObjectBindingPattern
-//   ArrayBindingPattern
-export function BindingInitialization(node, value, environment) {
+// #sec-identifiers-runtime-semantics-bindinginitialization
+//   BindingIdentifier :
+//     Identifier
+//     `yield`
+//     `await`
+export function BindingInitialization_BindingIdentifier(BindingIdentifier, value, environment) {
+  const name = NewValue(BindingIdentifier.name);
+  return Q(InitializeBoundName(name, value, environment));
+}
+
+// #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
+//   BindingPattern :
+//     ObjectBindingPattern
+//     ArrayBindingPattern
+export function BindingInitialization_BindingPattern(BindingPattern, value, environment) {
   switch (true) {
-    case isIdentifier(node): {
-      const name = NewValue(node.name);
-      return Q(InitializeBoundName(name, value, environment));
+    case isObjectBindingPattern(BindingPattern):
+      Q(RequireObjectCoercible(value));
+      return BindingInitialization_ObjectBindingPattern(BindingPattern, value, environment);
+
+    case isArrayBindingPattern(BindingPattern): {
+      const iteratorRecord = Q(GetIterator(value));
+      const result = IteratorBindingInitialization_ArrayBindingPattern(
+        BindingPattern, iteratorRecord, environment,
+      );
+      if (iteratorRecord.Done.isFalse()) {
+        return Q(IteratorClose(iteratorRecord, result));
+      }
+      return result;
     }
-    case isObjectBindingPattern(node):
-      return BindingInitialization_ObjectBindingPattern(node, value, environment);
-    case isArrayBindingPattern(node):
-      return BindingInitialization_ArrayBindingPattern(node, value, environment);
 
     default:
-      throw outOfRange('BindingInitialization', node);
+      throw outOfRange('BindingInitialization_BindingPattern', BindingPattern);
   }
 }
 
-// BindingPattern : ObjectBindingPattern
-function BindingInitialization_ObjectBindingPattern(BindingPattern, value, environment) {
+// #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
+//   ObjectBindingPattern :
+//     `{` `}`
+//     `{` BindingPropertyList `}`
+//     `{` BindingPropertyList `,` `}`
+//     `{` BindingRestProperty `}`
+//     `{` BindingPropertyList `,` BindingRestProperty `}`
+function BindingInitialization_ObjectBindingPattern(ObjectBindingPattern, value, environment) {
+  if (ObjectBindingPattern.properties.length === 0) {
+    return new NormalCompletion(undefined);
+  }
+
+  let BindingRestProperty;
+  let BindingPropertyList = ObjectBindingPattern.properties;
+  const last = ObjectBindingPattern.properties[ObjectBindingPattern.properties.length - 1];
+  if (isBindingRestProperty(last)) {
+    BindingRestProperty = last;
+    BindingPropertyList = BindingPropertyList.slice(0, -1);
+  }
+
+  const excludedNames = Q(PropertyBindingInitialization_BindingPropertyList(
+    BindingPropertyList, value, environment,
+  ));
+  if (BindingRestProperty === undefined) {
+    return new NormalCompletion(undefined);
+  }
+
+  return RestBindingInitialization_BindingRestProperty(
+    BindingRestProperty, value, environment, excludedNames,
+  );
+}
+
+export function BindingInitialization_CatchParameter(CatchParameter, value, environment) {
   switch (true) {
-    // ObjectBindingPattern : { }
-    case isEmptyObjectBindingPattern(BindingPattern):
-      return new NormalCompletion(undefined);
-    case isObjectBindingPatternWithBindingPropertyListAndBindingRestProperty(BindingPattern): {
-      const BindingPropertyList = BindingPattern.properties.slice(0, -1);
-      const BindingRestProperty = BindingPattern.properties[BindingPattern.properties - 1];
-      return BindingInitialization_ObjectBindingPattern_BindingPropertyList_BindingRestProperty(
-        BindingPropertyList, BindingRestProperty, value, environment,
-      );
-    }
-    case isObjectBindingPatternWithSingleBindingRestProperty(BindingPattern):
-      return BindingInitialization_ObjectBindingPattern_BindingRestProperty(
-        BindingPattern.properties[0], value, environment,
-      );
-    case isObjectBindingPatternWithBindingPropertyList(BindingPattern):
-      return BindingInitialization_ObjectBindingPattern_BindingPropertyList(
-        BindingPattern.properties, value, environment,
-      );
+    case isBindingIdentifier(CatchParameter):
+      return BindingInitialization_BindingIdentifier(CatchParameter, value, environment);
+
+    case isBindingPattern(CatchParameter):
+      return BindingInitialization_BindingPattern(CatchParameter, value, environment);
+
     default:
-      throw outOfRange('BindingInitialization_ObjectBindingPattern', BindingPattern);
-  }
-}
-
-// BindingPattern : ArrayBindingPattern
-function BindingInitialization_ArrayBindingPattern(ArrayBindingPattern, value, environment) {
-  const iteratorRecord = Q(GetIterator(value));
-  const result = IteratorBindingInitialization(ArrayBindingPattern, iteratorRecord, environment);
-  if (iteratorRecord.Done.isFalse()) {
-    return Q(IteratorClose(iteratorRecord, result));
-  }
-  return result;
-}
-
-// ObjectBindingPattern :
-//   { BindingPropertyList }
-//   { BindingPropertyList , }
-function BindingInitialization_ObjectBindingPattern_BindingPropertyList(
-  BindingPropertyList, value, environment,
-) {
-  Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
-  return new NormalCompletion(undefined);
-}
-
-// ObjectBindingPattern : { BindingRestProperty }
-function BindingInitialization_ObjectBindingPattern_BindingRestProperty(
-  BindingRestProperty, value, environment,
-) {
-  const excludedNames = [];
-  return RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
-}
-
-// ObjectBindingPattern : { BindingPropertyList , BindingRestProperty }
-function BindingInitialization_ObjectBindingPattern_BindingPropertyList_BindingRestProperty(
-  BindingPropertyList, BindingRestProperty, value, environment,
-) {
-  const excludedNames = Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
-  return RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
-}
-
-// #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
-// BindingPropertyList : BindingPropertyList , BindingProperty
-// BindingProperty :
-//   SingleNameBinding
-//   PropertyName : BindingElement
-function PropertyBindingInitialization(BindingPropertyList, value, environment) {
-  if (Array.isArray(BindingPropertyList)) {
-    const BindingProperty = BindingPropertyList.shift();
-
-    const boundNames = Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
-    const nextNames = Q(PropertyBindingInitialization(BindingProperty, value, environment));
-    return [...boundNames, ...nextNames];
-  } else {
-    // const SingleNameBinding = BindingPropertyList;
-
-    // const name = BoundNames_(SingleNameBinding);
-  }
-}
-
-function RestBindingInitialization(BindingIdentifier, value, environment, excludedNames) {
-  const lhs = Q(ResolveBinding(NewValue(BindingIdentifier), environment));
-  const restObj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  Q(CopyDataProperties(restObj, value, excludedNames));
-  if (Type(environment) === 'Undefined') {
-    return PutValue(lhs, restObj);
-  }
-  return InitializeReferencedBinding(lhs, restObj);
-}
-
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
-// ArrayBindingPattern :
-//   [ ]
-//   [ Elision ]
-//   [ Elision BindingRestElement ]
-//   [ BindingElementList ]
-//   [ BindingElementList , ]
-//   [ BindingElementList , Elision ]
-//   [ BindingElementList , Elision BindingRestElement ]
-export function IteratorBindingInitialization(node) {
-  switch (true) {
-    default:
-      throw outOfRange('IteratorBindingInitialization', node);
+      throw outOfRange('BindingInitialization_CatchParameter', CatchParameter);
   }
 }

@@ -66,7 +66,7 @@ function Evaluate_ComputedPropertyName(ComputedPropertyName) {
 //
 // Note: We need some out-of-band information on whether the PropertyName is
 // computed.
-function Evaluate_PropertyName(PropertyName, computed) {
+export function Evaluate_PropertyName(PropertyName, computed) {
   return computed
     ? Evaluate_ComputedPropertyName(PropertyName)
     : Evaluate_LiteralPropertyName(PropertyName);

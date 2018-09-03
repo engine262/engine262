@@ -451,6 +451,9 @@ export function isBindingIdentifierAndInitializer(node) {
 }
 
 // #prod-SingleNameBinding
+//
+// Use isBindingPropertyWithSingleNameBinding() instead if SingleNameBinding is
+// used as a child of BindingProperty.
 export function isSingleNameBinding(node) {
   return isBindingIdentifier(node) || isBindingIdentifierAndInitializer(node);
 }
@@ -479,6 +482,16 @@ export const isFunctionRestParameter = isBindingRestElement;
 export function isBindingProperty(node) {
   // ESTree puts the SingleNameBinding in node.value.
   return node.type === 'Property' && isBindingElement(node.value);
+}
+
+// Used in #prod-BindingProperty.
+export function isBindingPropertyWithSingleNameBinding(node) {
+  return isBindingProperty(node) && node.shorthand;
+}
+
+// Used in #prod-BindingProperty.
+export function isBindingPropertyWithColon(node) {
+  return isBindingProperty(node) && !node.shorthand;
 }
 
 // #prod-BindingRestProperty

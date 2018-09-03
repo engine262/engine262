@@ -20,7 +20,7 @@ import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import {
-  BindingInitialization,
+  BindingInitialization_CatchParameter,
   Evaluate_Block,
 } from './all.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -38,7 +38,7 @@ function CatchClauseEvaluation(Catch, thrownValue) {
     X(catchEnvRec.CreateMutableBinding(NewValue(argName), false));
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
-  const status = BindingInitialization(CatchParameter, thrownValue, catchEnv);
+  const status = BindingInitialization_CatchParameter(CatchParameter, thrownValue, catchEnv);
   if (status instanceof AbruptCompletion) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     return status;

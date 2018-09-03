@@ -6,6 +6,8 @@ import {
   isBindingPattern,
   isBindingPatternAndInitializer,
   isBindingProperty,
+  isBindingPropertyWithColon,
+  isBindingPropertyWithSingleNameBinding,
   isBindingRestElement,
   isBindingRestProperty,
   isClassDeclaration,
@@ -187,9 +189,9 @@ export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
 //   BindingProperty : SingleNameBinding
 export function BoundNames_BindingProperty(BindingProperty) {
   switch (true) {
-    case isSingleNameBinding(BindingProperty.value):
+    case isBindingPropertyWithSingleNameBinding(BindingProperty):
       return BoundNames_SingleNameBinding(BindingProperty.value);
-    case isBindingElement(BindingProperty.value):
+    case isBindingPropertyWithColon(BindingProperty):
       return BoundNames_BindingElement(BindingProperty.value);
     default:
       throw new TypeError(`Invalid BindingProperty: ${BindingProperty.value.type}`);

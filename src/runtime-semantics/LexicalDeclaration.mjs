@@ -25,7 +25,7 @@ import {
 import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
-import { BindingInitialization } from './all.mjs';
+import { BindingInitialization_BindingPattern } from './all.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
@@ -59,7 +59,7 @@ function Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const rhs = Q(Evaluate_Expression(Initializer));
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  return BindingInitialization(BindingPattern, value, env);
+  return BindingInitialization_BindingPattern(BindingPattern, value, env);
 }
 
 export function Evaluate_LexicalBinding(LexicalBinding) {
