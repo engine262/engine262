@@ -2,7 +2,7 @@ import {
   NormalCompletion,
 } from '../completion.mjs';
 
-// #sec-function-definitions-runtime-semantics-evaluation<Paste>
+// #sec-function-definitions-runtime-semantics-evaluation
 // FunctionDeclaration :
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
 //   function ( FormalParameters ) { FunctionBody }

@@ -9,12 +9,12 @@ import {
   New as NewValue,
 } from '../value.mjs';
 
-export function InstantiateFunctionObject(FunctionDeclaration, scope) {
-  const BindingIdentifier = FunctionDeclaration.id;
-  const FormalParameters = FunctionDeclaration.params;
-  const FunctionBody = FunctionDeclaration.body.body;
-
-  const strict = FunctionDeclaration.IsStrict;
+export function InstantiateFunctionObject({
+  id: BindingIdentifier,
+  params: FormalParameters,
+  body: FunctionBody,
+}, scope) {
+  const strict = true;
   const name = NewValue(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = FunctionCreate('Normal', FormalParameters, FunctionBody, scope, strict);
   MakeConstructor(F);
