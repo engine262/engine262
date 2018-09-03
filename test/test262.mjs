@@ -21,6 +21,8 @@ import { ParseScript } from '../lib/parse.mjs';
 import { New as NewValue } from '../lib/value.mjs';
 import { AbruptCompletion } from '../lib/completion.mjs';
 
+const testdir = new URL('./test262/', import.meta.url);
+
 function createRealm() {
   const realm = CreateRealm();
   const newContext = new ExecutionContext();
@@ -42,7 +44,7 @@ function createRealm() {
 
   function evalScript(sourceText, file = false) {
     if (file) {
-      sourceText = fs.readFileSync(sourceText);
+      sourceText = fs.readFileSync(new URL(sourceText, testdir));
     }
 
     const callerContext = surroundingAgent.runningExecutionContext;
@@ -66,7 +68,7 @@ function createRealm() {
 
   CreateDataProperty($262, NewValue('createRealm'), CreateBuiltinFunction(() => createRealm(), [], realm));
   CreateDataProperty($262, NewValue('evalScript'),
-    CreateBuiltinFunction(([sourceText]) => evalScript(sourceText.stringValue())));
+    CreateBuiltinFunction(([sourceText]) => evalScript(sourceText.stringValue()), [], realm));
 
   CreateDataProperty(globalObj, NewValue('$262'), $262);
 
@@ -87,8 +89,8 @@ function run(test, strict) {
       }
     });
 
-    evalScript('./test262/harness/assert.js', true);
-    evalScript('./test262/harness/sta.js', true);
+    evalScript('harness/assert.js', true);
+    evalScript('harness/sta.js', true);
 
     const source = fs.readFileSync(test, 'utf8');
 
@@ -97,14 +99,14 @@ function run(test, strict) {
 
     if (options.includes) {
       options.includes.forEach((n) => {
-        evalScript(`./test262/harness/${n}`, true);
+        evalScript(`harness/${n}`, true);
       });
     }
 
     let sync = true;
     if (options.flags) {
       if (options.flags.includes('async')) {
-        evalScript('./test262/harness/doneprintHandle.js', true);
+        evalScript('harness/doneprintHandle.js', true);
         sync = false;
       }
       if (strict && options.flags.includes('noStrict')) {
@@ -155,7 +157,9 @@ function run(test, strict) {
 }
 
 // const tests = glob.sync('./test262/test/built-ins/**/*.js');
-const tests = [];
+const tests = [
+  'built-ins/Array/length.js',
+];
 const skip = [];
 
 let passed = 0;
@@ -164,7 +168,8 @@ let failed = 0;
 
 /* eslint-disable no-console */
 const promises = tests.map(async (t) => {
-  const short = t.replace('./test262/test/built-ins/', '');
+  t = new URL(`test/${t}`, testdir);
+  const short = `${t}`;
 
   if (skip.includes(t)) {
     console.log('\u001b[33mSKIP\u001b[39m', short);
