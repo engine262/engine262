@@ -146,8 +146,15 @@ module.exports = ({ types: t, template }) => {
           return;
         }
         if (path.node.callee.name === 'Q' || path.node.callee.name === 'ReturnIfAbrupt') {
-          state.needCompletion = true;
           const [argument] = path.node.arguments;
+
+          if (t.isReturnStatement(path.parentPath)) {
+            path.replaceWith(argument);
+            return;
+          }
+
+          state.needCompletion = true;
+
           if (t.isIdentifier(argument)) {
             // ReturnIfAbrupt(argument)
             const parentStatement = findParentStatementPath(path);
