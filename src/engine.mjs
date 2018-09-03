@@ -257,8 +257,9 @@ export function NonSpecRunScript(sourceText) {
   const s = ParseScript(sourceText, realm, undefined);
   const res = ScriptEvaluation(s);
 
+  surroundingAgent.executionContextStack.pop();
+
   while (true) { // eslint-disable-line no-constant-condition
-    surroundingAgent.executionContextStack.pop();
     const nextQueue = surroundingAgent.pickQueue();
     // host specific behaviour
     if (!nextQueue) {
@@ -271,12 +272,12 @@ export function NonSpecRunScript(sourceText) {
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
     const result = nextPending.Job(...nextPending.Arguments);
+    surroundingAgent.executionContextStack.pop();
     if (result instanceof AbruptCompletion) {
       HostReportErrors([result.Value]);
     }
   }
 
-  surroundingAgent.executionContextStack.pop();
   surroundingAgent.executionContextStack.pop();
 
   return res;
@@ -292,7 +293,7 @@ export function AgentSignifier() {
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
-  scriptCtx.Function = null;
+  scriptCtx.Function = NewValue(null);
   scriptCtx.Realm = scriptRecord.Realm;
   scriptCtx.ScriptOrModule = scriptRecord;
   scriptCtx.VariableEnvironment = globalEnv;
@@ -304,7 +305,6 @@ export function ScriptEvaluation(scriptRecord) {
   if (result.Type === 'normal') {
     result = Evaluate_Script(scriptBody, globalEnv);
   }
-
   if (result.Type === 'normal' && !result.Value) {
     result = new NormalCompletion(NewValue(undefined));
   }
