@@ -20,6 +20,7 @@ import {
   isActualMultiplicativeExpression,
   isActualNewExpression,
   isActualShiftExpression,
+  isActualUnaryExpression,
   isActualUpdateExpression,
   isArrayLiteral,
   isArrowFunction,
@@ -69,6 +70,7 @@ import {
   Evaluate_ThisExpression,
   Evaluate_ThrowStatement,
   Evaluate_TryStatement,
+  Evaluate_UnaryExpression,
   Evaluate_UpdateExpression,
 } from './runtime-semantics/all.mjs';
 import {
@@ -243,6 +245,9 @@ export function Evaluate_Expression(Expression) {
 
       case isActualUpdateExpression(Expression):
         return Evaluate_UpdateExpression(Expression);
+
+      case isActualUnaryExpression(Expression):
+        return Evaluate_UnaryExpression(Expression);
 
         // case isAwaitExpression(Expression):
         //   return Evaluate_AwaitExpression(Expression);
