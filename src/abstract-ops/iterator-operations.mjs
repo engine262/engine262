@@ -56,7 +56,7 @@ export function GetIterator(obj, hint, method) {
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
-    Done: false,
+    Done: NewValue(false),
   };
   return iteratorRecord;
 }
@@ -158,6 +158,6 @@ export function CreateListIteratorRecord(list) {
   return {
     Iterator: iterator,
     NextMethod: next,
-    Done: false,
+    Done: NewValue(false),
   };
 }

@@ -21,6 +21,7 @@ import {
   ArgumentListEvaluation,
 } from './all.mjs';
 import {
+  Completion,
   AbruptCompletion,
   Q,
   ReturnIfAbrupt,
@@ -61,7 +62,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
   // Assert: If tailPosition is true, the above call will not return here
   // but instead evaluation will continue as if the following return has already occurred.
   if (!(result instanceof AbruptCompletion)) {
-    Assert(result instanceof Value);
+    Assert(result instanceof Value || result instanceof Completion);
   }
   return result;
 }

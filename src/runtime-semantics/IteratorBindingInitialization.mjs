@@ -87,7 +87,7 @@ export function IteratorBindingInitialization_BindingElement_BindingPattern(Bind
       iteratorRecord.Done = NewValue(true);
     }
     ReturnIfAbrupt(next);
-    if (next.isFalse()) {
+    if (Type(next) === 'Boolean' && next.isFalse()) {
       iteratorRecord.Done = NewValue(true);
     } else {
       v = IteratorValue(next);
@@ -124,16 +124,16 @@ export function IteratorBindingInitialization_SingleNameBinding(SingleNameBindin
     default:
       throw outOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
-  const bindingId = BindingIdentifier.name;
+  const bindingId = NewValue(BindingIdentifier.name);
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v;
   if (iteratorRecord.Done.isFalse()) {
-    const next = IteratorStep(iteratorRecord);
+    let next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
     ReturnIfAbrupt(next);
-    if (next.isFalse()) {
+    if (Type(next) === 'Boolean' && next.isFalse()) {
       iteratorRecord.Done = NewValue(true);
     } else {
       v = IteratorValue(next);
