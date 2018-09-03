@@ -75,7 +75,7 @@ export function GlobalDeclarationInstantiation(script, env) {
              || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
       const fn = BoundNames_FunctionDeclaration(d)[0];
       if (!declaredFunctionNames.includes(fn)) {
-        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(d));
+        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(NewValue(fn)));
         if (fnDefinable.isFalse()) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -118,7 +118,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   }
 
   for (const f of functionsToInitialize) {
-    const fn = BoundNames_FunctionDeclaration(f)[0];
+    const fn = NewValue(BoundNames_FunctionDeclaration(f)[0]);
     const fo = InstantiateFunctionObject(f, env);
     Q(envRec.CreateGlobalFunctionBinding(fn, fo, NewValue(false)));
   }

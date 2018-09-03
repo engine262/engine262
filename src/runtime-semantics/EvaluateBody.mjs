@@ -42,7 +42,7 @@ import {
 import {
   InstantiateFunctionObject,
   Evaluate_FunctionStatementList,
-  IteratorBindingInitialization_ArrayBindingPattern,
+  IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
 import { New as NewValue } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -123,11 +123,9 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
 
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
   if (hasDuplicates) {
-    Q(IteratorBindingInitialization_ArrayBindingPattern(
-      formals, iteratorRecord, NewValue(undefined),
-    ));
+    Q(IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, NewValue(undefined)));
   } else {
-    Q(IteratorBindingInitialization_ArrayBindingPattern(formals, iteratorRecord, env));
+    Q(IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
   }
 
   let varEnv;

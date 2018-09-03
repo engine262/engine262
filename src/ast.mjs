@@ -470,6 +470,9 @@ export function isBindingElement(node) {
          || isBindingPatternAndInitializer(node);
 }
 
+// #prod-FormalParameter
+export const isFormalParameter = isBindingElement;
+
 // #prod-BindingRestElement
 export function isBindingRestElement(node) {
   return node.type === 'RestElement';
