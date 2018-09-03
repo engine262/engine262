@@ -373,7 +373,7 @@ export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
     return NewValue(null);
   }
-  const ec = surroundingAgent.executionContextStack
+  const ec = [...surroundingAgent.executionContextStack]
     .reverse()
     .find((e) => e.ScriptOrModule !== undefined);
   if (!ec) {
