@@ -31,3 +31,4 @@ export * from './TemplateLiteral.mjs';
 export * from './ThisExpression.mjs';
 export * from './ThrowStatement.mjs';
 export * from './TryStatement.mjs';
+export * from './UpdateExpression.mjs';
