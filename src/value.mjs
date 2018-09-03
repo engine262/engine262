@@ -213,7 +213,7 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
   // Fill in "required" properties
   const length = New('length');
   if (F.properties.has(length)) {
-    const len = F.properties.get(length);
+    const len = F.properties.get(length).Value.numberValue();
     for (let i = 0; i < len; i += 1) {
       if (argumentsList[i] === undefined) {
         argumentsList[i] = undefinedValue;

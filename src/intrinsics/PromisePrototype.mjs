@@ -42,6 +42,7 @@ function ThenFinallyFunctions([value]) {
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
   const valueThunk = CreateBuiltinFunction(() => value, []);
+  SetFunctionLength(valueThunk, NewValue(0));
   return Q(Invoke(promise, NewValue('then'), [valueThunk]));
 }
 
@@ -55,6 +56,7 @@ function CatchFinallyFunctions([reason]) {
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
   const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
+  SetFunctionLength(thrower, NewValue(0));
   return Q(Invoke(promise, NewValue('then'), [thrower]));
 }
 
@@ -73,10 +75,12 @@ function PromiseProto_finally([onFinally], { thisValue }) {
   } else {
     const stepsThenFinally = ThenFinallyFunctions;
     thenFinally = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
+    SetFunctionLength(thenFinally, NewValue(1));
     thenFinally.Constructor = C;
     thenFinally.OnFinally = onFinally;
     const stepsCatchFinally = CatchFinallyFunctions;
     catchFinally = CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']);
+    SetFunctionLength(catchFinally, NewValue(1));
     catchFinally.Constructor = C;
     catchFinally.OnFinally = onFinally;
   }
