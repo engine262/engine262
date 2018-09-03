@@ -18,19 +18,25 @@ import {
   X,
 } from '../completion.mjs';
 
+// 6.2.4.1 #sec-getbase
 export function GetBase(V) {
   Assert(Type(V) === 'Reference');
   return V.BaseValue;
 }
 
-export function IsUnresolvableReference(V) {
+// 6.2.4.2 #sec-getreferencedname
+export function GetReferencedName(V) {
   Assert(Type(V) === 'Reference');
-  if (Type(V.BaseValue) === 'Undefined') {
-    return NewValue(true);
-  }
-  return NewValue(false);
+  return V.ReferencedName;
 }
 
+// 6.2.4.3 #sec-isstrictreference
+export function IsStrictReference(V) {
+  Assert(Type(V) === 'Reference');
+  return V.StrictReference;
+}
+
+// 6.2.4.4 #sec-hasprimitivebase
 export function HasPrimitiveBase(V) {
   Assert(Type(V) === 'Reference');
   if (V.BaseValue instanceof PrimitiveValue) {
@@ -39,6 +45,7 @@ export function HasPrimitiveBase(V) {
   return NewValue(false);
 }
 
+// 6.2.4.5 #sec-ispropertyreference
 export function IsPropertyReference(V) {
   Assert(Type(V) === 'Reference');
   if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V).isTrue()) {
@@ -47,31 +54,22 @@ export function IsPropertyReference(V) {
   return NewValue(false);
 }
 
-export function GetReferencedName(V) {
+// 6.2.4.6 #sec-isunresolvablereference
+export function IsUnresolvableReference(V) {
   Assert(Type(V) === 'Reference');
-  return V.ReferencedName;
+  if (Type(V.BaseValue) === 'Undefined') {
+    return NewValue(true);
+  }
+  return NewValue(false);
 }
 
+// 6.2.4.7 #sec-issuperreference
 export function IsSuperReference(V) {
   Assert(Type(V) === 'Reference');
   return NewValue('ThisValue' in V);
 }
 
-export function GetThisValue(V) {
-  Assert(IsPropertyReference(V).isTrue());
-  if (IsSuperReference(V).isTrue()) {
-    return V.ThisValue;
-  }
-  return GetBase(V);
-}
-
-// #sec-isstrictreference
-export function IsStrictReference(V) {
-  Assert(Type(V) === 'Reference');
-  return V.StrictReference;
-}
-
-// #sec-getvalue
+// 6.2.4.8 #sec-getvalue
 export function GetValue(V) {
   ReturnIfAbrupt(V);
   if (Type(V) !== 'Reference') {
@@ -92,7 +90,7 @@ export function GetValue(V) {
   }
 }
 
-// #sec-putvalue
+// 6.2.4.9 #sec-putvalue
 export function PutValue(V, W) {
   ReturnIfAbrupt(V);
   ReturnIfAbrupt(W);
@@ -121,7 +119,16 @@ export function PutValue(V, W) {
   }
 }
 
-// #sec-initializereferencedbinding
+// 6.2.4.10 #sec-getthisvalue
+export function GetThisValue(V) {
+  Assert(IsPropertyReference(V).isTrue());
+  if (IsSuperReference(V).isTrue()) {
+    return V.ThisValue;
+  }
+  return GetBase(V);
+}
+
+// 6.2.4.11 #sec-initializereferencedbinding
 export function InitializeReferencedBinding(V, W) {
   ReturnIfAbrupt(V);
   ReturnIfAbrupt(W);

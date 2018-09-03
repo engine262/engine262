@@ -8,7 +8,7 @@ import {
   GetBase,
   GetIterator,
   GetReferencedName,
-  IsUnresolvableReference,
+  InitializeReferencedBinding,
   IteratorClose,
   ObjectCreate,
   PutValue,
@@ -35,16 +35,6 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
-
-function InitializeReferencedBinding(V, W) {
-  ReturnIfAbrupt(V);
-  ReturnIfAbrupt(W);
-  Assert(Type(V) === 'Reference');
-  Assert(IsUnresolvableReference(V).isFalse());
-  const base = GetBase(V);
-  Assert(base instanceof EnvironmentRecord);
-  return base.InitializeBinding(GetReferencedName(V), W);
-}
 
 // #sec-initializeboundname
 function InitializeBoundName(name, value, environment) {
