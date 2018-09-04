@@ -14,6 +14,10 @@ import {
 } from '../completion.mjs';
 import { New as NewValue } from '../value.mjs';
 
+// #sec-if-statement-runtime-semantics-evaluation
+//   IfStatement :
+//     `if` `(` Expression `)` Statement `else` Statement
+//     `if` `(` Expression `)` Statement
 export function Evaluate_IfStatement({
   test: Expression,
   consequent: Statement,
@@ -23,7 +27,6 @@ export function Evaluate_IfStatement({
   const exprValue = ToBoolean(Q(GetValue(exprRef)));
 
   if (AlternateStatement !== null) {
-    // IfStatement : `if` `(` Expression `)` Statement `else` Statement
     let stmtCompletion;
     if (exprValue.isTrue()) {
       stmtCompletion = Evaluate_Statement(Statement);
@@ -32,7 +35,6 @@ export function Evaluate_IfStatement({
     }
     return new Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
   } else {
-    // IfStatement : `if` `(` Expression `)` Statement
     if (exprValue.isFalse()) {
       return new NormalCompletion(undefined);
     } else {
