@@ -104,3 +104,6 @@ export function EnsureCompletion(val) {
   }
   return new NormalCompletion(val);
 }
+
+// #await
+export function Await() {}

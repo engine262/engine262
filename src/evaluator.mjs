@@ -31,6 +31,7 @@ import {
   isLexicalDeclaration,
   isLiteral,
   isObjectLiteral,
+  isReturnStatement,
   isTemplateLiteral,
   isThis,
   isThrowStatement,
@@ -65,6 +66,7 @@ import {
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
   Evaluate_ObjectLiteral,
+  Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
@@ -120,6 +122,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_ExpressionStatement(StatementListItem);
     case isIfStatement(StatementListItem):
       return Evaluate_IfStatement(StatementListItem);
+    case isReturnStatement(StatementListItem):
+      return Evaluate_ReturnStatement(StatementListItem);
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);
     case isTryStatement(StatementListItem):

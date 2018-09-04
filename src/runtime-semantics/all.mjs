@@ -27,6 +27,7 @@ export * from './NewExpression.mjs';
 export * from './ObjectLiteral.mjs';
 export * from './PropertyBindingInitialization.mjs';
 export * from './RelationalOperators.mjs';
+export * from './ReturnStatement.mjs';
 export * from './RestBindingInitialization.mjs';
 export * from './ShiftExpression.mjs';
 export * from './TemplateLiteral.mjs';

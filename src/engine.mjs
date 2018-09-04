@@ -417,3 +417,16 @@ export function GetGlobalObject() {
   const currentRealm = ctx.Realm;
   return currentRealm.GlobalObject;
 }
+
+// #sec-getgeneratorkind
+export function GetGeneratorKind() {
+  const genContext = surroundingAgent.runningExecutionContext;
+  if (!genContext.Generator) {
+    return 'non-generator';
+  }
+  const generator = genContext.Generator;
+  if ('AsyncGeneratorState' in generator) {
+    return 'async';
+  }
+  return 'sync';
+}
