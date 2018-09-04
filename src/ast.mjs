@@ -556,8 +556,9 @@ export function isVariableStatement(node) {
   return node.type === 'VariableDeclaration' && node.kind === 'var';
 }
 
+// #prod-VariableDeclaration
 export function isVariableDeclaration(node) {
-  return node.type === 'VariableDeclaration';
+  return node.type === 'VariableDeclarator';
 }
 
 // #prod-EmptyStatement

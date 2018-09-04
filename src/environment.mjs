@@ -129,6 +129,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
+// 8.1.1.2 #sec-object-environment-records
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
   constructor(BindingObject) {
     super();
@@ -136,6 +137,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     this.withEnvironment = false;
   }
 
+  // 8.1.1.2.1 #sec-object-environment-records-hasbinding-n
   HasBinding(N) {
     const envRec = this;
     const bindings = envRec.bindingObject;
@@ -160,6 +162,39 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     return NewValue(true);
   }
 
+  // 8.1.1.2.2 #sec-object-environment-records-createmutablebinding-n-d
+  CreateMutableBinding(N, D) {
+    const envRec = this;
+    const bindings = envRec.bindingObject;
+    return Q(DefinePropertyOrThrow(bindings, N, {
+      Value: NewValue(undefined),
+      Writable: true,
+      Enumerable: true,
+      Configurable: D,
+    }));
+  }
+
+  // 8.1.1.2.3 #sec-object-environment-records-createimmutablebinding-n-s
+  CreateImmutableBinding(/* N, S */) {
+    throw new Error('CreateImmutableBinding got called on an object Environment Record');
+  }
+
+  // 8.1.1.2.4 #sec-object-environment-records-initializebinding-n-v
+  InitializeBinding(N, V) {
+    const envRec = this;
+    // Record that the binding for N in envRec has been initialized.
+    // According to the spec this is an unnecessary step for object Environment Records.
+    return Q(envRec.SetMutableBinding(N, V, NewValue(false)));
+  }
+
+  // 8.1.1.2.5 #sec-object-environment-records-setmutablebinding-n-v-s
+  SetMutableBinding(N, V, S) {
+    const envRec = this;
+    const bindings = envRec.bindingObject;
+    return Q(Set(bindings, N, V, S));
+  }
+
+  // 8.1.1.2.6 #sec-object-environment-records-getbindingvalue-n-s
   GetBindingValue(N, S) {
     const envRec = this;
     const bindings = envRec.bindingObject;
@@ -174,8 +209,30 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     return Q(Get(bindings, N));
   }
 
+  // 8.1.1.2.7 #sec-object-environment-records-deletebinding-n
+  DeleteBinding(N) {
+    const envRec = this;
+    const bindings = envRec.bindingObject;
+    return Q(bindings.Delete(N));
+  }
+
+  // 8.1.1.2.8 #sec-object-environment-records-hasthisbinding
   HasThisBinding() {
     return NewValue(false);
+  }
+
+  // 8.1.1.2.9 #sec-object-environment-records-hassuperbinding
+  HasSuperBinding() {
+    return NewValue(false);
+  }
+
+  // 8.1.1.2.10 #sec-object-environment-records-withbaseobject
+  WithBaseObject() {
+    const envRec = this;
+    if (envRec.withEnvironment) {
+      return envRec.bindingObject;
+    }
+    return NewValue(undefined);
   }
 }
 

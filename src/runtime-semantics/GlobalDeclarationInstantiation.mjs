@@ -69,7 +69,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   const functionsToInitialize = [];
   const declaredFunctionNames = [];
 
-  for (const d of varDeclarations.reverse()) {
+  for (const d of [...varDeclarations].reverse()) {
     if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
       Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d)
              || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
