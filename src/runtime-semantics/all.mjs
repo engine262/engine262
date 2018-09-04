@@ -15,6 +15,7 @@ export * from './FunctionExpression.mjs';
 export * from './FunctionStatementList.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './Identifier.mjs';
+export * from './IfStatement.mjs';
 export * from './InstantiateFunctionObject.mjs';
 export * from './IteratorBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';

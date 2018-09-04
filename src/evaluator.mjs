@@ -26,6 +26,7 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifierReference,
+  isIfStatement,
   isLexicalBinding,
   isLexicalDeclaration,
   isLiteral,
@@ -57,6 +58,7 @@ import {
   Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_Identifier,
+  Evaluate_IfStatement,
   Evaluate_LexicalBinding,
   Evaluate_LexicalDeclaration,
   Evaluate_MemberExpression,
@@ -116,6 +118,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_BlockStatement(StatementListItem);
     case isExpressionStatement(StatementListItem):
       return Evaluate_ExpressionStatement(StatementListItem);
+    case isIfStatement(StatementListItem):
+      return Evaluate_IfStatement(StatementListItem);
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);
     case isTryStatement(StatementListItem):
@@ -133,6 +137,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       throw outOfRange('Evaluate_StatementListItem', StatementListItem);
   }
 }
+
+export const Evaluate_Statement = Evaluate_StatementListItem;
 
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
