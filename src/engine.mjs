@@ -48,10 +48,7 @@ export class Agent {
 
     this.executionContextStack = [];
 
-    this.jobQueues = new Map([
-      ['ScriptJobs', []],
-      ['PromiseJobs', []],
-    ]);
+    this.jobQueue = [];
   }
 
   get isStrictCode() {
@@ -73,15 +70,6 @@ export class Agent {
 
   get activeFunctionObject() {
     return this.runningExecutionContext.Function;
-  }
-
-  pickQueue() {
-    for (const queue of this.jobQueues.values()) {
-      if (queue.length > 0) {
-        return queue;
-      }
-    }
-    return undefined;
   }
 
   intrinsic(name) {
@@ -137,8 +125,7 @@ export function EnqueueJob(queueName, job, args) {
     ScriptOrModule: callerScriptOrModule,
     HostDefined: undefined,
   };
-
-  surroundingAgent.jobQueues.get(queueName).push(pending);
+  surroundingAgent.jobQueue.push(pending);
 }
 
 // 8.6 InitializeHostDefinedRealm
@@ -219,9 +206,8 @@ export function RunJobs() {
 
   while (true) { // eslint-disable-line no-constant-condition
     surroundingAgent.executionContextStack.pop();
-    const nextQueue = surroundingAgent.pickQueue();
-    // host specific behaviour
-    if (!nextQueue) {
+    const nextQueue = surroundingAgent.jobQueue;
+    if (nextQueue.length === 0) {
       break;
     }
     const nextPending = nextQueue.shift();
@@ -258,9 +244,8 @@ export function NonSpecRunScript(sourceText) {
   surroundingAgent.executionContextStack.pop();
 
   while (true) { // eslint-disable-line no-constant-condition
-    const nextQueue = surroundingAgent.pickQueue();
-    // host specific behaviour
-    if (!nextQueue) {
+    const nextQueue = surroundingAgent.jobQueue;
+    if (nextQueue.length === 0) {
       break;
     }
     const nextPending = nextQueue.shift();

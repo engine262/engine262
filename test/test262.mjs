@@ -134,10 +134,10 @@ function run(test, strict) {
     }
 
     while (true) { // eslint-disable-line no-constant-condition
-      const nextQueue = surroundingAgent.pickQueue();
+      const nextQueue = surroundingAgent.jobQueue;
 
       // host specific behaviour
-      if (!nextQueue) {
+      if (nextQueue.length === 0) {
         break;
       }
 

@@ -26,9 +26,13 @@ import {
   IsConstantDeclaration,
   IsSimpleParameterList,
   LexicallyDeclaredNames_FunctionBody,
+  LexicallyDeclaredNames_ConciseBody,
   LexicallyScopedDeclarations_FunctionBody,
+  LexicallyScopedDeclarations_ConciseBody,
   VarDeclaredNames_FunctionBody,
+  VarDeclaredNames_ConciseBody,
   VarScopedDeclarations_FunctionBody,
+  VarScopedDeclarations_ConciseBody,
 } from '../static-semantics/all.mjs';
 import {
   NormalCompletion,
@@ -62,9 +66,15 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   const simpleParameterList = IsSimpleParameterList(formals);
   const hasParameterExpressions = ContainsExpression(formals);
 
-  const varNames = VarDeclaredNames_FunctionBody(code.body).map(NewValue);
-  const varDeclarations = VarScopedDeclarations_FunctionBody(code.body);
-  const lexicalNames = LexicallyDeclaredNames_FunctionBody(code.body).map(NewValue);
+  const varNames = (code.body
+    ? VarDeclaredNames_FunctionBody(code.body)
+    : VarDeclaredNames_ConciseBody(code)).map(NewValue);
+  const varDeclarations = code.body
+    ? VarScopedDeclarations_FunctionBody(code.body)
+    : VarScopedDeclarations_ConciseBody(code);
+  const lexicalNames = (code.body
+    ? LexicallyDeclaredNames_FunctionBody(code.body)
+    : LexicallyDeclaredNames_ConciseBody(code)).map(NewValue);
   const functionNames = [];
   const functionsToInitialize = [];
 
@@ -174,7 +184,9 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   lexEnv.EnvironmentRecord = lexEnvRec;
   calleeContext.LexicalEnvironment = lexEnv;
 
-  const lexDeclarations = LexicallyScopedDeclarations_FunctionBody(code.body);
+  const lexDeclarations = code.body
+    ? LexicallyScopedDeclarations_FunctionBody(code.body)
+    : LexicallyScopedDeclarations_ConciseBody(code);
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_LexicalDeclaration.map(NewValue)) {
       if (IsConstantDeclaration(d)) {
