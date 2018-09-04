@@ -33,3 +33,4 @@ export * from './ThrowStatement.mjs';
 export * from './TryStatement.mjs';
 export * from './UnaryExpression.mjs';
 export * from './UpdateExpression.mjs';
+export * from './VariableStatement.mjs';

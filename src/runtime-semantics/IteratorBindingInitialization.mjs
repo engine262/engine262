@@ -150,7 +150,7 @@ export function IteratorBindingInitialization_SingleNameBinding(SingleNameBindin
     const defaultValue = Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(v, 'name'));
+      const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
       if (hasNameProperty.isFalse()) {
         X(SetFunctionName(v, bindingId));
       }

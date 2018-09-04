@@ -52,13 +52,11 @@ export class Agent {
       ['ScriptJobs', []],
       ['PromiseJobs', []],
     ]);
-
-    // used for tracking strict mode
-    this.nodeStack = [];
   }
 
   get isStrictCode() {
-    return this.nodeStack[this.nodeStack.length - 1].IsStrict;
+    // TODO(strict)
+    return true;
   }
 
   get runningExecutionContext() {

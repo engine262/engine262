@@ -37,6 +37,7 @@ import {
   isThis,
   isThrowStatement,
   isTryStatement,
+  isVariableStatement,
 } from './ast.mjs';
 import {
   EvaluateBinopValues_AdditiveExpression_Minus,
@@ -72,6 +73,7 @@ import {
   Evaluate_TryStatement,
   Evaluate_UnaryExpression,
   Evaluate_UpdateExpression,
+  Evaluate_VariableStatement,
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
@@ -129,6 +131,8 @@ function Evaluate_StatementListItem(StatementListItem) {
         return Evaluate_LexicalDeclaration(StatementListItem);
       case isLexicalBinding(StatementListItem):
         return Evaluate_LexicalBinding(StatementListItem);
+      case isVariableStatement(StatementListItem):
+        return Evaluate_VariableStatement(StatementListItem);
 
       default:
         throw outOfRange('Evaluate_StatementListItem', StatementListItem);
