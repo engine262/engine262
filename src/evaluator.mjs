@@ -5,9 +5,6 @@ import {
   UpdateEmpty,
 } from './completion.mjs';
 import {
-  surroundingAgent,
-} from './engine.mjs';
-import {
   isActualAdditiveExpression,
   isActualAssignmentExpression,
   isActualBitwiseANDExpression,
@@ -114,31 +111,26 @@ export function Evaluate_StatementList(StatementList) {
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
 function Evaluate_StatementListItem(StatementListItem) {
-  surroundingAgent.nodeStack.push(StatementListItem);
-  try {
-    switch (true) {
-      case isBlockStatement(StatementListItem):
-        return Evaluate_BlockStatement(StatementListItem);
-      case isExpressionStatement(StatementListItem):
-        return Evaluate_ExpressionStatement(StatementListItem);
-      case isThrowStatement(StatementListItem):
-        return Evaluate_ThrowStatement(StatementListItem.argument);
-      case isTryStatement(StatementListItem):
-        return Evaluate_TryStatement(StatementListItem);
-      case isFunctionDeclaration(StatementListItem):
-        return Evaluate_FunctionDeclaration(StatementListItem);
-      case isLexicalDeclaration(StatementListItem):
-        return Evaluate_LexicalDeclaration(StatementListItem);
-      case isLexicalBinding(StatementListItem):
-        return Evaluate_LexicalBinding(StatementListItem);
-      case isVariableStatement(StatementListItem):
-        return Evaluate_VariableStatement(StatementListItem);
+  switch (true) {
+    case isBlockStatement(StatementListItem):
+      return Evaluate_BlockStatement(StatementListItem);
+    case isExpressionStatement(StatementListItem):
+      return Evaluate_ExpressionStatement(StatementListItem);
+    case isThrowStatement(StatementListItem):
+      return Evaluate_ThrowStatement(StatementListItem.argument);
+    case isTryStatement(StatementListItem):
+      return Evaluate_TryStatement(StatementListItem);
+    case isFunctionDeclaration(StatementListItem):
+      return Evaluate_FunctionDeclaration(StatementListItem);
+    case isLexicalDeclaration(StatementListItem):
+      return Evaluate_LexicalDeclaration(StatementListItem);
+    case isLexicalBinding(StatementListItem):
+      return Evaluate_LexicalBinding(StatementListItem);
+    case isVariableStatement(StatementListItem):
+      return Evaluate_VariableStatement(StatementListItem);
 
-      default:
-        throw outOfRange('Evaluate_StatementListItem', StatementListItem);
-    }
-  } finally {
-    surroundingAgent.nodeStack.pop();
+    default:
+      throw outOfRange('Evaluate_StatementListItem', StatementListItem);
   }
 }
 
@@ -193,121 +185,116 @@ export function EvaluateBinopValues(operator, lval, rval) {
 
 // (implicit)
 export function Evaluate_Expression(Expression) {
-  surroundingAgent.nodeStack.push(Expression);
-  try {
-    switch (true) {
-      case isThis(Expression):
-        return Evaluate_ThisExpression(Expression);
+  switch (true) {
+    case isThis(Expression):
+      return Evaluate_ThisExpression(Expression);
 
-      case isIdentifierReference(Expression):
-        return Evaluate_Identifier(Expression);
+    case isIdentifierReference(Expression):
+      return Evaluate_Identifier(Expression);
 
-      case isLiteral(Expression):
-        return Evaluate_Literal(Expression);
+    case isLiteral(Expression):
+      return Evaluate_Literal(Expression);
 
-      case isArrayLiteral(Expression):
-        return Evaluate_ArrayLiteral(Expression);
+    case isArrayLiteral(Expression):
+      return Evaluate_ArrayLiteral(Expression);
 
-      case isObjectLiteral(Expression):
-        return Evaluate_ObjectLiteral(Expression);
+    case isObjectLiteral(Expression):
+      return Evaluate_ObjectLiteral(Expression);
 
-      case isFunctionExpression(Expression):
-        return Evaluate_FunctionExpression(Expression);
+    case isFunctionExpression(Expression):
+      return Evaluate_FunctionExpression(Expression);
 
-        // case isClassExpression(Expression):
-        //   return Evaluate_ClassExpression(Expression);
+      // case isClassExpression(Expression):
+      //   return Evaluate_ClassExpression(Expression);
 
-        // case isGeneratorExpression(Expression):
-        //   return Evaluate_GeneratorExpression(Expression);
+      // case isGeneratorExpression(Expression):
+      //   return Evaluate_GeneratorExpression(Expression);
 
-        // case isAsyncFunctionExpression(Expression):
-        //   return Evaluate_AsyncFunctionExpression(Expression);
+      // case isAsyncFunctionExpression(Expression):
+      //   return Evaluate_AsyncFunctionExpression(Expression);
 
-        // case isAsyncGeneratorExpression(Expression):
-        //   return Evaluate_AsyncGeneratorExpression(Expression);
+      // case isAsyncGeneratorExpression(Expression):
+      //   return Evaluate_AsyncGeneratorExpression(Expression);
 
-        // case isRegularExpressionLiteral(Expression):
-        //   return Evaluate_RegularExpressionLiteral(Expression);
+      // case isRegularExpressionLiteral(Expression):
+      //   return Evaluate_RegularExpressionLiteral(Expression);
 
-      case isTemplateLiteral(Expression):
-        return Evaluate_TemplateLiteral(Expression);
+    case isTemplateLiteral(Expression):
+      return Evaluate_TemplateLiteral(Expression);
 
-      case isActualMemberExpression(Expression):
-        return Evaluate_MemberExpression(Expression);
+    case isActualMemberExpression(Expression):
+      return Evaluate_MemberExpression(Expression);
 
-        // case isSuperProperty(Expression):
-        //   return Evaluate_SuperProperty(Expression);
+      // case isSuperProperty(Expression):
+      //   return Evaluate_SuperProperty(Expression);
 
-        // case isMetaProperty(Expression):
-        //   return Evaluate_MetaProperty(Expression);
+      // case isMetaProperty(Expression):
+      //   return Evaluate_MetaProperty(Expression);
 
-      case isActualNewExpression(Expression):
-        return Evaluate_NewExpression(Expression);
+    case isActualNewExpression(Expression):
+      return Evaluate_NewExpression(Expression);
 
-      case isActualCallExpression(Expression):
-        return Evaluate_CallExpression(Expression);
+    case isActualCallExpression(Expression):
+      return Evaluate_CallExpression(Expression);
 
-      case isActualUpdateExpression(Expression):
-        return Evaluate_UpdateExpression(Expression);
+    case isActualUpdateExpression(Expression):
+      return Evaluate_UpdateExpression(Expression);
 
-      case isActualUnaryExpression(Expression):
-        return Evaluate_UnaryExpression(Expression);
+    case isActualUnaryExpression(Expression):
+      return Evaluate_UnaryExpression(Expression);
 
-        // case isAwaitExpression(Expression):
-        //   return Evaluate_AwaitExpression(Expression);
+      // case isAwaitExpression(Expression):
+      //   return Evaluate_AwaitExpression(Expression);
 
-      case isActualExponentiationExpression(Expression):
-        return Evaluate_ExponentiationExpression(Expression);
+    case isActualExponentiationExpression(Expression):
+      return Evaluate_ExponentiationExpression(Expression);
 
-      case isActualMultiplicativeExpression(Expression):
-        return Evaluate_MultiplicativeExpression(Expression);
+    case isActualMultiplicativeExpression(Expression):
+      return Evaluate_MultiplicativeExpression(Expression);
 
-      case isActualAdditiveExpression(Expression):
-        return Evaluate_AdditiveExpression(Expression);
+    case isActualAdditiveExpression(Expression):
+      return Evaluate_AdditiveExpression(Expression);
 
-      case isActualShiftExpression(Expression):
-        return Evaluate_ShiftExpression(Expression);
+    case isActualShiftExpression(Expression):
+      return Evaluate_ShiftExpression(Expression);
 
-        // case isActualRelationalExpression(Expression):
-        //   return Evaluate_RelationalExpression(Expression);
+      // case isActualRelationalExpression(Expression):
+      //   return Evaluate_RelationalExpression(Expression);
 
-      case isActualEqualityExpression(Expression):
-        return Evaluate_EqualityExpression(Expression);
+    case isActualEqualityExpression(Expression):
+      return Evaluate_EqualityExpression(Expression);
 
-      case isActualBitwiseANDExpression(Expression):
-      case isActualBitwiseXORExpression(Expression):
-      case isActualBitwiseORExpression(Expression):
-        return Evaluate_BinaryBitwiseExpression(Expression);
+    case isActualBitwiseANDExpression(Expression):
+    case isActualBitwiseXORExpression(Expression):
+    case isActualBitwiseORExpression(Expression):
+      return Evaluate_BinaryBitwiseExpression(Expression);
 
-        // case isActualLogicalANDExpression(Expression):
-        //   return Evaluate_LogicalANDExpression(Expression);
+      // case isActualLogicalANDExpression(Expression):
+      //   return Evaluate_LogicalANDExpression(Expression);
 
-        // case isActualLogicalORExpression(Expression):
-        //   return Evaluate_LogicalORExpression(Expression);
+      // case isActualLogicalORExpression(Expression):
+      //   return Evaluate_LogicalORExpression(Expression);
 
-        // case isActualConditionalExpression(Expression):
-        //   return Evaluate_ConditionalExpression(Expression);
+      // case isActualConditionalExpression(Expression):
+      //   return Evaluate_ConditionalExpression(Expression);
 
-        // case isYieldExpression(Expression):
-        //   return Evaluate_YieldExpression(Expression);
+      // case isYieldExpression(Expression):
+      //   return Evaluate_YieldExpression(Expression);
 
-      case isArrowFunction(Expression):
-        return Evaluate_ArrowFunction(Expression);
+    case isArrowFunction(Expression):
+      return Evaluate_ArrowFunction(Expression);
 
-        // case isAsyncArrowFunction(Expression):
-        //   return Evaluate_AsyncArrowFunction(Expression);
+      // case isAsyncArrowFunction(Expression):
+      //   return Evaluate_AsyncArrowFunction(Expression);
 
-      case isActualAssignmentExpression(Expression):
-        return Evaluate_AssignmentExpression(Expression);
+    case isActualAssignmentExpression(Expression):
+      return Evaluate_AssignmentExpression(Expression);
 
-        // case isExpressionWithComma(Expression):
-        //   return Evaluate_ExpressionWithComma(Expression);
+      // case isExpressionWithComma(Expression):
+      //   return Evaluate_ExpressionWithComma(Expression);
 
-      default:
-        throw outOfRange('Evaluate_Expression', Expression);
-    }
-  } finally {
-    surroundingAgent.nodeStack.pop();
+    default:
+      throw outOfRange('Evaluate_Expression', Expression);
   }
 }
 
