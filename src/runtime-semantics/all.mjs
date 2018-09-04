@@ -17,6 +17,7 @@ export * from './GlobalDeclarationInstantiation.mjs';
 export * from './Identifier.mjs';
 export * from './InstantiateFunctionObject.mjs';
 export * from './IteratorBindingInitialization.mjs';
+export * from './KeyedBindingInitialization.mjs';
 export * from './LexicalDeclaration.mjs';
 export * from './MakeConstructor.mjs';
 export * from './MemberExpression.mjs';

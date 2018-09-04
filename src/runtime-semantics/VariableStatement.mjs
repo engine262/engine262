@@ -9,7 +9,9 @@ import {
   isBindingIdentifier,
   isBindingPattern,
 } from '../ast.mjs';
-import { NormalCompletion, ReturnIfAbrupt, Q } from '../completion.mjs';
+import {
+  NormalCompletion, ReturnIfAbrupt, Q, X,
+} from '../completion.mjs';
 import { ResolveBinding } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
