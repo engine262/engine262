@@ -95,7 +95,7 @@ function run(test, strict) {
     const source = fs.readFileSync(test, 'utf8');
 
     const yamls = /\/\*---\n((.|\n)+?)\n---\*\//.exec(source)[1];
-    options = yaml(yamls);
+    options = yaml.default.parse(yamls);
 
     if (options.includes) {
       options.includes.forEach((n) => {
