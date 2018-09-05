@@ -20,6 +20,8 @@ export * from './InstantiateFunctionObject.mjs';
 export * from './IteratorBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
 export * from './LexicalDeclaration.mjs';
+export * from './LogicalANDExpression.mjs';
+export * from './LogicalORExpression.mjs';
 export * from './MakeConstructor.mjs';
 export * from './MemberExpression.mjs';
 export * from './MultiplicativeExpression.mjs';

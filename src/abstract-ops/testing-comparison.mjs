@@ -256,5 +256,5 @@ export function StrictEqualityComparision(x, y) {
     }
     return NewValue(false);
   }
-  return SameValueNonNumber(x, y);
+  return NewValue(SameValueNonNumber(x, y));
 }

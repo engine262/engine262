@@ -185,6 +185,8 @@ module.exports = ({ types: t, template }) => {
           state.needCall = true;
           const [ID, CAPABILITY] = path.node.arguments;
           path.parentPath.replaceWith(templates.Promise.dontCare({ ID, CAPABILITY }));
+        } else if (path.node.callee.name === 'Assert') {
+          path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));
         }
 
         function replace(templateObj, temporaryVariableName) {

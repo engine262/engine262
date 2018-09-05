@@ -181,7 +181,8 @@ const promises = tests.map(async (t) => {
     const { description } = await run(t, false);
     console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
   } catch (e) {
-    console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', short, e);
+    console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', short);
+    console.error(e);
     failed += 1;
     return;
   }
@@ -190,7 +191,8 @@ const promises = tests.map(async (t) => {
     const { description } = await run(t, true);
     console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
   } catch (e) {
-    console.error('\u001b[31mFAIL\u001b[39m [STRICT]', short, e);
+    console.error('\u001b[31mFAIL\u001b[39m [STRICT]', short);
+    console.error(e);
     failed += 1;
     return;
   }

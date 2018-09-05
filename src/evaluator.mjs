@@ -13,6 +13,8 @@ import {
   isActualCallExpression,
   isActualEqualityExpression,
   isActualExponentiationExpression,
+  isActualLogicalANDExpression,
+  isActualLogicalORExpression,
   isActualMemberExpression,
   isActualMultiplicativeExpression,
   isActualNewExpression,
@@ -62,6 +64,8 @@ import {
   Evaluate_IfStatement,
   Evaluate_LexicalBinding,
   Evaluate_LexicalDeclaration,
+  Evaluate_LogicalANDExpression,
+  Evaluate_LogicalORExpression,
   Evaluate_MemberExpression,
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
@@ -279,11 +283,11 @@ export function Evaluate_Expression(Expression) {
     case isActualBitwiseORExpression(Expression):
       return Evaluate_BinaryBitwiseExpression(Expression);
 
-      // case isActualLogicalANDExpression(Expression):
-      //   return Evaluate_LogicalANDExpression(Expression);
+    case isActualLogicalANDExpression(Expression):
+      return Evaluate_LogicalANDExpression(Expression);
 
-      // case isActualLogicalORExpression(Expression):
-      //   return Evaluate_LogicalORExpression(Expression);
+    case isActualLogicalORExpression(Expression):
+      return Evaluate_LogicalORExpression(Expression);
 
       // case isActualConditionalExpression(Expression):
       //   return Evaluate_ConditionalExpression(Expression);

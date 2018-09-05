@@ -78,7 +78,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   const functionNames = [];
   const functionsToInitialize = [];
 
-  for (const d in varDeclarations.reverse()) {
+  for (const d of [...varDeclarations].reverse()) {
     if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
       Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d)
              || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
@@ -159,7 +159,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     for (const n of varNames) {
       if (!instantiatedVarNames.includes(n)) {
         instantiatedVarNames.push(n);
-        X(envRec.CreateMutableBinding(n, NewValue(false)));
+        X(varEnvRec.CreateMutableBinding(n, NewValue(false)));
         let initialValue;
         if (!parameterBindings.includes(n) || functionNames.includes(n)) {
           initialValue = NewValue(undefined);
