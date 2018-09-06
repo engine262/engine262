@@ -77,7 +77,7 @@ export function GetValue(V) {
   }
   let base = GetBase(V);
   if (IsUnresolvableReference(V).isTrue()) {
-    return surroundingAgent.Throw('ReferenceError');
+    return surroundingAgent.Throw('ReferenceError', `${GetReferencedName(V).stringValue()} is not defined`);
   }
   if (IsPropertyReference(V).isTrue()) {
     if (HasPrimitiveBase(V).isTrue()) {
@@ -100,7 +100,7 @@ export function PutValue(V, W) {
   let base = GetBase(V);
   if (IsUnresolvableReference(V).isTrue()) {
     if (IsStrictReference(V).isTrue()) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', `${GetReferencedName(V).stringValue()} is not defined`);
     }
     const globalObj = GetGlobalObject();
     return Q(Set(globalObj, GetReferencedName(V), W, NewValue(false)));
