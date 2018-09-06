@@ -239,6 +239,10 @@ export function NonSpecRunScript(sourceText) {
 
   const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, undefined);
+  if (Array.isArray(s)) {
+    HostReportErrors(s);
+    return new NormalCompletion(undefined);
+  }
   const res = ScriptEvaluation(s);
 
   surroundingAgent.executionContextStack.pop();
@@ -302,6 +306,10 @@ export function ScriptEvaluation(scriptRecord) {
 export function ScriptEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
+  if (Array.isArray(s)) {
+    HostReportErrors(s);
+    return new NormalCompletion(undefined);
+  }
   return ScriptEvaluation(s);
 }
 
