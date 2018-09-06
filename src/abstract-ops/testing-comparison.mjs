@@ -12,7 +12,7 @@ import {
   ToPrimitive,
   ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
-import { X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-requireobjectcoercible
@@ -197,11 +197,81 @@ export function IsInteger(argument) {
   return true;
 }
 
+// #sec-isstringprefix
+export function IsStringPrefix(p, q) {
+  Assert(Type(p) === 'String');
+  Assert(Type(q) === 'String');
+  return p.stringValue().startsWith(q.stringValue());
+}
+
 // #sec-iscompatiblepropertydescriptor
 export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
   return ValidateAndApplyPropertyDescriptor(
     NewValue(undefined), NewValue(undefined), Extensible, Desc, Current,
   );
+}
+
+// #sec-abstract-relational-comparison
+export function AbstractRelationalComparison(x, y, LeftFirst = true) {
+  let px;
+  let py;
+  if (LeftFirst === true) {
+    px = Q(ToPrimitive(x, 'Number'));
+    py = Q(ToPrimitive(y, 'Number'));
+  } else {
+    py = Q(ToPrimitive(y, 'Number'));
+    px = Q(ToPrimitive(x, 'Number'));
+  }
+  if (Type(px) === 'String' && Type(py) === 'String') {
+    if (IsStringPrefix(py, px)) {
+      return NewValue(false);
+    }
+    if (IsStringPrefix(px, py)) {
+      return NewValue(true);
+    }
+    let k = 0;
+    while (true) {
+      if (px.stringValue()[k] !== py.stringValue[k]) {
+        break;
+      }
+      k += 1;
+    }
+    const m = px.stringValue().charCodeAt(k);
+    const n = py.stringValue().charCodeAt(k);
+    if (m < n) {
+      return NewValue(true);
+    } else {
+      return NewValue(false);
+    }
+  } else {
+    const nx = Q(ToNumber(px));
+    const ny = Q(ToNumber(py));
+    if (nx.isNaN()) {
+      return NewValue(undefined);
+    }
+    if (y.isNaN()) {
+      return NewValue(undefined);
+    }
+    // If nx and ny are the same Number value, return false.
+    // If nx is +0 and ny is -0, return false.
+    // If nx is -0 and ny is +0, return false.
+    if (nx.numberValue() === ny.numberValue()) {
+      return NewValue(false);
+    }
+    if (nx.numberValue() === +Infinity) {
+      return NewValue(false);
+    }
+    if (ny.numberValue() === +Infinity) {
+      return NewValue(true);
+    }
+    if (ny.numberValue() === -Infinity) {
+      return NewValue(false);
+    }
+    if (nx.numberValue() === -Infinity) {
+      return NewValue(true);
+    }
+    return NewValue(nx.numberValue() < ny.numberValue());
+  }
 }
 
 // #sec-abstract-equality-comparison

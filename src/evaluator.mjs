@@ -11,6 +11,7 @@ import {
   isActualBitwiseORExpression,
   isActualBitwiseXORExpression,
   isActualCallExpression,
+  isActualConditionalExpression,
   isActualEqualityExpression,
   isActualExponentiationExpression,
   isActualLogicalANDExpression,
@@ -18,6 +19,7 @@ import {
   isActualMemberExpression,
   isActualMultiplicativeExpression,
   isActualNewExpression,
+  isActualRelationalExpression,
   isActualShiftExpression,
   isActualUnaryExpression,
   isActualUpdateExpression,
@@ -56,6 +58,7 @@ import {
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
   Evaluate_CallExpression,
+  Evaluate_ConditionalExpression,
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_FunctionDeclaration,
@@ -70,6 +73,7 @@ import {
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
   Evaluate_ObjectLiteral,
+  Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
   Evaluate_TemplateLiteral,
@@ -272,8 +276,8 @@ export function Evaluate_Expression(Expression) {
     case isActualShiftExpression(Expression):
       return Evaluate_ShiftExpression(Expression);
 
-      // case isActualRelationalExpression(Expression):
-      //   return Evaluate_RelationalExpression(Expression);
+    case isActualRelationalExpression(Expression):
+      return Evaluate_RelationalExpression(Expression);
 
     case isActualEqualityExpression(Expression):
       return Evaluate_EqualityExpression(Expression);
@@ -289,8 +293,8 @@ export function Evaluate_Expression(Expression) {
     case isActualLogicalORExpression(Expression):
       return Evaluate_LogicalORExpression(Expression);
 
-      // case isActualConditionalExpression(Expression):
-      //   return Evaluate_ConditionalExpression(Expression);
+    case isActualConditionalExpression(Expression):
+      return Evaluate_ConditionalExpression(Expression);
 
       // case isYieldExpression(Expression):
       //   return Evaluate_YieldExpression(Expression);
