@@ -28,6 +28,7 @@ import {
   isBlockStatement,
   isExpressionStatement,
   isExpressionWithComma,
+  isForStatement,
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifierReference,
@@ -63,6 +64,7 @@ import {
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
+  Evaluate_ForStatement,
   Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_Identifier,
@@ -132,6 +134,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_ExpressionStatement(StatementListItem);
     case isIfStatement(StatementListItem):
       return Evaluate_IfStatement(StatementListItem);
+    case isForStatement(StatementListItem):
+      return Evaluate_ForStatement(StatementListItem);
     case isReturnStatement(StatementListItem):
       return Evaluate_ReturnStatement(StatementListItem);
     case isThrowStatement(StatementListItem):
@@ -152,7 +156,9 @@ function Evaluate_StatementListItem(StatementListItem) {
   }
 }
 
-export const Evaluate_Statement = Evaluate_StatementListItem;
+export function Evaluate_Statement(Statement) {
+  return EnsureCompletion(Evaluate_StatementListItem(Statement));
+}
 
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
@@ -203,8 +209,12 @@ export function EvaluateBinopValues(operator, lval, rval) {
   }
 }
 
-// (implicit)
 export function Evaluate_Expression(Expression) {
+  return EnsureCompletion(Inner_Evaluate_Expression(Expression));
+}
+
+// (implicit)
+function Inner_Evaluate_Expression(Expression) {
   switch (true) {
     case isThis(Expression):
       return Evaluate_ThisExpression(Expression);

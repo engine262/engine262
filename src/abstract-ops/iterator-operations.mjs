@@ -161,3 +161,20 @@ export function CreateListIteratorRecord(list) {
     Done: NewValue(false),
   };
 }
+
+// #sec-loopcontinues
+export function LoopContinues(completion, labelSet) {
+  if (completion.Type === 'normal') {
+    return NewValue(true);
+  }
+  if (completion.Type !== 'continue') {
+    return NewValue(false);
+  }
+  if (completion.Target === undefined) {
+    return NewValue(true);
+  }
+  if (labelSet.includes(completion.Target)) {
+    return NewValue(true);
+  }
+  return NewValue(false);
+}

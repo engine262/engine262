@@ -591,6 +591,22 @@ export function isIterationStatement(node) {
          || node.type === 'ForOfStatement';
 }
 
+export function isForStatement(node) {
+  return node.type === 'ForStatement';
+}
+
+export function isForStatementWithExpression(node) {
+  return isForStatement(node) && isExpression(node.init);
+}
+
+export function isForStatementWithVariableStatement(node) {
+  return isForStatement(node) && isVariableStatement(node.init);
+}
+
+export function isForStatementWithLexicalDeclaration(node) {
+  return isForStatement(node) && isLexicalDeclaration(node.init);
+}
+
 export function isForBinding() {
   return false;
 }

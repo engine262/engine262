@@ -24,6 +24,7 @@ import { NormalCompletion, Q } from './completion.mjs';
 export class LexicalEnvironment {
   constructor() {
     this.EnvironmentRecord = undefined;
+    this.outerEnvironmentReference = undefined;
   }
 }
 
@@ -493,7 +494,7 @@ export function NewDeclarativeEnvironment(E) {
   const env = new LexicalEnvironment();
   const envRec = new DeclarativeEnvironmentRecord();
   env.EnvironmentRecord = envRec;
-  env.outerLexicalEnvironment = E;
+  env.outerEnvironmentReference = E;
   return env;
 }
 
@@ -513,7 +514,7 @@ export function NewFunctionEnvironment(F, newTarget) {
   envRec.HomeObject = home;
   envRec.NewTarget = newTarget;
   env.EnvironmentRecord = envRec;
-  env.outerLexicalEnvironment = F.Environment;
+  env.outerEnvironmentReference = F.Environment;
   return env;
 }
 
@@ -531,7 +532,7 @@ export function NewGlobalEnvironment(G, thisValue) {
 
   env.EnvironmentRecord = globalRec;
 
-  env.outerLexicalEnvironment = NewValue(null);
+  env.outerEnvironmentReference = NewValue(null);
 
   return env;
 }
@@ -546,7 +547,7 @@ export function GetIdentifierReference(lex, name, strict) {
   if (exists.isTrue()) {
     return new Reference(envRec, name, strict);
   } else {
-    const outer = lex.outerLexicalEnvironment;
+    const outer = lex.outerEnvironmentReference;
     return GetIdentifierReference(outer, name, strict);
   }
 }

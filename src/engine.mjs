@@ -392,7 +392,7 @@ export function GetThisEnvironment() {
     if (exists) {
       return envRec;
     }
-    const outer = envRec.outerLexicalEnvironment;
+    const outer = envRec.outerEnvironmentReference;
     Assert(Type(outer) !== 'Null');
     lex = outer;
   }
