@@ -27,6 +27,7 @@ import {
   isArrowFunction,
   isBlockStatement,
   isExpressionStatement,
+  isExpressionWithComma,
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifierReference,
@@ -61,6 +62,7 @@ import {
   Evaluate_ConditionalExpression,
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
+  Evaluate_ExpressionWithComma,
   Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_Identifier,
@@ -308,8 +310,8 @@ export function Evaluate_Expression(Expression) {
     case isActualAssignmentExpression(Expression):
       return Evaluate_AssignmentExpression(Expression);
 
-      // case isExpressionWithComma(Expression):
-      //   return Evaluate_ExpressionWithComma(Expression);
+    case isExpressionWithComma(Expression):
+      return Evaluate_ExpressionWithComma(Expression);
 
     default:
       throw outOfRange('Evaluate_Expression', Expression);

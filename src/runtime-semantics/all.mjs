@@ -11,6 +11,7 @@ export * from './ConditionalExpression.mjs';
 export * from './EqualityExpression.mjs';
 export * from './EvaluateBody.mjs';
 export * from './ExponentiationExpression.mjs';
+export * from './ExpressionWithComma.mjs';
 export * from './FunctionDeclaration.mjs';
 export * from './FunctionExpression.mjs';
 export * from './FunctionStatementList.mjs';
