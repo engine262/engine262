@@ -8,7 +8,7 @@ import {
   AbruptCompletion,
   NormalCompletion,
   Q,
-  ThrowCompletion, X,
+  ThrowCompletion,
 } from './completion.mjs';
 import {
   GetIdentifierReference,
@@ -22,12 +22,10 @@ import {
 import {
   Assert,
   Construct,
-  CreateBuiltinFunction,
   Get,
   IsArray,
   IsPropertyKey,
   ToBoolean,
-  ToString,
 } from './abstract-ops/all.mjs';
 import {
   GlobalDeclarationInstantiation,
@@ -87,7 +85,10 @@ export class Agent {
 }
 Agent.Increment = 0;
 
-export const surroundingAgent = new Agent();
+export let surroundingAgent = new Agent();
+export function setSurroundingAgent(a) {
+  surroundingAgent = a;
+}
 
 export class ExecutionContext {
   constructor() {
@@ -139,51 +140,7 @@ export function InitializeHostDefinedRealm() {
   const global = NewValue(undefined);
   const thisValue = NewValue(undefined);
   SetRealmGlobalObject(realm, global, thisValue);
-  const globalObj = SetDefaultGlobalBindings(realm);
-
-  // Create any implementation-defined global object properties on globalObj.
-  globalObj.DefineOwnProperty(NewValue('print'), {
-    Value: CreateBuiltinFunction((args) => {
-      for (let i = 0; i < args.length; i += 1) {
-        const arg = args[i];
-        const type = Type(arg);
-        if (type === 'Undefined') {
-          args[i] = 'undefined';
-        } else if (type === 'Null') {
-          args[i] = 'null';
-        } else if (type === 'String' || type === 'Number' || type === 'Boolean') {
-          args[i] = X(ToString(arg)).stringValue();
-        } else if (type === 'Symbol') {
-          args[i] = `Symbol(${arg.Description.stringValue()})`;
-        } else if (type === 'Object') {
-          const funcToString = surroundingAgent.intrinsic('%FunctionPrototype%').properties.get(NewValue('toString')).Value;
-          const errorToString = surroundingAgent.intrinsic('%ErrorPrototype%').properties.get(NewValue('toString')).Value;
-          const objectToString = surroundingAgent.intrinsic('%ObjProto_toString%');
-          const toString = X(Get(arg, NewValue('toString')));
-          if (toString === errorToString
-              || toString === objectToString
-              || toString === funcToString) {
-            args[i] = X(toString.Call(arg, [])).stringValue();
-          } else {
-            const ctor = X(Get(arg, NewValue('constructor')));
-            const ctorName = X(Get(ctor, NewValue('name'))).stringValue();
-            if (ctorName !== '') {
-              args[i] = `#<${ctorName}>`;
-            } else {
-              args[i] = '[objectUnknown]';
-            }
-          }
-        } else {
-          throw new RangeError();
-        }
-      }
-      console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
-      return NewValue(undefined);
-    }, [], realm),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
+  SetDefaultGlobalBindings(realm);
 }
 
 // 8.6 RunJobs
@@ -221,53 +178,6 @@ export function RunJobs() {
       HostReportErrors([result.Value]);
     }
   }
-}
-
-export function NonSpecRunScript(sourceText) {
-  InitializeHostDefinedRealm();
-
-  const callerContext = surroundingAgent.runningExecutionContext;
-  const callerRealm = callerContext.Realm;
-  const callerScriptOrModule = callerContext.ScriptOrModule;
-
-  const newContext = new ExecutionContext();
-  newContext.Function = NewValue(null);
-  newContext.Realm = callerRealm;
-  newContext.ScriptOrModule = callerScriptOrModule;
-
-  surroundingAgent.executionContextStack.push(newContext);
-
-  const realm = surroundingAgent.currentRealmRecord;
-  const s = ParseScript(sourceText, realm, undefined);
-  if (Array.isArray(s)) {
-    HostReportErrors(s);
-    return new NormalCompletion(undefined);
-  }
-  const res = ScriptEvaluation(s);
-
-  surroundingAgent.executionContextStack.pop();
-
-  while (true) { // eslint-disable-line no-constant-condition
-    const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0) {
-      break;
-    }
-    const nextPending = nextQueue.shift();
-    const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
-    newContext.Function = NewValue(null);
-    newContext.Realm = nextPending.Realm;
-    newContext.ScriptOrModule = nextPending.ScriptOrModule;
-    surroundingAgent.executionContextStack.push(newContext);
-    const result = nextPending.Job(...nextPending.Arguments);
-    surroundingAgent.executionContextStack.pop();
-    if (result instanceof AbruptCompletion) {
-      HostReportErrors([result.Value]);
-    }
-  }
-
-  surroundingAgent.executionContextStack.pop();
-
-  return res;
 }
 
 // 8.7.1 AgentSignifier

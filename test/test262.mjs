@@ -1,78 +1,37 @@
 import fs from 'fs';
 import yaml from 'yaml';
-import glob from 'glob';
+// import glob from 'glob';
+import { Realm, BuiltinFunction } from '../lib/api.mjs';
 import {
-  ExecutionContext,
-  surroundingAgent,
-  ScriptEvaluation,
-  HostReportErrors,
-} from '../lib/engine.mjs';
-import {
-  CreateRealm,
-  SetRealmGlobalObject,
-  SetDefaultGlobalBindings,
-} from '../lib/realm.mjs';
-import {
-  CreateBuiltinFunction,
-  ObjectCreate,
   CreateDataProperty,
+  ObjectCreate,
 } from '../lib/abstract-ops/all.mjs';
-import { ParseScript } from '../lib/parse.mjs';
 import { New as NewValue } from '../lib/value.mjs';
-import { AbruptCompletion } from '../lib/completion.mjs';
 
 const testdir = new URL('./test262/', import.meta.url);
 
 function createRealm() {
-  const realm = CreateRealm();
-  const newContext = new ExecutionContext();
-  newContext.Function = NewValue(null);
-  newContext.Realm = realm;
-  newContext.ScriptOrModule = NewValue(null);
-  surroundingAgent.executionContextStack.push(newContext);
-  const global = NewValue(undefined);
-  const thisValue = NewValue(undefined);
-  SetRealmGlobalObject(realm, global, thisValue);
-  const globalObj = SetDefaultGlobalBindings(realm);
+  const realm = new Realm();
 
-  CreateDataProperty(globalObj, NewValue('print'), CreateBuiltinFunction((args) => {
+  CreateDataProperty(realm.global, NewValue('print'), new BuiltinFunction(realm, (args) => {
     console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
     return NewValue(undefined);
-  }, [], realm));
+  }));
 
-  const $262 = ObjectCreate(realm.Intrinsics['%ObjectPrototype%']);
+  const $262 = ObjectCreate(realm.realm.Intrinsics['%ObjectPrototype%']);
 
-  function evalScript(sourceText, file = false) {
+  CreateDataProperty($262, NewValue('createRealm'), new BuiltinFunction(realm, () => createRealm()));
+  CreateDataProperty($262, NewValue('evalScript'),
+    new BuiltinFunction(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
+
+  CreateDataProperty(realm.global, NewValue('$262'), $262);
+
+  $262.evalScript = (sourceText, file) => {
     if (file) {
       sourceText = fs.readFileSync(new URL(sourceText, testdir));
     }
-
-    const callerContext = surroundingAgent.runningExecutionContext;
-    const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = callerContext.ScriptOrModule;
-
-    const context = new ExecutionContext();
-    context.Function = NewValue(null);
-    context.Realm = callerRealm;
-    context.ScriptOrModule = callerScriptOrModule;
-
-    surroundingAgent.executionContextStack.push(context);
-
-    const s = ParseScript(sourceText, surroundingAgent.currentRealmRecord, undefined);
-    const res = ScriptEvaluation(s);
-
-    surroundingAgent.executionContextStack.pop();
-
-    return res;
-  }
-
-  CreateDataProperty($262, NewValue('createRealm'), CreateBuiltinFunction(() => createRealm(), [], realm));
-  CreateDataProperty($262, NewValue('evalScript'),
-    CreateBuiltinFunction(([sourceText]) => evalScript(sourceText.stringValue()), [], realm));
-
-  CreateDataProperty(globalObj, NewValue('$262'), $262);
-
-  $262.evalScript = evalScript;
+    return realm.evaluateScript(sourceText);
+  };
 
   return $262;
 }
@@ -130,27 +89,6 @@ function run(test, strict) {
         resolve(options);
       } else {
         reject(err);
-      }
-    }
-
-    while (true) { // eslint-disable-line no-constant-condition
-      const nextQueue = surroundingAgent.jobQueue;
-
-      // host specific behaviour
-      if (nextQueue.length === 0) {
-        break;
-      }
-
-      const nextPending = nextQueue.shift();
-      const newContext = new ExecutionContext();
-      newContext.Function = NewValue(null);
-      newContext.Realm = nextPending.Realm;
-      newContext.ScriptOrModule = nextPending.ScriptOrModule;
-      surroundingAgent.executionContextStack.push(newContext);
-      const result = nextPending.Job(...nextPending.Arguments);
-      surroundingAgent.executionContextStack.pop();
-      if (result instanceof AbruptCompletion) {
-        HostReportErrors([result.Value]);
       }
     }
   });

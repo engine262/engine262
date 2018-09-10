@@ -21,7 +21,7 @@
   },
   "scripts": {
     "test": "node --experimental-modules test/test262.mjs",
-    "lint": "eslint transform.js test/test262.mjs src/ --ext=js,mjs",
+    "lint": "eslint transform.js test/test262.mjs src/ --ext=js,mjs --cache",
     "build": "babel src -d lib --keep-file-extension"
   },
   "repository": {
