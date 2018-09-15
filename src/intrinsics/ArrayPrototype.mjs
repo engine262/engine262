@@ -31,6 +31,7 @@ import {
   Set,
   SetFunctionLength,
   SetFunctionName,
+  StrictEqualityComparision,
   ToBoolean,
   ToInteger,
   ToLength,
@@ -338,6 +339,72 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   return NewValue(false);
 }
 
+function ArrayProto_indexOf([searchElement, fromIndex = NewValue(0)], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (len === 0) {
+    return NewValue(-1);
+  }
+  const n = Q(ToInteger(fromIndex)).numberValue();
+  // Assert: If fromIndex is undefined, then n is 0.
+  if (n >= len) {
+    return NewValue(-1);
+  }
+  let k;
+  if (n >= 0) {
+    if (Object.is(-0, n)) {
+      k = 0;
+    } else {
+      k = n;
+    }
+  } else {
+    k = len + n;
+    if (k < 0) {
+      k = 0;
+    }
+  }
+  while (k < len) {
+    const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
+    if (kPresent.isTrue()) {
+      const elementK = Get(O, X(ToString(NewValue(k))));
+      const same = StrictEqualityComparision(searchElement, elementK);
+      if (same.isTrue()) {
+        return NewValue(k);
+      }
+    }
+    k += 1;
+  }
+  return NewValue(-1);
+}
+
+function ArrayProto_join([separator = NewValue(undefined)], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  let sep;
+  if (Type(separator) === 'Undefined') {
+    sep = ',';
+  } else {
+    sep = Q(ToString(separator)).stringValue();
+  }
+  let R = '';
+  let k = 0;
+  while (k < len) {
+    if (k > 0) {
+      R = `${R}${sep}`;
+    }
+    const element = Q(Get(O, X(ToString(NewValue(k)))));
+    let next;
+    if (Type(element) === 'Undefined' || Type(element) === 'Null') {
+      next = '';
+    } else {
+      next = Q(ToString(element)).stringValue();
+    }
+    R = `${R}${next}`;
+    k += 1;
+  }
+  return NewValue(R);
+}
+
 function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
@@ -363,6 +430,15 @@ function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
     k += 1;
   }
   return A;
+}
+
+function ArrayProto_toString(a, { thisValue }) {
+  const array = Q(ToObject(thisValue));
+  let func = Q(Get(array, NewValue('join')));
+  if (IsCallable(func).isFalse()) {
+    func = surroundingAgent.intrinsic('%ObjProto_toString%');
+  }
+  return Q(Call(func, array));
 }
 
 function ArrayProto_values(args, { thisValue }) {
@@ -392,8 +468,8 @@ export function CreateArrayPrototype(realmRec) {
     ['findIndex', ArrayProto_findIndex, 1],
     ['forEach', ArrayProto_forEach, 1],
     ['includes', ArrayProto_includes, 1],
-    // indexOf
-    // join
+    ['indexOf', ArrayProto_indexOf, 1],
+    ['join', ArrayProto_join, 1],
     ['keys', ArrayProto_keys, 0],
     // lastIndexOf
     ['map', ArrayProto_map, 1],
@@ -408,7 +484,7 @@ export function CreateArrayPrototype(realmRec) {
     // sort
     // splice
     // toLocaleString
-    // toString
+    ['toString', ArrayProto_toString, 0],
     // unshift
     ['values', ArrayProto_values, 0],
   ].forEach(([name, nativeFunction, length]) => {
@@ -435,12 +511,12 @@ export function CreateArrayPrototype(realmRec) {
     CreateDataProperty(unscopableList, NewValue('includes'), NewValue(true));
     CreateDataProperty(unscopableList, NewValue('keys'), NewValue(true));
     CreateDataProperty(unscopableList, NewValue('values'), NewValue(true));
-    proto.DefineOwnProperty(wellKnownSymbols.unscopables, {
+    X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, {
       Value: unscopableList,
       Writable: false,
       Enumerable: false,
       Configurable: false,
-    });
+    }));
   }
 
   realmRec.Intrinsics['%ArrayPrototype%'] = proto;
