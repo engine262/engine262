@@ -2,7 +2,7 @@
   "name": "engine262",
   "version": "0.0.1",
   "description": "Implementation of ECMA-262 in JavaScript",
-  "main": ".",
+  "main": "lib/api.mjs",
   "dependencies": {
     "acorn": "^5.7.1"
   },

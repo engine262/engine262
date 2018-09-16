@@ -1,30 +1,28 @@
 import fs from 'fs';
 import yaml from 'yaml';
 // import glob from 'glob';
-import { Realm, BuiltinFunction } from '../lib/api.mjs';
+import { Realm, Value, Object as APIObject } from '../lib/api.mjs';
 import {
   CreateDataProperty,
-  ObjectCreate,
 } from '../lib/abstract-ops/all.mjs';
-import { New as NewValue } from '../lib/value.mjs';
 
 const testdir = new URL('./test262/', import.meta.url);
 
 function createRealm() {
   const realm = new Realm();
 
-  CreateDataProperty(realm.global, NewValue('print'), new BuiltinFunction(realm, (args) => {
+  CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
     console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
-    return NewValue(undefined);
+    return new Value(realm, undefined);
   }));
 
-  const $262 = ObjectCreate(realm.realm.Intrinsics['%ObjectPrototype%']);
+  const $262 = new APIObject(realm);
 
-  CreateDataProperty($262, NewValue('createRealm'), new BuiltinFunction(realm, () => createRealm()));
-  CreateDataProperty($262, NewValue('evalScript'),
-    new BuiltinFunction(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
+  CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
+  CreateDataProperty($262, new Value(realm, 'evalScript'),
+    new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
 
-  CreateDataProperty(realm.global, NewValue('$262'), $262);
+  CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
   $262.evalScript = (sourceText, file) => {
     if (file) {

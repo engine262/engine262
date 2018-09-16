@@ -10,14 +10,18 @@ import {
 } from './engine.mjs';
 import {
   CreateBuiltinFunction,
+  ObjectCreate,
 } from './abstract-ops/all.mjs';
 import { New as NewValue } from './value.mjs';
 import { ParseScript } from './parse.mjs';
 import { ThrowCompletion, AbruptCompletion } from './completion.mjs';
 
 class APIRealm {
-  constructor() {
+  constructor(options = {}) {
     const realm = CreateRealm();
+
+    realm.hostDefinedOptions = options;
+
     const newContext = new ExecutionContext();
     newContext.Function = NewValue(null);
     newContext.Realm = realm;
@@ -80,11 +84,19 @@ class APIRealm {
   }
 }
 
-function APIBuiltinFunction(realm, fn) {
-  return CreateBuiltinFunction(fn, [], realm.realm);
+function APIObject(realm, intrinsic = '%ObjectPrototype%') {
+  return ObjectCreate(realm.realm.Intrinsics[intrinsic]);
+}
+
+function APIValue(realm, v) {
+  if (typeof v === 'function') {
+    return CreateBuiltinFunction(v, [], realm.realm);
+  }
+  return NewValue(v, realm.realm);
 }
 
 export {
   APIRealm as Realm,
-  APIBuiltinFunction as BuiltinFunction,
+  APIValue as Value,
+  APIObject as Object,
 };
