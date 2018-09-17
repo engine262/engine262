@@ -331,7 +331,7 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   }
   while (k < len) {
     const elementK = Q(Get(O, X(ToString(NewValue(k)))));
-    if (SameValueZero(searchElement, elementK)) {
+    if (SameValueZero(searchElement, elementK).isTrue()) {
       return NewValue(true);
     }
     k += 1;
@@ -410,6 +410,42 @@ function ArrayProto_keys(args, { thisValue }) {
   return CreateArrayIterator(O, 'key');
 }
 
+function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  if (len === 0) {
+    return NewValue(-1);
+  }
+  let n;
+  if (fromIndex !== undefined) {
+    n = Q(ToInteger(fromIndex)).numberValue();
+  } else {
+    n = len - 1;
+  }
+  let k;
+  if (n >= 0) {
+    if (Object.is(n, -0)) {
+      k = 0;
+    } else {
+      k = Math.min(n, len - 1);
+    }
+  } else {
+    k = len + n;
+  }
+  while (k >= 0) {
+    const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
+    if (kPresent.isTrue()) {
+      const elementK = Q(Get(O, X(ToString(NewValue(k)))));
+      const same = StrictEqualityComparision(searchElement, elementK);
+      if (same.isTrue()) {
+        return NewValue(k);
+      }
+    }
+    k -= 1;
+  }
+  return NewValue(-1);
+}
+
 function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
@@ -471,7 +507,7 @@ export function CreateArrayPrototype(realmRec) {
     ['indexOf', ArrayProto_indexOf, 1],
     ['join', ArrayProto_join, 1],
     ['keys', ArrayProto_keys, 0],
-    // lastIndexOf
+    ['lastIndexOf', ArrayProto_lastIndexOf, 1],
     ['map', ArrayProto_map, 1],
     // pop
     // push

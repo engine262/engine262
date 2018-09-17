@@ -299,10 +299,10 @@ export function GetThisEnvironment() {
   while (true) { // eslint-disable-line no-constant-condition
     const envRec = lex.EnvironmentRecord;
     const exists = envRec.HasThisBinding();
-    if (exists) {
+    if (exists.isTrue()) {
       return envRec;
     }
-    const outer = envRec.outerEnvironmentReference;
+    const outer = lex.outerEnvironmentReference;
     Assert(Type(outer) !== 'Null');
     lex = outer;
   }

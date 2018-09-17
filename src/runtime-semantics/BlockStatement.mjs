@@ -37,7 +37,7 @@ function BlockDeclarationInstantiation(code, env) {
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
   const declarations = LexicallyScopedDeclarations_StatementList(code);
   for (const d of declarations) {
-    for (const dn of BoundNames_Declaration(d)) {
+    for (const dn of BoundNames_Declaration(d).map(NewValue)) {
       if (IsConstantDeclaration(d)) {
         X(envRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {

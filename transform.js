@@ -106,16 +106,14 @@ module.exports = ({ types: t, template }) => {
           }
           state.foundCompletion = false;
           state.needCompletion = false;
-          state.foundAssert = false;
-          state.needAssert = false;
-          state.foundCall = false;
-          state.needCall = false;
+          state.foundAssertAndCall = false;
+          state.needAssertAndCall = false;
         },
         exit(path, state) {
           if (!state.foundCompletion && state.needCompletion) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
-          if ((!state.foundAssert && state.needAssert) || (!state.foundCall && state.needCall)) {
+          if (!state.foundAssertAndCall && state.needAssertAndCall) {
             path.node.body.unshift(createImportAssertAndCall(state.file));
           }
         },
@@ -134,11 +132,19 @@ module.exports = ({ types: t, template }) => {
             );
           }
         }
-        if (path.node.specifiers.find((s) => s.local.name === 'Assert')) {
-          state.foundAssert = true;
-        }
-        if (path.node.specifiers.find((s) => s.local.name === 'Call')) {
-          state.foundCall = true;
+        if (path.node.source.value.endsWith('abstract-ops/all.mjs')
+            || (state.file.opts.filename.includes('abstract-ops') && path.node.source.value === './all.mjs')) {
+          state.foundAssertAndCall = true;
+          if (!path.node.specifiers.find((s) => s.local.name === 'Assert')) {
+            path.node.specifiers.push(
+              t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
+            );
+          }
+          if (!path.node.specifiers.find((s) => s.local.name === 'Call') && !state.file.opts.filename.endsWith('object-operations.mjs')) {
+            path.node.specifiers.push(
+              t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
+            );
+          }
         }
       },
       CallExpression(path, state) {
@@ -178,11 +184,11 @@ module.exports = ({ types: t, template }) => {
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;
-          state.needAssert = true;
+          state.needAssertAndCall = true;
           replace(templates.X, 'val');
         } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
           state.needCompletion = true;
-          state.needCall = true;
+          state.needAssertAndCall = true;
           const [ID, CAPABILITY] = path.node.arguments;
           path.parentPath.replaceWith(templates.Promise.dontCare({ ID, CAPABILITY }));
         } else if (path.node.callee.name === 'Assert') {

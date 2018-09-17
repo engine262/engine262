@@ -96,11 +96,7 @@ export function OrdinaryGetOwnProperty(O, P) {
 }
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
-export function OrdinaryDefineOwnProperty(
-  O,
-  P,
-  Desc,
-) {
+export function OrdinaryDefineOwnProperty(O, P, Desc) {
   const current = Q(O.GetOwnProperty(P));
   const extensible = Q(IsExtensible(O));
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);

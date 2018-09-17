@@ -40,6 +40,8 @@ import { CreateNativeError } from './intrinsics/NativeError.mjs';
 import { CreateIteratorPrototype } from './intrinsics/IteratorPrototype.mjs';
 import { CreateAsyncIteratorPrototype } from './intrinsics/AsyncIteratorPrototype.mjs';
 import { CreateArrayIteratorPrototype } from './intrinsics/ArrayIteratorPrototype.mjs';
+import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
+import { CreateMap } from './intrinsics/Map.mjs';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms
@@ -65,7 +67,7 @@ export function CreateRealm() {
 
 function AddRestrictedFunctionProperties(F, realm) {
   Assert(realm.Intrinsics['%ThrowTypeError%']);
-  const thrower = realm.Intrinsics['%ThrowTypeError'];
+  const thrower = realm.Intrinsics['%ThrowTypeError%'];
   X(DefinePropertyOrThrow(F, NewValue('caller'), {
     Get: thrower,
     Set: thrower,
@@ -140,6 +142,9 @@ export function CreateIntrinsics(realmRec) {
 
   CreateMath(realmRec);
 
+  CreateMapPrototype(realmRec);
+  CreateMap(realmRec);
+
   return intrinsics;
 }
 
@@ -205,6 +210,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Array',
     'Boolean',
     'Function',
+    'Map',
     'Number',
     'Object',
     'Promise',

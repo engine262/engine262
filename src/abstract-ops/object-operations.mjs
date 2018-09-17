@@ -24,13 +24,14 @@ import {
 } from './all.mjs';
 import {
   Q, X,
+  NormalCompletion,
 } from '../completion.mjs';
 
 // #sec-get-o-p Get
 export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
-  return Q(O.Get(P, O));
+  return new NormalCompletion(Q(O.Get(P, O)));
 }
 
 // #sec-getv GetV

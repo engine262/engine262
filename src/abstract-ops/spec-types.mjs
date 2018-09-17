@@ -48,10 +48,10 @@ export function IsGenericDescriptor(Desc) {
   }
 
   if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 // #sec-frompropertydescriptor FromPropertyDescriptor

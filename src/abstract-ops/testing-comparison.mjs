@@ -110,7 +110,7 @@ export function SameValue(x, y) {
 // #sec-samevaluezero
 export function SameValueZero(x, y) {
   if (Type(x) !== Type(y)) {
-    return false;
+    return NewValue(false);
   }
   if (Type(x) === 'Number') {
     if (x.isNaN() && y.isNaN()) {
@@ -120,11 +120,11 @@ export function SameValueZero(x, y) {
     // If x is -0 and y is +0, return true.
     // If x is the same Number value as y, return true.
     if (x.numberValue() === y.numberValue()) {
-      return true;
+      return NewValue(true);
     }
-    return false;
+    return NewValue(false);
   }
-  return SameValueNonNumber(x, y);
+  return NewValue(SameValueNonNumber(x, y));
 }
 
 // 7.2.12 SameValueNonNumber
