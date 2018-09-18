@@ -42,6 +42,8 @@ import { CreateAsyncIteratorPrototype } from './intrinsics/AsyncIteratorPrototyp
 import { CreateArrayIteratorPrototype } from './intrinsics/ArrayIteratorPrototype.mjs';
 import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
 import { CreateMap } from './intrinsics/Map.mjs';
+import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
+import { CreateSet } from './intrinsics/Set.mjs';
 
 // https://tc39.github.io/ecma262/#sec-code-realms
 // 8.2 Realms
@@ -142,6 +144,9 @@ export function CreateIntrinsics(realmRec) {
 
   CreateMath(realmRec);
 
+  CreateSetPrototype(realmRec);
+  CreateSet(realmRec);
+
   CreateMapPrototype(realmRec);
   CreateMap(realmRec);
 
@@ -216,6 +221,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Promise',
     'Proxy',
     'Reflect',
+    'Set',
     'String',
     'Symbol',
     'Error',
