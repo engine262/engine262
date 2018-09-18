@@ -25,7 +25,7 @@ function SetConstructor([iterable], { NewTarget }) {
   if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
     return set;
   }
-  const adder = Q(Get(set, NewValue('set')));
+  const adder = Q(Get(set, NewValue('add')));
   if (IsCallable(adder).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -37,7 +37,7 @@ function SetConstructor([iterable], { NewTarget }) {
       return set;
     }
     const nextValue = Q(IteratorValue(next));
-    const status = Call(adder, set, [nextValue.Value]);
+    const status = Call(adder, set, [nextValue]);
     if (status instanceof AbruptCompletion) {
       return Q(IteratorClose(iteratorRecord, status));
     }

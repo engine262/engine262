@@ -26,6 +26,7 @@ import {
   isArrayLiteral,
   isArrowFunction,
   isBlockStatement,
+  isBreakStatement,
   isExpressionStatement,
   isExpressionWithComma,
   isForStatement,
@@ -59,6 +60,7 @@ import {
   Evaluate_AssignmentExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
+  Evaluate_BreakStatement,
   Evaluate_CallExpression,
   Evaluate_ConditionalExpression,
   Evaluate_EqualityExpression,
@@ -134,6 +136,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_ExpressionStatement(StatementListItem);
     case isIfStatement(StatementListItem):
       return Evaluate_IfStatement(StatementListItem);
+    case isBreakStatement(StatementListItem):
+      return Evaluate_BreakStatement(StatementListItem);
     case isForStatement(StatementListItem):
       return Evaluate_ForStatement(StatementListItem);
     case isReturnStatement(StatementListItem):

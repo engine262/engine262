@@ -40,6 +40,7 @@ import { CreateNativeError } from './intrinsics/NativeError.mjs';
 import { CreateIteratorPrototype } from './intrinsics/IteratorPrototype.mjs';
 import { CreateAsyncIteratorPrototype } from './intrinsics/AsyncIteratorPrototype.mjs';
 import { CreateArrayIteratorPrototype } from './intrinsics/ArrayIteratorPrototype.mjs';
+import { CreateSetIteratorPrototype } from './intrinsics/SetIteratorPrototype.mjs';
 import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
 import { CreateMap } from './intrinsics/Map.mjs';
 import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
@@ -117,8 +118,8 @@ export function CreateIntrinsics(realmRec) {
 
   CreateIteratorPrototype(realmRec);
   CreateAsyncIteratorPrototype(realmRec);
-
   CreateArrayIteratorPrototype(realmRec);
+  CreateSetIteratorPrototype(realmRec);
 
   CreateStringPrototype(realmRec);
   CreateString(realmRec);

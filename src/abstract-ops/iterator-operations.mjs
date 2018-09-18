@@ -19,6 +19,7 @@ import {
 } from '../value.mjs';
 import {
   Completion,
+  EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
 
@@ -58,7 +59,7 @@ export function GetIterator(obj, hint, method) {
     NextMethod: nextMethod,
     Done: NewValue(false),
   };
-  return iteratorRecord;
+  return EnsureCompletion(iteratorRecord);
 }
 
 // #sec-iteratornext
@@ -72,19 +73,19 @@ export function IteratorNext(iteratorRecord, value) {
   if (Type(result) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  return result;
+  return EnsureCompletion(result);
 }
 
 // #sec-iteratorcomplete
 export function IteratorComplete(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return ToBoolean(Q(Get(iterResult, NewValue('done'))));
+  return EnsureCompletion(ToBoolean(Q(Get(iterResult, NewValue('done')))));
 }
 
 // #sec-iteratorvalue
 export function IteratorValue(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return Q(Get(iterResult, NewValue('value')));
+  return EnsureCompletion(Q(Get(iterResult, NewValue('value'))));
 }
 
 // #sec-iteratorstep
@@ -92,9 +93,9 @@ export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
   if (done.isTrue()) {
-    return NewValue(false);
+    return EnsureCompletion(NewValue(false));
   }
-  return result;
+  return EnsureCompletion(result);
 }
 
 // #sec-iteratorclose

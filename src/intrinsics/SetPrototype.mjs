@@ -11,6 +11,25 @@ import {
 import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
+// #sec-CreateSetIterator
+function CreateSetIterator(set, kind) {
+  if (Type(set) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (!('SetData' in set)) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
+    'IteratedSet',
+    'SetNextIndex',
+    'SetIterationKind',
+  ]);
+  iterator.IteratedSet = set;
+  iterator.SetNextIndex = 0;
+  iterator.SetIterationKind = kind;
+  return iterator;
+}
+
 function SetProto_add([value], { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
@@ -66,7 +85,10 @@ function SetProto_delete([value], { thisValue }) {
   return NewValue(false);
 }
 
-function SetProto_entries() {}
+function SetProto_entries(args, { thisValue }) {
+  const S = thisValue;
+  return Q(CreateSetIterator(S, 'key+value'));
+}
 
 function SetProto_forEach([callbackfn, thisArg], { thisValue }) {
   const S = thisValue;
@@ -111,9 +133,10 @@ function SetProto_has([value], { thisValue }) {
   return NewValue(false);
 }
 
-function SetProto_keys() {}
-
-function SetProto_values() {}
+function SetProto_values(args, { thisValue }) {
+  const S = thisValue;
+  return Q(CreateSetIterator(S, 'value'));
+}
 
 function SetProto_size(args, { thisValue }) {
   const S = thisValue;
@@ -143,7 +166,6 @@ export function CreateSetPrototype(realmRec) {
     ['entries', SetProto_entries, 0],
     ['forEach', SetProto_forEach, 1],
     ['has', SetProto_has, 1],
-    ['keys', SetProto_keys, 0],
     ['values', SetProto_values, 0],
   ].forEach(([name, nativeFunction, length]) => {
     const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
@@ -169,6 +191,7 @@ export function CreateSetPrototype(realmRec) {
     }));
   }
 
+  X(proto.DefineOwnProperty(NewValue('keys'), Q(proto.GetOwnProperty(NewValue('values')))));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Q(proto.GetOwnProperty(NewValue('values')))));
 
   X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {

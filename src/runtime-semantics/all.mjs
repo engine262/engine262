@@ -6,6 +6,7 @@ export * from './AssignmentExpression.mjs';
 export * from './BindingInitialization.mjs';
 export * from './BitwiseOperators.mjs';
 export * from './BlockStatement.mjs';
+export * from './BreakStatement.mjs';
 export * from './CallExpression.mjs';
 export * from './ConditionalExpression.mjs';
 export * from './EqualityExpression.mjs';
