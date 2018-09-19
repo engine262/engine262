@@ -11,6 +11,23 @@ import {
 import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
+function CreateMapIterator(map, kind) {
+  if (Type(map) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (!('MapData' in map)) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
+    'Map',
+    'MapNextIndex',
+    'MapIterationKind',
+  ]);
+  iterator.Map = map;
+  iterator.MapNextIndex = 0;
+  iterator.MapIterationKind = kind;
+}
+
 function MapProto_clear(args, { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
@@ -53,7 +70,10 @@ function MapProto_delete([key], { thisValue }) {
   return NewValue(false);
 }
 
-function MapProto_entries() {}
+function MapProto_entries(args, { thisValue }) {
+  const M = thisValue;
+  return Q(CreateMapIterator(M, 'key+value'));
+}
 
 function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   const M = thisValue;
@@ -115,7 +135,10 @@ function MapProto_has([key], { thisValue }) {
   return NewValue(false);
 }
 
-function MapProto_keys() {}
+function MapProto_keys(args, { thisValue }) {
+  const M = thisValue;
+  return Q(CreateMapIterator(M, 'key'));
+}
 
 function MapProto_set([key, value], { thisValue }) {
   const M = thisValue;
@@ -158,7 +181,10 @@ function MapProto_size(args, { thisValue }) {
   return NewValue(count);
 }
 
-function MapProto_values() {}
+function MapProto_values(args, { thisValue }) {
+  const M = thisValue;
+  return Q(CreateMapIterator(M, 'value'));
+}
 
 export function CreateMapPrototype(realmRec) {
   const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
