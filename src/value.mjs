@@ -37,7 +37,7 @@ import {
   ToUint32,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import { Q, X } from './completion.mjs';
+import { Q, X, Completion } from './completion.mjs';
 import { outOfRange } from './helpers.mjs';
 
 export class Value {}
@@ -1036,6 +1036,10 @@ export function Type(val) {
 
   if (val instanceof Reference) {
     return 'Reference';
+  }
+
+  if (val instanceof Completion) {
+    return 'Completion';
   }
 
   if (val instanceof EnvironmentRecord) {
