@@ -4,7 +4,7 @@
   "description": "Implementation of ECMA-262 in JavaScript",
   "main": "lib/api.mjs",
   "dependencies": {
-    "acorn": "^5.7.1"
+    "acorn": "^6.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
