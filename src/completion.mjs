@@ -17,9 +17,9 @@ export class Completion {
 }
 
 // #sec-normalcompletion
-export class NormalCompletion extends Completion {
+export class NormalCompletion {
   constructor(value) {
-    super('normal', value);
+    return new Completion('normal', value);
   }
 
   static [Symbol.hasInstance](v) {
@@ -27,35 +27,51 @@ export class NormalCompletion extends Completion {
   }
 }
 
-export class AbruptCompletion extends Completion {
+export class AbruptCompletion {
   static [Symbol.hasInstance](v) {
     return v instanceof Completion && v.Type !== 'normal';
   }
 }
 
-export class BreakCompletion extends AbruptCompletion {
+export class BreakCompletion {
   constructor(target) {
-    super('break', undefined, target);
+    return new Completion('break', undefined, target);
+  }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type === 'break';
   }
 }
 
-export class ContinueCompletion extends AbruptCompletion {
+export class ContinueCompletion {
   constructor(target) {
-    super('continue', undefined, target);
+    return new Completion('continue', undefined, target);
+  }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type === 'continue';
   }
 }
 
 // #sec-normalcompletion
-export class ReturnCompletion extends AbruptCompletion {
+export class ReturnCompletion {
   constructor(value) {
-    super('return', value);
+    return new Completion('return', value);
+  }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type === 'return';
   }
 }
 
 // #sec-throwcompletion
-export class ThrowCompletion extends AbruptCompletion {
+export class ThrowCompletion {
   constructor(value) {
-    super('throw', value);
+    return new Completion('throw', value);
+  }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type === 'throw';
   }
 }
 
