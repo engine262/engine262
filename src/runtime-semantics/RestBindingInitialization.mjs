@@ -1,5 +1,4 @@
 import {
-  ResolveBinding,
   surroundingAgent,
 } from '../engine.mjs';
 import {
@@ -7,6 +6,7 @@ import {
   InitializeReferencedBinding,
   ObjectCreate,
   PutValue,
+  ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import {
   New as NewValue,

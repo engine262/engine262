@@ -1,9 +1,9 @@
 import {
-  GetGlobalObject,
   surroundingAgent,
 } from '../engine.mjs';
 import {
   Assert,
+  GetGlobalObject,
   ToObject,
 } from './all.mjs';
 import {

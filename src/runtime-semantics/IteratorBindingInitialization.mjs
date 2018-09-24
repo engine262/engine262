@@ -17,6 +17,7 @@ import {
   IteratorStep,
   IteratorValue,
   PutValue,
+  ResolveBinding,
   SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -29,7 +30,6 @@ import {
 } from '../completion.mjs';
 import {
   surroundingAgent,
-  ResolveBinding,
 } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';

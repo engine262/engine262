@@ -2,6 +2,7 @@ import {
   GetValue,
   HasOwnProperty,
   PutValue,
+  ResolveBinding,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import { BindingInitialization_BindingPattern } from './all.mjs';
@@ -12,7 +13,6 @@ import {
 import {
   NormalCompletion, ReturnIfAbrupt, Q, X,
 } from '../completion.mjs';
-import { ResolveBinding } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';

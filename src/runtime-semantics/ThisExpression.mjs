@@ -1,4 +1,4 @@
-import { ResolveThisBinding } from '../engine.mjs';
+import { ResolveThisBinding } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
 // #sec-this-keyword

@@ -4,6 +4,7 @@ import {
   HasOwnProperty,
   InitializeReferencedBinding,
   PutValue,
+  ResolveBinding,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
@@ -17,7 +18,6 @@ import {
   Q,
   X,
 } from '../completion.mjs';
-import { ResolveBinding } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 import {

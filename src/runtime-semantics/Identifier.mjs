@@ -1,5 +1,5 @@
 import { New as NewValue } from '../value.mjs';
-import { ResolveBinding } from '../engine.mjs';
+import { ResolveBinding } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
 // #sec-identifiers-runtime-semantics-evaluation

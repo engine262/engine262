@@ -1,12 +1,10 @@
 import {
-  ResolveBinding,
-} from '../engine.mjs';
-import {
   Assert,
   GetIterator,
   IteratorClose,
   PutValue,
   RequireObjectCoercible,
+  ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import {
   isArrayBindingPattern,

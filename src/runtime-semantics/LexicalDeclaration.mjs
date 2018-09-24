@@ -13,13 +13,13 @@ import {
   New as NewValue,
 } from '../value.mjs';
 import {
-  ResolveBinding,
   surroundingAgent,
 } from '../engine.mjs';
 import {
   GetValue,
   HasOwnProperty,
   InitializeReferencedBinding,
+  ResolveBinding,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {

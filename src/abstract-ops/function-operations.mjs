@@ -1,12 +1,12 @@
 import {
   surroundingAgent,
   // Suspend,
-  GetActiveScriptOrModule,
   ExecutionContext,
 } from '../engine.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
+  GetActiveScriptOrModule,
   HasOwnProperty,
   IsExtensible,
   ObjectCreate,
