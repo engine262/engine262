@@ -132,28 +132,51 @@ function Evaluate_StatementListItem(StatementListItem) {
   switch (true) {
     case isBlockStatement(StatementListItem):
       return Evaluate_BlockStatement(StatementListItem);
-    case isExpressionStatement(StatementListItem):
-      return Evaluate_ExpressionStatement(StatementListItem);
-    case isIfStatement(StatementListItem):
-      return Evaluate_IfStatement(StatementListItem);
-    case isBreakStatement(StatementListItem):
-      return Evaluate_BreakStatement(StatementListItem);
-    case isForStatement(StatementListItem):
-      return Evaluate_ForStatement(StatementListItem);
-    case isReturnStatement(StatementListItem):
-      return Evaluate_ReturnStatement(StatementListItem);
-    case isThrowStatement(StatementListItem):
-      return Evaluate_ThrowStatement(StatementListItem.argument);
-    case isTryStatement(StatementListItem):
-      return Evaluate_TryStatement(StatementListItem);
-    case isFunctionDeclaration(StatementListItem):
-      return Evaluate_FunctionDeclaration(StatementListItem);
+
     case isLexicalDeclaration(StatementListItem):
       return Evaluate_LexicalDeclaration(StatementListItem);
+
     case isLexicalBinding(StatementListItem):
       return Evaluate_LexicalBinding(StatementListItem);
+
     case isVariableStatement(StatementListItem):
       return Evaluate_VariableStatement(StatementListItem);
+
+    case isFunctionDeclaration(StatementListItem):
+      return Evaluate_FunctionDeclaration(StatementListItem);
+
+    case isExpressionStatement(StatementListItem):
+      return Evaluate_ExpressionStatement(StatementListItem);
+
+    case isIfStatement(StatementListItem):
+      return Evaluate_IfStatement(StatementListItem);
+
+    case isForStatement(StatementListItem):
+      return Evaluate_ForStatement(StatementListItem);
+
+      // case isContinueStatement(StatementListItem):
+      //   return Evaluate_ContinueStatement(StatementListItem);
+
+    case isBreakStatement(StatementListItem):
+      return Evaluate_BreakStatement(StatementListItem);
+
+    case isReturnStatement(StatementListItem):
+      return Evaluate_ReturnStatement(StatementListItem);
+
+      // case isWithStatement(StatementListItem):
+      //   return Evaluate_WithStatement(StatementListItem);
+
+      // case isSwitchStatement(StatementListItem):
+      //   return Evalaute_SwitchStatement(StatementListItem);
+
+    case isThrowStatement(StatementListItem):
+      return Evaluate_ThrowStatement(StatementListItem.argument);
+
+    case isTryStatement(StatementListItem):
+      return Evaluate_TryStatement(StatementListItem);
+
+      // case isDebuggerStatement(StatementListItem):
+      //   return Evaluate_DebuggerStatement(StatementListItem);
 
     default:
       throw outOfRange('Evaluate_StatementListItem', StatementListItem);
