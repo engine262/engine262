@@ -33,13 +33,13 @@ export function Evaluate_IfStatement({
     } else {
       stmtCompletion = Evaluate_Statement(AlternateStatement);
     }
-    return new Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
+    return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
   } else {
     if (exprValue.isFalse()) {
       return new NormalCompletion(undefined);
     } else {
       const stmtCompletion = Evaluate_Statement(Statement);
-      return new Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
+      return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
     }
   }
 }

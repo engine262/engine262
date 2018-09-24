@@ -5,16 +5,30 @@ import {
 import { New as NewValue } from './value.mjs';
 
 // #sec-completion-record-specification-type
-export class Completion {
+class Completion {
   constructor(type, value, target) {
-    if (type instanceof Completion) {
-      return type;
+    if (typeof type !== 'string') {
+      throw new TypeError('Completion type is not a string');
     }
     this.Type = type;
     this.Value = value;
     this.Target = target;
   }
 }
+
+function CompletionFunction(...args) {
+  if (new.target !== undefined) {
+    return new Completion(...args);
+  }
+  const completion = args[0];
+  return completion;
+}
+Object.defineProperty(
+  CompletionFunction, 'prototype',
+  Object.getOwnPropertyDescriptor(Completion, 'prototype'),
+);
+
+export { CompletionFunction as Completion };
 
 // #sec-normalcompletion
 export class NormalCompletion {

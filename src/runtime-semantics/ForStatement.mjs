@@ -59,7 +59,7 @@ function ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet
     }
     const result = Evaluate_Statement(stmt);
     if (LoopContinues(result, labelSet).isFalse()) {
-      return new Completion(UpdateEmpty(result, V));
+      return Completion(UpdateEmpty(result, V));
     }
     if (result.Value !== undefined) {
       V = result.Value;
@@ -107,12 +107,12 @@ export function Evaluate_ForStatement(ForStatement, labelSet = []) {
       const forDcl = Evaluate_Statement(ForStatement.init);
       if (forDcl instanceof AbruptCompletion) {
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-        return new Completion(forDcl);
+        return Completion(forDcl);
       }
       const perIterationLets = isConst ? [] : boundNames;
       const bodyResult = ForBodyEvaluation(ForStatement.test, ForStatement.update, ForStatement.body, perIterationLets, labelSet);
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      return new Completion(bodyResult);
+      return Completion(bodyResult);
     }
     default:
       throw outOfRange('Evaluate_ForStatement', ForStatement);
