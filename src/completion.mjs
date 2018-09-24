@@ -21,9 +21,17 @@ export class NormalCompletion extends Completion {
   constructor(value) {
     super('normal', value);
   }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type === 'normal';
+  }
 }
 
-export class AbruptCompletion extends Completion {}
+export class AbruptCompletion extends Completion {
+  static [Symbol.hasInstance](v) {
+    return v instanceof Completion && v.Type !== 'normal';
+  }
+}
 
 export class BreakCompletion extends AbruptCompletion {
   constructor(target) {
