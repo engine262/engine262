@@ -37,7 +37,7 @@ import {
   Q,
 } from '../completion.mjs';
 
-// 15.1.11 GlobalDeclarationInstantiation
+// 15.1.11 #sec-globaldeclarationinstantiation
 export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);

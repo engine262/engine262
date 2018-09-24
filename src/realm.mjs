@@ -47,8 +47,7 @@ import { CreateMap } from './intrinsics/Map.mjs';
 import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
 import { CreateSet } from './intrinsics/Set.mjs';
 
-// https://tc39.github.io/ecma262/#sec-code-realms
-// 8.2 Realms
+// 8.2 #sec-code-realms
 export class Realm {
   constructor() {
     this.Intrinsics = undefined;
@@ -59,7 +58,7 @@ export class Realm {
   }
 }
 
-// 8.2.1 CreateRealm
+// 8.2.1 #sec-createrealm
 export function CreateRealm() {
   const realmRec = new Realm();
   CreateIntrinsics(realmRec);
@@ -86,7 +85,7 @@ function AddRestrictedFunctionProperties(F, realm) {
   }));
 }
 
-// 8.2.2 CreateIntrinsics
+// 8.2.2 #sec-createintrinsics
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
@@ -156,7 +155,7 @@ export function CreateIntrinsics(realmRec) {
   return intrinsics;
 }
 
-// 8.2.3 SetRealmGlobalObject
+// 8.2.3 #sec-setrealmglobalobject
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   if (Type(globalObj) === 'Undefined') {
     const intrinsics = realmRec.Intrinsics;
@@ -175,7 +174,7 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   return realmRec;
 }
 
-// 8.2.4 SetDefaultGlobalBindings
+// 8.2.4 #sec-setdefaultglobalbindings
 export function SetDefaultGlobalBindings(realmRec) {
   const global = realmRec.GlobalObject;
 

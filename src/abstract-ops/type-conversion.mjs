@@ -19,7 +19,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
-// 7.1.1 ToPrimitive
+// 7.1.1 #sec-toprimitive
 export function ToPrimitive(
   input,
   preferredType,
@@ -51,7 +51,7 @@ export function ToPrimitive(
   return input;
 }
 
-// 7.1.1.1 OrdinaryToPrimitive
+// 7.1.1.1 #sec-ordinarytoprimitive
 export function OrdinaryToPrimitive(
   O, hint,
 ) {
@@ -76,7 +76,7 @@ export function OrdinaryToPrimitive(
   return surroundingAgent.Throw('TypeError');
 }
 
-// 7.1.2 ToBoolean
+// 7.1.2 #sec-toboolean
 export function ToBoolean(argument) {
   if (Type(argument) === 'Undefined') {
     return NewValue(false);
@@ -115,7 +115,7 @@ export function ToBoolean(argument) {
   throw outOfRange('ToBoolean', argument);
 }
 
-// 7.1.3 ToNumber
+// 7.1.3 #sec-tonumber
 export function ToNumber(argument) {
   const type = Type(argument);
   switch (type) {
@@ -144,7 +144,7 @@ export function ToNumber(argument) {
   }
 }
 
-// 7.1.4 ToInteger
+// 7.1.4 #sec-tointeger
 export function ToInteger(argument) {
   const number = Q(ToNumber(argument));
   if (number.isNaN()) {
@@ -161,7 +161,7 @@ export function ToInteger(argument) {
   return NewValue(number.numberValue() >= 0 ? mag : -mag);
 }
 
-// #sec-toint32
+// 7.1.5 #sec-toint32
 export function ToInt32(argument) {
   const number = Q(ToNumber(argument));
   if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
@@ -175,7 +175,7 @@ export function ToInt32(argument) {
   return int32bit;
 }
 
-// 7.1.6 ToUint32
+// 7.1.6 #sec-touint32
 export function ToUint32(argument) {
   const number = Q(ToNumber(argument));
   if (number.numberValue() === 0 // || number.value === -0
@@ -188,7 +188,7 @@ export function ToUint32(argument) {
   return NewValue(int32bit);
 }
 
-// 7.1.12 ToString
+// 7.1.12 #sec-tostring
 export function ToString(argument) {
   const type = Type(argument);
   switch (type) {
@@ -213,7 +213,7 @@ export function ToString(argument) {
   }
 }
 
-// 7.1.12.1 NumberToString
+// 7.1.12.1 #sec-tostring-applied-to-the-number-type
 export function NumberToString(m) {
   if (m.isNaN()) {
     return NewValue('NaN');
@@ -232,7 +232,7 @@ export function NumberToString(m) {
   return NewValue(`${mVal}`);
 }
 
-// 7.1.13 ToObject
+// 7.1.13 #sec-toobject
 export function ToObject(argument) {
   const type = Type(argument);
   switch (type) {
@@ -267,7 +267,7 @@ export function ToObject(argument) {
   }
 }
 
-// 7.1.14 ToPropertyKey
+// 7.1.14 #sec-topropertykey
 export function ToPropertyKey(argument) {
   const key = Q(ToPrimitive(argument, 'String'));
   if (Type(key) === 'Symbol') {
@@ -276,7 +276,7 @@ export function ToPropertyKey(argument) {
   return ToString(key);
 }
 
-// 7.1.15 ToLength
+// 7.1.15 #sec-tolength
 export function ToLength(argument) {
   const len = Q(ToInteger(argument));
   if (len.numberValue() <= 0) {
@@ -285,7 +285,7 @@ export function ToLength(argument) {
   return NewValue(Math.min(len.numberValue(), (2 ** 53) - 1));
 }
 
-// #sec-canonicalnumericindexstring
+// 7.1.16 #sec-canonicalnumericindexstring
 export function CanonicalNumericIndexString(argument) {
   Assert(Type(argument) === 'String');
   if (argument.stringValue() === '-0') {

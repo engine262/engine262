@@ -80,6 +80,17 @@ export function IsExtensible(O) {
   return O.IsExtensible();
 }
 
+// 7.2.7 IsPropertyKey
+export function IsPropertyKey(argument) {
+  if (Type(argument) === 'String') {
+    return true;
+  }
+  if (Type(argument) === 'Symbol') {
+    return true;
+  }
+  return false;
+}
+
 // 7.2.10 SameValue
 export function SameValue(x, y) {
   if (Type(x) !== Type(y)) {
@@ -159,17 +170,6 @@ export function SameValueNonNumber(x, y) {
   }
 
   return x === y;
-}
-
-// 7.2.7 IsPropertyKey
-export function IsPropertyKey(argument) {
-  if (Type(argument) === 'String') {
-    return true;
-  }
-  if (Type(argument) === 'Symbol') {
-    return true;
-  }
-  return false;
 }
 
 // #sec-ispromise

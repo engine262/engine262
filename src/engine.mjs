@@ -7,13 +7,8 @@ import { ParseModule, ParseScript } from './parse.mjs';
 import {
   AbruptCompletion,
   NormalCompletion,
-  Q,
   ThrowCompletion,
 } from './completion.mjs';
-import {
-  GetIdentifierReference,
-  LexicalEnvironment,
-} from './environment.mjs';
 import {
   CreateRealm,
   SetDefaultGlobalBindings,
@@ -114,7 +109,7 @@ export function isArrayIndex(P) {
   return false;
 }
 
-// 8.4.1 EnqueueJob
+// 8.4.1 #sec-enqueuejob
 export function EnqueueJob(queueName, job, args) {
   const callerContext = surroundingAgent.runningExecutionContext;
   const callerRealm = callerContext.Realm;
@@ -129,7 +124,7 @@ export function EnqueueJob(queueName, job, args) {
   surroundingAgent.jobQueue.push(pending);
 }
 
-// 8.6 InitializeHostDefinedRealm
+// 8.5 #sec-initializehostdefinedrealm
 export function InitializeHostDefinedRealm() {
   const realm = CreateRealm();
   const newContext = new ExecutionContext();
@@ -143,7 +138,7 @@ export function InitializeHostDefinedRealm() {
   SetDefaultGlobalBindings(realm);
 }
 
-// 8.6 RunJobs
+// 8.6 #sec-runjobs
 export function RunJobs() {
   InitializeHostDefinedRealm();
 
@@ -180,13 +175,13 @@ export function RunJobs() {
   }
 }
 
-// 8.7.1 AgentSignifier
+// 8.7.1 #sec-agentsignifier
 export function AgentSignifier() {
   const AR = surroundingAgent;
   return AR.Signifier;
 }
 
-// 15.1.10 ScriptEvaluation
+// 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
@@ -212,7 +207,7 @@ export function ScriptEvaluation(scriptRecord) {
   return result;
 }
 
-// 15.1.12 ScriptEvaluationJob
+// 15.1.12 #sec-scriptevaluationjob
 export function ScriptEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const s = ParseScript(sourceText, realm, hostDefined);
@@ -223,7 +218,7 @@ export function ScriptEvaluationJob(sourceText, hostDefined) {
   return ScriptEvaluation(s);
 }
 
-// 15.2.1.19
+// 15.2.1.19 #sec-toplevelmoduleevaluationjob
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
@@ -231,7 +226,7 @@ export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   m.Evaluate();
 }
 
-// 16.1 HostReportErrors
+// 16.1 #sec-host-report-errors
 export function HostReportErrors(errorList) {
   errorList.forEach((error) => {
     console.log('[HostReportErrors]', error); // eslint-disable-line no-console
@@ -244,7 +239,7 @@ export function HostEnsureCanCompileStrings() {
 
 export function HostPromiseRejectionTracker() {}
 
-// 19.4.3.2.1 SymbolDescriptiveString
+// 19.4.3.2.1 #sec-symboldescriptivestring
 export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
@@ -254,7 +249,7 @@ export function SymbolDescriptiveString(sym) {
   return NewValue(`Symbol(${desc.stringValue()})`);
 }
 
-// 22.1.3.1 IsConcatSpreadable
+// 22.1.3.1 #sec-isconcatspreadable
 export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {
     return NewValue(false);
@@ -266,62 +261,10 @@ export function IsConcatSpreadable(O) {
   return IsArray(O);
 }
 
-// 24.4.1.9 Suspend
+// 24.4.1.9 #sec-suspend
 export function Suspend() {}
 
-// #sec-getactivescriptormodule
-export function GetActiveScriptOrModule() {
-  if (surroundingAgent.executionContextStack.length === 0) {
-    return NewValue(null);
-  }
-  const ec = [...surroundingAgent.executionContextStack]
-    .reverse()
-    .find((e) => e.ScriptOrModule !== undefined);
-  if (!ec) {
-    return NewValue(null);
-  }
-  return ec.ScriptOrModule;
-}
-
-// #sec-resolvebinding
-export function ResolveBinding(name, env) {
-  if (!env || Type(env) === 'Undefined') {
-    env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  }
-  Assert(env instanceof LexicalEnvironment);
-  const strict = surroundingAgent.isStrictCode;
-  return GetIdentifierReference(env, name, NewValue(strict));
-}
-
-// #sec-getthisenvironment
-export function GetThisEnvironment() {
-  let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  while (true) { // eslint-disable-line no-constant-condition
-    const envRec = lex.EnvironmentRecord;
-    const exists = envRec.HasThisBinding();
-    if (exists.isTrue()) {
-      return envRec;
-    }
-    const outer = lex.outerEnvironmentReference;
-    Assert(Type(outer) !== 'Null');
-    lex = outer;
-  }
-}
-
-// #sec-resolvethisbinding
-export function ResolveThisBinding() {
-  const envRec = GetThisEnvironment();
-  return Q(envRec.GetThisBinding());
-}
-
-// #sec-getglobalobject
-export function GetGlobalObject() {
-  const ctx = surroundingAgent.runningExecutionContext;
-  const currentRealm = ctx.Realm;
-  return currentRealm.GlobalObject;
-}
-
-// #sec-getgeneratorkind
+// 25.4.3.5 #sec-getgeneratorkind
 export function GetGeneratorKind() {
   const genContext = surroundingAgent.runningExecutionContext;
   if (!genContext.Generator) {
