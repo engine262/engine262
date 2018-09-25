@@ -12,8 +12,10 @@ import {
   New as NewValue,
 } from '../value.mjs';
 import {
+  Completion,
   AbruptCompletion,
   UpdateEmpty,
+  EnsureCompletion,
   X,
 } from '../completion.mjs';
 import {
@@ -55,14 +57,14 @@ const Evaluate_Finally = Evaluate_Block;
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch
 function Evaluate_TryStatement_Catch(Block, Catch) {
-  const B = Evaluate_Block(Block);
+  const B = EnsureCompletion(Evaluate_Block(Block));
   let C;
   if (B.Type === 'throw') {
-    C = CatchClauseEvaluation(Catch, B.Value);
+    C = EnsureCompletion(CatchClauseEvaluation(Catch, B.Value));
   } else {
     C = B;
   }
-  return UpdateEmpty(C, NewValue(undefined));
+  return Completion(UpdateEmpty(C, NewValue(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -73,7 +75,7 @@ function Evaluate_TryStatement_Finally(Block, Finally) {
   if (F.Type === 'normal') {
     F = B;
   }
-  return UpdateEmpty(F, NewValue(undefined));
+  return Completion(UpdateEmpty(F, NewValue(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -90,7 +92,7 @@ function Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
   if (F.Type === 'normal') {
     F = C;
   }
-  return UpdateEmpty(F, NewValue(undefined));
+  return Completion(UpdateEmpty(F, NewValue(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation

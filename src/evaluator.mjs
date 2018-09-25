@@ -45,6 +45,7 @@ import {
   isThrowStatement,
   isTryStatement,
   isVariableStatement,
+  isWithStatement,
 } from './ast.mjs';
 import {
   EvaluateBinopValues_AdditiveExpression_Minus,
@@ -91,6 +92,7 @@ import {
   Evaluate_UnaryExpression,
   Evaluate_UpdateExpression,
   Evaluate_VariableStatement,
+  Evaluate_WithStatement,
 } from './runtime-semantics/all.mjs';
 import {
   New as NewValue,
@@ -165,8 +167,8 @@ function Evaluate_StatementListItem(StatementListItem) {
     case isReturnStatement(StatementListItem):
       return Evaluate_ReturnStatement(StatementListItem);
 
-      // case isWithStatement(StatementListItem):
-      //   return Evaluate_WithStatement(StatementListItem);
+    case isWithStatement(StatementListItem):
+      return Evaluate_WithStatement(StatementListItem);
 
     case isSwitchStatement(StatementListItem):
       return Evaluate_SwitchStatement(StatementListItem);

@@ -44,3 +44,4 @@ export * from './TryStatement.mjs';
 export * from './UnaryExpression.mjs';
 export * from './UpdateExpression.mjs';
 export * from './VariableStatement.mjs';
+export * from './WithStatement.mjs';

@@ -2,7 +2,7 @@ import {
   Assert,
   Call,
 } from './abstract-ops/all.mjs';
-import { New as NewValue } from './value.mjs';
+import { New as NewValue, Reference } from './value.mjs';
 
 // #sec-completion-record-specification-type
 class Completion {
@@ -138,6 +138,9 @@ export function IfAbruptRejectPromise(value, capability) {
 
 export function EnsureCompletion(val) {
   if (val instanceof Completion) {
+    return val;
+  }
+  if (val instanceof Reference) {
     return val;
   }
   return new NormalCompletion(val);

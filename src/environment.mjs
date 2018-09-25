@@ -498,6 +498,15 @@ export function NewDeclarativeEnvironment(E) {
   return env;
 }
 
+// #sec-newobjectenvironment
+export function NewObjectEnvironment(O, E) {
+  const env = new LexicalEnvironment();
+  const envRec = new ObjectEnvironmentRecord(O);
+  env.EnvironmentRecord = envRec;
+  env.outerEnvironmentReference = E;
+  return env;
+}
+
 // #sec-newfunctionenvironment
 export function NewFunctionEnvironment(F, newTarget) {
   Assert(F instanceof FunctionValue);
