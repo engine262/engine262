@@ -134,6 +134,9 @@ module.exports = ({ types: t, template }) => {
         }
         if (path.node.source.value.endsWith('abstract-ops/all.mjs')
             || (state.file.opts.filename.includes('abstract-ops') && path.node.source.value === './all.mjs')) {
+          if (state.file.opts.filename.endsWith('api.mjs')) {
+            return;
+          }
           state.foundAssertAndCall = true;
           if (!path.node.specifiers.find((s) => s.local.name === 'Assert')) {
             path.node.specifiers.push(

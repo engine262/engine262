@@ -1,28 +1,30 @@
 import fs from 'fs';
 import yaml from 'yaml';
 // import glob from 'glob';
-import { Realm, Value, Object as APIObject } from '../lib/api.mjs';
 import {
-  CreateDataProperty,
-} from '../lib/abstract-ops/all.mjs';
+  Realm,
+  Value,
+  Object as APIObject,
+  Abstract,
+} from '../lib/api.mjs';
 
 const testdir = new URL('./test262/', import.meta.url);
 
 function createRealm() {
   const realm = new Realm();
 
-  CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
     console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
     return new Value(realm, undefined);
   }));
 
   const $262 = new APIObject(realm);
 
-  CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
-  CreateDataProperty($262, new Value(realm, 'evalScript'),
+  Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
+  Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
 
-  CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
+  Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
   $262.evalScript = (sourceText, file) => {
     if (file) {

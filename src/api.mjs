@@ -8,13 +8,13 @@ import {
   ScriptEvaluation,
   surroundingAgent,
 } from './engine.mjs';
-import {
-  CreateBuiltinFunction,
-  ObjectCreate,
-} from './abstract-ops/all.mjs';
-import { New as NewValue } from './value.mjs';
+import { New as NewValue, Type } from './value.mjs';
 import { ParseScript } from './parse.mjs';
 import { ThrowCompletion, AbruptCompletion } from './completion.mjs';
+import * as AbstractOps from './abstract-ops/all.mjs';
+
+export const Abstract = { ...AbstractOps, Type };
+const { ObjectCreate, CreateBuiltinFunction } = Abstract;
 
 class APIRealm {
   constructor(options = {}) {
