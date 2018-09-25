@@ -41,7 +41,7 @@ export function BlockDeclarationInstantiation(code, env) {
       if (IsConstantDeclaration(d)) {
         X(envRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {
-        X(envRec.CreateMutableBinding(dn, NewValue(false)));
+        X(envRec.CreateMutableBinding(dn, false));
       }
       if (isFunctionDeclaration(d) || isGeneratorDeclaration(d)
           || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {

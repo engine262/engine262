@@ -35,7 +35,6 @@ import {
 import {
   New as NewValue,
   Type,
-  UndefinedValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -97,7 +96,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
 }
 
 function ArrayFrom(argList, { thisValue }) {
-  const [items, mapfn, thisArg] = argList;
+  const [items, mapfn = NewValue(undefined), thisArg] = argList;
   const C = thisValue;
   let mapping;
   let T;
@@ -111,7 +110,7 @@ function ArrayFrom(argList, { thisValue }) {
     if (argList.length >= 3) {
       T = thisArg;
     } else {
-      T = new UndefinedValue();
+      T = NewValue(undefined);
     }
     mapping = true;
   }
@@ -131,7 +130,7 @@ function ArrayFrom(argList, { thisValue }) {
       }
       const Pk = X(ToString(NewValue(k)));
       const next = Q(IteratorStep(iteratorRecord));
-      if (next.isFalse()) {
+      if (next === NewValue(false)) {
         Q(Set(A, NewValue('length'), NewValue(k), NewValue(true)));
         return A;
       }
@@ -154,7 +153,8 @@ function ArrayFrom(argList, { thisValue }) {
     }
   }
   const arrayLike = X(ToObject(items));
-  const len = Q(ToLength(Q(Get(arrayLike, NewValue('length')))));
+  const lenProp = Q(Get(arrayLike, NewValue('length')));
+  const len = Q(ToLength(lenProp));
   if (IsConstructor(C) === true) {
     A = Q(Construct(C, [len]));
   } else {

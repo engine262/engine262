@@ -548,6 +548,18 @@ export function isArrayBindingPattern(node) {
   return node.type === 'ArrayPattern';
 }
 
+// #prod-AssignmentPattern
+export const isAssignmentPattern = isBindingPattern;
+
+// #prod-ObjectAssignmentPattern
+export const isObjectAssignmentPattern = isObjectBindingPattern;
+
+// #prod-ArrayAssignmentPattern
+export const isArrayAssignmentPattern = isArrayBindingPattern;
+
+// #prod-AssignmentRestProperty
+export const isAssignmentRestProperty = isBindingRestElement;
+
 // #prod-Block
 export const isBlock = isBlockStatement;
 
@@ -591,24 +603,62 @@ export function isIterationStatement(node) {
          || node.type === 'ForOfStatement';
 }
 
+// Used in #prod-IterationStatement
+export function isDoWhileStatement(node) {
+  return node.type === 'DoWhileStatement';
+}
+
+// Used in #prod-IterationStatement
+export function isWhileStatement(node) {
+  return node.type === 'WhileStatement';
+}
+
+// Used in #prod-IterationStatement
 export function isForStatement(node) {
   return node.type === 'ForStatement';
 }
 
+// Used in #prod-IterationStatement
 export function isForStatementWithExpression(node) {
   return isForStatement(node) && isExpression(node.init);
 }
 
+// Used in #prod-IterationStatement
 export function isForStatementWithVariableStatement(node) {
   return isForStatement(node) && isVariableStatement(node.init);
 }
 
+// Used in #prod-IterationStatement
 export function isForStatementWithLexicalDeclaration(node) {
   return isForStatement(node) && isLexicalDeclaration(node.init);
 }
 
-export function isForBinding() {
-  return false;
+// Used in #prod-IterationStatement
+export function isForInStatement(node) {
+  return node.type === 'ForInStatement';
+}
+
+// Used in #prod-IterationStatement
+// This covers cases like for ({ a } of b), in which case the { a } is in fact
+// parsed as an ObjectLiteral per spec.
+export function isForInStatementWithExpression(node) {
+  return isForInStatement(node) && node.left.type !== 'VariableDeclaration';
+}
+
+// Used in #prod-IterationStatement
+export function isForInStatementWithVarForBinding(node) {
+  return isForInStatement(node) && isVariableStatement(node.left)
+    && !node.left.declarations[0].init;
+}
+
+// Used in #prod-IterationStatement
+export function isForInStatementWithForDeclaration(node) {
+  return isForInStatement(node) && isForDeclaration(node.left);
+}
+
+// #prod-ForBinding
+export function isForBinding(node) {
+  return isBindingIdentifier(node) || isBindingPattern(node);
 }
 
 // #prod-SwitchStatement
@@ -739,6 +789,9 @@ export function isClassDeclaration(node) {
 export function isLexicalDeclaration(node) {
   return node.type === 'VariableDeclaration' && (node.kind === 'let' || node.kind === 'const');
 }
+
+// #prod-ForDeclaration
+export const isForDeclaration = isLexicalDeclaration;
 
 // #prod-LexicalBinding
 export function isLexicalBinding(node) {

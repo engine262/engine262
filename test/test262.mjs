@@ -94,7 +94,7 @@ function run(test, strict) {
   });
 }
 
-// const tests = glob.sync('./test262/test/built-ins/**/*.js');
+// const tests = glob.sync('test/test262/test/built-ins/**/*.js').map(p => p.slice(18));
 const tests = [
   'built-ins/Array/length.js',
 ];

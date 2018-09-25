@@ -23,7 +23,8 @@ export function Evaluate_UpdateExpression({
       const LeftHandSideExpression = argument;
 
       const lhs = Evaluate_Expression(LeftHandSideExpression);
-      const oldValue = Q(ToNumber(Q(GetValue(lhs))));
+      const lhsValue = Q(GetValue(lhs));
+      const oldValue = Q(ToNumber(lhsValue));
       const newValue = Q(EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1)));
       Q(PutValue(lhs, newValue));
       return oldValue;

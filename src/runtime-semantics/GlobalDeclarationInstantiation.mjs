@@ -8,6 +8,8 @@ import {
   Assert,
 } from '../abstract-ops/all.mjs';
 import {
+  BoundNames_BindingIdentifier,
+  BoundNames_ForBinding,
   BoundNames_FunctionDeclaration,
   BoundNames_LexicalDeclaration,
   BoundNames_VariableDeclaration,
@@ -88,8 +90,16 @@ export function GlobalDeclarationInstantiation(script, env) {
   const declaredVarNames = [];
 
   for (const d of varDeclarations) {
-    if (isVariableDeclaration(d) || isForBinding(d) || isBindingIdentifier(d)) {
-      for (const vn of BoundNames_VariableDeclaration(d).map(NewValue)) {
+    let boundNames;
+    if (isVariableDeclaration(d)) {
+      boundNames = BoundNames_VariableDeclaration(d);
+    } else if (isForBinding(d)) {
+      boundNames = BoundNames_ForBinding(d);
+    } else if (isBindingIdentifier(d)) {
+      boundNames = BoundNames_BindingIdentifier(d);
+    }
+    if (boundNames !== undefined) {
+      for (const vn of boundNames.map(NewValue)) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           if (vnDefinable.isFalse()) {

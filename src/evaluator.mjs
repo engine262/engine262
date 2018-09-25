@@ -27,12 +27,12 @@ import {
   isArrowFunction,
   isBlockStatement,
   isBreakStatement,
+  isBreakableStatement,
   isClassExpression,
   isContinueStatement,
   isDebuggerStatement,
   isExpressionStatement,
   isExpressionWithComma,
-  isForStatement,
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifierReference,
@@ -44,7 +44,6 @@ import {
   isReturnStatement,
   isSuperCall,
   isSuperProperty,
-  isSwitchStatement,
   isTemplateLiteral,
   isThis,
   isThrowStatement,
@@ -68,6 +67,7 @@ import {
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
   Evaluate_BreakStatement,
+  Evaluate_BreakableStatement,
   Evaluate_CallExpression,
   Evaluate_ClassExpression,
   Evaluate_ConditionalExpression,
@@ -76,7 +76,6 @@ import {
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
-  Evaluate_ForStatement,
   Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_Identifier,
@@ -94,7 +93,6 @@ import {
   Evaluate_ShiftExpression,
   Evaluate_SuperCall,
   Evaluate_SuperProperty,
-  Evaluate_SwitchStatement,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
   Evaluate_ThrowStatement,
@@ -165,8 +163,8 @@ function Evaluate_StatementListItem(StatementListItem) {
     case isIfStatement(StatementListItem):
       return Evaluate_IfStatement(StatementListItem);
 
-    case isForStatement(StatementListItem):
-      return Evaluate_ForStatement(StatementListItem);
+    case isBreakableStatement(StatementListItem):
+      return Evaluate_BreakableStatement(StatementListItem);
 
     case isContinueStatement(StatementListItem):
       return Evaluate_ContinueStatement(StatementListItem);
@@ -179,9 +177,6 @@ function Evaluate_StatementListItem(StatementListItem) {
 
     case isWithStatement(StatementListItem):
       return Evaluate_WithStatement(StatementListItem);
-
-    case isSwitchStatement(StatementListItem):
-      return Evaluate_SwitchStatement(StatementListItem);
 
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);

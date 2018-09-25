@@ -105,7 +105,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   for (const paramName of parameterNames) {
     const alreadyDeclared = envRec.HasBinding(paramName);
     if (alreadyDeclared.isFalse()) {
-      X(envRec.CreateMutableBinding(paramName, NewValue(false)));
+      X(envRec.CreateMutableBinding(paramName, false));
       if (hasDuplicates === true) {
         X(envRec.InitializeBinding(paramName, NewValue(undefined)));
       }
@@ -123,7 +123,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     if (strict) {
       X(envRec.CreateImmutableBinding(NewValue('arguments'), NewValue(false)));
     } else {
-      X(envRec.CreateMutableBinding(NewValue('arguments'), NewValue(false)));
+      X(envRec.CreateMutableBinding(NewValue('arguments'), false));
     }
     envRec.InitializeBinding(NewValue('arguments'), ao);
     parameterBindings = [...parameterNames, NewValue('arguments')];
@@ -145,7 +145,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     for (const n of varNames) {
       if (!instantiatedVarNames.includes(n)) {
         instantiatedVarNames.push(n);
-        X(envRec.CreateMutableBinding(n, NewValue(false)));
+        X(envRec.CreateMutableBinding(n, false));
         envRec.InitializeBinding(n, NewValue(undefined));
       }
     }
@@ -159,7 +159,7 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     for (const n of varNames) {
       if (!instantiatedVarNames.includes(n)) {
         instantiatedVarNames.push(n);
-        X(varEnvRec.CreateMutableBinding(n, NewValue(false)));
+        X(varEnvRec.CreateMutableBinding(n, false));
         let initialValue;
         if (!parameterBindings.includes(n) || functionNames.includes(n)) {
           initialValue = NewValue(undefined);
@@ -188,11 +188,11 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
     ? LexicallyScopedDeclarations_FunctionBody(code.body)
     : LexicallyScopedDeclarations_ConciseBody(code);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration.map(NewValue)) {
+    for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
       if (IsConstantDeclaration(d)) {
         X(lexEnvRec.CreateImmutableBinding(dn, NewValue(true)));
       } else {
-        X(lexEnvRec.CreateMutableBinding(dn, NewValue(false)));
+        X(lexEnvRec.CreateMutableBinding(dn, false));
       }
     }
   }

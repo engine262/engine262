@@ -77,6 +77,23 @@ export function BindingInitialization_BindingPattern(BindingPattern, value, envi
   }
 }
 
+// (implicit)
+//   ForBinding :
+//     BindingIdentifier
+//     BindingPattern
+export function BindingInitialization_ForBinding(ForBinding, value, environment) {
+  switch (true) {
+    case isBindingIdentifier(ForBinding):
+      return BindingInitialization_BindingIdentifier(ForBinding, value, environment);
+
+    case isBindingPattern(ForBinding):
+      return BindingInitialization_BindingPattern(ForBinding, value, environment);
+
+    default:
+      throw outOfRange('BindingInitialization_ForBinding', ForBinding);
+  }
+}
+
 // #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
 //   ObjectBindingPattern :
 //     `{` `}`
@@ -120,4 +137,10 @@ export function BindingInitialization_CatchParameter(CatchParameter, value, envi
     default:
       throw outOfRange('BindingInitialization_CatchParameter', CatchParameter);
   }
+}
+
+// #sec-for-in-and-for-of-statements-runtime-semantics-bindinginitialization
+//   ForDeclaration : LetOrConst ForBinding
+export function BindingInitialization_ForDeclaration(ForDeclaration, value, environment) {
+  return BindingInitialization_ForBinding(ForDeclaration.declarations[0].id, value, environment);
 }
