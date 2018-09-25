@@ -5,6 +5,7 @@ import {
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
+  isSwitchCase,
 } from '../ast.mjs';
 import {
   TopLevelLexicallyScopedDeclarations_StatementList,
@@ -37,6 +38,8 @@ export function LexicallyScopedDeclarations_StatementListItem(StatementListItem)
       return [];
     case isDeclaration(StatementListItem):
       return [DeclarationPart_Declaration(StatementListItem)];
+    case isSwitchCase(StatementListItem):
+      return LexicallyScopedDeclarations_StatementList(StatementListItem.consequent);
     default:
       throw new TypeError(`Unexpected StatementListItem: ${StatementListItem.type}`);
   }

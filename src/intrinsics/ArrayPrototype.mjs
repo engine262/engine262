@@ -31,7 +31,7 @@ import {
   Set,
   SetFunctionLength,
   SetFunctionName,
-  StrictEqualityComparision,
+  StrictEqualityComparison,
   ToBoolean,
   ToInteger,
   ToLength,
@@ -367,7 +367,7 @@ function ArrayProto_indexOf([searchElement, fromIndex = NewValue(0)], { thisValu
     const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
     if (kPresent.isTrue()) {
       const elementK = Get(O, X(ToString(NewValue(k))));
-      const same = StrictEqualityComparision(searchElement, elementK);
+      const same = StrictEqualityComparison(searchElement, elementK);
       if (same.isTrue()) {
         return NewValue(k);
       }
@@ -436,7 +436,7 @@ function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
     const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
     if (kPresent.isTrue()) {
       const elementK = Q(Get(O, X(ToString(NewValue(k)))));
-      const same = StrictEqualityComparision(searchElement, elementK);
+      const same = StrictEqualityComparison(searchElement, elementK);
       if (same.isTrue()) {
         return NewValue(k);
       }

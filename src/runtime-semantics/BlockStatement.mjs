@@ -32,7 +32,7 @@ import {
 import { Evaluate_StatementList } from '../evaluator.mjs';
 
 // #sec-blockdeclarationinstantiation
-function BlockDeclarationInstantiation(code, env) {
+export function BlockDeclarationInstantiation(code, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
   const declarations = LexicallyScopedDeclarations_StatementList(code);

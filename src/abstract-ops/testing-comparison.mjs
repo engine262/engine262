@@ -277,7 +277,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
 // #sec-abstract-equality-comparison
 export function AbstractEqualityComparison(x, y) {
   if (Type(x) === Type(y)) {
-    return StrictEqualityComparision(x, y);
+    return StrictEqualityComparison(x, y);
   }
   if (Type(x) === 'Null' && Type(y) === 'Undefined') {
     return NewValue(true);
@@ -307,7 +307,7 @@ export function AbstractEqualityComparison(x, y) {
 }
 
 // #sec-strict-equality-comparison
-export function StrictEqualityComparision(x, y) {
+export function StrictEqualityComparison(x, y) {
   if (Type(x) !== Type(y)) {
     return NewValue(false);
   }

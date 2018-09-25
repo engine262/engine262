@@ -616,6 +616,10 @@ export function isSwitchStatement(node) {
   return node.type === 'SwitchStatement';
 }
 
+export function isSwitchCase(node) {
+  return node.type === 'SwitchCase';
+}
+
 // #prod-ContinueStatement
 export function isContinueStatement(node) {
   return node.type === 'ContinueStatement';

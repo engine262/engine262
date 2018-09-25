@@ -36,6 +36,7 @@ export * from './RelationalOperators.mjs';
 export * from './ReturnStatement.mjs';
 export * from './RestBindingInitialization.mjs';
 export * from './ShiftExpression.mjs';
+export * from './SwitchStatement.mjs';
 export * from './TemplateLiteral.mjs';
 export * from './ThisExpression.mjs';
 export * from './ThrowStatement.mjs';

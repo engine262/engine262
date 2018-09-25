@@ -39,6 +39,7 @@ import {
   isLiteral,
   isObjectLiteral,
   isReturnStatement,
+  isSwitchStatement,
   isTemplateLiteral,
   isThis,
   isThrowStatement,
@@ -82,6 +83,7 @@ import {
   Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
+  Evaluate_SwitchStatement,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
   Evaluate_ThrowStatement,
@@ -166,8 +168,8 @@ function Evaluate_StatementListItem(StatementListItem) {
       // case isWithStatement(StatementListItem):
       //   return Evaluate_WithStatement(StatementListItem);
 
-      // case isSwitchStatement(StatementListItem):
-      //   return Evalaute_SwitchStatement(StatementListItem);
+    case isSwitchStatement(StatementListItem):
+      return Evaluate_SwitchStatement(StatementListItem);
 
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);

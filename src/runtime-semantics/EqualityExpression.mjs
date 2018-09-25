@@ -1,7 +1,7 @@
 import {
   AbstractEqualityComparison,
   GetValue,
-  StrictEqualityComparision,
+  StrictEqualityComparison,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
@@ -36,9 +36,9 @@ export function Evaluate_EqualityExpression({
       }
     }
     case '===':
-      return StrictEqualityComparision(rval, lval);
+      return StrictEqualityComparison(rval, lval);
     case '!==': {
-      const r = StrictEqualityComparision(rval, lval);
+      const r = StrictEqualityComparison(rval, lval);
       if (r.isTrue()) {
         return NewValue(false);
       } else {
