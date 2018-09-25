@@ -4,6 +4,6 @@ import { BreakCompletion } from '../completion.mjs';
 // BreakStatement :
 //   `break` `;`
 //   `break` LabelIdentifier `;`
-export function Evaluate_BreakStatement(BreakStatement) {
-  return new BreakCompletion(BreakStatement.label);
+export function Evaluate_BreakStatement({ label: LabelIdentifier }) {
+  return new BreakCompletion(LabelIdentifier || undefined);
 }

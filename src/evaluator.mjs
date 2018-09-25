@@ -27,6 +27,7 @@ import {
   isArrowFunction,
   isBlockStatement,
   isBreakStatement,
+  isContinueStatement,
   isDebuggerStatement,
   isExpressionStatement,
   isExpressionWithComma,
@@ -66,6 +67,7 @@ import {
   Evaluate_BreakStatement,
   Evaluate_CallExpression,
   Evaluate_ConditionalExpression,
+  Evaluate_ContinueStatement,
   Evaluate_DebuggerStatement,
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
@@ -160,8 +162,8 @@ function Evaluate_StatementListItem(StatementListItem) {
     case isForStatement(StatementListItem):
       return Evaluate_ForStatement(StatementListItem);
 
-      // case isContinueStatement(StatementListItem):
-      //   return Evaluate_ContinueStatement(StatementListItem);
+    case isContinueStatement(StatementListItem):
+      return Evaluate_ContinueStatement(StatementListItem);
 
     case isBreakStatement(StatementListItem):
       return Evaluate_BreakStatement(StatementListItem);
