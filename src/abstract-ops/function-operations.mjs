@@ -286,3 +286,19 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   }));
   return new NormalCompletion(NewValue(undefined));
 }
+
+// #sec-makeclassconstructor
+export function MakeClassConstructor(F) {
+  Assert(F instanceof FunctionValue);
+  Assert(F.FunctionKind === 'normal');
+  F.FunctionKind = 'classConstructor';
+  return new NormalCompletion(NewValue(undefined));
+}
+
+// #sec-makemethod
+export function MakeMethod(F, homeObject) {
+  Assert(F instanceof FunctionValue);
+  Assert(Type(homeObject) === 'Object');
+  F.HomeObject = homeObject;
+  return new NormalCompletion(NewValue(undefined));
+}

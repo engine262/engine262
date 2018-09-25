@@ -27,6 +27,7 @@ import {
   isArrowFunction,
   isBlockStatement,
   isBreakStatement,
+  isClassExpression,
   isContinueStatement,
   isDebuggerStatement,
   isExpressionStatement,
@@ -66,6 +67,7 @@ import {
   Evaluate_BlockStatement,
   Evaluate_BreakStatement,
   Evaluate_CallExpression,
+  Evaluate_ClassExpression,
   Evaluate_ConditionalExpression,
   Evaluate_ContinueStatement,
   Evaluate_DebuggerStatement,
@@ -269,8 +271,8 @@ function Inner_Evaluate_Expression(Expression) {
     case isFunctionExpression(Expression):
       return Evaluate_FunctionExpression(Expression);
 
-      // case isClassExpression(Expression):
-      //   return Evaluate_ClassExpression(Expression);
+    case isClassExpression(Expression):
+      return Evaluate_ClassExpression(Expression);
 
       // case isGeneratorExpression(Expression):
       //   return Evaluate_GeneratorExpression(Expression);

@@ -1,10 +1,8 @@
 import {
   FunctionCreate,
   SetFunctionName,
-} from '../abstract-ops/all.mjs';
-import {
   MakeConstructor,
-} from './all.mjs';
+} from '../abstract-ops/all.mjs';
 import {
   New as NewValue,
 } from '../value.mjs';

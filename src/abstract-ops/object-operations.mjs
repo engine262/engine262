@@ -67,6 +67,20 @@ export function CreateDataProperty(O, P, V) {
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
+// #sec-createmethodproperty
+export function CreateMethodProperty(O, P, V) {
+  Assert(Type(O) === 'Object');
+  Assert(IsPropertyKey(P));
+
+  const newDesc = {
+    Value: V,
+    Writable: true,
+    Enumerable: false,
+    Configurable: true,
+  };
+  return Q(O.DefineOwnProperty(P, newDesc));
+}
+
 // 7.3.6 CreateDataPropertyOrThrow
 export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(Type(O) === 'Object');
