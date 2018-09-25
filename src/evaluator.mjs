@@ -27,6 +27,7 @@ import {
   isArrowFunction,
   isBlockStatement,
   isBreakStatement,
+  isDebuggerStatement,
   isExpressionStatement,
   isExpressionWithComma,
   isForStatement,
@@ -65,6 +66,7 @@ import {
   Evaluate_BreakStatement,
   Evaluate_CallExpression,
   Evaluate_ConditionalExpression,
+  Evaluate_DebuggerStatement,
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
@@ -179,8 +181,8 @@ function Evaluate_StatementListItem(StatementListItem) {
     case isTryStatement(StatementListItem):
       return Evaluate_TryStatement(StatementListItem);
 
-      // case isDebuggerStatement(StatementListItem):
-      //   return Evaluate_DebuggerStatement(StatementListItem);
+    case isDebuggerStatement(StatementListItem):
+      return Evaluate_DebuggerStatement(StatementListItem);
 
     default:
       throw outOfRange('Evaluate_StatementListItem', StatementListItem);

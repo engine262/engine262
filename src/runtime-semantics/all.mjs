@@ -9,6 +9,7 @@ export * from './BlockStatement.mjs';
 export * from './BreakStatement.mjs';
 export * from './CallExpression.mjs';
 export * from './ConditionalExpression.mjs';
+export * from './DebuggerStatement.mjs';
 export * from './EqualityExpression.mjs';
 export * from './EvaluateBody.mjs';
 export * from './ExponentiationExpression.mjs';
