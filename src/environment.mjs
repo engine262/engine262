@@ -238,6 +238,15 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 }
 
 export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  constructor() {
+    super();
+    this.ThisValue = undefined;
+    this.ThisBindingValue = undefined;
+    this.FunctionObject = undefined;
+    this.HomeObject = NewValue(undefined);
+    this.NewTarget = undefined;
+  }
+
   BindThisValue(V) {
     const envRec = this;
     Assert(envRec.ThisBindingStatus !== 'lexical');
@@ -256,6 +265,17 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     } else {
       return NewValue(true);
     }
+  }
+
+  HasSuperBinding() {
+    const envRec = this;
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return NewValue(false);
+    }
+    if (Type(envRec.HomeObject) === 'Undefined') {
+      return NewValue(false);
+    }
+    return NewValue(true);
   }
 
   GetThisBinding() {

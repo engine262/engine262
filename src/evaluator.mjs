@@ -42,6 +42,7 @@ import {
   isLiteral,
   isObjectLiteral,
   isReturnStatement,
+  isSuperProperty,
   isSwitchStatement,
   isTemplateLiteral,
   isThis,
@@ -90,6 +91,7 @@ import {
   Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
+  Evaluate_SuperProperty,
   Evaluate_SwitchStatement,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
@@ -292,8 +294,8 @@ function Inner_Evaluate_Expression(Expression) {
     case isActualMemberExpression(Expression):
       return Evaluate_MemberExpression(Expression);
 
-      // case isSuperProperty(Expression):
-      //   return Evaluate_SuperProperty(Expression);
+    case isSuperProperty(Expression):
+      return Evaluate_SuperProperty(Expression);
 
       // case isMetaProperty(Expression):
       //   return Evaluate_MetaProperty(Expression);

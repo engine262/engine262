@@ -952,7 +952,12 @@ export class Reference {
   }
 }
 
-export class SuperReference extends Reference {}
+export class SuperReference extends Reference {
+  constructor(BaseValue, ReferencedName, thisValue, StrictReference) {
+    super(BaseValue, ReferencedName, StrictReference);
+    this.thisValue = thisValue;
+  }
+}
 
 const undefinedValue = new UndefinedValue();
 const nullValue = new NullValue();
