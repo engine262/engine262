@@ -1,5 +1,6 @@
 import {
   New as NewValue,
+  ArrayExoticObjectValue,
   ProxyExoticObjectValue,
   Type,
 } from '../value.mjs';
@@ -39,7 +40,7 @@ export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return NewValue(false);
   }
-  if (Type(argument) === 'Array') {
+  if (argument instanceof ArrayExoticObjectValue) {
     return NewValue(true);
   }
   if (argument instanceof ProxyExoticObjectValue) {

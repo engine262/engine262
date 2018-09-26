@@ -70,9 +70,6 @@ export class Agent {
   }
 
   Throw(type, message) {
-    if (!message) {
-      console.trace(type); // eslint-disable-line no-console
-    }
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, message ? [NewValue(message)] : []);
     return new ThrowCompletion(error);

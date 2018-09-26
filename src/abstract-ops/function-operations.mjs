@@ -71,7 +71,7 @@ export function SetFunctionLength(F, length) {
     Value: length,
     Writable: false,
     Enumerable: false,
-    Configurable: false,
+    Configurable: true,
   }));
 }
 

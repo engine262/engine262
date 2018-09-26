@@ -6,6 +6,7 @@ import {
   Value,
   Object as APIObject,
   Abstract,
+  AbruptCompletion,
 } from '../lib/api.mjs';
 
 const testdir = new URL('./test262/', import.meta.url);
@@ -79,17 +80,15 @@ function run(test, strict) {
       }
     }
 
-    try {
-      evalScript(strict ? `"use strict";\n${source}` : source);
-      if (sync) {
-        resolve(options);
-      }
-    } catch (err) {
+    const completion = evalScript(strict ? `"use strict";\n${source}` : source);
+    if (completion instanceof AbruptCompletion) {
       if (options.negative) {
         resolve(options);
       } else {
-        reject(err);
+        reject({ options, error: completion });
       }
+    } else if (sync) {
+      resolve(options);
     }
   });
 }
@@ -126,9 +125,9 @@ const promises = tests.map(async (t) => {
   try {
     const { description } = await run(t, false);
     console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
-  } catch (e) {
-    console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', short);
-    console.error(e);
+  } catch ({ options: { description }, error }) {
+    console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
+    console.error(error);
     failed += 1;
     return;
   }
@@ -136,9 +135,9 @@ const promises = tests.map(async (t) => {
   try {
     const { description } = await run(t, true);
     console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
-  } catch (e) {
-    console.error('\u001b[31mFAIL\u001b[39m [STRICT]', short);
-    console.error(e);
+  } catch ({ options: { description }, error }) {
+    console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
+    console.error(error);
     failed += 1;
     return;
   }

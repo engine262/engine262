@@ -211,6 +211,7 @@ export class FunctionValue extends ObjectValue {}
 
 function nativeCall(F, argumentsList, thisArgument, newTarget) {
   // Fill in "required" properties
+  argumentsList.callLength = argumentsList.length;
   const length = New('length');
   if (F.properties.has(length)) {
     const len = F.properties.get(length).Value.numberValue();

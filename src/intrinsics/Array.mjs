@@ -40,7 +40,7 @@ import {
 import { outOfRange } from '../helpers.mjs';
 
 function ArrayConstructor(argumentsList, { NewTarget }) {
-  const numberOfArgs = argumentsList.length;
+  const numberOfArgs = argumentsList.callLength;
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
@@ -207,7 +207,7 @@ export function CreateArray(realmRec) {
   SetFunctionName(constructor, NewValue('Array'));
   SetFunctionLength(constructor, NewValue(1));
 
-  constructor.DefineOwnProperty(NewValue('constructor'), {
+  constructor.DefineOwnProperty(NewValue('prototype'), {
     Value: realmRec.Intrinsics['%ArrayPrototype%'],
     Writable: true,
     Enumerable: false,
