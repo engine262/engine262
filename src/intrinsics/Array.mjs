@@ -88,7 +88,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       Assert(defineStatus.isTrue());
       k += 1;
     }
-    Assert(Get(array, NewValue('length')).numberValue() === numberOfArgs);
+    Assert(X(Get(array, NewValue('length'))).numberValue() === numberOfArgs);
     return array;
   }
 

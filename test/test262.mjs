@@ -97,6 +97,14 @@ function run(test, strict) {
 // const tests = glob.sync('test/test262/test/built-ins/**/*.js').map(p => p.slice(18));
 const tests = [
   'built-ins/Array/length.js',
+  'built-ins/Array/S15.4.1_A1.1_T1.js',
+  'built-ins/Array/S15.4.1_A1.1_T2.js',
+  'built-ins/Array/S15.4.1_A1.1_T3.js',
+  'built-ins/Array/S15.4.1_A1.2_T1.js',
+  'built-ins/Array/S15.4.1_A1.3_T1.js',
+  'built-ins/Array/S15.4.1_A2.1_T1.js',
+  'built-ins/Array/S15.4.1_A2.2_T1.js',
+  'built-ins/Array/S15.4.1_A3.1_T1.js',
 ];
 const skip = [];
 
