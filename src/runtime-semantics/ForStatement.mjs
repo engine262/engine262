@@ -110,7 +110,7 @@ function BindingInstantiation_ForDeclaration(ForDeclaration, environment) {
   const envRec = environment.EnvironmentRecord;
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
   const ForBinding = ForDeclaration.declarations[0].id;
-  for (const name of BoundNames_ForBinding(ForBinding)) {
+  for (const name of BoundNames_ForBinding(ForBinding).map(NewValue)) {
     if (IsConstantDeclaration(ForDeclaration)) {
       X(envRec.CreateImmutableBinding(name, NewValue(true)));
     } else {
@@ -188,7 +188,7 @@ function ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind
       if (!destructuring) {
         const lhsNames = BoundNames_ForDeclaration(lhs);
         Assert(lhsNames.length === 1);
-        const [lhsName] = lhsNames;
+        const lhsName = NewValue(lhsNames[0]);
         lhsRef = X(ResolveBinding(lhsName));
       }
     }
