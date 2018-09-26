@@ -74,7 +74,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
 export function Evaluate_CallExpression(CallExpression) {
   const ref = Q(Evaluate_Expression(CallExpression.callee));
   const func = Q(GetValue(ref));
-  if (Type(ref) === 'Reference' && !IsPropertyReference(ref)
+  if (Type(ref) === 'Reference' && IsPropertyReference(ref).isFalse()
     && (Type(GetReferencedName(ref)) === 'String'
       && GetReferencedName(ref).stringValue() === 'eval')) {
     // TODO(eval)

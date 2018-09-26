@@ -47,7 +47,7 @@ function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
   if (Type(desc) === 'Undefined') {
     return NewValue(false);
   }
-  return desc.Enumerable;
+  return NewValue(desc.Enumerable);
 }
 
 function ObjectProto_toLocaleString(argList, { thisValue }) {

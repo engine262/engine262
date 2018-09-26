@@ -21,6 +21,7 @@ import {
   ToBoolean,
   ToNumber,
   ToObject,
+  ToInt32,
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
@@ -122,7 +123,11 @@ function Evaluate_UnaryExpression_Minus(UnaryExpression) {
 
 // #sec-bitwise-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `~` UnaryExpression
-function Evaluate_UnaryExpression_Tilde() {}
+function Evaluate_UnaryExpression_Tilde(UnaryExpression) {
+  const expr = Evaluate_Expression(UnaryExpression);
+  const oldValue = Q(ToInt32(Q(GetValue(expr))));
+  return NewValue(~oldValue.numberValue()); // eslint-disable-line no-bitwise
+}
 
 // #sec-logical-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `!` UnaryExpression

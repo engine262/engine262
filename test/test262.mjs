@@ -54,7 +54,7 @@ function run(test, strict) {
 
     const source = fs.readFileSync(test, 'utf8');
 
-    const yamls = /\/\*---\n((.|\n)+?)\n---\*\//.exec(source)[1];
+    const yamls = /\/\*---\r?\n(.+?)---\*\//s.exec(source)[1];
     options = yaml.default.parse(yamls);
 
     if (options.includes) {
@@ -80,15 +80,19 @@ function run(test, strict) {
       }
     }
 
-    const completion = evalScript(strict ? `"use strict";\n${source}` : source);
-    if (completion instanceof AbruptCompletion) {
-      if (options.negative) {
+    try {
+      const completion = evalScript(strict ? `"use strict";\n${source}` : source);
+      if (completion instanceof AbruptCompletion) {
+        if (options.negative) {
+          resolve({ options });
+        } else {
+          resolve({ error: completion, options });
+        }
+      } else if (sync) {
         resolve({ options });
-      } else {
-        resolve({ error: completion, options });
       }
-    } else if (sync) {
-      resolve({ options });
+    } catch (error) {
+      resolve({ error, options });
     }
   });
 }
@@ -120,37 +124,43 @@ tests.forEach((t) => {
     const short = t;
     t = new URL(`test/${t}`, testdir);
 
-    if (skip.includes(short) || short.toLowerCase().includes('bigint')) {
-      console.log('\u001b[33mSKIP\u001b[39m', short);
-      skipped += 1;
-      return;
-    }
-
-    {
-      const { options: { description }, error } = await run(t, false);
-      if (error) {
-        console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
-        console.error(error);
-        failed += 1;
+    try {
+      if (skip.includes(short) || short.toLowerCase().includes('bigint')) {
+        console.log('\u001b[33mSKIP\u001b[39m', short);
+        skipped += 1;
         return;
-      } else {
-        console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
       }
-    }
 
-    {
-      const { options: { description }, error } = await run(t, true);
-      if (error) {
-        console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
-        console.error(error);
-        failed += 1;
-        return;
-      } else {
-        console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
+      {
+        const { options: { description }, error } = await run(t, false);
+        if (error) {
+          console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
+          console.error(error);
+          failed += 1;
+          return;
+        } else {
+          console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
+        }
       }
-    }
 
-    passed += 1;
+      {
+        const { options: { description }, error } = await run(t, true);
+        if (error) {
+          console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
+          console.error(error);
+          failed += 1;
+          return;
+        } else {
+          console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
+        }
+      }
+
+      passed += 1;
+    } catch (e) {
+      console.error(short);
+      console.error(e);
+      process.exit(1);
+    }
   });
 });
 

@@ -5,8 +5,8 @@ import {
 import { New as NewValue, Reference } from './value.mjs';
 
 // #sec-completion-record-specification-type
-class Completion {
-  constructor(type, value, target) {
+export function Completion(type, value, target) {
+  if (new.target === Completion) {
     if (typeof type !== 'string') {
       throw new TypeError('Completion type is not a string');
     }
@@ -14,21 +14,8 @@ class Completion {
     this.Value = value;
     this.Target = target;
   }
+  return type;
 }
-
-function CompletionFunction(...args) {
-  if (new.target !== undefined) {
-    return new Completion(...args);
-  }
-  const completion = args[0];
-  return completion;
-}
-Object.defineProperty(
-  CompletionFunction, 'prototype',
-  Object.getOwnPropertyDescriptor(Completion, 'prototype'),
-);
-
-export { CompletionFunction as Completion };
 
 // #sec-normalcompletion
 export class NormalCompletion {
