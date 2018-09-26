@@ -55,6 +55,13 @@ export function ResolveThisBinding() {
   return Q(envRec.GetThisBinding());
 }
 
+// #sec-getnewtarget
+export function GetNewTarget() {
+  const envRec = GetThisEnvironment();
+  Assert('NewTarget' in envRec);
+  return envRec.NewTarget;
+}
+
 // 8.3.6 #sec-getglobalobject
 export function GetGlobalObject() {
   const ctx = surroundingAgent.runningExecutionContext;
