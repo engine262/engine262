@@ -54,7 +54,7 @@ function run(test, strict) {
 
     const source = fs.readFileSync(test, 'utf8');
 
-    const yamls = /\/\*---\r?\n(.+?)---\*\//s.exec(source)[1];
+    const yamls = source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')); // /\/\*---\r?\n(.+?)---\*\//s.exec(source)[1];
     options = yaml.default.parse(yamls);
 
     if (options.includes) {
@@ -110,6 +110,9 @@ const skip = [
   'language/expressions/tagged-template/tco-call.js',
   'language/expressions/call/tco-call-args.js',
   'language/expressions/logical-or/tco-right.js',
+  'bigint',
+  'yield',
+  'await',
 ];
 
 let passed = 0;
@@ -125,10 +128,12 @@ tests.forEach((t) => {
     t = new URL(`test/${t}`, testdir);
 
     try {
-      if (skip.includes(short) || short.toLowerCase().includes('bigint')) {
-        console.log('\u001b[33mSKIP\u001b[39m', short);
-        skipped += 1;
-        return;
+      for (const s of skip) {
+        if (short.includes(s)) {
+          console.log('\u001b[33mSKIP\u001b[39m', short);
+          skipped += 1;
+          return;
+        }
       }
 
       {
