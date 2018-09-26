@@ -29,7 +29,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    CreateDataProperty(obj, X(ToString(NewValue(index)), val));
+    CreateDataProperty(obj, X(ToString(NewValue(index))), val);
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, {

@@ -299,10 +299,10 @@ export function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(x, X(ToNumber(y)));
   }
   if (['String', 'Number', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
-    return AbstractEqualityComparison(x, ToPrimitive(y));
+    return AbstractEqualityComparison(x, Q(ToPrimitive(y)));
   }
   if (Type(x) === 'Object' && ['String', 'Number', 'Symbol'].includes(Type(y))) {
-    return AbstractEqualityComparison(ToPrimitive(x), y);
+    return AbstractEqualityComparison(Q(ToPrimitive(x)), y);
   }
   return NewValue(false);
 }

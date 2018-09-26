@@ -23,7 +23,6 @@ import {
   Q,
 } from '../completion.mjs';
 
-
 function PromiseConstructor([executor], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');

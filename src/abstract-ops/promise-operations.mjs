@@ -69,6 +69,7 @@ export function NewPromiseCapability(C) {
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
   const executor = CreateBuiltinFunction(steps, ['Capability']);
+  SetFunctionLength(executor, NewValue(2));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve).isFalse()) {

@@ -230,14 +230,31 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
 
 export class BuiltinFunctionValue extends FunctionValue {
   constructor(nativeFunction) {
-    // Unless otherwise specified every built-in function object has the
-    // %FunctionPrototype% object as the initial value of its [[Prototype]]
-    // internal slot.
     super();
     this.nativeFunction = nativeFunction;
-    // Will be filled in CreateBuiltinFunction.
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
+
+    if (this.nativeFunction.toString().includes('NewTarget')) {
+      this.Construct = function Construct(argumentsList, newTarget) {
+        const F = this;
+
+        // const callerContext = surroundingAgent.runningExecutionContext;
+        // If callerContext is not already suspended, suspend callerContext.
+        const calleeContext = new ExecutionContext();
+        calleeContext.Function = F;
+        const calleeRealm = F.Realm;
+        calleeContext.Realm = calleeRealm;
+        calleeContext.ScriptOrModule = F.ScriptOrModule;
+        // 8. Perform any necessary implementation-defined initialization of calleeContext.
+        surroundingAgent.executionContextStack.push(calleeContext);
+        const result = nativeCall(F, argumentsList, undefined, newTarget);
+        // Remove calleeContext from the execution context stack and
+        // restore callerContext as the running execution context.
+        surroundingAgent.executionContextStack.pop();
+        return result;
+      };
+    }
   }
 
   Call(thisArgument, argumentsList) {
@@ -253,25 +270,6 @@ export class BuiltinFunctionValue extends FunctionValue {
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
     const result = nativeCall(F, argumentsList, thisArgument, undefined);
-    // Remove calleeContext from the execution context stack and
-    // restore callerContext as the running execution context.
-    surroundingAgent.executionContextStack.pop();
-    return result;
-  }
-
-  Construct(argumentsList, newTarget) {
-    const F = this;
-
-    // const callerContext = surroundingAgent.runningExecutionContext;
-    // If callerContext is not already suspended, suspend callerContext.
-    const calleeContext = new ExecutionContext();
-    calleeContext.Function = F;
-    const calleeRealm = F.Realm;
-    calleeContext.Realm = calleeRealm;
-    calleeContext.ScriptOrModule = F.ScriptOrModule;
-    // 8. Perform any necessary implementation-defined initialization of calleeContext.
-    surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nativeCall(F, argumentsList, undefined, newTarget);
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop();
@@ -850,8 +848,8 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
 }
 
 export class ArgumentsExoticObjectValue extends ObjectValue {
-  constructor(...args) {
-    super(...args);
+  constructor() {
+    super();
 
     this.ParameterMap = undefined;
   }
@@ -1063,7 +1061,8 @@ export function Type(val) {
     return 'Descriptor';
   }
 
-  if (typeof val === 'object' && Object.keys(val).length === 1 && 'Value' in val) {
+  if (typeof val === 'object' && Object.keys(val).length === 1
+      && ('Value' in val || 'Get' in val || 'Set' in val)) {
     return 'Descriptor';
   }
 

@@ -77,7 +77,8 @@ export function Evaluate_CallExpression(CallExpression) {
   if (Type(ref) === 'Reference' && !IsPropertyReference(ref)
     && (Type(GetReferencedName(ref)) === 'String'
       && GetReferencedName(ref).stringValue() === 'eval')) {
-    // TODO: direct eval
+    // TODO(eval)
+    return surroundingAgent.Throw('TypeError', 'eval is not implemented');
   }
   const thisCall = CallExpression;
   const tailCall = IsInTailPosition(thisCall);

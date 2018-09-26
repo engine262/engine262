@@ -20,18 +20,15 @@ import { Q, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // 7.1.1 #sec-toprimitive
-export function ToPrimitive(
-  input,
-  preferredType,
-) {
+export function ToPrimitive(input, PreferredType) {
   if (Type(input) === 'Object') {
     let hint;
-    if (preferredType === undefined) {
+    if (PreferredType === undefined) {
       hint = NewValue('default');
-    } else if (preferredType === 'String') {
+    } else if (PreferredType === 'String') {
       hint = NewValue('string');
     } else {
-      Assert(preferredType === 'Number');
+      Assert(PreferredType === 'Number');
       hint = NewValue('number');
     }
     const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
@@ -47,7 +44,6 @@ export function ToPrimitive(
     }
     return Q(OrdinaryToPrimitive(input, hint));
   }
-  Assert(input instanceof PrimitiveValue);
   return input;
 }
 

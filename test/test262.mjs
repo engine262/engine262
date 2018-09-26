@@ -1,6 +1,6 @@
 import fs from 'fs';
 import yaml from 'yaml';
-// import glob from 'glob';
+import glob from 'glob';
 import {
   Realm,
   Value,
@@ -11,13 +11,10 @@ import {
 
 const testdir = new URL('./test262/', import.meta.url);
 
-function createRealm() {
+function createRealm(printer) {
   const realm = new Realm();
 
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
-    console.log('[GLOBAL PRINT]', ...args); // eslint-disable-line no-console
-    return new Value(realm, undefined);
-  }));
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => printer(...args)));
 
   const $262 = new APIObject(realm);
 
@@ -27,6 +24,7 @@ function createRealm() {
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
+  $262.realm = realm;
   $262.evalScript = (sourceText, file) => {
     if (file) {
       sourceText = fs.readFileSync(new URL(sourceText, testdir));
@@ -38,15 +36,17 @@ function createRealm() {
 }
 
 function run(test, strict) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let options = { description: test };
 
-    const { evalScript } = createRealm((m) => {
-      if (m === 'Test262:AsyncTestComplete') {
-        resolve(options);
+    const { evalScript, realm } = createRealm((m) => {
+      if (m === new Value(realm, 'Test262:AsyncTestComplete')) {
+        resolve({ options });
       } else {
-        reject(m);
+        console.log('[GLOBAL PRINT]', m); // eslint-disable-line no-console
+        resolve({ options, error: m });
       }
+      return new Value(realm, undefined);
     });
 
     evalScript('harness/assert.js', true);
@@ -70,12 +70,12 @@ function run(test, strict) {
         sync = false;
       }
       if (strict && options.flags.includes('noStrict')) {
-        resolve(options);
+        resolve({ options });
         return;
       }
 
       if (!strict && options.flags.includes('onlyStrict')) {
-        resolve(options);
+        resolve({ options });
         return;
       }
     }
@@ -83,79 +83,90 @@ function run(test, strict) {
     const completion = evalScript(strict ? `"use strict";\n${source}` : source);
     if (completion instanceof AbruptCompletion) {
       if (options.negative) {
-        resolve(options);
+        resolve({ options });
       } else {
-        reject({ options, error: completion });
+        resolve({ error: completion, options });
       }
     } else if (sync) {
-      resolve(options);
+      resolve({ options });
     }
   });
 }
 
-// const tests = glob.sync('test/test262/test/built-ins/**/*.js').map(p => p.slice(18));
-const tests = [
-  'built-ins/Array/length.js',
-  'built-ins/Array/S15.4.1_A1.1_T1.js',
-  'built-ins/Array/S15.4.1_A1.1_T2.js',
-  'built-ins/Array/S15.4.1_A1.1_T3.js',
-  'built-ins/Array/S15.4.1_A1.2_T1.js',
-  'built-ins/Array/S15.4.1_A1.3_T1.js',
-  'built-ins/Array/S15.4.1_A2.1_T1.js',
-  'built-ins/Array/S15.4.1_A2.2_T1.js',
-  'built-ins/Array/S15.4.1_A3.1_T1.js',
+const tests = glob.sync('test/test262/test/language/expressions/**/*.js').map((p) => p.slice(18));
+
+const skip = [
+  'language/expressions/tco-pos.js',
+  'language/expressions/conditional/tco-pos.js',
+  'language/expressions/conditional/tco-cond.js',
+  'language/expressions/logical-and/tco-right.js',
+  'language/expressions/comma/tco-final.js',
+  'language/expressions/tagged-template/tco-member.js',
+  'language/expressions/call/tco-member-args.js',
+  'language/expressions/tagged-template/tco-call.js',
+  'language/expressions/call/tco-call-args.js',
+  'language/expressions/logical-or/tco-right.js',
 ];
-const skip = [];
 
 let passed = 0;
 let skipped = 0;
 let failed = 0;
 
+let promise = Promise.resolve();
+
 /* eslint-disable no-console */
-const promises = tests.map(async (t) => {
-  t = new URL(`test/${t}`, testdir);
-  const short = `${t}`;
+tests.forEach((t) => {
+  promise = promise.then(async () => {
+    const short = t;
+    t = new URL(`test/${t}`, testdir);
 
-  if (skip.includes(t)) {
-    console.log('\u001b[33mSKIP\u001b[39m', short);
-    skipped += 1;
-    return;
-  }
+    if (skip.includes(short) || short.toLowerCase().includes('bigint')) {
+      console.log('\u001b[33mSKIP\u001b[39m', short);
+      skipped += 1;
+      return;
+    }
 
-  try {
-    const { description } = await run(t, false);
-    console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
-  } catch ({ options: { description }, error }) {
-    console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
-    console.error(error);
-    failed += 1;
-    return;
-  }
+    {
+      const { options: { description }, error } = await run(t, false);
+      if (error) {
+        console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
+        console.error(error);
+        failed += 1;
+        return;
+      } else {
+        console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
+      }
+    }
 
-  try {
-    const { description } = await run(t, true);
-    console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
-  } catch ({ options: { description }, error }) {
-    console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
-    console.error(error);
-    failed += 1;
-    return;
-  }
+    {
+      const { options: { description }, error } = await run(t, true);
+      if (error) {
+        console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
+        console.error(error);
+        failed += 1;
+        return;
+      } else {
+        console.log('\u001b[32mPASS\u001b[39m [STRICT]', description.trim());
+      }
+    }
 
-  passed += 1;
+    passed += 1;
+  });
 });
 
-Promise.all(promises)
-  .then((x) => {
-    console.table({
-      passed,
-      failed,
-      skipped,
-      total: x.length,
-    });
-    if (failed > 0) {
-      process.exit(1);
-    }
+promise.then(() => {
+  console.table({
+    passed,
+    failed,
+    skipped,
+    total: tests.length,
   });
+  if (failed > 0) {
+    process.exit(1);
+  }
+}).catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
 
 /* eslint-enable no-console */

@@ -302,3 +302,35 @@ export function MakeMethod(F, homeObject) {
   F.HomeObject = homeObject;
   return new NormalCompletion(NewValue(undefined));
 }
+
+// 9.3.3 CreateBuiltinFunction
+export function CreateBuiltinFunction(
+  steps,
+  internalSlotsList,
+  realm,
+  prototype,
+) {
+  if (!realm) {
+    // If realm is not present, set realm to the current Realm Record.
+    realm = surroundingAgent.currentRealmRecord;
+  }
+
+  if (!prototype) {
+    prototype = realm.Intrinsics['%FunctionPrototype%'];
+  }
+
+  // Let func be a new built-in function object that when
+  // called performs the action described by steps.
+  const func = NewValue(steps, realm);
+
+  internalSlotsList.forEach((slot) => {
+    func[slot] = undefined;
+  });
+
+  func.Realm = realm;
+  func.Prototype = prototype;
+  func.Extensible = true;
+  func.ScriptOrModule = null;
+
+  return func;
+}

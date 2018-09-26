@@ -559,4 +559,5 @@ export function CreateArrayPrototype(realmRec) {
 
   realmRec.Intrinsics['%ArrayProto_keys%'] = proto.Get(NewValue('keys'), proto);
   realmRec.Intrinsics['%ArrayProto_entries%'] = proto.Get(NewValue('entries'), proto);
+  realmRec.Intrinsics['%ArrayProto_values%'] = proto.Get(NewValue('values'), proto);
 }
