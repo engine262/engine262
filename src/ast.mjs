@@ -639,7 +639,7 @@ export function isForInStatement(node) {
 }
 
 // Used in #prod-IterationStatement
-// This covers cases like for ({ a } of b), in which case the { a } is in fact
+// This covers cases like for ({ a } in b), in which case the { a } is in fact
 // parsed as an ObjectLiteral per spec.
 export function isForInStatementWithExpression(node) {
   return isForInStatement(node) && node.left.type !== 'VariableDeclaration';
@@ -654,6 +654,29 @@ export function isForInStatementWithVarForBinding(node) {
 // Used in #prod-IterationStatement
 export function isForInStatementWithForDeclaration(node) {
   return isForInStatement(node) && isForDeclaration(node.left);
+}
+
+// Used in #prod-IterationStatement
+export function isForOfStatement(node) {
+  return node.type === 'ForOfStatement';
+}
+
+// Used in #prod-IterationStatement
+// This covers cases like for ({ a } of b), in which case the { a } is in fact
+// parsed as an ObjectLiteral per spec.
+export function isForOfStatementWithExpression(node) {
+  return isForOfStatement(node) && node.left.type !== 'VariableDeclaration';
+}
+
+// Used in #prod-IterationStatement
+export function isForOfStatementWithVarForBinding(node) {
+  return isForOfStatement(node) && isVariableStatement(node.left)
+    && !node.left.declarations[0].init;
+}
+
+// Used in #prod-IterationStatement
+export function isForOfStatementWithForDeclaration(node) {
+  return isForOfStatement(node) && isForDeclaration(node.left);
 }
 
 // #prod-ForBinding

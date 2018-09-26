@@ -33,6 +33,9 @@ import {
   isForInStatementWithExpression,
   isForInStatementWithForDeclaration,
   isForInStatementWithVarForBinding,
+  isForOfStatementWithExpression,
+  isForOfStatementWithForDeclaration,
+  isForOfStatementWithVarForBinding,
   isForDeclaration,
   isForBinding,
 } from '../ast.mjs';
@@ -155,7 +158,7 @@ function ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind
     assignmentPattern = lhs;
   }
   while (true) {
-    // TODO: this section of the spec is completely wrong.
+    // TODO: this section of the spec is completely wrong. See https://github.com/tc39/ecma262/issues/1107.
     // const nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
     // if (iteratorKind === 'async')
     // if (Type(nextResult) !== 'Object') {
@@ -341,6 +344,38 @@ export function LabelledEvaluation_IterationStatement(IterationStatement, labelS
       } = IterationStatement;
       const keyResult = Q(ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), Expression, 'enumerate'));
       return Q(ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
+    }
+
+    case isForOfStatementWithExpression(IterationStatement): {
+      const {
+        left: LeftHandSideExpression,
+        right: AssignmentExpression,
+        body: Statement,
+      } = IterationStatement;
+      const keyResult = Q(ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      return Q(ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet));
+    }
+
+    case isForOfStatementWithVarForBinding(IterationStatement): {
+      const {
+        left: {
+          declarations: [{ id: ForBinding }],
+        },
+        right: AssignmentExpression,
+        body: Statement,
+      } = IterationStatement;
+      const keyResult = Q(ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      return Q(ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet));
+    }
+
+    case isForOfStatementWithForDeclaration(IterationStatement): {
+      const {
+        left: ForDeclaration,
+        right: AssignmentExpression,
+        body: Statement,
+      } = IterationStatement;
+      const keyResult = Q(ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), AssignmentExpression, 'iterate'));
+      return Q(ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
     }
 
     default:
