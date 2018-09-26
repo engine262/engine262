@@ -26,7 +26,7 @@ export function Evaluate_AssignmentExpression(node) {
   const AssignmentExpression = node.right;
   if (node.operator === '=') {
     if (!isObjectLiteral(LeftHandSideExpression) && !isArrayLiteral(LeftHandSideExpression)) {
-      let lref = Q(Evaluate_Expression(LeftHandSideExpression));
+      const lref = Q(Evaluate_Expression(LeftHandSideExpression));
       ReturnIfAbrupt(lref);
       const rref = Q(Evaluate_Expression(AssignmentExpression));
       const rval = Q(GetValue(rref));

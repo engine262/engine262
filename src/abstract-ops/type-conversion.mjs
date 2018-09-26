@@ -1,6 +1,5 @@
 import {
   New as NewValue,
-  PrimitiveValue,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';

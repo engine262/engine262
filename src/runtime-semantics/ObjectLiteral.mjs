@@ -121,7 +121,7 @@ function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   PropertyDefinition, object, enumerable,
 ) {
   const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
-  let propKey = Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
+  const propKey = Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
   ReturnIfAbrupt(propKey);
   const exprValueRef = Evaluate_Expression(AssignmentExpression);
   const propValue = Q(GetValue(exprValueRef));

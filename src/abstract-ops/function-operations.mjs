@@ -115,7 +115,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
 
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  let result = OrdinaryCallEvaluateBody(F, argumentsList);
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
@@ -146,7 +146,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   }
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
-  let result = OrdinaryCallEvaluateBody(F, argumentsList);
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();

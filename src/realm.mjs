@@ -46,6 +46,7 @@ import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
 import { CreateMap } from './intrinsics/Map.mjs';
 import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
 import { CreateSet } from './intrinsics/Set.mjs';
+import { CreateFunctionProperties } from './intrinsics/functionProperties.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -152,6 +153,8 @@ export function CreateIntrinsics(realmRec) {
   CreateMapPrototype(realmRec);
   CreateMap(realmRec);
 
+  CreateFunctionProperties(realmRec);
+
   return intrinsics;
 }
 
@@ -192,27 +195,18 @@ export function SetDefaultGlobalBindings(realmRec) {
     }));
   });
 
-  // Function Properties of the Global Object
   [
-    ['eval'],
-    ['isFinite'],
-    ['isNaN'],
-    ['parseFloat'],
-    ['parseInt'],
-    ['decodeURI'],
-    ['decodeURIComponent'],
-    ['encodeURI'],
-    ['encodeURIComponent'],
-  ].forEach(([name, value]) => {
-    Q(DefinePropertyOrThrow(global, NewValue(name, realmRec), {
-      Value: value,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  });
+    // Function Properties of the Global Object
+    'eval',
+    'isFinite',
+    'isNaN',
+    'parseFloat',
+    'parseInt',
+    'decodeURI',
+    'decodeURIComponent',
+    'encodeURI',
+    'encodeURIComponent',
 
-  [
     // Constructor Properties of the Global Object
     'Array',
     'Boolean',
@@ -233,6 +227,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'SyntaxError',
     'TypeError',
     'URIError',
+
     // Other Properties of the Global Object
     'Math',
   ].forEach((name) => {

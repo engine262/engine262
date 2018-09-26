@@ -12,7 +12,6 @@ module.exports = {
   rules: {
     // TODO: turn back on after we fix out ReturnIfAbrupt transform
     'quote-props': ['error', 'consistent'],
-    'prefer-const': 'off',
     'strict': ['error', 'global'],
     'prefer-destructuring': 'off',
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],

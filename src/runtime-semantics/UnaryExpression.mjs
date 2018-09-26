@@ -31,7 +31,7 @@ import { outOfRange } from '../helpers.mjs';
 // #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
 function Evaluate_UnaryExpression_Delete(UnaryExpression) {
-  let ref = Evaluate_Expression(UnaryExpression);
+  const ref = Evaluate_Expression(UnaryExpression);
   ReturnIfAbrupt(ref);
   if (Type(ref) !== 'Reference') {
     return NewValue(true);

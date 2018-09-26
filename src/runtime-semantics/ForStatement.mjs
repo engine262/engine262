@@ -284,7 +284,7 @@ export function LabelledEvaluation_IterationStatement(IterationStatement, labelS
       return Q(ForBodyEvaluation(IterationStatement.test, IterationStatement.update, IterationStatement.body, [], labelSet));
 
     case isForStatementWithVariableStatement(IterationStatement): {
-      let varDcl = Evaluate_Statement(IterationStatement.init);
+      const varDcl = Evaluate_Statement(IterationStatement.init);
       ReturnIfAbrupt(varDcl);
       return Q(ForBodyEvaluation(IterationStatement.test, IterationStatement.update, IterationStatement.body, [], labelSet));
     }

@@ -23,6 +23,13 @@ export function CreateBoolean(realmRec) {
 
   const booleanConstructor = CreateBuiltinFunction(BooleanConstructor, [], realmRec);
 
+  booleanConstructor.DefineOwnProperty(NewValue('prototype'), {
+    Value: booleanPrototype,
+    Writable: false,
+    Enumerable: false,
+    Configurable: false,
+  });
+
   booleanPrototype.DefineOwnProperty(NewValue('constructor'), {
     Value: booleanConstructor,
     Writable: true,
@@ -30,5 +37,5 @@ export function CreateBoolean(realmRec) {
     Configurable: true,
   });
 
-  return booleanConstructor;
+  realmRec.Intrinsics['%Boolean%'] = booleanConstructor;
 }

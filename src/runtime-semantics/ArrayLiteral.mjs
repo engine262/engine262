@@ -78,7 +78,7 @@ function ArrayAccumulation(ElementList, array, nextIndex) {
 //   `[` ElementList `,` Elision `]`
 export function Evaluate_ArrayLiteral(ArrayLiteral) {
   const array = X(ArrayCreate(NewValue(0)));
-  let len = ArrayAccumulation(ArrayLiteral.elements, array, 0);
+  const len = ArrayAccumulation(ArrayLiteral.elements, array, 0);
   ReturnIfAbrupt(len);
   Set(array, NewValue('length'), ToUint32(NewValue(len)), NewValue(false));
   // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.

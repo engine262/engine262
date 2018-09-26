@@ -92,7 +92,7 @@ export function Evaluate_BindingList(BindingList) {
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalDeclaration : LetOrConst BindingList `;`
 export function Evaluate_LexicalDeclaration({ declarations: BindingList }) {
-  let next = Evaluate_BindingList(BindingList);
+  const next = Evaluate_BindingList(BindingList);
   ReturnIfAbrupt(next);
   return new NormalCompletion(undefined);
 }

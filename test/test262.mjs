@@ -139,6 +139,7 @@ tests.forEach((t) => {
       {
         const { options: { description }, error } = await run(t, false);
         if (error) {
+          console.error(short);
           console.error('\u001b[31mFAIL\u001b[39m [SLOPPY]', description.trim());
           console.error(error);
           failed += 1;
@@ -151,6 +152,7 @@ tests.forEach((t) => {
       {
         const { options: { description }, error } = await run(t, true);
         if (error) {
+          console.error(short);
           console.error('\u001b[31mFAIL\u001b[39m [STRICT]', description.trim());
           console.error(error);
           failed += 1;

@@ -47,7 +47,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
   } else {
     thisValue = NewValue(undefined);
   }
-  let argList = ArgumentListEvaluation(args);
+  const argList = ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'value is not a function');

@@ -204,7 +204,7 @@ function PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignment
     value: AssignmentElement,
   } = AssignmentProperty;
 
-  let name = Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
+  const name = Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
   ReturnIfAbrupt(name);
   Q(KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, value, name));
   return [name];
@@ -214,7 +214,7 @@ function PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignment
 //   AssignmentRestProperty : `...` DestructuringAssignmentTarget
 function RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames) {
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
-  let lref = Evaluate_Expression(DestructuringAssignmentTarget);
+  const lref = Evaluate_Expression(DestructuringAssignmentTarget);
   ReturnIfAbrupt(lref);
   const restObj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
@@ -263,7 +263,7 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentE
   }
   let value;
   if (iteratorRecord.Done.isFalse()) {
-    let next = IteratorStep(iteratorRecord);
+    const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
@@ -309,9 +309,9 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentE
 //     `,`
 //     Elision `,`
 function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorRecord) {
-  let remaining = Elision.length;
+  const remaining = Elision.length;
   while (remaining > 0 && iteratorRecord.Done.isFalse()) {
-    let next = IteratorStep(iteratorRecord);
+    const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
@@ -335,7 +335,7 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assign
   const A = X(ArrayCreate(NewValue(0)));
   let n = 0;
   while (iteratorRecord.Done.isFalse()) {
-    let next = IteratorStep(iteratorRecord);
+    const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
@@ -343,7 +343,7 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assign
     if (next.isFalse()) {
       iteratorRecord.Done = NewValue(true);
     } else {
-      let nextValue = IteratorValue(next);
+      const nextValue = IteratorValue(next);
       if (nextValue instanceof AbruptCompletion) {
         iteratorRecord.Done = NewValue(true);
       }

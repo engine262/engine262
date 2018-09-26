@@ -47,7 +47,7 @@ export function Evaluate_RelationalExpression({
 
   switch (operator) {
     case '<': {
-      let r = AbstractRelationalComparison(lval, rval);
+      const r = AbstractRelationalComparison(lval, rval);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined') {
         return NewValue(false);

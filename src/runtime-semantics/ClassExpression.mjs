@@ -65,7 +65,7 @@ function DefineMethod(MethodDefinition, object, functionPrototype) {
 //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
 function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
   if (MethodDefinition.kind === 'method' || MethodDefinition.kind === 'constructor') {
-    let methodDef = DefineMethod(MethodDefinition, object);
+    const methodDef = DefineMethod(MethodDefinition, object);
     ReturnIfAbrupt(methodDef);
     SetFunctionName(methodDef.Closure, methodDef.Key);
     const desc = {
@@ -79,7 +79,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const PropertyName = MethodDefinition.key;
     const FunctionBody = MethodDefinition.value.body;
 
-    let propKey = Evaluate_PropertyName(PropertyName);
+    const propKey = Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
     // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
     const strict = true;
@@ -98,7 +98,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const PropertySetParameterList = MethodDefinition.value.params;
     const FunctionBody = MethodDefinition.value.body;
 
-    let propKey = Evaluate_PropertyName(PropertyName);
+    const propKey = Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
     // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
     const strict = true;
@@ -219,7 +219,7 @@ export function Evaluate_ClassExpression({
   } else {
     className = NewValue(BindingIdentifier.name);
   }
-  let value = ClassDefinitionEvaluation(ClassTail, className);
+  const value = ClassDefinitionEvaluation(ClassTail, className);
   ReturnIfAbrupt(value);
   if (Type(className) !== 'Undefined') {
     const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));

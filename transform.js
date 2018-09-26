@@ -166,6 +166,9 @@ module.exports = ({ types: t, template }) => {
 
           if (t.isIdentifier(argument)) {
             // ReturnIfAbrupt(argument)
+            const binding = path.scope.getBinding(argument.name);
+            binding.path.parent.kind = 'let';
+
             const parentStatement = findParentStatementPath(path);
             parentStatement.insertBefore(template.statements.ast`
               if (${argument} instanceof AbruptCompletion) {

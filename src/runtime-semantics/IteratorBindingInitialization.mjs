@@ -128,7 +128,7 @@ export function IteratorBindingInitialization_SingleNameBinding(SingleNameBindin
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v;
   if (iteratorRecord.Done.isFalse()) {
-    let next = IteratorStep(iteratorRecord);
+    const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
@@ -200,7 +200,7 @@ export function IteratorBindingInitialization_BindingRestElement_Identifier(Bind
       }
       return InitializeReferencedBinding(lhs, A);
     }
-    let nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
@@ -234,7 +234,7 @@ export function IteratorBindingInitialization_BindingRestElement_Pattern(Binding
     if (iteratorRecord.Done.isTrue()) {
       return BindingInitialization_BindingPattern(BindingPattern, A, environment);
     }
-    let nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = NewValue(true);
     }
