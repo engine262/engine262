@@ -25,6 +25,7 @@ import { CreateBoolean } from './intrinsics/Boolean.mjs';
 import { CreateNumberPrototype } from './intrinsics/NumberPrototype.mjs';
 import { CreateNumber } from './intrinsics/Number.mjs';
 import { CreateFunctionPrototype } from './intrinsics/FunctionPrototype.mjs';
+import { CreateFunction } from './intrinsics/Function.mjs';
 import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
@@ -115,6 +116,7 @@ export function CreateIntrinsics(realmRec) {
   CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
 
+  CreateFunction(realmRec);
   CreateFunctionPrototype(realmRec);
 
   CreateIteratorPrototype(realmRec);

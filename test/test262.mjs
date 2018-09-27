@@ -1,4 +1,6 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import yaml from 'yaml';
 import glob from 'glob';
 import {
@@ -9,7 +11,7 @@ import {
   AbruptCompletion,
 } from '../lib/api.mjs';
 
-const testdir = new URL('./test262/', import.meta.url);
+const testdir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'test262');
 
 function createRealm(printer) {
   const realm = new Realm();
@@ -27,7 +29,7 @@ function createRealm(printer) {
   $262.realm = realm;
   $262.evalScript = (sourceText, file) => {
     if (file) {
-      sourceText = fs.readFileSync(new URL(sourceText, testdir));
+      sourceText = fs.readFileSync(path.resolve(testdir, sourceText));
     }
     return realm.evaluateScript(sourceText);
   };
@@ -54,7 +56,7 @@ function run(test, strict) {
 
     const source = fs.readFileSync(test, 'utf8');
 
-    const yamls = source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')); // /\/\*---\r?\n(.+?)---\*\//s.exec(source)[1];
+    const yamls = source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/'));
     options = yaml.default.parse(yamls);
 
     if (options.includes) {
@@ -97,7 +99,15 @@ function run(test, strict) {
   });
 }
 
-const tests = glob.sync('test/test262/test/language/expressions/**/*.js').map((p) => p.slice(18));
+const tests = [];
+[
+  'language/expressions/**/*.js',
+  'built-ins/Promise/*.js',
+]
+  .map((x) => path.resolve(testdir, 'test', x))
+  .forEach((x) => {
+    tests.push(...glob.sync(x));
+  });
 
 const skip = [
   'language/expressions/tco-pos.js',
@@ -113,6 +123,7 @@ const skip = [
   'bigint',
   'yield',
   'await',
+  'async',
 ];
 
 let passed = 0;
@@ -124,8 +135,7 @@ let promise = Promise.resolve();
 /* eslint-disable no-console */
 tests.forEach((t) => {
   promise = promise.then(async () => {
-    const short = t;
-    t = new URL(`test/${t}`, testdir);
+    const short = path.relative(`${testdir}/test`, t);
 
     try {
       for (const s of skip) {
@@ -136,7 +146,7 @@ tests.forEach((t) => {
         }
       }
 
-      {
+      /*{
         const { options: { description }, error } = await run(t, false);
         if (error) {
           console.error(short);
@@ -147,7 +157,7 @@ tests.forEach((t) => {
         } else {
           console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
         }
-      }
+      }*/
 
       {
         const { options: { description }, error } = await run(t, true);
