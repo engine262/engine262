@@ -42,6 +42,7 @@ class APIRealm {
 
     this.realm = realm;
     this.context = newContext;
+    this.agent = surroundingAgent;
   }
 
   evaluateScript(sourceText) {

@@ -314,6 +314,11 @@ export function GetFunctionRealm(obj) {
     return obj.Realm;
   }
 
+  if ('BoundThisFunction' in obj) {
+    const target = obj.BoundThisFunction;
+    return Q(GetFunctionRealm(target));
+  }
+
   if (obj instanceof ProxyExoticObjectValue) {
     if (Type(obj.ProxyHandler) === 'Null') {
       return surroundingAgent.Throw('TypeError');

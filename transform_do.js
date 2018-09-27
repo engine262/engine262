@@ -14,8 +14,8 @@ module.exports = ({ types: t, template }) => ({
         }
         state.foundCompletion = false;
         state.needCompletion = false;
-        state.foundAssert = false;
-        state.needAssert = false;
+        state.foundAssertOrCall = false;
+        state.needAssertOrCall = false;
       },
       exit(path, state) {
         if (!state.foundCompletion && state.needCompletion) {
@@ -25,10 +25,11 @@ module.exports = ({ types: t, template }) => ({
             t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
           ], t.Literal(r)));
         }
-        if (!state.foundAssert && state.needAssert) {
+        if (!state.foundAssertOrCall && state.needAssertOrCall) {
           const r = relative(state.file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
           path.node.body.unshift(t.ImportDeclaration([
             t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
+            t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
           ], t.StringLiteral(r)));
         }
       },
@@ -51,10 +52,16 @@ module.exports = ({ types: t, template }) => ({
         if (state.file.opts.filename.endsWith('api.mjs')) {
           return;
         }
-        state.foundAssert = true;
+        state.foundAssertOrCall = true;
         if (!path.node.specifiers.find((s) => s.local.name === 'Assert')) {
           path.node.specifiers.push(
             t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
+          );
+        }
+        if (!state.file.opts.filename.endsWith('object-operations.mjs')
+            && !path.node.specifiers.find((s) => s.local.name === 'Call')) {
+          path.node.specifiers.push(
+            t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
           );
         }
       }
@@ -76,68 +83,72 @@ module.exports = ({ types: t, template }) => ({
         if (t.isIdentifier(argument)) {
           const binding = path.scope.getBinding(argument.name);
           binding.path.parent.kind = 'let';
-          path.replaceWith(t.DoExpression(t.BlockStatement([
-            t.IfStatement(
-              t.BinaryExpression('instanceof', argument, t.Identifier('AbruptCompletion')),
-              t.ReturnStatement(argument),
-              t.IfStatement(
-                t.BinaryExpression('instanceof', argument, t.Identifier('Completion')),
-                t.ExpressionStatement(
-                  t.AssignmentExpression('=', argument, t.MemberExpression(argument, t.Identifier('Value'))),
-                ),
-                t.ExpressionStatement(argument),
-              ),
-            ),
-          ])));
+          path.replaceWith(template(`
+          (do {
+            if (ARGUMENT instanceof AbruptCompletion) {
+              return ARGUMENT;
+            } else if (ARGUMENT instanceof Completion) {
+              ARGUMENT = ARGUMENT.Value;
+            } else {
+              ARGUMENT;
+            }
+          });
+          `, { plugins: ['doExpressions'] })({ ARGUMENT: argument }));
         } else {
           const hygenicTemp = path.scope.generateUidIdentifier('hygenicTemp');
-          path.replaceWith(t.DoExpression(t.BlockStatement([
-            t.VariableDeclaration('const', [
-              t.VariableDeclarator(hygenicTemp, argument),
-            ]),
-            t.IfStatement(
-              t.BinaryExpression('instanceof', hygenicTemp, t.Identifier('AbruptCompletion')),
-              t.ReturnStatement(hygenicTemp),
-              t.IfStatement(
-                t.BinaryExpression('instanceof', hygenicTemp, t.Identifier('Completion')),
-                t.ExpressionStatement(
-                  t.MemberExpression(hygenicTemp, t.Identifier('Value')),
-                ),
-                t.ExpressionStatement(hygenicTemp),
-              ),
-            ),
-          ])));
+          path.replaceWith(template(`
+          (do {
+            const HYGENIC_TEMP = ARGUMENT;
+            if (HYGENIC_TEMP instanceof AbruptCompletion) {
+              return HYGENIC_TEMP;
+            } else if (HYGENIC_TEMP instanceof Completion) {
+              HYGENIC_TEMP.Value;
+            } else {
+              HYGENIC_TEMP;
+            }
+          });
+          `, { plugins: ['doExpressions'] })({ HYGENIC_TEMP: hygenicTemp, ARGUMENT: argument }));
         }
       } else if (path.node.callee.name === 'X') {
         state.needCompletion = true;
-        state.needAssert = true;
+        state.needAssertOrCall = true;
 
         const [argument] = path.node.arguments;
+        const val = path.scope.generateUidIdentifier('val');
+
+        path.replaceWith(template(`
+        (do {
+          const VAL = ARGUMENT;
+          Assert(!(VAL instanceof AbruptCompletion));
+          if (VAL instanceof Completion) {
+            VAL.Value;
+          } else {
+            VAL;
+          }
+        });
+        `, { plugins: ['doExpressions'] })({ VAL: val, ARGUMENT: argument }));
+      } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
+        state.needCompletion = true;
+        state.needAssertOrCall = true;
+
+        const [value, capability] = path.node.arguments;
+
+        const binding = path.scope.getBinding(value.name);
+        binding.path.parent.kind = 'let';
 
         const hygenicTemp = path.scope.generateUidIdentifier('hygenicTemp');
-        path.replaceWith(t.DoExpression(t.BlockStatement([
-          t.VariableDeclaration('const', [
-            t.VariableDeclarator(hygenicTemp, argument),
-          ]),
-          t.ExpressionStatement(t.CallExpression(
-            t.Identifier('Assert'), [
-              t.UnaryExpression('!', t.BinaryExpression(
-                'instanceof',
-                hygenicTemp,
-                t.Identifier('AbruptCompletion'),
-              )),
-            ],
-          )),
-          t.IfStatement(
-            t.BinaryExpression('instanceof', hygenicTemp, t.Identifier('Completion')),
-            t.ExpressionStatement(
-              t.MemberExpression(hygenicTemp, t.Identifier('Value')),
-            ),
-            t.ExpressionStatement(hygenicTemp),
-          ),
-        ])));
-      } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
-        // stuff
+
+        path.replaceWith(template(`
+        if (VALUE instanceof AbruptCompletion) {
+          const HYGENIC_TEMP = Call(CAPABILITY.Reject, NewValue(undefined), [VALUE.Value]);
+          if (HYGENIC_TEMP instanceof AbruptCompletion) {
+            return HYGENIC_TEMP;
+          }
+          return CAPABILITY.Promise;
+        } else if (VALUE instanceof Completion) {
+          VALUE = VALUE.Value;
+        }
+        `)({ VALUE: value, CAPABILITY: capability, HYGENIC_TEMP: hygenicTemp }));
       } else if (path.node.callee.name === 'Assert') {
         path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));
       }

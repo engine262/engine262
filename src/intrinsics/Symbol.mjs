@@ -22,7 +22,7 @@ function SymbolConstructor([description], { NewTarget }) {
   if (Type(NewTarget) !== 'Undefined') {
     return surroundingAgent.Throw('TypeError');
   }
-  const descString = Type(description) === 'Undefined'
+  const descString = description === undefined || Type(description) === 'Undefined'
     ? NewValue(undefined)
     : Q(ToString(description));
 

@@ -8,6 +8,7 @@ import {
   Value,
   Object as APIObject,
   Abstract,
+  Completion,
   AbruptCompletion,
 } from '../lib/api.mjs';
 
@@ -37,6 +38,55 @@ function createRealm(printer) {
   return $262;
 }
 
+function X(val) {
+  if (val instanceof AbruptCompletion) {
+    throw new Error();
+  }
+  if (val instanceof Completion) {
+    return val.Value;
+  }
+  return val;
+}
+
+function inspect(realm, value) {
+  const type = Abstract.Type(value);
+  if (type === 'Undefined') {
+    return 'undefined';
+  } else if (type === 'Null') {
+    return 'null';
+  } else if (type === 'String' || type === 'Number' || type === 'Boolean') {
+    return X(Abstract.ToString(value)).stringValue();
+  } else if (type === 'Symbol') {
+    return `Symbol(${value.Description.stringValue()})`;
+  } else if (type === 'Object') {
+    const funcToString = realm.agent.intrinsic('%FunctionPrototype%').properties.get(new Value(realm, 'toString')).Value;
+    const errorToString = realm.agent.intrinsic('%ErrorPrototype%').properties.get(new Value(realm, 'toString')).Value;
+    const objectToString = realm.agent.intrinsic('%ObjProto_toString%');
+    const toString = X(Abstract.Get(value, new Value(realm, 'toString')));
+    if (toString.nativeFunction === errorToString.nativeFunction
+        || toString.nativeFunction === objectToString.nativeFunction
+        || toString.nativeFunction === funcToString.nativeFunction) {
+      return X(toString.Call(value, [])).stringValue();
+    } else {
+      const ctor = X(Abstract.Get(value, new Value(realm, 'constructor')));
+      if (Abstract.Type(ctor) === 'Object') {
+        const ctorName = X(Abstract.Get(ctor, new Value(realm, 'name'))).stringValue();
+        if (ctorName !== '') {
+          return `#<${ctorName}>`;
+        } else {
+          return '[object Unknown]';
+        }
+      } else {
+        return '[object Unknown]';
+      }
+    }
+  } else if (type === 'Completion') {
+    return inspect(realm, value.Value);
+  } else {
+    throw new RangeError();
+  }
+}
+
 function run(test, strict) {
   return new Promise((resolve) => {
     let options = { description: test };
@@ -45,7 +95,7 @@ function run(test, strict) {
       if (m === new Value(realm, 'Test262:AsyncTestComplete')) {
         resolve({ options });
       } else {
-        console.log('[GLOBAL PRINT]', m); // eslint-disable-line no-console
+        console.log('[GLOBAL PRINT]', inspect(realm, m)); // eslint-disable-line no-console
         resolve({ options, error: m });
       }
       return new Value(realm, undefined);
@@ -88,7 +138,7 @@ function run(test, strict) {
         if (options.negative) {
           resolve({ options });
         } else {
-          resolve({ error: completion, options });
+          resolve({ error: inspect(realm, completion), options });
         }
       } else if (sync) {
         resolve({ options });
@@ -102,7 +152,7 @@ function run(test, strict) {
 const tests = [];
 [
   'language/expressions/**/*.js',
-  'built-ins/Promise/*.js',
+  'built-ins/Promise/**/*.js',
 ]
   .map((x) => path.resolve(testdir, 'test', x))
   .forEach((x) => {
@@ -146,7 +196,8 @@ tests.forEach((t) => {
         }
       }
 
-      /*{
+      /*
+      {
         const { options: { description }, error } = await run(t, false);
         if (error) {
           console.error(short);
@@ -157,7 +208,8 @@ tests.forEach((t) => {
         } else {
           console.log('\u001b[32mPASS\u001b[39m [SLOPPY]', description.trim());
         }
-      }*/
+      }
+      */
 
       {
         const { options: { description }, error } = await run(t, true);

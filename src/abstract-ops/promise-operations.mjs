@@ -56,9 +56,9 @@ function GetCapabilitiesExecutorFunctions([resolve, reject]) {
 
 export class PromiseCapabilityRecord {
   constructor() {
-    this.Promise = undefined;
-    this.Resolve = undefined;
-    this.Reject = undefined;
+    this.Promise = NewValue(undefined);
+    this.Resolve = NewValue(undefined);
+    this.Reject = NewValue(undefined);
   }
 }
 
