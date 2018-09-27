@@ -72,6 +72,7 @@ export class Agent {
   Throw(type, message) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, message ? [NewValue(message)] : []);
+    error.hostTrace = new Error().stack;
     return new ThrowCompletion(error);
   }
 }

@@ -21,6 +21,7 @@ function createRealm(printer) {
 
   const $262 = new APIObject(realm);
 
+  Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
   Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
   Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
@@ -59,14 +60,18 @@ function inspect(realm, value) {
   } else if (type === 'Symbol') {
     return `Symbol(${value.Description.stringValue()})`;
   } else if (type === 'Object') {
-    const funcToString = realm.agent.intrinsic('%FunctionPrototype%').properties.get(new Value(realm, 'toString')).Value;
-    const errorToString = realm.agent.intrinsic('%ErrorPrototype%').properties.get(new Value(realm, 'toString')).Value;
-    const objectToString = realm.agent.intrinsic('%ObjProto_toString%');
+    const funcToString = realm.realm.Intrinsics['%FunctionPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+    const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+    const objectToString = realm.realm.Intrinsics['%ObjProto_toString%'];
     const toString = X(Abstract.Get(value, new Value(realm, 'toString')));
     if (toString.nativeFunction === errorToString.nativeFunction
         || toString.nativeFunction === objectToString.nativeFunction
         || toString.nativeFunction === funcToString.nativeFunction) {
-      return X(toString.Call(value, [])).stringValue();
+      const s = X(toString.Call(value, [])).stringValue();
+      if (value.hostTrace) {
+        return `${s}\n${value.hostTrace}`;
+      }
+      return s;
     } else {
       const ctor = X(Abstract.Get(value, new Value(realm, 'constructor')));
       if (Abstract.Type(ctor) === 'Object') {
@@ -153,6 +158,7 @@ const tests = [];
 [
   'language/expressions/**/*.js',
   'built-ins/Promise/**/*.js',
+  'built-ins/Symbol/**/*.js',
 ]
   .map((x) => path.resolve(testdir, 'test', x))
   .forEach((x) => {
@@ -174,6 +180,7 @@ const skip = [
   'yield',
   'await',
   'async',
+  'matchall',
 ];
 
 let passed = 0;
@@ -189,7 +196,7 @@ tests.forEach((t) => {
 
     try {
       for (const s of skip) {
-        if (short.includes(s)) {
+        if (short.toLowerCase().includes(s)) {
           console.log('\u001b[33mSKIP\u001b[39m', short);
           skipped += 1;
           return;

@@ -30,7 +30,7 @@ function SymbolConstructor([description], { NewTarget }) {
 }
 
 function Symbol_for([key]) {
-  const stringKey = ToString(key);
+  const stringKey = Q(ToString(key));
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Key, stringKey)) {
       return e.Symbol;
@@ -73,6 +73,18 @@ export function CreateSymbol(realmRec) {
       Configurable: true,
     });
   });
+
+  {
+    const fn = CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec);
+    SetFunctionName(fn, NewValue('[Symbol.species]'), NewValue('get'));
+    SetFunctionLength(fn, NewValue(0));
+    symbolConstructor.DefineOwnProperty(wellKnownSymbols.species, {
+      Get: fn,
+      Set: NewValue(undefined),
+      Enumerable: false,
+      Configurable: true,
+    });
+  }
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
     symbolConstructor.DefineOwnProperty(NewValue(name), {
