@@ -92,7 +92,8 @@ export function ArraySetLength(A, Desc) {
   }
   while (newLen < oldLen) {
     oldLen -= 1;
-    const deleteSucceeded = X(A.Delete(X(ToString(NewValue(oldLen)))));
+    const idxToDelete = X(ToString(NewValue(oldLen)));
+    const deleteSucceeded = X(A.Delete(idxToDelete));
     if (deleteSucceeded.isFalse()) {
       newLenDesc.Value = NewValue(oldLen + 1);
       if (newWritable === false) {

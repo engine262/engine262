@@ -167,6 +167,9 @@ module.exports = ({ types: t, template }) => {
           if (t.isIdentifier(argument)) {
             // ReturnIfAbrupt(argument)
             const binding = path.scope.getBinding(argument.name);
+            if (!binding) {
+              throw new Error(`Unrecognized binding ${argument.name}`)
+            }
             binding.path.parent.kind = 'let';
 
             const parentStatement = findParentStatementPath(path);

@@ -32,9 +32,9 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
 // #sec-addition-operator-plus-runtime-semantics-evaluation
 //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 function Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
-  const lref = Q(Evaluate_Expression(AdditiveExpression));
+  const lref = Evaluate_Expression(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Q(Evaluate_Expression(MultiplicativeExpression));
+  const rref = Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
 }
@@ -49,9 +49,9 @@ export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
 function Evaluate_AdditiveExpression_Minus(
   AdditiveExpression, MultiplicativeExpression,
 ) {
-  const lref = Q(Evaluate_Expression(AdditiveExpression));
+  const lref = Evaluate_Expression(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Q(Evaluate_Expression(MultiplicativeExpression));
+  const rref = Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
 }

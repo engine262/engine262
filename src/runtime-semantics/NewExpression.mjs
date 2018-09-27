@@ -25,7 +25,7 @@ import {
 function EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = Q(Evaluate_Expression(constructExpr.callee));
+  const ref = Evaluate_Expression(constructExpr.callee);
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
   const argList = ArgumentListEvaluation(args);

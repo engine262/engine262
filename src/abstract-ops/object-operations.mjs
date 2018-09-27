@@ -360,7 +360,8 @@ export function CreateListFromArrayLike(obj, elementTypes) {
   if (Type(obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  const len = Q(ToLength(Q(Get(obj, NewValue('length')))));
+  const lenProp = Q(Get(obj, NewValue('length')));
+  const len = Q(ToLength(lenProp));
   const list = [];
   let index = 0;
   while (index < len.numberValue()) {

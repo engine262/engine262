@@ -39,7 +39,8 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     // a. If IsDetachedBuffer(a.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
     // b Let len be a.[[ArrayLength]].
   } else {
-    len = Q(ToLength(Q(Get(a, NewValue('length')))));
+    const lenProp = Q(Get(a, NewValue('length')));
+    len = Q(ToLength(lenProp));
   }
   if (index >= len.numberValue()) {
     O.IteratedObject = NewValue(undefined);

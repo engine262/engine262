@@ -25,7 +25,7 @@ export function Evaluate_UpdateExpression({
       const lhs = Evaluate_Expression(LeftHandSideExpression);
       const lhsValue = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsValue));
-      const newValue = Q(EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1)));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -35,8 +35,9 @@ export function Evaluate_UpdateExpression({
       const LeftHandSideExpression = argument;
 
       const lhs = Evaluate_Expression(LeftHandSideExpression);
-      const oldValue = Q(ToNumber(Q(GetValue(lhs))));
-      const newValue = Q(EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1)));
+      const lhsVal = Q(GetValue(lhs));
+      const oldValue = Q(ToNumber(lhsVal));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -46,8 +47,9 @@ export function Evaluate_UpdateExpression({
       const UnaryExpression = argument;
 
       const expr = Evaluate_Expression(UnaryExpression);
-      const oldValue = Q(ToNumber(Q(GetValue(expr))));
-      const newValue = Q(EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1)));
+      const exprVal = Q(GetValue(expr));
+      const oldValue = Q(ToNumber(exprVal));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
       Q(PutValue(expr, newValue));
       return newValue;
     }
@@ -57,8 +59,9 @@ export function Evaluate_UpdateExpression({
       const UnaryExpression = argument;
 
       const expr = Evaluate_Expression(UnaryExpression);
-      const oldValue = Q(ToNumber(Q(GetValue(expr))));
-      const newValue = Q(EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1)));
+      const exprVal = Q(GetValue(expr));
+      const oldValue = Q(ToNumber(exprVal));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));
       Q(PutValue(expr, newValue));
       return newValue;
     }

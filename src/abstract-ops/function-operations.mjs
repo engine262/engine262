@@ -265,7 +265,7 @@ export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototy
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(F instanceof FunctionValue);
   Assert(IsConstructor(F).isTrue());
-  Assert(X(IsExtensible(F)).isTrue() && X(HasOwnProperty(F, NewValue('prototype')).isFalse()));
+  Assert(X(IsExtensible(F)).isTrue() && X(HasOwnProperty(F, NewValue('prototype'))).isFalse());
   if (writablePrototype === undefined) {
     writablePrototype = true;
   }

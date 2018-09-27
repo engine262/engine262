@@ -26,7 +26,7 @@ export function ArgumentListEvaluation(ArgumentList) {
 
   const precedingArgs = [];
   for (const AssignmentExpression of ArgumentList.slice(0, -1)) {
-    const ref = Q(Evaluate_Expression(AssignmentExpression));
+    const ref = Evaluate_Expression(AssignmentExpression);
     const arg = Q(GetValue(ref));
     precedingArgs.push(arg);
   }
@@ -34,7 +34,7 @@ export function ArgumentListEvaluation(ArgumentList) {
   const last = ArgumentList[ArgumentList.length - 1];
   if (last.type === 'SpreadElement') {
     const AssignmentExpression = last.argument;
-    const spreadRef = Q(Evaluate_Expression(AssignmentExpression));
+    const spreadRef = Evaluate_Expression(AssignmentExpression);
     const spreadObj = Q(GetValue(spreadRef));
     const iteratorRecord = Q(GetIterator(spreadObj));
     while (true) {
@@ -47,7 +47,7 @@ export function ArgumentListEvaluation(ArgumentList) {
     }
   } else {
     const AssignmentExpression = last;
-    const ref = Q(Evaluate_Expression(AssignmentExpression));
+    const ref = Evaluate_Expression(AssignmentExpression);
     const arg = Q(GetValue(ref));
     precedingArgs.push(arg);
   }

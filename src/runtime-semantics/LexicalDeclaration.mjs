@@ -56,7 +56,7 @@ function Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
 //   LexicalBinding : BindingPattern Initializer
 function Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { id: BindingPattern, init: Initializer } = LexicalBinding;
-  const rhs = Q(Evaluate_Expression(Initializer));
+  const rhs = Evaluate_Expression(Initializer);
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   return BindingInitialization_BindingPattern(BindingPattern, value, env);

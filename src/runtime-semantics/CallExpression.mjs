@@ -72,7 +72,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
 export function Evaluate_CallExpression(CallExpression) {
-  const ref = Q(Evaluate_Expression(CallExpression.callee));
+  const ref = Evaluate_Expression(CallExpression.callee);
   const func = Q(GetValue(ref));
   if (Type(ref) === 'Reference' && IsPropertyReference(ref).isFalse()
     && (Type(GetReferencedName(ref)) === 'String'

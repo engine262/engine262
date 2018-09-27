@@ -191,8 +191,9 @@ export function CreateSetPrototype(realmRec) {
     }));
   }
 
-  X(proto.DefineOwnProperty(NewValue('keys'), Q(proto.GetOwnProperty(NewValue('values')))));
-  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Q(proto.GetOwnProperty(NewValue('values')))));
+  const valuesFunc = X(proto.GetOwnProperty(NewValue('values')));
+  X(proto.DefineOwnProperty(NewValue('keys'), valuesFunc));
+  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 
   X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
     Value: NewValue('Set'),

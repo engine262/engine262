@@ -22,9 +22,9 @@ import { outOfRange } from '../helpers.mjs';
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
 export function Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
-  const baseReference = Q(Evaluate_Expression(MemberExpression));
+  const baseReference = Evaluate_Expression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
-  const propertyNameReference = Q(Evaluate_Expression(Expression));
+  const propertyNameReference = Evaluate_Expression(Expression);
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
@@ -36,7 +36,7 @@ export function Evaluate_MemberExpression_Expression(MemberExpression, Expressio
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
 export function Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
-  const baseReference = Q(Evaluate_Expression(MemberExpression));
+  const baseReference = Evaluate_Expression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);

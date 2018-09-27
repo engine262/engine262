@@ -43,9 +43,9 @@ export function Evaluate_ShiftExpression({
   operator,
   right: AdditiveExpression,
 }) {
-  const lref = Q(Evaluate_Expression(ShiftExpression));
+  const lref = Evaluate_Expression(ShiftExpression);
   const lval = Q(GetValue(lref));
-  const rref = Q(Evaluate_Expression(AdditiveExpression));
+  const rref = Evaluate_Expression(AdditiveExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
 }

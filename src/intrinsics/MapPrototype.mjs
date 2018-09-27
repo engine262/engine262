@@ -223,7 +223,8 @@ export function CreateMapPrototype(realmRec) {
     }));
   }
 
-  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Q(proto.GetOwnProperty(NewValue('entries')))));
+  const entriesFunc = X(proto.GetOwnProperty(NewValue('entries')));
+  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));
 
   X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
     Value: NewValue('Map'),

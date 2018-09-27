@@ -107,14 +107,16 @@ function Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 // UnaryExpression : `+` UnaryExpression
 function Evaluate_UnaryExpression_Plus(UnaryExpression) {
   const expr = Evaluate_Expression(UnaryExpression);
-  return Q(ToNumber(Q(GetValue(expr))));
+  const exprVal = Q(GetValue(expr));
+  return Q(ToNumber(exprVal));
 }
 
 // #sec-unary-minus-operator-runtime-semantics-evaluation
 // UnaryExpression : `-` UnaryExpression
 function Evaluate_UnaryExpression_Minus(UnaryExpression) {
   const expr = Evaluate_Expression(UnaryExpression);
-  const oldValue = Q(ToNumber(Q(GetValue(expr))));
+  const exprVal = Q(GetValue(expr));
+  const oldValue = Q(ToNumber(exprVal));
   if (oldValue.isNaN()) {
     return NewValue(NaN);
   }
@@ -125,7 +127,8 @@ function Evaluate_UnaryExpression_Minus(UnaryExpression) {
 // UnaryExpression : `~` UnaryExpression
 function Evaluate_UnaryExpression_Tilde(UnaryExpression) {
   const expr = Evaluate_Expression(UnaryExpression);
-  const oldValue = Q(ToInt32(Q(GetValue(expr))));
+  const exprVal = Q(GetValue(expr));
+  const oldValue = Q(ToInt32(exprVal));
   return NewValue(~oldValue.numberValue()); // eslint-disable-line no-bitwise
 }
 

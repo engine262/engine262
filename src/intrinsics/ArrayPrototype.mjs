@@ -83,7 +83,8 @@ function ArrayProto_concat(args, { thisValue }) {
     const spreadable = Q(IsConcatSpreadable(E));
     if (spreadable.isTrue()) {
       let k = 0;
-      const len = Q(ToLength(Q(Get(E, NewValue('length')))));
+      const lenProp = Q(Get(E, NewValue('length')));
+      const len = Q(ToLength(lenProp));
       if (n + len.numberValue() > (2 ** 53) - 1) {
         return surroundingAgent.Throw('TypeError');
       }
@@ -92,7 +93,8 @@ function ArrayProto_concat(args, { thisValue }) {
         const exists = Q(HasProperty(E, P));
         if (exists.isTrue()) {
           const subElement = Q(Get(E, P));
-          Q(CreateDataPropertyOrThrow(A, X(ToString(NewValue(n))), subElement));
+          const nStr = X(ToString(NewValue(n)));
+          Q(CreateDataPropertyOrThrow(A, nStr, subElement));
         }
         n += 1;
         k += 1;
@@ -101,7 +103,8 @@ function ArrayProto_concat(args, { thisValue }) {
       if (n >= (2 ** 53) - 1) {
         return surroundingAgent.Throw('TypeError');
       }
-      Q(CreateDataPropertyOrThrow(A, X(ToString(NewValue(n))), E));
+      const nStr = X(ToString(NewValue(n)));
+      Q(CreateDataPropertyOrThrow(A, nStr, E));
       n += 1;
     }
   }
@@ -111,7 +114,8 @@ function ArrayProto_concat(args, { thisValue }) {
 
 function ArrayProto_copyWithin([target, start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length')))));
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp));
   const relativeTarget = Q(ToInteger(target));
   let to;
   if (relativeTarget.numberValue() < 0) {
@@ -171,7 +175,8 @@ function ArrayProto_entries(args, { thisValue }) {
 
 function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length')))));
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp));
   if (IsCallable(callbackFn).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -199,7 +204,8 @@ function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
 
 function ArrayProto_fill([value, start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
   let k;
   if (relativeStart < 0) {
@@ -229,7 +235,8 @@ function ArrayProto_fill([value, start, end], { thisValue }) {
 
 function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
@@ -255,7 +262,8 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
 
 function ArrayProto_find([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(predicate).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'predicate is not callable');
   }
@@ -275,7 +283,8 @@ function ArrayProto_find([predicate, thisArg], { thisValue }) {
 
 function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(predicate).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'predicate is not callable');
   }
@@ -295,7 +304,8 @@ function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
 
 function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
@@ -315,7 +325,8 @@ function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
 
 function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (len === 0) {
     return NewValue(false);
   }
@@ -330,7 +341,8 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
     }
   }
   while (k < len) {
-    const elementK = Q(Get(O, X(ToString(NewValue(k)))));
+    const kStr = X(ToString(NewValue(k)));
+    const elementK = Q(Get(O, kStr));
     if (SameValueZero(searchElement, elementK).isTrue()) {
       return NewValue(true);
     }
@@ -341,7 +353,8 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
 
 function ArrayProto_indexOf([searchElement, fromIndex = NewValue(0)], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (len === 0) {
     return NewValue(-1);
   }
@@ -364,7 +377,8 @@ function ArrayProto_indexOf([searchElement, fromIndex = NewValue(0)], { thisValu
     }
   }
   while (k < len) {
-    const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
+    const kStr = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, kStr));
     if (kPresent.isTrue()) {
       const elementK = Get(O, X(ToString(NewValue(k))));
       const same = StrictEqualityComparison(searchElement, elementK);
@@ -379,7 +393,8 @@ function ArrayProto_indexOf([searchElement, fromIndex = NewValue(0)], { thisValu
 
 function ArrayProto_join([separator = NewValue(undefined)], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   let sep;
   if (Type(separator) === 'Undefined') {
     sep = ',';
@@ -392,7 +407,8 @@ function ArrayProto_join([separator = NewValue(undefined)], { thisValue }) {
     if (k > 0) {
       R = `${R}${sep}`;
     }
-    const element = Q(Get(O, X(ToString(NewValue(k)))));
+    const kStr = X(ToString(NewValue(k)));
+    const element = Q(Get(O, kStr));
     let next;
     if (Type(element) === 'Undefined' || Type(element) === 'Null') {
       next = '';
@@ -412,7 +428,8 @@ function ArrayProto_keys(args, { thisValue }) {
 
 function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (len === 0) {
     return NewValue(-1);
   }
@@ -433,9 +450,10 @@ function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
     k = len + n;
   }
   while (k >= 0) {
-    const kPresent = Q(HasProperty(O, X(ToString(NewValue(k)))));
+    const kStr = X(ToString(NewValue(k)));
+    const kPresent = Q(HasProperty(O, kStr));
     if (kPresent.isTrue()) {
-      const elementK = Q(Get(O, X(ToString(NewValue(k)))));
+      const elementK = Q(Get(O, kStr));
       const same = StrictEqualityComparison(searchElement, elementK);
       if (same.isTrue()) {
         return NewValue(k);
@@ -448,7 +466,8 @@ function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
 
 function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, NewValue('length'))))).numberValue();
+  const lenProp = Q(Get(O, NewValue('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(callbackfn).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
