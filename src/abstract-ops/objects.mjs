@@ -367,10 +367,8 @@ export function OrdinaryOwnPropertyKeys(O) {
 }
 
 // 9.1.12 ObjectCreate
-export function ObjectCreate(
-  proto,
-  internalSlotsList,
-) {
+export function ObjectCreate(proto, internalSlotsList) {
+  Assert(Type(proto) === 'Null' || Type(proto) === 'Object');
   if (!internalSlotsList) {
     internalSlotsList = [];
   }

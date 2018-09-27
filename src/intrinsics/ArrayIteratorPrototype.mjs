@@ -63,7 +63,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function CreateArrayIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype']);
+  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
 
   proto.DefineOwnProperty(NewValue('next'), {
     Value: CreateBuiltinFunction(ArrayIteratorPrototype_next, [], realmRec),
