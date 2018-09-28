@@ -30,8 +30,8 @@ import { outOfRange } from '../helpers.mjs';
 
 // #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
-function Evaluate_UnaryExpression_Delete(UnaryExpression) {
-  const ref = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
+  const ref = yield* Evaluate_Expression(UnaryExpression);
   ReturnIfAbrupt(ref);
   if (Type(ref) !== 'Reference') {
     return NewValue(true);
@@ -58,16 +58,16 @@ function Evaluate_UnaryExpression_Delete(UnaryExpression) {
 
 // #sec-void-operator-runtime-semantics-evaluation
 // UnaryExpression : `void` UnaryExpression
-function Evaluate_UnaryExpression_Void(UnaryExpression) {
-  const expr = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Void(UnaryExpression) {
+  const expr = yield* Evaluate_Expression(UnaryExpression);
   Q(GetValue(expr));
   return NewValue(undefined);
 }
 
 // #sec-typeof-operator-runtime-semantics-evaluation
 // UnaryExpression : `typeof` UnaryExpression
-function Evaluate_UnaryExpression_Typeof(UnaryExpression) {
-  let val = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
+  let val = yield* Evaluate_Expression(UnaryExpression);
   if (Type(val) === 'Reference') {
     if (IsUnresolvableReference(val).isTrue()) {
       return NewValue('undefined');
@@ -105,16 +105,16 @@ function Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 
 // #sec-unary-plus-operator-runtime-semantics-evaluation
 // UnaryExpression : `+` UnaryExpression
-function Evaluate_UnaryExpression_Plus(UnaryExpression) {
-  const expr = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
+  const expr = yield* Evaluate_Expression(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   return Q(ToNumber(exprVal));
 }
 
 // #sec-unary-minus-operator-runtime-semantics-evaluation
 // UnaryExpression : `-` UnaryExpression
-function Evaluate_UnaryExpression_Minus(UnaryExpression) {
-  const expr = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
+  const expr = yield* Evaluate_Expression(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToNumber(exprVal));
   if (oldValue.isNaN()) {
@@ -125,8 +125,8 @@ function Evaluate_UnaryExpression_Minus(UnaryExpression) {
 
 // #sec-bitwise-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `~` UnaryExpression
-function Evaluate_UnaryExpression_Tilde(UnaryExpression) {
-  const expr = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
+  const expr = yield* Evaluate_Expression(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToInt32(exprVal));
   return NewValue(~oldValue.numberValue()); // eslint-disable-line no-bitwise
@@ -134,8 +134,8 @@ function Evaluate_UnaryExpression_Tilde(UnaryExpression) {
 
 // #sec-logical-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `!` UnaryExpression
-function Evaluate_UnaryExpression_Bang(UnaryExpression) {
-  const expr = Evaluate_Expression(UnaryExpression);
+function* Evaluate_UnaryExpression_Bang(UnaryExpression) {
+  const expr = yield* Evaluate_Expression(UnaryExpression);
   const oldValue = ToBoolean(Q(GetValue(expr)));
   if (oldValue.isTrue()) {
     return NewValue(false);
@@ -143,22 +143,22 @@ function Evaluate_UnaryExpression_Bang(UnaryExpression) {
   return NewValue(true);
 }
 
-export function Evaluate_UnaryExpression(UnaryExpression) {
+export function* Evaluate_UnaryExpression(UnaryExpression) {
   switch (true) {
     case isUnaryExpressionWithDelete(UnaryExpression):
-      return Evaluate_UnaryExpression_Delete(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Delete(UnaryExpression.argument);
     case isUnaryExpressionWithVoid(UnaryExpression):
-      return Evaluate_UnaryExpression_Void(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Void(UnaryExpression.argument);
     case isUnaryExpressionWithTypeof(UnaryExpression):
-      return Evaluate_UnaryExpression_Typeof(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Typeof(UnaryExpression.argument);
     case isUnaryExpressionWithPlus(UnaryExpression):
-      return Evaluate_UnaryExpression_Plus(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Plus(UnaryExpression.argument);
     case isUnaryExpressionWithMinus(UnaryExpression):
-      return Evaluate_UnaryExpression_Minus(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Minus(UnaryExpression.argument);
     case isUnaryExpressionWithTilde(UnaryExpression):
-      return Evaluate_UnaryExpression_Tilde(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Tilde(UnaryExpression.argument);
     case isUnaryExpressionWithBang(UnaryExpression):
-      return Evaluate_UnaryExpression_Bang(UnaryExpression.argument);
+      return yield* Evaluate_UnaryExpression_Bang(UnaryExpression.argument);
 
     default:
       throw outOfRange('Evaluate_UnaryExpression', UnaryExpression);

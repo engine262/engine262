@@ -28,14 +28,14 @@ export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOpera
   }
 }
 
-export function Evaluate_MultiplicativeExpression({
+export function* Evaluate_MultiplicativeExpression({
   left: MultiplicativeExpression,
   operator: MultiplicativeOperator,
   right: ExponentiationExpression,
 }) {
-  const left = Evaluate_Expression(MultiplicativeExpression);
+  const left = yield* Evaluate_Expression(MultiplicativeExpression);
   const leftValue = Q(GetValue(left));
-  const right = Evaluate_Expression(ExponentiationExpression);
+  const right = yield* Evaluate_Expression(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
   return EvaluateBinopValues_MultiplicativeExpression(
     MultiplicativeOperator, leftValue, rightValue,

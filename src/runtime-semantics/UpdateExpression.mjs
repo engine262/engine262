@@ -12,7 +12,7 @@ import {
 import { New as NewValue } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-export function Evaluate_UpdateExpression({
+export function* Evaluate_UpdateExpression({
   operator,
   prefix,
   argument,
@@ -22,7 +22,7 @@ export function Evaluate_UpdateExpression({
     case operator === '++' && !prefix: {
       const LeftHandSideExpression = argument;
 
-      const lhs = Evaluate_Expression(LeftHandSideExpression);
+      const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
       const lhsValue = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsValue));
       const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
@@ -34,7 +34,7 @@ export function Evaluate_UpdateExpression({
     case operator === '--' && !prefix: {
       const LeftHandSideExpression = argument;
 
-      const lhs = Evaluate_Expression(LeftHandSideExpression);
+      const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
       const lhsVal = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));
@@ -46,7 +46,7 @@ export function Evaluate_UpdateExpression({
     case operator === '++' && prefix: {
       const UnaryExpression = argument;
 
-      const expr = Evaluate_Expression(UnaryExpression);
+      const expr = yield* Evaluate_Expression(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
@@ -58,7 +58,7 @@ export function Evaluate_UpdateExpression({
     case operator === '--' && prefix: {
       const UnaryExpression = argument;
 
-      const expr = Evaluate_Expression(UnaryExpression);
+      const expr = yield* Evaluate_Expression(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));

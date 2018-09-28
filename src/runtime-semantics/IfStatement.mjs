@@ -23,7 +23,7 @@ export function* Evaluate_IfStatement({
   consequent: Statement,
   alternate: AlternateStatement,
 }) {
-  const exprRef = Evaluate_Expression(Expression);
+  const exprRef = yield* Evaluate_Expression(Expression);
   const exprValue = ToBoolean(Q(GetValue(exprRef)));
 
   if (AlternateStatement !== null) {

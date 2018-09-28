@@ -40,7 +40,7 @@ function* CatchClauseEvaluation(Catch, thrownValue) {
     X(catchEnvRec.CreateMutableBinding(NewValue(argName), false));
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
-  const status = BindingInitialization_CatchParameter(CatchParameter, thrownValue, catchEnv);
+  const status = yield* BindingInitialization_CatchParameter(CatchParameter, thrownValue, catchEnv);
   if (status instanceof AbruptCompletion) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     return status;

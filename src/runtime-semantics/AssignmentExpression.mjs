@@ -21,14 +21,14 @@ import { New as NewValue } from '../value.mjs';
 // AssignmentExpression :
 //   LeftHandSideExpression = AssignmentExpression
 //   LeftHandSideExpression AssignmentOperator AssignmentExpression
-export function Evaluate_AssignmentExpression(node) {
+export function* Evaluate_AssignmentExpression(node) {
   const LeftHandSideExpression = node.left;
   const AssignmentExpression = node.right;
   if (node.operator === '=') {
     if (!isObjectLiteral(LeftHandSideExpression) && !isArrayLiteral(LeftHandSideExpression)) {
-      const lref = Evaluate_Expression(LeftHandSideExpression);
+      const lref = yield* Evaluate_Expression(LeftHandSideExpression);
       ReturnIfAbrupt(lref);
-      const rref = Evaluate_Expression(AssignmentExpression);
+      const rref = yield* Evaluate_Expression(AssignmentExpression);
       const rval = Q(GetValue(rref));
       if (IsAnonymousFunctionDefinition(AssignmentExpression)
           && IsIdentifierRef(LeftHandSideExpression)) {
@@ -43,9 +43,9 @@ export function Evaluate_AssignmentExpression(node) {
   } else {
     const AssignmentOperator = node.operator;
 
-    const lref = Evaluate_Expression(LeftHandSideExpression);
+    const lref = yield* Evaluate_Expression(LeftHandSideExpression);
     const lval = Q(GetValue(lref));
-    const rref = Evaluate_Expression(AssignmentExpression);
+    const rref = yield* Evaluate_Expression(AssignmentExpression);
     const rval = Q(GetValue(rref));
     // Let op be the @ where AssignmentOperator is @=.
     const op = AssignmentOperator.slice(0, -1);

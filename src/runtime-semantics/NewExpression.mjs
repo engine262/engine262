@@ -22,13 +22,13 @@ import {
 } from '../completion.mjs';
 
 // #sec-evaluatenew
-function EvaluateNew(constructExpr, args = []) {
+function* EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = Evaluate_Expression(constructExpr.callee);
+  const ref = yield* Evaluate_Expression(constructExpr.callee);
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
-  const argList = ArgumentListEvaluation(args);
+  const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (IsConstructor(constructor).isFalse()) {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');
@@ -40,6 +40,6 @@ function EvaluateNew(constructExpr, args = []) {
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
-export function Evaluate_NewExpression(NewExpression) {
-  return EvaluateNew(NewExpression, NewExpression.arguments);
+export function* Evaluate_NewExpression(NewExpression) {
+  return yield* EvaluateNew(NewExpression, NewExpression.arguments);
 }

@@ -36,12 +36,12 @@ import {
 //
 // (implicit)
 //   BindingElement : SingleNameBinding
-export function KeyedBindingInitialization_BindingElement(BindingElement, value, environment, propertyName) {
+export function* KeyedBindingInitialization_BindingElement(BindingElement, value, environment, propertyName) {
   let BindingPattern;
   let Initializer;
   switch (true) {
     case isSingleNameBinding(BindingElement):
-      return KeyedBindingInitialization_SingleNameBinding(BindingElement, value, environment, propertyName);
+      return yield* KeyedBindingInitialization_SingleNameBinding(BindingElement, value, environment, propertyName);
     case isBindingPattern(BindingElement):
       BindingPattern = BindingElement;
       Initializer = undefined;
@@ -56,15 +56,15 @@ export function KeyedBindingInitialization_BindingElement(BindingElement, value,
 
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
   }
-  return BindingInitialization_BindingPattern(BindingPattern, v, environment);
+  return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
 }
 
 // #sec-runtime-semantics-keyedbindinginitialization
 //   SingleNameBinding : BindingIdentifier Initializer
-export function KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, value, environment, propertyName) {
+export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, value, environment, propertyName) {
   let BindingIdentifier;
   let Initializer;
   switch (true) {
@@ -84,7 +84,7 @@ export function KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, 
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));

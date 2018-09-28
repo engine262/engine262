@@ -63,7 +63,7 @@ export function IteratorBindingInitialization_ArrayBindingPattern(ArrayBindingPa
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElement : BindingPattern Initializer
-export function IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment) {
+function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment) {
   let BindingPattern;
   let Initializer;
   switch (true) {
@@ -101,15 +101,15 @@ export function IteratorBindingInitialization_BindingElement_BindingPattern(Bind
     v = NewValue(undefined);
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
   }
-  return BindingInitialization_BindingPattern(BindingPattern, v, environment);
+  return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
 }
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   SingleNameBinding : BindingIdentifier Initializer
-export function IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, iteratorRecord, environment) {
+function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, iteratorRecord, environment) {
   let BindingIdentifier;
   let Initializer;
   switch (true) {
@@ -147,7 +147,7 @@ export function IteratorBindingInitialization_SingleNameBinding(SingleNameBindin
     v = NewValue(undefined);
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
@@ -164,12 +164,12 @@ export function IteratorBindingInitialization_SingleNameBinding(SingleNameBindin
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElement : SingleNameBinding
-export function IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
+function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
   switch (true) {
     case isSingleNameBinding(BindingElement):
-      return IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
+      return yield* IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
     case isBindingPattern(BindingElement) || isBindingPatternAndInitializer(BindingElement):
-      return IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment);
+      return yield* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment);
     default:
       throw outOfRange('IteratorBindingInitialization_BindingElement', BindingElement);
   }
@@ -177,7 +177,7 @@ export function IteratorBindingInitialization_BindingElement(BindingElement, ite
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingRestElement : `...` BindingIdentifier
-export function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment) {
+function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment) {
   const BindingIdentifier = BindingRestElement.argument;
   const lhs = Q(ResolveBinding(BindingIdentifier, environment));
   const A = X(ArrayCreate(0));
@@ -215,7 +215,7 @@ export function IteratorBindingInitialization_BindingRestElement_Identifier(Bind
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingRestElement :
 //     `...` BindingPattern
-export function IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment) {
+function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment) {
   const BindingPattern = BindingRestElement.argument;
   const A = X(ArrayCreate(0));
   let n = 0;
@@ -232,7 +232,7 @@ export function IteratorBindingInitialization_BindingRestElement_Pattern(Binding
       }
     }
     if (iteratorRecord.Done.isTrue()) {
-      return BindingInitialization_BindingPattern(BindingPattern, A, environment);
+      return yield* BindingInitialization_BindingPattern(BindingPattern, A, environment);
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
@@ -246,12 +246,12 @@ export function IteratorBindingInitialization_BindingRestElement_Pattern(Binding
   }
 }
 
-export function IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment) {
+function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment) {
   switch (true) {
     case isBindingIdentifier(BindingRestElement.argument):
       return IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment);
     case isBindingPattern(BindingRestElement.arguement):
-      return IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
+      return yield* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
     default:
       throw outOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);
   }
@@ -259,10 +259,10 @@ export function IteratorBindingInitialization_BindingRestElement(BindingRestElem
 
 // #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FormalParameter : BindingElement
-export function IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
+function* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
   const BindingElement = FormalParameter;
   // if (!ContainsExpression_BindingElement(BindingElement)) {
-  //   return IteratorBindingInitialization_BindingElement(
+  //   return yield* IteratorBindingInitialization_BindingElement(
   //     BindingElement, iteratorRecord, environment,
   //   );
   // }
@@ -273,7 +273,7 @@ export function IteratorBindingInitialization_FormalParameter(FormalParameter, i
   const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
   currentContext.VariableEnvironment = paramVarEnv;
   currentContext.LexicalEnvironment = paramVarEnv;
-  const result = IteratorBindingInitialization_BindingElement(
+  const result = yield* IteratorBindingInitialization_BindingElement(
     BindingElement, iteratorRecord, environment,
   );
   currentContext.VariableEnvironment = originalEnv;
@@ -283,10 +283,10 @@ export function IteratorBindingInitialization_FormalParameter(FormalParameter, i
 
 // #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FunctionRestParameter : BindingRestElement
-export function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
+function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
   const BindingRestElement = FunctionRestParameter;
   // if (!ContainsExpression_BindingRestElement(BindingRestElement)) {
-  //   return IteratorBindingInitialization_BindingRestElement(
+  //   return yield* IteratorBindingInitialization_BindingRestElement(
   //     BindingRestElement, iteratorRecord, environment,
   //   );
   // }
@@ -297,7 +297,7 @@ export function IteratorBindingInitialization_FunctionRestParameter(FunctionRest
   const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
   currentContext.VariableEnvironment = paramVarEnv;
   currentContext.LexicalEnvironment = paramVarEnv;
-  const result = IteratorBindingInitialization_BindingRestElement(
+  const result = yield* IteratorBindingInitialization_BindingRestElement(
     BindingRestElement, iteratorRecord, environment,
   );
   currentContext.VariableEnvironment = originalEnv;
@@ -317,7 +317,7 @@ export function IteratorBindingInitialization_FunctionRestParameter(FunctionRest
 //     FormalParameterList
 //     FormalParameterList `,`
 //   FormalParameterList : FormalParameter
-export function IteratorBindingInitialization_FormalParameters(
+export function* IteratorBindingInitialization_FormalParameters(
   FormalParameters, iteratorRecord, environment,
 ) {
   if (FormalParameters.length === 0) {
@@ -326,13 +326,13 @@ export function IteratorBindingInitialization_FormalParameters(
 
   for (const FormalParameter of FormalParameters.slice(0, -1)) {
     Assert(isFormalParameter(FormalParameter));
-    Q(IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment));
+    Q(yield* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment));
   }
 
   const last = FormalParameters[FormalParameters.length - 1];
   if (isFunctionRestParameter(last)) {
-    return IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
+    return yield* IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
   }
   Assert(isFormalParameter(last));
-  return IteratorBindingInitialization_FormalParameter(last, iteratorRecord, environment);
+  return yield* IteratorBindingInitialization_FormalParameter(last, iteratorRecord, environment);
 }

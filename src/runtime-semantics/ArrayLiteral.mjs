@@ -19,8 +19,8 @@ import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 
-function ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
-  const spreadRef = Evaluate_Expression(SpreadElement.argument);
+function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
+  const spreadRef = yield* Evaluate_Expression(SpreadElement.argument);
   const spreadObj = Q(GetValue(spreadRef));
   const iteratorRecord = Q(GetIterator(spreadObj));
   while (true) {
@@ -37,8 +37,8 @@ function ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
   }
 }
 
-function ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
-  const initResult = Evaluate_Expression(AssignmentExpression);
+function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
+  const initResult = yield* Evaluate_Expression(AssignmentExpression);
   const initValue = Q(GetValue(initResult));
   const created = CreateDataProperty(
     array, ToString(ToUint32(NewValue(nextIndex))), initValue,
@@ -47,7 +47,7 @@ function ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nex
   return nextIndex + 1;
 }
 
-function ArrayAccumulation(ElementList, array, nextIndex) {
+function* ArrayAccumulation(ElementList, array, nextIndex) {
   let postIndex = nextIndex;
   for (const element of ElementList) {
     switch (true) {
@@ -57,11 +57,11 @@ function ArrayAccumulation(ElementList, array, nextIndex) {
         break;
 
       case isExpression(element):
-        postIndex = ArrayAccumulation_AssignmentExpression(element, array, postIndex);
+        postIndex = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
         break;
 
       case isSpreadElement(element):
-        postIndex = ArrayAccumulation_SpreadElement(element, array, postIndex);
+        postIndex = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
         break;
 
       default:
@@ -76,11 +76,11 @@ function ArrayAccumulation(ElementList, array, nextIndex) {
 //   `[` Elision `]`
 //   `[` ElementList `]`
 //   `[` ElementList `,` Elision `]`
-export function Evaluate_ArrayLiteral(ArrayLiteral) {
+export function* Evaluate_ArrayLiteral(ArrayLiteral) {
   const array = X(ArrayCreate(NewValue(0)));
-  const len = ArrayAccumulation(ArrayLiteral.elements, array, 0);
+  const len = yield* ArrayAccumulation(ArrayLiteral.elements, array, 0);
   ReturnIfAbrupt(len);
-  Set(array, NewValue('length'), ToUint32(NewValue(len)), NewValue(false));
+  X(Set(array, NewValue('length'), ToUint32(NewValue(len)), NewValue(false)));
   // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.
   return array;
 }

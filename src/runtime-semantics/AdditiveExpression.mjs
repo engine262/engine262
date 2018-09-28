@@ -31,10 +31,10 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
 
 // #sec-addition-operator-plus-runtime-semantics-evaluation
 //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
-function Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
-  const lref = Evaluate_Expression(AdditiveExpression);
+function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
+  const lref = yield* Evaluate_Expression(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(MultiplicativeExpression);
+  const rref = yield* Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
 }
@@ -46,24 +46,24 @@ export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
 }
 
 // #sec-subtraction-operator-minus-runtime-semantics-evaluation
-function Evaluate_AdditiveExpression_Minus(
+function* Evaluate_AdditiveExpression_Minus(
   AdditiveExpression, MultiplicativeExpression,
 ) {
-  const lref = Evaluate_Expression(AdditiveExpression);
+  const lref = yield* Evaluate_Expression(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(MultiplicativeExpression);
+  const rref = yield* Evaluate_Expression(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
 }
 
-export function Evaluate_AdditiveExpression(AdditiveExpression) {
+export function* Evaluate_AdditiveExpression(AdditiveExpression) {
   switch (true) {
     case isAdditiveExpressionWithPlus(AdditiveExpression):
-      return Evaluate_AdditiveExpression_Plus(
+      return yield* Evaluate_AdditiveExpression_Plus(
         AdditiveExpression.left, AdditiveExpression.right,
       );
     case isAdditiveExpressionWithMinus(AdditiveExpression):
-      return Evaluate_AdditiveExpression_Minus(
+      return yield* Evaluate_AdditiveExpression_Minus(
         AdditiveExpression.left, AdditiveExpression.right,
       );
 

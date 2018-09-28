@@ -28,10 +28,10 @@ export function EvaluateBinopValues_BitwiseORExpression(lval, rval) {
 }
 
 // #sec-binary-bitwise-operators-runtime-semantics-evaluation
-export function Evaluate_BinaryBitwiseExpression({ left: A, operator, right: B }) {
-  const lref = Evaluate_Expression(A);
+export function* Evaluate_BinaryBitwiseExpression({ left: A, operator, right: B }) {
+  const lref = yield* Evaluate_Expression(A);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(B);
+  const rref = yield* Evaluate_Expression(B);
   const rval = Q(GetValue(rref));
 
   // Return the result of applying the bitwise operator @ to lnum and rnum.

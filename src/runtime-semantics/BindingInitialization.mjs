@@ -55,11 +55,11 @@ export function BindingInitialization_BindingIdentifier(BindingIdentifier, value
 //   BindingPattern :
 //     ObjectBindingPattern
 //     ArrayBindingPattern
-export function BindingInitialization_BindingPattern(BindingPattern, value, environment) {
+export function* BindingInitialization_BindingPattern(BindingPattern, value, environment) {
   switch (true) {
     case isObjectBindingPattern(BindingPattern):
       Q(RequireObjectCoercible(value));
-      return BindingInitialization_ObjectBindingPattern(BindingPattern, value, environment);
+      return yield* BindingInitialization_ObjectBindingPattern(BindingPattern, value, environment);
 
     case isArrayBindingPattern(BindingPattern): {
       const iteratorRecord = Q(GetIterator(value));
@@ -81,13 +81,13 @@ export function BindingInitialization_BindingPattern(BindingPattern, value, envi
 //   ForBinding :
 //     BindingIdentifier
 //     BindingPattern
-export function BindingInitialization_ForBinding(ForBinding, value, environment) {
+export function* BindingInitialization_ForBinding(ForBinding, value, environment) {
   switch (true) {
     case isBindingIdentifier(ForBinding):
       return BindingInitialization_BindingIdentifier(ForBinding, value, environment);
 
     case isBindingPattern(ForBinding):
-      return BindingInitialization_BindingPattern(ForBinding, value, environment);
+      return yield* BindingInitialization_BindingPattern(ForBinding, value, environment);
 
     default:
       throw outOfRange('BindingInitialization_ForBinding', ForBinding);
@@ -101,7 +101,7 @@ export function BindingInitialization_ForBinding(ForBinding, value, environment)
 //     `{` BindingPropertyList `,` `}`
 //     `{` BindingRestProperty `}`
 //     `{` BindingPropertyList `,` BindingRestProperty `}`
-function BindingInitialization_ObjectBindingPattern(ObjectBindingPattern, value, environment) {
+function* BindingInitialization_ObjectBindingPattern(ObjectBindingPattern, value, environment) {
   if (ObjectBindingPattern.properties.length === 0) {
     return new NormalCompletion(undefined);
   }
@@ -114,7 +114,7 @@ function BindingInitialization_ObjectBindingPattern(ObjectBindingPattern, value,
     BindingPropertyList = BindingPropertyList.slice(0, -1);
   }
 
-  const excludedNames = Q(PropertyBindingInitialization_BindingPropertyList(
+  const excludedNames = Q(yield* PropertyBindingInitialization_BindingPropertyList(
     BindingPropertyList, value, environment,
   ));
   if (BindingRestProperty === undefined) {
@@ -126,13 +126,13 @@ function BindingInitialization_ObjectBindingPattern(ObjectBindingPattern, value,
   );
 }
 
-export function BindingInitialization_CatchParameter(CatchParameter, value, environment) {
+export function* BindingInitialization_CatchParameter(CatchParameter, value, environment) {
   switch (true) {
     case isBindingIdentifier(CatchParameter):
       return BindingInitialization_BindingIdentifier(CatchParameter, value, environment);
 
     case isBindingPattern(CatchParameter):
-      return BindingInitialization_BindingPattern(CatchParameter, value, environment);
+      return yield* BindingInitialization_BindingPattern(CatchParameter, value, environment);
 
     default:
       throw outOfRange('BindingInitialization_CatchParameter', CatchParameter);
@@ -141,6 +141,6 @@ export function BindingInitialization_CatchParameter(CatchParameter, value, envi
 
 // #sec-for-in-and-for-of-statements-runtime-semantics-bindinginitialization
 //   ForDeclaration : LetOrConst ForBinding
-export function BindingInitialization_ForDeclaration(ForDeclaration, value, environment) {
-  return BindingInitialization_ForBinding(ForDeclaration.declarations[0].id, value, environment);
+export function* BindingInitialization_ForDeclaration(ForDeclaration, value, environment) {
+  return yield* BindingInitialization_ForBinding(ForDeclaration.declarations[0].id, value, environment);
 }

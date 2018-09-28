@@ -16,14 +16,14 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 //
 // (implicit)
 //   TemplateLiteral : SubstitutionTemplate
-export function Evaluate_TemplateLiteral(TemplateLiteral) {
+export function* Evaluate_TemplateLiteral(TemplateLiteral) {
   let str = '';
   for (let i = 0; i < TemplateLiteral.quasis.length - 1; i += 1) {
     const TemplateHead = TemplateLiteral.quasis[i];
     const Expression = TemplateLiteral.expressions[i];
     const head = TemplateHead.value.cooked;
     // https://github.com/tc39/ecma262/issues/935
-    const subRef = Evaluate_Expression(Expression);
+    const subRef = yield* Evaluate_Expression(Expression);
     const sub = Q(GetValue(subRef));
     const middle = Q(ToString(sub));
     str += head;

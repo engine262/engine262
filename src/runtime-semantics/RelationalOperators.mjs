@@ -35,14 +35,14 @@ export function InstanceofOperator(V, target) {
   return Q(OrdinaryHasInstance(target, V));
 }
 
-export function Evaluate_RelationalExpression({
+export function* Evaluate_RelationalExpression({
   left: RelationalExpression,
   right: ShiftExpression,
   operator,
 }) {
-  const lref = Evaluate_Expression(RelationalExpression);
+  const lref = yield* Evaluate_Expression(RelationalExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(ShiftExpression);
+  const rref = yield* Evaluate_Expression(ShiftExpression);
   const rval = Q(GetValue(rref));
 
   switch (operator) {

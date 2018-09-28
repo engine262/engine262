@@ -32,13 +32,13 @@ import { outOfRange } from '../helpers.mjs';
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
-function Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
+function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   const { id: BindingIdentifier, init: Initializer } = LexicalBinding;
   const bindingId = NewValue(BindingIdentifier.name);
   const lhs = X(ResolveBinding(bindingId));
 
   if (Initializer) {
-    const rhs = Evaluate_Expression(Initializer);
+    const rhs = yield* Evaluate_Expression(Initializer);
     const value = Q(GetValue(rhs));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
@@ -54,21 +54,21 @@ function Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding : BindingPattern Initializer
-function Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
+function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { id: BindingPattern, init: Initializer } = LexicalBinding;
-  const rhs = Evaluate_Expression(Initializer);
+  const rhs = yield* Evaluate_Expression(Initializer);
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  return BindingInitialization_BindingPattern(BindingPattern, value, env);
+  return yield* BindingInitialization_BindingPattern(BindingPattern, value, env);
 }
 
-export function Evaluate_LexicalBinding(LexicalBinding) {
+export function* Evaluate_LexicalBinding(LexicalBinding) {
   switch (true) {
     case isBindingIdentifier(LexicalBinding.id):
-      return Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
+      return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
 
     case isBindingPattern(LexicalBinding.id):
-      return Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
+      return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
     default:
       throw outOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
@@ -80,10 +80,10 @@ export function Evaluate_LexicalBinding(LexicalBinding) {
 //
 // (implicit)
 //   BindingList : LexicalBinding
-export function Evaluate_BindingList(BindingList) {
+export function* Evaluate_BindingList(BindingList) {
   let last;
   for (const LexicalBinding of BindingList) {
-    last = Evaluate_LexicalBinding(LexicalBinding);
+    last = yield* Evaluate_LexicalBinding(LexicalBinding);
     ReturnIfAbrupt(last);
   }
   return last;
@@ -91,8 +91,8 @@ export function Evaluate_BindingList(BindingList) {
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalDeclaration : LetOrConst BindingList `;`
-export function Evaluate_LexicalDeclaration({ declarations: BindingList }) {
-  const next = Evaluate_BindingList(BindingList);
+export function* Evaluate_LexicalDeclaration({ declarations: BindingList }) {
+  const next = yield* Evaluate_BindingList(BindingList);
   ReturnIfAbrupt(next);
   return new NormalCompletion(undefined);
 }

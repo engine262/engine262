@@ -65,7 +65,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   Q(CreatePerIterationEnvironment(perIterationBindings));
   while (true) {
     if (test) {
-      const testRef = Evaluate_Expression(test);
+      const testRef = yield* Evaluate_Expression(test);
       const testValue = Q(GetValue(testRef));
       if (ToBoolean(testValue).isFalse()) {
         return new NormalCompletion(V);
@@ -80,7 +80,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
     }
     Q(CreatePerIterationEnvironment(perIterationBindings));
     if (increment) {
-      const incRef = Evaluate_Expression(increment);
+      const incRef = yield* Evaluate_Expression(increment);
       Q(GetValue(incRef));
     }
   }
@@ -120,7 +120,7 @@ function BindingInstantiation_ForDeclaration(ForDeclaration, environment) {
 }
 
 // 13.7.5.12 #sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind
-function ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
+function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   if (TDZnames.length > 0) {
     Assert(new Set(TDZnames).size === TDZnames.length);
@@ -131,7 +131,7 @@ function ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
     }
     surroundingAgent.runningExecutionContext.LexicalEnvironment = TDZ;
   }
-  const exprRef = Evaluate_Expression(expr);
+  const exprRef = yield* Evaluate_Expression(expr);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   const exprValue = Q(GetValue(exprRef));
   if (iterationKind === 'enumerate') {
@@ -177,7 +177,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     let lhsRef;
     if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
       if (!destructuring) {
-        lhsRef = Evaluate_Expression(lhs);
+        lhsRef = yield* Evaluate_Expression(lhs);
       }
     } else {
       Assert(lhsKind === 'lexicalBinding');
@@ -203,14 +203,14 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       }
     } else {
       if (lhsKind === 'assignment') {
-        status = DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, nextValue);
+        status = yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, nextValue);
       } else if (lhsKind === 'varBinding') {
         Assert(isForBinding(lhs));
-        status = BindingInitialization_ForBinding(lhs, nextValue, NewValue(undefined));
+        status = yield* BindingInitialization_ForBinding(lhs, nextValue, NewValue(undefined));
       } else {
         Assert(lhsKind === 'lexicalBinding');
         Assert(isForDeclaration(lhs));
-        status = BindingInitialization_ForDeclaration(lhs, nextValue, iterationEnv);
+        status = yield* BindingInitialization_ForDeclaration(lhs, nextValue, iterationEnv);
       }
     }
     if (status instanceof AbruptCompletion) {
@@ -278,7 +278,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 
     case isForStatementWithExpression(IterationStatement):
       if (IterationStatement.init) {
-        const exprRef = Evaluate_Expression(IterationStatement.init);
+        const exprRef = yield* Evaluate_Expression(IterationStatement.init);
         Q(GetValue(exprRef));
       }
       return Q(yield* ForBodyEvaluation(IterationStatement.test, IterationStatement.update, IterationStatement.body, [], labelSet));
@@ -320,7 +320,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: Expression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation([], Expression, 'enumerate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet));
     }
 
@@ -332,7 +332,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: Expression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation([], Expression, 'enumerate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet));
     }
 
@@ -342,7 +342,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: Expression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), Expression, 'enumerate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), Expression, 'enumerate'));
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
     }
 
@@ -352,7 +352,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
       return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet));
     }
 
@@ -364,7 +364,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
       return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet));
     }
 
@@ -374,7 +374,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), AssignmentExpression, 'iterate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), AssignmentExpression, 'iterate'));
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
     }
 

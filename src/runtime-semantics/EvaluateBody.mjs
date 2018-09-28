@@ -52,7 +52,7 @@ import {
 import { New as NewValue } from '../value.mjs';
 
 // #sec-functiondeclarationinstantiation
-export function FunctionDeclarationInstantiation(func, argumentsList) {
+export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const calleeContext = surroundingAgent.runningExecutionContext;
   const env = calleeContext.LexicalEnvironment;
   const envRec = env.EnvironmentRecord;
@@ -144,9 +144,9 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
 
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
   if (hasDuplicates) {
-    Q(IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, NewValue(undefined)));
+    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, NewValue(undefined)));
   } else {
-    Q(IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
+    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
   }
 
   let varEnv;
@@ -248,9 +248,9 @@ export function getFunctionBodyType(ECMAScriptCode) {
 
 // #sec-arrow-function-definitions-runtime-semantics-evaluatebody
 // ConciseBody : AssignmentExpression
-export function EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
-  Q(FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const exprRef = Evaluate_Expression(AssignmentExpression);
+export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
+  Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  const exprRef = yield* Evaluate_Expression(AssignmentExpression);
   const exprValue = Q(GetValue(exprRef));
   return new ReturnCompletion(exprValue);
 }
@@ -258,6 +258,6 @@ export function EvaluateBody_ConciseBody_Expression(AssignmentExpression, functi
 // #sec-function-definitions-runtime-semantics-evaluatebody
 // FunctionBody : FunctionStatementList
 export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
-  Q(FunctionDeclarationInstantiation(functionObject, argumentsList));
+  Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
 }

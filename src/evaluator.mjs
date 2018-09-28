@@ -147,19 +147,19 @@ function* Evaluate_StatementListItem(StatementListItem) {
       return yield* Evaluate_BlockStatement(StatementListItem);
 
     case isLexicalDeclaration(StatementListItem):
-      return Evaluate_LexicalDeclaration(StatementListItem);
+      return yield* Evaluate_LexicalDeclaration(StatementListItem);
 
     case isLexicalBinding(StatementListItem):
-      return Evaluate_LexicalBinding(StatementListItem);
+      return yield* Evaluate_LexicalBinding(StatementListItem);
 
     case isVariableStatement(StatementListItem):
-      return Evaluate_VariableStatement(StatementListItem);
+      return yield* Evaluate_VariableStatement(StatementListItem);
 
     case isFunctionDeclaration(StatementListItem):
       return Evaluate_FunctionDeclaration(StatementListItem);
 
     case isExpressionStatement(StatementListItem):
-      return Evaluate_ExpressionStatement(StatementListItem);
+      return yield* Evaluate_ExpressionStatement(StatementListItem);
 
     case isIfStatement(StatementListItem):
       return yield* Evaluate_IfStatement(StatementListItem);
@@ -174,13 +174,13 @@ function* Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_BreakStatement(StatementListItem);
 
     case isReturnStatement(StatementListItem):
-      return Evaluate_ReturnStatement(StatementListItem);
+      return yield* Evaluate_ReturnStatement(StatementListItem);
 
     case isWithStatement(StatementListItem):
       return yield* Evaluate_WithStatement(StatementListItem);
 
     case isThrowStatement(StatementListItem):
-      return Evaluate_ThrowStatement(StatementListItem.argument);
+      return yield* Evaluate_ThrowStatement(StatementListItem.argument);
 
     case isTryStatement(StatementListItem):
       return yield* Evaluate_TryStatement(StatementListItem);
@@ -199,8 +199,8 @@ export function* Evaluate_Statement(Statement) {
 
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
-function Evaluate_ExpressionStatement(ExpressionStatement) {
-  const exprRef = Evaluate_Expression(ExpressionStatement.expression);
+function* Evaluate_ExpressionStatement(ExpressionStatement) {
+  const exprRef = yield* Evaluate_Expression(ExpressionStatement.expression);
   return GetValue(exprRef);
 }
 
@@ -246,12 +246,12 @@ export function EvaluateBinopValues(operator, lval, rval) {
   }
 }
 
-export function Evaluate_Expression(Expression) {
-  return EnsureCompletion(Inner_Evaluate_Expression(Expression));
+export function* Evaluate_Expression(Expression) {
+  return EnsureCompletion(yield* Inner_Evaluate_Expression(Expression));
 }
 
 // (implicit)
-function Inner_Evaluate_Expression(Expression) {
+function* Inner_Evaluate_Expression(Expression) {
   switch (true) {
     case isThis(Expression):
       return Evaluate_ThisExpression(Expression);
@@ -263,16 +263,16 @@ function Inner_Evaluate_Expression(Expression) {
       return Evaluate_Literal(Expression);
 
     case isArrayLiteral(Expression):
-      return Evaluate_ArrayLiteral(Expression);
+      return yield* Evaluate_ArrayLiteral(Expression);
 
     case isObjectLiteral(Expression):
-      return Evaluate_ObjectLiteral(Expression);
+      return yield* Evaluate_ObjectLiteral(Expression);
 
     case isFunctionExpression(Expression):
       return Evaluate_FunctionExpression(Expression);
 
     case isClassExpression(Expression):
-      return Evaluate_ClassExpression(Expression);
+      return yield* Evaluate_ClassExpression(Expression);
 
       // case isGeneratorExpression(Expression):
       //   return Evaluate_GeneratorExpression(Expression);
@@ -287,66 +287,66 @@ function Inner_Evaluate_Expression(Expression) {
       //   return Evaluate_RegularExpressionLiteral(Expression);
 
     case isTemplateLiteral(Expression):
-      return Evaluate_TemplateLiteral(Expression);
+      return yield* Evaluate_TemplateLiteral(Expression);
 
     case isActualMemberExpression(Expression):
-      return Evaluate_MemberExpression(Expression);
+      return yield* Evaluate_MemberExpression(Expression);
 
     case isSuperProperty(Expression):
-      return Evaluate_SuperProperty(Expression);
+      return yield* Evaluate_SuperProperty(Expression);
 
     case isSuperCall(Expression):
-      return Evaluate_SuperCall(Expression);
+      return yield* Evaluate_SuperCall(Expression);
 
       // case isMetaProperty(Expression):
       //   return Evaluate_MetaProperty(Expression);
 
     case isActualNewExpression(Expression):
-      return Evaluate_NewExpression(Expression);
+      return yield* Evaluate_NewExpression(Expression);
 
     case isActualCallExpression(Expression):
-      return Evaluate_CallExpression(Expression);
+      return yield* Evaluate_CallExpression(Expression);
 
     case isActualUpdateExpression(Expression):
-      return Evaluate_UpdateExpression(Expression);
+      return yield* Evaluate_UpdateExpression(Expression);
 
     case isActualUnaryExpression(Expression):
-      return Evaluate_UnaryExpression(Expression);
+      return yield* Evaluate_UnaryExpression(Expression);
 
       // case isAwaitExpression(Expression):
       //   return Evaluate_AwaitExpression(Expression);
 
     case isActualExponentiationExpression(Expression):
-      return Evaluate_ExponentiationExpression(Expression);
+      return yield* Evaluate_ExponentiationExpression(Expression);
 
     case isActualMultiplicativeExpression(Expression):
-      return Evaluate_MultiplicativeExpression(Expression);
+      return yield* Evaluate_MultiplicativeExpression(Expression);
 
     case isActualAdditiveExpression(Expression):
-      return Evaluate_AdditiveExpression(Expression);
+      return yield* Evaluate_AdditiveExpression(Expression);
 
     case isActualShiftExpression(Expression):
-      return Evaluate_ShiftExpression(Expression);
+      return yield* Evaluate_ShiftExpression(Expression);
 
     case isActualRelationalExpression(Expression):
-      return Evaluate_RelationalExpression(Expression);
+      return yield* Evaluate_RelationalExpression(Expression);
 
     case isActualEqualityExpression(Expression):
-      return Evaluate_EqualityExpression(Expression);
+      return yield* Evaluate_EqualityExpression(Expression);
 
     case isActualBitwiseANDExpression(Expression):
     case isActualBitwiseXORExpression(Expression):
     case isActualBitwiseORExpression(Expression):
-      return Evaluate_BinaryBitwiseExpression(Expression);
+      return yield* Evaluate_BinaryBitwiseExpression(Expression);
 
     case isActualLogicalANDExpression(Expression):
-      return Evaluate_LogicalANDExpression(Expression);
+      return yield* Evaluate_LogicalANDExpression(Expression);
 
     case isActualLogicalORExpression(Expression):
-      return Evaluate_LogicalORExpression(Expression);
+      return yield* Evaluate_LogicalORExpression(Expression);
 
     case isActualConditionalExpression(Expression):
-      return Evaluate_ConditionalExpression(Expression);
+      return yield* Evaluate_ConditionalExpression(Expression);
 
       // case isYieldExpression(Expression):
       //   return Evaluate_YieldExpression(Expression);
@@ -358,10 +358,10 @@ function Inner_Evaluate_Expression(Expression) {
       //   return Evaluate_AsyncArrowFunction(Expression);
 
     case isActualAssignmentExpression(Expression):
-      return Evaluate_AssignmentExpression(Expression);
+      return yield* Evaluate_AssignmentExpression(Expression);
 
     case isExpressionWithComma(Expression):
-      return Evaluate_ExpressionWithComma(Expression);
+      return yield* Evaluate_ExpressionWithComma(Expression);
 
     default:
       throw outOfRange('Evaluate_Expression', Expression);

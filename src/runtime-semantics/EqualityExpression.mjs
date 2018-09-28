@@ -14,14 +14,14 @@ import { outOfRange } from '../helpers.mjs';
 //   EqualityExpression `!=` RelationalExpression
 //   EqualityExpression `===` RelationalExpression
 //   EqualityExpression `!==` RelationalExpression
-export function Evaluate_EqualityExpression({
+export function* Evaluate_EqualityExpression({
   left: EqualityExpression,
   operator,
   right: RelationalExpression,
 }) {
-  const lref = Evaluate_Expression(EqualityExpression);
+  const lref = yield* Evaluate_Expression(EqualityExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(RelationalExpression);
+  const rref = yield* Evaluate_Expression(RelationalExpression);
   const rval = Q(GetValue(rref));
 
   switch (operator) {

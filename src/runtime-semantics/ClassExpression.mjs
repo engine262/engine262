@@ -31,11 +31,11 @@ import { outOfRange } from '../helpers.mjs';
 
 // #sec-runtime-semantics-definemethod
 // MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-function DefineMethod(MethodDefinition, object, functionPrototype) {
+function* DefineMethod(MethodDefinition, object, functionPrototype) {
   const PropertyName = MethodDefinition.key;
   const UniqueFormalParameters = MethodDefinition.value.params;
 
-  const propKey = Evaluate_PropertyName(PropertyName);
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
   ReturnIfAbrupt(propKey);
   // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
   const strict = true;
@@ -62,9 +62,9 @@ function DefineMethod(MethodDefinition, object, functionPrototype) {
 //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` PropertyName `(` `)` `{` FunctionBody `}`
 //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
+function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
   if (MethodDefinition.kind === 'method' || MethodDefinition.kind === 'constructor') {
-    const methodDef = DefineMethod(MethodDefinition, object);
+    const methodDef = yield* DefineMethod(MethodDefinition, object);
     ReturnIfAbrupt(methodDef);
     SetFunctionName(methodDef.Closure, methodDef.Key);
     const desc = {
@@ -77,7 +77,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
   } else if (MethodDefinition.kind === 'get') {
     const PropertyName = MethodDefinition.key;
 
-    const propKey = Evaluate_PropertyName(PropertyName);
+    const propKey = yield* Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
     // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
     const strict = true;
@@ -95,7 +95,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const PropertyName = MethodDefinition.key;
     const PropertySetParameterList = MethodDefinition.value.params;
 
-    const propKey = Evaluate_PropertyName(PropertyName);
+    const propKey = yield* Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
     // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
     const strict = true;
@@ -117,7 +117,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
 // #sec-runtime-semantics-classdefinitionevaluation
 // ClassTail : ClassHeritage `{` ClassBody `}`
 // TODO(devsnek): This should be shared with ClassDeclaration
-function ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
+function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const classScope = NewDeclarativeEnvironment(lex);
   const classScopeEnvRec = classScope.EnvironmentRecord;
@@ -131,7 +131,7 @@ function ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
   } else {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
-    const superclassRef = Evaluate_Expression(ClassHeritage);
+    const superclassRef = yield* Evaluate_Expression(ClassHeritage);
     surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
     const superclass = Q(GetValue(superclassRef));
     if (Type(superclass) === 'Null') {
@@ -164,7 +164,7 @@ function ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     }
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
-  const constructorInfo = DefineMethod(constructor, proto, constructorParent);
+  const constructorInfo = yield* DefineMethod(constructor, proto, constructorParent);
   Assert(!(constructorInfo instanceof AbruptCompletion));
   const F = constructorInfo.Closure;
   if (ClassHeritage) {
@@ -182,9 +182,9 @@ function ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   for (const m of methods) {
     let status;
     if (IsStatic(m) === false) {
-      status = PropertyDefinitionEvaluation(m, proto, false);
+      status = yield* PropertyDefinitionEvaluation(m, proto, false);
     } else {
-      status = PropertyDefinitionEvaluation(m, F, false);
+      status = yield* PropertyDefinitionEvaluation(m, F, false);
     }
     if (status instanceof AbruptCompletion) {
       surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
@@ -200,7 +200,7 @@ function ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
 
 // #sec-class-definitions-runtime-semantics-evaluation
 // ClassExpression : `class` BindingIdentifier ClassTail
-export function Evaluate_ClassExpression({
+export function* Evaluate_ClassExpression({
   id: BindingIdentifier,
   body,
   superClass,
@@ -216,7 +216,7 @@ export function Evaluate_ClassExpression({
   } else {
     className = NewValue(BindingIdentifier.name);
   }
-  const value = ClassDefinitionEvaluation(ClassTail, className);
+  const value = yield* ClassDefinitionEvaluation(ClassTail, className);
   ReturnIfAbrupt(value);
   if (Type(className) !== 'Undefined') {
     const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));

@@ -26,11 +26,11 @@ function GetSuperConstructor() {
 
 // #sec-super-keyword-runtime-semantics-evaluation
 // SuperCall : `super` Arguments
-export function Evaluate_SuperCall({ arguments: Arguments }) {
+export function* Evaluate_SuperCall({ arguments: Arguments }) {
   const newTarget = GetNewTarget();
   Assert(Type(newTarget) === 'Object');
   const func = Q(GetSuperConstructor());
-  const argList = ArgumentListEvaluation(Arguments);
+  const argList = yield* ArgumentListEvaluation(Arguments);
   ReturnIfAbrupt(argList);
   const result = Q(Construct(func, argList, newTarget));
   const thisER = GetThisEnvironment();

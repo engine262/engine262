@@ -4,16 +4,16 @@ import { Q } from '../completion.mjs';
 
 // #sec-binary-logical-operators-runtime-semantics-evaluation
 // LogicalORExpression : LogicalORExpression `||` LogicalANDExpression
-export function Evaluate_LogicalORExpression({
+export function* Evaluate_LogicalORExpression({
   left: LogicalORExpression,
   right: LogicalANDExpression,
 }) {
-  const lref = Evaluate_Expression(LogicalORExpression);
+  const lref = yield* Evaluate_Expression(LogicalORExpression);
   const lval = Q(GetValue(lref));
   const lbool = ToBoolean(lval);
   if (lbool.isTrue()) {
     return lval;
   }
-  const rref = Evaluate_Expression(LogicalANDExpression);
+  const rref = yield* Evaluate_Expression(LogicalANDExpression);
   return Q(GetValue(rref));
 }

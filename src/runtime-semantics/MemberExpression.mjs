@@ -21,10 +21,10 @@ import { outOfRange } from '../helpers.mjs';
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
-export function Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
-  const baseReference = Evaluate_Expression(MemberExpression);
+function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
+  const baseReference = yield* Evaluate_Expression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
-  const propertyNameReference = Evaluate_Expression(Expression);
+  const propertyNameReference = yield* Evaluate_Expression(Expression);
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
@@ -35,8 +35,8 @@ export function Evaluate_MemberExpression_Expression(MemberExpression, Expressio
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
-export function Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
-  const baseReference = Evaluate_Expression(MemberExpression);
+function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
+  const baseReference = yield* Evaluate_Expression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = NewValue(IdentifierName.name);
@@ -51,14 +51,14 @@ export function Evaluate_MemberExpression_IdentifierName(MemberExpression, Ident
 //   CallExpression :
 //     CallExpression `[` Expression `]`
 //     CallExpression `.` IdentifierName
-export function Evaluate_MemberExpression(MemberExpression) {
+export function* Evaluate_MemberExpression(MemberExpression) {
   switch (true) {
     case isActualMemberExpressionWithBrackets(MemberExpression):
-      return Evaluate_MemberExpression_Expression(
+      return yield* Evaluate_MemberExpression_Expression(
         MemberExpression.object, MemberExpression.property,
       );
     case isActualMemberExpressionWithDot(MemberExpression):
-      return Evaluate_MemberExpression_IdentifierName(
+      return yield* Evaluate_MemberExpression_IdentifierName(
         MemberExpression.object, MemberExpression.property,
       );
     default:

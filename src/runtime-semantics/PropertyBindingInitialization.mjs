@@ -19,12 +19,12 @@ import { New as NewValue } from '../value.mjs';
 //
 // (implicit)
 //   BindingPropertyList : BindingProperty
-export function PropertyBindingInitialization_BindingPropertyList(
+export function* PropertyBindingInitialization_BindingPropertyList(
   BindingPropertyList, value, environment,
 ) {
   const boundNames = [];
   for (const BindingProperty of BindingPropertyList) {
-    const nextNames = PropertyBindingInitialization_BindingProperty(
+    const nextNames = yield* PropertyBindingInitialization_BindingProperty(
       BindingProperty, value, environment,
     );
     boundNames.push(...nextNames);
@@ -36,18 +36,18 @@ export function PropertyBindingInitialization_BindingPropertyList(
 //   BindingProperty :
 //     SingleNameBinding
 //     PropertyName `:` BindingElement
-export function PropertyBindingInitialization_BindingProperty(BindingProperty, value, environment) {
+export function* PropertyBindingInitialization_BindingProperty(BindingProperty, value, environment) {
   switch (true) {
     case isBindingPropertyWithSingleNameBinding(BindingProperty): {
       const name = NewValue(BindingProperty.key.name);
-      Q(KeyedBindingInitialization_SingleNameBinding(BindingProperty.value, value, environment, name));
+      Q(yield* KeyedBindingInitialization_SingleNameBinding(BindingProperty.value, value, environment, name));
       return [name];
     }
     case isBindingPropertyWithColon(BindingProperty): {
       const { key: PropertyName, value: BindingElement } = BindingProperty;
-      const P = Evaluate_PropertyName(PropertyName, BindingProperty.computed);
+      const P = yield* Evaluate_PropertyName(PropertyName, BindingProperty.computed);
       ReturnIfAbrupt(P);
-      Q(KeyedBindingInitialization_BindingElement(BindingElement, value, environment, P));
+      Q(yield* KeyedBindingInitialization_BindingElement(BindingElement, value, environment, P));
       return [P];
     }
     default:

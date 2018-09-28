@@ -52,9 +52,9 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
 
 // #sec-object-initializer-runtime-semantics-evaluation
 //   ComputedPropertyName : `[` AssignmentExpression `]`
-function Evaluate_ComputedPropertyName(ComputedPropertyName) {
+function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
   const AssignmentExpression = ComputedPropertyName;
-  const exprValue = Evaluate_Expression(AssignmentExpression);
+  const exprValue = yield* Evaluate_Expression(AssignmentExpression);
   const propName = Q(GetValue(exprValue));
   return Q(ToPropertyKey(propName));
 }
@@ -66,9 +66,9 @@ function Evaluate_ComputedPropertyName(ComputedPropertyName) {
 //
 // Note: We need some out-of-band information on whether the PropertyName is
 // computed.
-export function Evaluate_PropertyName(PropertyName, computed) {
+export function* Evaluate_PropertyName(PropertyName, computed) {
   return computed
-    ? Evaluate_ComputedPropertyName(PropertyName)
+    ? yield* Evaluate_ComputedPropertyName(PropertyName)
     : Evaluate_LiteralPropertyName(PropertyName);
 }
 
@@ -77,14 +77,14 @@ export function Evaluate_PropertyName(PropertyName, computed) {
 //
 // (implicit)
 //   PropertyDefinitionList : PropertyDefinition
-function PropertyDefinitionEvaluation_PropertyDefinitionList(
+function* PropertyDefinitionEvaluation_PropertyDefinitionList(
   PropertyDefinitionList, object, enumerable,
 ) {
   Assert(PropertyDefinitionList.length > 0);
 
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
-    lastReturn = Q(PropertyDefinitionEvaluation_PropertyDefinition(
+    lastReturn = Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(
       PropertyDefinition, object, enumerable,
     ));
   }
@@ -93,10 +93,10 @@ function PropertyDefinitionEvaluation_PropertyDefinitionList(
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : `...` AssignmentExpression
-function PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
+function* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
   const AssignmentExpression = PropertyDefinition.argument;
 
-  const exprValue = Evaluate_Expression(AssignmentExpression);
+  const exprValue = yield* Evaluate_Expression(AssignmentExpression);
   const fromValue = Q(GetValue(exprValue));
   const excludedNames = [];
   return Q(CopyDataProperties(object, fromValue, excludedNames));
@@ -104,12 +104,12 @@ function PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefiniti
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : IdentifierReference
-function PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   PropertyDefinition, object, enumerable,
 ) {
   const IdentifierReference = PropertyDefinition.key;
   const propName = NewValue(IdentifierReference.name);
-  const exprValue = Evaluate_Expression(IdentifierReference);
+  const exprValue = yield* Evaluate_Expression(IdentifierReference);
   const propValue = Q(GetValue(exprValue));
   Assert(enumerable);
   return CreateDataPropertyOrThrow(object, propName, propValue);
@@ -117,13 +117,13 @@ function PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : PropertyName `:` AssignmentExpression
-function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
+function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   PropertyDefinition, object, enumerable,
 ) {
   const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
-  const propKey = Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
+  const propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
   ReturnIfAbrupt(propKey);
-  const exprValueRef = Evaluate_Expression(AssignmentExpression);
+  const exprValueRef = yield* Evaluate_Expression(AssignmentExpression);
   const propValue = Q(GetValue(exprValueRef));
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
     const hasNameProperty = Q(HasOwnProperty(propValue, NewValue('name')));
@@ -136,15 +136,15 @@ function PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
 }
 
 // Note: PropertyDefinition : CoverInitializedName is an early error.
-function PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
   switch (true) {
     case isPropertyDefinitionIdentifierReference(PropertyDefinition):
-      return PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
+      return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
         PropertyDefinition, object, enumerable,
       );
 
     case isPropertyDefinitionKeyValue(PropertyDefinition):
-      return PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
+      return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
         PropertyDefinition, object, enumerable,
       );
 
@@ -153,7 +153,7 @@ function PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, obj
       //     PropertyDefinition., object, enumerable);
 
     case isPropertyDefinitionSpread(PropertyDefinition):
-      return PropertyDefinitionEvaluation_PropertyDefinition_Spread(
+      return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(
         PropertyDefinition, object, enumerable,
       );
 
@@ -167,7 +167,7 @@ function PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, obj
 //     `{` `}`
 //     `{` PropertyDefintionList `}`
 //     `{` PropertyDefintionList `,` `}`
-export function Evaluate_ObjectLiteral(ObjectLiteral) {
+export function* Evaluate_ObjectLiteral(ObjectLiteral) {
   if (ObjectLiteral.properties.length === 0) {
     return ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   }
@@ -175,6 +175,6 @@ export function Evaluate_ObjectLiteral(ObjectLiteral) {
   const PropertyDefintionList = ObjectLiteral.properties;
 
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  Q(PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true));
+  Q(yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true));
   return obj;
 }

@@ -211,7 +211,7 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
 
     // ConciseBody : AssignmentExpression
     case 'ConciseBody_Expression':
-      return EvaluateBody_ConciseBody_Expression(F.ECMAScriptCode.body, F, argumentsList);
+      return yield* EvaluateBody_ConciseBody_Expression(F.ECMAScriptCode.body, F, argumentsList);
 
     default:
       throw outOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);

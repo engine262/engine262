@@ -11,7 +11,7 @@ export function* Evaluate_WithStatement({
   object: Expression,
   body: Statement,
 }) {
-  const val = Evaluate_Expression(Expression);
+  const val = yield* Evaluate_Expression(Expression);
   const actualVal = Q(GetValue(val));
   const obj = Q(ToObject(actualVal));
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;

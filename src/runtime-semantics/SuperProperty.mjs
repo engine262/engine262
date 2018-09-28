@@ -22,13 +22,13 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
 // SuperProperty :
 //   `super` `[` Expression `]`
 //   `super` `.` IdentifierName
-export function Evaluate_SuperProperty(SuperProperty) {
+export function* Evaluate_SuperProperty(SuperProperty) {
   if (SuperProperty.computed) {
     const Expression = SuperProperty.property;
 
     const env = GetThisEnvironment();
     const actualThis = Q(env.GetThisBinding());
-    const propertyNameReference = Evaluate_Expression(Expression);
+    const propertyNameReference = yield* Evaluate_Expression(Expression);
     const propertyNameValue = Q(GetValue(propertyNameReference));
     const propertyKey = Q(ToPropertyKey(propertyNameValue));
     const strict = true; // TODO(strict)

@@ -35,7 +35,7 @@ function IsInTailPosition() {
   return false;
 }
 
-function EvaluateCall(func, ref, args, tailPosition) {
+function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
   if (Type(ref) === 'Reference') {
     if (IsPropertyReference(ref).isTrue()) {
@@ -47,7 +47,7 @@ function EvaluateCall(func, ref, args, tailPosition) {
   } else {
     thisValue = NewValue(undefined);
   }
-  const argList = ArgumentListEvaluation(args);
+  const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'value is not a function');
@@ -71,8 +71,8 @@ function EvaluateCall(func, ref, args, tailPosition) {
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
-export function Evaluate_CallExpression(CallExpression) {
-  const ref = Evaluate_Expression(CallExpression.callee);
+export function* Evaluate_CallExpression(CallExpression) {
+  const ref = yield* Evaluate_Expression(CallExpression.callee);
   const func = Q(GetValue(ref));
   if (Type(ref) === 'Reference' && IsPropertyReference(ref).isFalse()
     && (Type(GetReferencedName(ref)) === 'String'
@@ -82,5 +82,5 @@ export function Evaluate_CallExpression(CallExpression) {
   }
   const thisCall = CallExpression;
   const tailCall = IsInTailPosition(thisCall);
-  return Q(EvaluateCall(func, ref, CallExpression.arguments, tailCall));
+  return Q(yield* EvaluateCall(func, ref, CallExpression.arguments, tailCall));
 }

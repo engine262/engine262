@@ -38,14 +38,14 @@ export function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
 //   ShiftExpression << AdditiveExpression
 //   ShiftExpression >> AdditiveExpression
 //   ShiftExpression >>> AdditiveExpression
-export function Evaluate_ShiftExpression({
+export function* Evaluate_ShiftExpression({
   left: ShiftExpression,
   operator,
   right: AdditiveExpression,
 }) {
-  const lref = Evaluate_Expression(ShiftExpression);
+  const lref = yield* Evaluate_Expression(ShiftExpression);
   const lval = Q(GetValue(lref));
-  const rref = Evaluate_Expression(AdditiveExpression);
+  const rref = yield* Evaluate_Expression(AdditiveExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
 }

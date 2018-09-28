@@ -11,13 +11,13 @@ export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
 
 // #sec-exp-operator-runtime-semantics-evaluation
 // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
-export function Evaluate_ExponentiationExpression({
+export function* Evaluate_ExponentiationExpression({
   left: UpdateExpression,
   right: ExponentiationExpression,
 }) {
-  const left = Evaluate_Expression(UpdateExpression);
+  const left = yield* Evaluate_Expression(UpdateExpression);
   const leftValue = Q(GetValue(left));
-  const right = Evaluate_Expression(ExponentiationExpression);
+  const right = yield* Evaluate_Expression(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
   return EvaluateBinopValues_ExponentiationExpression(leftValue, rightValue);
 }

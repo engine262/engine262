@@ -14,9 +14,9 @@ import {
 import { BlockDeclarationInstantiation } from './BlockStatement.mjs';
 
 // #sec-runtime-semantics-caseclauseisselected
-function CaseClauseIsSelected(C, input) {
+function* CaseClauseIsSelected(C, input) {
   // Assert: C is an instance of the production CaseClause : `case` Expression : StatementList.
-  const exprRef = Evaluate_Expression(C.test);
+  const exprRef = yield* Evaluate_Expression(C.test);
   const clauseSelector = Q(GetValue(exprRef));
   return StrictEqualityComparison(input, clauseSelector);
 }
@@ -48,7 +48,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     let found = false;
     for (const C of A) {
       if (found === false) {
-        found = Q(CaseClauseIsSelected(C, input)).isTrue();
+        found = Q(yield* CaseClauseIsSelected(C, input)).isTrue();
       }
       if (found === true) {
         const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
@@ -134,7 +134,7 @@ export function* Evaluate_SwitchStatement({
   discriminant: Expression,
   cases: CaseBlock,
 }) {
-  const exprRef = Evaluate_Expression(Expression);
+  const exprRef = yield* Evaluate_Expression(Expression);
   const switchValue = Q(GetValue(exprRef));
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const blockEnv = NewDeclarativeEnvironment(oldEnv);

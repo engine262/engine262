@@ -45,13 +45,13 @@ import { Type, New as NewValue } from '../value.mjs';
 //   AssignmentPattern :
 //     ObjectAssignmentPattern
 //     ArrayAssignmentPattern
-export function DestructuringAssignmentEvaluation_AssignmentPattern(AssignmentPattern, value) {
+export function* DestructuringAssignmentEvaluation_AssignmentPattern(AssignmentPattern, value) {
   switch (true) {
     case isObjectAssignmentPattern(AssignmentPattern):
-      return DestructuringAssignmentEvaluation_ObjectAssignmentPattern(AssignmentPattern, value);
+      return yield* DestructuringAssignmentEvaluation_ObjectAssignmentPattern(AssignmentPattern, value);
 
     case isArrayAssignmentPattern(AssignmentPattern):
-      return DestructuringAssignmentEvaluation_ArrayAssignmentPattern(AssignmentPattern, value);
+      return yield* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(AssignmentPattern, value);
 
     default:
       throw outOfRange('DestructuringAssignmentEvaluation_AssignmentPattern', AssignmentPattern);
@@ -65,7 +65,7 @@ export function DestructuringAssignmentEvaluation_AssignmentPattern(AssignmentPa
 //     `{` AssignmentPropertyList `}`
 //     `{` AssignmentPropertyList `,` `}`
 //     `{` AssignmentPropertyList `,` AssignmentRestProperty `}`
-function DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssignmentPattern, value) {
+function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssignmentPattern, value) {
   let AssignmentPropertyList = ObjectAssignmentPattern.properties;
   let AssignmentRestProperty;
   // Members of the AssignmentPropertyList may be null, so add a truthyness check.
@@ -78,14 +78,14 @@ function DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssignm
   Q(RequireObjectCoercible(value));
   let excludedNames = [];
   if (AssignmentPropertyList.length > 0) {
-    excludedNames = Q(PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(
+    excludedNames = Q(yield* PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(
       AssignmentPropertyList, value,
     ));
   }
   if (AssignmentRestProperty === undefined) {
     return new NormalCompletion(undefined);
   }
-  return RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames);
+  return yield* RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames);
 }
 
 // 12.15.5.2 #sec-runtime-semantics-destructuringassignmentevaluation
@@ -95,7 +95,7 @@ function DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssignm
 //     `[` Elision_opt AssignmentRestProperty `]`
 //     `[` AssignmentElementList `]`
 //     `[` AssignmentElementList `,` Elision_opt AssignmentRestProperty_opt `]`
-function DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignmentPattern, value) {
+function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignmentPattern, value) {
   let Elision;
   let AssignmentElementList = ArrayAssignmentPattern.elements;
   let AssignmentRestProperty;
@@ -121,7 +121,7 @@ function DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignmen
   const iteratorRecord = Q(GetIterator(value));
   let status;
   if (AssignmentElementList.length > 0) {
-    status = IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord);
+    status = yield* IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord);
     if (status instanceof AbruptCompletion) {
       if (iteratorRecord.Done.isFalse()) {
         return Q(IteratorClose(iteratorRecord, status));
@@ -144,7 +144,7 @@ function DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignmen
     }
   }
   if (AssignmentRestProperty !== undefined) {
-    status = IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, iteratorRecord);
+    status = yield* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, iteratorRecord);
   }
   // ArrayAssignmentPattern : `[` `]`
   if (status === undefined) {
@@ -161,10 +161,10 @@ function DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignmen
 //
 // (implicit)
 //   AssignmentPropertyList : AssignmentProperty
-function PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(AssignmentPropertyList, value) {
+function* PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(AssignmentPropertyList, value) {
   const names = [];
   for (const AssignmentProperty of AssignmentPropertyList) {
-    names.push(...PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value));
+    names.push(...yield* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value));
   }
   return names;
 }
@@ -173,7 +173,7 @@ function PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(Assign
 //   AssignmentProperty :
 //     IdentifierReference Initializer_opt
 //     PropertyName `:` AssignmentElement
-function PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value) {
+function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value) {
   if (AssignmentProperty.shorthand) {
     // AssignmentProperty : IdentifierReference Initializer_opt
     const IdentifierReference = AssignmentProperty.key;
@@ -186,7 +186,7 @@ function PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignment
     const lref = Q(ResolveBinding(P));
     let v = Q(GetV(value, P));
     if (Initializer !== undefined && Type(v) === 'Undefined') {
-      const defaultValue = Evaluate_Expression(Initializer);
+      const defaultValue = yield* Evaluate_Expression(Initializer);
       v = Q(GetValue(defaultValue));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
@@ -204,17 +204,17 @@ function PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignment
     value: AssignmentElement,
   } = AssignmentProperty;
 
-  const name = Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
+  const name = yield* Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
   ReturnIfAbrupt(name);
-  Q(KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, value, name));
+  Q(yield* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, value, name));
   return [name];
 }
 
 // 12.15.5.4 #sec-runtime-semantics-restdestructuringassignmentevaluation
 //   AssignmentRestProperty : `...` DestructuringAssignmentTarget
-function RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames) {
+function* RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames) {
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
-  const lref = Evaluate_Expression(DestructuringAssignmentTarget);
+  const lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
   ReturnIfAbrupt(lref);
   const restObj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
@@ -225,11 +225,11 @@ function RestDestructuringAssignmentEvaluation_AssignmentRestProperty(Assignment
 //   AssignmentElementList :
 //     AssignmentElisionElement
 //     AssignmentElementList `,` AssignmentElisionElement
-function IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord) {
+function* IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord) {
   Assert(AssignmentElementList.length > 0);
   let result;
   for (const AssignmentElisionElement of AssignmentElementList) {
-    result = Q(IteratorDestructuringAssignmentEvaluation_AssignmentElisionElement(AssignmentElisionElement, iteratorRecord));
+    result = Q(yield* IteratorDestructuringAssignmentEvaluation_AssignmentElisionElement(AssignmentElisionElement, iteratorRecord));
   }
   return result;
 }
@@ -238,17 +238,17 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentElementList(Assignm
 //   AssignmentElisionElement :
 //     AssignmentElement
 //     Elision AssignmentElement
-function IteratorDestructuringAssignmentEvaluation_AssignmentElisionElement(AssignmentElisionElement, iteratorRecord) {
+function* IteratorDestructuringAssignmentEvaluation_AssignmentElisionElement(AssignmentElisionElement, iteratorRecord) {
   if (!AssignmentElisionElement) {
     // This is an elision.
     return IteratorDestructuringAssignmentEvaluation_Elision([AssignmentElisionElement], iteratorRecord);
   }
-  return IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElisionElement, iteratorRecord);
+  return yield* IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElisionElement, iteratorRecord);
 }
 
 // 12.15.5.5 #sec-runtime-semantics-iteratordestructuringassignmentevaluation
 //   AssignmentElement : DestructuringAssignmentTarget Initializer_opt
-function IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, iteratorRecord) {
+function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, iteratorRecord) {
   let DestructuringAssignmentTarget = AssignmentElement;
   let Initializer;
   if (AssignmentElement.type === 'AssignmentPattern') {
@@ -258,7 +258,7 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentE
 
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   let value;
@@ -283,14 +283,14 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentElement(AssignmentE
   }
   let v;
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
   } else {
     v = value;
   }
   if (isAssignmentPattern(DestructuringAssignmentTarget)) {
     const nestedAssignmentPattern = DestructuringAssignmentTarget;
-    return DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, v);
+    return yield* DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, v);
   }
   if (Initializer !== undefined
       && Type(v) === 'Undefined'
@@ -325,11 +325,11 @@ function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorReco
 
 // 12.15.5.5 #sec-runtime-semantics-iteratordestructuringassignmentevaluation
 //   AssignmentRestElement : `...` DestructuringAssignmentTarget
-function IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, iteratorRecord) {
+function* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, iteratorRecord) {
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   const A = X(ArrayCreate(NewValue(0)));
@@ -357,12 +357,12 @@ function IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assign
     return Q(PutValue(lref, A));
   }
   const nestedAssignmentPattern = DestructuringAssignmentTarget;
-  return DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, A);
+  return yield* DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, A);
 }
 
 // 12.15.5.6 #sec-runtime-semantics-keyeddestructuringassignmentevaluation
 //   AssignmentElement : DestructuringAssignmentTarget Initializer_opt
-function KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, value, propertyName) {
+function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElement, value, propertyName) {
   let DestructuringAssignmentTarget = AssignmentElement;
   let Initializer;
   if (AssignmentElement.type === 'AssignmentPattern') {
@@ -372,20 +372,20 @@ function KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentElem
 
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   const v = Q(GetV(value, propertyName));
   let rhsValue;
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate_Expression(Initializer);
     rhsValue = Q(GetValue(defaultValue));
   } else {
     rhsValue = v;
   }
   if (isAssignmentPattern(DestructuringAssignmentTarget)) {
     const assignmentPattern = DestructuringAssignmentTarget;
-    return DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rhsValue);
+    return yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rhsValue);
   }
   if (Initializer !== undefined
       && Type(v) === 'Undefined'

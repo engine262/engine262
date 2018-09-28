@@ -23,7 +23,7 @@ import { New as NewValue } from '../value.mjs';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
-export function Evaluate_VariableDeclaration(VariableDeclaration) {
+export function* Evaluate_VariableDeclaration(VariableDeclaration) {
   switch (true) {
     case isBindingIdentifier(VariableDeclaration.id) && VariableDeclaration.init === null:
       return new NormalCompletion(undefined);
@@ -35,7 +35,7 @@ export function Evaluate_VariableDeclaration(VariableDeclaration) {
       } = VariableDeclaration;
       const bindingId = NewValue(BindingIdentifier.name);
       const lhs = Q(ResolveBinding(bindingId));
-      const rhs = Evaluate_Expression(Initializer);
+      const rhs = yield* Evaluate_Expression(Initializer);
       const value = Q(GetValue(rhs));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
@@ -51,9 +51,9 @@ export function Evaluate_VariableDeclaration(VariableDeclaration) {
         id: BindingPattern,
         init: Initializer,
       } = VariableDeclaration;
-      const rhs = Evaluate_Expression(Initializer);
+      const rhs = yield* Evaluate_Expression(Initializer);
       const rval = Q(GetValue(rhs));
-      return BindingInitialization_BindingPattern(BindingPattern, rval, NewValue(undefined));
+      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, NewValue(undefined));
     }
 
     default:
@@ -66,10 +66,10 @@ export function Evaluate_VariableDeclaration(VariableDeclaration) {
 //
 // (implicit)
 //   VariableDeclarationList : VariableDeclaration
-export function Evaluate_VariableDeclarationList(VariableDeclarationList) {
+export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
   let next;
   for (const VariableDeclaration of VariableDeclarationList) {
-    next = Evaluate_VariableDeclaration(VariableDeclaration);
+    next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
     ReturnIfAbrupt(next);
   }
   return next;
@@ -77,8 +77,8 @@ export function Evaluate_VariableDeclarationList(VariableDeclarationList) {
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function Evaluate_VariableStatement(VariableStatement) {
-  const next = Evaluate_VariableDeclarationList(VariableStatement.declarations);
+export function* Evaluate_VariableStatement(VariableStatement) {
+  const next = yield* Evaluate_VariableDeclarationList(VariableStatement.declarations);
   ReturnIfAbrupt(next);
   return new NormalCompletion(undefined);
 }
