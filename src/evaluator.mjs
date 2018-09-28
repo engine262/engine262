@@ -106,6 +106,7 @@ import {
   New as NewValue,
 } from './value.mjs';
 import {
+  Assert,
   GetValue,
 } from './abstract-ops/all.mjs';
 import { outOfRange } from './helpers.mjs';

@@ -4,14 +4,11 @@ import {
 // import { CoveredFormalsList } from '../static-semantics/all.mjs';
 import { FunctionCreate } from '../abstract-ops/all.mjs';
 
-export function Evaluate_ArrowFunction({
-  params: ArrowParameters,
-  body: ConciseBody,
-  IsStrict,
-}) {
-  const strict = IsStrict;
+export function Evaluate_ArrowFunction(ArrowFunction) {
+  const { params: ArrowParameters } = ArrowFunction;
+  const strict = true; // TODO(IsStrict)
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const parameters = ArrowParameters; // CoveredFormalsList(ArrowParameters);
-  const closure = FunctionCreate('Arrow', parameters, ConciseBody, scope, strict);
+  const parameters = ArrowParameters;
+  const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope, strict);
   return closure;
 }

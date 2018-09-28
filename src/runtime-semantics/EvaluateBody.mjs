@@ -8,13 +8,13 @@ import {
   GetValue,
 } from '../abstract-ops/all.mjs';
 import {
+  isArrowFunction,
   isAsyncFunctionDeclaration,
   isAsyncGeneratorDeclaration,
   isBindingIdentifier,
-  isBlockStatement,
-  isExpression,
   isForBinding,
   isFunctionDeclaration,
+  isFunctionExpression,
   isGeneratorDeclaration,
   isVariableDeclaration,
 } from '../ast.mjs';
@@ -49,7 +49,6 @@ import {
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
 import { New as NewValue } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
 
 // #sec-functiondeclarationinstantiation
 export function FunctionDeclarationInstantiation(func, argumentsList) {
@@ -66,15 +65,26 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   const simpleParameterList = IsSimpleParameterList(formals);
   const hasParameterExpressions = ContainsExpression(formals);
 
-  const varNames = (code.body
-    ? VarDeclaredNames_FunctionBody(code.body)
-    : VarDeclaredNames_ConciseBody(code)).map(NewValue);
-  const varDeclarations = code.body
-    ? VarScopedDeclarations_FunctionBody(code.body)
-    : VarScopedDeclarations_ConciseBody(code);
-  const lexicalNames = (code.body
-    ? LexicallyDeclaredNames_FunctionBody(code.body)
-    : LexicallyDeclaredNames_ConciseBody(code)).map(NewValue);
+  let varNames;
+  let varDeclarations;
+  let lexicalNames;
+
+  switch (getFunctionBodyType(code)) {
+    case 'FunctionBody':
+      varNames = VarDeclaredNames_FunctionBody(code.body.body).map(NewValue);
+      varDeclarations = VarScopedDeclarations_FunctionBody(code.body.body);
+      lexicalNames = LexicallyDeclaredNames_FunctionBody(code.body.body).map(NewValue);
+      break;
+    case 'ConciseBody_Expression':
+    case 'ConciseBody_FunctionBody':
+      varNames = VarDeclaredNames_ConciseBody(code.body).map(NewValue);
+      varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
+      lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(NewValue);
+      break;
+    default:
+      throw outOfRange('FunctionDeclarationInstantiation', code);
+  }
+
   const functionNames = [];
   const functionsToInitialize = [];
 
@@ -184,9 +194,18 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   lexEnv.EnvironmentRecord = lexEnvRec;
   calleeContext.LexicalEnvironment = lexEnv;
 
-  const lexDeclarations = code.body
-    ? LexicallyScopedDeclarations_FunctionBody(code.body)
-    : LexicallyScopedDeclarations_ConciseBody(code);
+  let lexDeclarations;
+  switch (getFunctionBodyType(code)) {
+    case 'FunctionBody':
+      lexDeclarations = LexicallyScopedDeclarations_FunctionBody(code.body.body);
+      break;
+    case 'ConciseBody_Expression':
+    case 'ConciseBody_FunctionBody':
+      lexDeclarations = LexicallyScopedDeclarations_ConciseBody(code.body);
+      break;
+    default:
+      throw outOfRange('FunctionDeclarationInstantiation', code);
+  }
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
       if (IsConstantDeclaration(d)) {
@@ -206,9 +225,29 @@ export function FunctionDeclarationInstantiation(func, argumentsList) {
   return new NormalCompletion(undefined);
 }
 
+export function getFunctionBodyType(ECMAScriptCode) {
+  switch (true) {
+    // FunctionBody : FunctionStatementList
+    case isFunctionDeclaration(ECMAScriptCode)
+      || isFunctionExpression(ECMAScriptCode): // includes MethodDefinitions
+      return 'FunctionBody';
+
+    // ConciseBody : `{` FunctionBody `}`
+    case isArrowFunction(ECMAScriptCode) && !ECMAScriptCode.expression:
+      return 'ConciseBody_FunctionBody';
+
+    // ConciseBody : AssignmentExpression
+    case isArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
+      return 'ConciseBody_Expression';
+
+    default:
+      throw outOfRange('getFunctionBodyType', ECMAScriptCode);
+  }
+}
+
 // #sec-arrow-function-definitions-runtime-semantics-evaluatebody
 // ConciseBody : AssignmentExpression
-export function EvaluateBody_ConciseBody(AssignmentExpression, functionObject, argumentsList) {
+export function EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
   Q(FunctionDeclarationInstantiation(functionObject, argumentsList));
   const exprRef = Evaluate_Expression(AssignmentExpression);
   const exprValue = Q(GetValue(exprRef));
@@ -220,18 +259,4 @@ export function EvaluateBody_ConciseBody(AssignmentExpression, functionObject, a
 export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
   Q(FunctionDeclarationInstantiation(functionObject, argumentsList));
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
-}
-
-// ConciseBody : [lookahead != `{`] AssignmentExpression
-// FunctionBody : FunctionStatementList
-export function* EvaluateBody(node, functionObject, argumentsList) {
-  switch (true) {
-    case isExpression(node):
-      return EvaluateBody_ConciseBody(node, functionObject, argumentsList);
-    case isBlockStatement(node):
-      return yield* EvaluateBody_FunctionBody(node.body, functionObject, argumentsList);
-
-    default:
-      throw outOfRange('EvaluateBody', node);
-  }
 }

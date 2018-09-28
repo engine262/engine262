@@ -34,7 +34,6 @@ import { outOfRange } from '../helpers.mjs';
 function DefineMethod(MethodDefinition, object, functionPrototype) {
   const PropertyName = MethodDefinition.key;
   const UniqueFormalParameters = MethodDefinition.value.params;
-  const FunctionBody = MethodDefinition.value.body;
 
   const propKey = Evaluate_PropertyName(PropertyName);
   ReturnIfAbrupt(propKey);
@@ -50,7 +49,7 @@ function DefineMethod(MethodDefinition, object, functionPrototype) {
     kind = 'Method';
     prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
   }
-  const closure = FunctionCreate(kind, UniqueFormalParameters, FunctionBody, scope, strict, prototype);
+  const closure = FunctionCreate(kind, UniqueFormalParameters, MethodDefinition.value, scope, strict, prototype);
   MakeMethod(closure, object);
   return {
     Key: propKey,
@@ -77,7 +76,6 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
   } else if (MethodDefinition.kind === 'get') {
     const PropertyName = MethodDefinition.key;
-    const FunctionBody = MethodDefinition.value.body;
 
     const propKey = Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
@@ -85,7 +83,7 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const strict = true;
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     const formalParameterList = [];
-    const closure = FunctionCreate('Method', formalParameterList, FunctionBody, scope, strict);
+    const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
     SetFunctionName(closure, propKey, NewValue('get'));
     const desc = {
       Get: closure,
@@ -96,14 +94,13 @@ function PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
   } else if (MethodDefinition.kind === 'set') {
     const PropertyName = MethodDefinition.key;
     const PropertySetParameterList = MethodDefinition.value.params;
-    const FunctionBody = MethodDefinition.value.body;
 
     const propKey = Evaluate_PropertyName(PropertyName);
     ReturnIfAbrupt(propKey);
     // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
     const strict = true;
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const closure = FunctionCreate('Method', PropertySetParameterList, FunctionBody, scope, strict);
+    const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
     MakeMethod(closure, object);
     SetFunctionName(closure, propKey, NewValue('set'));
     const desc = {

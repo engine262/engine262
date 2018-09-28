@@ -10,11 +10,11 @@ import {
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { New as NewValue } from '../value.mjs';
 
-function Evaluate_FunctionExpression_BindingIdentifier({
-  id: BindingIdentifier,
-  params: FormalParameters,
-  body: FunctionBody,
-}) {
+function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
+  const {
+    id: BindingIdentifier,
+    params: FormalParameters,
+  } = FunctionExpression;
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
   const strict = true;
@@ -23,7 +23,7 @@ function Evaluate_FunctionExpression_BindingIdentifier({
   const envRec = funcEnv.EnvironmentRecord;
   const name = NewValue(BindingIdentifier.name);
   envRec.CreateImmutableBinding(name, NewValue(false));
-  const closure = FunctionCreate('Normal', FormalParameters, FunctionBody, funcEnv, strict);
+  const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv, strict);
   MakeConstructor(closure);
   SetFunctionName(closure, name);
   envRec.InitializeBinding(name, closure);
@@ -35,13 +35,13 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
     return Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression);
   }
 
-  const { body: FunctionBody, params: FormalParameters } = FunctionExpression;
+  const FormalParameters = FunctionExpression.params;
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
   const strict = true;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = FunctionCreate('Normal', FormalParameters, FunctionBody, scope, strict);
+  const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, scope, strict);
   MakeConstructor(closure);
   return closure;
 }

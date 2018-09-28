@@ -29,7 +29,9 @@ import {
   ExpectedArgumentCount_FormalParameters,
 } from '../static-semantics/all.mjs';
 import {
-  EvaluateBody,
+  EvaluateBody_ConciseBody_Expression,
+  EvaluateBody_FunctionBody,
+  getFunctionBodyType,
 } from '../runtime-semantics/all.mjs';
 import {
   FunctionEnvironmentRecord,
@@ -200,7 +202,20 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 
 // #sec-ordinarycallevaluatebody
 export function* OrdinaryCallEvaluateBody(F, argumentsList) {
-  return yield* EvaluateBody(F.ECMAScriptCode, F, argumentsList);
+  switch (getFunctionBodyType(F.ECMAScriptCode)) {
+    // FunctionBody : FunctionStatementList
+    // ConciseBody : `{` FunctionBody `}`
+    case 'FunctionBody':
+    case 'ConciseBody_FunctionBody':
+      return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
+    // ConciseBody : AssignmentExpression
+    case 'ConciseBody_Expression':
+      return EvaluateBody_ConciseBody_Expression(F.ECMAScriptCode.body, F, argumentsList);
+
+    default:
+      throw outOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
+  }
 }
 
 function FunctionAllocate(functionPrototype, strict, functionKind) {
@@ -257,6 +272,9 @@ function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
 }
 
 // #sec-FunctionCreate
+// Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
+// instead take in the entire function node as Body and save it in
+// ECMAScriptCode as such.
 export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototype) {
   if (prototype === undefined) {
     prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
