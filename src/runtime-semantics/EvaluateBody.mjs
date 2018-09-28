@@ -43,6 +43,7 @@ import {
 import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
+import { outOfRange } from '../helpers.mjs';
 import {
   InstantiateFunctionObject,
   Evaluate_FunctionStatementList,

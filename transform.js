@@ -168,7 +168,7 @@ module.exports = ({ types: t, template }) => {
             // ReturnIfAbrupt(argument)
             const binding = path.scope.getBinding(argument.name);
             if (!binding) {
-              throw new Error(`Unrecognized binding ${argument.name}`)
+              throw new Error(`Unrecognized binding ${argument.name}`);
             }
             binding.path.parent.kind = 'let';
 

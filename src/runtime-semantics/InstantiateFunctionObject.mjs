@@ -4,11 +4,9 @@ import {
   MakeConstructor,
 } from '../abstract-ops/all.mjs';
 import {
-  isAsyncFunctionDeclaration,
-  isAsyncGeneratorDeclaration,
   isFunctionDeclaration,
-  isGeneratorDeclaration,
 } from '../ast.mjs';
+import { outOfRange } from '../helpers.mjs';
 import {
   New as NewValue,
 } from '../value.mjs';
