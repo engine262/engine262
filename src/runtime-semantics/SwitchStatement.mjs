@@ -26,7 +26,7 @@ function CaseClauseIsSelected(C, input) {
 //   `{` `}`
 //   `{` CaseClauses `}`
 //   `{` CaseClauses DefaultClause CaseClauses `}`
-function CaseBlockEvaluation(CaseBlock, input) {
+function* CaseBlockEvaluation(CaseBlock, input) {
   if (CaseBlock.length === 0) {
     return NormalCompletion(NewValue(undefined));
   }
@@ -51,7 +51,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
         found = Q(CaseClauseIsSelected(C, input)).isTrue();
       }
       if (found === true) {
-        const R = EnsureCompletion(Evaluate_StatementList(C.consequent));
+        const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
         if (R.Value !== undefined) {
           V = R.Value;
         }
@@ -73,7 +73,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
           foundInB = Q(CaseClauseIsSelected(C, input)).isTrue();
         }
         if (foundInB === true) {
-          const R = EnsureCompletion(Evaluate_StatementList(C.consequent));
+          const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
           if (R.Value !== undefined) {
             V = R.Value;
           }
@@ -86,7 +86,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
     if (foundInB === true) {
       return NormalCompletion(V);
     }
-    const R = EnsureCompletion(Evaluate_StatementList(DefaultClause.consequent));
+    const R = EnsureCompletion(yield* Evaluate_StatementList(DefaultClause.consequent));
     if (R.Value !== undefined) {
       V = R.Value;
     }
@@ -94,7 +94,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
       return Completion(UpdateEmpty(R, V));
     }
     for (const C of B) {
-      const R = EnsureCompletion(Evaluate_StatementList(C.consequent)); // eslint-disable-line no-shadow
+      const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent)); // eslint-disable-line no-shadow
       if (R.Value !== undefined) {
         V = R.Value;
       }
@@ -114,7 +114,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
         found = Q(CaseClauseIsSelected(C, input)).isTrue();
       }
       if (found === true) {
-        const R = EnsureCompletion(Evaluate_StatementList(C.consequent));
+        const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
         if (R.Value !== undefined) {
           V = R.Value;
         }
@@ -130,7 +130,7 @@ function CaseBlockEvaluation(CaseBlock, input) {
 
 // #sec-switch-statement-runtime-semantics-evaluation
 // SwitchStatement : `switch` `(` Expression `)` CaseBlock
-export function Evaluate_SwitchStatement({
+export function* Evaluate_SwitchStatement({
   discriminant: Expression,
   cases: CaseBlock,
 }) {
@@ -140,7 +140,7 @@ export function Evaluate_SwitchStatement({
   const blockEnv = NewDeclarativeEnvironment(oldEnv);
   BlockDeclarationInstantiation(CaseBlock, blockEnv);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  const R = CaseBlockEvaluation(CaseBlock, switchValue);
+  const R = yield* CaseBlockEvaluation(CaseBlock, switchValue);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return R;
 }

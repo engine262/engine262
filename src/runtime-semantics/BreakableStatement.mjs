@@ -17,17 +17,17 @@ import {
 //   BreakableStatement :
 //     IterationStatement
 //     SwitchStatement
-export function Evaluate_BreakableStatement(BreakableStatement) {
+export function* Evaluate_BreakableStatement(BreakableStatement) {
   const newLabelSet = [];
-  return LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
+  return yield* LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
 }
 
 // #sec-statement-semantics-runtime-semantics-labelledevaluation
 //   BreakableStatement : IterationStatement
-function LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   switch (true) {
     case isIterationStatement(BreakableStatement): {
-      let stmtResult = LabelledEvaluation_IterationStatement(BreakableStatement, labelSet);
+      let stmtResult = yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet);
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
@@ -41,7 +41,7 @@ function LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
     }
 
     case isSwitchStatement(BreakableStatement): {
-      let stmtResult = Evaluate_SwitchStatement(BreakableStatement, labelSet);
+      let stmtResult = yield* Evaluate_SwitchStatement(BreakableStatement, labelSet);
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {

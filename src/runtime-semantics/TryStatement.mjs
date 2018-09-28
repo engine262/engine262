@@ -30,7 +30,7 @@ import { outOfRange } from '../helpers.mjs';
 // #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.
 //    Catch : catch `(` CatchParameter `)` Block
-function CatchClauseEvaluation(Catch, thrownValue) {
+function* CatchClauseEvaluation(Catch, thrownValue) {
   const CatchParameter = Catch.param;
   const Block = Catch.body;
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -45,7 +45,7 @@ function CatchClauseEvaluation(Catch, thrownValue) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     return status;
   }
-  const B = Evaluate_Block(Block);
+  const B = yield* Evaluate_Block(Block);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return B;
 }
@@ -56,11 +56,11 @@ const Evaluate_Finally = Evaluate_Block;
 
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch
-function Evaluate_TryStatement_Catch(Block, Catch) {
-  const B = EnsureCompletion(Evaluate_Block(Block));
+function* Evaluate_TryStatement_Catch(Block, Catch) {
+  const B = EnsureCompletion(yield* Evaluate_Block(Block));
   let C;
   if (B.Type === 'throw') {
-    C = EnsureCompletion(CatchClauseEvaluation(Catch, B.Value));
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
   } else {
     C = B;
   }
@@ -69,9 +69,9 @@ function Evaluate_TryStatement_Catch(Block, Catch) {
 
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Finally
-function Evaluate_TryStatement_Finally(Block, Finally) {
-  const B = Evaluate_Block(Block);
-  let F = Evaluate_Finally(Finally);
+function* Evaluate_TryStatement_Finally(Block, Finally) {
+  const B = yield* Evaluate_Block(Block);
+  let F = yield* Evaluate_Finally(Finally);
   if (F.Type === 'normal') {
     F = B;
   }
@@ -80,15 +80,15 @@ function Evaluate_TryStatement_Finally(Block, Finally) {
 
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch Finally
-function Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
-  const B = Evaluate_Block(Block);
+function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
+  const B = yield* Evaluate_Block(Block);
   let C;
   if (B.Type === 'throw') {
-    C = CatchClauseEvaluation(Catch, B.Value);
+    C = yield* CatchClauseEvaluation(Catch, B.Value);
   } else {
     C = B;
   }
-  let F = Evaluate_Finally(Finally);
+  let F = yield* Evaluate_Finally(Finally);
   if (F.Type === 'normal') {
     F = C;
   }
@@ -96,16 +96,16 @@ function Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
-export function Evaluate_TryStatement(Expression) {
+export function* Evaluate_TryStatement(Expression) {
   switch (true) {
     case isTryStatementWithCatch(Expression) && isTryStatementWithFinally(Expression):
-      return Evaluate_TryStatement_CatchFinally(
+      return yield* Evaluate_TryStatement_CatchFinally(
         Expression.block, Expression.handler, Expression.finalizer,
       );
     case isTryStatementWithCatch(Expression):
-      return Evaluate_TryStatement_Catch(Expression.block, Expression.handler);
+      return yield* Evaluate_TryStatement_Catch(Expression.block, Expression.handler);
     case isTryStatementWithFinally(Expression):
-      return Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
+      return yield* Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
     default:
       throw outOfRange('Evaluate_TryStatement', Expression);

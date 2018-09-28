@@ -115,19 +115,19 @@ import { outOfRange } from './helpers.mjs';
 //
 // (implicit)
 //   StatementList : StatementListItem
-export function Evaluate_StatementList(StatementList) {
+export function* Evaluate_StatementList(StatementList) {
   if (StatementList.length === 0) {
     return new NormalCompletion(undefined);
   }
 
-  let sl = Evaluate_StatementListItem(StatementList[0]);
+  let sl = yield* Evaluate_StatementListItem(StatementList[0]);
   if (StatementList.length === 1) {
     return sl;
   }
 
   for (const StatementListItem of StatementList.slice(1)) {
     ReturnIfAbrupt(sl);
-    let s = Evaluate_StatementListItem(StatementListItem);
+    let s = yield* Evaluate_StatementListItem(StatementListItem);
     // We don't always return a Completion value, but here we actually need it
     // to be a Completion.
     s = EnsureCompletion(s);
@@ -140,10 +140,10 @@ export function Evaluate_StatementList(StatementList) {
 // (implicit)
 //   StatementListItem : Statement
 //   Statement : ExpressionStatement
-function Evaluate_StatementListItem(StatementListItem) {
+function* Evaluate_StatementListItem(StatementListItem) {
   switch (true) {
     case isBlockStatement(StatementListItem):
-      return Evaluate_BlockStatement(StatementListItem);
+      return yield* Evaluate_BlockStatement(StatementListItem);
 
     case isLexicalDeclaration(StatementListItem):
       return Evaluate_LexicalDeclaration(StatementListItem);
@@ -161,10 +161,10 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_ExpressionStatement(StatementListItem);
 
     case isIfStatement(StatementListItem):
-      return Evaluate_IfStatement(StatementListItem);
+      return yield* Evaluate_IfStatement(StatementListItem);
 
     case isBreakableStatement(StatementListItem):
-      return Evaluate_BreakableStatement(StatementListItem);
+      return yield* Evaluate_BreakableStatement(StatementListItem);
 
     case isContinueStatement(StatementListItem):
       return Evaluate_ContinueStatement(StatementListItem);
@@ -176,13 +176,13 @@ function Evaluate_StatementListItem(StatementListItem) {
       return Evaluate_ReturnStatement(StatementListItem);
 
     case isWithStatement(StatementListItem):
-      return Evaluate_WithStatement(StatementListItem);
+      return yield* Evaluate_WithStatement(StatementListItem);
 
     case isThrowStatement(StatementListItem):
       return Evaluate_ThrowStatement(StatementListItem.argument);
 
     case isTryStatement(StatementListItem):
-      return Evaluate_TryStatement(StatementListItem);
+      return yield* Evaluate_TryStatement(StatementListItem);
 
     case isDebuggerStatement(StatementListItem):
       return Evaluate_DebuggerStatement(StatementListItem);
@@ -192,8 +192,8 @@ function Evaluate_StatementListItem(StatementListItem) {
   }
 }
 
-export function Evaluate_Statement(Statement) {
-  return EnsureCompletion(Evaluate_StatementListItem(Statement));
+export function* Evaluate_Statement(Statement) {
+  return EnsureCompletion(yield* Evaluate_StatementListItem(Statement));
 }
 
 // #sec-expression-statement-runtime-semantics-evaluation
@@ -377,5 +377,7 @@ export function Evaluate_Script(Script, envRec) {
   if (Script.length === 0) {
     return new NormalCompletion();
   }
-  return Evaluate_StatementList(Script, envRec);
+  const { value, done } = Evaluate_StatementList(Script, envRec).next();
+  Assert(done);
+  return value;
 }

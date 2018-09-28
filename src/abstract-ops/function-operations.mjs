@@ -115,7 +115,9 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
 
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  const result = OrdinaryCallEvaluateBody(F, argumentsList);
+  const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
+  Assert(done);
+  const result = value;
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
@@ -146,7 +148,10 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   }
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
-  const result = OrdinaryCallEvaluateBody(F, argumentsList);
+  const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
+  Assert(done);
+  const result = value;
+
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();
@@ -194,8 +199,8 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 }
 
 // #sec-ordinarycallevaluatebody
-export function OrdinaryCallEvaluateBody(F, argumentsList) {
-  return EvaluateBody(F.ECMAScriptCode, F, argumentsList);
+export function* OrdinaryCallEvaluateBody(F, argumentsList) {
+  return yield* EvaluateBody(F.ECMAScriptCode, F, argumentsList);
 }
 
 function FunctionAllocate(functionPrototype, strict, functionKind) {

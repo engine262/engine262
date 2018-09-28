@@ -7,7 +7,7 @@ import { Q, Completion, UpdateEmpty } from '../completion.mjs';
 
 // #sec-with-statement-runtime-semantics-evaluation
 // WithStatement : `with` `(` Expression `)` Statement
-export function Evaluate_WithStatement({
+export function* Evaluate_WithStatement({
   object: Expression,
   body: Statement,
 }) {
@@ -18,7 +18,7 @@ export function Evaluate_WithStatement({
   const newEnv = NewObjectEnvironment(obj, oldEnv);
   newEnv.withEnvironment = true;
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
-  const C = Evaluate_Statement(Statement);
+  const C = yield* Evaluate_Statement(Statement);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return Completion(UpdateEmpty(C, NewValue(undefined)));
 }

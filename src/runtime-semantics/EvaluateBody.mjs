@@ -217,19 +217,19 @@ export function EvaluateBody_ConciseBody(AssignmentExpression, functionObject, a
 
 // #sec-function-definitions-runtime-semantics-evaluatebody
 // FunctionBody : FunctionStatementList
-export function EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
+export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
   Q(FunctionDeclarationInstantiation(functionObject, argumentsList));
-  return Evaluate_FunctionStatementList(FunctionStatementList);
+  return yield* Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
 // ConciseBody : [lookahead != `{`] AssignmentExpression
 // FunctionBody : FunctionStatementList
-export function EvaluateBody(node, functionObject, argumentsList) {
+export function* EvaluateBody(node, functionObject, argumentsList) {
   switch (true) {
     case isExpression(node):
       return EvaluateBody_ConciseBody(node, functionObject, argumentsList);
     case isBlockStatement(node):
-      return EvaluateBody_FunctionBody(node.body, functionObject, argumentsList);
+      return yield* EvaluateBody_FunctionBody(node.body, functionObject, argumentsList);
 
     default:
       throw outOfRange('EvaluateBody', node);

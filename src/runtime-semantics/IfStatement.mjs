@@ -18,7 +18,7 @@ import { New as NewValue } from '../value.mjs';
 //   IfStatement :
 //     `if` `(` Expression `)` Statement `else` Statement
 //     `if` `(` Expression `)` Statement
-export function Evaluate_IfStatement({
+export function* Evaluate_IfStatement({
   test: Expression,
   consequent: Statement,
   alternate: AlternateStatement,
@@ -29,16 +29,16 @@ export function Evaluate_IfStatement({
   if (AlternateStatement !== null) {
     let stmtCompletion;
     if (exprValue.isTrue()) {
-      stmtCompletion = Evaluate_Statement(Statement);
+      stmtCompletion = yield* Evaluate_Statement(Statement);
     } else {
-      stmtCompletion = Evaluate_Statement(AlternateStatement);
+      stmtCompletion = yield* Evaluate_Statement(AlternateStatement);
     }
     return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
   } else {
     if (exprValue.isFalse()) {
       return new NormalCompletion(undefined);
     } else {
-      const stmtCompletion = Evaluate_Statement(Statement);
+      const stmtCompletion = yield* Evaluate_Statement(Statement);
       return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
     }
   }

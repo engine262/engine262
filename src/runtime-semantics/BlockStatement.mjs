@@ -57,7 +57,7 @@ export function BlockDeclarationInstantiation(code, env) {
 //   Block :
 //     `{` `}`
 //     `{` StatementList `}`
-export function Evaluate_Block(Block) {
+export function* Evaluate_Block(Block) {
   const StatementList = Block.body;
 
   if (StatementList.length === 0) {
@@ -68,7 +68,7 @@ export function Evaluate_Block(Block) {
   const blockEnv = NewDeclarativeEnvironment(oldEnv);
   BlockDeclarationInstantiation(StatementList, blockEnv);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
-  const blockValue = Evaluate_StatementList(StatementList);
+  const blockValue = yield* Evaluate_StatementList(StatementList);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   return blockValue;
 }
