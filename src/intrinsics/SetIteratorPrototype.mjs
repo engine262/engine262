@@ -5,7 +5,6 @@ import {
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
 import { Type, Value, wellKnownSymbols } from '../value.mjs';
-import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function SetIteratorPrototype_next(args, { thisValue }) {

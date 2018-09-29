@@ -20,7 +20,12 @@ import * as AbstractOps from './abstract-ops/all.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const { ObjectCreate, CreateBuiltinFunction } = Abstract;
-export { AbruptCompletion, NormalCompletion, Completion, Descriptor };
+export {
+  AbruptCompletion,
+  NormalCompletion,
+  Completion,
+  Descriptor,
+};
 
 class APIRealm {
   constructor(options = {}) {

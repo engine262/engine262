@@ -159,11 +159,7 @@ export function Call(F, V, argumentsList) {
 }
 
 // 7.3.13 Construct
-export function Construct(
-  F,
-  argumentsList,
-  newTarget,
-) {
+export function Construct(F, argumentsList, newTarget) {
   if (!newTarget) {
     newTarget = F;
   }
@@ -194,9 +190,9 @@ export function SetIntegrityLevel(O, level) {
       if (Type(currentDesc) !== 'Undefined') {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
-          desc = { Configurable: false };
+          desc = Descriptor({ Configurable: new Value(false) });
         } else {
-          desc = { Configurable: false, Writable: false };
+          desc = Descriptor({ Configurable: new Value(false), Writable: new Value(false) });
         }
         Q(DefinePropertyOrThrow(O, k, desc));
       }
@@ -217,11 +213,11 @@ export function TestIntegrityLevel(O, level) {
   for (const k of keys) {
     const currentDesc = Q(O.GetOwnProperty(k));
     if (Type(currentDesc) !== 'Undefined') {
-      if (currentDesc.Configurable === true) {
+      if (currentDesc.Configurable.isTrue()) {
         return new Value(false);
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
-        if (currentDesc.Writable === true) {
+        if (currentDesc.Writable.isTrue()) {
           return new Value(false);
         }
       }
@@ -255,10 +251,7 @@ export function Invoke(V, P, argumentsList) {
 
 
 // #sec-enumerableownpropertynames EnumerableOwnPropertyNames
-export function EnumerableOwnPropertyNames(
-  O,
-  kind,
-) {
+export function EnumerableOwnPropertyNames(O, kind) {
   Assert(Type(O) === 'Object');
   const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
@@ -348,7 +341,7 @@ export function CopyDataProperties(target, source, excludedItems) {
     }
     if (excluded === false) {
       const desc = Q(from.GetOwnProperty(nextKey));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
+      if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
         const propValue = Q(Get(from, nextKey));
         X(CreateDataProperty(target, nextKey, propValue));
       }

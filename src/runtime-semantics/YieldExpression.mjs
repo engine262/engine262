@@ -1,5 +1,6 @@
 import { isYieldExpressionWithStar } from '../ast.mjs';
 import {
+  Assert,
   CreateIterResultObject,
   GeneratorYield,
   GetGeneratorKind,

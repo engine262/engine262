@@ -1030,6 +1030,15 @@ export function Descriptor(O) {
   }
 }
 
+Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
+  return this.Value === undefined
+    && this.Get === undefined
+    && this.Set === undefined
+    && this.Writable === undefined
+    && this.Enumerable === undefined
+    && this.Configurable === undefined;
+};
+
 export function Type(val) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';

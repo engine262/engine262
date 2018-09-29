@@ -4,6 +4,7 @@ import {
   Reference,
   Type,
   wellKnownSymbols,
+  Descriptor,
 } from './value.mjs';
 import {
   surroundingAgent,
@@ -167,12 +168,12 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   CreateMutableBinding(N, D) {
     const envRec = this;
     const bindings = envRec.bindingObject;
-    return Q(DefinePropertyOrThrow(bindings, N, {
+    return Q(DefinePropertyOrThrow(bindings, N, Descriptor({
       Value: new Value(undefined),
-      Writable: true,
-      Enumerable: true,
+      Writable: new Value(true),
+      Enumerable: new Value(true),
       Configurable: D,
-    }));
+    })));
   }
 
   // 8.1.1.2.3 #sec-object-environment-records-createimmutablebinding-n-s
@@ -452,12 +453,12 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     if (Type(existingProp) === 'Undefined') {
       return Q(IsExtensible(globalObject));
     }
-    if (existingProp.Configurable) {
+    if (existingProp.Configurable.isrue()) {
       return new Value(true);
     }
     if (IsDataDescriptor(existingProp).isTrue()
-        && existingProp.Writable === true
-        && existingProp.Enumerable === true) {
+        && existingProp.Writable.isTrue()
+        && existingProp.Enumerable.isTrue()) {
       return new Value(true);
     }
     return new Value(false);
@@ -486,17 +487,17 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const globalObject = ObjRec.bindingObject;
     const existingProp = Q(globalObject.GetOwnProperty(N));
     let desc;
-    if (Type(existingProp) === 'Undefined' || existingProp.Configurable === true) {
-      desc = {
+    if (Type(existingProp) === 'Undefined' || existingProp.Configurable.isTrue()) {
+      desc = Descriptor({
         Value: V,
-        Writable: true,
-        Enumerable: true,
+        Writable: new Value(true),
+        Enumerable: new Value(true),
         Configurable: D,
-      };
+      });
     } else {
-      desc = {
+      desc = Descriptor({
         Value: V,
-      };
+      });
     }
     Q(DefinePropertyOrThrow(globalObject, N, desc));
     // Record that the binding for N in ObjRec has been initialized.

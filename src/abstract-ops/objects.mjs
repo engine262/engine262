@@ -138,12 +138,12 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     return new Value(true);
   }
 
-  if (Object.keys(Desc).length === 0) {
+  if (Desc.everyFieldIsAbsent()) {
     return new Value(true);
   }
 
   if (current.Configurable.isFalse()) {
-    if (Desc.Configurable.isTrue()) {
+    if (Desc.Configurable !== undefined && Desc.Configurable.isTrue()) {
       return new Value(false);
     }
 
@@ -155,22 +155,22 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
   if (IsGenericDescriptor(Desc)) {
     // No further validation is required.
   } else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-    if (current.Configurable === false) {
+    if (current.Configurable.isFalse()) {
       return new Value(false);
     }
     if (IsDataDescriptor(current)) {
       if (Type(O) !== 'Undefined') {
         const entry = O.properties.get(P);
-        delete entry.Value;
-        delete entry.Writable;
+        entry.Value = undefined;
+        entry.Writable = undefined;
         entry.Get = new Value(undefined);
         entry.Set = new Value(undefined);
       }
     } else {
       if (Type(O) !== 'Undefined') {
         const entry = O.properties.get(P);
-        delete entry.Get;
-        delete entry.Set;
+        entry.Get = undefined;
+        entry.Set = undefined;
         entry.Value = new Value(undefined);
         entry.Writable = new Value(false);
       }
@@ -187,7 +187,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     }
   } else {
     Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc));
-    if (current.Configurable === false) {
+    if (current.Configurable.isFalse()) {
       if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === false) {
         return new Value(false);
       }
@@ -200,9 +200,12 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
 
   if (Type(O) !== 'Undefined') {
     O.properties.set(P, current);
-    Object.keys(Desc).forEach((field) => {
-      current[field] = Desc[field];
-    });
+    current.Value = Desc.Value;
+    current.Writable = Desc.Writable;
+    current.Get = Desc.Get;
+    current.Set = Desc.Set;
+    current.Enumerable = Desc.Enumerable;
+    current.Configurable = Desc.Configurable;
   }
 
   return new Value(true);
@@ -254,13 +257,7 @@ export function OrdinarySet(O, P, V, Receiver) {
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function OrdinarySetWithOwnDescriptor(
-  O,
-  P,
-  V,
-  Receiver,
-  ownDesc,
-) {
+export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   Assert(IsPropertyKey(P));
 
   if (Type(ownDesc) === 'Undefined') {
@@ -268,12 +265,12 @@ export function OrdinarySetWithOwnDescriptor(
     if (Type(parent) !== 'Null') {
       return Q(parent.Set(P, V, Receiver));
     }
-    ownDesc = {
+    ownDesc = Descriptor({
       Value: new Value(undefined),
-      Writable: true,
-      Enumerable: true,
-      Configurable: true,
-    };
+      Writable: new Value(true),
+      Enumerable: new Value(true),
+      Configurable: new Value(true),
+    });
   }
 
   if (IsDataDescriptor(ownDesc)) {
@@ -292,7 +289,7 @@ export function OrdinarySetWithOwnDescriptor(
       if (existingDescriptor.Writable === false) {
         return new Value(false);
       }
-      const valueDesc = { Value: V };
+      const valueDesc = Descriptor({ Value: V });
       return Q(Receiver.DefineOwnProperty(P, valueDesc));
     }
     return CreateDataProperty(Receiver, P, V);
@@ -314,7 +311,7 @@ export function OrdinaryDelete(O, P) {
   if (Type(desc) === 'Undefined') {
     return new Value(true);
   }
-  if (desc.Configurable === true) {
+  if (desc.Configurable.isTrue()) {
     O.properties.delete(P);
     return new Value(true);
   }
