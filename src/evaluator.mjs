@@ -51,6 +51,7 @@ import {
   isTryStatement,
   isVariableStatement,
   isWithStatement,
+  isYieldExpression,
 } from './ast.mjs';
 import {
   EvaluateBinopValues_AdditiveExpression_Minus,
@@ -103,6 +104,7 @@ import {
   Evaluate_UpdateExpression,
   Evaluate_VariableStatement,
   Evaluate_WithStatement,
+  Evaluate_YieldExpression,
 } from './runtime-semantics/all.mjs';
 import {
   Value,
@@ -350,8 +352,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isActualConditionalExpression(Expression):
       return yield* Evaluate_ConditionalExpression(Expression);
 
-      // case isYieldExpression(Expression):
-      //   return Evaluate_YieldExpression(Expression);
+    case isYieldExpression(Expression):
+      return yield* Evaluate_YieldExpression(Expression);
 
     case isArrowFunction(Expression):
       return Evaluate_ArrowFunction(Expression);

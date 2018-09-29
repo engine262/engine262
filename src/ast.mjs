@@ -336,6 +336,11 @@ export function isYieldExpression(node) {
   return node.type === 'YieldExpression';
 }
 
+// Used in #prod-YieldExpression.
+export function isYieldExpressionWithStar(node) {
+  return isYieldExpression(node) && node.delegate;
+}
+
 // #prod-ArrowFunction
 export function isArrowFunction(node) {
   return node.type === 'ArrowFunctionExpression'

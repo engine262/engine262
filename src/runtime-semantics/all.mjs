@@ -52,3 +52,4 @@ export * from './UnaryExpression.mjs';
 export * from './UpdateExpression.mjs';
 export * from './VariableStatement.mjs';
 export * from './WithStatement.mjs';
+export * from './YieldExpression.mjs';

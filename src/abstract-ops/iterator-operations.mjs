@@ -127,8 +127,8 @@ export function IteratorClose(
 export function CreateIterResultObject(value, done) {
   Assert(Type(done) === 'Boolean');
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  CreateDataProperty(obj, new Value('value'), value);
-  CreateDataProperty(obj, new Value('done'), done);
+  X(CreateDataProperty(obj, new Value('value'), value));
+  X(CreateDataProperty(obj, new Value('done'), done));
   return obj;
 }
 
