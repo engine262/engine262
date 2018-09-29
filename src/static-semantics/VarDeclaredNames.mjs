@@ -282,6 +282,10 @@ export const VarDeclaredNames_FunctionStatementList = TopLevelVarDeclaredNames_S
 //   FunctionBody : FunctionStatementList
 export const VarDeclaredNames_FunctionBody = VarDeclaredNames_FunctionStatementList;
 
+// (implicit)
+//   GeneratorBody : FunctionBody
+export const VarDeclaredNames_GeneratorBody = VarDeclaredNames_FunctionBody;
+
 // 14.2.12 #sec-arrow-function-definitions-static-semantics-vardeclarednames
 //   ConciseBody : AssignmentExpression
 //

@@ -22,6 +22,7 @@ export * from './ForStatement.mjs';
 export * from './FunctionDeclaration.mjs';
 export * from './FunctionExpression.mjs';
 export * from './FunctionStatementList.mjs';
+export * from './GeneratorExpression.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './Identifier.mjs';
 export * from './IfStatement.mjs';

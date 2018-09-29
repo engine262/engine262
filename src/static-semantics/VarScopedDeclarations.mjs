@@ -285,8 +285,11 @@ export const
 
 // (implicit)
 //   FunctionBody : FunctionStatementList
-export const
-  VarScopedDeclarations_FunctionBody = VarScopedDeclarations_FunctionStatementList;
+export const VarScopedDeclarations_FunctionBody = VarScopedDeclarations_FunctionStatementList;
+
+// (implicit)
+//   GeneratorBody : FunctionBody
+export const VarScopedDeclarations_GeneratorBody = VarScopedDeclarations_FunctionBody;
 
 // 14.2.13 #sec-arrow-function-definitions-static-semantics-varscopeddeclarations
 //   ConciseBody : AssignmentExpression

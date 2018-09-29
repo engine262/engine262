@@ -80,6 +80,10 @@ export const
 //   FunctionBody : FunctionStatementList
 export const LexicallyDeclaredNames_FunctionBody = LexicallyDeclaredNames_FunctionStatementList;
 
+// (implicit)
+//   GeneratorBody : FunctionBody
+export const LexicallyDeclaredNames_GeneratorBody = LexicallyDeclaredNames_FunctionBody;
+
 // 14.2.10 #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
 //   ConciseBody : AssignmentExpression
 //

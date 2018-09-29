@@ -2,6 +2,7 @@ export * from './arguments-operations.mjs';
 export * from './array-objects.mjs';
 export * from './execution-contexts.mjs';
 export * from './function-operations.mjs';
+export * from './generator-operations.mjs';
 export * from './iterator-operations.mjs';
 export * from './notational-conventions.mjs';
 export * from './object-operations.mjs';

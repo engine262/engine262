@@ -1,11 +1,13 @@
-import { GetGeneratorKind } from '../engine.mjs';
 import { New as NewValue } from '../value.mjs';
 import {
   Q, X,
   ReturnCompletion,
   Await,
 } from '../completion.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
+import {
+  GetGeneratorKind,
+  GetValue,
+} from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 
 // #sec-return-statement-runtime-semantics-evaluation

@@ -5,7 +5,9 @@ import {
   CreateListIteratorRecord,
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
+  GeneratorStart,
   GetValue,
+  OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
   isArrowFunction,
@@ -16,6 +18,7 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isGeneratorDeclaration,
+  isGeneratorExpression,
   isVariableDeclaration,
 } from '../ast.mjs';
 import {
@@ -25,14 +28,18 @@ import {
   ContainsExpression,
   IsConstantDeclaration,
   IsSimpleParameterList,
-  LexicallyDeclaredNames_FunctionBody,
   LexicallyDeclaredNames_ConciseBody,
-  LexicallyScopedDeclarations_FunctionBody,
+  LexicallyDeclaredNames_FunctionBody,
+  LexicallyDeclaredNames_GeneratorBody,
   LexicallyScopedDeclarations_ConciseBody,
-  VarDeclaredNames_FunctionBody,
+  LexicallyScopedDeclarations_FunctionBody,
+  LexicallyScopedDeclarations_GeneratorBody,
   VarDeclaredNames_ConciseBody,
-  VarScopedDeclarations_FunctionBody,
+  VarDeclaredNames_FunctionBody,
+  VarDeclaredNames_GeneratorBody,
   VarScopedDeclarations_ConciseBody,
+  VarScopedDeclarations_FunctionBody,
+  VarScopedDeclarations_GeneratorBody,
 } from '../static-semantics/all.mjs';
 import {
   NormalCompletion,
@@ -81,6 +88,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       varNames = VarDeclaredNames_ConciseBody(code.body).map(NewValue);
       varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
       lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(NewValue);
+      break;
+    case 'GeneratorBody':
+      varNames = VarDeclaredNames_GeneratorBody(code.body.body).map(NewValue);
+      varDeclarations = VarScopedDeclarations_GeneratorBody(code.body.body);
+      lexicalNames = LexicallyDeclaredNames_GeneratorBody(code.body.body).map(NewValue);
       break;
     default:
       throw outOfRange('FunctionDeclarationInstantiation', code);
@@ -204,6 +216,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     case 'ConciseBody_FunctionBody':
       lexDeclarations = LexicallyScopedDeclarations_ConciseBody(code.body);
       break;
+    case 'GeneratorBody':
+      lexDeclarations = LexicallyScopedDeclarations_GeneratorBody(code.body.body);
+      break;
     default:
       throw outOfRange('FunctionDeclarationInstantiation', code);
   }
@@ -241,6 +256,11 @@ export function getFunctionBodyType(ECMAScriptCode) {
     case isArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
       return 'ConciseBody_Expression';
 
+    // GeneratorBody : FunctionBody
+    case isGeneratorDeclaration(ECMAScriptCode)
+      || isGeneratorExpression(ECMAScriptCode):
+      return 'GeneratorBody';
+
     default:
       throw outOfRange('getFunctionBodyType', ECMAScriptCode);
   }
@@ -260,4 +280,15 @@ export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, funct
 export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
+}
+
+// #sec-generator-function-definitions-runtime-semantics-evaluatebody
+// GeneratorBody : FunctionBody
+export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
+  Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, NewValue('%GeneratorPrototype%'), ['GeneratorState', 'GeneratorContext']));
+  G.GeneratorState = NewValue(undefined);
+  G.GeneratorContext = NewValue(undefined);
+  GeneratorStart(G, GeneratorBody);
+  return new ReturnCompletion(G);
 }

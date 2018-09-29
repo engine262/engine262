@@ -261,16 +261,3 @@ export function IsConcatSpreadable(O) {
 
 // 24.4.1.9 #sec-suspend
 export function Suspend() {}
-
-// 25.4.3.5 #sec-getgeneratorkind
-export function GetGeneratorKind() {
-  const genContext = surroundingAgent.runningExecutionContext;
-  if (!genContext.Generator) {
-    return 'non-generator';
-  }
-  const generator = genContext.Generator;
-  if ('AsyncGeneratorState' in generator) {
-    return 'async';
-  }
-  return 'sync';
-}

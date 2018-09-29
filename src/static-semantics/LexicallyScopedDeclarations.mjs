@@ -75,8 +75,11 @@ export const // eslint-disable-next-line max-len
 
 // (implicit)
 //   FunctionBody : FunctionStatementList
-export const
-  LexicallyScopedDeclarations_FunctionBody = LexicallyScopedDeclarations_FunctionStatementList;
+export const LexicallyScopedDeclarations_FunctionBody = LexicallyScopedDeclarations_FunctionStatementList;
+
+// (implicit)
+//   GeneratorBody : FunctionBody
+export const LexicallyScopedDeclarations_GeneratorBody = LexicallyScopedDeclarations_FunctionBody;
 
 // 14.2.11 #sec-arrow-function-definitions-static-semantics-lexicallyscopeddeclarations
 //   ConciseBody : AssignmentExpression

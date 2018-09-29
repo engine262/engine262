@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+// import { fileURLToPath } from 'url';
 import yaml from 'yaml';
 import glob from 'glob';
 import {
@@ -12,7 +12,7 @@ import {
   AbruptCompletion,
 } from '../lib/api.mjs';
 
-const testdir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'test262');
+const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
 
 function createRealm(printer) {
   const realm = new Realm();

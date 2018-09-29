@@ -31,6 +31,7 @@ import {
 import {
   EvaluateBody_ConciseBody_Expression,
   EvaluateBody_FunctionBody,
+  EvaluateBody_GeneratorBody,
   getFunctionBodyType,
 } from '../runtime-semantics/all.mjs';
 import {
@@ -213,6 +214,9 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
     case 'ConciseBody_Expression':
       return yield* EvaluateBody_ConciseBody_Expression(F.ECMAScriptCode.body, F, argumentsList);
 
+    case 'GeneratorBody':
+      return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
     default:
       throw outOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
   }
@@ -281,6 +285,13 @@ export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototy
   }
   const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
   const F = FunctionAllocate(prototype, Strict, allocKind);
+  return FunctionInitialize(F, kind, ParameterList, Body, Scope);
+}
+
+// #sec-generatorfunctioncreate
+export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict) {
+  const functionPrototype = surroundingAgent.intrinsic('%Generator%');
+  const F = FunctionAllocate(functionPrototype, Strict, 'generator');
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 

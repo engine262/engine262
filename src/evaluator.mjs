@@ -35,6 +35,7 @@ import {
   isExpressionWithComma,
   isFunctionDeclaration,
   isFunctionExpression,
+  isGeneratorExpression,
   isIdentifierReference,
   isIfStatement,
   isLexicalBinding,
@@ -78,6 +79,7 @@ import {
   Evaluate_ExpressionWithComma,
   Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
+  Evaluate_GeneratorExpression,
   Evaluate_Identifier,
   Evaluate_IfStatement,
   Evaluate_LexicalBinding,
@@ -274,8 +276,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isClassExpression(Expression):
       return yield* Evaluate_ClassExpression(Expression);
 
-      // case isGeneratorExpression(Expression):
-      //   return Evaluate_GeneratorExpression(Expression);
+    case isGeneratorExpression(Expression):
+      return Evaluate_GeneratorExpression(Expression);
 
       // case isAsyncFunctionExpression(Expression):
       //   return Evaluate_AsyncFunctionExpression(Expression);
