@@ -75,10 +75,6 @@ export function Value(value) {
     return value ? trueValue : falseValue;
   }
 
-  if (typeof value === 'symbol') {
-    return new SymbolValue(value);
-  }
-
   if (typeof value === 'function') {
     return new BuiltinFunctionValue(value);
   }
