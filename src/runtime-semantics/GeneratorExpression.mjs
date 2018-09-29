@@ -7,7 +7,7 @@ import {
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { Value } from '../value.mjs';
+import { Descriptor, Value } from '../value.mjs';
 
 // #sec-generator-function-definitions-runtime-semantics-evaluation
 //   GeneratorExpression :
@@ -34,12 +34,12 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
-    {
+    Descriptor({
       Value: prototype,
-      Writable: true,
-      Enumerable: false,
-      Configurable: false,
-    },
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(false),
+    }),
   ));
   if (BindingIdentifier) {
     X(SetFunctionName(closure, name));

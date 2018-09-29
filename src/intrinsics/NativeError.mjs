@@ -8,6 +8,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Value,
   Type,
 } from '../value.mjs';
@@ -35,12 +36,12 @@ export function CreateNativeError(realmRec) {
       const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`), ['ErrorData']);
       if (Type(message) !== 'Undefined') {
         const msg = Q(ToString(message));
-        const msgDesc = {
+        const msgDesc = Descriptor({
           Value: msg,
-          Writable: true,
-          Enumerable: false,
-          Configurable: true,
-        };
+          Writable: new Value(true),
+          Enumerable: new Value(false),
+          Configurable: new Value(true),
+        });
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }
       return O;
