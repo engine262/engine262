@@ -26,6 +26,7 @@ import {
   UpdateEmpty,
 } from '../completion.mjs';
 import {
+  isDoWhileStatement,
   isForStatementWithExpression,
   isForStatementWithVariableStatement,
   isForStatementWithLexicalDeclaration,
@@ -289,7 +290,26 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
 //     `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
 export function* LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
   switch (true) {
-    // case isDoWhileStatement(IterationStatement):
+    case isDoWhileStatement(IterationStatement): {
+      const Statement = IterationStatement.body;
+      const Expression = IterationStatement.test;
+
+      let V = new Value(undefined);
+      while (true) {
+        const stmtResult = yield* Evaluate_Statement(Statement);
+        if (!LoopContinues(stmtResult, labelSet)) {
+          return Completion(UpdateEmpty(stmtResult, V));
+        }
+        if (stmtResult.Value !== undefined) {
+          V = stmtResult.Value;
+        }
+        const exprRef = yield* Evaluate_Expression(Expression);
+        const exprValue = Q(GetValue(exprRef));
+        if (ToBoolean(exprValue).isFalse()) {
+          return new NormalCompletion(V);
+        }
+      }
+    }
 
     case isWhileStatement(IterationStatement): {
       const Expression = IterationStatement.test;
@@ -300,7 +320,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         const exprRef = yield* Evaluate_Expression(Expression);
         const exprValue = Q(GetValue(exprRef));
         if (ToBoolean(exprValue).isFalse()) {
-          return NormalCompletion(V);
+          return new NormalCompletion(V);
         }
         const stmtResult = yield* Evaluate_Statement(Statement);
         if (!LoopContinues(stmtResult, labelSet)) {
