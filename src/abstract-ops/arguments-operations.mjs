@@ -8,6 +8,7 @@ import {
   ToString,
 } from './all.mjs';
 import {
+  Descriptor,
   Value,
   wellKnownSymbols,
   ArgumentsExoticObjectValue,
@@ -20,30 +21,30 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'), ['ParameterMap']);
   obj.ParameterMap = new Value(undefined);
-  DefinePropertyOrThrow(obj, new Value('length'), {
+  DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  }));
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
     CreateDataProperty(obj, X(ToString(new Value(index))), val);
     index += 1;
   }
-  X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, {
+  X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
     Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  }));
-  X(DefinePropertyOrThrow(obj, new Value('callee'), {
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
+  X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Enumerable: false,
-    Configurable: false,
-  }));
+    Enumerable: new Value(false),
+    Configurable: new Value(false),
+  })));
   return obj;
 }
 
@@ -98,12 +99,12 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     CreateDataProperty(obj, X(ToString(new Value(index))), val);
     index += 1;
   }
-  DefinePropertyOrThrow(obj, new Value('length'), {
+  X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
   const mappedNames = [];
   index = numberOfParameters - 1;
   while (index >= 0) {
@@ -113,27 +114,27 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
-        map.DefineOwnProperty(X(ToString(new Value(index))), {
+        X(map.DefineOwnProperty(X(ToString(new Value(index))), Descriptor({
           Set: p,
           Get: g,
-          Enumerable: false,
-          Configurable: true,
-        });
+          Enumerable: new Value(false),
+          Configurable: new Value(true),
+        })));
       }
     }
     index -= 1;
   }
-  X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, {
+  X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
     Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  }));
-  X(DefinePropertyOrThrow(obj, new Value('callee'), {
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
+  X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Enumerable: false,
-    Configurable: false,
-  }));
+    Enumerable: new Value(false),
+    Configurable: new Value(false),
+  })));
   return obj;
 }
