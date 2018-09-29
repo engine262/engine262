@@ -4,7 +4,7 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -29,13 +29,13 @@ import {
 export function PromiseResolve(C, x) {
   Assert(Type(C) === 'Object');
   if (IsPromise(x).isTrue()) {
-    const xConstructor = Q(Get(x, NewValue('constructor')));
+    const xConstructor = Q(Get(x, new Value('constructor')));
     if (SameValue(xConstructor, C)) {
       return x;
     }
   }
   const promiseCapability = NewPromiseCapability(C);
-  Q(Call(promiseCapability.Resolve, NewValue(undefined), [x]));
+  Q(Call(promiseCapability.Resolve, new Value(undefined), [x]));
   return promiseCapability.Promise;
 }
 
@@ -51,14 +51,14 @@ function GetCapabilitiesExecutorFunctions([resolve, reject]) {
   }
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 export class PromiseCapabilityRecord {
   constructor() {
-    this.Promise = NewValue(undefined);
-    this.Resolve = NewValue(undefined);
-    this.Reject = NewValue(undefined);
+    this.Promise = new Value(undefined);
+    this.Resolve = new Value(undefined);
+    this.Reject = new Value(undefined);
   }
 }
 
@@ -69,7 +69,7 @@ export function NewPromiseCapability(C) {
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
   const executor = CreateBuiltinFunction(steps, ['Capability']);
-  SetFunctionLength(executor, NewValue(2));
+  SetFunctionLength(executor, new Value(2));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve).isFalse()) {
@@ -96,13 +96,13 @@ export function PromiseReactionJob(reaction, argument) {
       handlerResult = new ThrowCompletion(argument);
     }
   } else {
-    handlerResult = Call(handler, NewValue(undefined), [argument]);
+    handlerResult = Call(handler, new Value(undefined), [argument]);
   }
   let status;
   if (handlerResult instanceof AbruptCompletion) {
-    status = Call(promiseCapability.Reject, NewValue(undefined), [handlerResult.Value]);
+    status = Call(promiseCapability.Reject, new Value(undefined), [handlerResult.Value]);
   } else {
-    status = Call(promiseCapability.Resolve, NewValue(undefined), [handlerResult.Value]);
+    status = Call(promiseCapability.Resolve, new Value(undefined), [handlerResult.Value]);
   }
   return status;
 }
@@ -113,7 +113,7 @@ function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
   if (thenCallResult instanceof AbruptCompletion) {
-    const status = Call(resolvingFunctions.Reject, NewValue(undefined), [thenCallResult.Value]);
+    const status = Call(resolvingFunctions.Reject, new Value(undefined), [thenCallResult.Value]);
     return status;
   }
   return thenCallResult;
@@ -123,7 +123,7 @@ function TriggerPromiseReactions(reactions, argument) {
   reactions.forEach((reaction) => {
     EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
   });
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function FulfillPromise(promise, value) {
@@ -155,7 +155,7 @@ function PromiseResolveFunctions([resolution]) {
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   alreadyResolved.Value = true;
   if (SameValue(resolution, promise) === true) {
@@ -166,7 +166,7 @@ function PromiseResolveFunctions([resolution]) {
     return FulfillPromise(promise, resolution);
   }
 
-  const then = Get(resolution, NewValue('then'));
+  const then = Get(resolution, new Value('then'));
   if (then instanceof AbruptCompletion) {
     return RejectPromise(promise, then.Value);
   }
@@ -175,7 +175,7 @@ function PromiseResolveFunctions([resolution]) {
     return FulfillPromise(promise, resolution);
   }
   EnqueueJob('PromiseJobs', PromiseResolveTheableJob, [promise, resolution, thenAction]);
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function PromiseRejectFunctions([reason]) {
@@ -184,7 +184,7 @@ function PromiseRejectFunctions([reason]) {
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   alreadyResolved.Value = true;
   return RejectPromise(promise, reason);
@@ -194,12 +194,12 @@ export function CreateResolvingFunctions(promise) {
   const alreadyResolved = { Value: false };
   const stepsResolve = PromiseResolveFunctions;
   const resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
-  SetFunctionLength(resolve, NewValue(1));
+  SetFunctionLength(resolve, new Value(1));
   resolve.Promise = promise;
   resolve.AlreadyResolved = alreadyResolved;
   const stepsReject = PromiseRejectFunctions;
   const reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
-  SetFunctionLength(reject, NewValue(1));
+  SetFunctionLength(reject, new Value(1));
   reject.Promise = promise;
   reject.AlreadyResolved = alreadyResolved;
   return {

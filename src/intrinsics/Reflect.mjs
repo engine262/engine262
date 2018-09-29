@@ -15,7 +15,7 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
-import { New as NewValue, Type } from '../value.mjs';
+import { Value, Type, Descriptor } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 function Reflect_apply([target, thisArgument, argumentsList]) {
@@ -154,14 +154,14 @@ export function CreateReflect(realmRec) {
     ['setPrototypeOf', Reflect_setPrototypeOf, 2],
   ].forEach(([name, fn, len]) => {
     fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
-    reflect.DefineOwnProperty(NewValue(name), {
+    SetFunctionName(fn, new Value(name));
+    SetFunctionLength(fn, new Value(len));
+    reflect.DefineOwnProperty(new Value(name), Descriptor({
       Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    }));
   });
 
   realmRec.Intrinsics['%Reflect%'] = reflect;

@@ -6,7 +6,7 @@ import {
   GetThisEnvironment,
   RequireObjectCoercible,
 } from '../abstract-ops/all.mjs';
-import { SuperReference, New as NewValue } from '../value.mjs';
+import { SuperReference, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 // #sec-makesuperpropertyreference
@@ -38,7 +38,7 @@ export function* Evaluate_SuperProperty(SuperProperty) {
 
     const env = GetThisEnvironment();
     const actualThis = Q(env.GetThisBinding());
-    const propertyKey = NewValue(IdentifierName.name);
+    const propertyKey = new Value(IdentifierName.name);
     const strict = true; // TODO(strict)
     return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
   }

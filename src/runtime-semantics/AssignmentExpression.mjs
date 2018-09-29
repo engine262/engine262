@@ -15,7 +15,7 @@ import {
   isObjectLiteral,
 } from '../ast.mjs';
 import { EvaluateBinopValues, Evaluate_Expression } from '../evaluator.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-assignment-operators-runtime-semantics-evaluation
 // AssignmentExpression :
@@ -32,7 +32,7 @@ export function* Evaluate_AssignmentExpression(node) {
       const rval = Q(GetValue(rref));
       if (IsAnonymousFunctionDefinition(AssignmentExpression)
           && IsIdentifierRef(LeftHandSideExpression)) {
-        const hasNameProperty = Q(HasOwnProperty(rval, NewValue('name')));
+        const hasNameProperty = Q(HasOwnProperty(rval, new Value('name')));
         if (hasNameProperty.isFalse()) {
           SetFunctionName(rval, GetReferencedName(lref));
         }

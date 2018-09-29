@@ -25,7 +25,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
-import { New as NewValue, Type } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-delete-operator-runtime-semantics-evaluation
@@ -34,11 +34,11 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   const ref = yield* Evaluate_Expression(UnaryExpression);
   ReturnIfAbrupt(ref);
   if (Type(ref) !== 'Reference') {
-    return NewValue(true);
+    return new Value(true);
   }
   if (IsUnresolvableReference(ref).isTrue()) {
     Assert(IsStrictReference(ref).isFalse());
-    return NewValue(false);
+    return new Value(false);
   }
   if (IsPropertyReference(ref).isTrue()) {
     if (IsSuperReference(ref).isTrue()) {
@@ -61,7 +61,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
 function* Evaluate_UnaryExpression_Void(UnaryExpression) {
   const expr = yield* Evaluate_Expression(UnaryExpression);
   Q(GetValue(expr));
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 // #sec-typeof-operator-runtime-semantics-evaluation
@@ -70,7 +70,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
   let val = yield* Evaluate_Expression(UnaryExpression);
   if (Type(val) === 'Reference') {
     if (IsUnresolvableReference(val).isTrue()) {
-      return NewValue('undefined');
+      return new Value('undefined');
     }
   }
   val = Q(GetValue(val));
@@ -81,22 +81,22 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 
   switch (type) {
     case 'Undefined':
-      return NewValue('undefined');
+      return new Value('undefined');
     case 'Null':
-      return NewValue('object');
+      return new Value('object');
     case 'Boolean':
-      return NewValue('boolean');
+      return new Value('boolean');
     case 'Number':
-      return NewValue('number');
+      return new Value('number');
     case 'String':
-      return NewValue('string');
+      return new Value('string');
     case 'Symbol':
-      return NewValue('symbol');
+      return new Value('symbol');
     case 'Object':
       if (IsCallable(val).isTrue()) {
-        return NewValue('function');
+        return new Value('function');
       }
-      return NewValue('object');
+      return new Value('object');
 
     default:
       throw outOfRange('Evaluate_UnaryExpression_Typeof', type);
@@ -118,9 +118,9 @@ function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToNumber(exprVal));
   if (oldValue.isNaN()) {
-    return NewValue(NaN);
+    return new Value(NaN);
   }
-  return NewValue(-oldValue.numberValue());
+  return new Value(-oldValue.numberValue());
 }
 
 // #sec-bitwise-not-operator-runtime-semantics-evaluation
@@ -129,7 +129,7 @@ function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
   const expr = yield* Evaluate_Expression(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToInt32(exprVal));
-  return NewValue(~oldValue.numberValue()); // eslint-disable-line no-bitwise
+  return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
 }
 
 // #sec-logical-not-operator-runtime-semantics-evaluation
@@ -138,9 +138,9 @@ function* Evaluate_UnaryExpression_Bang(UnaryExpression) {
   const expr = yield* Evaluate_Expression(UnaryExpression);
   const oldValue = ToBoolean(Q(GetValue(expr)));
   if (oldValue.isTrue()) {
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(true);
+  return new Value(true);
 }
 
 export function* Evaluate_UnaryExpression(UnaryExpression) {

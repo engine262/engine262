@@ -40,7 +40,51 @@ import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Q, X, Completion } from './completion.mjs';
 import { outOfRange } from './helpers.mjs';
 
-export class Value {}
+export function Value(value) {
+  if (new.target !== undefined && new.target !== Value) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return nullValue;
+  }
+
+  if (value === undefined) {
+    return undefinedValue;
+  }
+
+  if (typeof value === 'string') {
+    if (stringMap.has(value)) {
+      return stringMap.get(value);
+    }
+    const s = new StringValue(value);
+    stringMap.set(value, s);
+    return s;
+  }
+
+  if (typeof value === 'number') {
+    if (numberMap.has(value)) {
+      return numberMap.get(value);
+    }
+    const s = new NumberValue(value);
+    numberMap.set(value, s);
+    return s;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? trueValue : falseValue;
+  }
+
+  if (typeof value === 'symbol') {
+    return new SymbolValue(value);
+  }
+
+  if (typeof value === 'function') {
+    return new BuiltinFunctionValue(value);
+  }
+
+  throw outOfRange('new Value', value);
+}
 
 export class PrimitiveValue extends Value {}
 
@@ -185,23 +229,23 @@ export class ArrayExoticObjectValue extends ObjectValue {
       return Q(ArraySetLength(A, Desc));
     }
     if (isArrayIndex(P)) {
-      const oldLenDesc = OrdinaryGetOwnProperty(A, New('length'));
+      const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
       Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = X(ToUint32(P));
       if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
-        return New(false);
+        return new Value(false);
       }
       const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
       if (succeeded.isFalse()) {
-        return New(false);
+        return new Value(false);
       }
       if (index.numberValue() >= oldLen.numberValue()) {
-        oldLenDesc.Value = New(index.numberValue() + 1);
-        const succeeded = OrdinaryDefineOwnProperty(A, New('length'), oldLenDesc); // eslint-disable-line no-shadow
+        oldLenDesc.Value = new Value(index.numberValue() + 1);
+        const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
         Assert(succeeded.isTrue());
       }
-      return New(true);
+      return new Value(true);
     }
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }
@@ -212,7 +256,7 @@ export class FunctionValue extends ObjectValue {}
 function nativeCall(F, argumentsList, thisArgument, newTarget) {
   // Fill in "required" properties
   argumentsList.callLength = argumentsList.length;
-  const length = New('length');
+  const length = new Value('length');
   if (F.properties.has(length)) {
     const len = F.properties.get(length).Value.numberValue();
     for (let i = 0; i < len; i += 1) {
@@ -293,7 +337,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('getPrototypeOf')));
+    const trap = Q(GetMethod(handler, new Value('getPrototypeOf')));
     if (Type(trap) === 'Undefined') {
       return Q(target.GetPrototypeOf());
     }
@@ -322,7 +366,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('setPrototypeOf')));
+    const trap = Q(GetMethod(handler, new Value('setPrototypeOf')));
     if (Type(trap) === 'Undefined') {
       return Q(target.SetPrototypeOf(V));
     }
@@ -350,7 +394,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('isExtensible')));
+    const trap = Q(GetMethod(handler, new Value('isExtensible')));
     if (Type(trap) === 'Undefined') {
       return Q(target.IsExtensible());
     }
@@ -371,7 +415,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('preventExtensions')));
+    const trap = Q(GetMethod(handler, new Value('preventExtensions')));
     if (Type(trap) === 'Undefined') {
       return Q(target.PreventExtensions());
     }
@@ -395,7 +439,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('getOwnPropertyDescriptor')));
+    const trap = Q(GetMethod(handler, new Value('getOwnPropertyDescriptor')));
     if (Type(trap) === 'Undefined') {
       return Q(target.GetOwnProperty(P));
     }
@@ -406,7 +450,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetDesc = Q(target.GetOwnProperty(P));
     if (Type(trapResultObj) === 'Undefined') {
       if (Type(targetDesc) === 'Undefined') {
-        return New(undefined);
+        return new Value(undefined);
       }
       if (targetDesc.Configurable === false) {
         return surroundingAgent.Throw('TypeError');
@@ -416,7 +460,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       if (extensibleTarget.isFalse()) {
         return surroundingAgent.Throw('TypeError');
       }
-      return New(undefined);
+      return new Value(undefined);
     }
     const extensibleTarget = Q(IsExtensible(target));
     const resultDesc = Q(ToPropertyDescriptor(trapResultObj));
@@ -443,14 +487,14 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('defineProperty')));
+    const trap = Q(GetMethod(handler, new Value('defineProperty')));
     if (Type(trap) === 'Undefined') {
       return Q(target.DefineOwnProperty(P, Desc));
     }
     const descObj = FromPropertyDescriptor(Desc);
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, descObj])));
     if (booleanTrapResult.isFalse()) {
-      return New(false);
+      return new Value(false);
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     const extensibleTarget = Q(IsExtensible(target));
@@ -475,7 +519,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
         return surroundingAgent.Throw('TypeError');
       }
     }
-    return New(true);
+    return new Value(true);
   }
 
   HasProperty(P) {
@@ -488,7 +532,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(target, New('has')));
+    const trap = Q(GetMethod(target, new Value('has')));
     if (Type(trap) === 'Undefined') {
       return Q(target.HasProperty(P));
     }
@@ -518,7 +562,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('get')));
+    const trap = Q(GetMethod(handler, new Value('get')));
     if (Type(trap) === 'Undefined') {
       return Q(target.Get(P, Receiver));
     }
@@ -549,13 +593,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('set')));
+    const trap = Q(GetMethod(handler, new Value('set')));
     if (Type(trap) === 'Undefined') {
       return Q(target.Set(P, V, Receiver));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, Receiver])));
     if (booleanTrapResult.isFalse()) {
-      return New(false);
+      return new Value(false);
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === false) {
@@ -570,7 +614,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
         }
       }
     }
-    return New(true);
+    return new Value(true);
   }
 
   Delete(P) {
@@ -583,7 +627,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('deleteProperty')));
+    const trap = Q(GetMethod(handler, new Value('deleteProperty')));
     if (Type(trap) === 'Undefined') {
       return Q(target.Delete(P));
     }
@@ -610,7 +654,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, New('ownKeys')));
+    const trap = Q(GetMethod(handler, new Value('ownKeys')));
     if (Type(trap) === 'Undefined') {
       return Q(target.OwnPropertyKeys());
     }
@@ -684,7 +728,7 @@ export class StringExoticObjectValue extends ObjectValue {
     const str = O.StringData.stringValue();
     const len = str.length;
     for (let i = 0; i < len; i += 1) {
-      keys.push(X(ToString(New(i))));
+      keys.push(X(ToString(new Value(i))));
     }
     for (const key of O.properties.keys()) {
       if (Type(key) === 'String') {
@@ -706,9 +750,9 @@ function SetImmutablePrototype(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
   const current = Q(O.GetPrototypeOf());
   if (SameValue(V, current)) {
-    return New(true);
+    return new Value(true);
   }
-  return New(false);
+  return new Value(false);
 }
 
 export class ModuleNamespaceExoticObjectValue extends ObjectValue {
@@ -716,7 +760,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     super();
     this.Module = null;
     this.Exports = [];
-    this.Prototype = New(null);
+    this.Prototype = new Value(null);
   }
 
   SetPrototypeOf(V) {
@@ -726,11 +770,11 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
   }
 
   IsExtensible() {
-    return New(false);
+    return new Value(false);
   }
 
   PreventExtensions() {
-    return New(true);
+    return new Value(true);
   }
 
   GetOwnProperty(P) {
@@ -741,7 +785,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (!exports.includes(P)) {
-      return New(undefined);
+      return new Value(undefined);
     }
     const value = Q(O.Get(P, O));
     return {
@@ -761,24 +805,24 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
 
     const current = O.GetOwnProperty(P);
     if (Type(current) === 'Undefined') {
-      return New(false);
+      return new Value(false);
     }
     if (IsAccessorDescriptor(Desc).isTrue()) {
-      return New(false);
+      return new Value(false);
     }
     if ('Writable' in Desc && Desc.Writable === false) {
-      return New(false);
+      return new Value(false);
     }
     if ('Enumerable' in Desc && Desc.Enumerable === false) {
-      return New(false);
+      return new Value(false);
     }
     if ('Configurable' in Desc && Desc.Configurable === true) {
-      return New(true);
+      return new Value(true);
     }
     if ('Value' in Desc && SameValue(Desc.Value, current.Value)) {
-      return New(false);
+      return new Value(false);
     }
-    return New(true);
+    return new Value(true);
   }
 
   HasProperty(P) {
@@ -789,9 +833,9 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (exports.includes(P)) {
-      return New(true);
+      return new Value(true);
     } else {
-      return New(false);
+      return new Value(false);
     }
   }
 
@@ -804,7 +848,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (!exports.includes(P)) {
-      return New(undefined);
+      return new Value(undefined);
     }
     const m = O.Module;
     const binding = m.ResolveExport(P, []);
@@ -816,11 +860,11 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
     }
     const targetEnvRec = targetEnv.EnvironmentRecord;
-    return Q(targetEnvRec.GetBindingValue(binding.BindingName, New(true)));
+    return Q(targetEnvRec.GetBindingValue(binding.BindingName, new Value(true)));
   }
 
   Set() {
-    return New(false);
+    return new Value(false);
   }
 
   Delete(P) {
@@ -832,9 +876,9 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (exports.includes(P)) {
-      return New(false);
+      return new Value(false);
     }
-    return New(true);
+    return new Value(true);
   }
 
   OwnPropertyKeys() {
@@ -881,14 +925,14 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     }
     const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
     if (allowed.isFalse()) {
-      return New(false);
+      return new Value(false);
     }
     if (isMapped.isTrue()) {
       if (IsAccessorDescriptor(Desc).isTrue()) {
         map.Delete(P);
       } else {
         if ('Value' in Desc) {
-          const setStatus = Set(map, P, Desc.Value, New(false));
+          const setStatus = Set(map, P, Desc.Value, new Value(false));
           Assert(setStatus.isTrue());
         }
         if ('Writable' in Desc && Desc.Writable === false) {
@@ -896,7 +940,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
         }
       }
     }
-    return New(true);
+    return new Value(true);
   }
 
   Get(P, Receiver) {
@@ -921,7 +965,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
       isMapped = X(HasOwnProperty(map, P)).isTrue();
     }
     if (isMapped) {
-      const setStatus = Set(map, P, V, New(false));
+      const setStatus = Set(map, P, V, new Value(false));
       Assert(setStatus.isTrue());
     }
     return Q(OrdinarySet(args, P, V, Receiver));
@@ -967,46 +1011,23 @@ const falseValue = new BooleanValue(false);
 const stringMap = new Map();
 const numberMap = new Map();
 
-export function New(value) {
-  if (value === null) {
-    return nullValue;
+export function Descriptor(O) {
+  if (new.target === Descriptor) {
+    this.Value = O.Value;
+    this.Get = O.Get;
+    this.Set = O.Set;
+    this.Writable = O.Writable;
+    this.Enumerable = O.Enumerable;
+    this.Configurable = O.Configurable;
+    Assert(this.Value === undefined || this.Value instanceof Value);
+    Assert(this.Get === undefined || this.Get instanceof FunctionValue || this.Set instanceof UndefinedValue);
+    Assert(this.Set === undefined || this.Set instanceof FunctionValue || this.Set instanceof UndefinedValue);
+    Assert(this.Writable === undefined || this.Writable instanceof BooleanValue);
+    Assert(this.Enumerable === undefined || this.Enumerable instanceof BooleanValue);
+    Assert(this.Configurable === undefined || this.Configurable instanceof BooleanValue);
+  } else {
+    return new Descriptor(O);
   }
-
-  if (value === undefined) {
-    return undefinedValue;
-  }
-
-  if (typeof value === 'string') {
-    if (stringMap.has(value)) {
-      return stringMap.get(value);
-    }
-    const s = new StringValue(value);
-    stringMap.set(value, s);
-    return s;
-  }
-
-  if (typeof value === 'number') {
-    if (numberMap.has(value)) {
-      return numberMap.get(value);
-    }
-    const s = new NumberValue(value);
-    numberMap.set(value, s);
-    return s;
-  }
-
-  if (typeof value === 'boolean') {
-    return value ? trueValue : falseValue;
-  }
-
-  if (typeof value === 'symbol') {
-    return new SymbolValue(value);
-  }
-
-  if (typeof value === 'function') {
-    return new BuiltinFunctionValue(value);
-  }
-
-  throw outOfRange('NewValue', value);
 }
 
 export function Type(val) {
@@ -1054,15 +1075,7 @@ export function Type(val) {
     return 'LexicalEnvironment';
   }
 
-  if (typeof val === 'object'
-      && 'Configurable' in val
-      && 'Enumerable' in val
-      && ('Value' in val || 'Get' in val || 'Set' in val)) {
-    return 'Descriptor';
-  }
-
-  if (typeof val === 'object' && Object.keys(val).length === 1
-      && ('Value' in val || 'Get' in val || 'Set' in val)) {
+  if (val instanceof Descriptor) {
     return 'Descriptor';
   }
 

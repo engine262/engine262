@@ -2,8 +2,9 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
+  Descriptor,
 } from '../value.mjs';
 import {
   CreateDataProperty,
@@ -21,7 +22,7 @@ export function IsAccessorDescriptor(Desc) {
     return false;
   }
 
-  if (!('Get' in Desc) && !('Set' in Desc)) {
+  if (Desc.Get === undefined && Desc.Set === undefined) {
     return false;
   }
 
@@ -34,7 +35,7 @@ export function IsDataDescriptor(Desc) {
     return false;
   }
 
-  if (!('Value' in Desc) && !('Writable' in Desc)) {
+  if (Desc.Value === undefined && Desc.Writable === undefined) {
     return false;
   }
 
@@ -57,26 +58,26 @@ export function IsGenericDescriptor(Desc) {
 // #sec-frompropertydescriptor FromPropertyDescriptor
 export function FromPropertyDescriptor(Desc) {
   if (Type(Desc) === 'Undefined') {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  if ('Value' in Desc) {
-    CreateDataProperty(obj, NewValue('value'), Desc.Value);
+  if (Desc.Value !== undefined) {
+    CreateDataProperty(obj, new Value('value'), Desc.Value);
   }
-  if ('Writable' in Desc) {
-    CreateDataProperty(obj, NewValue('writable'), NewValue(Desc.Writable));
+  if (Desc.Writable !== undefined) {
+    CreateDataProperty(obj, new Value('writable'), Desc.Writable);
   }
-  if ('Get' in Desc) {
-    CreateDataProperty(obj, NewValue('get'), Desc.Get);
+  if (Desc.Get !== undefined) {
+    CreateDataProperty(obj, new Value('get'), Desc.Get);
   }
-  if ('Set' in Desc) {
-    CreateDataProperty(obj, NewValue('set'), Desc.Set);
+  if (Desc.Set !== undefined) {
+    CreateDataProperty(obj, new Value('set'), Desc.Set);
   }
-  if ('Enumerable' in Desc) {
-    CreateDataProperty(obj, NewValue('enumerable'), NewValue(Desc.Enumerable));
+  if (Desc.Enumerable !== undefined) {
+    CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable);
   }
-  if ('Configurable' in Desc) {
-    CreateDataProperty(obj, NewValue('configurable'), NewValue(Desc.Configurable));
+  if (Desc.Configurable !== undefined) {
+    CreateDataProperty(obj, new Value('configurable'), Desc.Configurable);
   }
   // Assert: All of the above CreateDataProperty operations return true.
   return obj;
@@ -88,46 +89,46 @@ export function ToPropertyDescriptor(Obj) {
     return surroundingAgent.Throw('TypeError');
   }
 
-  const desc = {};
-  const hasEnumerable = Q(HasProperty(Obj, NewValue('enumerable')));
+  const desc = Descriptor({});
+  const hasEnumerable = Q(HasProperty(Obj, new Value('enumerable')));
   if (hasEnumerable.isTrue()) {
-    const enumerable = ToBoolean(Q(Get(Obj, NewValue('enumerable'))));
-    desc.Enumerable = enumerable.isTrue();
+    const enumerable = ToBoolean(Q(Get(Obj, new Value('enumerable'))));
+    desc.Enumerable = enumerable;
   }
-  const hasConfigurable = Q(HasProperty(Obj, NewValue('configurable')));
+  const hasConfigurable = Q(HasProperty(Obj, new Value('configurable')));
   if (hasConfigurable.isTrue()) {
-    const conf = ToBoolean(Q(Get(Obj, NewValue('configurable'))));
-    desc.Configurable = conf.isTrue();
+    const conf = ToBoolean(Q(Get(Obj, new Value('configurable'))));
+    desc.Configurable = conf;
   }
-  const hasValue = Q(HasProperty(Obj, NewValue('value')));
+  const hasValue = Q(HasProperty(Obj, new Value('value')));
   if (hasValue.isTrue()) {
-    const value = Q(Get(Obj, NewValue('value')));
+    const value = Q(Get(Obj, new Value('value')));
     desc.Value = value;
   }
-  const hasWritable = Q(HasProperty(Obj, NewValue('writable')));
+  const hasWritable = Q(HasProperty(Obj, new Value('writable')));
   if (hasWritable.isTrue()) {
-    const writable = ToBoolean(Q(Get(Obj, NewValue('writable'))));
-    desc.Writable = writable.isTrue();
+    const writable = ToBoolean(Q(Get(Obj, new Value('writable'))));
+    desc.Writable = writable;
   }
-  const hasGet = Q(HasProperty(Obj, NewValue('get')));
+  const hasGet = Q(HasProperty(Obj, new Value('get')));
   if (hasGet.isTrue()) {
-    const getter = Q(Get(Obj, NewValue('get')));
+    const getter = Q(Get(Obj, new Value('get')));
     if (IsCallable(getter).isFalse() && Type(getter) !== 'Undefined') {
       return surroundingAgent.Throw('TypeError');
     }
     desc.Get = getter;
   }
-  const hasSet = Q(HasProperty(Obj, NewValue('set')));
+  const hasSet = Q(HasProperty(Obj, new Value('set')));
   if (hasSet.isTrue()) {
-    const setter = Q(Get(Obj, NewValue('set')));
+    const setter = Q(Get(Obj, new Value('set')));
     if (IsCallable(setter).isFalse() && Type(setter) !== 'Undefined') {
       return surroundingAgent.Throw('TypeError');
     }
     desc.Set = setter;
   }
-  if ('Get' in desc || 'Set' in desc) {
-    if ('Value' in desc || 'Writable' in desc) {
-      return surroundingAgent.Throw('TypeError');
+  if (desc.Get !== undefined || desc.Set !== undefined) {
+    if (desc.Value !== undefined || desc.Writable !== undefined) {
+      return surroundingAgent.Throw('TypeError', 'invalid descriptor');
     }
   }
   return desc;
@@ -137,10 +138,10 @@ export function ToPropertyDescriptor(Obj) {
 export function CompletePropertyDescriptor(Desc) {
   // Assert: Desc is a Property Descriptor.
   const like = {
-    Value: NewValue(undefined),
+    Value: new Value(undefined),
     Writable: false,
-    Get: NewValue(undefined),
-    Set: NewValue(undefined),
+    Get: new Value(undefined),
+    Set: new Value(undefined),
     Enumerable: false,
     Configurable: false,
   };

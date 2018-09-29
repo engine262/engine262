@@ -13,7 +13,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
-  New as NewValue,
+  Value,
   Reference,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -29,7 +29,7 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
   const strict = surroundingAgent.isStrictCode;
-  return new Reference(bv, propertyKey, NewValue(strict));
+  return new Reference(bv, propertyKey, new Value(strict));
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
@@ -39,9 +39,9 @@ function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierN
   const baseReference = yield* Evaluate_Expression(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
-  const propertyNameString = NewValue(IdentifierName.name);
+  const propertyNameString = new Value(IdentifierName.name);
   const strict = true; // TODO(IsStrict)
-  return new Reference(bv, propertyNameString, NewValue(strict));
+  return new Reference(bv, propertyNameString, new Value(strict));
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation

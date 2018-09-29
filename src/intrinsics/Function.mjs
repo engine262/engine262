@@ -1,7 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
-import { New as NewValue } from '../value.mjs';
-import { CreateBuiltinFunction } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // #sec-createdynamicfunction
 function CreateDynamicFunction() {
@@ -14,22 +13,6 @@ function FunctionConstructor(args, { NewTarget }) {
 }
 
 export function CreateFunction(realmRec) {
-  const cons = CreateBuiltinFunction(FunctionConstructor, [], realmRec);
-  const proto = realmRec.Intrinsics['%FunctionPrototype%'];
-
-  cons.DefineOwnProperty(NewValue('prototype'), {
-    Value: proto,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
-
-  proto.DefineOwnProperty(NewValue('constructor'), {
-    Value: cons,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
+  const cons = BootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%FunctionPrototype%'], []);
   realmRec.Intrinsics['%Function%'] = cons;
 }

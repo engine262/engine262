@@ -1,12 +1,9 @@
 import {
-  CreateBuiltinFunction,
   OrdinaryCreateFromConstructor,
   ToBoolean,
 } from '../abstract-ops/all.mjs';
-import {
-  New as NewValue,
-} from '../value.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function BooleanConstructor([value], { NewTarget }) {
   const b = ToBoolean(value);
@@ -19,23 +16,10 @@ function BooleanConstructor([value], { NewTarget }) {
 }
 
 export function CreateBoolean(realmRec) {
-  const booleanPrototype = realmRec.Intrinsics['%BooleanPrototype%'];
+  const cons = BootstrapConstructor(
+    realmRec, BooleanConstructor, 'Boolean', 1,
+    realmRec.Intrinsics['%BooleanPrototype%'], [],
+  );
 
-  const booleanConstructor = CreateBuiltinFunction(BooleanConstructor, [], realmRec);
-
-  booleanConstructor.DefineOwnProperty(NewValue('prototype'), {
-    Value: booleanPrototype,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
-
-  booleanPrototype.DefineOwnProperty(NewValue('constructor'), {
-    Value: booleanConstructor,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  realmRec.Intrinsics['%Boolean%'] = booleanConstructor;
+  realmRec.Intrinsics['%Boolean%'] = cons;
 }

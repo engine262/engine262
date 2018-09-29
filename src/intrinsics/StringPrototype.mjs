@@ -11,9 +11,10 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   StringExoticObjectValue,
   Type,
+  Descriptor,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
@@ -34,9 +35,9 @@ function StringProto_charAt([pos], { thisValue }) {
   const position = Q(ToInteger(pos)).numberValue();
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return NewValue('');
+    return new Value('');
   }
-  return NewValue(S.stringValue()[position]);
+  return new Value(S.stringValue()[position]);
 }
 
 function StringProto_charCodeAt([pos], { thisValue }) {
@@ -45,7 +46,7 @@ function StringProto_charCodeAt([pos], { thisValue }) {
   const position = Q(ToInteger(pos)).numberValue();
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return NewValue(NaN);
+    return new Value(NaN);
   }
   return S.stringValue().charCodeAt(position);
 }
@@ -61,7 +62,7 @@ export function CreateStringPrototype(realmRec) {
   const proto = new StringExoticObjectValue();
   proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
   proto.Extensible = true;
-  proto.StringData = NewValue('');
+  proto.StringData = new Value('');
 
   [
     ['charAt', StringProto_charAt, 1],
@@ -70,14 +71,14 @@ export function CreateStringPrototype(realmRec) {
     ['valueOf', StringProto_valueOf, 0],
   ].forEach(([name, fn, length]) => {
     const n = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(n, NewValue(name));
-    SetFunctionLength(n, NewValue(length));
-    proto.DefineOwnProperty(NewValue(name), {
+    SetFunctionName(n, new Value(name));
+    SetFunctionLength(n, new Value(length));
+    proto.DefineOwnProperty(new Value(name), Descriptor({
       Value: n,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    }));
   });
 
   realmRec.Intrinsics['%StringPrototype%'] = proto;

@@ -8,7 +8,7 @@ import {
   ToString,
 } from './all.mjs';
 import {
-  New as NewValue,
+  Value,
   wellKnownSymbols,
   ArgumentsExoticObjectValue,
 } from '../value.mjs';
@@ -19,9 +19,9 @@ import { X } from '../completion.mjs';
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'), ['ParameterMap']);
-  obj.ParameterMap = NewValue(undefined);
-  DefinePropertyOrThrow(obj, NewValue('length'), {
-    Value: NewValue(len),
+  obj.ParameterMap = new Value(undefined);
+  DefinePropertyOrThrow(obj, new Value('length'), {
+    Value: new Value(len),
     Writable: true,
     Enumerable: false,
     Configurable: true,
@@ -29,7 +29,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    CreateDataProperty(obj, X(ToString(NewValue(index))), val);
+    CreateDataProperty(obj, X(ToString(new Value(index))), val);
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, {
@@ -38,7 +38,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
     Enumerable: false,
     Configurable: true,
   }));
-  X(DefinePropertyOrThrow(obj, NewValue('callee'), {
+  X(DefinePropertyOrThrow(obj, new Value('callee'), {
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: false,
@@ -51,7 +51,7 @@ function ArgGetterSteps() {
   const f = this;
   const name = f.Name;
   const env = f.Env;
-  return env.GetBindingValue(name, NewValue(false));
+  return env.GetBindingValue(name, new Value(false));
 }
 
 // #sec-makearggetter
@@ -67,14 +67,14 @@ function ArgSetterSteps([value]) {
   const f = this;
   const name = f.Name;
   const env = f.Env;
-  return env.SetMutableBinding(name, value, NewValue(false));
+  return env.SetMutableBinding(name, value, new Value(false));
 }
 
 // #sec-makeargsetter
 function MakeArgSetter(name, env) {
   const steps = ArgSetterSteps;
   const setter = CreateBuiltinFunction(steps, ['Name', 'Env']);
-  SetFunctionLength(setter, NewValue(1));
+  SetFunctionLength(setter, new Value(1));
   setter.Name = name;
   setter.Env = env;
   return setter;
@@ -88,18 +88,18 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   const obj = new ArgumentsExoticObjectValue();
   obj.Prototype = surroundingAgent.intrinsic('%ObjectPrototype%');
   obj.Extensible = true;
-  const map = ObjectCreate(NewValue(null));
+  const map = ObjectCreate(new Value(null));
   obj.ParameterMap = map;
-  const parameterNames = BoundNames_FormalParameterList(formals).map(NewValue);
+  const parameterNames = BoundNames_FormalParameterList(formals).map(Value);
   const numberOfParameters = parameterNames.length;
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    CreateDataProperty(obj, X(ToString(NewValue(index))), val);
+    CreateDataProperty(obj, X(ToString(new Value(index))), val);
     index += 1;
   }
-  DefinePropertyOrThrow(obj, NewValue('length'), {
-    Value: NewValue(len),
+  DefinePropertyOrThrow(obj, new Value('length'), {
+    Value: new Value(len),
     Writable: true,
     Enumerable: false,
     Configurable: true,
@@ -113,7 +113,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
-        map.DefineOwnProperty(X(ToString(NewValue(index))), {
+        map.DefineOwnProperty(X(ToString(new Value(index))), {
           Set: p,
           Get: g,
           Enumerable: false,
@@ -129,7 +129,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     Enumerable: false,
     Configurable: true,
   }));
-  X(DefinePropertyOrThrow(obj, NewValue('callee'), {
+  X(DefinePropertyOrThrow(obj, new Value('callee'), {
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: false,

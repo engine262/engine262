@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   Type,
   wellKnownSymbols,
 } from './value.mjs';
@@ -71,7 +71,7 @@ export class Agent {
 
   Throw(type, message) {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    const error = Construct(cons, message ? [NewValue(message)] : []);
+    const error = Construct(cons, message ? [new Value(message)] : []);
     error.hostTrace = new Error().stack;
     return new ThrowCompletion(error);
   }
@@ -126,12 +126,12 @@ export function EnqueueJob(queueName, job, args) {
 export function InitializeHostDefinedRealm() {
   const realm = CreateRealm();
   const newContext = new ExecutionContext();
-  newContext.Function = NewValue(null);
+  newContext.Function = new Value(null);
   newContext.Realm = realm;
-  newContext.ScriptOrModule = NewValue(null);
+  newContext.ScriptOrModule = new Value(null);
   surroundingAgent.executionContextStack.push(newContext);
-  const global = NewValue(undefined);
-  const thisValue = NewValue(undefined);
+  const global = new Value(undefined);
+  const thisValue = new Value(undefined);
   SetRealmGlobalObject(realm, global, thisValue);
   SetDefaultGlobalBindings(realm);
 }
@@ -162,7 +162,7 @@ export function RunJobs() {
     }
     const nextPending = nextQueue.shift();
     const newContext = new ExecutionContext();
-    newContext.Function = NewValue(null);
+    newContext.Function = new Value(null);
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
@@ -183,7 +183,7 @@ export function AgentSignifier() {
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
-  scriptCtx.Function = NewValue(null);
+  scriptCtx.Function = new Value(null);
   scriptCtx.Realm = scriptRecord.Realm;
   scriptCtx.ScriptOrModule = scriptRecord;
   scriptCtx.VariableEnvironment = globalEnv;
@@ -196,7 +196,7 @@ export function ScriptEvaluation(scriptRecord) {
     result = Evaluate_Script(scriptBody, globalEnv);
   }
   if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(NewValue(undefined));
+    result = new NormalCompletion(new Value(undefined));
   }
   // Suspend scriptCtx
   surroundingAgent.executionContextStack.pop();
@@ -242,15 +242,15 @@ export function SymbolDescriptiveString(sym) {
   Assert(Type(sym) === 'Symbol');
   let desc = sym.Description;
   if (Type(desc) === 'Undefined') {
-    desc = NewValue('');
+    desc = new Value('');
   }
-  return NewValue(`Symbol(${desc.stringValue()})`);
+  return new Value(`Symbol(${desc.stringValue()})`);
 }
 
 // 22.1.3.1 #sec-isconcatspreadable
 export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   const spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
   if (spreadable.value !== undefined) {

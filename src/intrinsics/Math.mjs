@@ -1,6 +1,7 @@
 import {
-  New as NewValue,
+  Value,
   wellKnownSymbols,
+  Descriptor,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -25,19 +26,20 @@ export function CreateMath(realmRec) {
     ['SQRT1_2', Math.SQRT1_2],
     ['SQRT2', Math.SQRT2],
   ].forEach(([name, value]) => {
-    mathObj.DefineOwnProperty(NewValue(name), {
-      Value: NewValue(value),
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
+    mathObj.DefineOwnProperty(new Value(name), Descriptor({
+      Value: new Value(value),
+      Writable: new Value(false),
+      Enumerable: new Value(false),
+      Configurable: new Value(false),
+    }));
   });
 
-  mathObj.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Math'),
-    Enumerable: false,
-    Configurable: false,
-  });
+  mathObj.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
+    Value: new Value('Math'),
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(false),
+  }));
 
   // 20.2.2 Function Properties of the Math Object
 
@@ -78,12 +80,12 @@ export function CreateMath(realmRec) {
     ['tanh'],
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
-    mathObj.DefineOwnProperty(NewValue(name), {
+    mathObj.DefineOwnProperty(new Value(name), Descriptor({
       Value: CreateBuiltinFunction(nativeMethod || (() => surroundingAgent.Throw('TypeError')), [], realmRec),
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    }));
   });
 
   realmRec.Intrinsics['%Math%'] = mathObj;

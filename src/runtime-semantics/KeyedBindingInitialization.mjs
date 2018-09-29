@@ -24,7 +24,7 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -80,14 +80,14 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
       throw outOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
 
-  const bindingId = NewValue(BindingIdentifier.name);
+  const bindingId = new Value(BindingIdentifier.name);
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
+      const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
       if (hasNameProperty.isFalse()) {
         X(SetFunctionName(v, bindingId));
       }

@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -7,14 +7,9 @@ import {
   SymbolDescriptiveString,
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  Assert,
-  CreateBuiltinFunction,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
-} from '../abstract-ops/all.mjs';
+import { Assert } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function thisSymbolValue(value) {
   if (Type(value) === 'Symbol') {
@@ -41,40 +36,16 @@ function Symbol_toPrimitive(argList, { thisValue }) {
 }
 
 function Symbol_toStringTag() {
-  return NewValue('Symbol');
+  return new Value('Symbol');
 }
 
 export function CreateSymbolPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  [
+  const proto = BootstrapPrototype(realmRec, [
     ['toString', Symbol_toString, 0],
     ['valueOf', Symbol_valueOf, 0],
-  ].forEach(([name, fn, len]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
-
-  proto.DefineOwnProperty(wellKnownSymbols.toPrimitive, {
-    Value: CreateBuiltinFunction(Symbol_toPrimitive, [], realmRec),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
-
-  proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: CreateBuiltinFunction(Symbol_toStringTag, [], realmRec),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
+    [wellKnownSymbols.toPrimitive, Symbol_toPrimitive, 0],
+    [wellKnownSymbols.toStringTag, Symbol_toStringTag, 0],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%SymbolPrototype%'] = proto;
 }

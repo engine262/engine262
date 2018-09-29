@@ -1,4 +1,4 @@
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import {
   ToNumber,
   CreateBuiltinFunction,
@@ -10,9 +10,9 @@ import { Q } from '../completion.mjs';
 function isNaN([number]) {
   const num = Q(ToNumber(number));
   if (num.isNaN()) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 export function CreateFunctionProperties(realmRec) {
@@ -20,8 +20,8 @@ export function CreateFunctionProperties(realmRec) {
     ['isNaN', isNaN, 1],
   ].forEach(([name, fn, len]) => {
     fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
+    SetFunctionName(fn, new Value(name));
+    SetFunctionLength(fn, new Value(len));
     realmRec.Intrinsics[`%${name}%`] = fn;
   });
 }

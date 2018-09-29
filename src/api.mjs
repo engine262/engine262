@@ -8,7 +8,7 @@ import {
   ScriptEvaluation,
   surroundingAgent,
 } from './engine.mjs';
-import { New as NewValue, Type } from './value.mjs';
+import { Value, Descriptor, Type } from './value.mjs';
 import { ParseScript } from './parse.mjs';
 import {
   Completion,
@@ -20,7 +20,7 @@ import * as AbstractOps from './abstract-ops/all.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const { ObjectCreate, CreateBuiltinFunction } = Abstract;
-export { AbruptCompletion, NormalCompletion, Completion };
+export { AbruptCompletion, NormalCompletion, Completion, Descriptor };
 
 class APIRealm {
   constructor(options = {}) {
@@ -29,12 +29,12 @@ class APIRealm {
     realm.hostDefinedOptions = options;
 
     const newContext = new ExecutionContext();
-    newContext.Function = NewValue(null);
+    newContext.Function = new Value(null);
     newContext.Realm = realm;
-    newContext.ScriptOrModule = NewValue(null);
+    newContext.ScriptOrModule = new Value(null);
     surroundingAgent.executionContextStack.push(newContext);
-    const global = NewValue(undefined);
-    const thisValue = NewValue(undefined);
+    const global = new Value(undefined);
+    const thisValue = new Value(undefined);
     SetRealmGlobalObject(realm, global, thisValue);
     this.global = SetDefaultGlobalBindings(realm);
 
@@ -53,7 +53,7 @@ class APIRealm {
     const callerScriptOrModule = callerContext.ScriptOrModule;
 
     const newContext = new ExecutionContext();
-    newContext.Function = NewValue(null);
+    newContext.Function = new Value(null);
     newContext.Realm = callerRealm;
     newContext.ScriptOrModule = callerScriptOrModule;
 
@@ -73,7 +73,7 @@ class APIRealm {
       }
       const nextPending = nextQueue.shift();
       const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
-      newContext.Function = NewValue(null);
+      newContext.Function = new Value(null);
       newContext.Realm = nextPending.Realm;
       newContext.ScriptOrModule = nextPending.ScriptOrModule;
       surroundingAgent.executionContextStack.push(newContext);
@@ -99,7 +99,7 @@ function APIValue(realm, v) {
   if (typeof v === 'function') {
     return CreateBuiltinFunction(v, [], realm.realm);
   }
-  return NewValue(v, realm.realm);
+  return new Value(v, realm.realm);
 }
 
 export {

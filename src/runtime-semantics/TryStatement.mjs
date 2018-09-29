@@ -9,7 +9,7 @@ import {
   BoundNames_CatchParameter,
 } from '../static-semantics/all.mjs';
 import {
-  New as NewValue,
+  Value,
 } from '../value.mjs';
 import {
   Completion,
@@ -37,7 +37,7 @@ function* CatchClauseEvaluation(Catch, thrownValue) {
   const catchEnv = NewDeclarativeEnvironment(oldEnv);
   const catchEnvRec = catchEnv.EnvironmentRecord;
   for (const argName of BoundNames_CatchParameter(CatchParameter)) {
-    X(catchEnvRec.CreateMutableBinding(NewValue(argName), false));
+    X(catchEnvRec.CreateMutableBinding(new Value(argName), false));
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
   const status = yield* BindingInitialization_CatchParameter(CatchParameter, thrownValue, catchEnv);
@@ -64,7 +64,7 @@ function* Evaluate_TryStatement_Catch(Block, Catch) {
   } else {
     C = B;
   }
-  return Completion(UpdateEmpty(C, NewValue(undefined)));
+  return Completion(UpdateEmpty(C, new Value(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -75,7 +75,7 @@ function* Evaluate_TryStatement_Finally(Block, Finally) {
   if (F.Type === 'normal') {
     F = B;
   }
-  return Completion(UpdateEmpty(F, NewValue(undefined)));
+  return Completion(UpdateEmpty(F, new Value(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -92,7 +92,7 @@ function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
   if (F.Type === 'normal') {
     F = C;
   }
-  return Completion(UpdateEmpty(F, NewValue(undefined)));
+  return Completion(UpdateEmpty(F, new Value(undefined)));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation

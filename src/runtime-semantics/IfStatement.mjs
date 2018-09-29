@@ -12,7 +12,7 @@ import {
   NormalCompletion,
   UpdateEmpty,
 } from '../completion.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-if-statement-runtime-semantics-evaluation
 //   IfStatement :
@@ -33,13 +33,13 @@ export function* Evaluate_IfStatement({
     } else {
       stmtCompletion = yield* Evaluate_Statement(AlternateStatement);
     }
-    return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
+    return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
   } else {
     if (exprValue.isFalse()) {
       return new NormalCompletion(undefined);
     } else {
       const stmtCompletion = yield* Evaluate_Statement(Statement);
-      return Completion(UpdateEmpty(stmtCompletion, NewValue(undefined)));
+      return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
     }
   }
 }

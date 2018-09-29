@@ -2,21 +2,19 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
-  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
   CreateArrayFromList,
-  CreateBuiltinFunction,
   CreateIterResultObject,
   Get,
-  ObjectCreate,
   ToLength,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function ArrayIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
@@ -30,7 +28,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   }
   const a = O.IteratedObject;
   if (Type(a) === 'Undefined') {
-    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+    return CreateIterResultObject(new Value(undefined), new Value(true));
   }
   const index = O.ArrayIteratorNextIndex;
   const itemKind = O.ArrayIterationKind;
@@ -39,45 +37,33 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     // a. If IsDetachedBuffer(a.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
     // b Let len be a.[[ArrayLength]].
   } else {
-    const lenProp = Q(Get(a, NewValue('length')));
+    const lenProp = Q(Get(a, new Value('length')));
     len = Q(ToLength(lenProp));
   }
   if (index >= len.numberValue()) {
-    O.IteratedObject = NewValue(undefined);
-    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+    O.IteratedObject = new Value(undefined);
+    return CreateIterResultObject(new Value(undefined), new Value(true));
   }
   O.ArrayIteratorNextIndex = index + 1;
   if (itemKind === 'key') {
-    return CreateIterResultObject(NewValue(index), NewValue(false));
+    return CreateIterResultObject(new Value(index), new Value(false));
   }
-  const elementKey = X(ToString(NewValue(index)));
+  const elementKey = X(ToString(new Value(index)));
   const elementValue = Q(Get(a, elementKey));
   let result;
   if (itemKind === 'value') {
     result = elementValue;
   } else {
     Assert(itemKind === 'key+value');
-    result = CreateArrayFromList([NewValue(index), elementValue]);
+    result = CreateArrayFromList([new Value(index), elementValue]);
   }
-  return CreateIterResultObject(result, NewValue(false));
+  return CreateIterResultObject(result, new Value(false));
 }
 
 export function CreateArrayIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
-
-  proto.DefineOwnProperty(NewValue('next'), {
-    Value: CreateBuiltinFunction(ArrayIteratorPrototype_next, [], realmRec),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Array Iterator'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  });
+  const proto = BootstrapPrototype(realmRec, [
+    ['next', ArrayIteratorPrototype_next, 0],
+  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
 
   realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
 }

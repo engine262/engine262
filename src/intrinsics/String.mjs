@@ -7,7 +7,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -16,7 +16,7 @@ function StringConstructor(args, { NewTarget }) {
   let s;
   if (args.length === 0) {
     // String ( )
-    s = NewValue('');
+    s = new Value('');
   } else {
     // String ( value )
     const [value] = args;
@@ -30,8 +30,8 @@ function StringConstructor(args, { NewTarget }) {
 
 export function CreateString(realmRec) {
   const stringConstructor = CreateBuiltinFunction(StringConstructor, [], realmRec);
-  SetFunctionName(stringConstructor, NewValue('String'));
-  SetFunctionLength(stringConstructor, NewValue(1));
+  SetFunctionName(stringConstructor, new Value('String'));
+  SetFunctionLength(stringConstructor, new Value(1));
 
   realmRec.Intrinsics['%String%'] = stringConstructor;
 }

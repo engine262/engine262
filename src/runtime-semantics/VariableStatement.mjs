@@ -16,7 +16,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableDeclaration :
@@ -33,12 +33,12 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
         id: BindingIdentifier,
         init: Initializer,
       } = VariableDeclaration;
-      const bindingId = NewValue(BindingIdentifier.name);
+      const bindingId = new Value(BindingIdentifier.name);
       const lhs = Q(ResolveBinding(bindingId));
       const rhs = yield* Evaluate_Expression(Initializer);
       const value = Q(GetValue(rhs));
       if (IsAnonymousFunctionDefinition(Initializer)) {
-        const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
+        const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
         if (hasNameProperty.isFalse()) {
           X(SetFunctionName(value, bindingId));
         }
@@ -53,7 +53,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
       } = VariableDeclaration;
       const rhs = yield* Evaluate_Expression(Initializer);
       const rval = Q(GetValue(rhs));
-      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, NewValue(undefined));
+      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, new Value(undefined));
     }
 
     default:

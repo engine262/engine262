@@ -7,7 +7,7 @@ import {
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-generator-function-definitions-runtime-semantics-evaluation
 //   GeneratorExpression :
@@ -27,13 +27,13 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     funcEnv = NewDeclarativeEnvironment(scope);
     envRec = funcEnv.EnvironmentRecord;
     name = BindingIdentifier.name;
-    envRec.CreateImmutableBinding(name, NewValue(false));
+    envRec.CreateImmutableBinding(name, new Value(false));
   }
   const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv, strict));
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
   X(DefinePropertyOrThrow(
     closure,
-    NewValue('prototype'),
+    new Value('prototype'),
     {
       Value: prototype,
       Writable: true,

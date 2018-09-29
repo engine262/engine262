@@ -10,7 +10,7 @@ import {
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
-import { New as NewValue, Type } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 
 // 25.4.3.1 #sec-generatorstart
 export function GeneratorStart(generator, generatorBody) {
@@ -25,18 +25,18 @@ export function GeneratorStart(generator, generatorBody) {
     genContext.codeEvaluationState = null;
     let resultValue;
     if (result.Type === 'normal') {
-      resultValue = NewValue(undefined);
+      resultValue = new Value(undefined);
     } else if (result.Type === 'return') {
       resultValue = result.Value;
     } else {
       Assert(result.Type === 'throw');
       return Completion(result);
     }
-    return X(CreateIterResultObject(resultValue, NewValue(true)));
+    return X(CreateIterResultObject(resultValue, new Value(true)));
   }());
   generator.GeneratorContext = genContext;
   generator.GeneratorState = 'suspendedStart';
-  return new NormalCompletion(NewValue(undefined));
+  return new NormalCompletion(new Value(undefined));
 }
 
 // 25.4.3.2 #sec-generatorvalidate
@@ -59,7 +59,7 @@ export function GeneratorValidate(generator) {
 export function GeneratorResume(generator, value) {
   const state = Q(GeneratorValidate(generator));
   if (state === 'completed') {
-    return X(CreateIterResultObject(NewValue(undefined), NewValue(true)));
+    return X(CreateIterResultObject(new Value(undefined), new Value(true)));
   }
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
   const genContext = generator.GeneratorContext;
@@ -85,7 +85,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   }
   if (state === 'completed') {
     if (abruptCompletion.Type === 'return') {
-      return X(CreateIterResultObject(NewValue(undefined), NewValue(true)));
+      return X(CreateIterResultObject(new Value(undefined), new Value(true)));
     }
     return Completion(abruptCompletion);
   }

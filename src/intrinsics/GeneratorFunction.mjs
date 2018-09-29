@@ -1,12 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
-import { New as NewValue, wellKnownSymbols } from '../value.mjs';
-import {
-  CreateBuiltinFunction,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
-} from '../abstract-ops/all.mjs';
+import { Value, wellKnownSymbols, Descriptor } from '../value.mjs';
+import { ObjectCreate } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // #sec-createdynamicfunction
 function CreateDynamicFunction() {
@@ -19,48 +15,32 @@ function GeneratorFunctionConstructor(args, { NewTarget }) {
 }
 
 export function CreateGeneratorFunction(realmRec) {
-  const cons = CreateBuiltinFunction(GeneratorFunctionConstructor, [], realmRec);
-  SetFunctionName(cons, NewValue('GeneratorFunction'));
-  SetFunctionLength(cons, NewValue(1));
+  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, realmRec.Intrinsics['%GeneratorPrototype%'], []);
 
   const generator = ObjectCreate(realmRec.Intrinsics['%FunctionPrototype%']);
 
   const generatorPrototype = realmRec.Intrinsics['%GeneratorPrototype%'];
 
-  X(cons.DefineOwnProperty(NewValue('prototype'), {
-    Value: generator,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
-
-  X(generator.DefineOwnProperty(NewValue('constructor'), {
+  X(generator.DefineOwnProperty(new Value('constructor'), Descriptor({
     Value: cons,
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  }));
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
 
-  X(generator.DefineOwnProperty(NewValue('prototype'), {
+  X(generator.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: generatorPrototype,
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  }));
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
 
-  X(generator.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('GeneratorFunction'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  }));
-
-  X(generatorPrototype.DefineOwnProperty(NewValue('constructor'), {
-    Value: generator,
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  }));
+  X(generator.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
+    Value: new Value('GeneratorFunction'),
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
 
   realmRec.Intrinsics['%GeneratorFunction%'] = cons;
   realmRec.Intrinsics['%Generator%'] = generator;

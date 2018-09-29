@@ -2,14 +2,11 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   CreateArrayFromList,
-  CreateBuiltinFunction,
   CreateIterResultObject,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
+import { Type, Value, wellKnownSymbols } from '../value.mjs';
 import { X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function SetIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
@@ -23,7 +20,7 @@ function SetIteratorPrototype_next(args, { thisValue }) {
   let index = O.SetNextIndex;
   const itemKind = O.SetIterationKind;
   if (Type(s) === 'Undefined') {
-    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+    return CreateIterResultObject(new Value(undefined), new Value(true));
   }
   Assert('SetData' in s);
   const entries = s.SetData;
@@ -34,36 +31,20 @@ function SetIteratorPrototype_next(args, { thisValue }) {
     O.SetNextIndex = index;
     if (e !== undefined) {
       if (itemKind === 'key+value') {
-        return CreateIterResultObject(CreateArrayFromList([e, e]), NewValue(false));
+        return CreateIterResultObject(CreateArrayFromList([e, e]), new Value(false));
       }
-      return CreateIterResultObject(e, NewValue(false));
+      return CreateIterResultObject(e, new Value(false));
     }
   }
-  O.IteratedSet = NewValue(undefined);
-  return CreateIterResultObject(NewValue(undefined), NewValue(true));
+  O.IteratedSet = new Value(undefined);
+  return CreateIterResultObject(new Value(undefined), new Value(true));
 }
 
 export function CreateSetIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
-
-  {
-    const fn = CreateBuiltinFunction(SetIteratorPrototype_next, [], realmRec);
-    SetFunctionName(fn, NewValue('next'));
-    SetFunctionLength(fn, NewValue(0));
-    X(proto.DefineOwnProperty(NewValue('next'), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  }
-
-  X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Set Iterator'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
+  const proto = BootstrapPrototype(realmRec, [
+    ['next', SetIteratorPrototype_next, 0],
+    [wellKnownSymbols.toStringTag, new Value('Set Iterator')],
+  ], realmRec.Intrinsics['%IteratorPrototype%']);
 
   realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
 }

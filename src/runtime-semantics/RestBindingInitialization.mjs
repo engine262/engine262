@@ -9,7 +9,7 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -22,7 +22,7 @@ export function RestBindingInitialization_BindingRestProperty(
   BindingRestProperty, value, environment, excludedNames,
 ) {
   const BindingIdentifier = BindingRestProperty.argument;
-  const lhs = Q(ResolveBinding(NewValue(BindingIdentifier.name), environment));
+  const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment));
   const restObj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
   if (Type(environment) === 'Undefined') {

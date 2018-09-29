@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_Expression, Evaluate_StatementList } from '../evaluator.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import {
   Q,
   Completion,
@@ -28,7 +28,7 @@ function* CaseClauseIsSelected(C, input) {
 //   `{` CaseClauses DefaultClause CaseClauses `}`
 function* CaseBlockEvaluation(CaseBlock, input) {
   if (CaseBlock.length === 0) {
-    return NormalCompletion(NewValue(undefined));
+    return NormalCompletion(new Value(undefined));
   }
 
   const defaultIndex = CaseBlock.findIndex((c) => c.test === null);
@@ -38,7 +38,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     const secondCaseClauses = CaseBlock.slice(defaultIndex + 1);
     const DefaultClause = CaseBlock[defaultIndex];
 
-    let V = NewValue(undefined);
+    let V = new Value(undefined);
     let A;
     if (firstCaseClauses.length > 0) {
       A = firstCaseClauses;
@@ -105,7 +105,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     return NormalCompletion(V);
   } else {
     // CaseBlock : `{` CaseClauses `}`
-    let V = NewValue(undefined);
+    let V = new Value(undefined);
     // Let A be the List of CaseClause items in CaseClauses, in source text order.
     const A = CaseBlock;
     let found = false;

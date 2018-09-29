@@ -11,11 +11,18 @@ import {
   IteratorStep,
   IteratorValue,
 } from '../abstract-ops/all.mjs';
-import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
+import {
+  Type,
+  Value,
+  wellKnownSymbols,
+  Descriptor,
+} from '../value.mjs';
 import {
   Q, X,
-  ThrowCompletion, AbruptCompletion,
+  ThrowCompletion,
+  AbruptCompletion,
 } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder).isFalse()) {
@@ -33,11 +40,11 @@ function AddEntriesFromIterable(target, iterable, adder) {
       const error = new ThrowCompletion(surroundingAgent.Throw('TypeError').Value);
       return Q(IteratorClose(iteratorRecord, error));
     }
-    const k = Get(nextItem, NewValue('0'));
+    const k = Get(nextItem, new Value('0'));
     if (k instanceof AbruptCompletion) {
       return Q(IteratorClose(iteratorRecord, k));
     }
-    const v = Get(nextItem, NewValue('1'));
+    const v = Get(nextItem, new Value('1'));
     if (v instanceof AbruptCompletion) {
       return Q(IteratorClose(iteratorRecord, v));
     }
@@ -57,34 +64,19 @@ function MapConstructor([iterable], { NewTarget }) {
   if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
     return map;
   }
-  const adder = Q(Get(map, NewValue('set')));
+  const adder = Q(Get(map, new Value('set')));
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 
 export function CreateMap(realmRec) {
-  const mapConstructor = CreateBuiltinFunction(MapConstructor, [], realmRec);
+  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 1, realmRec.Intrinsics['%MapPrototype%'], []);
 
-  const proto = realmRec.Intrinsics['%MapPrototype%'];
-  X(proto.DefineOwnProperty(NewValue('prototype'), {
-    Value: mapConstructor,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  }));
-
-  X(mapConstructor.DefineOwnProperty(NewValue('prototype'), {
-    Value: proto,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
-
-  X(mapConstructor.DefineOwnProperty(wellKnownSymbols.species, {
+  X(mapConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: NewValue(undefined),
-    Enumerable: false,
-    Configurable: true,
-  }));
+    Set: new Value(undefined),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
 
   realmRec.Intrinsics['%Map%'] = mapConstructor;
 }

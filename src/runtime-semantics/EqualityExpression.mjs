@@ -5,7 +5,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-equality-operators-runtime-semantics-evaluation
@@ -30,9 +30,9 @@ export function* Evaluate_EqualityExpression({
     case '!=': {
       const r = AbstractEqualityComparison(rval, lval);
       if (r.isTrue()) {
-        return NewValue(false);
+        return new Value(false);
       } else {
-        return NewValue(true);
+        return new Value(true);
       }
     }
     case '===':
@@ -40,9 +40,9 @@ export function* Evaluate_EqualityExpression({
     case '!==': {
       const r = StrictEqualityComparison(rval, lval);
       if (r.isTrue()) {
-        return NewValue(false);
+        return new Value(false);
       } else {
-        return NewValue(true);
+        return new Value(true);
       }
     }
 

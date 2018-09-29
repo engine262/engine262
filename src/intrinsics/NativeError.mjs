@@ -2,19 +2,17 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  CreateBuiltinFunction,
   DefinePropertyOrThrow,
   ObjectCreate,
   OrdinaryCreateFromConstructor,
-  SetFunctionLength,
-  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 export function CreateNativeError(realmRec) {
   [
@@ -25,7 +23,9 @@ export function CreateNativeError(realmRec) {
     'TypeError',
     'URIError',
   ].forEach((name) => {
-    const cons = CreateBuiltinFunction(([message = NewValue(undefined)], { NewTarget }) => {
+    const proto = ObjectCreate(realmRec.Intrinsics['%ErrorPrototype%']);
+
+    const cons = BootstrapConstructor(realmRec, ([message = new Value(undefined)], { NewTarget }) => {
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
         newTarget = surroundingAgent.activeFunctionObject;
@@ -41,42 +41,14 @@ export function CreateNativeError(realmRec) {
           Enumerable: false,
           Configurable: true,
         };
-        X(DefinePropertyOrThrow(O, NewValue('message'), msgDesc));
+        X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }
       return O;
-    }, [], realmRec);
+    }, name, 1, proto, [
+      ['name', new Value(name)],
+      ['message', new Value('')],
+    ]);
     cons.Prototype = realmRec.Intrinsics['%Error%'];
-    SetFunctionLength(cons, NewValue(1));
-    SetFunctionName(cons, NewValue(name));
-
-    const proto = ObjectCreate(realmRec.Intrinsics['%ErrorPrototype%']);
-
-    cons.DefineOwnProperty(NewValue('prototype'), {
-      Value: proto,
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
-
-    proto.DefineOwnProperty(NewValue('constructor'), {
-      Value: cons,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-
-    proto.DefineOwnProperty(NewValue('message'), {
-      Value: NewValue(''),
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-    proto.DefineOwnProperty(NewValue('name'), {
-      Value: NewValue(name),
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
 
     realmRec.Intrinsics[`%${name}Prototype%`] = proto;
     realmRec.Intrinsics[`%${name}%`] = cons;

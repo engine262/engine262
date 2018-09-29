@@ -7,7 +7,7 @@ import {
   ToObject,
 } from './all.mjs';
 import {
-  New as NewValue,
+  Value,
   PrimitiveValue,
   Type,
 } from '../value.mjs';
@@ -40,33 +40,33 @@ export function IsStrictReference(V) {
 export function HasPrimitiveBase(V) {
   Assert(Type(V) === 'Reference');
   if (V.BaseValue instanceof PrimitiveValue) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 6.2.4.5 #sec-ispropertyreference
 export function IsPropertyReference(V) {
   Assert(Type(V) === 'Reference');
   if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V).isTrue()) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 6.2.4.6 #sec-isunresolvablereference
 export function IsUnresolvableReference(V) {
   Assert(Type(V) === 'Reference');
   if (Type(V.BaseValue) === 'Undefined') {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 6.2.4.7 #sec-issuperreference
 export function IsSuperReference(V) {
   Assert(Type(V) === 'Reference');
-  return NewValue('ThisValue' in V);
+  return new Value('ThisValue' in V);
 }
 
 // 6.2.4.8 #sec-getvalue
@@ -103,7 +103,7 @@ export function PutValue(V, W) {
       return surroundingAgent.Throw('ReferenceError', `${GetReferencedName(V).stringValue()} is not defined`);
     }
     const globalObj = GetGlobalObject();
-    return Q(Set(globalObj, GetReferencedName(V), W, NewValue(false)));
+    return Q(Set(globalObj, GetReferencedName(V), W, new Value(false)));
   } else if (IsPropertyReference(V).isTrue()) {
     if (HasPrimitiveBase(V).isTrue()) {
       Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');

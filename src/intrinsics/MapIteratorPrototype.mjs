@@ -2,14 +2,10 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   CreateArrayFromList,
-  CreateBuiltinFunction,
   CreateIterResultObject,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
-import { X } from '../completion.mjs';
+import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
@@ -23,7 +19,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
   let index = O.MapNextIndex;
   const itemKind = O.MapIterationKind;
   if (Type(s) === 'Undefined') {
-    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+    return CreateIterResultObject(new Value(undefined), new Value(true));
   }
   Assert('MapData' in s);
   const entries = s.MapData;
@@ -42,34 +38,18 @@ function MapIteratorPrototype_next(args, { thisValue }) {
         Assert(itemKind === 'key+value');
         result = CreateArrayFromList([e.Key, e.Value]);
       }
-      return CreateIterResultObject(result, NewValue(false));
+      return CreateIterResultObject(result, new Value(false));
     }
   }
-  O.IteratedMap = NewValue(undefined);
-  return CreateIterResultObject(NewValue(undefined), NewValue(true));
+  O.IteratedMap = new Value(undefined);
+  return CreateIterResultObject(new Value(undefined), new Value(true));
 }
 
 export function CreateMapIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
-
-  {
-    const fn = CreateBuiltinFunction(MapIteratorPrototype_next, [], realmRec);
-    SetFunctionName(fn, NewValue('next'));
-    SetFunctionLength(fn, NewValue(0));
-    X(proto.DefineOwnProperty(NewValue('next'), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  }
-
-  X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Map Iterator'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
+  const proto = BootstrapPrototype(realmRec, [
+    ['next', MapIteratorPrototype_next, 0],
+    [wellKnownSymbols.toStringTag, new Value('Map Iterator')],
+  ], realmRec.Intrinsics['%IteratorPrototype%']);
 
   realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
 }

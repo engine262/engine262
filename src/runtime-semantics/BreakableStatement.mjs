@@ -7,7 +7,7 @@ import {
   NormalCompletion,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import {
   Evaluate_SwitchStatement,
   LabelledEvaluation_IterationStatement,
@@ -31,7 +31,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(NewValue(undefined));
+            stmtResult = new NormalCompletion(new Value(undefined));
           } else {
             stmtResult = new NormalCompletion(stmtResult.Value);
           }
@@ -45,7 +45,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(NewValue(undefined));
+            stmtResult = new NormalCompletion(new Value(undefined));
           } else {
             stmtResult = new NormalCompletion(stmtResult.Value);
           }

@@ -14,7 +14,7 @@ import {
   isObjectBindingPattern,
 } from '../ast.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -34,7 +34,7 @@ function InitializeBoundName(name, value, environment) {
   if (Type(environment) !== 'Undefined') {
     const env = environment.EnvironmentRecord;
     env.InitializeBinding(name, value);
-    return new NormalCompletion(NewValue(undefined));
+    return new NormalCompletion(new Value(undefined));
   } else {
     const lhs = ResolveBinding(name);
     return Q(PutValue(lhs, value));
@@ -47,7 +47,7 @@ function InitializeBoundName(name, value, environment) {
 //     `yield`
 //     `await`
 export function BindingInitialization_BindingIdentifier(BindingIdentifier, value, environment) {
-  const name = NewValue(BindingIdentifier.name);
+  const name = new Value(BindingIdentifier.name);
   return Q(InitializeBoundName(name, value, environment));
 }
 

@@ -8,8 +8,14 @@ import {
   SetFunctionLength,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
+import {
+  Type,
+  Value,
+  Descriptor,
+  wellKnownSymbols,
+} from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function CreateMapIterator(map, kind) {
   if (Type(map) !== 'Object') {
@@ -41,7 +47,7 @@ function MapProto_clear(args, { thisValue }) {
     p.Key = undefined;
     p.Value = undefined;
   }
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function MapProto_delete([key], { thisValue }) {
@@ -64,10 +70,10 @@ function MapProto_delete([key], { thisValue }) {
       // such as physically removing the entry from internal data structures.
       entries.splice(i, 1);
 
-      return NewValue(true);
+      return new Value(true);
     }
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 function MapProto_entries(args, { thisValue }) {
@@ -90,7 +96,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   if (thisArg !== undefined) {
     T = thisArg;
   } else {
-    T = NewValue(undefined);
+    T = new Value(undefined);
   }
   const entries = M.MapData;
   for (const e of entries) {
@@ -98,7 +104,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
       Q(Call(callbackfn, T, [e.Value, e.Key, M]));
     }
   }
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function MapProto_get([key], { thisValue }) {
@@ -115,7 +121,7 @@ function MapProto_get([key], { thisValue }) {
       return p.Value;
     }
   }
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function MapProto_has([key], { thisValue }) {
@@ -129,10 +135,10 @@ function MapProto_has([key], { thisValue }) {
   const entries = M.MapData;
   for (const p of entries) {
     if (p.Key !== undefined && SameValueZero(p.Key, key).isTrue()) {
-      return NewValue(true);
+      return new Value(true);
     }
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 function MapProto_keys(args, { thisValue }) {
@@ -156,7 +162,7 @@ function MapProto_set([key, value], { thisValue }) {
     }
   }
   if (Type(key) === 'Number' && Object.is(key.numberValue(), -0)) {
-    key = NewValue(0);
+    key = new Value(0);
   }
   const p = { Key: key, Value: value };
   entries.push(p);
@@ -178,7 +184,7 @@ function MapProto_size(args, { thisValue }) {
       count += 1;
     }
   }
-  return NewValue(count);
+  return new Value(count);
 }
 
 function MapProto_values(args, { thisValue }) {
@@ -187,9 +193,7 @@ function MapProto_values(args, { thisValue }) {
 }
 
 export function CreateMapPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  [
+  const proto = BootstrapPrototype(realmRec, [
     ['clear', MapProto_clear, 0],
     ['delete', MapProto_delete, 1],
     ['entries', MapProto_entries, 0],
@@ -199,39 +203,23 @@ export function CreateMapPrototype(realmRec) {
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
     ['values', MapProto_values, 0],
-  ].forEach(([name, nativeFunction, length]) => {
-    const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(length));
-    X(proto.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  });
+    [wellKnownSymbols.toStringTag, new Value('map')],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   {
     const fn = CreateBuiltinFunction(MapProto_size, [], realmRec);
-    SetFunctionName(fn, NewValue('size'));
-    SetFunctionLength(fn, NewValue(0));
-    X(proto.DefineOwnProperty(NewValue('size'), {
+    SetFunctionName(fn, new Value('size'));
+    SetFunctionLength(fn, new Value(0));
+    X(proto.DefineOwnProperty(new Value('size'), Descriptor({
       Get: fn,
-      Set: NewValue(undefined),
-      Enumerable: false,
-      Configurable: true,
-    }));
+      Set: new Value(undefined),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    })));
   }
 
-  const entriesFunc = X(proto.GetOwnProperty(NewValue('entries')));
+  const entriesFunc = X(proto.GetOwnProperty(new Value('entries')));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));
-
-  X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Map'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
 
   realmRec.Intrinsics['%MapPrototype%'] = proto;
 }

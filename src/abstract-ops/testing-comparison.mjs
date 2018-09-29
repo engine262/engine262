@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   ArrayExoticObjectValue,
   ProxyExoticObjectValue,
   Type,
@@ -38,10 +38,10 @@ export function RequireObjectCoercible(argument) {
 // 7.2.2 IsArray
 export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   if (argument instanceof ArrayExoticObjectValue) {
-    return NewValue(true);
+    return new Value(true);
   }
   if (argument instanceof ProxyExoticObjectValue) {
     if (Type(argument.ProxyHandler) === 'Null') {
@@ -50,29 +50,29 @@ export function IsArray(argument) {
     const target = argument.ProxyTarget;
     return IsArray(target);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 7.2.3 IsCallable
 export function IsCallable(argument) {
   if (Type(argument) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   if ('Call' in argument) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 7.2.4 IsConstructor
 export function IsConstructor(argument) {
   if (Type(argument) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   if ('Construct' in argument) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // 7.2.5 IsExtensible
@@ -122,7 +122,7 @@ export function SameValue(x, y) {
 // #sec-samevaluezero
 export function SameValueZero(x, y) {
   if (Type(x) !== Type(y)) {
-    return NewValue(false);
+    return new Value(false);
   }
   if (Type(x) === 'Number') {
     if (x.isNaN() && y.isNaN()) {
@@ -132,11 +132,11 @@ export function SameValueZero(x, y) {
     // If x is -0 and y is +0, return true.
     // If x is the same Number value as y, return true.
     if (x.numberValue() === y.numberValue()) {
-      return NewValue(true);
+      return new Value(true);
     }
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(SameValueNonNumber(x, y));
+  return new Value(SameValueNonNumber(x, y));
 }
 
 // 7.2.12 SameValueNonNumber
@@ -176,12 +176,12 @@ export function SameValueNonNumber(x, y) {
 // #sec-ispromise
 export function IsPromise(x) {
   if (Type(x) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   if (!('PromiseState' in x)) {
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(true);
+  return new Value(true);
 }
 
 // #sec-isinteger
@@ -208,7 +208,7 @@ export function IsStringPrefix(p, q) {
 // #sec-iscompatiblepropertydescriptor
 export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
   return ValidateAndApplyPropertyDescriptor(
-    NewValue(undefined), NewValue(undefined), Extensible, Desc, Current,
+    new Value(undefined), new Value(undefined), Extensible, Desc, Current,
   );
 }
 
@@ -225,10 +225,10 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   }
   if (Type(px) === 'String' && Type(py) === 'String') {
     if (IsStringPrefix(py, px)) {
-      return NewValue(false);
+      return new Value(false);
     }
     if (IsStringPrefix(px, py)) {
-      return NewValue(true);
+      return new Value(true);
     }
     let k = 0;
     while (true) {
@@ -240,38 +240,38 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     const m = px.stringValue().charCodeAt(k);
     const n = py.stringValue().charCodeAt(k);
     if (m < n) {
-      return NewValue(true);
+      return new Value(true);
     } else {
-      return NewValue(false);
+      return new Value(false);
     }
   } else {
     const nx = Q(ToNumber(px));
     const ny = Q(ToNumber(py));
     if (nx.isNaN()) {
-      return NewValue(undefined);
+      return new Value(undefined);
     }
     if (y.isNaN()) {
-      return NewValue(undefined);
+      return new Value(undefined);
     }
     // If nx and ny are the same Number value, return false.
     // If nx is +0 and ny is -0, return false.
     // If nx is -0 and ny is +0, return false.
     if (nx.numberValue() === ny.numberValue()) {
-      return NewValue(false);
+      return new Value(false);
     }
     if (nx.numberValue() === +Infinity) {
-      return NewValue(false);
+      return new Value(false);
     }
     if (ny.numberValue() === +Infinity) {
-      return NewValue(true);
+      return new Value(true);
     }
     if (ny.numberValue() === -Infinity) {
-      return NewValue(false);
+      return new Value(false);
     }
     if (nx.numberValue() === -Infinity) {
-      return NewValue(true);
+      return new Value(true);
     }
-    return NewValue(nx.numberValue() < ny.numberValue());
+    return new Value(nx.numberValue() < ny.numberValue());
   }
 }
 
@@ -281,10 +281,10 @@ export function AbstractEqualityComparison(x, y) {
     return StrictEqualityComparison(x, y);
   }
   if (Type(x) === 'Null' && Type(y) === 'Undefined') {
-    return NewValue(true);
+    return new Value(true);
   }
   if (Type(x) === 'Undefined' && Type(y) === 'Null') {
-    return NewValue(true);
+    return new Value(true);
   }
   if (Type(x) === 'Number' && Type(y) === 'String') {
     return AbstractEqualityComparison(x, X(ToNumber(y)));
@@ -304,28 +304,28 @@ export function AbstractEqualityComparison(x, y) {
   if (Type(x) === 'Object' && ['String', 'Number', 'Symbol'].includes(Type(y))) {
     return AbstractEqualityComparison(Q(ToPrimitive(x)), y);
   }
-  return NewValue(false);
+  return new Value(false);
 }
 
 // #sec-strict-equality-comparison
 export function StrictEqualityComparison(x, y) {
   if (Type(x) !== Type(y)) {
-    return NewValue(false);
+    return new Value(false);
   }
   if (Type(x) === 'Number') {
     if (x.isNaN()) {
-      return NewValue(false);
+      return new Value(false);
     }
     if (y.isNaN()) {
-      return NewValue(false);
+      return new Value(false);
     }
     // If x is the same Number value as y, return true.
     // If x is +0 and y is -0, return true.
     // If x is -0 and y is +0, return true.
     if (x.numberValue() === y.numberValue()) {
-      return NewValue(true);
+      return new Value(true);
     }
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(SameValueNonNumber(x, y));
+  return new Value(SameValueNonNumber(x, y));
 }

@@ -14,7 +14,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Type,
-  New as NewValue,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
@@ -50,7 +50,7 @@ export function* Evaluate_RelationalExpression({
       const r = AbstractRelationalComparison(lval, rval);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined') {
-        return NewValue(false);
+        return new Value(false);
       }
       return r;
     }
@@ -58,7 +58,7 @@ export function* Evaluate_RelationalExpression({
       const r = AbstractRelationalComparison(rval, lval, false);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined') {
-        return NewValue(false);
+        return new Value(false);
       }
       return r;
     }
@@ -66,17 +66,17 @@ export function* Evaluate_RelationalExpression({
       const r = AbstractRelationalComparison(rval, lval, false);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined' || r.isTrue()) {
-        return NewValue(false);
+        return new Value(false);
       }
-      return NewValue(true);
+      return new Value(true);
     }
     case '>=': {
       const r = AbstractRelationalComparison(lval, rval);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined' || r.isTrue()) {
-        return NewValue(false);
+        return new Value(false);
       }
-      return NewValue(true);
+      return new Value(true);
     }
 
     case 'instanceof':

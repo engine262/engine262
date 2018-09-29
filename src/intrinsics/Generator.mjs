@@ -1,20 +1,14 @@
 import {
-  CreateBuiltinFunction,
   GeneratorResume,
   GeneratorResumeAbrupt,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Q, X,
+  Q,
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mjs';
-import {
-  New as NewValue,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { Value, wellKnownSymbols } from '../value.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // #sec-generator.prototype.next
 function GeneratorProto_next([value], { thisValue }) {
@@ -37,50 +31,12 @@ function GeneratorProto_throw([exception], { thisValue }) {
 }
 
 export function CreateGenerator(realmRec) {
-  const generatorPrototype = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
-
-  {
-    const next = CreateBuiltinFunction(GeneratorProto_next, [], realmRec);
-    SetFunctionName(next, NewValue('next'));
-    SetFunctionLength(next, NewValue(1));
-    X(generatorPrototype.DefineOwnProperty(NewValue('next'), {
-      Value: next,
-      Writable: false,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  }
-
-  {
-    const ret = CreateBuiltinFunction(GeneratorProto_return, [], realmRec);
-    SetFunctionName(ret, NewValue('return'));
-    SetFunctionLength(ret, NewValue(1));
-    X(generatorPrototype.DefineOwnProperty(NewValue('return'), {
-      Value: ret,
-      Writable: false,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  }
-
-  {
-    const thr = CreateBuiltinFunction(GeneratorProto_throw, [], realmRec);
-    SetFunctionName(thr, NewValue('throw'));
-    SetFunctionLength(thr, NewValue(1));
-    X(generatorPrototype.DefineOwnProperty(NewValue('throw'), {
-      Value: thr,
-      Writable: false,
-      Enumerable: false,
-      Configurable: true,
-    }));
-  }
-
-  X(generatorPrototype.DefineOwnProperty(wellKnownSymbols.toStringTag, {
-    Value: NewValue('Generator'),
-    Writable: false,
-    Enumerable: false,
-    Configurable: true,
-  }));
+  const generatorPrototype = BootstrapPrototype(realmRec, [
+    ['next', GeneratorProto_next, 1],
+    ['return', GeneratorProto_return, 1],
+    ['throw', GeneratorProto_throw, 1],
+    [wellKnownSymbols.toStringTag, new Value('Generator')],
+  ], realmRec.Intrinsics['%IteratorPrototype%']);
 
   realmRec.Intrinsics['%GeneratorPrototype%'] = generatorPrototype;
 }

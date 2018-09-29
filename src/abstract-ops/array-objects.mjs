@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   ArrayExoticObjectValue,
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -19,7 +19,7 @@ import { Q, X } from '../completion.mjs';
 export function ArrayCreate(length, proto) {
   Assert(length.numberValue() >= 0);
   if (Object.is(length.numberValue(), -0)) {
-    length = NewValue(0);
+    length = new Value(0);
   }
   if (length.numberValue() > (2 ** 32) - 1) {
     return surroundingAgent.Throw('RangeError');
@@ -35,7 +35,7 @@ export function ArrayCreate(length, proto) {
   A.Prototype = proto;
   A.Extensible = true;
 
-  X(OrdinaryDefineOwnProperty(A, NewValue('length'), {
+  X(OrdinaryDefineOwnProperty(A, new Value('length'), {
     Value: length,
     Writable: true,
     Enumerable: false,
@@ -61,7 +61,7 @@ export function CreateArrayIterator(array, kind) {
 // 9.4.2.4 ArraySetLength
 export function ArraySetLength(A, Desc) {
   if (!('Value' in Desc)) {
-    return OrdinaryDefineOwnProperty(A, NewValue('length'), Desc);
+    return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
   }
   const newLenDesc = { ...Desc };
   const newLen = Q(ToUint32(Desc.Value)).numberValue();
@@ -69,15 +69,15 @@ export function ArraySetLength(A, Desc) {
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'Invalid array length');
   }
-  newLenDesc.Value = NewValue(newLen);
-  const oldLenDesc = OrdinaryGetOwnProperty(A, NewValue('length'));
+  newLenDesc.Value = new Value(newLen);
+  const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
   Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
   let oldLen = oldLenDesc.Value.numberValue();
   if (newLen >= oldLen) {
-    return OrdinaryDefineOwnProperty(A, NewValue('length'), newLenDesc);
+    return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
   }
   if (oldLenDesc.Writable === false) {
-    return NewValue(false);
+    return new Value(false);
   }
   let newWritable;
   if (!('Writable' in newLenDesc) || newLenDesc.Writable === true) {
@@ -86,25 +86,25 @@ export function ArraySetLength(A, Desc) {
     newWritable = false;
     newLenDesc.Writable = true;
   }
-  const succeeded = X(OrdinaryDefineOwnProperty(A, NewValue('length'), newLenDesc));
+  const succeeded = X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
   if (succeeded.isFalse()) {
-    return NewValue(false);
+    return new Value(false);
   }
   while (newLen < oldLen) {
     oldLen -= 1;
-    const idxToDelete = X(ToString(NewValue(oldLen)));
+    const idxToDelete = X(ToString(new Value(oldLen)));
     const deleteSucceeded = X(A.Delete(idxToDelete));
     if (deleteSucceeded.isFalse()) {
-      newLenDesc.Value = NewValue(oldLen + 1);
+      newLenDesc.Value = new Value(oldLen + 1);
       if (newWritable === false) {
         newLenDesc.Writable = false;
       }
-      X(OrdinaryDefineOwnProperty(A, NewValue('length'), newLenDesc));
-      return NewValue(false);
+      X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
+      return new Value(false);
     }
   }
   if (newWritable === false) {
-    OrdinaryDefineOwnProperty(A, NewValue('length'), { Writable: false });
+    OrdinaryDefineOwnProperty(A, new Value('length'), { Writable: false });
   }
-  return NewValue(true);
+  return new Value(true);
 }

@@ -39,7 +39,7 @@ import {
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
-import { Type, New as NewValue } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 
 // (implicit)
 //   AssignmentPattern :
@@ -189,7 +189,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
       const defaultValue = yield* Evaluate_Expression(Initializer);
       v = Q(GetValue(defaultValue));
       if (IsAnonymousFunctionDefinition(Initializer)) {
-        const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
+        const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
         if (hasNameProperty.isFalse()) {
           X(SetFunctionName(v, P));
         }
@@ -265,21 +265,21 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
   if (iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     } else {
       value = IteratorValue(next);
       if (value instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(value);
     }
   }
   if (iteratorRecord.Done.isTrue()) {
-    value = NewValue(undefined);
+    value = new Value(undefined);
   }
   let v;
   if (Initializer !== undefined && Type(v) === 'Undefined') {
@@ -296,7 +296,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
       && Type(v) === 'Undefined'
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
-    const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
+    const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
     if (hasNameProperty.isFalse()) {
       X(SetFunctionName(v, GetReferencedName(lref)));
     }
@@ -313,11 +313,11 @@ function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorReco
   while (remaining > 0 && iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
   }
   return new NormalCompletion(undefined);
@@ -332,23 +332,23 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assig
     lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
-  const A = X(ArrayCreate(NewValue(0)));
+  const A = X(ArrayCreate(new Value(0)));
   let n = 0;
   while (iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     } else {
       const nextValue = IteratorValue(next);
       if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(nextValue);
-      const status = X(CreateDataProperty(A, ToString(NewValue(n)), nextValue));
+      const status = X(CreateDataProperty(A, ToString(new Value(n)), nextValue));
       Assert(status.isTrue());
       n += 1;
     }
@@ -391,7 +391,7 @@ function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentEle
       && Type(v) === 'Undefined'
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
-    const hasNameProperty = Q(HasOwnProperty(rhsValue, NewValue('name')));
+    const hasNameProperty = Q(HasOwnProperty(rhsValue, new Value('name')));
     if (hasNameProperty.isFalse()) {
       X(SetFunctionName(rhsValue, GetReferencedName(lref)));
     }

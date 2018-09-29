@@ -16,9 +16,10 @@ import {
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
   ProxyExoticObjectValue,
+  Descriptor,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
@@ -31,7 +32,7 @@ function ProxyCallSlot(thisArgument, argumentsList) {
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, NewValue('apply')));
+  const trap = Q(GetMethod(handler, new Value('apply')));
   if (Type(trap) === 'Undefined') {
     return Q(Call(target, thisArgument, argumentsList));
   }
@@ -48,7 +49,7 @@ function ProxyConstructSlot(argumentsList, newTarget) {
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, NewValue('construct')));
+  const trap = Q(GetMethod(handler, new Value('construct')));
   if (Type(trap) === 'Undefined') {
     Assert(IsConstructor(target).isTrue());
     return Q(Construct(target, argumentsList, newTarget));
@@ -98,40 +99,40 @@ function ProxyRevocationFunctions() {
 
   const p = F.RevocableProxy;
   if (Type(p) === 'Null') {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
-  F.RevocableProxy = NewValue(null);
+  F.RevocableProxy = new Value(null);
   Assert(p instanceof ProxyExoticObjectValue);
-  p.ProxyTarget = NewValue(null);
-  p.ProxyHandler = NewValue(null);
-  return NewValue(undefined);
+  p.ProxyTarget = new Value(null);
+  p.ProxyHandler = new Value(null);
+  return new Value(undefined);
 }
 
 function Proxy_revocable([target, handler]) {
   const p = Q(ProxyCreate(target, handler));
   const steps = ProxyRevocationFunctions;
   const revoker = CreateBuiltinFunction(steps, ['RevocableProxy']);
-  SetFunctionLength(revoker, NewValue(0));
+  SetFunctionLength(revoker, new Value(0));
   revoker.RevocableProxy = p;
   const result = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  CreateDataProperty(result, NewValue('proxy'), p);
-  CreateDataProperty(result, NewValue('revoke'), revoker);
+  CreateDataProperty(result, new Value('proxy'), p);
+  CreateDataProperty(result, new Value('revoke'), revoker);
   return result;
 }
 
 export function CreateProxy(realmRec) {
   const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec);
-  SetFunctionName(proxyConstructor, NewValue('Proxy'));
-  SetFunctionLength(proxyConstructor, NewValue(2));
+  SetFunctionName(proxyConstructor, new Value('Proxy'));
+  SetFunctionLength(proxyConstructor, new Value(2));
 
   {
     const fn = CreateBuiltinFunction(Proxy_revocable, [], realmRec);
-    proxyConstructor.DefineOwnProperty(NewValue('revocable'), {
+    proxyConstructor.DefineOwnProperty(new Value('revocable'), Descriptor({
       Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    }));
   }
 
   realmRec.Intrinsics['%Proxy%'] = proxyConstructor;

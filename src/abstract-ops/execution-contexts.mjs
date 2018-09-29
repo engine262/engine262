@@ -5,7 +5,7 @@ import {
   LexicalEnvironment,
 } from '../environment.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import { Assert } from './all.mjs';
@@ -13,13 +13,13 @@ import { Assert } from './all.mjs';
 // 8.3.1 #sec-getactivescriptormodule
 export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
-    return NewValue(null);
+    return new Value(null);
   }
   const ec = [...surroundingAgent.executionContextStack]
     .reverse()
     .find((e) => e.ScriptOrModule !== undefined);
   if (!ec) {
-    return NewValue(null);
+    return new Value(null);
   }
   return ec.ScriptOrModule;
 }
@@ -31,7 +31,7 @@ export function ResolveBinding(name, env) {
   }
   Assert(env instanceof LexicalEnvironment);
   const strict = surroundingAgent.isStrictCode;
-  return GetIdentifierReference(env, name, NewValue(strict));
+  return GetIdentifierReference(env, name, new Value(strict));
 }
 
 // 8.3.3 #sec-getthisenvironment

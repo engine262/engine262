@@ -19,10 +19,11 @@ import {
   ToInteger,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   ObjectValue,
   Type,
   wellKnownSymbols,
+  Descriptor,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
@@ -87,10 +88,10 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
   // Let args be a new (possibly empty) List consisting of all
   // of the argument values provided after thisArg in order.
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
-  const targetHasLength = Q(HasOwnProperty(Target, NewValue('length')));
+  const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
   let L;
   if (targetHasLength.isTrue()) {
-    let targetLen = Q(Get(Target, NewValue('length')));
+    let targetLen = Q(Get(Target, new Value('length')));
     if (Type(targetLen) !== 'Number') {
       L = 0;
     } else {
@@ -101,11 +102,11 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
     L = 0;
   }
   X(SetFunctionLength(F, L));
-  let targetName = Q(Get(Target, NewValue('name')));
+  let targetName = Q(Get(Target, new Value('name')));
   if (Type(targetName) !== 'String') {
-    targetName = NewValue('');
+    targetName = new Value('');
   }
-  SetFunctionName(F, targetName, NewValue('bound'));
+  SetFunctionName(F, targetName, new Value('bound'));
   return F;
 }
 
@@ -123,10 +124,10 @@ function FunctionProto_call([thisArg, ...args], { thisValue: func }) {
 
 function FunctionProto_toString(args, { thisValue: func }) {
   if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
-    return NewValue('function() { [native code] }');
+    return new Value('function() { [native code] }');
   }
   if ('ECMAScriptCode' in func) {
-    return NewValue('function() { /* WIP */ }');
+    return new Value('function() { /* WIP */ }');
   }
   return surroundingAgent.Throw('TypeError');
 }
@@ -148,16 +149,16 @@ export function CreateFunctionPrototype(realmRec) {
     [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1],
   ].forEach(([name, fn, length]) => {
     if (typeof name === 'string') {
-      name = NewValue(name);
+      name = new Value(name);
     }
     const n = CreateBuiltinFunction(fn, [], realmRec);
     SetFunctionName(n, name);
-    SetFunctionLength(n, NewValue(length));
-    proto.DefineOwnProperty(name, {
+    SetFunctionLength(n, new Value(length));
+    proto.DefineOwnProperty(name, Descriptor({
       Value: n,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    }));
   });
 }

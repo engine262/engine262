@@ -156,9 +156,9 @@ function run(test, strict) {
 
 const tests = [];
 [
-  'language/expressions/**/*.js',
-  'built-ins/Promise/**/*.js',
-  'built-ins/Symbol/**/*.js',
+  // 'language/expressions/**/*.js',
+  // 'built-ins/Promise/**/*.js',
+  'built-ins/Object/**/*.js',
 ]
   .map((x) => path.resolve(testdir, 'test', x))
   .forEach((x) => {

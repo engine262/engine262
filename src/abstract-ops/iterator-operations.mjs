@@ -13,7 +13,7 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -53,11 +53,11 @@ export function GetIterator(obj, hint, method) {
   if (Type(iterator) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  const nextMethod = Q(GetV(iterator, NewValue('next')));
+  const nextMethod = Q(GetV(iterator, new Value('next')));
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
-    Done: NewValue(false),
+    Done: new Value(false),
   };
   return EnsureCompletion(iteratorRecord);
 }
@@ -79,13 +79,13 @@ export function IteratorNext(iteratorRecord, value) {
 // #sec-iteratorcomplete
 export function IteratorComplete(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return EnsureCompletion(ToBoolean(Q(Get(iterResult, NewValue('done')))));
+  return EnsureCompletion(ToBoolean(Q(Get(iterResult, new Value('done')))));
 }
 
 // #sec-iteratorvalue
 export function IteratorValue(iterResult) {
   Assert(Type(iterResult) === 'Object');
-  return EnsureCompletion(Q(Get(iterResult, NewValue('value'))));
+  return EnsureCompletion(Q(Get(iterResult, new Value('value'))));
 }
 
 // #sec-iteratorstep
@@ -93,7 +93,7 @@ export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
   if (done.isTrue()) {
-    return EnsureCompletion(NewValue(false));
+    return EnsureCompletion(new Value(false));
   }
   return EnsureCompletion(result);
 }
@@ -106,7 +106,7 @@ export function IteratorClose(
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
   const iterator = iteratorRecord.Iterator;
-  const ret = Q(GetMethod(iterator, NewValue('return')));
+  const ret = Q(GetMethod(iterator, new Value('return')));
   if (Type(ret) === 'Undefined') {
     return completion;
   }
@@ -127,8 +127,8 @@ export function IteratorClose(
 export function CreateIterResultObject(value, done) {
   Assert(Type(done) === 'Boolean');
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  CreateDataProperty(obj, NewValue('value'), value);
-  CreateDataProperty(obj, NewValue('done'), done);
+  CreateDataProperty(obj, new Value('value'), value);
+  CreateDataProperty(obj, new Value('done'), done);
   return obj;
 }
 
@@ -140,10 +140,10 @@ function ListIteratorNextSteps(args, { thisValue }) {
   const index = O.ListIteratorNextIndex;
   const len = list.length;
   if (index >= len) {
-    return CreateIterResultObject(NewValue(undefined), NewValue(true));
+    return CreateIterResultObject(new Value(undefined), new Value(true));
   }
   O.ListIteratorNextIndex += 1;
-  return CreateIterResultObject(list[index], NewValue(false));
+  return CreateIterResultObject(list[index], new Value(false));
 }
 
 // #sec-createlistiteratorRecord
@@ -159,23 +159,23 @@ export function CreateListIteratorRecord(list) {
   return {
     Iterator: iterator,
     NextMethod: next,
-    Done: NewValue(false),
+    Done: new Value(false),
   };
 }
 
 // #sec-loopcontinues
 export function LoopContinues(completion, labelSet) {
   if (completion.Type === 'normal') {
-    return NewValue(true);
+    return new Value(true);
   }
   if (completion.Type !== 'continue') {
-    return NewValue(false);
+    return new Value(false);
   }
   if (completion.Target === undefined) {
-    return NewValue(true);
+    return new Value(true);
   }
   if (labelSet.includes(completion.Target)) {
-    return NewValue(true);
+    return new Value(true);
   }
-  return NewValue(false);
+  return new Value(false);
 }

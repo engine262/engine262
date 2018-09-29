@@ -2,8 +2,9 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
+  Descriptor,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
@@ -23,8 +24,6 @@ import {
   NewPromiseCapability,
   OrdinaryCreateFromConstructor,
   PromiseResolve,
-  SetFunctionLength,
-  SetFunctionName,
   PromiseCapabilityRecord,
 } from '../abstract-ops/all.mjs';
 import {
@@ -34,6 +33,7 @@ import {
   IfAbruptRejectPromise,
   ReturnIfAbrupt,
 } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function PromiseConstructor([executor], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
@@ -54,11 +54,11 @@ function PromiseConstructor([executor], { NewTarget }) {
   promise.PromiseRejectReactions = [];
   promise.PromiseIsHandled = false;
   const resolvingFunctions = CreateResolvingFunctions(promise);
-  const completion = Call(executor, NewValue(undefined), [
+  const completion = Call(executor, new Value(undefined), [
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
   if (completion instanceof AbruptCompletion) {
-    Q(Call(resolvingFunctions.Reject, NewValue(undefined), [completion.Value]));
+    Q(Call(resolvingFunctions.Reject, new Value(undefined), [completion.Value]));
   }
   return promise;
 }
@@ -69,7 +69,7 @@ function PromiseAllResolveElementFunctions([x]) {
 
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   alreadyCalled.Value = true;
   const index = F.Index;
@@ -80,9 +80,9 @@ function PromiseAllResolveElementFunctions([x]) {
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
     const valuesArray = CreateArrayFromList(values);
-    return Q(Call(promiseCapability.Resolve, NewValue(undefined), [valuesArray]));
+    return Q(Call(promiseCapability.Resolve, new Value(undefined), [valuesArray]));
   }
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 // #sec-performpromiseall
@@ -95,25 +95,25 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   while (true) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount === 0) {
         const valuesArray = CreateArrayFromList(values);
-        Q(Call(resultCapability.Resolve), NewValue(undefined), [valuesArray]);
+        Q(Call(resultCapability.Resolve), new Value(undefined), [valuesArray]);
       }
       return resultCapability.Promise;
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(nextValue);
-    values.push(NewValue(undefined));
-    const nextPromise = Q(Invoke(constructor, NewValue('resolve'), [nextValue]));
+    values.push(new Value(undefined));
+    const nextPromise = Q(Invoke(constructor, new Value('resolve'), [nextValue]));
     const steps = PromiseAllResolveElementFunctions;
     const resolveElement = CreateBuiltinFunction(steps, [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
@@ -124,7 +124,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     resolveElement.Capability = resultCapability;
     resolveElement.RemainingElements = remainingElementsCount;
     remainingElementsCount.Value += 1;
-    Q(Invoke(nextPromise, NewValue('then'), [resolveElement, resultCapability.Reject]));
+    Q(Invoke(nextPromise, new Value('then'), [resolveElement, resultCapability.Reject]));
     index += 1;
   }
 }
@@ -148,7 +148,7 @@ function Promise_all([iterable], { thisValue }) {
 }
 
 function Promise_race() {
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 function Promise_reject([r], { thisValue }) {
@@ -157,7 +157,7 @@ function Promise_reject([r], { thisValue }) {
     return surroundingAgent.Throw('TypeError');
   }
   const promiseCapability = NewPromiseCapability(C);
-  Q(Call(promiseCapability.Reject, NewValue(undefined), [r]));
+  Q(Call(promiseCapability.Reject, new Value(undefined), [r]));
   return promiseCapability.Promise;
 }
 
@@ -174,52 +174,23 @@ function Promise_symbolSpecies(args, { thisValue }) {
 }
 
 export function CreatePromise(realmRec) {
-  const promiseConstructor = CreateBuiltinFunction(PromiseConstructor, [], realmRec);
-  SetFunctionName(promiseConstructor, NewValue('Promise'));
-  SetFunctionLength(promiseConstructor, NewValue(1));
-
-  const proto = realmRec.Intrinsics['%PromisePrototype%'];
-
-  promiseConstructor.DefineOwnProperty(NewValue('prototype'), {
-    Value: proto,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-  proto.DefineOwnProperty(NewValue('constructor'), {
-    Value: promiseConstructor,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  [
+  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%PromisePrototype%'], [
     ['all', Promise_all, 1],
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],
-  ].forEach(([name, fn, len]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
-    promiseConstructor.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  ]);
 
-  promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, {
+  promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction(Promise_symbolSpecies, [], realmRec),
-    Set: NewValue(undefined),
-    Enumerable: false,
-    Configurable: true,
-  });
+    Set: new Value(undefined),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  }));
 
-  realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, NewValue('all'));
-  realmRec.Intrinsics['%Promise_reject%'] = Get(promiseConstructor, NewValue('reject'));
-  realmRec.Intrinsics['%Promise_resolve%'] = Get(promiseConstructor, NewValue('resolve'));
+  realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, new Value('all'));
+  realmRec.Intrinsics['%Promise_reject%'] = Get(promiseConstructor, new Value('reject'));
+  realmRec.Intrinsics['%Promise_resolve%'] = Get(promiseConstructor, new Value('resolve'));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }

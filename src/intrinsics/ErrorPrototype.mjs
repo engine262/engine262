@@ -2,31 +2,30 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
-  CreateBuiltinFunction,
   Get,
-  ObjectCreate,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function ErrorProto_toString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  let name = Q(Get(O, NewValue('name')));
+  let name = Q(Get(O, new Value('name')));
   if (Type(name) === 'Undefined') {
-    name = NewValue('Error');
+    name = new Value('Error');
   } else {
     name = Q(ToString(name));
   }
-  let msg = Q(Get(O, NewValue('message')));
+  let msg = Q(Get(O, new Value('message')));
   if (Type(msg) === 'Undefined') {
-    msg = NewValue('');
+    msg = new Value('');
   } else {
     msg = Q(ToString(msg));
   }
@@ -36,30 +35,15 @@ function ErrorProto_toString(args, { thisValue }) {
   if (msg.stringValue() === '') {
     return name;
   }
-  return NewValue(`${name.stringValue()}: ${msg.stringValue()}`);
+  return new Value(`${name.stringValue()}: ${msg.stringValue()}`);
 }
 
 export function CreateErrorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  proto.DefineOwnProperty(NewValue('toString'), {
-    Value: CreateBuiltinFunction(ErrorProto_toString, [], realmRec),
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  [
-    ['message', NewValue('')],
-    ['name', NewValue('Error')],
-  ].forEach(([name, value]) => {
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: value,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  const proto = BootstrapPrototype(realmRec, [
+    ['toString', ErrorProto_toString, 0],
+    ['message', new Value('')],
+    ['name', new Value('Error')],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%ErrorPrototype%'] = proto;
 }

@@ -1,15 +1,14 @@
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
-  CreateBuiltinFunction,
-  ObjectCreate,
   ToInteger,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function thisNumberValue(value) {
   if (Type(value) === 'Number') {
@@ -21,7 +20,7 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function NumberToString(args, { thisValue }) {
+function NumberProto_toString(args, { thisValue }) {
   const [radix] = args;
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
@@ -41,23 +40,15 @@ function NumberToString(args, { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return NewValue(42);
+  return surroundingAgent.Throw('TypeError', 'NumberToString');
 }
 
 export function CreateNumberPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-  proto.NumberData = NewValue(0);
+  const proto = BootstrapPrototype(realmRec, [
+    ['toString', NumberProto_toString, 0],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
-  [
-    ['toString', NumberToString],
-  ].forEach(([name, fn]) => {
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(fn, [], realmRec),
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  proto.NumberData = new Value(0);
 
   realmRec.Intrinsics['%NumberPrototype%'] = proto;
 }

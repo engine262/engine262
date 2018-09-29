@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   StringExoticObjectValue,
   Type,
 } from '../value.mjs';
@@ -19,8 +19,8 @@ export function StringCreate(value, prototype) {
   S.StringData = value;
   S.Prototype = prototype;
   S.Extensible = true;
-  const length = NewValue(value.stringValue().length);
-  X(DefinePropertyOrThrow(S, NewValue('length'), {
+  const length = new Value(value.stringValue().length);
+  X(DefinePropertyOrThrow(S, new Value('length'), {
     Value: length,
     Writable: false,
     Enumerable: false,
@@ -33,26 +33,26 @@ export function StringGetOwnProperty(S, P) {
   Assert(Type(S) === 'Object' && 'StringData' in S);
   Assert(IsPropertyKey(P));
   if (Type(P) !== 'String') {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   const index = X(CanonicalNumericIndexString(P));
   if (Type(index) === 'Undefined') {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   if (IsInteger(index).isFalse()) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   if (Object.is(index.numberValue(), -0)) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   const str = S.StringData;
   const len = str.stringValue().length;
   if (index.numberValue() < 0 || len <= index.numberValue()) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   const resultStr = str.stringValue()[index.numberValue()];
   return {
-    Value: NewValue(resultStr),
+    Value: new Value(resultStr),
     Writable: false,
     Enumerable: false,
     Configurable: false,

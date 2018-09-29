@@ -12,7 +12,7 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 //   BindingPropertyList : BindingPropertyList `,` BindingProperty
@@ -39,7 +39,7 @@ export function* PropertyBindingInitialization_BindingPropertyList(
 export function* PropertyBindingInitialization_BindingProperty(BindingProperty, value, environment) {
   switch (true) {
     case isBindingPropertyWithSingleNameBinding(BindingProperty): {
-      const name = NewValue(BindingProperty.key.name);
+      const name = new Value(BindingProperty.key.name);
       Q(yield* KeyedBindingInitialization_SingleNameBinding(BindingProperty.value, value, environment, name));
       return [name];
     }

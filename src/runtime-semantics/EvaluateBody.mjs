@@ -56,7 +56,7 @@ import {
   Evaluate_FunctionStatementList,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-functiondeclarationinstantiation
 export function* FunctionDeclarationInstantiation(func, argumentsList) {
@@ -66,7 +66,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const code = func.ECMAScriptCode;
   const strict = func.Strict;
   const formals = func.FormalParameters;
-  const parameterNames = BoundNames_FormalParameterList(formals).map(NewValue);
+  const parameterNames = BoundNames_FormalParameterList(formals).map(Value);
   const hasDuplicates = !parameterNames.every(
     (e) => parameterNames.indexOf(e) === parameterNames.lastIndexOf(e),
   );
@@ -79,15 +79,15 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   switch (getFunctionBodyType(code)) {
     case 'FunctionBody':
-      varNames = VarDeclaredNames_FunctionBody(code.body.body).map(NewValue);
+      varNames = VarDeclaredNames_FunctionBody(code.body.body).map(Value);
       varDeclarations = VarScopedDeclarations_FunctionBody(code.body.body);
-      lexicalNames = LexicallyDeclaredNames_FunctionBody(code.body.body).map(NewValue);
+      lexicalNames = LexicallyDeclaredNames_FunctionBody(code.body.body).map(Value);
       break;
     case 'ConciseBody_Expression':
     case 'ConciseBody_FunctionBody':
-      varNames = VarDeclaredNames_ConciseBody(code.body).map(NewValue);
+      varNames = VarDeclaredNames_ConciseBody(code.body).map(Value);
       varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
-      lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(NewValue);
+      lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(Value);
       break;
     case 'GeneratorBody':
       varNames = VarDeclaredNames_GeneratorBody(code.body.body).map(NewValue);
@@ -116,11 +116,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   let argumentsObjectNeeded = true;
   if (func.ThisMode === 'lexical') {
     argumentsObjectNeeded = false;
-  } else if (parameterNames.includes(NewValue('arguments'))) {
+  } else if (parameterNames.includes(new Value('arguments'))) {
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
-    if (functionNames.includes(NewValue('arguments'))
-        || lexicalNames.includes(NewValue('arguments'))) {
+    if (functionNames.includes(new Value('arguments'))
+        || lexicalNames.includes(new Value('arguments'))) {
       argumentsObjectNeeded = false;
     }
   }
@@ -130,7 +130,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     if (alreadyDeclared.isFalse()) {
       X(envRec.CreateMutableBinding(paramName, false));
       if (hasDuplicates === true) {
-        X(envRec.InitializeBinding(paramName, NewValue(undefined)));
+        X(envRec.InitializeBinding(paramName, new Value(undefined)));
       }
     }
   }
@@ -144,19 +144,19 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       ao = CreateMappedArgumentsObject(func, formals, argumentsList, envRec);
     }
     if (strict) {
-      X(envRec.CreateImmutableBinding(NewValue('arguments'), NewValue(false)));
+      X(envRec.CreateImmutableBinding(new Value('arguments'), new Value(false)));
     } else {
-      X(envRec.CreateMutableBinding(NewValue('arguments'), false));
+      X(envRec.CreateMutableBinding(new Value('arguments'), false));
     }
-    envRec.InitializeBinding(NewValue('arguments'), ao);
-    parameterBindings = [...parameterNames, NewValue('arguments')];
+    envRec.InitializeBinding(new Value('arguments'), ao);
+    parameterBindings = [...parameterNames, new Value('arguments')];
   } else {
     parameterBindings = parameterNames;
   }
 
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
   if (hasDuplicates) {
-    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, NewValue(undefined)));
+    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, new Value(undefined)));
   } else {
     Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
   }
@@ -169,7 +169,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       if (!instantiatedVarNames.includes(n)) {
         instantiatedVarNames.push(n);
         X(envRec.CreateMutableBinding(n, false));
-        envRec.InitializeBinding(n, NewValue(undefined));
+        envRec.InitializeBinding(n, new Value(undefined));
       }
     }
     varEnv = env;
@@ -185,9 +185,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
         X(varEnvRec.CreateMutableBinding(n, false));
         let initialValue;
         if (!parameterBindings.includes(n) || functionNames.includes(n)) {
-          initialValue = NewValue(undefined);
+          initialValue = new Value(undefined);
         } else {
-          initialValue = envRec.GetBindingValue(n, NewValue(false));
+          initialValue = envRec.GetBindingValue(n, new Value(false));
         }
         varEnvRec.InitializeBinding(n, initialValue);
       }
@@ -223,9 +223,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       throw outOfRange('FunctionDeclarationInstantiation', code);
   }
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
+    for (const dn of BoundNames_LexicalDeclaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        X(lexEnvRec.CreateImmutableBinding(dn, NewValue(true)));
+        X(lexEnvRec.CreateImmutableBinding(dn, new Value(true)));
       } else {
         X(lexEnvRec.CreateMutableBinding(dn, false));
       }
@@ -235,7 +235,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   for (const f of functionsToInitialize) {
     const fn = BoundNames_FunctionDeclaration(f)[0];
     const fo = InstantiateFunctionObject(f, lexEnv);
-    X(varEnvRec.SetMutableBinding(fn, fo, NewValue(false)));
+    X(varEnvRec.SetMutableBinding(fn, fo, new Value(false)));
   }
 
   return new NormalCompletion(undefined);

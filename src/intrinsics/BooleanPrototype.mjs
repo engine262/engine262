@@ -1,16 +1,13 @@
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  Assert,
-  CreateBuiltinFunction,
-  ObjectCreate,
-} from '../abstract-ops/all.mjs';
+import { Assert } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function thisBooleanValue(value) {
   if (Type(value) === 'Boolean') {
@@ -28,9 +25,9 @@ function thisBooleanValue(value) {
 function BooleanProto_toString(argList, { thisValue }) {
   const b = Q(thisBooleanValue(thisValue));
   if (b.isTrue()) {
-    return NewValue('true');
+    return new Value('true');
   }
-  return NewValue('false');
+  return new Value('false');
 }
 
 function BooleanProto_valueOf(argList, { thisValue }) {
@@ -38,20 +35,12 @@ function BooleanProto_valueOf(argList, { thisValue }) {
 }
 
 export function CreateBooleanPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-  proto.BooleanData = NewValue(false);
+  const proto = BootstrapPrototype(realmRec, [
+    ['toString', BooleanProto_toString, 0],
+    ['valueOf', BooleanProto_valueOf, 0],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
-  [
-    ['toString', BooleanProto_toString],
-    ['valueOf', BooleanProto_valueOf],
-  ].forEach(([name, nativeFunction]) => {
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: CreateBuiltinFunction(nativeFunction, [], realmRec),
-      Writable: false,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  proto.BooleanData = new Value(false);
 
   realmRec.Intrinsics['%BooleanPrototype%'] = proto;
 }

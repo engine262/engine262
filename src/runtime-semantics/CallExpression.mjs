@@ -1,11 +1,7 @@
 import {
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  New as NewValue,
-  Type,
-  Value,
-} from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 import {
   Assert,
   Call,
@@ -45,7 +41,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
       thisValue = refEnv.WithBaseObject();
     }
   } else {
-    thisValue = NewValue(undefined);
+    thisValue = new Value(undefined);
   }
   const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);

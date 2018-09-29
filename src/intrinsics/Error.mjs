@@ -1,17 +1,15 @@
 import {
-  CreateBuiltinFunction,
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
-  SetFunctionLength,
-  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function ErrorConstructor([message], { NewTarget }) {
   let newTarget;
@@ -29,15 +27,13 @@ function ErrorConstructor([message], { NewTarget }) {
       Enumerable: false,
       Configurable: true,
     };
-    X(DefinePropertyOrThrow(O, NewValue('message'), msgDesc));
+    X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }
   return O;
 }
 
 export function CreateError(realmRec) {
-  const error = CreateBuiltinFunction(ErrorConstructor, [], realmRec);
-  SetFunctionName(error, NewValue('Error'));
-  SetFunctionLength(error, NewValue(1));
+  const error = BootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%ErrorPrototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;
 }

@@ -2,7 +2,7 @@ import {
   GetValue,
   ToInt32,
 } from '../abstract-ops/all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -12,19 +12,19 @@ import { outOfRange } from '../helpers.mjs';
 export function EvaluateBinopValues_BitwiseANDExpression(lval, rval) {
   const lnum = Q(ToInt32(lval));
   const rnum = Q(ToInt32(rval));
-  return NewValue(lnum.numberValue() & rnum.numberValue());
+  return new Value(lnum.numberValue() & rnum.numberValue());
 }
 
 export function EvaluateBinopValues_BitwiseXORExpression(lval, rval) {
   const lnum = Q(ToInt32(lval));
   const rnum = Q(ToInt32(rval));
-  return NewValue(lnum.numberValue() ^ rnum.numberValue());
+  return new Value(lnum.numberValue() ^ rnum.numberValue());
 }
 
 export function EvaluateBinopValues_BitwiseORExpression(lval, rval) {
   const lnum = Q(ToInt32(lval));
   const rnum = Q(ToInt32(rval));
-  return NewValue(lnum.numberValue() | rnum.numberValue());
+  return new Value(lnum.numberValue() | rnum.numberValue());
 }
 
 // #sec-binary-bitwise-operators-runtime-semantics-evaluation

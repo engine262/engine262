@@ -32,7 +32,7 @@ import {
   isVariableDeclaration,
 } from '../ast.mjs';
 import {
-  New as NewValue,
+  Value,
 } from '../value.mjs';
 import {
   NormalCompletion,
@@ -44,8 +44,8 @@ export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
-  const lexNames = LexicallyDeclaredNames_ScriptBody(script).map(NewValue);
-  const varNames = VarDeclaredNames_ScriptBody(script).map(NewValue);
+  const lexNames = LexicallyDeclaredNames_ScriptBody(script).map(Value);
+  const varNames = VarDeclaredNames_ScriptBody(script).map(Value);
 
   for (const name of lexNames) {
     if (envRec.HasVarDeclaration(name).isTrue()) {
@@ -77,7 +77,7 @@ export function GlobalDeclarationInstantiation(script, env) {
              || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
       const fn = BoundNames_FunctionDeclaration(d)[0];
       if (!declaredFunctionNames.includes(fn)) {
-        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(NewValue(fn)));
+        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(new Value(fn)));
         if (fnDefinable.isFalse()) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -99,7 +99,7 @@ export function GlobalDeclarationInstantiation(script, env) {
       boundNames = BoundNames_BindingIdentifier(d);
     }
     if (boundNames !== undefined) {
-      for (const vn of boundNames.map(NewValue)) {
+      for (const vn of boundNames.map(Value)) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           if (vnDefinable.isFalse()) {
@@ -118,23 +118,23 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration(d).map(NewValue)) {
+    for (const dn of BoundNames_LexicalDeclaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        Q(envRec.CreateImmutableBinding(dn, NewValue(true)));
+        Q(envRec.CreateImmutableBinding(dn, new Value(true)));
       } else {
-        Q(envRec.CreateMutableBinding(dn, NewValue(false)));
+        Q(envRec.CreateMutableBinding(dn, new Value(false)));
       }
     }
   }
 
   for (const f of functionsToInitialize) {
-    const fn = NewValue(BoundNames_FunctionDeclaration(f)[0]);
+    const fn = new Value(BoundNames_FunctionDeclaration(f)[0]);
     const fo = InstantiateFunctionObject(f, env);
-    Q(envRec.CreateGlobalFunctionBinding(fn, fo, NewValue(false)));
+    Q(envRec.CreateGlobalFunctionBinding(fn, fo, new Value(false)));
   }
 
   for (const vn of declaredVarNames) {
-    Q(envRec.CreateGlobalVarBinding(vn, NewValue(false)));
+    Q(envRec.CreateGlobalVarBinding(vn, new Value(false)));
   }
 
   return new NormalCompletion(undefined);

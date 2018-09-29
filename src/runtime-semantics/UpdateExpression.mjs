@@ -9,7 +9,7 @@ import {
   EvaluateBinopValues_AdditiveExpression_Plus,
   EvaluateBinopValues_AdditiveExpression_Minus,
 } from './all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 export function* Evaluate_UpdateExpression({
@@ -25,7 +25,7 @@ export function* Evaluate_UpdateExpression({
       const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
       const lhsValue = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsValue));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -37,7 +37,7 @@ export function* Evaluate_UpdateExpression({
       const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
       const lhsVal = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -49,7 +49,7 @@ export function* Evaluate_UpdateExpression({
       const expr = yield* Evaluate_Expression(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, NewValue(1));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
       Q(PutValue(expr, newValue));
       return newValue;
     }
@@ -61,7 +61,7 @@ export function* Evaluate_UpdateExpression({
       const expr = yield* Evaluate_Expression(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, NewValue(1));
+      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));
       Q(PutValue(expr, newValue));
       return newValue;
     }

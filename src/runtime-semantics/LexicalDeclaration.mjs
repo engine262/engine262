@@ -10,7 +10,7 @@ import {
   isBindingPattern,
 } from '../ast.mjs';
 import {
-  New as NewValue,
+  Value,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -34,21 +34,21 @@ import { outOfRange } from '../helpers.mjs';
 //     BindingIdentifier Initializer
 function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   const { id: BindingIdentifier, init: Initializer } = LexicalBinding;
-  const bindingId = NewValue(BindingIdentifier.name);
+  const bindingId = new Value(BindingIdentifier.name);
   const lhs = X(ResolveBinding(bindingId));
 
   if (Initializer) {
     const rhs = yield* Evaluate_Expression(Initializer);
     const value = Q(GetValue(rhs));
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
+      const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
       if (hasNameProperty.isFalse()) {
         SetFunctionName(value, bindingId);
       }
     }
     return InitializeReferencedBinding(lhs, value);
   } else {
-    return InitializeReferencedBinding(lhs, NewValue(undefined));
+    return InitializeReferencedBinding(lhs, new Value(undefined));
   }
 }
 

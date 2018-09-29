@@ -1,9 +1,9 @@
 import {
-  New as NewValue,
+  Value,
   ProxyExoticObjectValue,
   Type,
-  Value,
   wellKnownSymbols,
+  Descriptor,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -58,12 +58,12 @@ export function CreateDataProperty(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
 
-  const newDesc = {
+  const newDesc = Descriptor({
     Value: V,
-    Writable: true,
-    Enumerable: true,
-    Configurable: true,
-  };
+    Writable: new Value(true),
+    Enumerable: new Value(true),
+    Configurable: new Value(true),
+  });
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
@@ -72,12 +72,12 @@ export function CreateMethodProperty(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
 
-  const newDesc = {
+  const newDesc = Descriptor({
     Value: V,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  };
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  });
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
@@ -119,7 +119,7 @@ export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
   if (Type(func) === 'Null' || Type(func) === 'Undefined') {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   if (IsCallable(func) === false) {
     return surroundingAgent.Throw('TypeError');
@@ -140,9 +140,9 @@ export function HasOwnProperty(O, P) {
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
   if (Type(desc) === 'Undefined') {
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(true);
+  return new Value(true);
 }
 
 // 7.3.12 Call
@@ -181,7 +181,7 @@ export function SetIntegrityLevel(O, level) {
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(O.PreventExtensions());
   if (status.isFalse()) {
-    return NewValue(false);
+    return new Value(false);
   }
   const keys = Q(O.OwnPropertyKeys());
   if (level === 'sealed') {
@@ -202,7 +202,7 @@ export function SetIntegrityLevel(O, level) {
       }
     }
   }
-  return NewValue(true);
+  return new Value(true);
 }
 
 // #sec-testintegritylevel TestIntegrityLevel
@@ -211,32 +211,32 @@ export function TestIntegrityLevel(O, level) {
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(IsExtensible(O));
   if (status.isTrue()) {
-    return NewValue(false);
+    return new Value(false);
   }
   const keys = Q(O.OwnPropertyKeys());
   for (const k of keys) {
     const currentDesc = Q(O.GetOwnProperty(k));
     if (Type(currentDesc) !== 'Undefined') {
       if (currentDesc.Configurable === true) {
-        return NewValue(false);
+        return new Value(false);
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
         if (currentDesc.Writable === true) {
-          return NewValue(false);
+          return new Value(false);
         }
       }
     }
   }
-  return NewValue(true);
+  return new Value(true);
 }
 
 // 7.3.16 CreateArrayFromList
 export function CreateArrayFromList(elements) {
   Assert(elements.every((e) => e instanceof Value));
-  const array = X(ArrayCreate(NewValue(0)));
+  const array = X(ArrayCreate(new Value(0)));
   let n = 0;
   elements.forEach((e) => {
-    const status = CreateDataProperty(array, X(ToString(NewValue(n))), e);
+    const status = CreateDataProperty(array, X(ToString(new Value(n))), e);
     Assert(status.isTrue());
     n += 1;
   });
@@ -290,7 +290,7 @@ export function EnumerableOwnPropertyNames(
 // #sec-speciesconstructor
 export function SpeciesConstructor(O, defaultConstructor) {
   Assert(Type(O) === 'Object');
-  const C = Q(Get(O, NewValue('constructor')));
+  const C = Q(Get(O, new Value('constructor')));
   if (Type(C) === 'Undefined') {
     return defaultConstructor;
   }
@@ -365,12 +365,12 @@ export function CreateListFromArrayLike(obj, elementTypes) {
   if (Type(obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-  const lenProp = Q(Get(obj, NewValue('length')));
+  const lenProp = Q(Get(obj, new Value('length')));
   const len = Q(ToLength(lenProp));
   const list = [];
   let index = 0;
   while (index < len.numberValue()) {
-    const indexName = X(ToString(NewValue(index)));
+    const indexName = X(ToString(new Value(index)));
     const next = Q(Get(obj, indexName));
     if (!elementTypes.includes(Type(next))) {
       return surroundingAgent.Throw('TypeError');

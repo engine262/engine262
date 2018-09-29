@@ -1,22 +1,19 @@
 import {
-  New as NewValue,
+  Value,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  CreateBuiltinFunction,
   Get,
   HasOwnProperty,
   Invoke,
   IsArray,
-  ObjectCreate,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
   ToObject,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function ObjectProto_hasOwnProperty([V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
@@ -26,16 +23,16 @@ function ObjectProto_hasOwnProperty([V], { thisValue }) {
 
 function ObjectProto_isPrototypeOf([V], { thisValue }) {
   if (Type(V) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
   const O = Q(ToObject(thisValue));
   while (true) {
     V = Q(V.GetPrototypeOf());
     if (Type(V) === 'Null') {
-      return NewValue(false);
+      return new Value(false);
     }
     if (SameValue(O, V) === true) {
-      return NewValue(true);
+      return new Value(true);
     }
   }
 }
@@ -45,9 +42,9 @@ function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
   if (Type(desc) === 'Undefined') {
-    return NewValue(false);
+    return new Value(false);
   }
-  return NewValue(desc.Enumerable);
+  return new Value(desc.Enumerable);
 }
 
 function ObjectProto_toLocaleString(argList, { thisValue }) {
@@ -57,10 +54,10 @@ function ObjectProto_toLocaleString(argList, { thisValue }) {
 
 function ObjectProto_toString(argList, { thisValue }) {
   if (Type(thisValue) === 'Undefined') {
-    return NewValue('[object Undefined]');
+    return new Value('[object Undefined]');
   }
   if (Type(thisValue) === 'Undefined') {
-    return NewValue('[object Null]');
+    return new Value('[object Null]');
   }
   const O = X(ToObject(thisValue));
   const isArray = Q(IsArray(O));
@@ -90,7 +87,7 @@ function ObjectProto_toString(argList, { thisValue }) {
   if (Type(tag) !== 'String') {
     tag = builtinTag;
   }
-  return NewValue(`[object ${tag}]`);
+  return new Value(`[object ${tag}]`);
 }
 
 function ObjectProto_valueOf(argList, { thisValue }) {
@@ -99,29 +96,17 @@ function ObjectProto_valueOf(argList, { thisValue }) {
 
 export function CreateObjectPrototype(realmRec) {
   // FIXME(devsnek): this should be an immutable prototype object
-  const proto = ObjectCreate(NewValue(null));
-
-  [
+  const proto = BootstrapPrototype(realmRec, [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],
     ['isPrototypeOf', ObjectProto_isPrototypeOf, 1],
     ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1],
     ['toLocaleString', ObjectProto_toLocaleString, 0],
     ['toString', ObjectProto_toString, 0],
     ['valueOf', ObjectProto_valueOf, 0],
-  ].forEach(([name, fn, length]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(length));
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  ], new Value(null));
 
-  realmRec.Intrinsics['%ObjProto_toString%'] = Get(proto, NewValue('toString'));
-  realmRec.Intrinsics['%ObjProto_valueOf%'] = Get(proto, NewValue('valueOf'));
+  realmRec.Intrinsics['%ObjProto_toString%'] = Get(proto, new Value('toString'));
+  realmRec.Intrinsics['%ObjProto_valueOf%'] = Get(proto, new Value('valueOf'));
 
   realmRec.Intrinsics['%ObjectPrototype%'] = proto;
 }

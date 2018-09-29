@@ -105,7 +105,7 @@ import {
   Evaluate_WithStatement,
 } from './runtime-semantics/all.mjs';
 import {
-  New as NewValue,
+  Value,
 } from './value.mjs';
 import {
   Assert,
@@ -212,7 +212,7 @@ function* Evaluate_ExpressionStatement(ExpressionStatement) {
 //   Literal : NumbericLiteral
 //   Literal : StringLiteral
 function Evaluate_Literal(Literal) {
-  return NewValue(Literal.value);
+  return new Value(Literal.value);
 }
 
 export function EvaluateBinopValues(operator, lval, rval) {

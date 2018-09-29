@@ -8,7 +8,7 @@ import {
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const {
@@ -21,8 +21,8 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
-  const name = NewValue(BindingIdentifier.name);
-  envRec.CreateImmutableBinding(name, NewValue(false));
+  const name = new Value(BindingIdentifier.name);
+  envRec.CreateImmutableBinding(name, new Value(false));
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv, strict);
   MakeConstructor(closure);
   SetFunctionName(closure, name);

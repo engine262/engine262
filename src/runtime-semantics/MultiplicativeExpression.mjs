@@ -5,7 +5,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
-  New as NewValue,
+  Value,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 
@@ -17,11 +17,11 @@ export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOpera
   // to lnum and rnum as specified in 12.7.3.1, 12.7.3.2, or 12.7.3.3.
   switch (MultiplicativeOperator) {
     case '*':
-      return NewValue(lnum.numberValue() * rnum.numberValue());
+      return new Value(lnum.numberValue() * rnum.numberValue());
     case '/':
-      return NewValue(lnum.numberValue() / rnum.numberValue());
+      return new Value(lnum.numberValue() / rnum.numberValue());
     case '%':
-      return NewValue(lnum.numberValue() % rnum.numberValue());
+      return new Value(lnum.numberValue() % rnum.numberValue());
 
     default:
       throw outOfRange('EvaluateBinopValues_MultiplicativeExpression', MultiplicativeOperator);

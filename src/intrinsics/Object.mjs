@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -7,7 +7,6 @@ import {
 } from '../engine.mjs';
 import {
   CreateArrayFromList,
-  CreateBuiltinFunction,
   CreateDataProperty,
   DefinePropertyOrThrow,
   EnumerableOwnPropertyNames,
@@ -19,8 +18,6 @@ import {
   RequireObjectCoercible,
   SameValue,
   Set,
-  SetFunctionLength,
-  SetFunctionName,
   SetIntegrityLevel,
   TestIntegrityLevel,
   ToObject,
@@ -28,6 +25,7 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
   if (Type(NewTarget) !== 'Undefined'
@@ -59,7 +57,7 @@ function Object_assign([target, ...sources]) {
       const desc = Q(from.GetOwnProperty(nextKey));
       if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
         const propValue = Q(Get(from, nextKey));
-        Q(Set(to, nextKey, propValue, NewValue(true)));
+        Q(Set(to, nextKey, propValue, new Value(true)));
       }
     });
   });
@@ -182,12 +180,12 @@ function Object_getPrototypeOf([O]) {
 }
 
 function Object_is([value1, value2]) {
-  return NewValue(SameValue(value1, value2));
+  return new Value(SameValue(value1, value2));
 }
 
 function Object_isExtensible([O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(false);
+    return new Value(false);
   }
 
   return IsExtensible(O);
@@ -195,7 +193,7 @@ function Object_isExtensible([O]) {
 
 function Object_isFrozen([O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(true);
+    return new Value(true);
   }
 
   return Q(TestIntegrityLevel(O, 'frozen'));
@@ -203,7 +201,7 @@ function Object_isFrozen([O]) {
 
 function Object_isSealed([O]) {
   if (Type(O) !== 'Object') {
-    return NewValue(true);
+    return new Value(true);
   }
 
   return Q(TestIntegrityLevel(O, 'sealed'));
@@ -262,29 +260,7 @@ function Object_values([O]) {
 }
 
 export function CreateObject(realmRec) {
-  const objectConstructor = CreateBuiltinFunction(
-    ObjectConstructor, [], realmRec,
-    realmRec.Intrinsics['%FunctionPrototype%'],
-  );
-
-  SetFunctionName(objectConstructor, NewValue('Object'));
-  SetFunctionLength(objectConstructor, NewValue(1));
-
-  const proto = realmRec.Intrinsics['%ObjectPrototype%'];
-  objectConstructor.DefineOwnProperty(NewValue('prototype'), {
-    Value: proto,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  });
-  proto.DefineOwnProperty(NewValue('constructor'), {
-    Value: objectConstructor,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  [
+  const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%ObjectPrototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],
     ['defineProperties', Object_defineProperties, 2],
@@ -305,17 +281,7 @@ export function CreateObject(realmRec) {
     ['seal', Object_seal, 1],
     ['setPrototypeOf', Object_setPrototypeOf, 2],
     ['values', Object_values, 1],
-  ].forEach(([name, fn, len]) => {
-    const fnv = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fnv, NewValue(name));
-    SetFunctionLength(fnv, NewValue(len));
-    objectConstructor.DefineOwnProperty(NewValue(name), {
-      Value: fnv,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  ]);
 
   realmRec.Intrinsics['%Object%'] = objectConstructor;
 }

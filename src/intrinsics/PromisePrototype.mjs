@@ -13,23 +13,19 @@ import {
   IsConstructor,
   IsPromise,
   NewPromiseCapability,
-  ObjectCreate,
   PromiseCapabilityRecord,
   PromiseReactionJob,
   PromiseResolve,
   SetFunctionLength,
-  SetFunctionName,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
-import {
-  New as NewValue,
-  Type,
-} from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function PromiseProto_catch([onRejected], { thisValue }) {
   const promise = thisValue;
-  return Q(Invoke(promise, NewValue('then'), [NewValue(undefined), onRejected]));
+  return Q(Invoke(promise, new Value('then'), [new Value(undefined), onRejected]));
 }
 
 function ThenFinallyFunctions([value]) {
@@ -37,13 +33,13 @@ function ThenFinallyFunctions([value]) {
 
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally).isTrue());
-  const result = Q(Call(onFinally, NewValue(undefined)));
+  const result = Q(Call(onFinally, new Value(undefined)));
   const C = F.Constructor;
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
   const valueThunk = CreateBuiltinFunction(() => value, []);
-  SetFunctionLength(valueThunk, NewValue(0));
-  return Q(Invoke(promise, NewValue('then'), [valueThunk]));
+  SetFunctionLength(valueThunk, new Value(0));
+  return Q(Invoke(promise, new Value('then'), [valueThunk]));
 }
 
 function CatchFinallyFunctions([reason]) {
@@ -51,13 +47,13 @@ function CatchFinallyFunctions([reason]) {
 
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally).isTrue());
-  const result = Q(Call(onFinally, NewValue(undefined)));
+  const result = Q(Call(onFinally, new Value(undefined)));
   const C = F.Constructor;
   Assert(IsConstructor(C).isTrue());
   const promise = Q(PromiseResolve(C, result));
   const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
-  SetFunctionLength(thrower, NewValue(0));
-  return Q(Invoke(promise, NewValue('then'), [thrower]));
+  SetFunctionLength(thrower, new Value(0));
+  return Q(Invoke(promise, new Value('then'), [thrower]));
 }
 
 function PromiseProto_finally([onFinally], { thisValue }) {
@@ -75,16 +71,16 @@ function PromiseProto_finally([onFinally], { thisValue }) {
   } else {
     const stepsThenFinally = ThenFinallyFunctions;
     thenFinally = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
-    SetFunctionLength(thenFinally, NewValue(1));
+    SetFunctionLength(thenFinally, new Value(1));
     thenFinally.Constructor = C;
     thenFinally.OnFinally = onFinally;
     const stepsCatchFinally = CatchFinallyFunctions;
     catchFinally = CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']);
-    SetFunctionLength(catchFinally, NewValue(1));
+    SetFunctionLength(catchFinally, new Value(1));
     catchFinally.Constructor = C;
     catchFinally.OnFinally = onFinally;
   }
-  return Q(Invoke(promise, NewValue('then'), [thenFinally, catchFinally]));
+  return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
 }
 
 export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
@@ -92,13 +88,13 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   if (resultCapability) {
     Assert(resultCapability instanceof PromiseCapabilityRecord);
   } else {
-    resultCapability = NewValue(undefined);
+    resultCapability = new Value(undefined);
   }
   if (IsCallable(onFulfilled).isFalse()) {
-    onFulfilled = NewValue(undefined);
+    onFulfilled = new Value(undefined);
   }
   if (IsCallable(onRejected).isFalse()) {
-    onRejected = NewValue(undefined);
+    onRejected = new Value(undefined);
   }
   const fulfillReaction = {
     Capability: resultCapability,
@@ -139,25 +135,13 @@ function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
 }
 
 export function CreatePromisePrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  [
+  const proto = BootstrapPrototype(realmRec, [
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],
     ['then', PromiseProto_then, 2],
-  ].forEach(([name, fn, len]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
-    proto.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
-  realmRec.Intrinsics['%PromiseProto_then%'] = X(Get(proto, NewValue('then')));
+  realmRec.Intrinsics['%PromiseProto_then%'] = X(Get(proto, new Value('then')));
 
   realmRec.Intrinsics['%PromisePrototype%'] = proto;
 }

@@ -1,20 +1,19 @@
 import {
-  New as NewValue,
+  Value,
   SymbolValue,
   Type,
   wellKnownSymbols,
+  Descriptor,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  CreateBuiltinFunction,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 export const GlobalSymbolRegistry = [];
 
@@ -23,7 +22,7 @@ function SymbolConstructor([description], { NewTarget }) {
     return surroundingAgent.Throw('TypeError');
   }
   const descString = description === undefined || Type(description) === 'Undefined'
-    ? NewValue(undefined)
+    ? new Value(undefined)
     : Q(ToString(description));
 
   return new SymbolValue(descString);
@@ -51,65 +50,35 @@ function Symbol_keyFor([sym]) {
       return e.Key;
     }
   }
-  return NewValue(undefined);
+  return new Value(undefined);
+}
+
+function Symbol_symbolSpecies(args, { thisValue }) {
+  return thisValue;
 }
 
 export function CreateSymbol(realmRec) {
-  const symbolConstructor = CreateBuiltinFunction(SymbolConstructor, [], realmRec);
-  SetFunctionName(symbolConstructor, NewValue('Symbol'));
-  SetFunctionLength(symbolConstructor, NewValue(0));
-
-  [
+  const symbolConstructor = BootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 1, realmRec.Intrinsics['%SymbolPrototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],
-  ].forEach(([name, fn, len]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, NewValue(name));
-    SetFunctionLength(fn, NewValue(len));
-    symbolConstructor.DefineOwnProperty(NewValue(name), {
-      Value: fn,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    });
-  });
-
-  {
-    const fn = CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec);
-    SetFunctionName(fn, NewValue('[Symbol.species]'), NewValue('get'));
-    SetFunctionLength(fn, NewValue(0));
-    symbolConstructor.DefineOwnProperty(wellKnownSymbols.species, {
-      Get: fn,
-      Set: NewValue(undefined),
-      Enumerable: false,
-      Configurable: true,
-    });
-  }
+    [wellKnownSymbols.species, Symbol_symbolSpecies, 0],
+  ]);
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
-    symbolConstructor.DefineOwnProperty(NewValue(name), {
+    symbolConstructor.DefineOwnProperty(new Value(name), Descriptor({
       Value: sym,
-      Writable: false,
-      Enumerable: false,
-      Configurable: false,
-    });
+      Writable: new Value(false),
+      Enumerable: new Value(false),
+      Configurable: new Value(false),
+    }));
   }
 
-  symbolConstructor.DefineOwnProperty(NewValue('prototype'), {
+  symbolConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%SymbolPrototype%'],
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  });
-
-  realmRec.Intrinsics['%SymbolPrototype%'].DefineOwnProperty(
-    NewValue('constructor'), {
-      Value: symbolConstructor,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    },
-  );
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  }));
 
   realmRec.Intrinsics['%Symbol%'] = symbolConstructor;
 }

@@ -1,25 +1,14 @@
-import {
-  New as NewValue,
-  wellKnownSymbols,
-} from '../value.mjs';
-import {
-  CreateBuiltinFunction,
-  ObjectCreate,
-  SetFunctionName,
-} from '../abstract-ops/all.mjs';
+import { wellKnownSymbols } from '../value.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
+
+function AsyncIteratorPrototype_asyncIterator(args, { thisValue }) {
+  return thisValue;
+}
 
 export function CreateAsyncIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%IteratorPrototype%']);
-
-  const fn = CreateBuiltinFunction((args, { thisValue }) => thisValue, [], realmRec);
-  SetFunctionName(fn, NewValue('[Symbol.asyncIterator]'));
-
-  proto.DefineOwnProperty(wellKnownSymbols.asyncIterator, {
-    Value: fn,
-    Enumerable: false,
-    Configurable: false,
-    Writable: false,
-  });
+  const proto = BootstrapPrototype(realmRec, [
+    [wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
 }

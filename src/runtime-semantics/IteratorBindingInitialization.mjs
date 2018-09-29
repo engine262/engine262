@@ -38,7 +38,7 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import {
@@ -84,21 +84,21 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
   if (iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     } else {
       v = IteratorValue(next);
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(v);
     }
   }
   if (iteratorRecord.Done.isTrue()) {
-    v = NewValue(undefined);
+    v = new Value(undefined);
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);
@@ -124,33 +124,33 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
     default:
       throw outOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
-  const bindingId = NewValue(BindingIdentifier.name);
+  const bindingId = new Value(BindingIdentifier.name);
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v;
   if (iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
     if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     } else {
       v = IteratorValue(next);
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(v);
     }
   }
   if (iteratorRecord.Done.isTrue()) {
-    v = NewValue(undefined);
+    v = new Value(undefined);
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(v, NewValue('name')));
+      const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
       if (hasNameProperty.isFalse()) {
         X(SetFunctionName(v, bindingId));
       }
@@ -187,11 +187,11 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
     if (iteratorRecord.Done.isFalse()) {
       next = IteratorStep(iteratorRecord);
       if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(next);
       if (next.isFalse()) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
     }
     if (iteratorRecord.Done.isTrue()) {
@@ -202,7 +202,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(nextValue);
     const nStr = X(ToString(n));
@@ -224,11 +224,11 @@ function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestEl
     if (iteratorRecord.Done.isFalse()) {
       next = IteratorStep(iteratorRecord);
       if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(next);
       if (next.isFalse()) {
-        iteratorRecord.Done = NewValue(true);
+        iteratorRecord.Done = new Value(true);
       }
     }
     if (iteratorRecord.Done.isTrue()) {
@@ -236,7 +236,7 @@ function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestEl
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = NewValue(true);
+      iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(nextValue);
     const nStr = X(ToString(n));

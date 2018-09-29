@@ -20,7 +20,7 @@ import {
   ToPropertyKey,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
@@ -37,11 +37,11 @@ import { outOfRange } from '../helpers.mjs';
 function Evaluate_LiteralPropertyName(LiteralPropertyName) {
   switch (true) {
     case isIdentifierName(LiteralPropertyName):
-      return NewValue(LiteralPropertyName.name);
+      return new Value(LiteralPropertyName.name);
     case isStringLiteral(LiteralPropertyName):
-      return NewValue(LiteralPropertyName.value);
+      return new Value(LiteralPropertyName.value);
     case isNumericLiteral(LiteralPropertyName): {
-      const nbr = NewValue(LiteralPropertyName.value);
+      const nbr = new Value(LiteralPropertyName.value);
       return X(ToString(nbr));
     }
 
@@ -108,7 +108,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   PropertyDefinition, object, enumerable,
 ) {
   const IdentifierReference = PropertyDefinition.key;
-  const propName = NewValue(IdentifierReference.name);
+  const propName = new Value(IdentifierReference.name);
   const exprValue = yield* Evaluate_Expression(IdentifierReference);
   const propValue = Q(GetValue(exprValue));
   Assert(enumerable);
@@ -126,7 +126,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   const exprValueRef = yield* Evaluate_Expression(AssignmentExpression);
   const propValue = Q(GetValue(exprValueRef));
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
-    const hasNameProperty = Q(HasOwnProperty(propValue, NewValue('name')));
+    const hasNameProperty = Q(HasOwnProperty(propValue, new Value('name')));
     if (hasNameProperty.isFalse()) {
       X(SetFunctionName(propValue, propKey));
     }

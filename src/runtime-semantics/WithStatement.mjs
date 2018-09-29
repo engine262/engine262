@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_Statement, Evaluate_Expression } from '../evaluator.mjs';
 import { NewObjectEnvironment } from '../environment.mjs';
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { ToObject, GetValue } from '../abstract-ops/all.mjs';
 import { Q, Completion, UpdateEmpty } from '../completion.mjs';
 
@@ -20,5 +20,5 @@ export function* Evaluate_WithStatement({
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   const C = yield* Evaluate_Statement(Statement);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-  return Completion(UpdateEmpty(C, NewValue(undefined)));
+  return Completion(UpdateEmpty(C, new Value(undefined)));
 }

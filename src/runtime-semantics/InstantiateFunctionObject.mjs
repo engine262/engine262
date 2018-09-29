@@ -7,9 +7,7 @@ import {
   isFunctionDeclaration,
 } from '../ast.mjs';
 import { outOfRange } from '../helpers.mjs';
-import {
-  New as NewValue,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // #sec-function-definitions-runtime-semantics-instantiatefunctionobject
 //   FunctionDeclaration :
@@ -21,7 +19,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
     params: FormalParameters,
   } = FunctionDeclaration;
   const strict = true; // TODO(IsStrict)
-  const name = NewValue(BindingIdentifier ? BindingIdentifier.name : 'default');
+  const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict);
   MakeConstructor(F);
   SetFunctionName(F, name);

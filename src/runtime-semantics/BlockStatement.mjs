@@ -23,7 +23,7 @@ import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import {
-  New as NewValue,
+  Value,
 } from '../value.mjs';
 import {
   NormalCompletion,
@@ -37,9 +37,9 @@ export function BlockDeclarationInstantiation(code, env) {
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
   const declarations = LexicallyScopedDeclarations_StatementList(code);
   for (const d of declarations) {
-    for (const dn of BoundNames_Declaration(d).map(NewValue)) {
+    for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        X(envRec.CreateImmutableBinding(dn, NewValue(true)));
+        X(envRec.CreateImmutableBinding(dn, new Value(true)));
       } else {
         X(envRec.CreateMutableBinding(dn, false));
       }

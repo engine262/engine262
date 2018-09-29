@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, New as NewValue } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -61,7 +61,7 @@ import { outOfRange } from '../helpers.mjs';
 
 // 13.7.4.8 #sec-forbodyevaluation
 function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
-  let V = NewValue(undefined);
+  let V = new Value(undefined);
   Q(CreatePerIterationEnvironment(perIterationBindings));
   while (true) {
     if (test) {
@@ -97,12 +97,12 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     const thisIterationEnvRec = thisIterationEnv.EnvironmentRecord;
     for (const bn of perIterationBindings) {
       X(thisIterationEnvRec.CreateMutableBinding(bn, false));
-      const lastValue = Q(lastIterationEnvRec.GetBindingValue(bn, NewValue(true)));
+      const lastValue = Q(lastIterationEnvRec.GetBindingValue(bn, new Value(true)));
       thisIterationEnvRec.InitializeBinding(bn, lastValue);
     }
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
   }
-  return NewValue(undefined);
+  return new Value(undefined);
 }
 
 // 13.7.5.10 #sec-runtime-semantics-bindinginstantiation
@@ -110,9 +110,9 @@ function BindingInstantiation_ForDeclaration(ForDeclaration, environment) {
   const envRec = environment.EnvironmentRecord;
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
   const ForBinding = ForDeclaration.declarations[0].id;
-  for (const name of BoundNames_ForBinding(ForBinding).map(NewValue)) {
+  for (const name of BoundNames_ForBinding(ForBinding).map(Value)) {
     if (IsConstantDeclaration(ForDeclaration)) {
-      X(envRec.CreateImmutableBinding(name, NewValue(true)));
+      X(envRec.CreateImmutableBinding(name, new Value(true)));
     } else {
       X(envRec.CreateMutableBinding(name, false));
     }
@@ -150,7 +150,7 @@ function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
 // 13.7.5.13 #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
 function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet/* , iteratorKind = 'sync' */) {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  let V = NewValue(undefined);
+  let V = new Value(undefined);
   const destructuring = lhs.type === 'VariableDeclaration'
     ? IsDestructuring_ForDeclaration(lhs) : IsDestructuring_ForBinding(lhs);
   let assignmentPattern;
@@ -167,7 +167,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
 
     // NON-SPEC START
     const nextResult = Q(IteratorStep(iteratorRecord));
-    if (nextResult === NewValue(false)) {
+    if (nextResult === new Value(false)) {
       return new NormalCompletion(V);
     }
     // NON-SPEC END
@@ -188,7 +188,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       if (!destructuring) {
         const lhsNames = BoundNames_ForDeclaration(lhs);
         Assert(lhsNames.length === 1);
-        const lhsName = NewValue(lhsNames[0]);
+        const lhsName = new Value(lhsNames[0]);
         lhsRef = X(ResolveBinding(lhsName));
       }
     }
@@ -206,7 +206,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         status = yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, nextValue);
       } else if (lhsKind === 'varBinding') {
         Assert(isForBinding(lhs));
-        status = yield* BindingInitialization_ForBinding(lhs, nextValue, NewValue(undefined));
+        status = yield* BindingInitialization_ForBinding(lhs, nextValue, new Value(undefined));
       } else {
         Assert(lhsKind === 'lexicalBinding');
         Assert(isForDeclaration(lhs));
@@ -294,10 +294,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
       const loopEnv = NewDeclarativeEnvironment(oldEnv);
       const loopEnvRec = loopEnv.EnvironmentRecord;
       const isConst = IsConstantDeclaration(IterationStatement.init);
-      const boundNames = BoundNames_LexicalDeclaration(IterationStatement.init).map(NewValue);
+      const boundNames = BoundNames_LexicalDeclaration(IterationStatement.init).map(Value);
       for (const dn of boundNames) {
         if (isConst) {
-          X(loopEnvRec.CreateImmutableBinding(dn, NewValue(true)));
+          X(loopEnvRec.CreateImmutableBinding(dn, new Value(true)));
         } else {
           X(loopEnvRec.CreateMutableBinding(dn, true));
         }
@@ -413,21 +413,21 @@ function* InternalEnumerateObjectProperties(O) {
 function EnumerateObjectProperties(O) {
   Assert(Type(O) === 'Object');
   const internalIterator = InternalEnumerateObjectProperties(O);
-  const iterator = X(ObjectCreate(NewValue(null)));
+  const iterator = X(ObjectCreate(new Value(null)));
   const nextMethod = CreateBuiltinFunction(() => {
     let { value, done } = internalIterator.next();
     if (value === undefined) {
-      value = NewValue(value);
+      value = new Value(value);
     }
-    done = NewValue(done);
+    done = new Value(done);
     return X(CreateIterResultObject(value, done));
   }, []);
-  X(CreateDataProperty(iterator, NewValue('next'), nextMethod));
-  X(CreateDataProperty(iterator, NewValue('throw'), NewValue(null)));
-  X(CreateDataProperty(iterator, NewValue('return'), NewValue(null)));
+  X(CreateDataProperty(iterator, new Value('next'), nextMethod));
+  X(CreateDataProperty(iterator, new Value('throw'), new Value(null)));
+  X(CreateDataProperty(iterator, new Value('return'), new Value(null)));
   return {
     Iterator: iterator,
     NextMethod: nextMethod,
-    Done: NewValue(false),
+    Done: new Value(false),
   };
 }

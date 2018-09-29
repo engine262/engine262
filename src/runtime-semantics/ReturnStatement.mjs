@@ -1,4 +1,4 @@
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import {
   Q, X,
   ReturnCompletion,
@@ -14,7 +14,7 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 export function* Evaluate_ReturnStatement({ argument: Expression }) {
   if (Expression === null) {
     // ReturnStatement : return `;`
-    return new ReturnCompletion(NewValue(undefined));
+    return new ReturnCompletion(new Value(undefined));
   } else {
     // ReturnStatement : return Expression `;`
     const exprRef = yield* Evaluate_Expression(Expression);

@@ -1,4 +1,4 @@
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToNumber } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
@@ -6,7 +6,7 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
   const base = Q(ToNumber(lval));
   const exponent = Q(ToNumber(rval));
-  return NewValue(base.numberValue() ** exponent.numberValue());
+  return new Value(base.numberValue() ** exponent.numberValue());
 }
 
 // #sec-exp-operator-runtime-semantics-evaluation

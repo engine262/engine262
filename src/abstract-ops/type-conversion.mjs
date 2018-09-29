@@ -1,5 +1,5 @@
 import {
-  New as NewValue,
+  Value,
   Type,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -23,12 +23,12 @@ export function ToPrimitive(input, PreferredType) {
   if (Type(input) === 'Object') {
     let hint;
     if (PreferredType === undefined) {
-      hint = NewValue('default');
+      hint = new Value('default');
     } else if (PreferredType === 'String') {
-      hint = NewValue('string');
+      hint = new Value('string');
     } else {
       Assert(PreferredType === 'Number');
-      hint = NewValue('number');
+      hint = new Value('number');
     }
     const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
     if (Type(exoticToPrim) !== 'Undefined') {
@@ -39,7 +39,7 @@ export function ToPrimitive(input, PreferredType) {
       return surroundingAgent.Throw('TypeError');
     }
     if (hint.stringValue() === 'default') {
-      hint = NewValue('number');
+      hint = new Value('number');
     }
     return Q(OrdinaryToPrimitive(input, hint));
   }
@@ -55,9 +55,9 @@ export function OrdinaryToPrimitive(
          && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
   let methodNames;
   if (hint.stringValue() === 'string') {
-    methodNames = [NewValue('toString'), NewValue('valueOf')];
+    methodNames = [new Value('toString'), new Value('valueOf')];
   } else {
-    methodNames = [NewValue('valueOf'), NewValue('toString')];
+    methodNames = [new Value('valueOf'), new Value('toString')];
   }
   for (const name of methodNames) {
     const method = Q(Get(O, name));
@@ -74,11 +74,11 @@ export function OrdinaryToPrimitive(
 // 7.1.2 #sec-toboolean
 export function ToBoolean(argument) {
   if (Type(argument) === 'Undefined') {
-    return NewValue(false);
+    return new Value(false);
   }
 
   if (Type(argument) === 'Null') {
-    return NewValue(false);
+    return new Value(false);
   }
 
   if (Type(argument) === 'Boolean') {
@@ -87,24 +87,24 @@ export function ToBoolean(argument) {
 
   if (Type(argument) === 'Number') {
     if (argument.numberValue() === 0 || argument.isNaN()) {
-      return NewValue(false);
+      return new Value(false);
     }
-    return NewValue(true);
+    return new Value(true);
   }
 
   if (Type(argument) === 'String') {
     if (argument.stringValue().length > 0) {
-      return NewValue(true);
+      return new Value(true);
     }
-    return NewValue(false);
+    return new Value(false);
   }
 
   if (Type(argument) === 'Symbol') {
-    return NewValue(true);
+    return new Value(true);
   }
 
   if (Type(argument) === 'Object') {
-    return NewValue(true);
+    return new Value(true);
   }
 
   throw outOfRange('ToBoolean', argument);
@@ -115,19 +115,19 @@ export function ToNumber(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return NewValue(NaN);
+      return new Value(NaN);
     case 'Null':
-      return NewValue(0);
+      return new Value(0);
     case 'Boolean':
       if (argument.isTrue()) {
-        return NewValue(1);
+        return new Value(1);
       }
-      return NewValue(0);
+      return new Value(0);
     case 'Number':
       return argument;
     case 'String':
       // FIXME(devsnek): https://tc39.github.io/ecma262/#sec-runtime-semantics-mv-s
-      return NewValue(+(argument.stringValue()));
+      return new Value(+(argument.stringValue()));
     case 'Symbol':
       return surroundingAgent.Throw('TypeError');
     case 'Object': {
@@ -143,7 +143,7 @@ export function ToNumber(argument) {
 export function ToInteger(argument) {
   const number = Q(ToNumber(argument));
   if (number.isNaN()) {
-    return NewValue(0);
+    return new Value(0);
   }
   if (number.numberValue() === 0
   //  || number.value === -0
@@ -153,14 +153,14 @@ export function ToInteger(argument) {
   // Return the number value that is the same sign
   // as number and whose magnitude is floor(abs(number)).
   const mag = Math.floor(Math.abs(number.numberValue()));
-  return NewValue(number.numberValue() >= 0 ? mag : -mag);
+  return new Value(number.numberValue() >= 0 ? mag : -mag);
 }
 
 // 7.1.5 #sec-toint32
 export function ToInt32(argument) {
   const number = Q(ToNumber(argument));
   if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
-    return NewValue(0);
+    return new Value(0);
   }
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
@@ -176,11 +176,11 @@ export function ToUint32(argument) {
   if (number.numberValue() === 0 // || number.value === -0
       || number.numberValue() === Infinity
       || number.numberValue() === -Infinity) {
-    return NewValue(0);
+    return new Value(0);
   }
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
-  return NewValue(int32bit);
+  return new Value(int32bit);
 }
 
 // 7.1.12 #sec-tostring
@@ -188,11 +188,11 @@ export function ToString(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return NewValue('undefined');
+      return new Value('undefined');
     case 'Null':
-      return NewValue('null');
+      return new Value('null');
     case 'Boolean':
-      return NewValue(argument.isTrue() ? 'true' : 'false');
+      return new Value(argument.isTrue() ? 'true' : 'false');
     case 'Number':
       return NumberToString(argument);
     case 'String':
@@ -211,20 +211,20 @@ export function ToString(argument) {
 // 7.1.12.1 #sec-tostring-applied-to-the-number-type
 export function NumberToString(m) {
   if (m.isNaN()) {
-    return NewValue('NaN');
+    return new Value('NaN');
   }
   const mVal = m.numberValue();
   if (m.numberValue() === 0) {
-    return NewValue('0');
+    return new Value('0');
   }
   if (mVal < 0) {
-    return NewValue(`-${NumberToString(NewValue(-mVal)).stringValue()}`);
+    return new Value(`-${NumberToString(new Value(-mVal)).stringValue()}`);
   }
   if (m.isInfinity()) {
-    return NewValue('Infinity');
+    return new Value('Infinity');
   }
   // TODO: implement properly
-  return NewValue(`${mVal}`);
+  return new Value(`${mVal}`);
 }
 
 // 7.1.13 #sec-toobject
@@ -275,9 +275,9 @@ export function ToPropertyKey(argument) {
 export function ToLength(argument) {
   const len = Q(ToInteger(argument));
   if (len.numberValue() <= 0) {
-    return NewValue(0);
+    return new Value(0);
   }
-  return NewValue(Math.min(len.numberValue(), (2 ** 53) - 1));
+  return new Value(Math.min(len.numberValue(), (2 ** 53) - 1));
 }
 
 // 7.1.16 #sec-canonicalnumericindexstring
@@ -288,7 +288,7 @@ export function CanonicalNumericIndexString(argument) {
   }
   const n = X(ToNumber(argument));
   if (SameValue(X(ToString(n)), argument) === false) {
-    return NewValue(undefined);
+    return new Value(undefined);
   }
   return n;
 }

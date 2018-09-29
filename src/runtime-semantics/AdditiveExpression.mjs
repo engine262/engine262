@@ -11,7 +11,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
-  New as NewValue,
+  Value,
   Type,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -22,11 +22,11 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   if (Type(lprim) === 'String' || Type(rprim) === 'String') {
     const lstr = Q(ToString(lprim));
     const rstr = Q(ToString(rprim));
-    return NewValue(lstr.stringValue() + rstr.stringValue());
+    return new Value(lstr.stringValue() + rstr.stringValue());
   }
   const lnum = Q(ToNumber(lprim));
   const rnum = Q(ToNumber(rprim));
-  return NewValue(lnum.numberValue() + rnum.numberValue());
+  return new Value(lnum.numberValue() + rnum.numberValue());
 }
 
 // #sec-addition-operator-plus-runtime-semantics-evaluation
@@ -42,7 +42,7 @@ function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExp
 export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
   const lnum = Q(ToNumber(lval));
   const rnum = Q(ToNumber(rval));
-  return NewValue(lnum.numberValue() - rnum.numberValue());
+  return new Value(lnum.numberValue() - rnum.numberValue());
 }
 
 // #sec-subtraction-operator-minus-runtime-semantics-evaluation

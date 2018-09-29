@@ -10,11 +10,17 @@ import {
   IteratorStep,
   IteratorValue,
 } from '../abstract-ops/all.mjs';
-import { Type, New as NewValue, wellKnownSymbols } from '../value.mjs';
+import {
+  Type,
+  Value,
+  wellKnownSymbols,
+  Descriptor,
+} from '../value.mjs';
 import {
   Q, X,
   AbruptCompletion,
 } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function SetConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
@@ -25,7 +31,7 @@ function SetConstructor([iterable], { NewTarget }) {
   if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
     return set;
   }
-  const adder = Q(Get(set, NewValue('add')));
+  const adder = Q(Get(set, new Value('add')));
   if (IsCallable(adder).isFalse()) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -45,29 +51,14 @@ function SetConstructor([iterable], { NewTarget }) {
 }
 
 export function CreateSet(realmRec) {
-  const setConstructor = CreateBuiltinFunction(SetConstructor, [], realmRec);
+  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 1, realmRec.Intrinsics['%SetPrototype%'], []);
 
-  const proto = realmRec.Intrinsics['%SetPrototype%'];
-  X(proto.DefineOwnProperty(NewValue('prototype'), {
-    Value: setConstructor,
-    Writable: true,
-    Enumerable: false,
-    Configurable: true,
-  }));
-
-  X(setConstructor.DefineOwnProperty(NewValue('prototype'), {
-    Value: proto,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
-
-  X(setConstructor.DefineOwnProperty(wellKnownSymbols.species, {
+  X(setConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: NewValue(undefined),
-    Enumerable: false,
-    Configurable: true,
-  }));
+    Set: new Value(undefined),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
 
   realmRec.Intrinsics['%Set%'] = setConstructor;
 }

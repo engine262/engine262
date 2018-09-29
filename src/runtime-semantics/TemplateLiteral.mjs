@@ -1,4 +1,4 @@
-import { New as NewValue } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import {
   GetValue,
@@ -31,5 +31,5 @@ export function* Evaluate_TemplateLiteral(TemplateLiteral) {
   }
   const TemplateTail = TemplateLiteral.quasis[TemplateLiteral.quasis.length - 1];
   const tail = TemplateTail.value.cooked;
-  return NewValue(str + tail);
+  return new Value(str + tail);
 }

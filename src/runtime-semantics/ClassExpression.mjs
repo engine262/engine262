@@ -17,7 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
-import { Type, New as NewValue } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { IsStatic } from '../static-semantics/all.mjs';
 import {
@@ -84,7 +84,7 @@ function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     const formalParameterList = [];
     const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
-    SetFunctionName(closure, propKey, NewValue('get'));
+    SetFunctionName(closure, propKey, new Value('get'));
     const desc = {
       Get: closure,
       Enumerable: enumerable,
@@ -102,7 +102,7 @@ function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
     MakeMethod(closure, object);
-    SetFunctionName(closure, propKey, NewValue('set'));
+    SetFunctionName(closure, propKey, new Value('set'));
     const desc = {
       Set: closure,
       Enumerable: enumerable,
@@ -122,7 +122,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const classScope = NewDeclarativeEnvironment(lex);
   const classScopeEnvRec = classScope.EnvironmentRecord;
   if (Type(className) !== 'Undefined') {
-    classScopeEnvRec.CreateImmutableBinding(className, NewValue(true));
+    classScopeEnvRec.CreateImmutableBinding(className, new Value(true));
   }
   let protoParent;
   let constructorParent;
@@ -135,12 +135,12 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
     const superclass = Q(GetValue(superclassRef));
     if (Type(superclass) === 'Null') {
-      protoParent = NewValue(null);
+      protoParent = new Value(null);
       constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
     } else if (IsConstructor(superclass).isFalse()) {
       return surroundingAgent.Throw('TypeError');
     } else {
-      protoParent = Q(Get(superclass, NewValue('prototype')));
+      protoParent = Q(Get(superclass, new Value('prototype')));
       if (Type(protoParent) !== 'Object' && Type(protoParent) !== 'Null') {
         return surroundingAgent.Throw('TypeError');
       }
@@ -170,9 +170,9 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  MakeConstructor(F, NewValue(false), proto);
+  MakeConstructor(F, new Value(false), proto);
   MakeClassConstructor(F);
-  CreateMethodProperty(proto, NewValue('constructor'), F);
+  CreateMethodProperty(proto, new Value('constructor'), F);
   let methods;
   if (!ClassBody) {
     methods = [];
@@ -212,14 +212,14 @@ export function* Evaluate_ClassExpression({
 
   let className;
   if (!BindingIdentifier) {
-    className = NewValue(undefined);
+    className = new Value(undefined);
   } else {
-    className = NewValue(BindingIdentifier.name);
+    className = new Value(BindingIdentifier.name);
   }
   const value = yield* ClassDefinitionEvaluation(ClassTail, className);
   ReturnIfAbrupt(value);
   if (Type(className) !== 'Undefined') {
-    const hasNameProperty = Q(HasOwnProperty(value, NewValue('name')));
+    const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
     if (hasNameProperty.isFalse()) {
       SetFunctionName(value, className);
     }
