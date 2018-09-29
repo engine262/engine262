@@ -19,6 +19,10 @@ export function GeneratorStart(generator, generatorBody) {
   genContext.Generator = generator;
   genContext.codeEvaluationState = (function* resumer() {
     const result = yield* Evaluate_FunctionBody(generatorBody);
+    Assert(surroundingAgent.runningExecutionContext === genContext);
+    surroundingAgent.executionContextStack.pop();
+    generator.GeneratorState = 'completed';
+    genContext.codeEvaluationState = null;
     let resultValue;
     if (result.Type === 'normal') {
       resultValue = NewValue(undefined);
@@ -67,7 +71,6 @@ export function GeneratorResume(generator, value) {
   const iter = genContext.codeEvaluationState.next(new NormalCompletion(value));
   Assert(surroundingAgent.runningExecutionContext === methodContext);
   Assert(surroundingAgent.executionContextStack.length === originalStackLength);
-  console.log('hmm', iter);
   return Completion(iter.value);
 }
 
