@@ -6,6 +6,7 @@ import {
 import {
   Value,
   Type,
+  Descriptor,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -21,12 +22,12 @@ function ErrorConstructor([message], { NewTarget }) {
   const O = Q(OrdinaryCreateFromConstructor(newTarget, '%ErrorPrototype%', ['ErrorData']));
   if (Type(message) !== 'Undefined') {
     const msg = Q(ToString(message));
-    const msgDesc = {
+    const msgDesc = Descriptor({
       Value: msg,
-      Writable: true,
-      Enumerable: false,
-      Configurable: true,
-    };
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(true),
+    });
     X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }
   return O;

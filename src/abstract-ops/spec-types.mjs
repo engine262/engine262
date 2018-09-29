@@ -146,24 +146,24 @@ export function CompletePropertyDescriptor(Desc) {
     Configurable: false,
   };
   if (IsGenericDescriptor(Desc).isTrue() || IsDataDescriptor(Desc).isTrue()) {
-    if (!('Value' in Desc)) {
+    if (Desc.Value === undefined) {
       Desc.Value = like.Value;
     }
-    if (!('Writable' in Desc)) {
+    if (Desc.Writable === undefined) {
       Desc.Writable = like.Writable;
     }
   } else {
-    if (!('Get' in Desc)) {
+    if (Desc.Get === undefined) {
       Desc.Get = like.Get;
     }
-    if (!('Set' in Desc)) {
+    if (Desc.Set === undefined) {
       Desc.Set = like.Set;
     }
   }
-  if (!('Enumerable' in Desc)) {
+  if (Desc.Enumerable === undefined) {
     Desc.Enumerable = like.Enumerable;
   }
-  if (!('Configurable' in Desc)) {
+  if (Desc.Configurable === undefined) {
     Desc.Configurable = like.Configurable;
   }
   return Desc;

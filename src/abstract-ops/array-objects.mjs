@@ -60,7 +60,7 @@ export function CreateArrayIterator(array, kind) {
 
 // 9.4.2.4 ArraySetLength
 export function ArraySetLength(A, Desc) {
-  if (!('Value' in Desc)) {
+  if (Desc.Value === undefined) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
   }
   const newLenDesc = { ...Desc };
@@ -76,11 +76,11 @@ export function ArraySetLength(A, Desc) {
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
   }
-  if (oldLenDesc.Writable === false) {
+  if (oldLenDesc.Writable.isFalse()) {
     return new Value(false);
   }
   let newWritable;
-  if (!('Writable' in newLenDesc) || newLenDesc.Writable === true) {
+  if (newLenDesc.Writable === undefined || newLenDesc.Writable.isTrue()) {
     newWritable = true;
   } else {
     newWritable = false;

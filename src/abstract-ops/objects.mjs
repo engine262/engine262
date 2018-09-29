@@ -199,13 +199,25 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
   }
 
   if (Type(O) !== 'Undefined') {
-    O.properties.set(P, current);
-    current.Value = Desc.Value;
-    current.Writable = Desc.Writable;
-    current.Get = Desc.Get;
-    current.Set = Desc.Set;
-    current.Enumerable = Desc.Enumerable;
-    current.Configurable = Desc.Configurable;
+    const target = O.properties.get(P);
+    if (Desc.Value !== undefined) {
+      target.Value = Desc.Value;
+    }
+    if (Desc.Writable !== undefined) {
+      target.Writable = Desc.Writable;
+    }
+    if (Desc.Get !== undefined) {
+      target.Get = Desc.Get;
+    }
+    if (Desc.Set !== undefined) {
+      target.Set = Desc.Set;
+    }
+    if (Desc.Enumerable !== undefined) {
+      target.Enumerable = Desc.Set;
+    }
+    if (Desc.Configurable !== undefined) {
+      target.Configurable = Desc.Configurable;
+    }
   }
 
   return new Value(true);
@@ -286,7 +298,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
       if (IsAccessorDescriptor(existingDescriptor)) {
         return new Value(false);
       }
-      if (existingDescriptor.Writable === false) {
+      if (existingDescriptor.Writable.isFalse()) {
         return new Value(false);
       }
       const valueDesc = Descriptor({ Value: V });

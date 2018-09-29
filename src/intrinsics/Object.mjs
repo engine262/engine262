@@ -55,7 +55,7 @@ function Object_assign([target, ...sources]) {
     }
     keys.forEach((nextKey) => {
       const desc = Q(from.GetOwnProperty(nextKey));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
+      if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
         const propValue = Q(Get(from, nextKey));
         Q(Set(to, nextKey, propValue, new Value(true)));
       }
@@ -84,23 +84,22 @@ function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
   }
-
   const props = Q(ToObject(Properties));
   const keys = Q(props.OwnPropertyKeys());
   const descriptors = [];
-  keys.forEach((nextKey) => {
+  for (const nextKey of keys) {
     const propDesc = Q(props.GetOwnProperty(nextKey));
-    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable === true) {
+    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable.isTrue()) {
       const descObj = Q(Get(props, nextKey));
       const desc = Q(ToPropertyDescriptor(descObj));
       descriptors.push([nextKey, desc]);
     }
-  });
-  descriptors.forEach((pair) => {
+  }
+  for (const pair of descriptors) {
     const P = pair[0];
     const desc = pair[1];
     Q(DefinePropertyOrThrow(O, P, desc));
-  });
+  }
   return O;
 }
 

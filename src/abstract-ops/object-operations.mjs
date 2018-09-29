@@ -258,7 +258,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
   ownKeys.forEach((key) => {
     if (Type(key) === 'String') {
       const desc = Q(O.GetOwnProperty(key));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable === true) {
+      if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
         if (kind === 'key') {
           properties.push(key);
         } else {

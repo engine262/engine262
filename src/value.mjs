@@ -233,7 +233,7 @@ export class ArrayExoticObjectValue extends ObjectValue {
       Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = X(ToUint32(P));
-      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === false) {
+      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable.isFalse()) {
         return new Value(false);
       }
       const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
@@ -452,7 +452,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       if (Type(targetDesc) === 'Undefined') {
         return new Value(undefined);
       }
-      if (targetDesc.Configurable === false) {
+      if (targetDesc.Configurable.isFalse()) {
         return surroundingAgent.Throw('TypeError');
       }
       const extensibleTarget = Q(IsExtensible(target));
@@ -469,8 +469,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (valid.isFalse()) {
       return surroundingAgent.Throw('TypeError');
     }
-    if (resultDesc.Configurable === false) {
-      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable === true) {
+    if (resultDesc.Configurable.isFalse()) {
+      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable.isFalse()) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -499,7 +499,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetDesc = Q(target.GetOwnProperty(P));
     const extensibleTarget = Q(IsExtensible(target));
     let settingConfigFalse;
-    if ('Configurable' in Desc && Desc.Configurable === false) {
+    if (Desc.Configurable !== undefined && Desc.Configurable.isFalse()) {
       settingConfigFalse = true;
     } else {
       settingConfigFalse = false;
@@ -515,7 +515,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc).isFalse()) {
         return surroundingAgent.Throw('TypeError');
       }
-      if (settingConfigFalse && targetDesc.Configurable === true) {
+      if (settingConfigFalse && targetDesc.Configurable.isFalse()) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -540,7 +540,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (booleanTrapResult.isFalse()) {
       const targetDesc = Q(target.GetOwnProperty(P));
       if (Type(targetDesc) !== 'Undefined') {
-        if (targetDesc.Configurable === false) {
+        if (targetDesc.Configurable.isFalse()) {
           return surroundingAgent.Throw('TypeError');
         }
         const extensibleTarget = Q(IsExtensible(target));
@@ -568,8 +568,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === false) {
-      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable === false) {
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable.isFalse()) {
+      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable.isFalse()) {
         if (SameValue(trapResult, targetDesc.Value) === false) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -602,8 +602,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return new Value(false);
     }
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === false) {
-      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable === false) {
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable.isFalse()) {
+      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable.isFalse()) {
         if (SameValue(V, targetDesc.Value) === false) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -639,7 +639,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (Type(targetDesc) === 'Undefined') {
       return trueValue;
     }
-    if (targetDesc.Configurable === false) {
+    if (targetDesc.Configurable.isFalse()) {
       return surroundingAgent.Throw('TypeError');
     }
     return trueValue;
@@ -671,7 +671,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetNonconfigurableKeys = [];
     for (const key of targetKeys) {
       const desc = Q(target.GetOwnProperty(key));
-      if (Type(desc) !== 'Undefined' && desc.Configurable === false) {
+      if (Type(desc) !== 'Undefined' && desc.Configurable.isFalse()) {
         targetNonconfigurableKeys.push(key);
       } else {
         targetConfigurableKeys.push(key);
@@ -810,16 +810,16 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     if (IsAccessorDescriptor(Desc).isTrue()) {
       return new Value(false);
     }
-    if ('Writable' in Desc && Desc.Writable === false) {
+    if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
       return new Value(false);
     }
-    if ('Enumerable' in Desc && Desc.Enumerable === false) {
+    if (Desc.Enumerable !== undefined && Desc.Enumerable.isFalse()) {
       return new Value(false);
     }
-    if ('Configurable' in Desc && Desc.Configurable === true) {
+    if (Desc.Configurable !== undefined && Desc.Configurable.isTrue()) {
       return new Value(true);
     }
-    if ('Value' in Desc && SameValue(Desc.Value, current.Value)) {
+    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value)) {
       return new Value(false);
     }
     return new Value(true);
@@ -918,7 +918,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const isMapped = HasOwnProperty(map, P);
     let newArgDesc = Desc;
     if (isMapped.isTrue() && IsDataDescriptor(Desc).isTrue()) {
-      if (!('Value' in Desc) && 'Writable' in Desc && Desc.Writable === false) {
+      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable.isFalse()) {
         newArgDesc = { ...Desc };
         newArgDesc.Value = Get(map, P);
       }
@@ -931,11 +931,11 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
       if (IsAccessorDescriptor(Desc).isTrue()) {
         map.Delete(P);
       } else {
-        if ('Value' in Desc) {
+        if (Desc.Value !== undefined) {
           const setStatus = Set(map, P, Desc.Value, new Value(false));
           Assert(setStatus.isTrue());
         }
-        if ('Writable' in Desc && Desc.Writable === false) {
+        if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
           map.Delete(P);
         }
       }
@@ -1019,12 +1019,6 @@ export function Descriptor(O) {
     this.Writable = O.Writable;
     this.Enumerable = O.Enumerable;
     this.Configurable = O.Configurable;
-    Assert(this.Value === undefined || this.Value instanceof Value);
-    Assert(this.Get === undefined || this.Get instanceof FunctionValue || this.Set instanceof UndefinedValue);
-    Assert(this.Set === undefined || this.Set instanceof FunctionValue || this.Set instanceof UndefinedValue);
-    Assert(this.Writable === undefined || this.Writable instanceof BooleanValue);
-    Assert(this.Enumerable === undefined || this.Enumerable instanceof BooleanValue);
-    Assert(this.Configurable === undefined || this.Configurable instanceof BooleanValue);
   } else {
     return new Descriptor(O);
   }
