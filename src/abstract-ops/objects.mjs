@@ -364,6 +364,9 @@ export function ObjectCreate(proto, internalSlotsList) {
   }
 
   const obj = new ObjectValue();
+  for (const slot of internalSlotsList) {
+    obj[slot] = new Value(undefined);
+  }
 
   // The following steps happen in ObjectValue constructor:
   //
