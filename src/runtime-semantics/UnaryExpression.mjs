@@ -47,7 +47,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
     const baseObj = X(ToObject(GetBase(ref)));
     const deleteStatus = Q(baseObj.Delete(GetReferencedName(ref)));
     if (deleteStatus.isFalse() && IsStrictReference(ref).isTrue()) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', `Cannot delete property ${GetReferencedName(ref).stringValue()}`);
     }
     return deleteStatus;
   } else {
