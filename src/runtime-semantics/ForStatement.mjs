@@ -11,7 +11,6 @@ import {
   IteratorClose,
   IteratorStep,
   IteratorValue,
-  LoopContinues,
   ObjectCreate,
   PutValue,
   ResolveBinding,
@@ -60,6 +59,23 @@ import {
 } from '../environment.mjs';
 import { outOfRange } from '../helpers.mjs';
 
+// 13.7.1.2 #sec-loopcontinues
+function LoopContinues(completion, labelSet) {
+  if (completion.Type === 'normal') {
+    return true;
+  }
+  if (completion.Type !== 'continue') {
+    return false;
+  }
+  if (completion.Target === undefined) {
+    return true;
+  }
+  if (labelSet.includes(completion.Target)) {
+    return true;
+  }
+  return false;
+}
+
 // 13.7.4.8 #sec-forbodyevaluation
 function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
   let V = new Value(undefined);
@@ -73,7 +89,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
       }
     }
     const result = yield* Evaluate_Statement(stmt);
-    if (LoopContinues(result, labelSet).isFalse()) {
+    if (!LoopContinues(result, labelSet)) {
       return Completion(UpdateEmpty(result, V));
     }
     if (result.Value !== undefined) {
@@ -229,7 +245,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     }
     const result = yield* Evaluate_Statement(stmt);
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-    if (LoopContinues(result, labelSet).isFalse()) {
+    if (!LoopContinues(result, labelSet)) {
       if (iterationKind === 'enumerate') {
         return Completion(UpdateEmpty(result, V));
       } else {
@@ -287,7 +303,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
           return NormalCompletion(V);
         }
         const stmtResult = yield* Evaluate_Statement(Statement);
-        if (LoopContinues(stmtResult, labelSet).isFalse()) {
+        if (!LoopContinues(stmtResult, labelSet)) {
           return Completion(UpdateEmpty(stmtResult, V));
         }
         if (stmtResult.Value !== undefined) {
