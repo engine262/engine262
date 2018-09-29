@@ -90,9 +90,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(Value);
       break;
     case 'GeneratorBody':
-      varNames = VarDeclaredNames_GeneratorBody(code.body.body).map(NewValue);
+      varNames = VarDeclaredNames_GeneratorBody(code.body.body).map(Value);
       varDeclarations = VarScopedDeclarations_GeneratorBody(code.body.body);
-      lexicalNames = LexicallyDeclaredNames_GeneratorBody(code.body.body).map(NewValue);
+      lexicalNames = LexicallyDeclaredNames_GeneratorBody(code.body.body).map(Value);
       break;
     default:
       throw outOfRange('FunctionDeclarationInstantiation', code);
@@ -286,9 +286,7 @@ export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject
 // GeneratorBody : FunctionBody
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, NewValue('%GeneratorPrototype%'), ['GeneratorState', 'GeneratorContext']));
-  G.GeneratorState = NewValue(undefined);
-  G.GeneratorContext = NewValue(undefined);
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, new Value('%GeneratorPrototype%'), ['GeneratorState', 'GeneratorContext']));
   GeneratorStart(G, GeneratorBody);
   return new ReturnCompletion(G);
 }
