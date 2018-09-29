@@ -38,6 +38,7 @@ import {
   isForOfStatementWithVarForBinding,
   isForDeclaration,
   isForBinding,
+  isWhileStatement,
 } from '../ast.mjs';
 import {
   BoundNames_ForBinding,
@@ -274,7 +275,26 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
   switch (true) {
     // case isDoWhileStatement(IterationStatement):
 
-    // case isWhileStatement(IterationStatement):
+    case isWhileStatement(IterationStatement): {
+      const Expression = IterationStatement.test;
+      const Statement = IterationStatement.body;
+
+      let V = new Value(undefined);
+      while (true) {
+        const exprRef = yield* Evaluate_Expression(Expression);
+        const exprValue = Q(GetValue(exprRef));
+        if (ToBoolean(exprValue).isFalse()) {
+          return NormalCompletion(V);
+        }
+        const stmtResult = yield* Evaluate_Statement(Statement);
+        if (LoopContinues(stmtResult, labelSet).isFalse()) {
+          return Completion(UpdateEmpty(stmtResult, V));
+        }
+        if (stmtResult.Value !== undefined) {
+          V = stmtResult.Value;
+        }
+      }
+    }
 
     case isForStatementWithExpression(IterationStatement):
       if (IterationStatement.init) {

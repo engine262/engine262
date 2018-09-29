@@ -26,7 +26,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
   if (BindingIdentifier) {
     funcEnv = NewDeclarativeEnvironment(scope);
     envRec = funcEnv.EnvironmentRecord;
-    name = BindingIdentifier.name;
+    name = new Value(BindingIdentifier.name);
     envRec.CreateImmutableBinding(name, new Value(false));
   }
   const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv, strict));
