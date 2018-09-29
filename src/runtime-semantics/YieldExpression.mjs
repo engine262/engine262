@@ -1,16 +1,28 @@
 import { isYieldExpressionWithStar } from '../ast.mjs';
 import {
   Assert,
+  Call,
   CreateIterResultObject,
   GeneratorYield,
   GetGeneratorKind,
+  GetIterator,
+  GetMethod,
   GetValue,
+  IteratorClose,
+  IteratorComplete,
+  IteratorValue,
 } from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+import {
+  Q, X,
+  Completion,
+  NormalCompletion,
+  ReturnCompletion,
+} from '../completion.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Evaluate_Expression,
 } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 
 // #sec-generator-function-definitions-runtime-semantics-evaluation
 //   YieldExpression :
@@ -35,8 +47,98 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
 // #sec-generator-function-definitions-runtime-semantics-evaluation
 //   YieldExpression :
 //     `yield` `*` AssignmentExpression
-function* Evaluate_YieldExpression_Star(/* YieldExpression */) {
-  // TODO
+function* Evaluate_YieldExpression_Star(YieldExpression) {
+  const AssignmentExpression = YieldExpression.argument;
+
+  const generatorKind = X(GetGeneratorKind());
+  Assert(generatorKind === 'sync');
+  const exprRef = yield* Evaluate_Expression(AssignmentExpression);
+  const value = Q(GetValue(exprRef));
+  const iteratorRecord = Q(GetIterator(value, generatorKind));
+  const iterator = iteratorRecord.Iterator;
+  let received = new NormalCompletion(new Value(undefined));
+  while (true) {
+    if (received.Type === 'normal') {
+      const innerResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]));
+      // TODO(asynciterator)
+      // if (generatorKind === 'async') {
+      //   innerResult = Q(Await(innerResult));
+      // }
+      if (Type(innerResult) !== 'Object') {
+        return surroundingAgent.Throw('TypeError');
+      }
+      const done = Q(IteratorComplete(innerResult));
+      if (done.isTrue()) {
+        return Q(IteratorValue(innerResult));
+      }
+      // TODO(asynciterator)
+      // if (generatorKind === 'async') {
+      //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerResult)));
+      // } else {
+      received = yield* GeneratorYield(innerResult);
+      // }
+    } else if (received.Type === 'throw') {
+      const thr = Q(GetMethod(iterator, new Value('throw')));
+      if (Type(thr) !== 'Undefined') {
+        const innerResult = Q(Call(thr, iterator, [received.Value]));
+        // TODO(asynciterator)
+        // if (generatorKind === 'async') {
+        //   innerResult = Q(Await(innerResult));
+        // }
+        if (Type(innerResult) !== 'Object') {
+          return surroundingAgent.Throw('TypeError');
+        }
+        const done = Q(IteratorComplete(innerResult));
+        if (done.isTrue()) {
+          return Q(IteratorValue(innerResult));
+        }
+        // TODO(asynciterator)
+        // if (generatorKind === 'async') {
+        //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerResult)));
+        // } else {
+        received = yield* GeneratorYield(innerResult);
+        // }
+      } else {
+        const closeCompletion = new NormalCompletion(undefined);
+        // TODO(asynciterator)
+        // if (generatorKind === 'async') {
+        //   Q(AsyncIteratorClose(iteratorRecord, closeCompletion);
+        // } else {
+        Q(IteratorClose(iteratorRecord, closeCompletion));
+        // }
+        return surroundingAgent.Throw('TypeError');
+      }
+    } else {
+      Assert(received.Type === 'return');
+      const ret = Q(GetMethod(iterator, new Value('return')));
+      if (Type(ret) === 'Undefined') {
+        // TODO(asynciterator)
+        // if (generatorKind === 'async') {
+        //   received.Value = Q(Await(received.Value));
+        // }
+        return Completion(received);
+      }
+      const innerReturnResult = Q(Call(ret, iterator, [received.Value]));
+      // TODO(asynciterator)
+      // if (generatorKind === 'async') {
+      //   innerReturnResult = Q(Await(innerReturnResult));
+      // }
+      if (Type(innerReturnResult) !== 'Object') {
+        return surroundingAgent.Throw('TypeError');
+      }
+      const done = Q(IteratorComplete(innerReturnResult));
+      if (done.isTrue()) {
+        const innerValue = Q(IteratorValue(innerReturnResult));
+        return new ReturnCompletion(innerValue);
+      }
+      // TODO(asynciterator)
+      // if (generatorKind === 'async') {
+      //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerReturnResult)));
+      // } else {
+      received = yield* GeneratorYield(innerReturnResult);
+      // }
+    }
+  }
 }
 
 export function* Evaluate_YieldExpression(YieldExpression) {
