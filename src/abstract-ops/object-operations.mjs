@@ -121,8 +121,8 @@ export function GetMethod(V, P) {
   if (Type(func) === 'Null' || Type(func) === 'Undefined') {
     return new Value(undefined);
   }
-  if (IsCallable(func) === false) {
-    return surroundingAgent.Throw('TypeError');
+  if (IsCallable(func).isFalse()) {
+    return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
   return func;
 }

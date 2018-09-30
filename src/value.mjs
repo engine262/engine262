@@ -33,7 +33,6 @@ import {
   StringGetOwnProperty,
   ToBoolean,
   ToPropertyDescriptor,
-  ToString,
   ToUint32,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';

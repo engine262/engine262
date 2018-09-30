@@ -487,6 +487,38 @@ function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
+function ArrayProto_pop(args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  if (len === 0) {
+    Q(Set(O, new Value('length'), new Value(0), new Value(true)));
+    return new Value(undefined);
+  } else {
+    const newLen = len - 1;
+    const index = Q(ToString(new Value(newLen)));
+    const element = Q(Get(O, index));
+    Q(DeletePropertyOrThrow(O, index));
+    Q(Set(O, new Value('length'), new Value(newLen), new Value(true)));
+    return element;
+  }
+}
+
+function ArrayProto_push([...items], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const argCount = items.length;
+  if (len + argCount > (2 ** 53) - 1) {
+    return surroundingAgent.Throw('TypeError', 'Invalid array length');
+  }
+  while (items.length > 0) {
+    const E = items.shift();
+    Q(Set(O, X(ToString(new Value(len))), E, new Value(true)));
+    len += 1;
+  }
+  Q(Set(O, new Value('length'), new Value(len), new Value(true)));
+  return new Value(len);
+}
+
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, new Value('join')));
@@ -528,8 +560,8 @@ export function CreateArrayPrototype(realmRec) {
     ['keys', ArrayProto_keys, 0],
     ['lastIndexOf', ArrayProto_lastIndexOf, 1],
     ['map', ArrayProto_map, 1],
-    // pop
-    // push
+    ['pop', ArrayProto_pop, 0],
+    ['push', ArrayProto_push, 1],
     // reduce
     // reduceRight
     // reverse

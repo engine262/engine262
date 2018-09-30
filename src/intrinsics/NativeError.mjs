@@ -3,7 +3,6 @@ import {
 } from '../engine.mjs';
 import {
   DefinePropertyOrThrow,
-  ObjectCreate,
   OrdinaryCreateFromConstructor,
   ToString,
 } from '../abstract-ops/all.mjs';

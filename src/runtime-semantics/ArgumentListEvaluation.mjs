@@ -6,6 +6,7 @@ import {
   IteratorStep,
   IteratorValue,
 } from '../abstract-ops/all.mjs';
+import { Type } from '../value.mjs';
 
 // #sec-argument-lists-runtime-semantics-argumentlistevaluation
 //   Arguments : `(` `)`
@@ -39,7 +40,7 @@ export function* ArgumentListEvaluation(ArgumentList) {
     const iteratorRecord = Q(GetIterator(spreadObj));
     while (true) {
       const next = Q(IteratorStep(iteratorRecord));
-      if (next.isFalse()) {
+      if (Type(next) === 'Boolean' && next.isFalse()) {
         break;
       }
       const nextArg = Q(IteratorValue(next));

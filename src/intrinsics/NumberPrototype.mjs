@@ -43,9 +43,14 @@ function NumberProto_toString(args, { thisValue }) {
   return surroundingAgent.Throw('TypeError', 'NumberToString');
 }
 
+function NumberProto_valueOf(args, { thisValue }) {
+  return Q(thisNumberValue(thisValue));
+}
+
 export function CreateNumberPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['toString', NumberProto_toString, 0],
+    ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   proto.NumberData = new Value(0);
