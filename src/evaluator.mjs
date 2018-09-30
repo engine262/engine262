@@ -33,9 +33,9 @@ import {
   isDebuggerStatement,
   isExpressionStatement,
   isExpressionWithComma,
-  isFunctionDeclaration,
   isFunctionExpression,
   isGeneratorExpression,
+  isHoistableDeclaration,
   isIdentifierReference,
   isIfStatement,
   isLexicalBinding,
@@ -78,9 +78,9 @@ import {
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
-  Evaluate_FunctionDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_GeneratorExpression,
+  Evaluate_HoistableDeclaration,
   Evaluate_Identifier,
   Evaluate_IfStatement,
   Evaluate_LexicalBinding,
@@ -159,8 +159,8 @@ function* Evaluate_StatementListItem(StatementListItem) {
     case isVariableStatement(StatementListItem):
       return yield* Evaluate_VariableStatement(StatementListItem);
 
-    case isFunctionDeclaration(StatementListItem):
-      return Evaluate_FunctionDeclaration(StatementListItem);
+    case isHoistableDeclaration(StatementListItem):
+      return Evaluate_HoistableDeclaration(StatementListItem);
 
     case isExpressionStatement(StatementListItem):
       return yield* Evaluate_ExpressionStatement(StatementListItem);
