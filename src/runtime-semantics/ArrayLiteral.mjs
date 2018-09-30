@@ -40,9 +40,7 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
 function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
   const initResult = yield* Evaluate_Expression(AssignmentExpression);
   const initValue = Q(GetValue(initResult));
-  const created = CreateDataProperty(
-    array, ToString(ToUint32(new Value(nextIndex))), initValue,
-  );
+  const created = CreateDataProperty(array, ToString(ToUint32(new Value(nextIndex))), initValue);
   Assert(created.isTrue());
   return nextIndex + 1;
 }
@@ -58,10 +56,12 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
 
       case isExpression(element):
         postIndex = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
+        ReturnIfAbrupt(postIndex);
         break;
 
       case isSpreadElement(element):
         postIndex = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
+        ReturnIfAbrupt(postIndex);
         break;
 
       default:

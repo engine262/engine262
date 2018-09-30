@@ -22,8 +22,8 @@
   "scripts": {
     "test": "node --experimental-modules test/test262.mjs",
     "lint": "eslint transform.js transform_do.js test/test262.mjs src/ --ext=js,mjs --cache",
-    "build": "babel src -d lib --keep-file-extension --plugins=@babel/plugin-syntax-object-rest-spread,./transform.js",
-    "build-do": "babel src -d lib --keep-file-extension --plugins=@babel/plugin-syntax-object-rest-spread,./transform_do.js"
+    "build": "babel src -d lib --keep-file-extension --source-maps --plugins=@babel/plugin-syntax-object-rest-spread,./transform.js",
+    "build-do": "babel src -d lib --keep-file-extension --source-maps --plugins=@babel/plugin-syntax-object-rest-spread,./transform_do.js"
   },
   "repository": {
     "type": "git",
