@@ -31,14 +31,14 @@ export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
     case isFunctionDeclaration(AnyFunctionDeclaration):
       return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope);
 
-    // case isGeneratorDeclaration(AnyFunctionDeclaration):
-    //   return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
+      // case isGeneratorDeclaration(AnyFunctionDeclaration):
+      //   return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
 
-    // case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
-    //   return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
+      // case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
+      //   return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
 
-    // case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
-    //   return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
+      // case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
+      //   return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
     default:
       throw outOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);

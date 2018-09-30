@@ -231,11 +231,11 @@ export function CreateArrayFromList(elements) {
   Assert(elements.every((e) => e instanceof Value));
   const array = X(ArrayCreate(new Value(0)));
   let n = 0;
-  elements.forEach((e) => {
+  for (const e of elements) {
     const status = CreateDataProperty(array, X(ToString(new Value(n))), e);
     Assert(status.isTrue());
     n += 1;
-  });
+  }
   return array;
 }
 

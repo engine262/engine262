@@ -44,7 +44,7 @@ function Object_assign([target, ...sources]) {
     return to;
   }
   // Let sources be the List of argument values starting with the second argument.
-  sources.forEach((nextSource) => {
+  for (const nextSource of sources) {
     let keys;
     let from;
     if (Type(nextSource) === 'Undefined' || Type(nextSource) === 'Null') {
@@ -53,14 +53,14 @@ function Object_assign([target, ...sources]) {
       from = X(ToObject(nextSource));
       keys = Q(from.OwnPropertyKeys());
     }
-    keys.forEach((nextKey) => {
+    for (const nextKey of keys) {
       const desc = Q(from.GetOwnProperty(nextKey));
       if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
         const propValue = Q(Get(from, nextKey));
         Q(Set(to, nextKey, propValue, new Value(true)));
       }
-    });
-  });
+    }
+  }
   return to;
 }
 
@@ -143,13 +143,13 @@ function Object_getOwnPropertyDescriptors([O]) {
   const obj = Q(ToObject(O));
   const ownKeys = Q(obj.OwnPropertyKeys());
   const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
-  ownKeys.forEach((key) => {
+  for (const key of ownKeys) {
     const desc = Q(obj.GetOwnProperty(key));
     const descriptor = X(FromPropertyDescriptor(desc));
     if (Type(descriptor) !== 'Undefined') {
       X(CreateDataProperty(descriptors, key, descriptor));
     }
-  });
+  }
   return descriptors;
 }
 

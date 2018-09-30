@@ -10,7 +10,6 @@ module.exports = {
     },
   ],
   rules: {
-    // TODO: turn back on after we fix out ReturnIfAbrupt transform
     'quote-props': ['error', 'consistent'],
     'strict': ['error', 'global'],
     'prefer-destructuring': 'off',
