@@ -24,6 +24,7 @@ import {
 import {
   NormalCompletion, Q, ReturnIfAbrupt,
   X,
+  EnsureCompletion,
 } from '../completion.mjs';
 import {
   ExpectedArgumentCount_ArrowParameters,
@@ -121,7 +122,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
   Assert(done);
-  const result = value;
+  let result = EnsureCompletion(value);
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
@@ -154,7 +155,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const envRec = constructorEnv.EnvironmentRecord;
   const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
   Assert(done);
-  const result = value;
+  let result = EnsureCompletion(value);
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.

@@ -78,6 +78,7 @@ export class ThrowCompletion {
 
 // #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
+  Assert(completionRecord instanceof Completion);
   if (completionRecord.Type === 'return' || completionRecord.Type === 'throw') {
     Assert(completionRecord.Value !== undefined);
   }

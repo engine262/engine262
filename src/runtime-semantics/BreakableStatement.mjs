@@ -5,6 +5,7 @@ import {
 import {
   Completion,
   NormalCompletion,
+  EnsureCompletion,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
@@ -27,7 +28,7 @@ export function* Evaluate_BreakableStatement(BreakableStatement) {
 function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   switch (true) {
     case isIterationStatement(BreakableStatement): {
-      let stmtResult = yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet);
+      let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet));
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
@@ -41,7 +42,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
     }
 
     case isSwitchStatement(BreakableStatement): {
-      let stmtResult = yield* Evaluate_SwitchStatement(BreakableStatement, labelSet);
+      let stmtResult = EnsureCompletion(yield* Evaluate_SwitchStatement(BreakableStatement, labelSet));
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {

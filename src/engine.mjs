@@ -8,6 +8,7 @@ import {
   AbruptCompletion,
   NormalCompletion,
   ThrowCompletion,
+  EnsureCompletion,
 } from './completion.mjs';
 import {
   CreateRealm,
@@ -191,7 +192,7 @@ export function ScriptEvaluation(scriptRecord) {
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptCtx);
   const scriptBody = scriptRecord.ECMAScriptCode.body;
-  let result = GlobalDeclarationInstantiation(scriptBody, globalEnv);
+  let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
   if (result.Type === 'normal') {
     result = Evaluate_Script(scriptBody, globalEnv);
   }

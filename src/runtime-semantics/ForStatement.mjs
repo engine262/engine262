@@ -23,6 +23,7 @@ import {
   AbruptCompletion,
   BreakCompletion,
   NormalCompletion,
+  EnsureCompletion,
   UpdateEmpty,
 } from '../completion.mjs';
 import {
@@ -89,7 +90,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
         return new NormalCompletion(V);
       }
     }
-    const result = yield* Evaluate_Statement(stmt);
+    const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
     if (!LoopContinues(result, labelSet)) {
       return Completion(UpdateEmpty(result, V));
     }
@@ -244,7 +245,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         return Q(IteratorClose(iteratorRecord, status));
       }
     }
-    const result = yield* Evaluate_Statement(stmt);
+    const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     if (!LoopContinues(result, labelSet)) {
       if (iterationKind === 'enumerate') {
@@ -296,7 +297,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 
       let V = new Value(undefined);
       while (true) {
-        const stmtResult = yield* Evaluate_Statement(Statement);
+        const stmtResult = EnsureCompletion(yield* Evaluate_Statement(Statement));
         if (!LoopContinues(stmtResult, labelSet)) {
           return Completion(UpdateEmpty(stmtResult, V));
         }
@@ -322,7 +323,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         if (ToBoolean(exprValue).isFalse()) {
           return new NormalCompletion(V);
         }
-        const stmtResult = yield* Evaluate_Statement(Statement);
+        const stmtResult = EnsureCompletion(yield* Evaluate_Statement(Statement));
         if (!LoopContinues(stmtResult, labelSet)) {
           return Completion(UpdateEmpty(stmtResult, V));
         }

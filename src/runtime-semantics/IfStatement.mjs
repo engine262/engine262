@@ -10,6 +10,7 @@ import {
   Q,
   Completion,
   NormalCompletion,
+  EnsureCompletion,
   UpdateEmpty,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
@@ -29,16 +30,16 @@ export function* Evaluate_IfStatement({
   if (AlternateStatement !== null) {
     let stmtCompletion;
     if (exprValue.isTrue()) {
-      stmtCompletion = yield* Evaluate_Statement(Statement);
+      stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(Statement));
     } else {
-      stmtCompletion = yield* Evaluate_Statement(AlternateStatement);
+      stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(AlternateStatement));
     }
     return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
   } else {
     if (exprValue.isFalse()) {
       return new NormalCompletion(undefined);
     } else {
-      const stmtCompletion = yield* Evaluate_Statement(Statement);
+      const stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(Statement));
       return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
     }
   }

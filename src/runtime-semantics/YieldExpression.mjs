@@ -17,6 +17,7 @@ import {
   Completion,
   NormalCompletion,
   ReturnCompletion,
+  EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
@@ -73,9 +74,9 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
       }
       // TODO(asynciterator)
       // if (generatorKind === 'async') {
-      //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerResult)));
+      //   received = EnsureCompletion(yield* AsyncGeneratorYield(Q(IteratorValue(innerResult))));
       // } else {
-      received = yield* GeneratorYield(innerResult);
+      received = EnsureCompletion(yield* GeneratorYield(innerResult));
       // }
     } else if (received.Type === 'throw') {
       const thr = Q(GetMethod(iterator, new Value('throw')));
@@ -94,9 +95,9 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
         }
         // TODO(asynciterator)
         // if (generatorKind === 'async') {
-        //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerResult)));
+        //   received = EnsureCompletion(yield* AsyncGeneratorYield(Q(IteratorValue(innerResult))));
         // } else {
-        received = yield* GeneratorYield(innerResult);
+        received = EnsureCompletion(yield* GeneratorYield(innerResult));
         // }
       } else {
         const closeCompletion = new NormalCompletion(undefined);
@@ -133,9 +134,9 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
       }
       // TODO(asynciterator)
       // if (generatorKind === 'async') {
-      //   received = yield* AsyncGeneratorYield(Q(IteratorValue(innerReturnResult)));
+      //   received = EnsureCompletion(yield* AsyncGeneratorYield(Q(IteratorValue(innerReturnResult))));
       // } else {
-      received = yield* GeneratorYield(innerReturnResult);
+      received = EnsureCompletion(yield* GeneratorYield(innerReturnResult));
       // }
     }
   }
