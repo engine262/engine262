@@ -213,7 +213,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
       target.Set = Desc.Set;
     }
     if (Desc.Enumerable !== undefined) {
-      target.Enumerable = Desc.Set;
+      target.Enumerable = Desc.Enumerable;
     }
     if (Desc.Configurable !== undefined) {
       target.Configurable = Desc.Configurable;
