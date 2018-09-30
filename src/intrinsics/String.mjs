@@ -4,13 +4,14 @@ import {
   SetFunctionLength,
   SetFunctionName,
   StringCreate,
+  SymbolDescriptiveString,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
   Value,
   Type,
 } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 
 function StringConstructor(args, { NewTarget }) {
   let s;
@@ -20,12 +21,15 @@ function StringConstructor(args, { NewTarget }) {
   } else {
     // String ( value )
     const [value] = args;
+    if (Type(NewTarget) === 'Undefined' && Type(value) === 'Symbol') {
+      return X(SymbolDescriptiveString(value));
+    }
     s = Q(ToString(value));
   }
   if (Type(NewTarget) === 'Undefined') {
     return s;
   }
-  return StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%')));
+  return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));
 }
 
 export function CreateString(realmRec) {

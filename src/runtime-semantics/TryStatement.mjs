@@ -70,8 +70,8 @@ function* Evaluate_TryStatement_Catch(Block, Catch) {
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Finally
 function* Evaluate_TryStatement_Finally(Block, Finally) {
-  const B = yield* Evaluate_Block(Block);
-  let F = yield* Evaluate_Finally(Finally);
+  const B = EnsureCompletion(yield* Evaluate_Block(Block));
+  let F = EnsureCompletion(yield* Evaluate_Finally(Finally));
   if (F.Type === 'normal') {
     F = B;
   }
@@ -81,14 +81,14 @@ function* Evaluate_TryStatement_Finally(Block, Finally) {
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch Finally
 function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
-  const B = yield* Evaluate_Block(Block);
+  const B = EnsureCompletion(yield* Evaluate_Block(Block));
   let C;
   if (B.Type === 'throw') {
-    C = yield* CatchClauseEvaluation(Catch, B.Value);
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
   } else {
     C = B;
   }
-  let F = yield* Evaluate_Finally(Finally);
+  let F = EnsureCompletion(yield* Evaluate_Finally(Finally));
   if (F.Type === 'normal') {
     F = C;
   }

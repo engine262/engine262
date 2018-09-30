@@ -11,5 +11,6 @@ export * from './promise-operations.mjs';
 export * from './reference-operations.mjs';
 export * from './spec-types.mjs';
 export * from './string-objects.mjs';
+export * from './symbol-objects.mjs';
 export * from './testing-comparison.mjs';
 export * from './type-conversion.mjs';

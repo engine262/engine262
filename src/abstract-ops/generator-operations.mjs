@@ -7,6 +7,7 @@ import {
   Completion,
   AbruptCompletion,
   NormalCompletion,
+  EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
@@ -18,7 +19,7 @@ export function GeneratorStart(generator, generatorBody) {
   const genContext = surroundingAgent.runningExecutionContext;
   genContext.Generator = generator;
   genContext.codeEvaluationState = (function* resumer() {
-    const result = yield* Evaluate_FunctionBody(generatorBody);
+    const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
     Assert(surroundingAgent.runningExecutionContext === genContext);
     surroundingAgent.executionContextStack.pop();
     generator.GeneratorState = 'completed';
@@ -85,7 +86,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   }
   if (state === 'completed') {
     if (abruptCompletion.Type === 'return') {
-      return X(CreateIterResultObject(new Value(undefined), new Value(true)));
+      return X(CreateIterResultObject(abruptCompletion.Value, new Value(true)));
     }
     return Completion(abruptCompletion);
   }

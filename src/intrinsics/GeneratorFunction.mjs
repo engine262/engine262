@@ -1,8 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, wellKnownSymbols, Descriptor } from '../value.mjs';
-import { ObjectCreate } from '../abstract-ops/all.mjs';
+import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
 
 // #sec-createdynamicfunction
 function CreateDynamicFunction() {
@@ -15,31 +15,26 @@ function GeneratorFunctionConstructor(args, { NewTarget }) {
 }
 
 export function CreateGeneratorFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, realmRec.Intrinsics['%GeneratorPrototype%'], []);
-
-  const generator = ObjectCreate(realmRec.Intrinsics['%FunctionPrototype%']);
-
   const generatorPrototype = realmRec.Intrinsics['%GeneratorPrototype%'];
 
-  X(generator.DefineOwnProperty(new Value('constructor'), Descriptor({
-    Value: cons,
+  const generator = BootstrapPrototype(realmRec, [
+    ['prototype', generatorPrototype, undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('GeneratorFunction'), undefined, { Writable: new Value(false) }],
+  ], realmRec.Intrinsics['%FunctionPrototype%']);
+  X(DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
+    Value: generator,
     Writable: new Value(false),
     Enumerable: new Value(false),
     Configurable: new Value(true),
-  })));
+  })))
 
-  X(generator.DefineOwnProperty(new Value('prototype'), Descriptor({
-    Value: generatorPrototype,
+  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
+  X(DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({
     Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Configurable: new Value(false),
   })));
-
-  X(generator.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-    Value: new Value('GeneratorFunction'),
+  X(DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({
     Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
   })));
 
   realmRec.Intrinsics['%GeneratorFunction%'] = cons;

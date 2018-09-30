@@ -237,16 +237,6 @@ export function HostEnsureCanCompileStrings() {
 
 export function HostPromiseRejectionTracker() {}
 
-// 19.4.3.2.1 #sec-symboldescriptivestring
-export function SymbolDescriptiveString(sym) {
-  Assert(Type(sym) === 'Symbol');
-  let desc = sym.Description;
-  if (Type(desc) === 'Undefined') {
-    desc = new Value('');
-  }
-  return new Value(`Symbol(${desc.stringValue()})`);
-}
-
 // 22.1.3.1 #sec-isconcatspreadable
 export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {

@@ -4,10 +4,12 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  SymbolDescriptiveString,
   surroundingAgent,
 } from '../engine.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
+import {
+  Assert,
+  SymbolDescriptiveString,
+} from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 

@@ -13,10 +13,11 @@ import {
 export function BootstrapPrototype(realmRec, props, Prototype) {
   const proto = ObjectCreate(Prototype);
 
-  for (const [n, v, len] of props) {
+  for (const [n, v, len, descriptor] of props) {
     let value;
     const name = n instanceof Value ? n : new Value(n);
     if (typeof v === 'function') {
+      Assert(typeof len === 'number');
       value = CreateBuiltinFunction(v, [], realmRec);
       SetFunctionName(value, name);
       SetFunctionLength(value, new Value(len));
@@ -27,7 +28,8 @@ export function BootstrapPrototype(realmRec, props, Prototype) {
       Value: value,
       Writable: new Value(true),
       Enumerable: new Value(false),
-      Configurable: new Value(!(value instanceof SymbolValue)),
+      Configurable: new Value(true),
+      ...descriptor,
     }));
   }
 
