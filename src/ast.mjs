@@ -89,7 +89,7 @@ export function isPropertyDefinitionKeyValue(node) {
 // MethodDefinition in a PropertyDefinition is largely compatible with the
 // latter.
 export function isPropertyDefinitionMethodDefinition(node) {
-  return node.type === 'Property' && !node.shorthand && node.method;
+  return node.type === 'Property' && !node.shorthand && (node.method || node.kind === 'get' || node.kind === 'set');
 }
 
 // Used in #prod-PropertyDefinition

@@ -724,13 +724,13 @@ export class StringExoticObjectValue extends ObjectValue {
     const str = O.StringData.stringValue();
     const len = str.length;
     for (let i = 0; i < len; i += 1) {
-      keys.push(X(ToString(new Value(i))));
+      keys.push(new Value(`${i}`));
     }
     for (const key of O.properties.keys()) {
       if (Type(key) === 'String') {
         const int = Number.parseInt(key.stringValue(), 10);
         if (int > 0 && int < (2 ** 53) - 1) {
-          // nothing
+          // keys.push(key);
         } else {
           keys.push(key);
         }
@@ -738,6 +738,7 @@ export class StringExoticObjectValue extends ObjectValue {
         keys.push(key);
       }
     }
+    return keys;
   }
 }
 

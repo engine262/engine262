@@ -2,6 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   ArrayExoticObjectValue,
   Value,
+  Descriptor,
   Type,
 } from '../value.mjs';
 import {
@@ -35,12 +36,12 @@ export function ArrayCreate(length, proto) {
   A.Prototype = proto;
   A.Extensible = true;
 
-  X(OrdinaryDefineOwnProperty(A, new Value('length'), {
+  X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
     Value: length,
-    Writable: true,
-    Enumerable: false,
-    Configurable: false,
-  }));
+    Writable: new Value(true),
+    Enumerable: new Value(false),
+    Configurable: new Value(false),
+  })));
 
   return A;
 }
@@ -63,7 +64,7 @@ export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
   }
-  const newLenDesc = { ...Desc };
+  const newLenDesc = Descriptor({ ...Desc });
   const newLen = Q(ToUint32(Desc.Value)).numberValue();
   const numberLen = Q(ToNumber(Desc.Value)).numberValue();
   if (newLen !== numberLen) {
@@ -84,7 +85,7 @@ export function ArraySetLength(A, Desc) {
     newWritable = true;
   } else {
     newWritable = false;
-    newLenDesc.Writable = true;
+    newLenDesc.Writable = new Value(true);
   }
   const succeeded = X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
   if (succeeded.isFalse()) {

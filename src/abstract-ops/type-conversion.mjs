@@ -14,6 +14,7 @@ import {
   IsCallable,
   ObjectCreate,
   SameValue,
+  StringCreate,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
@@ -245,11 +246,8 @@ export function ToObject(argument) {
       obj.NumberData = argument;
       return obj;
     }
-    case 'String': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%StringPrototype%'));
-      obj.StringData = argument;
-      return obj;
-    }
+    case 'String':
+      return StringCreate(argument, surroundingAgent.intrinsic('%StringPrototype%'));
     case 'Symbol': {
       const obj = ObjectCreate(surroundingAgent.intrinsic('%SymbolPrototype%'));
       obj.SymbolData = argument;

@@ -13,6 +13,7 @@ export * from './ClassExpression.mjs';
 export * from './ConditionalExpression.mjs';
 export * from './ContinueStatement.mjs';
 export * from './DebuggerStatement.mjs';
+export * from './DefineMethod.mjs';
 export * from './DestructuringAssignmentEvaluation.mjs';
 export * from './EqualityExpression.mjs';
 export * from './EvaluateBody.mjs';

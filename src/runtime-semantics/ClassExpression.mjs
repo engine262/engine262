@@ -16,8 +16,8 @@ import {
   DefinePropertyOrThrow,
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { Evaluate_PropertyName } from './all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Evaluate_PropertyName, DefineMethod } from './all.mjs';
+import { Value, Type, Descriptor } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { IsStatic } from '../static-semantics/all.mjs';
 import {
@@ -29,34 +29,6 @@ import {
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
-// #sec-runtime-semantics-definemethod
-// MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-function* DefineMethod(MethodDefinition, object, functionPrototype) {
-  const PropertyName = MethodDefinition.key;
-  const UniqueFormalParameters = MethodDefinition.value.params;
-
-  const propKey = yield* Evaluate_PropertyName(PropertyName);
-  ReturnIfAbrupt(propKey);
-  // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-  const strict = true;
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  let kind;
-  let prototype;
-  if (functionPrototype !== undefined) {
-    kind = 'Normal';
-    prototype = functionPrototype;
-  } else {
-    kind = 'Method';
-    prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
-  }
-  const closure = FunctionCreate(kind, UniqueFormalParameters, MethodDefinition.value, scope, strict, prototype);
-  MakeMethod(closure, object);
-  return {
-    Key: propKey,
-    Closure: closure,
-  };
-}
-
 // #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
 // MethodDefinition :
 //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
@@ -67,12 +39,12 @@ function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const methodDef = yield* DefineMethod(MethodDefinition, object);
     ReturnIfAbrupt(methodDef);
     SetFunctionName(methodDef.Closure, methodDef.Key);
-    const desc = {
+    const desc = Descriptor({
       Value: methodDef.Closure,
-      Writable: true,
-      Enumerable: enumerable,
-      Configurable: true,
-    };
+      Writable: new Value(true),
+      Enumerable: new Value(enumerable),
+      Configurable: new Value(true),
+    });
     return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
   } else if (MethodDefinition.kind === 'get') {
     const PropertyName = MethodDefinition.key;
@@ -86,9 +58,9 @@ function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
     SetFunctionName(closure, propKey, new Value('get'));
     const desc = {
-      Get: closure,
-      Enumerable: enumerable,
-      Configurable: true,
+      Get: new Value(closure),
+      Enumerable: new Value(enumerable),
+      Configurable: new Value(true),
     };
     return Q(DefinePropertyOrThrow(object, propKey, desc));
   } else if (MethodDefinition.kind === 'set') {
@@ -103,11 +75,11 @@ function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
     const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
     MakeMethod(closure, object);
     SetFunctionName(closure, propKey, new Value('set'));
-    const desc = {
-      Set: closure,
-      Enumerable: enumerable,
-      Configurable: true,
-    };
+    const desc = Descriptor({
+      Set: new Value(closure),
+      Enumerable: new Value(enumerable),
+      Configurable: new Value(true),
+    });
     return Q(DefinePropertyOrThrow(object, propKey, desc));
   } else {
     throw outOfRange('PropertyDefinitionEvaluation', MethodDefinition.kind);

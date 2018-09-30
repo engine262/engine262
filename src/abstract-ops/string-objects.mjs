@@ -2,6 +2,7 @@ import {
   Value,
   StringExoticObjectValue,
   Type,
+  Descriptor,
 } from '../value.mjs';
 import {
   Assert,
@@ -20,12 +21,12 @@ export function StringCreate(value, prototype) {
   S.Prototype = prototype;
   S.Extensible = true;
   const length = new Value(value.stringValue().length);
-  X(DefinePropertyOrThrow(S, new Value('length'), {
+  X(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
     Value: length,
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  }));
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(false),
+  })));
   return S;
 }
 
@@ -39,7 +40,7 @@ export function StringGetOwnProperty(S, P) {
   if (Type(index) === 'Undefined') {
     return new Value(undefined);
   }
-  if (IsInteger(index).isFalse()) {
+  if (IsInteger(index) === false) {
     return new Value(undefined);
   }
   if (Object.is(index.numberValue(), -0)) {
@@ -51,10 +52,10 @@ export function StringGetOwnProperty(S, P) {
     return new Value(undefined);
   }
   const resultStr = str.stringValue()[index.numberValue()];
-  return {
+  return Descriptor({
     Value: new Value(resultStr),
-    Writable: false,
-    Enumerable: false,
-    Configurable: false,
-  };
+    Writable: new Value(false),
+    Enumerable: new Value(true),
+    Configurable: new Value(false),
+  });
 }

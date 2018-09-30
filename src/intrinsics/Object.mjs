@@ -45,19 +45,15 @@ function Object_assign([target, ...sources]) {
   }
   // Let sources be the List of argument values starting with the second argument.
   for (const nextSource of sources) {
-    let keys;
-    let from;
-    if (Type(nextSource) === 'Undefined' || Type(nextSource) === 'Null') {
-      keys = [];
-    } else {
-      from = X(ToObject(nextSource));
-      keys = Q(from.OwnPropertyKeys());
-    }
-    for (const nextKey of keys) {
-      const desc = Q(from.GetOwnProperty(nextKey));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
-        const propValue = Q(Get(from, nextKey));
-        Q(Set(to, nextKey, propValue, new Value(true)));
+    if (Type(nextSource) !== 'Undefined' && Type(nextSource) !== 'Null') {
+      const from = X(ToObject(nextSource));
+      const keys = Q(from.OwnPropertyKeys());
+      for (const nextKey of keys) {
+        const desc = Q(from.GetOwnProperty(nextKey));
+        if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
+          const propValue = Q(Get(from, nextKey));
+          Q(Set(to, nextKey, propValue, new Value(true)));
+        }
       }
     }
   }

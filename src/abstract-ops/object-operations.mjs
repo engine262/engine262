@@ -255,7 +255,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
   Assert(Type(O) === 'Object');
   const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
-  ownKeys.forEach((key) => {
+  for (const key of ownKeys) {
     if (Type(key) === 'String') {
       const desc = Q(O.GetOwnProperty(key));
       if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
@@ -273,7 +273,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
         }
       }
     }
-  });
+  }
   // Order the elements of properties so they are in the same relative
   // order as would be produced by the Iterator that would be returned
   // if the EnumerateObjectProperties internal method were invoked with O.

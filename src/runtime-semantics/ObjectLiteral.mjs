@@ -7,6 +7,7 @@ import {
   isPropertyDefinitionIdentifierReference,
   isPropertyDefinitionKeyValue,
   isPropertyDefinitionSpread,
+  isPropertyDefinitionMethodDefinition,
   isStringLiteral,
 } from '../ast.mjs';
 import {
@@ -19,14 +20,15 @@ import {
   SetFunctionName,
   ToPropertyKey,
   ToString,
+  DefinePropertyOrThrow,
+  MakeMethod,
+  FunctionCreate,
 } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
+import { Value, Descriptor } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
+import { DefineMethod } from './all.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import {
-  Q, ReturnIfAbrupt,
-  X,
-} from '../completion.mjs';
+import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-object-initializer-runtime-semantics-evaluation
@@ -135,22 +137,75 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   return CreateDataPropertyOrThrow(object, propKey, propValue);
 }
 
+function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+  switch (MethodDefinition.kind) {
+    case 'init': {
+      const methodDef = yield* DefineMethod(MethodDefinition, object);
+      ReturnIfAbrupt(methodDef);
+      SetFunctionName(methodDef.Closure, methodDef.Key);
+      const desc = Descriptor({
+        Value: methodDef.Closure,
+        Writable: new Value(true),
+        Enumerable: new Value(enumerable),
+        Configurable: new Value(true),
+      });
+      return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
+    }
+    case 'get': {
+      const PropertyName = MethodDefinition.key;
+
+      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      ReturnIfAbrupt(propKey);
+      // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
+      const strict = true;
+      const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+      const formalParameterList = [];
+      const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
+      SetFunctionName(closure, propKey, new Value('get'));
+      const desc = Descriptor({
+        Get: closure,
+        Enumerable: new Value(enumerable),
+        Configurable: new Value(true),
+      });
+      return Q(DefinePropertyOrThrow(object, propKey, desc));
+    }
+    case 'set': {
+      const PropertyName = MethodDefinition.key;
+      const PropertySetParameterList = MethodDefinition.value.params;
+
+      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      ReturnIfAbrupt(propKey);
+      // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
+      const strict = true;
+      const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+      const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
+      MakeMethod(closure, object);
+      SetFunctionName(closure, propKey, new Value('set'));
+      const desc = Descriptor({
+        Set: closure,
+        Enumerable: new Value(enumerable),
+        Configurable: new Value(true),
+      });
+      return Q(DefinePropertyOrThrow(object, propKey, desc));
+    }
+    default:
+      throw outOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition.kind);
+  }
+}
+
 // Note: PropertyDefinition : CoverInitializedName is an early error.
 function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
   switch (true) {
+    case isPropertyDefinitionMethodDefinition(PropertyDefinition):
+      return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
+
     case isPropertyDefinitionIdentifierReference(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
         PropertyDefinition, object, enumerable,
       );
 
     case isPropertyDefinitionKeyValue(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
-        PropertyDefinition, object, enumerable,
-      );
-
-      // case isPropertyDefinitionMethodDefinition(PropertyDefinition):
-      //   return PropertyDefinitionEvaluation_MethodDefinition(
-      //     PropertyDefinition., object, enumerable);
+      return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable);
 
     case isPropertyDefinitionSpread(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(
