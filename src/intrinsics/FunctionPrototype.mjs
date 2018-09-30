@@ -140,6 +140,7 @@ function FunctionProto_hasInstance([V], { thisValue }) {
 export function CreateFunctionPrototype(realmRec) {
   Assert(realmRec.Intrinsics['%FunctionPrototype%']);
   const proto = realmRec.Intrinsics['%FunctionPrototype%'];
+  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
 
   [
     ['apply', FunctionProto_apply, 2],
