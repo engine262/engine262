@@ -46,7 +46,7 @@ function SetProto_add([value], { thisValue }) {
   }
   const entries = S.SetData;
   for (const e of entries) {
-    if (e !== undefined && SameValueZero(e, value).isTrue()) {
+    if (e !== undefined && SameValueZero(e, value)) {
       return S;
     }
   }
@@ -83,7 +83,7 @@ function SetProto_delete([value], { thisValue }) {
   const entries = S.SetData;
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
-    if (e !== undefined && SameValueZero(e, value).isTrue()) {
+    if (e !== undefined && SameValueZero(e, value)) {
       entries[i] = undefined;
       return new Value(true);
     }
@@ -132,7 +132,7 @@ function SetProto_has([value], { thisValue }) {
   }
   const entries = S.SetData;
   for (const e of entries) {
-    if (e !== undefined && SameValueZero(e, value).isTrue()) {
+    if (e !== undefined && SameValueZero(e, value)) {
       return new Value(true);
     }
   }

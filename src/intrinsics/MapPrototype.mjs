@@ -61,7 +61,7 @@ function MapProto_delete([key], { thisValue }) {
   const entries = M.MapData;
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
-    if (p.Key !== undefined && SameValueZero(p.Key, key).isTrue()) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       p.Key = undefined;
       p.Value = undefined;
 
@@ -117,7 +117,7 @@ function MapProto_get([key], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key).isTrue()) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       return p.Value;
     }
   }
@@ -134,7 +134,7 @@ function MapProto_has([key], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key).isTrue()) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       return new Value(true);
     }
   }
@@ -156,7 +156,7 @@ function MapProto_set([key, value], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key).isTrue()) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
       p.Value = value;
       return M;
     }

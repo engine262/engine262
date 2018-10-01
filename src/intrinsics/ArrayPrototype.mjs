@@ -343,7 +343,7 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   while (k < len) {
     const kStr = X(ToString(new Value(k)));
     const elementK = Q(Get(O, kStr));
-    if (SameValueZero(searchElement, elementK).isTrue()) {
+    if (SameValueZero(searchElement, elementK)) {
       return new Value(true);
     }
     k += 1;

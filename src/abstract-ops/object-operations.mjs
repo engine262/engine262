@@ -335,7 +335,7 @@ export function CopyDataProperties(target, source, excludedItems) {
   for (const nextKey of keys) {
     let excluded = false;
     for (const e of excludedItems) {
-      if (SameValue(e, nextKey).isTrue()) {
+      if (SameValue(e, nextKey)) {
         excluded = true;
       }
     }
