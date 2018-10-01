@@ -224,7 +224,7 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
   }
 }
 
-function FunctionAllocate(functionPrototype, strict, functionKind) {
+export function FunctionAllocate(functionPrototype, strict, functionKind) {
   Assert(Type(functionPrototype) === 'Object');
   Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
     .includes(functionKind));
@@ -246,7 +246,7 @@ function FunctionAllocate(functionPrototype, strict, functionKind) {
   return F;
 }
 
-function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
+export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
   let len;
   switch (kind) {
     case 'Normal':

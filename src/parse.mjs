@@ -15,6 +15,92 @@ function deepFreeze(obj) {
   }
 }
 
+// Copied from acorn/src/scopeflags.js.
+const SCOPE_FUNCTION = 2;
+const SCOPE_ASYNC = 4;
+const SCOPE_GENERATOR = 8;
+
+function functionFlags(async, generator) {
+  // eslint-disable-next-line no-bitwise
+  return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
+}
+
+// Adapted from several different places in Acorn.
+function parseFuncBody(sourceText, async, generator) {
+  const parser = new acorn.Parser({
+    sourceType: 'script',
+    ecmaVersion: 2019,
+  }, sourceText);
+
+  // Parser.prototype.parse()
+  const node = parser.startNode();
+  parser.nextToken();
+
+  // Parser.prototype.parseFunction()
+  parser.initFunction(node);
+  parser.enterScope(functionFlags(async, generator));
+
+  // Parser.prototype.parseBlock()
+  const body = [];
+  while (!parser.eat(acorn.tokTypes.eof)) {
+    const stmt = parser.parseStatement(null);
+    body.push(stmt);
+  }
+
+  // Parser.prototype.parseFunctionBody()
+  parser.adaptDirectivePrologue(body);
+  return body;
+}
+
+export function ParseAsFunctionBody(sourceText) {
+  return parseFuncBody(sourceText, false, false);
+}
+
+export function ParseAsGeneratorBody(sourceText) {
+  return parseFuncBody(sourceText, false, true);
+}
+
+export function ParseAsAsyncFunctionBody(sourceText) {
+  return parseFuncBody(sourceText, true, false);
+}
+
+export function ParseAsAsyncGeneratorBody(sourceText) {
+  return parseFuncBody(sourceText, true, true);
+}
+
+// Adapted from several different places in Acorn.
+// `strict` refers to ContainsUseStrict of the corresponding function body.
+export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableYield) {
+  // Adapted from different places in Acorn.
+  const parser = new acorn.Parser({
+    sourceType: 'script',
+    ecmaVersion: 2019,
+  }, sourceText);
+
+  parser.strict = strict;
+
+  // Parser.prototype.parse()
+  const node = parser.startNode();
+  parser.nextToken();
+
+  // Parser.prototype.parseFunction()
+  parser.initFunction(node);
+  parser.enterScope(functionFlags(enableAwait, enableYield));
+
+  // Parser.prototype.parseFunctionParams()
+  const params = parser.parseBindingList(acorn.tokTypes.eof, false, true);
+  parser.checkYieldAwaitInDefaultParams();
+
+  // Parser.prototype.parseFunctionBody()
+  const simple = parser.isSimpleParamList(params);
+  if (strict && !simple) {
+    parser.raiseRecoverable(node.start, 'Illegal \'use strict\' directive in function with non-simple parameter list');
+  }
+  parser.checkParams({ params }, !strict && simple);
+
+  return params;
+}
+
 export function ParseScript(sourceText, realm, hostDefined) {
   let body;
   try {

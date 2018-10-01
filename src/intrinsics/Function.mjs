@@ -1,11 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-
-// #sec-createdynamicfunction
-function CreateDynamicFunction() {
-  return surroundingAgent.Throw('TypeError', 'CreateDynamicFunction');
-}
+import { CreateDynamicFunction } from './CreateDynamicFunction.mjs';
 
 function FunctionConstructor(args, { NewTarget }) {
   const C = surroundingAgent.activeFunctionObject;

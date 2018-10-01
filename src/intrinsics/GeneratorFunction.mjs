@@ -3,11 +3,7 @@ import { Value, wellKnownSymbols, Descriptor } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
-
-// #sec-createdynamicfunction
-function CreateDynamicFunction() {
-  return surroundingAgent.Throw('TypeError', 'CreateDynamicFunction');
-}
+import { CreateDynamicFunction } from './CreateDynamicFunction.mjs';
 
 function GeneratorFunctionConstructor(args, { NewTarget }) {
   const C = surroundingAgent.activeFunctionObject;
