@@ -3,7 +3,12 @@ import { Evaluate_Statement, Evaluate_Expression } from '../evaluator.mjs';
 import { NewObjectEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
 import { ToObject, GetValue } from '../abstract-ops/all.mjs';
-import { Q, Completion, EnsureCompletion, UpdateEmpty } from '../completion.mjs';
+import {
+  Q,
+  Completion,
+  EnsureCompletion,
+  UpdateEmpty,
+} from '../completion.mjs';
 
 // #sec-with-statement-runtime-semantics-evaluation
 // WithStatement : `with` `(` Expression `)` Statement

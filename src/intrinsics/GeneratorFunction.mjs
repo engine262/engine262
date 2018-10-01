@@ -26,7 +26,7 @@ export function CreateGeneratorFunction(realmRec) {
     Writable: new Value(false),
     Enumerable: new Value(false),
     Configurable: new Value(true),
-  })))
+  })));
 
   const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
   X(DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({

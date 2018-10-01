@@ -31,6 +31,7 @@ import {
   isClassExpression,
   isContinueStatement,
   isDebuggerStatement,
+  isEmptyStatement,
   isExpressionStatement,
   isExpressionWithComma,
   isFunctionExpression,
@@ -75,6 +76,7 @@ import {
   Evaluate_ConditionalExpression,
   Evaluate_ContinueStatement,
   Evaluate_DebuggerStatement,
+  Evaluate_EmptyStatement,
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
@@ -164,6 +166,9 @@ function* Evaluate_StatementListItem(StatementListItem) {
 
     case isExpressionStatement(StatementListItem):
       return yield* Evaluate_ExpressionStatement(StatementListItem);
+
+    case isEmptyStatement(StatementListItem):
+      return Evaluate_EmptyStatement(StatementListItem);
 
     case isIfStatement(StatementListItem):
       return yield* Evaluate_IfStatement(StatementListItem);

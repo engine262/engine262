@@ -15,6 +15,7 @@ export * from './ContinueStatement.mjs';
 export * from './DebuggerStatement.mjs';
 export * from './DefineMethod.mjs';
 export * from './DestructuringAssignmentEvaluation.mjs';
+export * from './EmptyStatement.mjs';
 export * from './EqualityExpression.mjs';
 export * from './EvaluateBody.mjs';
 export * from './ExponentiationExpression.mjs';

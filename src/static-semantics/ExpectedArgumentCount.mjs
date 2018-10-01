@@ -39,6 +39,9 @@ export function ExpectedArgumentCount_FormalParameters(FormalParameters) {
     return count;
   }
   Assert(isBindingElement(last));
+  if (HasInitializer_BindingElement(last)) {
+    return count;
+  }
   return count + 1;
 }
 

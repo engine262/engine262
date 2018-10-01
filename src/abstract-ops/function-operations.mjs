@@ -122,7 +122,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
   Assert(done);
-  let result = EnsureCompletion(value);
+  const result = EnsureCompletion(value);
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
@@ -155,7 +155,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const envRec = constructorEnv.EnvironmentRecord;
   const { value, done } = OrdinaryCallEvaluateBody(F, argumentsList).next();
   Assert(done);
-  let result = EnsureCompletion(value);
+  const result = EnsureCompletion(value);
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
