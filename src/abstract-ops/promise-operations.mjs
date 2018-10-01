@@ -34,7 +34,7 @@ export function PromiseResolve(C, x) {
       return x;
     }
   }
-  const promiseCapability = NewPromiseCapability(C);
+  const promiseCapability = Q(NewPromiseCapability(C));
   Q(Call(promiseCapability.Resolve, new Value(undefined), [x]));
   return promiseCapability.Promise;
 }
@@ -43,11 +43,11 @@ function GetCapabilitiesExecutorFunctions([resolve, reject]) {
   const F = this;
 
   const promiseCapability = F.Capability;
-  if (promiseCapability.Resolve !== undefined) {
-    return surroundingAgent.Throw('TypeError');
+  if (Type(promiseCapability.Resolve) !== 'Undefined') {
+    return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
   }
-  if (promiseCapability.Reject !== undefined) {
-    return surroundingAgent.Throw('TypeError');
+  if (Type(promiseCapability.Reject) !== 'Undefined') {
+    return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
   }
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;
@@ -64,7 +64,7 @@ export class PromiseCapabilityRecord {
 
 export function NewPromiseCapability(C) {
   if (IsConstructor(C).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
@@ -73,10 +73,10 @@ export function NewPromiseCapability(C) {
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise resolve function is not callable');
   }
   if (IsCallable(promiseCapability.Reject).isFalse()) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise reject function is not callable');
   }
   promiseCapability.Promise = promise;
   return promiseCapability;
@@ -151,6 +151,7 @@ function RejectPromise(promise, reason) {
 
 function PromiseResolveFunctions([resolution]) {
   const F = this;
+
   Assert('Promise' in F && Type(F.Promise) === 'Object');
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
@@ -159,7 +160,7 @@ function PromiseResolveFunctions([resolution]) {
   }
   alreadyResolved.Value = true;
   if (SameValue(resolution, promise) === true) {
-    const selfResolutionError = Construct(surroundingAgent.intrinsic('%TypeError%'), []);
+    const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
     return RejectPromise(promise, selfResolutionError);
   }
   if (Type(resolution) !== 'Object') {
@@ -180,6 +181,7 @@ function PromiseResolveFunctions([resolution]) {
 
 function PromiseRejectFunctions([reason]) {
   const F = this;
+
   Assert('Promise' in F && Type(F.Promise) === 'Object');
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
