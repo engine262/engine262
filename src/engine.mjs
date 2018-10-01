@@ -189,6 +189,7 @@ export function ScriptEvaluation(scriptRecord) {
   scriptCtx.ScriptOrModule = scriptRecord;
   scriptCtx.VariableEnvironment = globalEnv;
   scriptCtx.LexicalEnvironment = globalEnv;
+  scriptCtx.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptCtx);
   const scriptBody = scriptRecord.ECMAScriptCode.body;

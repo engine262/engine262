@@ -101,7 +101,7 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
   return params;
 }
 
-export function ParseScript(sourceText, realm, hostDefined) {
+export function ParseScript(sourceText, realm, hostDefined = {}) {
   let body;
   try {
     body = acorn.parse(sourceText, {
@@ -116,6 +116,8 @@ export function ParseScript(sourceText, realm, hostDefined) {
   if (Array.isArray(body)) {
     return body;
   }
+
+  hostDefined.sourceText = sourceText;
 
   return {
     Realm: realm,

@@ -124,10 +124,19 @@ function FunctionProto_call([thisArg, ...args], { thisValue: func }) {
 
 function FunctionProto_toString(args, { thisValue: func }) {
   if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
+    const name = func.properties.get(new Value('name'));
+    if (name !== undefined) {
+      return new Value(`function ${name.Value.stringValue()} { [native code] }`);
+    }
     return new Value('function() { [native code] }');
   }
   if ('ECMAScriptCode' in func) {
-    return new Value('function() { /* WIP */ }');
+    const scriptCtx = [...surroundingAgent.executionContextStack]
+      .reverse()
+      .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
+    Assert(scriptCtx !== undefined);
+    const { sourceText } = scriptCtx.HostDefined;
+    return new Value(sourceText.slice(func.ECMAScriptCode.start, func.ECMAScriptCode.end));
   }
   return surroundingAgent.Throw('TypeError');
 }
