@@ -47,7 +47,7 @@ export function BlockDeclarationInstantiation(code, env) {
           || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
         const fn = BoundNames_Declaration(d)[0];
         const fo = InstantiateFunctionObject(d, env);
-        envRec.InitializeBinding(fn, fo);
+        envRec.InitializeBinding(new Value(fn), fo);
       }
     }
   }

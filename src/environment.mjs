@@ -17,6 +17,7 @@ import {
   HasProperty,
   IsDataDescriptor,
   IsExtensible,
+  IsPropertyKey,
   Set,
   ToBoolean,
 } from './abstract-ops/all.mjs';
@@ -39,6 +40,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   HasBinding(N) {
+    Assert(IsPropertyKey(N));
     if (this.bindings.has(N)) {
       return new Value(true);
     }
@@ -46,6 +48,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateMutableBinding(N, D) {
+    Assert(IsPropertyKey(N));
     this.bindings.set(N, {
       initialized: false,
       mutable: true,
@@ -56,6 +59,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateImmutableBinding(N, S) {
+    Assert(IsPropertyKey(N));
     this.bindings.set(N, {
       initialized: false,
       mutable: false,
@@ -66,6 +70,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   InitializeBinding(N, V) {
+    Assert(IsPropertyKey(N));
     const binding = this.bindings.get(N);
     Assert(binding !== undefined);
     binding.value = V;
@@ -73,6 +78,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   SetMutableBinding(N, V, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     if (!this.bindings.has(N)) {
       if (S.isTrue()) {
@@ -100,6 +106,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   GetBindingValue(N) {
+    Assert(IsPropertyKey(N));
     const binding = this.bindings.get(N);
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError', `${N.stringValue()} is not defined`);
@@ -108,6 +115,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   DeleteBinding(N) {
+    Assert(IsPropertyKey(N));
     const binding = this.bindings.get(N);
     if (binding.deletable === false) {
       return new Value(false);
@@ -141,6 +149,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.1 #sec-object-environment-records-hasbinding-n
   HasBinding(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const bindings = envRec.bindingObject;
 
@@ -166,6 +175,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.2 #sec-object-environment-records-createmutablebinding-n-d
   CreateMutableBinding(N, D) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const bindings = envRec.bindingObject;
     return Q(DefinePropertyOrThrow(bindings, N, Descriptor({
@@ -183,6 +193,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.4 #sec-object-environment-records-initializebinding-n-v
   InitializeBinding(N, V) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     // Record that the binding for N in envRec has been initialized.
     // According to the spec this is an unnecessary step for object Environment Records.
@@ -191,6 +202,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.5 #sec-object-environment-records-setmutablebinding-n-v-s
   SetMutableBinding(N, V, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const bindings = envRec.bindingObject;
     return Q(Set(bindings, N, V, S));
@@ -198,6 +210,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.6 #sec-object-environment-records-getbindingvalue-n-s
   GetBindingValue(N, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const bindings = envRec.bindingObject;
     const value = Q(HasProperty(bindings, N));
@@ -213,6 +226,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // 8.1.1.2.7 #sec-object-environment-records-deletebinding-n
   DeleteBinding(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const bindings = envRec.bindingObject;
     return Q(bindings.Delete(N));
@@ -309,6 +323,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   HasBinding(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -319,6 +334,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateMutableBinding(N, D) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -328,6 +344,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateImmutableBinding(N, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -337,6 +354,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   InitializeBinding(N, V) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -347,6 +365,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   SetMutableBinding(N, V, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -357,6 +376,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   GetBindingValue(N, S) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -367,6 +387,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   DeleteBinding(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = this.DeclarativeRecord;
     if (DclRec.HasBinding(N).isTrue()) {
@@ -406,6 +427,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   HasVarDeclaration(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const varDeclaredNames = envRec.VarNames;
     if (varDeclaredNames.has(N)) {
@@ -415,12 +437,14 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   HasLexicalDeclaration(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     return DclRec.HasBinding(N);
   }
 
   HasRestrictedGlobalProperty(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
@@ -435,6 +459,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CanDeclareGlobalVar(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
@@ -446,6 +471,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CanDeclareGlobalFunction(N) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
@@ -465,6 +491,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateGlobalVarBinding(N, D) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
@@ -482,6 +509,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   CreateGlobalFunctionBinding(N, V, D) {
+    Assert(IsPropertyKey(N));
     const envRec = this;
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
