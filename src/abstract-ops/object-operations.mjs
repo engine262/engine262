@@ -37,7 +37,7 @@ export function Get(O, P) {
 // #sec-getv GetV
 export function GetV(V, P) {
   Assert(IsPropertyKey(P));
-  const O = ToObject(V);
+  const O = Q(ToObject(V));
   return Q(O.Get(P, V));
 }
 
