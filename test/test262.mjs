@@ -106,12 +106,26 @@ function createRealm() {
 async function run({ source, meta }) {
   const $262 = createRealm();
 
-  $262.evalScript('harness/assert.js', true);
-  $262.evalScript('harness/sta.js', true);
+  X($262.evalScript('harness/assert.js', true));
+  X($262.evalScript('harness/sta.js', true));
 
   if (meta.includes !== undefined) {
     meta.includes.forEach((n) => {
-      $262.evalScript(`harness/${n}`, true);
+      X($262.evalScript(`harness/${n}`, true));
+    });
+  }
+
+  let asyncPromise;
+  if (meta.flags.includes('async')) {
+    X($262.evalScript('harness/doneprintHandle.js', true));
+    asyncPromise = new Promise((resolve) => {
+      $262.handlePrint = (m) => {
+        if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
+          resolve({ status: PASS });
+        } else {
+          resolve({ status: FAIL, error: m });
+        }
+      };
     });
   }
 
@@ -124,16 +138,8 @@ async function run({ source, meta }) {
     }
   }
 
-  if (meta.flags.includes('async')) {
-    return new Promise((resolve) => {
-      $262.handlePrint = (m) => {
-        if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
-          resolve({ status: PASS });
-        } else {
-          resolve({ status: FAIL });
-        }
-      };
-    });
+  if (asyncPromise !== undefined) {
+    return asyncPromise;
   }
 
   return { status: PASS };
@@ -152,6 +158,10 @@ process.on('exit', () => {
     failed,
     skipped,
   });
+
+  if (passed + failed + skipped < files.length || failed > 0) {
+    process.exitCode = 1;
+  }
 });
 
 files.reduce((promise, filename) => promise.then(async () => {
@@ -169,32 +179,26 @@ files.reduce((promise, filename) => promise.then(async () => {
     meta.flags = [];
   }
 
-  try {
-    const { status, error } = await run({ source, meta });
+  const { status, error } = await run({ source, meta });
 
-    switch (status) {
-      case SKIP:
-        skipped += 1;
-        console.log('\u001b[33mSKIP\u001b[39m', short);
-        break;
-      case PASS:
-        passed += 1;
-        console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
-        break;
-      case FAIL:
-        process.exitCode = 1;
-        failed += 1;
-        console.error('\u001b[31mFAIL\u001b[39m', short);
-        if (error) {
-          console.error(error);
-        }
-        break;
-      default:
-        throw new RangeError('whoops');
-    }
-  } catch (e) {
-    console.log('\u001b[31mFATAL\u001b[39m', short);
-    throw e;
+  switch (status) {
+    case SKIP:
+      skipped += 1;
+      console.log('\u001b[33mSKIP\u001b[39m', short);
+      break;
+    case PASS:
+      passed += 1;
+      console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
+      break;
+    case FAIL:
+      failed += 1;
+      console.error('\u001b[31mFAIL\u001b[39m', `${short} - ${meta.description.trim()}`);
+      if (error) {
+        console.error(error);
+      }
+      break;
+    default:
+      throw new RangeError('whoops');
   }
 }), Promise.resolve())
   .catch((e) => {

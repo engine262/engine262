@@ -235,7 +235,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   for (const f of functionsToInitialize) {
     const fn = BoundNames_FunctionDeclaration(f)[0];
     const fo = InstantiateFunctionObject(f, lexEnv);
-    X(varEnvRec.SetMutableBinding(fn, fo, new Value(false)));
+    X(varEnvRec.SetMutableBinding(new Value(fn), fo, new Value(false)));
   }
 
   return new NormalCompletion(undefined);

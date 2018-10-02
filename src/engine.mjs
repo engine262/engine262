@@ -55,11 +55,7 @@ export class Agent {
   }
 
   get currentRealmRecord() {
-    const currentCtx = this.runningExecutionContext;
-    if (currentCtx !== undefined) {
-      return currentCtx.Realm;
-    }
-    return undefined;
+    return this.runningExecutionContext.Realm;
   }
 
   get activeFunctionObject() {
@@ -79,10 +75,7 @@ export class Agent {
 }
 Agent.Increment = 0;
 
-export let surroundingAgent = new Agent();
-export function setSurroundingAgent(a) {
-  surroundingAgent = a;
-}
+export const surroundingAgent = new Agent();
 
 export class ExecutionContext {
   constructor() {
