@@ -103,7 +103,7 @@ function createRealm() {
   return $262;
 }
 
-async function run({ source, meta }) {
+async function run({ source, meta, strict }) {
   const $262 = createRealm();
 
   X($262.evalScript('harness/assert.js', true));
@@ -129,7 +129,7 @@ async function run({ source, meta }) {
     });
   }
 
-  const completion = $262.evalScript(meta.flags.includes('strict') ? `'use strict';\n${source}` : source);
+  const completion = $262.evalScript(strict ? `'use strict';\n${source}` : source);
   if (completion instanceof AbruptCompletion) {
     if (meta.negative) {
       return { status: PASS };
@@ -179,26 +179,45 @@ files.reduce((promise, filename) => promise.then(async () => {
     meta.flags = [];
   }
 
-  const { status, error } = await run({ source, meta });
-
-  switch (status) {
-    case SKIP:
-      skipped += 1;
-      console.log('\u001b[33mSKIP\u001b[39m', short);
-      break;
-    case PASS:
-      passed += 1;
-      console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
-      break;
-    case FAIL:
+  let skip = false;
+  let fail = false;
+  if (!meta.flags.includes('noStrict')) {
+    const { status, error } = await run({ source, meta, strict: true });
+    if (status === SKIP) {
+      skip = true;
+    } else if (status === FAIL) {
+      fail = true;
       failed += 1;
-      console.error('\u001b[31mFAIL\u001b[39m', `${short} - ${meta.description.trim()}`);
+      console.error('\u001b[31mFAIL\u001b[39m (SLOPPY)', `${short} - ${meta.description.trim()}`);
       if (error) {
         console.error(error);
       }
-      break;
-    default:
-      throw new RangeError('whoops');
+    }
+  }
+  if (!meta.flags.includes('onlyStrict')) {
+    const { status, error } = await run({ source, meta, strict: true });
+    if (status === SKIP) {
+      skip = true;
+    } else if (status === FAIL) {
+      if (!fail) {
+        fail = true;
+        failed += 1;
+      }
+      console.error('\u001b[31mFAIL\u001b[39m (STRICT)', `${short} - ${meta.description.trim()}`);
+      if (error) {
+        console.error(error);
+      }
+    }
+  }
+
+  if (skip) {
+    skipped += 1;
+    console.log('\u001b[33mSKIP\u001b[39m', short);
+  }
+
+  if (!skip && !fail) {
+    passed += 1;
+    console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
   }
 }), Promise.resolve())
   .catch((e) => {

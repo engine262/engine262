@@ -194,7 +194,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
       thisValue = globalEnvRec.GlobalThisValue;
     } else {
       thisValue = X(ToObject(thisArgument));
-      // NOTE: ToObject produces wrapper objects using calleeRealm.<Paste>
+      // NOTE: ToObject produces wrapper objects using calleeRealm.
     }
   }
   const envRec = localEnv.EnvironmentRecord;
