@@ -28,31 +28,32 @@ export function CreateNativeError(realmRec) {
       ['message', new Value('')],
     ], realmRec.Intrinsics['%ErrorPrototype%']);
 
-    const holder = {
-      // Do this to get the proper function name for debugging
-      [`${name}Constructor`]: ([message = new Value(undefined)], { NewTarget }) => {
-        let newTarget;
-        if (Type(NewTarget) === 'Undefined') {
-          newTarget = surroundingAgent.activeFunctionObject;
-        } else {
-          newTarget = NewTarget;
-        }
-        const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`), ['ErrorData']);
-        if (Type(message) !== 'Undefined') {
-          const msg = Q(ToString(message));
-          const msgDesc = Descriptor({
-            Value: msg,
-            Writable: new Value(true),
-            Enumerable: new Value(false),
-            Configurable: new Value(true),
-          });
-          X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
-        }
-        return O;
-      },
+    const Constructor = ([message = new Value(undefined)], { NewTarget }) => {
+      let newTarget;
+      if (Type(NewTarget) === 'Undefined') {
+        newTarget = surroundingAgent.activeFunctionObject;
+      } else {
+        newTarget = NewTarget;
+      }
+      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`), ['ErrorData']);
+      if (Type(message) !== 'Undefined') {
+        const msg = Q(ToString(message));
+        const msgDesc = Descriptor({
+          Value: msg,
+          Writable: new Value(true),
+          Enumerable: new Value(false),
+          Configurable: new Value(true),
+        });
+        X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+      }
+      return O;
     };
+    Object.defineProperty(Constructor, 'name', {
+      value: `${name}Constructor`,
+      configurable: true,
+    });
 
-    const cons = BootstrapConstructor(realmRec, holder[`${name}Constructor`], name, 1, proto, []);
+    const cons = BootstrapConstructor(realmRec, Constructor, name, 1, proto, []);
     cons.Prototype = realmRec.Intrinsics['%Error%'];
 
     realmRec.Intrinsics[`%${name}Prototype%`] = proto;
