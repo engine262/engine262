@@ -1,42 +1,21 @@
-import {
-  GeneratorResume,
-  GeneratorResumeAbrupt,
-} from '../abstract-ops/all.mjs';
-import {
-  Q,
-  ReturnCompletion,
-  ThrowCompletion,
-} from '../completion.mjs';
-import { Value, wellKnownSymbols } from '../value.mjs';
+import { Value, wellKnownSymbols, Descriptor } from '../value.mjs';
+import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
+import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// #sec-generator.prototype.next
-function GeneratorProto_next([value], { thisValue }) {
-  const g = thisValue;
-  return Q(GeneratorResume(g, value));
-}
-
-// #sec-generator.prototype.return
-function GeneratorProto_return([value], { thisValue }) {
-  const g = thisValue;
-  const C = new ReturnCompletion(value);
-  return Q(GeneratorResumeAbrupt(g, C));
-}
-
-// #sec-generator.prototype.throw
-function GeneratorProto_throw([exception], { thisValue }) {
-  const g = thisValue;
-  const C = new ThrowCompletion(exception);
-  return Q(GeneratorResumeAbrupt(g, C));
-}
-
 export function CreateGenerator(realmRec) {
-  const generatorPrototype = BootstrapPrototype(realmRec, [
-    ['next', GeneratorProto_next, 1],
-    ['return', GeneratorProto_return, 1],
-    ['throw', GeneratorProto_throw, 1],
-    [wellKnownSymbols.toStringTag, new Value('Generator'), undefined, { Writable: new Value(false) }],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  const generatorPrototype = realmRec.Intrinsics['%GeneratorPrototype%'];
 
-  realmRec.Intrinsics['%GeneratorPrototype%'] = generatorPrototype;
+  const generator = BootstrapPrototype(realmRec, [
+    ['prototype', generatorPrototype, undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('GeneratorFunction'), undefined, { Writable: new Value(false) }],
+  ], realmRec.Intrinsics['%FunctionPrototype%']);
+  X(DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
+    Value: generator,
+    Writable: new Value(false),
+    Enumerable: new Value(false),
+    Configurable: new Value(true),
+  })));
+
+  realmRec.Intrinsics['%Generator%'] = generator;
 }

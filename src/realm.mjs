@@ -51,6 +51,7 @@ import { CreateSet } from './intrinsics/Set.mjs';
 import { CreateFunctionProperties } from './intrinsics/functionProperties.mjs';
 import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
+import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -160,6 +161,7 @@ export function CreateIntrinsics(realmRec) {
 
   CreateFunctionProperties(realmRec);
 
+  CreateGeneratorPrototype(realmRec);
   CreateGenerator(realmRec);
   CreateGeneratorFunction(realmRec);
 
