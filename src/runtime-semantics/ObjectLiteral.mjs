@@ -137,6 +137,11 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   return CreateDataPropertyOrThrow(object, propKey, propValue);
 }
 
+// #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
+//   MethodDefinition :
+//     PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+//     `get` PropertyName `(` `)` `{` FunctionBody `}`
+//     `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
 function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (MethodDefinition.kind) {
     case 'init': {
@@ -193,12 +198,12 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
   }
 }
 
+// (implicit)
+//   PropertyDefinition : MethodDefinition
+//
 // Note: PropertyDefinition : CoverInitializedName is an early error.
-function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable, ) {
   switch (true) {
-    case isPropertyDefinitionMethodDefinition(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
-
     case isPropertyDefinitionIdentifierReference(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
         PropertyDefinition, object, enumerable,
@@ -206,6 +211,9 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
 
     case isPropertyDefinitionKeyValue(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable);
+
+    case isPropertyDefinitionMethodDefinition(PropertyDefinition):
+      return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
 
     case isPropertyDefinitionSpread(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(
