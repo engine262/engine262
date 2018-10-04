@@ -105,7 +105,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
 //
 // (implicit)
 //   MethodDefinition : GeneratorMethod
-function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (true) {
     case isMethodDefinitionRegularFunction(MethodDefinition): {
       const methodDef = yield* DefineMethod(MethodDefinition, object);
@@ -171,6 +171,12 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       throw outOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition.kind);
   }
 }
+
+// (implicit)
+//   ClassElement :
+//     MethodDefinition
+//     `static` MethodDefinition
+export const PropertyDefinitionEvaluation_ClassElement = PropertyDefinitionEvaluation_MethodDefinition;
 
 // #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 //   GeneratorMethod : `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`

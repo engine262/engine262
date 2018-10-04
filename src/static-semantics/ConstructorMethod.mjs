@@ -3,7 +3,7 @@
 //     ClassElement
 //     ClassElementList ClassElement
 function ConstructorMethod_ClassElementList(ClassElementList) {
-  return ClassElementList.find(ClassElement => ClassElement.kind === 'constructor');
+  return ClassElementList.find((ClassElement) => ClassElement.kind === 'constructor');
 }
 
 // (implicit)

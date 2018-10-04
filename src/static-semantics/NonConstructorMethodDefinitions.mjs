@@ -3,9 +3,9 @@
 //     ClassElement
 //     ClassElementList ClassElement
 function NonConstructorMethodDefinitions_ClassElementList(ClassElementList) {
-  return ClassElementList.filter(ClassElement => ClassElement.kind !== 'constructor');
+  return ClassElementList.filter((ClassElement) => ClassElement.kind !== 'constructor');
 }
 
 // (implicit)
 //   ClassBody : ClassElementList
-export function NonConstructorMethodDefinitions_ClassBody = NonConstructorMethodDefinitions_ClassElementList;
+export const NonConstructorMethodDefinitions_ClassBody = NonConstructorMethodDefinitions_ClassElementList;

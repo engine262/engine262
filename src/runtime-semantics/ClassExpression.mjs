@@ -2,22 +2,22 @@ import acorn from 'acorn';
 import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
+  CreateMethodProperty,
   Get,
   GetValue,
   HasOwnProperty,
   IsConstructor,
+  MakeClassConstructor,
+  MakeConstructor,
   ObjectCreate,
   SetFunctionName,
-  MakeConstructor,
-  MakeClassConstructor,
-  MakeMethod,
-  CreateMethodProperty,
-  FunctionCreate,
-  DefinePropertyOrThrow,
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { Evaluate_PropertyName, DefineMethod } from './all.mjs';
-import { Value, Type, Descriptor } from '../value.mjs';
+import {
+  DefineMethod,
+  PropertyDefinitionEvaluation_ClassElement,
+} from './all.mjs';
+import { Value, Type } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import {
   ConstructorMethod_ClassBody,
@@ -31,64 +31,6 @@ import {
   NormalCompletion,
   AbruptCompletion,
 } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
-
-// #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
-// MethodDefinition :
-//   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-//   `get` PropertyName `(` `)` `{` FunctionBody `}`
-//   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function* PropertyDefinitionEvaluation(MethodDefinition, object, enumerable) {
-  if (MethodDefinition.kind === 'method' || MethodDefinition.kind === 'constructor') {
-    const methodDef = yield* DefineMethod(MethodDefinition, object);
-    ReturnIfAbrupt(methodDef);
-    SetFunctionName(methodDef.Closure, methodDef.Key);
-    const desc = Descriptor({
-      Value: methodDef.Closure,
-      Writable: new Value(true),
-      Enumerable: new Value(enumerable),
-      Configurable: new Value(true),
-    });
-    return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
-  } else if (MethodDefinition.kind === 'get') {
-    const PropertyName = MethodDefinition.key;
-
-    const propKey = yield* Evaluate_PropertyName(PropertyName);
-    ReturnIfAbrupt(propKey);
-    // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-    const strict = true;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const formalParameterList = [];
-    const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
-    SetFunctionName(closure, propKey, new Value('get'));
-    const desc = {
-      Get: new Value(closure),
-      Enumerable: new Value(enumerable),
-      Configurable: new Value(true),
-    };
-    return Q(DefinePropertyOrThrow(object, propKey, desc));
-  } else if (MethodDefinition.kind === 'set') {
-    const PropertyName = MethodDefinition.key;
-    const PropertySetParameterList = MethodDefinition.value.params;
-
-    const propKey = yield* Evaluate_PropertyName(PropertyName);
-    ReturnIfAbrupt(propKey);
-    // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-    const strict = true;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
-    MakeMethod(closure, object);
-    SetFunctionName(closure, propKey, new Value('set'));
-    const desc = Descriptor({
-      Set: new Value(closure),
-      Enumerable: new Value(enumerable),
-      Configurable: new Value(true),
-    });
-    return Q(DefinePropertyOrThrow(object, propKey, desc));
-  } else {
-    throw outOfRange('PropertyDefinitionEvaluation', MethodDefinition.kind);
-  }
-}
 
 // #sec-runtime-semantics-classdefinitionevaluation
 // ClassTail : ClassHeritage `{` ClassBody `}`
@@ -158,9 +100,9 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   for (const m of methods) {
     let status;
     if (IsStatic_ClassElement(m) === false) {
-      status = yield* PropertyDefinitionEvaluation(m, proto, false);
+      status = yield* PropertyDefinitionEvaluation_ClassElement(m, proto, false);
     } else {
-      status = yield* PropertyDefinitionEvaluation(m, F, false);
+      status = yield* PropertyDefinitionEvaluation_ClassElement(m, F, false);
     }
     if (status instanceof AbruptCompletion) {
       surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
