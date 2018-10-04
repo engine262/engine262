@@ -22,9 +22,9 @@ import {
   isVariableDeclaration,
 } from '../ast.mjs';
 import {
+  BoundNames_Declaration,
   BoundNames_FormalParameterList,
   BoundNames_FunctionDeclaration,
-  BoundNames_LexicalDeclaration,
   ContainsExpression,
   IsConstantDeclaration,
   IsSimpleParameterList,
@@ -223,7 +223,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       throw outOfRange('FunctionDeclarationInstantiation', code);
   }
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration(d).map(Value)) {
+    for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
         X(lexEnvRec.CreateImmutableBinding(dn, new Value(true)));
       } else {
