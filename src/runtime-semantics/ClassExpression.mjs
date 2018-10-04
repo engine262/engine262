@@ -88,7 +88,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  MakeConstructor(F, new Value(false), proto);
+  MakeConstructor(F, false, proto);
   MakeClassConstructor(F);
   CreateMethodProperty(proto, new Value('constructor'), F);
   let methods;
