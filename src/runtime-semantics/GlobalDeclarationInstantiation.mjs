@@ -9,9 +9,9 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   BoundNames_BindingIdentifier,
+  BoundNames_Declaration,
   BoundNames_ForBinding,
   BoundNames_FunctionDeclaration,
-  BoundNames_LexicalDeclaration,
   BoundNames_VariableDeclaration,
   IsConstantDeclaration,
   LexicallyDeclaredNames_ScriptBody,
@@ -118,7 +118,7 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_LexicalDeclaration(d).map(Value)) {
+    for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
         Q(envRec.CreateImmutableBinding(dn, new Value(true)));
       } else {
