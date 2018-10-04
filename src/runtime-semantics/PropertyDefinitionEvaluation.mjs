@@ -2,21 +2,27 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
+  isGeneratorMethod,
+  isMethodDefinition,
+  isMethodDefinitionGetter,
+  isMethodDefinitionRegularFunction,
+  isMethodDefinitionSetter,
   isPropertyDefinitionIdentifierReference,
   isPropertyDefinitionKeyValue,
   isPropertyDefinitionSpread,
-  isPropertyDefinitionMethodDefinition,
 } from '../ast.mjs';
 import {
   Assert,
   CopyDataProperties,
   CreateDataPropertyOrThrow,
+  DefinePropertyOrThrow,
+  FunctionCreate,
+  GeneratorFunctionCreate,
   GetValue,
   HasOwnProperty,
-  SetFunctionName,
-  DefinePropertyOrThrow,
   MakeMethod,
-  FunctionCreate,
+  ObjectCreate,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import { Value, Descriptor } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
@@ -100,8 +106,8 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
 // (implicit)
 //   MethodDefinition : GeneratorMethod
 function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
-  switch (MethodDefinition.kind) {
-    case 'init': {
+  switch (true) {
+    case isMethodDefinitionRegularFunction(MethodDefinition): {
       const methodDef = yield* DefineMethod(MethodDefinition, object);
       ReturnIfAbrupt(methodDef);
       SetFunctionName(methodDef.Closure, methodDef.Key);
@@ -113,7 +119,17 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       });
       return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
     }
-    case 'get': {
+
+    case isGeneratorMethod(MethodDefinition):
+      return yield* PropertyDefinitionEvaluation_GeneratorMethod(MethodDefinition, object, enumerable);
+
+      // case isAsyncMethod(MethodDefinition):
+      //   return yield* PropertyDefinitionEvaluation_AsyncMethod(MethodDefinition, object, enumerable);
+
+      // case isAsyncGeneratorMethod(MethodDefinition):
+      //   return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(MethodDefinition, object, enumerable);
+
+    case isMethodDefinitionGetter(MethodDefinition): {
       const PropertyName = MethodDefinition.key;
 
       const propKey = yield* Evaluate_PropertyName(PropertyName);
@@ -131,7 +147,8 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       });
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
-    case 'set': {
+
+    case isMethodDefinitionSetter(MethodDefinition): {
       const PropertyName = MethodDefinition.key;
       const PropertySetParameterList = MethodDefinition.value.params;
 
@@ -155,6 +172,43 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
   }
 }
 
+// #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+//   GeneratorMethod : `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
+  const {
+    key: PropertyName,
+    value: GeneratorExpression,
+  } = GeneratorMethod;
+  const UniqueFormalParameters = GeneratorExpression.params;
+
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  ReturnIfAbrupt(propKey);
+  // TODO(IsStrict)
+  const strict = true;
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope, strict));
+  MakeMethod(closure, object);
+  const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
+  X(DefinePropertyOrThrow(
+    closure,
+    new Value('prototype'),
+    Descriptor({
+      Value: prototype,
+      Writable: new Value(true),
+      Enumerable: new Value(false),
+      Configurable: new Value(false),
+    }),
+  ));
+  X(SetFunctionName(closure, propKey));
+  const desc = Descriptor({
+    Value: closure,
+    Writable: new Value(true),
+    Enumerable: new Value(enumerable),
+    Configurable: new Value(true),
+  });
+  return Q(DefinePropertyOrThrow(object, propKey, desc));
+}
+
 // (implicit)
 //   PropertyDefinition : MethodDefinition
 //
@@ -169,7 +223,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     case isPropertyDefinitionKeyValue(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable);
 
-    case isPropertyDefinitionMethodDefinition(PropertyDefinition):
+    case isMethodDefinition(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
 
     case isPropertyDefinitionSpread(PropertyDefinition):

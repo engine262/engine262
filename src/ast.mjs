@@ -73,23 +73,72 @@ export function isObjectLiteral(node) {
   return node.type === 'ObjectExpression';
 }
 
+// #prod-GeneratorMethod
+export function isGeneratorMethod(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && node.method && node.kind === 'init')
+    || (node.type === 'MethodDefinition' && node.kind === 'method')
+  ) && isGeneratorExpression(node.value);
+}
+
+// #prod-AsyncMethod
+export function isAsyncMethod(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && node.method && node.kind === 'init')
+    || (node.type === 'MethodDefinition' && node.kind === 'method')
+  ) && isAsyncFunctionExpression(node.value);
+}
+
+// #prod-AsyncGeneratorMethod
+export function isAsyncGeneratorMethod(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && node.method && node.kind === 'init')
+    || (node.type === 'MethodDefinition' && node.kind === 'method')
+  ) && isAsyncGeneratorExpression(node.value);
+}
+
+// Used in #prod-MethodDefinition
+export function isMethodDefinitionRegularFunction(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && node.method && node.kind === 'init')
+    || (node.type === 'MethodDefinition' && node.kind === 'method')
+  ) && isFunctionExpression(node.value);
+}
+
+// Used in #prod-MethodDefinition
+export function isMethodDefinitionGetter(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && !node.method)
+    || node.type === 'MethodDefinition'
+  ) && node.kind === 'get';
+}
+
+// Used in #prod-MethodDefinition
+export function isMethodDefinitionSetter(node) {
+  return (
+    (node.type === 'Property' && !node.shorthand && !node.method)
+    || node.type === 'MethodDefinition'
+  ) && node.kind === 'set';
+}
+
+// #prod-MethodDefinition
+export function isMethodDefinition(node) {
+  return isMethodDefinitionRegularFunction(node)
+    || isGeneratorMethod(node)
+    || isAsyncMethod(node)
+    || isAsyncGeneratorExpression(node)
+    || isMethodDefinitionGetter(node)
+    || isMethodDefinitionSetter(node);
+}
+
 // Used in #prod-PropertyDefinition
 export function isPropertyDefinitionIdentifierReference(node) {
-  return node.type === 'Property' && node.shorthand && !node.method && !node.computed;
+  return node.type === 'Property' && node.shorthand && !node.method && !node.computed && node.kind === 'init';
 }
 
 // Used in #prod-PropertyDefinition
 export function isPropertyDefinitionKeyValue(node) {
-  return node.type === 'Property' && !node.shorthand && !node.method;
-}
-
-// Used in #prod-PropertyDefinition
-// Note: ESTree makes a distinction between MethodDefinition in a
-// PropertyDefinition and that in a ClassElement. However, the sort of
-// MethodDefinition in a PropertyDefinition is largely compatible with the
-// latter.
-export function isPropertyDefinitionMethodDefinition(node) {
-  return node.type === 'Property' && !node.shorthand && (node.method || node.kind === 'get' || node.kind === 'set');
+  return node.type === 'Property' && !node.shorthand && !node.method && node.kind === 'init';
 }
 
 // Used in #prod-PropertyDefinition
