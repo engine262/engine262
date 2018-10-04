@@ -32,6 +32,11 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 
+const emptyConstructorNode = acorn.parse('(class { constructor() {} })').body[0].expression.body.body[0];
+const forwardingConstructorNode = acorn.parse('(class { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
+Object.freeze(emptyConstructorNode);
+Object.freeze(forwardingConstructorNode);
+
 // #sec-runtime-semantics-classdefinitionevaluation
 // ClassTail : ClassHeritage `{` ClassBody `}`
 // TODO(devsnek): This should be shared with ClassDeclaration
@@ -75,10 +80,10 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   if (constructor === undefined) {
     if (ClassHeritage) {
       // Set constructor to the result of parsing the source text `constructor(... args){ super (...args);}`
-      constructor = acorn.parse('(class { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
+      constructor = forwardingConstructorNode;
     } else {
       // Set constructor to the result of parsing the source text `constructor() {}`
-      constructor = acorn.parse('(class { constructor() {} })').body[0].expression.body.body[0];
+      constructor = emptyConstructorNode;
     }
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
