@@ -19,7 +19,11 @@ import { Evaluate_Expression } from '../evaluator.mjs';
 import { Evaluate_PropertyName, DefineMethod } from './all.mjs';
 import { Value, Type, Descriptor } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { IsStatic } from '../static-semantics/all.mjs';
+import {
+  ConstructorMethod_ClassBody,
+  IsStatic_ClassElement,
+  NonConstructorMethodDefinitions_ClassBody,
+} from '../static-semantics/all.mjs';
 import {
   Q,
   Completion,
@@ -124,7 +128,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   if (!ClassBody) {
     constructor = undefined;
   } else {
-    constructor = ClassBody.find((c) => c.kind === 'constructor');
+    constructor = ConstructorMethod_ClassBody(ClassBody);
   }
   if (constructor === undefined) {
     if (ClassHeritage) {
@@ -149,11 +153,11 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   if (!ClassBody) {
     methods = [];
   } else {
-    methods = ClassBody;
+    methods = NonConstructorMethodDefinitions_ClassBody(ClassBody);
   }
   for (const m of methods) {
     let status;
-    if (IsStatic(m) === false) {
+    if (IsStatic_ClassElement(m) === false) {
       status = yield* PropertyDefinitionEvaluation(m, proto, false);
     } else {
       status = yield* PropertyDefinitionEvaluation(m, F, false);

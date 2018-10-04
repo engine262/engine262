@@ -1,8 +1,8 @@
 // #sec-static-semantics-isstatic
-// ClassElement :
-//   MethodDefinition
-//   `static` MethodDefinition
-//   `;`
-export function IsStatic(node) {
-  return node.static;
+//   ClassElement :
+//     MethodDefinition
+//     `static` MethodDefinition
+//     `;`
+export function IsStatic_ClassElement(ClassElement) {
+  return ClassElement.static;
 }

@@ -20,3 +20,5 @@ export * from './IsStatic.mjs';
 export * from './HasName.mjs';
 export * from './IsFunctionDefinition.mjs';
 export * from './IsIdentifierRef.mjs';
+export * from './NonConstructorMethodDefinitions.mjs';
+export * from './ConstructorMethod.mjs';
