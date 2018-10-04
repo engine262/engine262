@@ -40,6 +40,7 @@ export * from './MultiplicativeExpression.mjs';
 export * from './NewExpression.mjs';
 export * from './ObjectLiteral.mjs';
 export * from './PropertyBindingInitialization.mjs';
+export * from './PropertyDefinitionEvaluation.mjs';
 export * from './RelationalOperators.mjs';
 export * from './RestBindingInitialization.mjs';
 export * from './ReturnStatement.mjs';
