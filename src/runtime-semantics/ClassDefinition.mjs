@@ -15,6 +15,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   DefineMethod,
+  InitializeBoundName,
   PropertyDefinitionEvaluation_ClassElement,
 } from './all.mjs';
 import { Value, Type } from '../value.mjs';
@@ -38,8 +39,7 @@ Object.freeze(emptyConstructorNode);
 Object.freeze(forwardingConstructorNode);
 
 // #sec-runtime-semantics-classdefinitionevaluation
-// ClassTail : ClassHeritage `{` ClassBody `}`
-// TODO(devsnek): This should be shared with ClassDeclaration
+//   ClassTail : ClassHeritage `{` ClassBody `}`
 function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const classScope = NewDeclarativeEnvironment(lex);
@@ -122,7 +122,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
 }
 
 // #sec-class-definitions-runtime-semantics-evaluation
-// ClassExpression : `class` BindingIdentifier ClassTail
+//   ClassExpression : `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassExpression({
   id: BindingIdentifier,
   body,
@@ -148,4 +148,45 @@ export function* Evaluate_ClassExpression({
     }
   }
   return new NormalCompletion(value);
+}
+
+// #sec-runtime-semantics-bindingclassdeclarationevaluation
+//   ClassDeclaration :
+//     `class` BindingIdentifier ClassTail
+//     `class` ClassTail
+export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration) {
+  const {
+    id: BindingIdentifier,
+    body,
+    superClass: ClassHeritage,
+  } = ClassDeclaration;
+  const ClassTail = {
+    ClassHeritage,
+    ClassBody: body.body,
+  };
+
+  let className;
+  if (!BindingIdentifier) {
+    className = new Value(undefined);
+  } else {
+    className = new Value(BindingIdentifier.name);
+  }
+  const value = yield* ClassDefinitionEvaluation(ClassTail, className);
+  ReturnIfAbrupt(value);
+  if (BindingIdentifier) {
+    const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
+    if (hasNameProperty.isFalse()) {
+      SetFunctionName(value, className);
+    }
+    const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    Q(InitializeBoundName(className, value, env));
+  }
+  return new NormalCompletion(value);
+}
+
+// #sec-class-definitions-runtime-semantics-evaluation
+//   ClassDeclaration : `class` BindingIdentifier ClassTail
+export function* Evaluate_ClassDeclaration(ClassDeclaration) {
+  Q(yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration));
+  return new NormalCompletion(undefined);
 }

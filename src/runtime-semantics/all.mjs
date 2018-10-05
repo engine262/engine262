@@ -9,7 +9,7 @@ export * from './BlockStatement.mjs';
 export * from './BreakStatement.mjs';
 export * from './BreakableStatement.mjs';
 export * from './CallExpression.mjs';
-export * from './ClassExpression.mjs';
+export * from './ClassDefinition.mjs';
 export * from './ConditionalExpression.mjs';
 export * from './ContinueStatement.mjs';
 export * from './DebuggerStatement.mjs';

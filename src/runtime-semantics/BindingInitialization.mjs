@@ -29,7 +29,7 @@ import {
 } from './all.mjs';
 
 // #sec-initializeboundname
-function InitializeBoundName(name, value, environment) {
+export function InitializeBoundName(name, value, environment) {
   Assert(Type(name) === 'String');
   if (Type(environment) !== 'Undefined') {
     const env = environment.EnvironmentRecord;

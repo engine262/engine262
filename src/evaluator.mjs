@@ -28,6 +28,7 @@ import {
   isBlockStatement,
   isBreakStatement,
   isBreakableStatement,
+  isClassDeclaration,
   isClassExpression,
   isContinueStatement,
   isDebuggerStatement,
@@ -72,6 +73,7 @@ import {
   Evaluate_BreakStatement,
   Evaluate_BreakableStatement,
   Evaluate_CallExpression,
+  Evaluate_ClassDeclaration,
   Evaluate_ClassExpression,
   Evaluate_ConditionalExpression,
   Evaluate_ContinueStatement,
@@ -152,23 +154,14 @@ function* Evaluate_StatementListItem(StatementListItem) {
     case isBlockStatement(StatementListItem):
       return yield* Evaluate_BlockStatement(StatementListItem);
 
-    case isLexicalDeclaration(StatementListItem):
-      return yield* Evaluate_LexicalDeclaration(StatementListItem);
-
-    case isLexicalBinding(StatementListItem):
-      return yield* Evaluate_LexicalBinding(StatementListItem);
-
     case isVariableStatement(StatementListItem):
       return yield* Evaluate_VariableStatement(StatementListItem);
 
-    case isHoistableDeclaration(StatementListItem):
-      return Evaluate_HoistableDeclaration(StatementListItem);
+    case isEmptyStatement(StatementListItem):
+      return Evaluate_EmptyStatement(StatementListItem);
 
     case isExpressionStatement(StatementListItem):
       return yield* Evaluate_ExpressionStatement(StatementListItem);
-
-    case isEmptyStatement(StatementListItem):
-      return Evaluate_EmptyStatement(StatementListItem);
 
     case isIfStatement(StatementListItem):
       return yield* Evaluate_IfStatement(StatementListItem);
@@ -196,6 +189,18 @@ function* Evaluate_StatementListItem(StatementListItem) {
 
     case isDebuggerStatement(StatementListItem):
       return Evaluate_DebuggerStatement(StatementListItem);
+
+    case isHoistableDeclaration(StatementListItem):
+      return Evaluate_HoistableDeclaration(StatementListItem);
+
+    case isClassDeclaration(StatementListItem):
+      return yield* Evaluate_ClassDeclaration(StatementListItem);
+
+    case isLexicalDeclaration(StatementListItem):
+      return yield* Evaluate_LexicalDeclaration(StatementListItem);
+
+    case isLexicalBinding(StatementListItem):
+      return yield* Evaluate_LexicalBinding(StatementListItem);
 
     default:
       throw outOfRange('Evaluate_StatementListItem', StatementListItem);
