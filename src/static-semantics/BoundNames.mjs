@@ -11,27 +11,14 @@ import {
   isBindingRestElement,
   isBindingRestProperty,
   isClassDeclaration,
+  isFormalParameter,
+  isFunctionRestParameter,
   isHoistableDeclaration,
   isLexicalDeclaration,
   isObjectBindingPattern,
   isSingleNameBinding,
 } from '../ast.mjs';
-
-// #sec-function-definitions-static-semantics-boundnames
-export function BoundNames_FormalParameterList(FormalParameterList) {
-  const names = [];
-  for (const FormalParameter of FormalParameterList) {
-    switch (true) {
-      case isBindingElement(FormalParameter):
-        names.push(...BoundNames_BindingElement(FormalParameter));
-        break;
-
-      default:
-        throw TypeError('BoundNames_FormalParameterList');
-    }
-  }
-  return names;
-}
+import { outOfRange } from '../helpers.mjs';
 
 // 12.1.2 #sec-identifiers-static-semantics-boundnames
 //   BindingIdentifier :
@@ -62,7 +49,7 @@ export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
         names.push(...BoundNames_BindingPattern(declarator.id));
         break;
       default:
-        throw new TypeError(`Invalid LexicalBinding: ${declarator.id.type}`);
+        throw outOfRange('BoundNames_LexicalDeclaration', LexicalDeclaration);
     }
   }
   return names;
@@ -92,7 +79,7 @@ export function BoundNames_VariableDeclaration(VariableDeclaration) {
     case isBindingPattern(VariableDeclaration.id):
       return BoundNames_BindingPattern(VariableDeclaration.id);
     default:
-      throw new TypeError(`Invalid VariableDeclaration: ${VariableDeclaration.id.type}`);
+      throw outOfRange('BoundNames_VariableDeclaration', VariableDeclaration);
   }
 }
 
@@ -114,7 +101,7 @@ export function BoundNames_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return BoundNames_BindingIdentifier(SingleNameBinding.left);
     default:
-      throw new TypeError(`Invalid SingleNameBinding: ${SingleNameBinding.type}`);
+      throw outOfRange('BoundNames_SingleNameBinding', SingleNameBinding);
   }
 }
 
@@ -134,7 +121,7 @@ export function BoundNames_BindingElement(BindingElement) {
     case isBindingPatternAndInitializer(BindingElement):
       return BoundNames_BindingPattern(BindingElement.left);
     default:
-      throw new TypeError(`Invalid BindingElement: ${BindingElement.type}`);
+      throw outOfRange('BoundNames_BindingElement', BindingElement);
   }
 }
 
@@ -149,7 +136,7 @@ export function BoundNames_BindingRestElement(BindingRestElement) {
     case isBindingPattern(BindingRestElement.argument):
       return BoundNames_BindingPattern(BindingRestElement.argument);
     default:
-      throw new TypeError(`Invalid binding of BindingRestElement: ${BindingRestElement.argument.type}`);
+      throw outOfRange('BoundNames_BindingRestElement argument', BindingRestElement.argument);
   }
 }
 
@@ -176,7 +163,7 @@ export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
         break;
       }
       default:
-        throw new TypeError(`Invalid element of ArrayBindingPattern: ${BindingElisionElementOrBindingRestElement.type}`);
+        throw outOfRange('BoundNames_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
     }
   }
   return names;
@@ -194,7 +181,7 @@ export function BoundNames_BindingProperty(BindingProperty) {
     case isBindingPropertyWithColon(BindingProperty):
       return BoundNames_BindingElement(BindingProperty.value);
     default:
-      throw new TypeError(`Invalid BindingProperty: ${BindingProperty.value.type}`);
+      throw outOfRange('BoundNames_BindingProperty', BindingProperty);
   }
 }
 
@@ -202,7 +189,7 @@ export function BoundNames_BindingProperty(BindingProperty) {
 //   BindingRestProperty : `...` BindingIdentifier
 export function BoundNames_BindingRestProperty(BindingRestProperty) {
   if (!isBindingIdentifier(BindingRestProperty.argument)) {
-    throw new TypeError(`Invalid binding of BindingRestProperty: ${BindingRestProperty.argument.type}`);
+    throw outOfRange('BoundNames_BindingRestProperty argument', BindingRestProperty.argument);
   }
   return BoundNames_BindingIdentifier(BindingRestProperty.argument);
 }
@@ -233,7 +220,7 @@ function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
         break;
       }
       default:
-        throw new TypeError(`Invalid element of ObjectBindingPattern: ${BindingPropertyOrBindingRestProperty.type}`);
+        throw outOfRange('BoundNames_ObjectBindingPattern property', BindingPropertyOrBindingRestProperty);
     }
   }
   return names;
@@ -250,7 +237,7 @@ function BoundNames_BindingPattern(BindingPattern) {
     case isArrayBindingPattern(BindingPattern):
       return BoundNames_ArrayBindingPattern(BindingPattern);
     default:
-      throw new TypeError(`Invalid BindingPattern: ${BindingPattern.type}`);
+      throw outOfRange('BoundNames_BindingPattern', BindingPattern);
   }
 }
 
@@ -271,9 +258,7 @@ function BoundNames_BindingIdentifierOrBindingPattern(
     case isBindingPattern(BindingIdentifierOrBindingPattern):
       return BoundNames_BindingPattern(BindingIdentifierOrBindingPattern);
     default:
-      throw new TypeError(
-        `Invalid ${targetTypeForErrorMessage}: ${BindingIdentifierOrBindingPattern.type}`,
-      );
+      throw outOfRange(`BoundNames_BindingIdentifierOrBindingPattern ${targetTypeForErrorMessage}`, BindingIdentifierOrBindingPattern);
   }
 }
 
@@ -291,6 +276,48 @@ export function BoundNames_ForBinding(node) {
 //     BindingPattern
 export function BoundNames_CatchParameter(node) {
   return BoundNames_BindingIdentifierOrBindingPattern('CatchParameter', node);
+}
+
+// (implicit)
+//   FormalParameter : BindingElement
+export const BoundNames_FormalParameter = BoundNames_BindingElement;
+
+// (implicit)
+//   FunctionRestParameter : BindingRestElement
+export const BoundNames_FunctionRestParameter = BoundNames_BindingRestElement;
+
+// 14.1.3 #sec-function-definitions-static-semantics-boundnames
+//   FormalParameters :
+//     [empty]
+//     FormalParameterList `,` FunctionRestParameter
+//
+//   FormalParameterList :
+//     FormalParameterList `,` FormalParameter
+//
+// (implicit)
+//   FormalParameters :
+//     FunctionRestParameter
+//     FormalParameterList
+//     FormalParameterList `,`
+//
+//   FormalParameterList : FormalParameter
+export function BoundNames_FormalParameters(FormalParameters) {
+  const names = [];
+  for (const FormalParameterOrFunctionRestParameter of FormalParameters) {
+    switch (true) {
+      case isFormalParameter(FormalParameterOrFunctionRestParameter):
+        names.push(...BoundNames_FormalParameter(FormalParameterOrFunctionRestParameter));
+        break;
+
+      case isFunctionRestParameter(FormalParameterOrFunctionRestParameter):
+        names.push(...BoundNames_FunctionRestParameter(FormalParameterOrFunctionRestParameter));
+        break;
+
+      default:
+        throw outOfRange('BoundNames_FormalParameters element', FormalParameterOrFunctionRestParameter);
+    }
+  }
+  return names;
 }
 
 // 14.1.3 #sec-function-definitions-static-semantics-boundnames
@@ -358,6 +385,6 @@ export function BoundNames_Declaration(Declaration) {
     case isLexicalDeclaration(Declaration):
       return BoundNames_LexicalDeclaration(Declaration);
     default:
-      throw new TypeError(`Unexpected Declaration: ${Declaration.type}`);
+      throw outOfRange('BoundNames_Declaration', Declaration);
   }
 }

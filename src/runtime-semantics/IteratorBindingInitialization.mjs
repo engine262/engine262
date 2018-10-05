@@ -179,8 +179,8 @@ function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorR
 //   BindingRestElement : `...` BindingIdentifier
 function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment) {
   const BindingIdentifier = BindingRestElement.argument;
-  const lhs = Q(ResolveBinding(BindingIdentifier, environment));
-  const A = X(ArrayCreate(0));
+  const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment));
+  const A = X(ArrayCreate(new Value(0)));
   let n = 0;
   while (true) {
     let next;
@@ -190,7 +190,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
         iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(next);
-      if (next.isFalse()) {
+      if (Type(next) === 'Boolean' && next.isFalse()) {
         iteratorRecord.Done = new Value(true);
       }
     }
@@ -205,7 +205,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
       iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(nextValue);
-    const nStr = X(ToString(n));
+    const nStr = X(ToString(new Value(n)));
     const status = X(CreateDataProperty(A, nStr, nextValue));
     Assert(status.isTrue());
     n += 1;
@@ -227,7 +227,7 @@ function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestEl
         iteratorRecord.Done = new Value(true);
       }
       ReturnIfAbrupt(next);
-      if (next.isFalse()) {
+      if (Type(next) === 'Boolean' && next.isFalse()) {
         iteratorRecord.Done = new Value(true);
       }
     }

@@ -13,7 +13,7 @@ import {
   wellKnownSymbols,
   ArgumentsExoticObjectValue,
 } from '../value.mjs';
-import { BoundNames_FormalParameterList } from '../static-semantics/all.mjs';
+import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 
 // #sec-CreateUnmappedArgumentsObject
@@ -91,7 +91,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   obj.Extensible = true;
   const map = ObjectCreate(new Value(null));
   obj.ParameterMap = map;
-  const parameterNames = BoundNames_FormalParameterList(formals).map(Value);
+  const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const numberOfParameters = parameterNames.length;
   let index = 0;
   while (index < len) {

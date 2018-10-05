@@ -132,7 +132,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
     case isMethodDefinitionGetter(MethodDefinition): {
       const PropertyName = MethodDefinition.key;
 
-      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
       const strict = true;
@@ -152,7 +152,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const PropertyName = MethodDefinition.key;
       const PropertySetParameterList = MethodDefinition.value.params;
 
-      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
       const strict = true;
@@ -168,7 +168,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
     default:
-      throw outOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition.kind);
+      throw outOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
   }
 }
 
@@ -187,7 +187,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   } = GeneratorMethod;
   const UniqueFormalParameters = GeneratorExpression.params;
 
-  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
   // TODO(IsStrict)
   const strict = true;

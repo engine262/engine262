@@ -23,7 +23,7 @@ import {
 } from '../ast.mjs';
 import {
   BoundNames_Declaration,
-  BoundNames_FormalParameterList,
+  BoundNames_FormalParameters,
   BoundNames_FunctionDeclaration,
   ContainsExpression,
   IsConstantDeclaration,
@@ -66,7 +66,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const code = func.ECMAScriptCode;
   const strict = func.Strict;
   const formals = func.FormalParameters;
-  const parameterNames = BoundNames_FormalParameterList(formals).map(Value);
+  const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const hasDuplicates = !parameterNames.every(
     (e) => parameterNames.indexOf(e) === parameterNames.lastIndexOf(e),
   );

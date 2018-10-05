@@ -16,6 +16,22 @@ const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 't
 
 const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.js'));
 
+const excludedFeatures = new Set([
+  'BigInt',
+  'Promise.prototype.finally',
+  'async',
+  'async-functions',
+  'async-iteration',
+  'class-fields-private',
+  'class-fields-public',
+  'class-methods-private',
+  'class-static-fields-private',
+  'class-static-fields-public',
+  'class-static-methods-private',
+  'dynamic-import',
+  'export-star-as-namespace-from-module',
+]);
+
 const PASS = Symbol('PASS');
 const FAIL = Symbol('FAIL');
 const SKIP = Symbol('SKIP');
@@ -169,7 +185,9 @@ files.reduce((promise, filename) => promise.then(async () => {
   const source = await fs.promises.readFile(filename, 'utf8');
   const meta = yaml.default.parse(source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')));
 
-  if (filename.includes('annexB')) {
+  if (filename.includes('annexB')
+      || filename.includes('async-meth')
+      || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))) {
     skipped += 1;
     console.log('\u001b[33mSKIP\u001b[39m', short);
     return;
@@ -182,31 +200,41 @@ files.reduce((promise, filename) => promise.then(async () => {
   let skip = false;
   let fail = false;
   if (!meta.flags.includes('noStrict')) {
-    const { status, error } = await run({ source, meta, strict: true });
-    if (status === SKIP) {
-      skip = true;
-    } else if (status === FAIL) {
-      fail = true;
-      failed += 1;
-      console.error('\u001b[31mFAIL\u001b[39m (SLOPPY)', `${short} - ${meta.description.trim()}`);
-      if (error) {
-        console.error(error);
+    try {
+      const { status, error } = await run({ source, meta, strict: true });
+      if (status === SKIP) {
+        skip = true;
+      } else if (status === FAIL) {
+        fail = true;
+        failed += 1;
+        console.error('\u001b[31mFAIL\u001b[39m (SLOPPY)', `${short} - ${meta.description.trim()}`);
+        if (error) {
+          console.error(error);
+        }
       }
+    } catch (err) {
+      console.error(filename);
+      throw err;
     }
   }
   if (!meta.flags.includes('onlyStrict')) {
-    const { status, error } = await run({ source, meta, strict: true });
-    if (status === SKIP) {
-      skip = true;
-    } else if (status === FAIL) {
-      if (!fail) {
-        fail = true;
-        failed += 1;
+    try {
+      const { status, error } = await run({ source, meta, strict: true });
+      if (status === SKIP) {
+        skip = true;
+      } else if (status === FAIL) {
+        if (!fail) {
+          fail = true;
+          failed += 1;
+        }
+        console.error('\u001b[31mFAIL\u001b[39m (STRICT)', `${short} - ${meta.description.trim()}`);
+        if (error) {
+          console.error(error);
+        }
       }
-      console.error('\u001b[31mFAIL\u001b[39m (STRICT)', `${short} - ${meta.description.trim()}`);
-      if (error) {
-        console.error(error);
-      }
+    } catch (err) {
+      console.error(filename);
+      throw err;
     }
   }
 

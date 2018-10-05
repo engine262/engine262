@@ -9,7 +9,7 @@ export function* DefineMethod(MethodDefinition, object, functionPrototype) {
   const PropertyName = MethodDefinition.key;
   const UniqueFormalParameters = MethodDefinition.value.params;
 
-  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
   ReturnIfAbrupt(propKey);
   // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
   const strict = true;
