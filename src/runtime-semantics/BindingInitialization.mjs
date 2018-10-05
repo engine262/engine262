@@ -63,7 +63,7 @@ export function* BindingInitialization_BindingPattern(BindingPattern, value, env
 
     case isArrayBindingPattern(BindingPattern): {
       const iteratorRecord = Q(GetIterator(value));
-      const result = IteratorBindingInitialization_ArrayBindingPattern(
+      const result = yield* IteratorBindingInitialization_ArrayBindingPattern(
         BindingPattern, iteratorRecord, environment,
       );
       if (iteratorRecord.Done.isFalse()) {

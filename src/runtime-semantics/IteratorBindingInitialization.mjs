@@ -3,6 +3,7 @@ import {
   isBindingIdentifierAndInitializer,
   isBindingPattern,
   isBindingPatternAndInitializer,
+  isBindingRestElement,
   isFormalParameter,
   isFunctionRestParameter,
   isSingleNameBinding,
@@ -43,6 +44,7 @@ import {
 } from '../value.mjs';
 import {
   BindingInitialization_BindingPattern,
+  IteratorDestructuringAssignmentEvaluation_Elision,
 } from './all.mjs';
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
@@ -54,11 +56,40 @@ import {
 //     `[` BindingElementList `,` `]`
 //     `[` BindingElementList `,` Elision `]`
 //     `[` BindingElementList `,` Elision BindingRestElement `]`
-export function IteratorBindingInitialization_ArrayBindingPattern(ArrayBindingPattern) {
-  switch (true) {
-    default:
-      throw outOfRange('IteratorBindingInitialization_ArrayBindingPattern', ArrayBindingPattern);
+export function* IteratorBindingInitialization_ArrayBindingPattern(ArrayBindingPattern, iteratorRecord, environment) {
+  let Elision;
+  let BindingElementList = ArrayBindingPattern.elements;
+  let BindingRestElement;
+  // Members of the BindingElementList may be null, so add a truthyness check.
+  if (BindingElementList.length > 0 && BindingElementList[BindingElementList.length - 1]
+      && isBindingRestElement(BindingElementList[BindingElementList.length - 1])) {
+    BindingRestElement = BindingElementList[BindingElementList.length - 1];
+    BindingElementList = BindingElementList.slice(0, -1);
   }
+  if (BindingElementList.length > 0) {
+    let begin;
+    for (begin = BindingElementList.length; begin > 0; begin -= 1) {
+      if (BindingElementList[begin - 1] !== null) {
+        break;
+      }
+    }
+    if (begin !== BindingElementList.length) {
+      Elision = BindingElementList.slice(begin);
+      BindingElementList = BindingElementList.slice(0, begin);
+    }
+  }
+
+  let status = new NormalCompletion(undefined);
+  if (BindingElementList.length > 0) {
+    status = Q(yield* IteratorBindingInitialization_BindingElementList(BindingElementList, iteratorRecord, environment));
+  }
+  if (Elision !== undefined) {
+    status = Q(IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorRecord));
+  }
+  if (BindingRestElement !== undefined) {
+    status = Q(yield* IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment));
+  }
+  return status;
 }
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
@@ -163,6 +194,32 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
 }
 
 // #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+//   BindingElementList : BindingElementList `,` BindingElisionElement
+//
+// (implicit)
+//   BindingElementList : BindingElisionElement
+function* IteratorBindingInitialization_BindingElementList(BindingElementList, iteratorRecord, environment) {
+  Assert(BindingElementList.length > 0);
+  let result;
+  for (const BindingElisionElement of BindingElementList) {
+    result = Q(yield* IteratorBindingInitialization_BindingElisionElement(BindingElisionElement, iteratorRecord, environment));
+  }
+  return result;
+}
+
+// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+//   BindingElisionElement :
+//     BindingElement
+//     Elision BindingElement
+function* IteratorBindingInitialization_BindingElisionElement(BindingElisionElement, iteratorRecord, environment) {
+  if (!BindingElisionElement) {
+    // This is an elision.
+    return Q(IteratorDestructuringAssignmentEvaluation_Elision([BindingElisionElement], iteratorRecord));
+  }
+  return yield* IteratorBindingInitialization_BindingElement(BindingElisionElement, iteratorRecord, environment);
+}
+
+// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElement : SingleNameBinding
 function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
   switch (true) {
@@ -239,7 +296,7 @@ function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestEl
       iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(nextValue);
-    const nStr = X(ToString(n));
+    const nStr = X(ToString(new Value(n)));
     const status = X(CreateDataProperty(A, nStr, nextValue));
     Assert(status.isTrue());
     n += 1;
@@ -250,7 +307,7 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
   switch (true) {
     case isBindingIdentifier(BindingRestElement.argument):
       return IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment);
-    case isBindingPattern(BindingRestElement.arguement):
+    case isBindingPattern(BindingRestElement.argument):
       return yield* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
     default:
       throw outOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);

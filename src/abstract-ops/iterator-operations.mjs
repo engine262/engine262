@@ -103,6 +103,8 @@ export function IteratorClose(
   iteratorRecord,
   completion,
 ) {
+  completion = EnsureCompletion(completion);
+
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
   const iterator = iteratorRecord.Iterator;
@@ -110,7 +112,7 @@ export function IteratorClose(
   if (Type(ret) === 'Undefined') {
     return completion;
   }
-  const innerResult = Call(ret, iterator, []);
+  const innerResult = EnsureCompletion(Call(ret, iterator, []));
   if (completion.Type === 'throw') {
     return completion;
   }

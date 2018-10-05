@@ -308,17 +308,18 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
 //   Elision :
 //     `,`
 //     Elision `,`
-function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorRecord) {
-  const remaining = Elision.length;
+export function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorRecord) {
+  let remaining = Elision.length;
   while (remaining > 0 && iteratorRecord.Done.isFalse()) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
       iteratorRecord.Done = new Value(true);
     }
     ReturnIfAbrupt(next);
-    if (next.isFalse()) {
+    if (Type(next) === 'Boolean' && next.isFalse()) {
       iteratorRecord.Done = new Value(true);
     }
+    remaining -= 1;
   }
   return new NormalCompletion(undefined);
 }

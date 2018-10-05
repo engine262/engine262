@@ -24,9 +24,9 @@ export function* PropertyBindingInitialization_BindingPropertyList(
 ) {
   const boundNames = [];
   for (const BindingProperty of BindingPropertyList) {
-    const nextNames = yield* PropertyBindingInitialization_BindingProperty(
+    const nextNames = Q(yield* PropertyBindingInitialization_BindingProperty(
       BindingProperty, value, environment,
-    );
+    ));
     boundNames.push(...nextNames);
   }
   return boundNames;

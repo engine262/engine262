@@ -152,6 +152,10 @@ export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
   const names = [];
   for (const BindingElisionElementOrBindingRestElement of ArrayBindingPattern.elements) {
     switch (true) {
+      case BindingElisionElementOrBindingRestElement === null:
+        // This is an elision.
+        break;
+
       case isBindingElement(BindingElisionElementOrBindingRestElement): {
         const BindingElement = BindingElisionElementOrBindingRestElement;
         names.push(...BoundNames_BindingElement(BindingElement));
