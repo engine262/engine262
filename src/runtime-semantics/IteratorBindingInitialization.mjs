@@ -217,7 +217,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
 //     `...` BindingPattern
 function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment) {
   const BindingPattern = BindingRestElement.argument;
-  const A = X(ArrayCreate(0));
+  const A = X(ArrayCreate(new Value(0)));
   let n = 0;
   while (true) {
     let next;

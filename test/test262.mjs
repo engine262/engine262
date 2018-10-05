@@ -18,8 +18,6 @@ const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.j
 
 const excludedFeatures = new Set([
   'BigInt',
-  'Promise.prototype.finally',
-  'async',
   'async-functions',
   'async-iteration',
   'class-fields-private',
@@ -186,7 +184,6 @@ files.reduce((promise, filename) => promise.then(async () => {
   const meta = yaml.default.parse(source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')));
 
   if (filename.includes('annexB')
-      || filename.includes('async-meth')
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))) {
     skipped += 1;
     console.log('\u001b[33mSKIP\u001b[39m', short);
