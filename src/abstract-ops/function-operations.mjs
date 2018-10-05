@@ -224,6 +224,21 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
   }
 }
 
+// #sec-ecmascript-function-objects
+const esFunctionInternalSlots = Object.freeze([
+  'Environment',
+  'FormalParameters',
+  'FunctionKind',
+  'ECMAScriptCode',
+  'ConstructorKind',
+  'Realm',
+  'ScriptOrModule',
+  'ThisMode',
+  'Strict',
+  'HomeObject',
+]);
+
+// #sec-functionallocate
 export function FunctionAllocate(functionPrototype, strict, functionKind) {
   Assert(Type(functionPrototype) === 'Object');
   Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
@@ -233,6 +248,9 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
     functionKind = 'Normal';
   }
   const F = new FunctionValue(functionPrototype);
+  for (const internalSlot of esFunctionInternalSlots) {
+    F[internalSlot] = new Value(undefined);
+  }
   F.Call = FunctionCallSlot;
   if (needsConstruct) {
     F.Construct = FunctionConstructSlot;
@@ -246,6 +264,7 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
   return F;
 }
 
+// #sec-functioninitialize
 export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
   let len;
   switch (kind) {
@@ -318,7 +337,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     Value: prototype,
     Writable: new Value(writablePrototype),
     Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Configurable: new Value(false),
   })));
   return new NormalCompletion(new Value(undefined));
 }

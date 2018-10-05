@@ -110,7 +110,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
     case isMethodDefinitionRegularFunction(MethodDefinition): {
       const methodDef = yield* DefineMethod(MethodDefinition, object);
       ReturnIfAbrupt(methodDef);
-      SetFunctionName(methodDef.Closure, methodDef.Key);
+      X(SetFunctionName(methodDef.Closure, methodDef.Key));
       const desc = Descriptor({
         Value: methodDef.Closure,
         Writable: new Value(true),
@@ -139,7 +139,8 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const formalParameterList = [];
       const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
-      SetFunctionName(closure, propKey, new Value('get'));
+      X(MakeMethod(closure, object));
+      X(SetFunctionName(closure, propKey, new Value('get')));
       const desc = Descriptor({
         Get: closure,
         Enumerable: new Value(enumerable),
@@ -158,8 +159,8 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const strict = true;
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
-      MakeMethod(closure, object);
-      SetFunctionName(closure, propKey, new Value('set'));
+      X(MakeMethod(closure, object));
+      X(SetFunctionName(closure, propKey, new Value('set')));
       const desc = Descriptor({
         Set: closure,
         Enumerable: new Value(enumerable),

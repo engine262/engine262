@@ -95,13 +95,13 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
     if (Type(targetLen) !== 'Number') {
       L = 0;
     } else {
-      targetLen = ToInteger(targetLen);
+      targetLen = Q(ToInteger(targetLen)).numberValue();
       L = Math.max(0, targetLen - args.length);
     }
   } else {
     L = 0;
   }
-  X(SetFunctionLength(F, L));
+  X(SetFunctionLength(F, new Value(L)));
   let targetName = Q(Get(Target, new Value('name')));
   if (Type(targetName) !== 'String') {
     targetName = new Value('');

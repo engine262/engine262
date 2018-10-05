@@ -24,7 +24,7 @@ export function* DefineMethod(MethodDefinition, object, functionPrototype) {
     prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
   }
   const closure = FunctionCreate(kind, UniqueFormalParameters, MethodDefinition.value, scope, strict, prototype);
-  MakeMethod(closure, object);
+  X(MakeMethod(closure, object));
   return {
     Key: propKey,
     Closure: closure,
