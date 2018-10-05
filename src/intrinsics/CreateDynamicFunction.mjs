@@ -23,12 +23,29 @@ import {
   ParseAsFunctionBody,
   ParseAsGeneratorBody,
 } from '../parse.mjs';
-import { ContainsUseStrict_FunctionBody } from '../static-semantics/all.mjs';
+import {
+  BoundNames_FormalParameters,
+  ContainsUseStrict_FunctionBody,
+  LexicallyDeclaredNames_FunctionBody,
+} from '../static-semantics/all.mjs';
 import {
   Descriptor,
   Type,
   Value,
 } from '../value.mjs';
+
+function hasIntersection(reference, check) {
+  if (reference.length === 0 || check.length === 0) {
+    return false;
+  }
+  const refSet = new Set(reference);
+  for (const el of check) {
+    if (refSet.has(el)) {
+      return el;
+    }
+  }
+  return false;
+}
 
 // #sec-createdynamicfunction
 export function CreateDynamicFunction(constructor, newTarget, kind, args) {
@@ -100,26 +117,29 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     return surroundingAgent.Throw('SyntaxError', err.message);
   }
 
-  // These steps should be included in bodyParser:
-  // If body Contains SuperCall is true, throw a SyntaxError exception.
-  // If body Contains SuperProperty is true, throw a SyntaxError exception.
+  // These steps *should* but are not included in bodyParser:
+  // 23. If body Contains SuperCall is true, throw a SyntaxError exception.
+  // 25. If body Contains SuperProperty is true, throw a SyntaxError exception.
   //
   // See https://github.com/acornjs/acorn/issues/740.
 
   // These steps are included in ParseAsFormalParameters:
-  // If strict is true, the Early Error rules for UniqueFormalParameters:FormalParameters are applied.
-  // If strict is true and IsSimpleParameterList of parameters is false, throw a SyntaxError exception.
-  // If parameters Contains SuperCall is true, throw a SyntaxError exception.
-  // If parameters Contains SuperProperty is true, throw a SyntaxError exception.
-  // If kind is "generator" or "async generator", then
-  //   If parameters Contains YieldExpression is true, throw a SyntaxError exception.
-  // If kind is "async" or "async generator", then
-  //   If parameters Contains AwaitExpression is true, throw a SyntaxError exception.
-  // If strict is true, then
-  //   If BoundNames of parameters contains any duplicate elements, throw a SyntaxError exception.
+  // 20. If strict is true, the Early Error rules for UniqueFormalParameters : FormalParameters are applied.
+  // 21. If strict is true and IsSimpleParameterList of parameters is false, throw a SyntaxError exception.
+  // 24. If parameters Contains SuperCall is true, throw a SyntaxError exception.
+  // 26. If parameters Contains SuperProperty is true, throw a SyntaxError exception.
+  // 27. If kind is "generator" or "async generator", then
+  //   a. If parameters Contains YieldExpression is true, throw a SyntaxError exception.
+  // 28. If kind is "async" or "async generator", then
+  //   a. If parameters Contains AwaitExpression is true, throw a SyntaxError exception.
+  // 29. If strict is true, then
+  //   a. If BoundNames of parameters contains any duplicate elements, throw a SyntaxError exception.
 
-  // TODO(TimothyGu)
-  // If any element of the BoundNames of parameters also occurs in the LexicallyDeclaredNames of body, throw a SyntaxError exception.
+  // 22. If any element of the BoundNames of parameters also occurs in the LexicallyDeclaredNames of body, throw a SyntaxError exception.
+  const intersected = hasIntersection(BoundNames_FormalParameters(parameters), LexicallyDeclaredNames_FunctionBody(body));
+  if (intersected !== false) {
+    return surroundingAgent.Throw('SyntaxError', `Identifier '${intersected}' is already declared`);
+  }
 
   const fabricatedFunctionNode = {
     type: 'FunctionExpression',

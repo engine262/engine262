@@ -84,6 +84,14 @@ export const LexicallyDeclaredNames_FunctionBody = LexicallyDeclaredNames_Functi
 //   GeneratorBody : FunctionBody
 export const LexicallyDeclaredNames_GeneratorBody = LexicallyDeclaredNames_FunctionBody;
 
+// (implicit)
+//   AsyncFunctionBody : FunctionBody
+export const LexicallyDeclaredNames_AsyncFunctionBody = LexicallyDeclaredNames_FunctionBody;
+
+// (implicit)
+//   AsyncGeneratorBody : FunctionBody
+export const LexicallyDeclaredNames_AsyncGeneratorBody = LexicallyDeclaredNames_FunctionBody;
+
 // 14.2.10 #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
 //   ConciseBody : AssignmentExpression
 //
