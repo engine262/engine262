@@ -40,7 +40,6 @@ import {
   isHoistableDeclaration,
   isIdentifierReference,
   isIfStatement,
-  isLexicalBinding,
   isLexicalDeclaration,
   isLiteral,
   isObjectLiteral,
@@ -87,7 +86,6 @@ import {
   Evaluate_HoistableDeclaration,
   Evaluate_Identifier,
   Evaluate_IfStatement,
-  Evaluate_LexicalBinding,
   Evaluate_LexicalDeclaration,
   Evaluate_LogicalANDExpression,
   Evaluate_LogicalORExpression,
@@ -147,8 +145,31 @@ export function* Evaluate_StatementList(StatementList) {
 }
 
 // (implicit)
-//   StatementListItem : Statement
-//   Statement : ExpressionStatement
+//   StatementListItem :
+//     Statement
+//     Declaration
+//
+//   Statement :
+//     BlockStatement
+//     ExpressionStatement
+//     VariableStatement
+//     EmptyStatement
+//     ExpressionStatement
+//     IfStatement
+//     BreakableStatement
+//     ContinueStatement
+//     BreakStatement
+//     ReturnStatement
+//     WithStatement
+//     LabelledStatement
+//     ThrowStatement
+//     TryStatement
+//     DebuggerStatement
+//
+//   Declaration :
+//     HoistableDeclaration
+//     ClassDeclaration
+//     LexicalDeclaration
 function* Evaluate_StatementListItem(StatementListItem) {
   switch (true) {
     case isBlockStatement(StatementListItem):
@@ -199,17 +220,12 @@ function* Evaluate_StatementListItem(StatementListItem) {
     case isLexicalDeclaration(StatementListItem):
       return yield* Evaluate_LexicalDeclaration(StatementListItem);
 
-    case isLexicalBinding(StatementListItem):
-      return yield* Evaluate_LexicalBinding(StatementListItem);
-
     default:
       throw outOfRange('Evaluate_StatementListItem', StatementListItem);
   }
 }
 
-export function* Evaluate_Statement(Statement) {
-  return EnsureCompletion(yield* Evaluate_StatementListItem(Statement));
-}
+export const Evaluate_Statement = Evaluate_StatementListItem;
 
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
