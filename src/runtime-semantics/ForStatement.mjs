@@ -2,6 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import {
   Assert,
+  Call,
   CreateBuiltinFunction,
   CreateDataProperty,
   CreateIterResultObject,
@@ -9,7 +10,7 @@ import {
   GetValue,
   InitializeReferencedBinding,
   IteratorClose,
-  IteratorStep,
+  IteratorComplete,
   IteratorValue,
   ObjectCreate,
   PutValue,
