@@ -119,7 +119,7 @@ module.exports = ({ types: t, template }) => ({
         path.replaceWith(template(`
         (do {
           const VAL = ARGUMENT;
-          Assert(!(VAL instanceof AbruptCompletion));
+          Assert(!(VAL instanceof AbruptCompletion), "!(VAL instanceof AbruptCompletion)");
           if (VAL instanceof Completion) {
             VAL.Value;
           } else {

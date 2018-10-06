@@ -182,7 +182,7 @@ export function SetIntegrityLevel(O, level) {
   const keys = Q(O.OwnPropertyKeys());
   if (level === 'sealed') {
     for (const k of keys) {
-      Q(DefinePropertyOrThrow(O, k, { Configurable: false }));
+      Q(DefinePropertyOrThrow(O, k, Descriptor({ Configurable: new Value(false) })));
     }
   } else if (level === 'frozen') {
     for (const k of keys) {

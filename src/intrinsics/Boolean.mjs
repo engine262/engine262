@@ -8,7 +8,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function BooleanConstructor([value], { NewTarget }) {
   const b = ToBoolean(value);
-  if (Type(NewTarget) === 'undefined') {
+  if (Type(NewTarget) === 'Undefined') {
     return b;
   }
   const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%BooleanPrototype%', ['BooleanData']));

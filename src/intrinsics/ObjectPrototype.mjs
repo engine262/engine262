@@ -49,14 +49,14 @@ function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
 
 function ObjectProto_toLocaleString(argList, { thisValue }) {
   const O = thisValue;
-  return Q(Invoke(O, 'toString'));
+  return Q(Invoke(O, new Value('toString')));
 }
 
 function ObjectProto_toString(argList, { thisValue }) {
   if (Type(thisValue) === 'Undefined') {
     return new Value('[object Undefined]');
   }
-  if (Type(thisValue) === 'Undefined') {
+  if (Type(thisValue) === 'Null') {
     return new Value('[object Null]');
   }
   const O = X(ToObject(thisValue));

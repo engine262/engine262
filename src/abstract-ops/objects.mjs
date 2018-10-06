@@ -49,7 +49,7 @@ export function OrdinarySetPrototypeOf(O, V) {
     if (Type(p) === 'Null') {
       done = true;
     } else if (SameValue(p, O) === true) {
-      return false;
+      return new Value(false);
     } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
       done = true;
     } else {
@@ -57,7 +57,7 @@ export function OrdinarySetPrototypeOf(O, V) {
     }
   }
   O.Prototype = V;
-  return true;
+  return new Value(true);
 }
 
 // 9.1.3.1 OrdinaryIsExtensible
@@ -389,11 +389,7 @@ export function ObjectCreate(proto, internalSlotsList) {
 }
 
 // 9.1.13 OrdinaryCreateFromConstructor
-export function OrdinaryCreateFromConstructor(
-  constructor,
-  intrinsicDefaultProto,
-  internalSlotsList,
-) {
+export function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
@@ -401,9 +397,7 @@ export function OrdinaryCreateFromConstructor(
 }
 
 // 9.1.14 GetPrototypeFromConstructor
-export function GetPrototypeFromConstructor(
-  constructor, intrinsicDefaultProto,
-) {
+export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor).isTrue());

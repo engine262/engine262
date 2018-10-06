@@ -4,12 +4,11 @@ import {
   Descriptor,
 } from '../value.mjs';
 import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
   CreateBuiltinFunction,
   ObjectCreate,
+  ToNumber,
 } from '../abstract-ops/all.mjs';
+import { Q } from '../completion.mjs';
 
 // 20.2 The Math Object
 export function CreateMath(realmRec) {
@@ -81,7 +80,13 @@ export function CreateMath(realmRec) {
     ['trunc'],
   ].forEach(([name, nativeMethod]) => {
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
-      Value: CreateBuiltinFunction(nativeMethod || (() => surroundingAgent.Throw('TypeError')), [], realmRec),
+      // TODO(Math)
+      Value: CreateBuiltinFunction(nativeMethod || (([...args]) => {
+        for (let i = 0; i < args.length; i += 1) {
+          args[i] = Q(ToNumber(args[i])).numberValue();
+        }
+        return new Value(Math[name](...args));
+      }), [], realmRec),
       Writable: new Value(true),
       Enumerable: new Value(false),
       Configurable: new Value(true),

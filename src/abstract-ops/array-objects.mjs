@@ -98,14 +98,14 @@ export function ArraySetLength(A, Desc) {
     if (deleteSucceeded.isFalse()) {
       newLenDesc.Value = new Value(oldLen + 1);
       if (newWritable === false) {
-        newLenDesc.Writable = false;
+        newLenDesc.Writable = new Value(false);
       }
       X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
       return new Value(false);
     }
   }
   if (newWritable === false) {
-    OrdinaryDefineOwnProperty(A, new Value('length'), { Writable: false });
+    OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: new Value(false) }));
   }
   return new Value(true);
 }

@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 import fs from 'fs';
+import util from 'util';
 import path from 'path';
 import glob from 'glob';
 import yaml from 'yaml';
@@ -11,6 +12,8 @@ import {
   Completion,
   AbruptCompletion,
 } from '../lib/api.mjs';
+
+util.inspect.defaultOptions.depth = 2;
 
 const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
 
@@ -28,6 +31,7 @@ const excludedFeatures = new Set([
   'class-static-methods-private',
   'dynamic-import',
   'export-star-as-namespace-from-module',
+  'RegExp',
 ]);
 
 const PASS = Symbol('PASS');

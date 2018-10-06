@@ -479,7 +479,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     if (Type(existingProp) === 'Undefined') {
       return Q(IsExtensible(globalObject));
     }
-    if (existingProp.Configurable.isrue()) {
+    if (existingProp.Configurable.isTrue()) {
       return new Value(true);
     }
     if (IsDataDescriptor(existingProp).isTrue()

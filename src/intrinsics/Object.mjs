@@ -150,8 +150,8 @@ function Object_getOwnPropertyDescriptors([O]) {
 }
 
 function GetOwnPropertyKeys(O, type) {
-  const obj = ToObject(O);
-  const keys = obj.OwnPropertyKeys();
+  const obj = Q(ToObject(O));
+  const keys = Q(obj.OwnPropertyKeys());
   const nameList = [];
   keys.forEach((nextKey) => {
     if (Type(nextKey) === type) {
