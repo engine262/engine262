@@ -4,9 +4,11 @@ import {
 import {
   Value,
   Type,
+  DataBlock,
   Descriptor,
 } from '../value.mjs';
 import {
+  Assert,
   CreateDataProperty,
   Get,
   HasProperty,
@@ -14,7 +16,7 @@ import {
   ObjectCreate,
   ToBoolean,
 } from './all.mjs';
-import { Q } from '../completion.mjs';
+import { Q, NormalCompletion } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
@@ -55,7 +57,7 @@ export function IsGenericDescriptor(Desc) {
   return false;
 }
 
-// #sec-frompropertydescriptor FromPropertyDescriptor
+// 6.2.5.4 #sec-frompropertydescriptor
 export function FromPropertyDescriptor(Desc) {
   if (Type(Desc) === 'Undefined') {
     return new Value(undefined);
@@ -83,7 +85,7 @@ export function FromPropertyDescriptor(Desc) {
   return obj;
 }
 
-// #sec-topropertydescriptor ToPropertyDescriptor
+// 6.2.5.5 #sec-topropertydescriptor
 export function ToPropertyDescriptor(Obj) {
   if (Type(Obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -134,17 +136,17 @@ export function ToPropertyDescriptor(Obj) {
   return desc;
 }
 
-// #sec-completepropertydescriptor
+// 6.2.5.6 #sec-completepropertydescriptor
 export function CompletePropertyDescriptor(Desc) {
-  // Assert: Desc is a Property Descriptor.
-  const like = {
+  Assert(Type(Desc) === 'Descriptor');
+  const like = Descriptor({
     Value: new Value(undefined),
     Writable: false,
     Get: new Value(undefined),
     Set: new Value(undefined),
     Enumerable: false,
     Configurable: false,
-  };
+  });
   if (IsGenericDescriptor(Desc).isTrue() || IsDataDescriptor(Desc).isTrue()) {
     if (Desc.Value === undefined) {
       Desc.Value = like.Value;
@@ -167,4 +169,50 @@ export function CompletePropertyDescriptor(Desc) {
     Desc.Configurable = like.Configurable;
   }
   return Desc;
+}
+
+// 6.2.7.1 #sec-createbytedatablock
+export function CreateByteDataBlock(size) {
+  size = size.numberValue();
+  Assert(size >= 0);
+  let db;
+  try {
+    db = new DataBlock(size);
+  } catch (err) {
+    return surroundingAgent.Throw('RangeError', 'Cannot allocate memory');
+  }
+  return db;
+}
+
+// 6.2.7.3 #sec-copydatablockbytes
+export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
+  Assert(Type(toIndex) === 'Number');
+  Assert(Type(fromIndex) === 'Number');
+  Assert(Type(count) === 'Number');
+  toIndex = toIndex.numberValue();
+  fromIndex = fromIndex.numberValue();
+  count = count.numberValue();
+
+  Assert(fromBlock !== toBlock);
+  Assert(Type(fromBlock) === 'Data Block' /* || Type(fromBlock) === 'Shared Data Block' */);
+  Assert(Type(toBlock) === 'Data Block' /* || Type(toBlock) === 'Shared Data Block' */);
+  Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0);
+  Assert(Number.isSafeInteger(toIndex) && toIndex >= 0);
+  Assert(Number.isSafeInteger(count) && count >= 0);
+  const fromSize = fromBlock.byteLength;
+  Assert(fromIndex + count <= fromSize);
+  const toSize = toBlock.byteLength;
+  Assert(toIndex + count <= toSize);
+  while (count > 0) {
+    // if (Type(fromBlock) === 'Shared Data Block') {
+    //   ...
+    // } else {
+    Assert(Type(toBlock) !== 'Shared Data Block');
+    toBlock[toIndex] = fromBlock[fromIndex];
+    // }
+    toIndex += 1;
+    fromIndex += 1;
+    count -= 1;
+  }
+  return new NormalCompletion(undefined);
 }

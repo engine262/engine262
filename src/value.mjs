@@ -1031,6 +1031,13 @@ Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
     && this.Configurable === undefined;
 };
 
+export class DataBlock extends Uint8Array {
+  constructor(size) {
+    Assert(typeof size === 'number');
+    super(size);
+  }
+}
+
 export function Type(val) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';
@@ -1078,6 +1085,10 @@ export function Type(val) {
 
   if (val instanceof Descriptor) {
     return 'Descriptor';
+  }
+
+  if (val instanceof DataBlock) {
+    return 'Data Block';
   }
 
   throw outOfRange('Type', val);
