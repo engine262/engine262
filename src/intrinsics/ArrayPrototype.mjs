@@ -25,6 +25,7 @@ import {
   IsArray,
   IsCallable,
   IsConstructor,
+  Invoke,
   ObjectCreate,
   SameValue,
   SameValueZero,
@@ -519,6 +520,315 @@ function ArrayProto_push([...items], { thisValue }) {
   return new Value(len);
 }
 
+function ArrayProto_reduce([callbackfn, initialValue], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (len === 0 && initialValue === undefined) {
+    return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
+  }
+  let k = 0;
+  let accumulator = new Value(undefined);
+  if (initialValue !== undefined) {
+    accumulator = initialValue;
+  } else {
+    let kPresent = false;
+    while (kPresent === false && k < len) {
+      const Pk = X(ToString(new Value(k)));
+      kPresent = Q(HasProperty(O, Pk)).isTrue();
+      if (kPresent === true) {
+        accumulator = Q(Get(O, Pk));
+      }
+      k += 1;
+    }
+    if (kPresent === false) {
+      return surroundingAgent.Throw('TypeError');
+    }
+  }
+  while (k < len) {
+    const Pk = X(ToString(new Value(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      accumulator = Q(Call(callbackfn, new Value(undefined), [accumulator, kValue, new Value(k), O]));
+    }
+    k += 1;
+  }
+  return accumulator;
+}
+
+function ArrayProto_reduceRight([callbackfn, initialValue], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  if (len === 0 && initialValue === undefined) {
+    return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
+  }
+  let k = len - 1;
+  let accumulator = new Value(undefined);
+  if (initialValue !== undefined) {
+    accumulator = initialValue;
+  } else {
+    let kPresent = false;
+    while (kPresent === false && k >= 0) {
+      const Pk = X(ToString(new Value(k)));
+      kPresent = Q(HasProperty(O, Pk)).isTrue();
+      if (kPresent === true) {
+        accumulator = Q(Get(O, Pk));
+      }
+      k -= 1;
+    }
+    if (kPresent === false) {
+      return surroundingAgent.Throw('TypeError');
+    }
+  }
+  while (k >= 0) {
+    const Pk = X(ToString(new Value(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      accumulator = Q(Call(callbackfn, new Value(undefined), [accumulator, kValue, new Value(k), O]));
+    }
+    k -= 1;
+  }
+  return accumulator;
+}
+
+function ArrayProto_reverse(args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const middle = Math.floor(len / 2);
+  let lower = 0;
+  while (lower !== middle) {
+    const upper = len - lower - 1;
+    const upperP = X(ToString(new Value(upper)));
+    const lowerP = X(ToString(new Value(lower)));
+    const lowerExists = Q(HasProperty(O, lowerP));
+    let lowerValue;
+    let upperValue;
+    if (lowerExists.isTrue()) {
+      lowerValue = Q(Get(O, lowerP));
+    }
+    const upperExists = Q(HasProperty(O, upperP));
+    if (upperExists.isTrue()) {
+      upperValue = Q(Get(O, upperP));
+    }
+    if (lowerExists.isTrue() && upperExists.isTrue()) {
+      Q(Set(O, lowerP, upperValue, new Value(true)));
+      Q(Set(O, upperP, lowerValue, new Value(true)));
+    } else if (lowerExists.isFalse() && upperExists.isTrue()) {
+      Q(Set(O, lowerP, upperValue, new Value(true)));
+      Q(DeletePropertyOrThrow(O, upperP));
+    } else if (lowerExists.isTrue() && upperExists.isFalse()) {
+      Q(DeletePropertyOrThrow(O, lowerP));
+      Q(Set(O, upperP, lowerValue, new Value(true)));
+    } else {
+      // no further action is required
+    }
+    lower += 1;
+  }
+  return O;
+}
+
+function ArrayProto_shift(args, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  if (len === 0) {
+    Q(Set(O, new Value('length'), new Value(0), new Value(true)));
+    return new Value(undefined);
+  }
+  const first = Q(Get(O, new Value('0')));
+  let k = 1;
+  while (k < len) {
+    const from = X(ToString(new Value(k)));
+    const to = X(ToString(new Value(k - 1)));
+    const fromPresent = Q(HasProperty(O, from));
+    if (fromPresent.isTrue()) {
+      const fromVal = Q(Get(O, from));
+      Q(Set(O, to, fromVal, new Value(true)));
+    } else {
+      Q(DeletePropertyOrThrow(O, to));
+    }
+    k += 1;
+  }
+  Q(DeletePropertyOrThrow(O, X(ToString(new Value(len - 1)))));
+  Q(Set(O, new Value('length'), new Value(len - 1), new Value(true)));
+  return first;
+}
+
+function ArrayProto_slice([start, end], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const relativeStart = Q(ToInteger(start)).numberValue();
+  let k;
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (Type(end) === 'Undefined') {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(ToInteger(end)).numberValue();
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
+  const count = Math.max(final - k, 0);
+  const A = Q(ArraySpeciesCreate(O, new Value(count)));
+  let n = 0;
+  while (k < final) {
+    const Pk = X(ToString(new Value(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      Q(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), kValue));
+    }
+    k += 1;
+    n += 1;
+  }
+  Q(Set(A, new Value('length'), new Value(n), new Value(true)));
+  return A;
+}
+
+function ArrayProto_some([callbackfn, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  if (IsCallable(callbackfn).isFalse()) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  let T;
+  if (thisArg !== undefined) {
+    T = thisArg;
+  } else {
+    T = new Value(undefined);
+  }
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(new Value(k)));
+    const kPresent = Q(HasProperty(O, Pk));
+    if (kPresent.isTrue()) {
+      const kValue = Q(Get(O, Pk));
+      const testResult = ToBoolean(Q(Call(callbackfn, T, [kValue, new Value(k), O])));
+      if (testResult.isTrue()) {
+        return new Value(true);
+      }
+    }
+    k += 1;
+  }
+  return new Value(true);
+}
+
+function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLength }) {
+  const O = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const relativeStart = Q(ToInteger(start)).numberValue();
+  let actualStart;
+  if (relativeStart < 0) {
+    actualStart = Math.max(len + relativeStart, 0);
+  } else {
+    actualStart = Math.min(relativeStart, len);
+  }
+  let insertCount;
+  let actualDeleteCount;
+  if (callLength === 0) {
+    insertCount = 0;
+    actualDeleteCount = 0;
+  } else if (callLength === 1) {
+    insertCount = 0;
+    actualDeleteCount = len - actualStart;
+  } else {
+    insertCount = callLength - 2;
+    const dc = Q(ToInteger(deleteCount)).numberValue();
+    actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
+  }
+  if (len + insertCount - actualDeleteCount > (2 ** 53) - 1) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const A = Q(ArraySpeciesCreate(O, new Value(actualDeleteCount)));
+  let k = 0;
+  while (k < actualDeleteCount) {
+    const from = X(ToString(new Value(actualStart + k)));
+    const fromPresent = Q(HasProperty(O, from));
+    if (fromPresent.isTrue()) {
+      const fromValue = Q(Get(O, from));
+      Q(CreateDataPropertyOrThrow(A, X(ToString(new Value(k))), fromValue));
+    }
+    k += 1;
+  }
+  Q(Set(A, new Value('length'), new Value(actualDeleteCount), new Value(true)));
+  const itemCount = items.length;
+  if (itemCount < actualDeleteCount) {
+    k = actualStart;
+    while (k < len - actualDeleteCount) {
+      const from = X(ToString(new Value(k + actualDeleteCount)));
+      const to = X(ToString(new Value(k + itemCount)));
+      const fromPresent = Q(HasProperty(O, from));
+      if (fromPresent.isTrue()) {
+        const fromValue = Q(Get(O, from));
+        Q(Set(O, to, fromValue, new Value(true)));
+      } else {
+        Q(DeletePropertyOrThrow(O, to));
+      }
+      k += 1;
+    }
+    k = len;
+    while (k > len - actualDeleteCount + itemCount) {
+      Q(DeletePropertyOrThrow(O, X(ToString(new Value(k - 1)))));
+      k -= 1;
+    }
+  } else if (itemCount > actualDeleteCount) {
+    k = len - actualDeleteCount;
+    while (k > actualStart) {
+      const from = X(ToString(new Value(k + actualDeleteCount - 1)));
+      const to = X(ToString(new Value(k + itemCount - 1)));
+      const fromPresent = Q(HasProperty(O, from));
+      if (fromPresent.isTrue()) {
+        const fromValue = Q(Get(O, from));
+        Q(Set(O, to, fromValue, new Value(true)));
+      } else {
+        Q(DeletePropertyOrThrow(O, to));
+      }
+      k -= 1;
+    }
+  }
+  k = actualStart;
+  while (items.length > 0) {
+    const E = items.shift();
+    Q(Set(O, X(ToString(new Value(k))), E, new Value(true)));
+    k += 1;
+  }
+  return A;
+}
+
+function ArrayProto_toLocaleString(args, { thisValue }) {
+  const array = Q(ToObject(thisValue));
+  const len = Q(ToLength(Q(Get(array, new Value('length'))))).numberValue();
+  const separator = ', ';
+  let R = '';
+  let k = 0;
+  while (k < len) {
+    if (k > 0) {
+      R = `${R}${separator}`;
+    }
+    const nextElement = Q(Get(array, X(ToString(new Value(k)))));
+    if (Type(nextElement) !== 'Undefined' && Type(nextElement) !== 'Null') {
+      const S = Q(Invoke(nextElement, new Value('toLocaleString')));
+      R = `${R}${S}`;
+    }
+    k += 1;
+  }
+  return R;
+}
+
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, new Value('join')));
@@ -562,15 +872,15 @@ export function CreateArrayPrototype(realmRec) {
     ['map', ArrayProto_map, 1],
     ['pop', ArrayProto_pop, 0],
     ['push', ArrayProto_push, 1],
-    // reduce
-    // reduceRight
-    // reverse
-    // shift
-    // slice
-    // some
+    ['reduce', ArrayProto_reduce, 1],
+    ['reduceRight', ArrayProto_reduceRight, 1],
+    ['reverse', ArrayProto_reverse, 1],
+    ['shift', ArrayProto_shift, 0],
+    ['slice', ArrayProto_slice, 2],
+    ['some', ArrayProto_some, 1],
     // sort
-    // splice
-    // toLocaleString
+    ['splice', ArrayProto_splice, 2],
+    ['toLocaleString', ArrayProto_toLocaleString, 0],
     ['toString', ArrayProto_toString, 0],
     // unshift
     ['values', ArrayProto_values, 0],

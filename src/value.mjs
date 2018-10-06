@@ -249,8 +249,9 @@ export class ArrayExoticObjectValue extends ObjectValue {
 export class FunctionValue extends ObjectValue {}
 
 function nativeCall(F, argumentsList, thisArgument, newTarget) {
+  const callLength = argumentsList.length;
+
   // Fill in "required" properties
-  argumentsList.callLength = argumentsList.length;
   const length = new Value('length');
   if (F.properties.has(length)) {
     const len = F.properties.get(length).Value.numberValue();
@@ -264,6 +265,7 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
   return F.nativeFunction(argumentsList, {
     thisValue: thisArgument || undefinedValue,
     NewTarget: newTarget || undefinedValue,
+    callLength,
   });
 }
 

@@ -37,8 +37,8 @@ import {
 import { outOfRange } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function ArrayConstructor(argumentsList, { NewTarget }) {
-  const numberOfArgs = argumentsList.callLength;
+function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
+  const numberOfArgs = callLength;
   if (numberOfArgs === 0) {
     // 22.1.1.1 Array ( )
     Assert(numberOfArgs === 0);
