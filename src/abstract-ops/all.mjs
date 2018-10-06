@@ -1,5 +1,6 @@
 export * from './arguments-operations.mjs';
 export * from './array-objects.mjs';
+export * from './arraybuffer-objects.mjs';
 export * from './execution-contexts.mjs';
 export * from './function-operations.mjs';
 export * from './generator-operations.mjs';

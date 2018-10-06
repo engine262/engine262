@@ -14,6 +14,7 @@ import {
   IsCallable,
   ObjectCreate,
   SameValue,
+  SameValueZero,
   StringCreate,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -289,4 +290,22 @@ export function CanonicalNumericIndexString(argument) {
     return new Value(undefined);
   }
   return n;
+}
+
+// 7.1.17 #sec-toindex
+export function ToIndex(value) {
+  let index;
+  if (Type(value) === 'Undefined') {
+    index = new Value(0);
+  } else {
+    const integerIndex = Q(ToInteger(value));
+    if (integerIndex.numberValue() < 0) {
+      return surroundingAgent.Throw('RangeError', 'Index cannot be negative');
+    }
+    index = X(ToLength(integerIndex));
+    if (!SameValueZero(integerIndex, index)) {
+      return surroundingAgent.Throw('RangeError', 'Index out of range');
+    }
+  }
+  return index;
 }

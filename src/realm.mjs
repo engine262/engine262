@@ -52,6 +52,7 @@ import { CreateFunctionProperties } from './intrinsics/functionProperties.mjs';
 import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
 import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
+import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -165,6 +166,8 @@ export function CreateIntrinsics(realmRec) {
   CreateGenerator(realmRec);
   CreateGeneratorFunction(realmRec);
 
+  CreateArrayBuffer(realmRec);
+
   return intrinsics;
 }
 
@@ -219,27 +222,45 @@ export function SetDefaultGlobalBindings(realmRec) {
 
     // Constructor Properties of the Global Object
     'Array',
+    'ArrayBuffer',
     'Boolean',
+    // 'DataView',
+    // 'Date',
+    'Error',
+    'EvalError',
+    // 'Float32Array',
+    // 'Float64Array',
     'Function',
+    // 'Int8Array',
+    // 'Int16Array',
+    // 'Int32Array',
     'Map',
     'Number',
     'Object',
     'Promise',
     'Proxy',
-    'Reflect',
-    'Set',
-    'String',
-    'Symbol',
-    'Error',
-    'EvalError',
     'RangeError',
     'ReferenceError',
+    // 'RegExp',
+    'Set',
+    // 'SharedArrayBuffer',
+    'String',
+    'Symbol',
     'SyntaxError',
     'TypeError',
+    // 'Uint8Array',
+    // 'Uint8ClampedArray',
+    // 'Uint16Array',
+    // 'Uint32Array',
     'URIError',
+    // 'WeakMap',
+    // 'WeakSet',
 
     // Other Properties of the Global Object
+    // 'Atomics',
+    // 'JSON',
     'Math',
+    'Reflect',
   ].forEach((name) => {
     Q(DefinePropertyOrThrow(global, new Value(name, realmRec), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
