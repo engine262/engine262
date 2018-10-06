@@ -114,7 +114,7 @@ function ArrayFrom(argList, { thisValue }) {
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
   if (Type(usingIterator) !== 'Undefined') {
-    if (IsConstructor(C) === true) {
+    if (IsConstructor(C).isTrue()) {
       A = Q(Construct(C));
     } else {
       A = X(ArrayCreate(new Value(0)));
@@ -153,7 +153,7 @@ function ArrayFrom(argList, { thisValue }) {
   const arrayLike = X(ToObject(items));
   const lenProp = Q(Get(arrayLike, new Value('length')));
   const len = Q(ToLength(lenProp));
-  if (IsConstructor(C) === true) {
+  if (IsConstructor(C).isTrue()) {
     A = Q(Construct(C, [len]));
   } else {
     A = Q(ArrayCreate(len));
@@ -184,7 +184,7 @@ function ArrayOf([...items], { thisValue }) {
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
-  if (IsConstructor(C) === true) {
+  if (IsConstructor(C).isTrue()) {
     A = Q(Construct(C, [len]));
   } else {
     A = Q(ArrayCreate(new Value(len)));
