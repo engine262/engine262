@@ -177,19 +177,16 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     assignmentPattern = lhs;
   }
   while (true) {
-    // TODO: this section of the spec is completely wrong. See https://github.com/tc39/ecma262/issues/1107.
-    // const nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
+    const nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
+    // TODO(asynciteration)
     // if (iteratorKind === 'async')
-    // if (Type(nextResult) !== 'Object') {
-    //   return surroundingAgent.Throw('TypeError');
-    // }
-
-    // NON-SPEC START
-    const nextResult = Q(IteratorStep(iteratorRecord));
-    if (nextResult === new Value(false)) {
+    if (Type(nextResult) !== 'Object') {
+      return surroundingAgent.Throw('TypeError');
+    }
+    const done = Q(IteratorComplete(nextResult));
+    if (done === new Value(true)) {
       return new NormalCompletion(V);
     }
-    // NON-SPEC END
 
     const nextValue = Q(IteratorValue(nextResult));
     let iterationEnv;
