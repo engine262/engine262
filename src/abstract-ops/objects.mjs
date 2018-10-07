@@ -340,7 +340,7 @@ export function OrdinaryOwnPropertyKeys(O) {
   for (const key of O.properties.keys()) {
     if (Type(key) === 'String') {
       const int = Number.parseInt(key.stringValue(), 10);
-      if (int > 0 && int < (2 ** 53) - 1) {
+      if (int >= 0 && int < (2 ** 53) - 1) {
         integerIndexes.push(key);
       } else {
         strings.push(key);

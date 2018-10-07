@@ -112,10 +112,9 @@ import {
   Value,
 } from './value.mjs';
 import {
-  Assert,
   GetValue,
 } from './abstract-ops/all.mjs';
-import { outOfRange } from './helpers.mjs';
+import { Unwind, outOfRange } from './helpers.mjs';
 
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
@@ -408,7 +407,5 @@ export function Evaluate_Script(Script, envRec) {
   if (Script.length === 0) {
     return new NormalCompletion();
   }
-  const { value, done } = Evaluate_StatementList(Script, envRec).next();
-  Assert(done);
-  return value;
+  return Unwind(Evaluate_StatementList(Script, envRec));
 }

@@ -53,7 +53,7 @@ import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
 import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
 import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
-
+import { CreateJSON } from './intrinsics/JSON.mjs';
 // 8.2 #sec-code-realms
 export class Realm {
   constructor() {
@@ -168,6 +168,8 @@ export function CreateIntrinsics(realmRec) {
 
   CreateArrayBuffer(realmRec);
 
+  CreateJSON(realmRec);
+
   return intrinsics;
 }
 
@@ -258,7 +260,7 @@ export function SetDefaultGlobalBindings(realmRec) {
 
     // Other Properties of the Global Object
     // 'Atomics',
-    // 'JSON',
+    'JSON',
     'Math',
     'Reflect',
   ].forEach((name) => {

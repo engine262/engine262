@@ -448,7 +448,7 @@ function* InternalEnumerateObjectProperties(O) {
     const desc = Q(O.GetOwnProperty(key));
     if (Type(desc) !== 'Undefined') {
       visited.add(key);
-      if (desc.Enumerable) {
+      if (desc.Enumerable.isTrue()) {
         yield key;
       }
     }
