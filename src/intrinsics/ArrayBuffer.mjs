@@ -44,7 +44,7 @@ function ArrayBuffer_speciesGetter(a, { thisValue }) {
 }
 
 export function CreateArrayBuffer(realmRec) {
-  const abConstructor = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBufferPrototype%'] || ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']), []);
+  const abConstructor = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBufferPrototype%'], []);
 
   {
     const isViewMethod = CreateBuiltinFunction(ArrayBuffer_isView, [], realmRec);

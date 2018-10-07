@@ -203,12 +203,12 @@ export function CreateMapPrototype(realmRec) {
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
     ['values', MapProto_values, 0],
-    [wellKnownSymbols.toStringTag, new Value('map')],
+    [wellKnownSymbols.toStringTag, new Value('Map'), undefined, { Writable: new Value(false) }],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   {
     const fn = CreateBuiltinFunction(MapProto_size, [], realmRec);
-    SetFunctionName(fn, new Value('size'));
+    SetFunctionName(fn, new Value('get size'));
     SetFunctionLength(fn, new Value(0));
     X(proto.DefineOwnProperty(new Value('size'), Descriptor({
       Get: fn,

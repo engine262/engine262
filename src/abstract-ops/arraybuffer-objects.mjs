@@ -25,3 +25,17 @@ export function IsDetachedBuffer(arrayBuffer) {
   }
   return false;
 }
+
+// 24.2.1.2 #sec-issharedarraybuffer
+export function IsSharedArrayBuffer(obj) {
+  Assert(Type(obj) === 'Object' && 'ArrayBufferData' in obj);
+  const bufferData = obj.ArrayBufferData;
+  if (Type(bufferData) === 'Null') {
+    return false;
+  }
+  if (Type(bufferData) === 'Data Block') {
+    return false;
+  }
+  Assert(Type(bufferData) === 'Shared Data Block');
+  return true;
+}

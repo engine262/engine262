@@ -53,6 +53,7 @@ import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
 import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
 import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
+import { CreateArrayBufferPrototype } from './intrinsics/ArrayBufferPrototype.mjs';
 import { CreateJSON } from './intrinsics/JSON.mjs';
 // 8.2 #sec-code-realms
 export class Realm {
@@ -166,6 +167,7 @@ export function CreateIntrinsics(realmRec) {
   CreateGenerator(realmRec);
   CreateGeneratorFunction(realmRec);
 
+  CreateArrayBufferPrototype(realmRec);
   CreateArrayBuffer(realmRec);
 
   CreateJSON(realmRec);
