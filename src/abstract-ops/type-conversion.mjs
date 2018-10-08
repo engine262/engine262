@@ -166,7 +166,7 @@ export function ToInt32(argument) {
   }
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
-  if (int32bit > (2 ** 31)) {
+  if (int32bit >= (2 ** 31)) {
     return int32bit - (2 ** 32);
   }
   return int32bit;
@@ -175,14 +175,87 @@ export function ToInt32(argument) {
 // 7.1.6 #sec-touint32
 export function ToUint32(argument) {
   const number = Q(ToNumber(argument));
-  if (number.numberValue() === 0 // || number.value === -0
-      || number.numberValue() === Infinity
-      || number.numberValue() === -Infinity) {
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
     return new Value(0);
   }
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
   return new Value(int32bit);
+}
+
+// 7.1.7 #sec-toint16
+export function ToInt16(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+    return new Value(0);
+  }
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
+  const int16bit = int % (2 ** 16);
+  if (int16bit >= (2 ** 15)) {
+    return int16bit - (2 ** 16);
+  }
+  return int16bit;
+}
+
+// 7.1.8 #sec-touint16
+export function ToUint16(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+    return new Value(0);
+  }
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
+  const int16bit = int % (2 ** 16);
+  return new Value(int16bit);
+}
+
+// 7.1.9 #sec-toint8
+export function ToInt8(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+    return new Value(0);
+  }
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
+  const int8bit = int % (2 ** 8);
+  if (int8bit >= (2 ** 7)) {
+    return int8bit - (2 ** 8);
+  }
+  return int8bit;
+}
+
+// 7.1.10 #sec-touint8
+export function ToUint8(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+    return new Value(0);
+  }
+  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
+  const int8bit = int % (2 ** 8);
+  return new Value(int8bit);
+}
+
+// 7.1.11 #sec-touint8clamp
+export function ToUint8Clamp(argument) {
+  const number = Q(ToNumber(argument));
+  if (number.isNaN()) {
+    return new Value(0);
+  }
+  if (number.numberValue() <= 0) {
+    return new Value(0);
+  }
+  if (number.numberValue() >= 255) {
+    return new Value(255);
+  }
+  const f = Math.floor(number.numberValue());
+  if (f + 0.5 < number.numberValue()) {
+    return new Value(f + 1);
+  }
+  if (number.numberValue() < f + 0.5) {
+    return new Value(f);
+  }
+  if (f % 2 === 1) {
+    return new Value(f + 1);
+  }
+  return new Value(f);
 }
 
 // 7.1.12 #sec-tostring
