@@ -15,4 +15,3 @@ export * from './string-objects.mjs';
 export * from './symbol-objects.mjs';
 export * from './testing-comparison.mjs';
 export * from './type-conversion.mjs';
-export * from './typedarray-objects.mjs';
