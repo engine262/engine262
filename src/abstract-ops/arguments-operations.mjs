@@ -20,12 +20,12 @@ import { X } from '../completion.mjs';
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'), ['ParameterMap']);
-  obj.ParameterMap = new Value(undefined);
+  obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
   let index = 0;
   while (index < len) {
@@ -35,15 +35,15 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
     Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Enumerable: Value.false,
+    Configurable: Value.false,
   })));
   return obj;
 }
@@ -52,7 +52,7 @@ function ArgGetterSteps() {
   const f = this;
   const name = f.Name;
   const env = f.Env;
-  return env.GetBindingValue(name, new Value(false));
+  return env.GetBindingValue(name, Value.false);
 }
 
 // #sec-makearggetter
@@ -68,7 +68,7 @@ function ArgSetterSteps([value]) {
   const f = this;
   const name = f.Name;
   const env = f.Env;
-  return env.SetMutableBinding(name, value, new Value(false));
+  return env.SetMutableBinding(name, value, Value.false);
 }
 
 // #sec-makeargsetter
@@ -88,8 +88,8 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   const len = argumentsList.length;
   const obj = new ArgumentsExoticObjectValue();
   obj.Prototype = surroundingAgent.intrinsic('%ObjectPrototype%');
-  obj.Extensible = true;
-  const map = ObjectCreate(new Value(null));
+  obj.Extensible = Value.true;
+  const map = ObjectCreate(Value.null);
   obj.ParameterMap = map;
   const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const numberOfParameters = parameterNames.length;
@@ -101,9 +101,9 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   }
   X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
   const mappedNames = [];
   index = numberOfParameters - 1;
@@ -117,8 +117,8 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
         X(map.DefineOwnProperty(X(ToString(new Value(index))), Descriptor({
           Set: p,
           Get: g,
-          Enumerable: new Value(false),
-          Configurable: new Value(true),
+          Enumerable: Value.false,
+          Configurable: Value.true,
         })));
       }
     }
@@ -126,15 +126,15 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
     Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Enumerable: Value.false,
+    Configurable: Value.false,
   })));
   return obj;
 }

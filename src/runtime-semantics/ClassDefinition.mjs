@@ -45,7 +45,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const classScope = NewDeclarativeEnvironment(lex);
   const classScopeEnvRec = classScope.EnvironmentRecord;
   if (Type(className) !== 'Undefined') {
-    classScopeEnvRec.CreateImmutableBinding(className, new Value(true));
+    classScopeEnvRec.CreateImmutableBinding(className, Value.true);
   }
   let protoParent;
   let constructorParent;
@@ -58,9 +58,9 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
     const superclass = Q(GetValue(superclassRef));
     if (Type(superclass) === 'Null') {
-      protoParent = new Value(null);
+      protoParent = Value.null;
       constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
-    } else if (IsConstructor(superclass).isFalse()) {
+    } else if (IsConstructor(superclass) === Value.false) {
       return surroundingAgent.Throw('TypeError');
     } else {
       protoParent = Q(Get(superclass, new Value('prototype')));
@@ -135,7 +135,7 @@ export function* Evaluate_ClassExpression({
 
   let className;
   if (!BindingIdentifier) {
-    className = new Value(undefined);
+    className = Value.undefined;
   } else {
     className = new Value(BindingIdentifier.name);
   }
@@ -143,7 +143,7 @@ export function* Evaluate_ClassExpression({
   ReturnIfAbrupt(value);
   if (Type(className) !== 'Undefined') {
     const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-    if (hasNameProperty.isFalse()) {
+    if (hasNameProperty === Value.false) {
       SetFunctionName(value, className);
     }
   }
@@ -167,7 +167,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
 
   let className;
   if (!BindingIdentifier) {
-    className = new Value(undefined);
+    className = Value.undefined;
   } else {
     className = new Value(BindingIdentifier.name);
   }
@@ -175,7 +175,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
   ReturnIfAbrupt(value);
   if (BindingIdentifier) {
     const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-    if (hasNameProperty.isFalse()) {
+    if (hasNameProperty === Value.false) {
       SetFunctionName(value, className);
     }
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;

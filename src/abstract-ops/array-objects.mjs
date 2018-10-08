@@ -34,13 +34,13 @@ export function ArrayCreate(length, proto) {
   // to the default ordinary object definitions specified in 9.1.
 
   A.Prototype = proto;
-  A.Extensible = true;
+  A.Extensible = Value.true;
 
   X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
     Value: length,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   })));
 
   return A;
@@ -77,35 +77,35 @@ export function ArraySetLength(A, Desc) {
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
   }
-  if (oldLenDesc.Writable.isFalse()) {
-    return new Value(false);
+  if (oldLenDesc.Writable === Value.false) {
+    return Value.false;
   }
   let newWritable;
-  if (newLenDesc.Writable === undefined || newLenDesc.Writable.isTrue()) {
+  if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
     newWritable = true;
   } else {
     newWritable = false;
-    newLenDesc.Writable = new Value(true);
+    newLenDesc.Writable = Value.true;
   }
   const succeeded = X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
-  if (succeeded.isFalse()) {
-    return new Value(false);
+  if (succeeded === Value.false) {
+    return Value.false;
   }
   while (newLen < oldLen) {
     oldLen -= 1;
     const idxToDelete = X(ToString(new Value(oldLen)));
     const deleteSucceeded = X(A.Delete(idxToDelete));
-    if (deleteSucceeded.isFalse()) {
+    if (deleteSucceeded === Value.false) {
       newLenDesc.Value = new Value(oldLen + 1);
       if (newWritable === false) {
-        newLenDesc.Writable = new Value(false);
+        newLenDesc.Writable = Value.false;
       }
       X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
-      return new Value(false);
+      return Value.false;
     }
   }
   if (newWritable === false) {
-    OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: new Value(false) }));
+    OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
   }
-  return new Value(true);
+  return Value.true;
 }

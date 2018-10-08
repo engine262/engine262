@@ -32,14 +32,14 @@ function SetConstructor([iterable], { NewTarget }) {
     return set;
   }
   const adder = Q(Get(set, new Value('add')));
-  if (IsCallable(adder).isFalse()) {
+  if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   const iteratorRecord = Q(GetIterator(iterable));
 
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
-    if (Type(next) === 'Boolean' && next.isFalse()) {
+    if (next === Value.false) {
       return set;
     }
     const nextValue = Q(IteratorValue(next));
@@ -55,9 +55,9 @@ export function CreateSet(realmRec) {
 
   X(setConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: new Value(undefined),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Set: Value.undefined,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
 
   realmRec.Intrinsics['%Set%'] = setConstructor;

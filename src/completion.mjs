@@ -114,7 +114,7 @@ export function X(val) {
 // #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise(value, capability) {
   if (value instanceof AbruptCompletion) {
-    const hygenicTemp = Call(capability.Reject, new Value(undefined), [value.Value]);
+    const hygenicTemp = Call(capability.Reject, Value.undefined, [value.Value]);
     if (hygenicTemp instanceof AbruptCompletion) {
       return hygenicTemp;
     }

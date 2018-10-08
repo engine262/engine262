@@ -42,13 +42,13 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
     const value = Q(GetValue(rhs));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-      if (hasNameProperty.isFalse()) {
+      if (hasNameProperty === Value.false) {
         SetFunctionName(value, bindingId);
       }
     }
     return InitializeReferencedBinding(lhs, value);
   } else {
-    return InitializeReferencedBinding(lhs, new Value(undefined));
+    return InitializeReferencedBinding(lhs, Value.undefined);
   }
 }
 

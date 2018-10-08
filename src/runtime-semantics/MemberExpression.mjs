@@ -29,7 +29,7 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
   const strict = surroundingAgent.isStrictCode;
-  return new Reference(bv, propertyKey, new Value(strict));
+  return new Reference(bv, propertyKey, strict ? Value.true : Value.false);
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation
@@ -40,8 +40,8 @@ function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierN
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = new Value(IdentifierName.name);
-  const strict = true; // TODO(IsStrict)
-  return new Reference(bv, propertyNameString, new Value(strict));
+  const strict = Value.true; // TODO(IsStrict)
+  return new Reference(bv, propertyNameString, strict);
 }
 
 // #sec-property-accessors-runtime-semantics-evaluation

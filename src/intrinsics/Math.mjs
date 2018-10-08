@@ -27,17 +27,17 @@ export function CreateMath(realmRec) {
   ].forEach(([name, value]) => {
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
       Value: new Value(value),
-      Writable: new Value(false),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     }));
   });
 
   mathObj.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
     Value: new Value('Math'),
-    Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   }));
 
   // 20.2.2 Function Properties of the Math Object
@@ -87,9 +87,9 @@ export function CreateMath(realmRec) {
         }
         return new Value(Math[name](...args));
       }), [], realmRec),
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     }));
   });
 

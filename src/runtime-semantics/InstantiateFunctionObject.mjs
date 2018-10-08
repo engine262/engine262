@@ -47,9 +47,9 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   })));
   SetFunctionName(F, name);
   return F;

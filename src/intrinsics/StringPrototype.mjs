@@ -61,7 +61,7 @@ function StringProto_valueOf(args, { thisValue }) {
 export function CreateStringPrototype(realmRec) {
   const proto = new StringExoticObjectValue();
   proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
-  proto.Extensible = true;
+  proto.Extensible = Value.true;
   proto.StringData = new Value('');
 
   [
@@ -75,9 +75,9 @@ export function CreateStringPrototype(realmRec) {
     SetFunctionLength(n, new Value(length));
     proto.DefineOwnProperty(new Value(name), Descriptor({
       Value: n,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     }));
   });
 

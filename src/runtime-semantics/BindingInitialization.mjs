@@ -34,7 +34,7 @@ export function InitializeBoundName(name, value, environment) {
   if (Type(environment) !== 'Undefined') {
     const env = environment.EnvironmentRecord;
     env.InitializeBinding(name, value);
-    return new NormalCompletion(new Value(undefined));
+    return new NormalCompletion(Value.undefined);
   } else {
     const lhs = ResolveBinding(name);
     return Q(PutValue(lhs, value));
@@ -66,7 +66,7 @@ export function* BindingInitialization_BindingPattern(BindingPattern, value, env
       const result = yield* IteratorBindingInitialization_ArrayBindingPattern(
         BindingPattern, iteratorRecord, environment,
       );
-      if (iteratorRecord.Done.isFalse()) {
+      if (iteratorRecord.Done === Value.false) {
         return Q(IteratorClose(iteratorRecord, result));
       }
       return result;

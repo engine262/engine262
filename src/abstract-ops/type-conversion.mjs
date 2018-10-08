@@ -63,7 +63,7 @@ export function OrdinaryToPrimitive(
   }
   for (const name of methodNames) {
     const method = Q(Get(O, name));
-    if (IsCallable(method).isTrue()) {
+    if (IsCallable(method) === Value.true) {
       const result = Q(Call(method, O));
       if (Type(result) !== 'Object') {
         return result;
@@ -76,11 +76,11 @@ export function OrdinaryToPrimitive(
 // 7.1.2 #sec-toboolean
 export function ToBoolean(argument) {
   if (Type(argument) === 'Undefined') {
-    return new Value(false);
+    return Value.false;
   }
 
   if (Type(argument) === 'Null') {
-    return new Value(false);
+    return Value.false;
   }
 
   if (Type(argument) === 'Boolean') {
@@ -89,24 +89,24 @@ export function ToBoolean(argument) {
 
   if (Type(argument) === 'Number') {
     if (argument.numberValue() === 0 || argument.isNaN()) {
-      return new Value(false);
+      return Value.false;
     }
-    return new Value(true);
+    return Value.true;
   }
 
   if (Type(argument) === 'String') {
     if (argument.stringValue().length > 0) {
-      return new Value(true);
+      return Value.true;
     }
-    return new Value(false);
+    return Value.false;
   }
 
   if (Type(argument) === 'Symbol') {
-    return new Value(true);
+    return Value.true;
   }
 
   if (Type(argument) === 'Object') {
-    return new Value(true);
+    return Value.true;
   }
 
   throw outOfRange('ToBoolean', argument);
@@ -121,7 +121,7 @@ export function ToNumber(argument) {
     case 'Null':
       return new Value(0);
     case 'Boolean':
-      if (argument.isTrue()) {
+      if (argument === Value.true) {
         return new Value(1);
       }
       return new Value(0);
@@ -194,7 +194,7 @@ export function ToString(argument) {
     case 'Null':
       return new Value('null');
     case 'Boolean':
-      return new Value(argument.isTrue() ? 'true' : 'false');
+      return new Value(argument === Value.true ? 'true' : 'false');
     case 'Number':
       return NumberToString(argument);
     case 'String':
@@ -286,8 +286,8 @@ export function CanonicalNumericIndexString(argument) {
     return -0;
   }
   const n = X(ToNumber(argument));
-  if (SameValue(X(ToString(n)), argument) === false) {
-    return new Value(undefined);
+  if (SameValue(X(ToString(n)), argument) === Value.false) {
+    return Value.undefined;
   }
   return n;
 }
@@ -303,7 +303,7 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'Index cannot be negative');
     }
     index = X(ToLength(integerIndex));
-    if (!SameValueZero(integerIndex, index)) {
+    if (SameValueZero(integerIndex, index) === Value.false) {
       return surroundingAgent.Throw('RangeError', 'Index out of range');
     }
   }

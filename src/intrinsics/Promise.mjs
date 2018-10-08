@@ -39,7 +39,7 @@ function PromiseConstructor([executor], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
-  if (IsCallable(executor).isFalse()) {
+  if (IsCallable(executor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'Promise resolver is not a function');
   }
   const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%PromisePrototype%', [
@@ -54,11 +54,11 @@ function PromiseConstructor([executor], { NewTarget }) {
   promise.PromiseRejectReactions = [];
   promise.PromiseIsHandled = false;
   const resolvingFunctions = CreateResolvingFunctions(promise);
-  const completion = Call(executor, new Value(undefined), [
+  const completion = Call(executor, Value.undefined, [
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
   if (completion instanceof AbruptCompletion) {
-    Q(Call(resolvingFunctions.Reject, new Value(undefined), [completion.Value]));
+    Q(Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]));
   }
   return promise;
 }
@@ -69,7 +69,7 @@ function PromiseAllResolveElementFunctions([x]) {
 
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
-    return new Value(undefined);
+    return Value.undefined;
   }
   alreadyCalled.Value = true;
   const index = F.Index;
@@ -80,14 +80,14 @@ function PromiseAllResolveElementFunctions([x]) {
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
     const valuesArray = CreateArrayFromList(values);
-    return Q(Call(promiseCapability.Resolve, new Value(undefined), [valuesArray]));
+    return Q(Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 // #sec-performpromiseall
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
-  Assert(IsConstructor(constructor).isTrue());
+  Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   const values = [];
   const remainingElementsCount = { Value: 1 };
@@ -95,24 +95,24 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   while (true) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount === 0) {
         const valuesArray = CreateArrayFromList(values);
-        Q(Call(resultCapability.Resolve), new Value(undefined), [valuesArray]);
+        Q(Call(resultCapability.Resolve), Value.undefined, [valuesArray]);
       }
       return resultCapability.Promise;
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(nextValue);
-    values.push(new Value(undefined));
+    values.push(Value.undefined);
     const nextPromise = Q(Invoke(constructor, new Value('resolve'), [nextValue]));
     const steps = PromiseAllResolveElementFunctions;
     const resolveElement = CreateBuiltinFunction(steps, [
@@ -139,7 +139,7 @@ function Promise_all([iterable], { thisValue }) {
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   let result = PerformPromiseAll(iteratorRecord, C, promiseCapability);
   if (result instanceof AbruptCompletion) {
-    if (iteratorRecord.Done.isFalse()) {
+    if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
     }
     IfAbruptRejectPromise(result, promiseCapability);
@@ -148,7 +148,7 @@ function Promise_all([iterable], { thisValue }) {
 }
 
 function Promise_race() {
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function Promise_reject([r], { thisValue }) {
@@ -157,7 +157,7 @@ function Promise_reject([r], { thisValue }) {
     return surroundingAgent.Throw('TypeError');
   }
   const promiseCapability = NewPromiseCapability(C);
-  Q(Call(promiseCapability.Reject, new Value(undefined), [r]));
+  Q(Call(promiseCapability.Reject, Value.undefined, [r]));
   return promiseCapability.Promise;
 }
 
@@ -183,9 +183,9 @@ export function CreatePromise(realmRec) {
 
   promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction(Promise_symbolSpecies, [], realmRec),
-    Set: new Value(undefined),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Set: Value.undefined,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, new Value('all'));

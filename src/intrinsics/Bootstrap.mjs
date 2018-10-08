@@ -27,9 +27,9 @@ export function BootstrapPrototype(realmRec, props, Prototype) {
     }
     proto.DefineOwnProperty(name, Descriptor({
       Value: value,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
       ...descriptor,
     }));
   }
@@ -45,16 +45,16 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
 
   cons.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: Prototype,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
     Value: cons,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   for (const [n, v, len] of props) {
@@ -69,9 +69,9 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
     }
     cons.DefineOwnProperty(name, Descriptor({
       Value: value,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(!(value instanceof SymbolValue)),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: value instanceof SymbolValue ? Value.false : Value.true,
     }));
   }
 

@@ -32,7 +32,7 @@ function JSON_parse([text, reviver]) {
     const val = Q(Get(holder, name));
     if (Type(val) === 'Object') {
       const isArray = Q(IsArray(val));
-      if (isArray.isTrue()) {
+      if (isArray === Value.true) {
         let I = 0;
         const len = Q(ToLength(Q(Get(val, new Value('length'))))).numberValue();
         while (I < len) {
@@ -75,11 +75,11 @@ function JSON_parse([text, reviver]) {
          || unfiltered instanceof BooleanValue
          || unfiltered instanceof NullValue
          || unfiltered instanceof ObjectValue);
-  if (IsCallable(reviver).isTrue()) {
+  if (IsCallable(reviver) === Value.true) {
     const root = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
     const rootName = new Value('');
     const status = CreateDataProperty(root, rootName, unfiltered);
-    Assert(status.isTrue());
+    Assert(status === Value.true);
     return Q(InternalizeJSONProperty(root, rootName));
   } else {
     return unfiltered;
@@ -93,7 +93,7 @@ function JSON_stringify([value, replacer, space]) {
     let value = Q(Get(holder, key));
     if (Type(value) === 'Object') {
       const toJSON = Q(Get(value, new Value('toJSON')));
-      if (IsCallable(toJSON).isTrue()) {
+      if (IsCallable(toJSON) === Value.true) {
         value = Q(Call(toJSON, value, [key]));
       }
     }
@@ -109,14 +109,14 @@ function JSON_stringify([value, replacer, space]) {
         value = value.BooleanData;
       }
     }
-    if (value === new Value(null)) {
+    if (value === Value.null) {
       return new Value('null');
     }
-    if (value === new Value(true)) {
+    if (value === Value.true) {
       return new Value('true');
     }
-    if (value === new Value(false)) {
-      return new Value(false);
+    if (value === Value.false) {
+      return Value.false;
     }
     if (Type(value) === 'String') {
       return QuoteJSONString(value);
@@ -127,14 +127,14 @@ function JSON_stringify([value, replacer, space]) {
       }
       return new Value('null');
     }
-    if (Type(value) === 'Object' && IsCallable(value).isFalse()) {
+    if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
       const isArray = Q(IsArray(value));
-      if (isArray.isTrue()) {
+      if (isArray === Value.true) {
         return Q(SerializeJSONArray(value));
       }
       return Q(SerializeJSONObject(value));
     }
-    return new Value(undefined);
+    return Value.undefined;
   }
 
   // #sec-serializejsonobject
@@ -171,21 +171,21 @@ function JSON_stringify([value, replacer, space]) {
 
   const stack = [];
   let indent = '';
-  let PropertyList = new Value(undefined);
-  let ReplacerFunction = new Value(undefined);
+  let PropertyList = Value.undefined;
+  let ReplacerFunction = Value.undefined;
   if (Type(replacer) === 'Object') {
-    if (IsCallable(replacer).isTrue()) {
+    if (IsCallable(replacer) === Value.true) {
       ReplacerFunction = replacer;
     }
   } else {
     const isArray = Q(IsArray(replacer));
-    if (isArray.isTrue()) {
+    if (isArray === Value.true) {
       PropertyList = [];
       const len = Q(ToLength(Q(Get(replacer, new Value('length'))))).numberValue();
       let k = 0;
       while (k < len) {
         const v = Q(Get(replacer, X(ToString(new Value(k)))));
-        let item = new Value(undefined);
+        let item = Value.undefined;
         if (Type(v) === 'String') {
           item = v;
         } else if (Type(v) === 'Number') {
@@ -224,7 +224,7 @@ function JSON_stringify([value, replacer, space]) {
   }
   const wrapper = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   const status = CreateDataProperty(wrapper, new Value(''), value);
-  Assert(status.isTrue());
+  Assert(status === Value.true);
   return Q(SerializeJSONProperty(new Value(''), wrapper));
 }
 */
@@ -238,9 +238,9 @@ export function CreateJSON(realmRec) {
 
   json.DefineOwnProperty(new Value('parse'), Descriptor({
     Value: parse,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   /*
@@ -250,17 +250,17 @@ export function CreateJSON(realmRec) {
 
   json.DefineOwnProperty(new Value('stringify'), Descriptor({
     Value: stringify,
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
   */
 
   json.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
     Value: new Value('JSON'),
-    Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   realmRec.Intrinsics['%JSON%'] = json;

@@ -88,7 +88,7 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-      if (hasNameProperty.isFalse()) {
+      if (hasNameProperty === Value.false) {
         X(SetFunctionName(v, bindingId));
       }
     }

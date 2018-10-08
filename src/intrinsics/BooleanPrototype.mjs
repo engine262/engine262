@@ -24,7 +24,7 @@ function thisBooleanValue(value) {
 
 function BooleanProto_toString(argList, { thisValue }) {
   const b = Q(thisBooleanValue(thisValue));
-  if (b.isTrue()) {
+  if (b === Value.true) {
     return new Value('true');
   }
   return new Value('false');
@@ -40,7 +40,7 @@ export function CreateBooleanPrototype(realmRec) {
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
-  proto.BooleanData = new Value(false);
+  proto.BooleanData = Value.false;
 
   realmRec.Intrinsics['%BooleanPrototype%'] = proto;
 }

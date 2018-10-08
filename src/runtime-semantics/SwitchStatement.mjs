@@ -28,7 +28,7 @@ function* CaseClauseIsSelected(C, input) {
 //   `{` CaseClauses DefaultClause CaseClauses `}`
 function* CaseBlockEvaluation(CaseBlock, input) {
   if (CaseBlock.length === 0) {
-    return NormalCompletion(new Value(undefined));
+    return NormalCompletion(Value.undefined);
   }
 
   const defaultIndex = CaseBlock.findIndex((c) => c.test === null);
@@ -38,7 +38,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     const secondCaseClauses = CaseBlock.slice(defaultIndex + 1);
     const DefaultClause = CaseBlock[defaultIndex];
 
-    let V = new Value(undefined);
+    let V = Value.undefined;
     let A;
     if (firstCaseClauses.length > 0) {
       A = firstCaseClauses;
@@ -48,7 +48,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     let found = false;
     for (const C of A) {
       if (found === false) {
-        found = Q(yield* CaseClauseIsSelected(C, input)).isTrue();
+        found = Q(yield* CaseClauseIsSelected(C, input)) === Value.true;
       }
       if (found === true) {
         const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
@@ -70,7 +70,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     if (found === false) {
       for (const C of B) {
         if (foundInB === false) {
-          foundInB = Q(CaseClauseIsSelected(C, input)).isTrue();
+          foundInB = Q(CaseClauseIsSelected(C, input)) === Value.true;
         }
         if (foundInB === true) {
           const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
@@ -105,13 +105,13 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     return NormalCompletion(V);
   } else {
     // CaseBlock : `{` CaseClauses `}`
-    let V = new Value(undefined);
+    let V = Value.undefined;
     // Let A be the List of CaseClause items in CaseClauses, in source text order.
     const A = CaseBlock;
     let found = false;
     for (const C of A) {
       if (found === false) {
-        found = Q(CaseClauseIsSelected(C, input)).isTrue();
+        found = Q(CaseClauseIsSelected(C, input)) === Value.true;
       }
       if (found === true) {
         const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));

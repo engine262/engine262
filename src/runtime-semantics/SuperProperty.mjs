@@ -12,7 +12,7 @@ import { Q } from '../completion.mjs';
 // #sec-makesuperpropertyreference
 function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   const env = GetThisEnvironment();
-  Assert(env.HasSuperBinding().isTrue());
+  Assert(env.HasSuperBinding() === Value.true);
   const baseValue = Q(env.GetSuperBase());
   const bv = Q(RequireObjectCoercible(baseValue));
   return new SuperReference(bv, propertyKey, actualThis, strict);

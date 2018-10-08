@@ -46,7 +46,7 @@ function SetProto_add([value], { thisValue }) {
   }
   const entries = S.SetData;
   for (const e of entries) {
-    if (e !== undefined && SameValueZero(e, value)) {
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
       return S;
     }
   }
@@ -69,7 +69,7 @@ function SetProto_clear(args, { thisValue }) {
   for (let i = 0; i < entries.length; i += 1) {
     entries[i] = undefined;
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function SetProto_delete([value], { thisValue }) {
@@ -83,12 +83,12 @@ function SetProto_delete([value], { thisValue }) {
   const entries = S.SetData;
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
-    if (e !== undefined && SameValueZero(e, value)) {
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
       entries[i] = undefined;
-      return new Value(true);
+      return Value.true;
     }
   }
-  return new Value(false);
+  return Value.false;
 }
 
 function SetProto_entries(args, { thisValue }) {
@@ -104,14 +104,14 @@ function SetProto_forEach([callbackfn, thisArg], { thisValue }) {
   if (!('SetData' in S)) {
     return surroundingAgent.Throw('TypeError');
   }
-  if (IsCallable(callbackfn).isFalse()) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   let T;
   if (thisArg !== undefined) {
     T = thisArg;
   } else {
-    T = new Value(undefined);
+    T = Value.undefined;
   }
   const entries = S.SetData;
   for (const e of entries) {
@@ -119,7 +119,7 @@ function SetProto_forEach([callbackfn, thisArg], { thisValue }) {
       Q(Call(callbackfn, T, [e, e, S]));
     }
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function SetProto_has([value], { thisValue }) {
@@ -132,11 +132,11 @@ function SetProto_has([value], { thisValue }) {
   }
   const entries = S.SetData;
   for (const e of entries) {
-    if (e !== undefined && SameValueZero(e, value)) {
-      return new Value(true);
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+      return Value.true;
     }
   }
-  return new Value(false);
+  return Value.false;
 }
 
 function SetProto_values(args, { thisValue }) {
@@ -171,7 +171,7 @@ export function CreateSetPrototype(realmRec) {
     ['forEach', SetProto_forEach, 1],
     ['has', SetProto_has, 1],
     ['values', SetProto_values, 0],
-    [wellKnownSymbols.toStringTag, new Value('Set'), undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('Set'), undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   {
@@ -180,9 +180,9 @@ export function CreateSetPrototype(realmRec) {
     SetFunctionLength(fn, new Value(0));
     X(proto.DefineOwnProperty(new Value('size'), Descriptor({
       Get: fn,
-      Set: new Value(undefined),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
 

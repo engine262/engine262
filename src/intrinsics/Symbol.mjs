@@ -22,7 +22,7 @@ function SymbolConstructor([description], { NewTarget }) {
     return surroundingAgent.Throw('TypeError');
   }
   const descString = description === undefined || Type(description) === 'Undefined'
-    ? new Value(undefined)
+    ? Value.undefined
     : Q(ToString(description));
 
   return new SymbolValue(descString);
@@ -31,7 +31,7 @@ function SymbolConstructor([description], { NewTarget }) {
 function Symbol_for([key]) {
   const stringKey = Q(ToString(key));
   for (const e of GlobalSymbolRegistry) {
-    if (SameValue(e.Key, stringKey)) {
+    if (SameValue(e.Key, stringKey) === Value.true) {
       return e.Symbol;
     }
   }
@@ -46,11 +46,11 @@ function Symbol_keyFor([sym]) {
     return surroundingAgent.Throw('TypeError');
   }
   for (const e of GlobalSymbolRegistry) {
-    if (SameValue(e.Symbol, sym)) {
+    if (SameValue(e.Symbol, sym) === Value.true) {
       return e.Key;
     }
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function Symbol_symbolSpecies(args, { thisValue }) {
@@ -67,17 +67,17 @@ export function CreateSymbol(realmRec) {
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
     symbolConstructor.DefineOwnProperty(new Value(name), Descriptor({
       Value: sym,
-      Writable: new Value(false),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     }));
   }
 
   symbolConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%SymbolPrototype%'],
-    Writable: new Value(true),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   }));
 
   realmRec.Intrinsics['%Symbol%'] = symbolConstructor;

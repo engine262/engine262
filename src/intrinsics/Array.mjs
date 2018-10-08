@@ -59,7 +59,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     let intLen;
     if (Type(len) !== 'Number') {
       const defineStatus = CreateDataProperty(array, new Value('0'), len);
-      Assert(defineStatus.isTrue());
+      Assert(defineStatus === Value.true);
       intLen = new Value(1);
     } else {
       intLen = ToUint32(len);
@@ -67,7 +67,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
         return surroundingAgent.Throw('RangeError');
       }
     }
-    Set(array, new Value('length'), intLen, new Value(true));
+    Set(array, new Value('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
     // #sec-array-items Array ( ...items )
@@ -83,7 +83,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
       const Pk = ToString(new Value(k));
       const itemK = items[k];
       const defineStatus = CreateDataProperty(array, Pk, itemK);
-      Assert(defineStatus.isTrue());
+      Assert(defineStatus === Value.true);
       k += 1;
     }
     Assert(X(Get(array, new Value('length'))).numberValue() === numberOfArgs);
@@ -94,7 +94,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
 }
 
 function ArrayFrom(argList, { thisValue }) {
-  const [items, mapfn = new Value(undefined), thisArg] = argList;
+  const [items, mapfn = Value.undefined, thisArg] = argList;
   const C = thisValue;
   let mapping;
   let T;
@@ -108,13 +108,13 @@ function ArrayFrom(argList, { thisValue }) {
     if (argList.length >= 3) {
       T = thisArg;
     } else {
-      T = new Value(undefined);
+      T = Value.undefined;
     }
     mapping = true;
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
   if (Type(usingIterator) !== 'Undefined') {
-    if (IsConstructor(C).isTrue()) {
+    if (IsConstructor(C) === Value.true) {
       A = Q(Construct(C));
     } else {
       A = X(ArrayCreate(new Value(0)));
@@ -128,8 +128,8 @@ function ArrayFrom(argList, { thisValue }) {
       }
       const Pk = X(ToString(new Value(k)));
       const next = Q(IteratorStep(iteratorRecord));
-      if (next === new Value(false)) {
-        Q(Set(A, new Value('length'), new Value(k), new Value(true)));
+      if (next === Value.false) {
+        Q(Set(A, new Value('length'), new Value(k), Value.true));
         return A;
       }
       const nextValue = IteratorValue(next);
@@ -153,7 +153,7 @@ function ArrayFrom(argList, { thisValue }) {
   const arrayLike = X(ToObject(items));
   const lenProp = Q(Get(arrayLike, new Value('length')));
   const len = Q(ToLength(lenProp));
-  if (IsConstructor(C).isTrue()) {
+  if (IsConstructor(C) === Value.true) {
     A = Q(Construct(C, [len]));
   } else {
     A = Q(ArrayCreate(len));
@@ -171,7 +171,7 @@ function ArrayFrom(argList, { thisValue }) {
     Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), len, new Value(true)));
+  Q(Set(A, new Value('length'), len, Value.true));
   return A;
 }
 
@@ -184,7 +184,7 @@ function ArrayOf([...items], { thisValue }) {
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
-  if (IsConstructor(C).isTrue()) {
+  if (IsConstructor(C) === Value.true) {
     A = Q(Construct(C, [len]));
   } else {
     A = Q(ArrayCreate(new Value(len)));
@@ -196,7 +196,7 @@ function ArrayOf([...items], { thisValue }) {
     Q(CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), new Value(len), new Value(true)));
+  Q(Set(A, new Value('length'), new Value(len), Value.true));
   return A;
 }
 

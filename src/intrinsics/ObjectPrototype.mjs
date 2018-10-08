@@ -23,16 +23,16 @@ function ObjectProto_hasOwnProperty([V], { thisValue }) {
 
 function ObjectProto_isPrototypeOf([V], { thisValue }) {
   if (Type(V) !== 'Object') {
-    return new Value(false);
+    return Value.false;
   }
   const O = Q(ToObject(thisValue));
   while (true) {
     V = Q(V.GetPrototypeOf());
     if (Type(V) === 'Null') {
-      return new Value(false);
+      return Value.false;
     }
-    if (SameValue(O, V) === true) {
-      return new Value(true);
+    if (SameValue(O, V) === Value.true) {
+      return Value.true;
     }
   }
 }
@@ -42,7 +42,7 @@ function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));
   if (Type(desc) === 'Undefined') {
-    return new Value(false);
+    return Value.false;
   }
   return desc.Enumerable;
 }
@@ -62,7 +62,7 @@ function ObjectProto_toString(argList, { thisValue }) {
   const O = X(ToObject(thisValue));
   const isArray = Q(IsArray(O));
   let builtinTag;
-  if (isArray.isTrue()) {
+  if (isArray === Value.true) {
     builtinTag = 'Array';
   } else if (Type(O) === 'String') {
     builtinTag = 'String';
@@ -103,7 +103,7 @@ export function CreateObjectPrototype(realmRec) {
     ['toLocaleString', ObjectProto_toLocaleString, 0],
     ['toString', ObjectProto_toString, 0],
     ['valueOf', ObjectProto_valueOf, 0],
-  ], new Value(null));
+  ], Value.null);
 
   realmRec.Intrinsics['%ObjProto_toString%'] = Get(proto, new Value('toString'));
   realmRec.Intrinsics['%ObjProto_valueOf%'] = Get(proto, new Value('valueOf'));

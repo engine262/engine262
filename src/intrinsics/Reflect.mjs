@@ -19,7 +19,7 @@ import { Value, Type, Descriptor } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 function Reflect_apply([target, thisArgument, argumentsList]) {
-  if (IsCallable(target).isFalse()) {
+  if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'target is not callable');
   }
   const args = Q(CreateListFromArrayLike(argumentsList));
@@ -28,12 +28,12 @@ function Reflect_apply([target, thisArgument, argumentsList]) {
 }
 
 function Reflect_construct([target, argumentsList, newTarget]) {
-  if (IsConstructor(target).isFalse()) {
+  if (IsConstructor(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'target is not a constructor');
   }
   if (!newTarget) {
     newTarget = target;
-  } else if (IsConstructor(newTarget).isFalse()) {
+  } else if (IsConstructor(newTarget) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'newTarget is not a constructor');
   }
   const args = Q(CreateListFromArrayLike(argumentsList));
@@ -158,9 +158,9 @@ export function CreateReflect(realmRec) {
     SetFunctionLength(fn, new Value(len));
     reflect.DefineOwnProperty(new Value(name), Descriptor({
       Value: fn,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     }));
   });
 

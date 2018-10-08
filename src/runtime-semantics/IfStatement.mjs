@@ -29,18 +29,18 @@ export function* Evaluate_IfStatement({
 
   if (AlternateStatement !== null) {
     let stmtCompletion;
-    if (exprValue.isTrue()) {
+    if (exprValue === Value.true) {
       stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(Statement));
     } else {
       stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(AlternateStatement));
     }
-    return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
+    return Completion(UpdateEmpty(stmtCompletion, Value.undefined));
   } else {
-    if (exprValue.isFalse()) {
+    if (exprValue === Value.false) {
       return new NormalCompletion(undefined);
     } else {
       const stmtCompletion = EnsureCompletion(yield* Evaluate_Statement(Statement));
-      return Completion(UpdateEmpty(stmtCompletion, new Value(undefined)));
+      return Completion(UpdateEmpty(stmtCompletion, Value.undefined));
     }
   }
 }

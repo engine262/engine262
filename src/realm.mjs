@@ -82,14 +82,14 @@ function AddRestrictedFunctionProperties(F, realm) {
   X(DefinePropertyOrThrow(F, new Value('caller'), Descriptor({
     Get: thrower,
     Set: thrower,
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(F, new Value('arguments'), Descriptor({
     Get: thrower,
     Set: thrower,
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
 }
 
@@ -98,13 +98,13 @@ export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  const objProto = ObjectCreate(new Value(null));
+  const objProto = ObjectCreate(Value.null);
   intrinsics['%ObjectPrototype%'] = objProto;
 
   const thrower = CreateBuiltinFunction(
     () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
       + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
-    [], realmRec, new Value(null),
+    [], realmRec, Value.null,
   );
   intrinsics['%ThrowTypeError%'] = thrower;
 
@@ -200,15 +200,15 @@ export function SetDefaultGlobalBindings(realmRec) {
 
   // Value Properties of the Global Object
   [
-    ['Infinity', new Value(Infinity, realmRec)],
-    ['NaN', new Value(NaN, realmRec)],
-    ['undefined', new Value(undefined, realmRec)],
+    ['Infinity', new Value(Infinity)],
+    ['NaN', new Value(NaN)],
+    ['undefined', Value.undefined],
   ].forEach(([name, value]) => {
-    Q(DefinePropertyOrThrow(global, new Value(name, realmRec), Descriptor({
+    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
       Value: value,
-      Writable: new Value(false),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     })));
   });
 
@@ -266,11 +266,11 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Math',
     'Reflect',
   ].forEach((name) => {
-    Q(DefinePropertyOrThrow(global, new Value(name, realmRec), Descriptor({
+    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   });
 

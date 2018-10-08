@@ -19,7 +19,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
   let index = O.MapNextIndex;
   const itemKind = O.MapIterationKind;
   if (Type(s) === 'Undefined') {
-    return CreateIterResultObject(new Value(undefined), new Value(true));
+    return CreateIterResultObject(Value.undefined, Value.true);
   }
   Assert('MapData' in s);
   const entries = s.MapData;
@@ -38,11 +38,11 @@ function MapIteratorPrototype_next(args, { thisValue }) {
         Assert(itemKind === 'key+value');
         result = CreateArrayFromList([e.Key, e.Value]);
       }
-      return CreateIterResultObject(result, new Value(false));
+      return CreateIterResultObject(result, Value.false);
     }
   }
-  O.IteratedMap = new Value(undefined);
-  return CreateIterResultObject(new Value(undefined), new Value(true));
+  O.IteratedMap = Value.undefined;
+  return CreateIterResultObject(Value.undefined, Value.true);
 }
 
 export function CreateMapIteratorPrototype(realmRec) {

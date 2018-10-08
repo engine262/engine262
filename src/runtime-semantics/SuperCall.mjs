@@ -6,7 +6,7 @@ import {
   GetNewTarget,
   IsConstructor,
 } from '../abstract-ops/all.mjs';
-import { Type, FunctionValue } from '../value.mjs';
+import { Value, Type, FunctionValue } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
@@ -18,7 +18,7 @@ function GetSuperConstructor() {
   const activeFunction = envRec.FunctionObject;
   Assert(activeFunction instanceof FunctionValue);
   const superConstructor = X(activeFunction.GetPrototypeOf());
-  if (IsConstructor(superConstructor).isFalse()) {
+  if (IsConstructor(superConstructor) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return superConstructor;

@@ -25,17 +25,17 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function PromiseProto_catch([onRejected], { thisValue }) {
   const promise = thisValue;
-  return Q(Invoke(promise, new Value('then'), [new Value(undefined), onRejected]));
+  return Q(Invoke(promise, new Value('then'), [Value.undefined, onRejected]));
 }
 
 function ThenFinallyFunctions([value]) {
   const F = this;
 
   const onFinally = F.OnFinally;
-  Assert(IsCallable(onFinally).isTrue());
-  const result = Q(Call(onFinally, new Value(undefined)));
+  Assert(IsCallable(onFinally) === Value.true);
+  const result = Q(Call(onFinally, Value.undefined));
   const C = F.Constructor;
-  Assert(IsConstructor(C).isTrue());
+  Assert(IsConstructor(C) === Value.true);
   const promise = Q(PromiseResolve(C, result));
   const valueThunk = CreateBuiltinFunction(() => value, []);
   SetFunctionLength(valueThunk, new Value(0));
@@ -46,10 +46,10 @@ function CatchFinallyFunctions([reason]) {
   const F = this;
 
   const onFinally = F.OnFinally;
-  Assert(IsCallable(onFinally).isTrue());
-  const result = Q(Call(onFinally, new Value(undefined)));
+  Assert(IsCallable(onFinally) === Value.true);
+  const result = Q(Call(onFinally, Value.undefined));
   const C = F.Constructor;
-  Assert(IsConstructor(C).isTrue());
+  Assert(IsConstructor(C) === Value.true);
   const promise = Q(PromiseResolve(C, result));
   const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
   SetFunctionLength(thrower, new Value(0));
@@ -62,10 +62,10 @@ function PromiseProto_finally([onFinally], { thisValue }) {
     return surroundingAgent.Throw('TypeError');
   }
   const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
-  Assert(IsConstructor(C).isTrue());
+  Assert(IsConstructor(C) === Value.true);
   let thenFinally;
   let catchFinally;
-  if (IsCallable(onFinally).isFalse()) {
+  if (IsCallable(onFinally) === Value.false) {
     thenFinally = onFinally;
     catchFinally = onFinally;
   } else {
@@ -84,17 +84,17 @@ function PromiseProto_finally([onFinally], { thisValue }) {
 }
 
 export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
-  Assert(IsPromise(promise).isTrue());
+  Assert(IsPromise(promise) === Value.true);
   if (resultCapability) {
     Assert(resultCapability instanceof PromiseCapabilityRecord);
   } else {
-    resultCapability = new Value(undefined);
+    resultCapability = Value.undefined;
   }
-  if (IsCallable(onFulfilled).isFalse()) {
-    onFulfilled = new Value(undefined);
+  if (IsCallable(onFulfilled) === Value.false) {
+    onFulfilled = Value.undefined;
   }
-  if (IsCallable(onRejected).isFalse()) {
-    onRejected = new Value(undefined);
+  if (IsCallable(onRejected) === Value.false) {
+    onRejected = Value.undefined;
   }
   const fulfillReaction = {
     Capability: resultCapability,
@@ -126,7 +126,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
 
 function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
   const promise = thisValue;
-  if (IsPromise(promise).isFalse()) {
+  if (IsPromise(promise) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));

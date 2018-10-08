@@ -25,14 +25,14 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
   const iteratorRecord = Q(GetIterator(spreadObj));
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
-    if (Type(next) === 'Boolean' && next.isFalse()) {
+    if (next === Value.false) {
       return nextIndex;
     }
     const nextValue = Q(IteratorValue(next));
     const status = CreateDataProperty(
       array, ToString(ToUint32(new Value(nextIndex))), nextValue,
     );
-    Assert(status.isTrue());
+    Assert(status === Value.true);
     nextIndex += 1;
   }
 }
@@ -41,7 +41,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
   const initResult = yield* Evaluate_Expression(AssignmentExpression);
   const initValue = Q(GetValue(initResult));
   const created = CreateDataProperty(array, ToString(ToUint32(new Value(nextIndex))), initValue);
-  Assert(created.isTrue());
+  Assert(created === Value.true);
   return nextIndex + 1;
 }
 
@@ -80,7 +80,7 @@ export function* Evaluate_ArrayLiteral(ArrayLiteral) {
   const array = X(ArrayCreate(new Value(0)));
   const len = yield* ArrayAccumulation(ArrayLiteral.elements, array, 0);
   ReturnIfAbrupt(len);
-  X(Set(array, new Value('length'), ToUint32(new Value(len)), new Value(false)));
+  X(Set(array, new Value('length'), ToUint32(new Value(len)), Value.false));
   // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.
   return array;
 }

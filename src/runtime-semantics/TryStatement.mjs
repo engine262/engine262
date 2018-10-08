@@ -64,7 +64,7 @@ function* Evaluate_TryStatement_Catch(Block, Catch) {
   } else {
     C = B;
   }
-  return Completion(UpdateEmpty(C, new Value(undefined)));
+  return Completion(UpdateEmpty(C, Value.undefined));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -75,7 +75,7 @@ function* Evaluate_TryStatement_Finally(Block, Finally) {
   if (F.Type === 'normal') {
     F = B;
   }
-  return Completion(UpdateEmpty(F, new Value(undefined)));
+  return Completion(UpdateEmpty(F, Value.undefined));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation
@@ -92,7 +92,7 @@ function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
   if (F.Type === 'normal') {
     F = C;
   }
-  return Completion(UpdateEmpty(F, new Value(undefined)));
+  return Completion(UpdateEmpty(F, Value.undefined));
 }
 
 // #sec-try-statement-runtime-semantics-evaluation

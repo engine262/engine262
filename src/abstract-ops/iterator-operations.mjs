@@ -57,7 +57,7 @@ export function GetIterator(obj, hint, method) {
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
-    Done: new Value(false),
+    Done: Value.false,
   };
   return EnsureCompletion(iteratorRecord);
 }
@@ -92,8 +92,8 @@ export function IteratorValue(iterResult) {
 export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
-  if (done.isTrue()) {
-    return EnsureCompletion(new Value(false));
+  if (done === Value.true) {
+    return EnsureCompletion(Value.false);
   }
   return EnsureCompletion(result);
 }
@@ -142,10 +142,10 @@ function ListIteratorNextSteps(args, { thisValue }) {
   const index = O.ListIteratorNextIndex;
   const len = list.length;
   if (index >= len) {
-    return CreateIterResultObject(new Value(undefined), new Value(true));
+    return CreateIterResultObject(Value.undefined, Value.true);
   }
   O.ListIteratorNextIndex += 1;
-  return CreateIterResultObject(list[index], new Value(false));
+  return CreateIterResultObject(list[index], Value.false);
 }
 
 // #sec-createlistiteratorRecord
@@ -161,6 +161,6 @@ export function CreateListIteratorRecord(list) {
   return {
     Iterator: iterator,
     NextMethod: next,
-    Done: new Value(false),
+    Done: Value.false,
   };
 }

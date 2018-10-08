@@ -22,7 +22,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
   const name = new Value(BindingIdentifier.name);
-  envRec.CreateImmutableBinding(name, new Value(false));
+  envRec.CreateImmutableBinding(name, Value.false);
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv, strict);
   MakeConstructor(closure);
   SetFunctionName(closure, name);

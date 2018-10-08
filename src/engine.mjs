@@ -120,12 +120,12 @@ export function EnqueueJob(queueName, job, args) {
 export function InitializeHostDefinedRealm() {
   const realm = CreateRealm();
   const newContext = new ExecutionContext();
-  newContext.Function = new Value(null);
+  newContext.Function = Value.null;
   newContext.Realm = realm;
-  newContext.ScriptOrModule = new Value(null);
+  newContext.ScriptOrModule = Value.null;
   surroundingAgent.executionContextStack.push(newContext);
-  const global = new Value(undefined);
-  const thisValue = new Value(undefined);
+  const global = Value.undefined;
+  const thisValue = Value.undefined;
   SetRealmGlobalObject(realm, global, thisValue);
   SetDefaultGlobalBindings(realm);
 }
@@ -156,7 +156,7 @@ export function RunJobs() {
     }
     const nextPending = nextQueue.shift();
     const newContext = new ExecutionContext();
-    newContext.Function = new Value(null);
+    newContext.Function = Value.null;
     newContext.Realm = nextPending.Realm;
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
@@ -177,7 +177,7 @@ export function AgentSignifier() {
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptCtx = new ExecutionContext();
-  scriptCtx.Function = new Value(null);
+  scriptCtx.Function = Value.null;
   scriptCtx.Realm = scriptRecord.Realm;
   scriptCtx.ScriptOrModule = scriptRecord;
   scriptCtx.VariableEnvironment = globalEnv;
@@ -191,7 +191,7 @@ export function ScriptEvaluation(scriptRecord) {
     result = Evaluate_Script(scriptBody, globalEnv);
   }
   if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(new Value(undefined));
+    result = new NormalCompletion(Value.undefined);
   }
   // Suspend scriptCtx
   surroundingAgent.executionContextStack.pop();
@@ -235,7 +235,7 @@ export function HostPromiseRejectionTracker() {}
 // 22.1.3.1 #sec-isconcatspreadable
 export function IsConcatSpreadable(O) {
   if (Type(O) !== 'Object') {
-    return new Value(false);
+    return Value.false;
   }
   const spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
   if (spreadable.value !== undefined) {

@@ -32,7 +32,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(new Value(undefined));
+            stmtResult = new NormalCompletion(Value.undefined);
           } else {
             stmtResult = new NormalCompletion(stmtResult.Value);
           }
@@ -46,7 +46,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
       if (stmtResult.Type === 'break') {
         if (stmtResult.Target === undefined) {
           if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(new Value(undefined));
+            stmtResult = new NormalCompletion(Value.undefined);
           } else {
             stmtResult = new NormalCompletion(stmtResult.Value);
           }

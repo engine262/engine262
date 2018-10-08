@@ -28,7 +28,7 @@ import {
 import { Q, X } from '../completion.mjs';
 
 function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
-  if (IsCallable(func).isFalse()) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   if (Type(argArray) === 'Undefined' || Type(argArray) === 'Null') {
@@ -54,10 +54,10 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   const F = this;
 
   const target = F.BoundTargetFunction;
-  Assert(IsConstructor(target).isTrue());
+  Assert(IsConstructor(target) === Value.true);
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs, ...argumentsList];
-  if (SameValue(F, newTarget)) {
+  if (SameValue(F, newTarget) === Value.true) {
     newTarget = target;
   }
   return Q(Construct(target, args, newTarget));
@@ -69,11 +69,11 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   const proto = Q(targetFunction.GetPrototypeOf());
   const obj = new ObjectValue();
   obj.Call = BoundFunctionExoticObjectCall;
-  if (IsConstructor(targetFunction).isTrue()) {
+  if (IsConstructor(targetFunction) === Value.true) {
     obj.Construct = BoundFunctionExoticObjectConstruct;
   }
   obj.Prototype = proto;
-  obj.Extensible = true;
+  obj.Extensible = Value.true;
   obj.BoundTargetFunction = targetFunction;
   obj.BoundThis = boundThis;
   obj.BoundArguments = boundArgs;
@@ -82,7 +82,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
 
 function FunctionProto_bind([thisArg, ...args], { thisValue }) {
   const Target = thisValue;
-  if (IsCallable(Target).isFalse()) {
+  if (IsCallable(Target) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   // Let args be a new (possibly empty) List consisting of all
@@ -90,7 +90,7 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
   const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
   let L;
-  if (targetHasLength.isTrue()) {
+  if (targetHasLength === Value.true) {
     let targetLen = Q(Get(Target, new Value('length')));
     if (Type(targetLen) !== 'Number') {
       L = 0;
@@ -111,7 +111,7 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
 }
 
 function FunctionProto_call([thisArg, ...args], { thisValue: func }) {
-  if (IsCallable(func).isFalse()) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   const argList = [];
@@ -166,9 +166,9 @@ export function CreateFunctionPrototype(realmRec) {
     SetFunctionLength(n, new Value(length));
     proto.DefineOwnProperty(name, Descriptor({
       Value: n,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     }));
   });
 }

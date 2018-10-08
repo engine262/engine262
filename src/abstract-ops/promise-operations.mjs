@@ -28,14 +28,14 @@ import {
 
 export function PromiseResolve(C, x) {
   Assert(Type(C) === 'Object');
-  if (IsPromise(x).isTrue()) {
+  if (IsPromise(x) === Value.true) {
     const xConstructor = Q(Get(x, new Value('constructor')));
-    if (SameValue(xConstructor, C)) {
+    if (SameValue(xConstructor, C) === Value.true) {
       return x;
     }
   }
   const promiseCapability = Q(NewPromiseCapability(C));
-  Q(Call(promiseCapability.Resolve, new Value(undefined), [x]));
+  Q(Call(promiseCapability.Resolve, Value.undefined, [x]));
   return promiseCapability.Promise;
 }
 
@@ -51,19 +51,19 @@ function GetCapabilitiesExecutorFunctions([resolve, reject]) {
   }
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 export class PromiseCapabilityRecord {
   constructor() {
-    this.Promise = new Value(undefined);
-    this.Resolve = new Value(undefined);
-    this.Reject = new Value(undefined);
+    this.Promise = Value.undefined;
+    this.Resolve = Value.undefined;
+    this.Reject = Value.undefined;
   }
 }
 
 export function NewPromiseCapability(C) {
-  if (IsConstructor(C).isFalse()) {
+  if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
   const promiseCapability = new PromiseCapabilityRecord();
@@ -72,10 +72,10 @@ export function NewPromiseCapability(C) {
   SetFunctionLength(executor, new Value(2));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
-  if (IsCallable(promiseCapability.Resolve).isFalse()) {
+  if (IsCallable(promiseCapability.Resolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'Promise resolve function is not callable');
   }
-  if (IsCallable(promiseCapability.Reject).isFalse()) {
+  if (IsCallable(promiseCapability.Reject) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'Promise reject function is not callable');
   }
   promiseCapability.Promise = promise;
@@ -96,13 +96,13 @@ export function PromiseReactionJob(reaction, argument) {
       handlerResult = new ThrowCompletion(argument);
     }
   } else {
-    handlerResult = Call(handler, new Value(undefined), [argument]);
+    handlerResult = Call(handler, Value.undefined, [argument]);
   }
   let status;
   if (handlerResult instanceof AbruptCompletion) {
-    status = Call(promiseCapability.Reject, new Value(undefined), [handlerResult.Value]);
+    status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
   } else {
-    status = Call(promiseCapability.Resolve, new Value(undefined), [handlerResult.Value]);
+    status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
   }
   return status;
 }
@@ -113,7 +113,7 @@ function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
   if (thenCallResult instanceof AbruptCompletion) {
-    const status = Call(resolvingFunctions.Reject, new Value(undefined), [thenCallResult.Value]);
+    const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
     return status;
   }
   return thenCallResult;
@@ -123,7 +123,7 @@ function TriggerPromiseReactions(reactions, argument) {
   reactions.forEach((reaction) => {
     EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
   });
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function FulfillPromise(promise, value) {
@@ -156,10 +156,10 @@ function PromiseResolveFunctions([resolution]) {
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
-    return new Value(undefined);
+    return Value.undefined;
   }
   alreadyResolved.Value = true;
-  if (SameValue(resolution, promise) === true) {
+  if (SameValue(resolution, promise) === Value.true) {
     const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
     return RejectPromise(promise, selfResolutionError);
   }
@@ -172,11 +172,11 @@ function PromiseResolveFunctions([resolution]) {
     return RejectPromise(promise, then.Value);
   }
   const thenAction = then.Value;
-  if (IsCallable(thenAction).isFalse()) {
+  if (IsCallable(thenAction) === Value.false) {
     return FulfillPromise(promise, resolution);
   }
   EnqueueJob('PromiseJobs', PromiseResolveTheableJob, [promise, resolution, thenAction]);
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function PromiseRejectFunctions([reason]) {
@@ -186,7 +186,7 @@ function PromiseRejectFunctions([reason]) {
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
-    return new Value(undefined);
+    return Value.undefined;
   }
   alreadyResolved.Value = true;
   return RejectPromise(promise, reason);

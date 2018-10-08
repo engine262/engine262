@@ -1,25 +1,15 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
-  isActualNewExpression,
-} from '../ast.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { isActualNewExpression } from '../ast.mjs';
 import {
   Assert,
   Construct,
   GetValue,
   IsConstructor,
 } from '../abstract-ops/all.mjs';
-import {
-  ArgumentListEvaluation,
-} from './all.mjs';
-import {
-  Evaluate_Expression,
-} from '../evaluator.mjs';
-import {
-  Q,
-  ReturnIfAbrupt,
-} from '../completion.mjs';
+import { Value } from '../value.mjs';
+import { ArgumentListEvaluation } from './all.mjs';
+import { Evaluate_Expression } from '../evaluator.mjs';
+import { Q, ReturnIfAbrupt } from '../completion.mjs';
 
 // #sec-evaluatenew
 function* EvaluateNew(constructExpr, args = []) {
@@ -30,7 +20,7 @@ function* EvaluateNew(constructExpr, args = []) {
   // We convert empty to [] as part of the default parameter.
   const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
-  if (IsConstructor(constructor).isFalse()) {
+  if (IsConstructor(constructor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'value is not a constructor');
   }
   return Q(Construct(constructor, argList));

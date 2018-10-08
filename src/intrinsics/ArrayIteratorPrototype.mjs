@@ -28,7 +28,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   }
   const a = O.IteratedObject;
   if (Type(a) === 'Undefined') {
-    return CreateIterResultObject(new Value(undefined), new Value(true));
+    return CreateIterResultObject(Value.undefined, Value.true);
   }
   const index = O.ArrayIteratorNextIndex;
   const itemKind = O.ArrayIterationKind;
@@ -41,12 +41,12 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     len = Q(ToLength(lenProp));
   }
   if (index >= len.numberValue()) {
-    O.IteratedObject = new Value(undefined);
-    return CreateIterResultObject(new Value(undefined), new Value(true));
+    O.IteratedObject = Value.undefined;
+    return CreateIterResultObject(Value.undefined, Value.true);
   }
   O.ArrayIteratorNextIndex = index + 1;
   if (itemKind === 'key') {
-    return CreateIterResultObject(new Value(index), new Value(false));
+    return CreateIterResultObject(new Value(index), Value.false);
   }
   const elementKey = X(ToString(new Value(index)));
   const elementValue = Q(Get(a, elementKey));
@@ -57,7 +57,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     Assert(itemKind === 'key+value');
     result = CreateArrayFromList([new Value(index), elementValue]);
   }
-  return CreateIterResultObject(result, new Value(false));
+  return CreateIterResultObject(result, Value.false);
 }
 
 export function CreateArrayIteratorPrototype(realmRec) {

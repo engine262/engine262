@@ -13,13 +13,13 @@ import { Assert } from './all.mjs';
 // 8.3.1 #sec-getactivescriptormodule
 export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
-    return new Value(null);
+    return Value.null;
   }
   const ec = [...surroundingAgent.executionContextStack]
     .reverse()
     .find((e) => e.ScriptOrModule !== undefined);
   if (!ec) {
-    return new Value(null);
+    return Value.null;
   }
   return ec.ScriptOrModule;
 }
@@ -31,7 +31,7 @@ export function ResolveBinding(name, env) {
   }
   Assert(env instanceof LexicalEnvironment);
   const strict = surroundingAgent.isStrictCode;
-  return GetIdentifierReference(env, name, new Value(strict));
+  return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
 // 8.3.3 #sec-getthisenvironment
@@ -40,7 +40,7 @@ export function GetThisEnvironment() {
   while (true) { // eslint-disable-line no-constant-condition
     const envRec = lex.EnvironmentRecord;
     const exists = envRec.HasThisBinding();
-    if (exists.isTrue()) {
+    if (exists === Value.true) {
       return envRec;
     }
     const outer = lex.outerEnvironmentReference;

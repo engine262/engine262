@@ -47,7 +47,7 @@ function MapProto_clear(args, { thisValue }) {
     p.Key = undefined;
     p.Value = undefined;
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function MapProto_delete([key], { thisValue }) {
@@ -61,7 +61,7 @@ function MapProto_delete([key], { thisValue }) {
   const entries = M.MapData;
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
-    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       p.Key = undefined;
       p.Value = undefined;
 
@@ -70,10 +70,10 @@ function MapProto_delete([key], { thisValue }) {
       // such as physically removing the entry from internal data structures.
       entries.splice(i, 1);
 
-      return new Value(true);
+      return Value.true;
     }
   }
-  return new Value(false);
+  return Value.false;
 }
 
 function MapProto_entries(args, { thisValue }) {
@@ -89,14 +89,14 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   if (!('MapData' in M)) {
     return surroundingAgent.Throw('TypeError');
   }
-  if (IsCallable(callbackfn).isFalse()) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   let T;
   if (thisArg !== undefined) {
     T = thisArg;
   } else {
-    T = new Value(undefined);
+    T = Value.undefined;
   }
   const entries = M.MapData;
   for (const e of entries) {
@@ -104,7 +104,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
       Q(Call(callbackfn, T, [e.Value, e.Key, M]));
     }
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function MapProto_get([key], { thisValue }) {
@@ -117,11 +117,11 @@ function MapProto_get([key], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       return p.Value;
     }
   }
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 function MapProto_has([key], { thisValue }) {
@@ -134,11 +134,11 @@ function MapProto_has([key], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
-      return new Value(true);
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      return Value.true;
     }
   }
-  return new Value(false);
+  return Value.false;
 }
 
 function MapProto_keys(args, { thisValue }) {
@@ -156,7 +156,7 @@ function MapProto_set([key, value], { thisValue }) {
   }
   const entries = M.MapData;
   for (const p of entries) {
-    if (p.Key !== undefined && SameValueZero(p.Key, key)) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       p.Value = value;
       return M;
     }
@@ -203,7 +203,7 @@ export function CreateMapPrototype(realmRec) {
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
     ['values', MapProto_values, 0],
-    [wellKnownSymbols.toStringTag, new Value('Map'), undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('Map'), undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   {
@@ -212,9 +212,9 @@ export function CreateMapPrototype(realmRec) {
     SetFunctionLength(fn, new Value(0));
     X(proto.DefineOwnProperty(new Value('size'), Descriptor({
       Get: fn,
-      Set: new Value(undefined),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
 

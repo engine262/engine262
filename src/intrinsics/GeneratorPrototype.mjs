@@ -35,7 +35,7 @@ export function CreateGeneratorPrototype(realmRec) {
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],
     ['throw', GeneratorProto_throw, 1],
-    [wellKnownSymbols.toStringTag, new Value('Generator'), undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('Generator'), undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%IteratorPrototype%']);
 
   realmRec.Intrinsics['%GeneratorPrototype%'] = generatorPrototype;

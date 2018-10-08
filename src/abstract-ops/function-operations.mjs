@@ -45,7 +45,7 @@ import { outOfRange, Unwind } from '../helpers.mjs';
 
 // #sec-SetFunctionName
 export function SetFunctionName(F, name, prefix) {
-  Assert(IsExtensible(F).isTrue() && HasOwnProperty(F, new Value('name')).isFalse());
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
   Assert(Type(name) === 'Symbol' || Type(name) === 'String');
   Assert(!prefix || Type(prefix) === 'String');
   if (Type(name) === 'Symbol') {
@@ -61,22 +61,22 @@ export function SetFunctionName(F, name, prefix) {
   }
   return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
     Value: name,
-    Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
 }
 
 // #sec-SetFunctionLength
 export function SetFunctionLength(F, length) {
-  Assert(IsExtensible(F).isTrue() && HasOwnProperty(F, new Value('length')).isFalse());
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
   Assert(Type(length) === 'Number');
   Assert(length.numberValue() >= 0 && X(ToInteger(length)).numberValue() === length.numberValue());
   return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
     Value: length,
-    Writable: new Value(false),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
 }
 
@@ -116,7 +116,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   }
 
   // const callerContext = surroundingAgent.runningExecutionContext;
-  const calleeContext = PrepareForOrdinaryCall(F, new Value(undefined));
+  const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
 
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
@@ -130,7 +130,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
     return new NormalCompletion(result.Value);
   }
   ReturnIfAbrupt(result);
-  return new NormalCompletion(new Value(undefined));
+  return new NormalCompletion(Value.undefined);
 }
 
 function FunctionConstructSlot(argumentsList, newTarget) {
@@ -175,7 +175,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   const thisMode = F.ThisMode;
   if (thisMode === 'lexical') {
-    return new NormalCompletion(new Value(undefined));
+    return new NormalCompletion(Value.undefined);
   }
   const calleeRealm = F.Realm;
   const localEnv = calleeContext.LexicalEnvironment;
@@ -245,7 +245,7 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
   }
   const F = new FunctionValue(functionPrototype);
   for (const internalSlot of esFunctionInternalSlots) {
-    F[internalSlot] = new Value(undefined);
+    F[internalSlot] = Value.undefined;
   }
   F.Call = FunctionCallSlot;
   if (needsConstruct) {
@@ -255,7 +255,7 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
   F.Strict = strict;
   F.FunctionKind = functionKind;
   F.Prototype = functionPrototype;
-  F.Extensible = true;
+  F.Extensible = Value.true;
   F.Realm = surroundingAgent.currentRealmRecord;
   return F;
 }
@@ -315,8 +315,8 @@ export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict
 // #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(F instanceof FunctionValue);
-  Assert(IsConstructor(F).isTrue());
-  Assert(X(IsExtensible(F)).isTrue() && X(HasOwnProperty(F, new Value('prototype'))).isFalse());
+  Assert(IsConstructor(F) === Value.true);
+  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
   if (writablePrototype === undefined) {
     writablePrototype = true;
   }
@@ -324,18 +324,18 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     prototype = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
     X(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
       Value: F,
-      Writable: new Value(writablePrototype),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: writablePrototype ? Value.true : Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
-    Writable: new Value(writablePrototype),
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
+    Writable: writablePrototype ? Value.true : Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   })));
-  return new NormalCompletion(new Value(undefined));
+  return new NormalCompletion(Value.undefined);
 }
 
 // #sec-makeclassconstructor
@@ -343,7 +343,7 @@ export function MakeClassConstructor(F) {
   Assert(F instanceof FunctionValue);
   Assert(F.FunctionKind === 'normal');
   F.FunctionKind = 'classConstructor';
-  return new NormalCompletion(new Value(undefined));
+  return new NormalCompletion(Value.undefined);
 }
 
 // #sec-makemethod
@@ -351,7 +351,7 @@ export function MakeMethod(F, homeObject) {
   Assert(F instanceof FunctionValue);
   Assert(Type(homeObject) === 'Object');
   F.HomeObject = homeObject;
-  return new NormalCompletion(new Value(undefined));
+  return new NormalCompletion(Value.undefined);
 }
 
 // 9.3.3 CreateBuiltinFunction
@@ -380,7 +380,7 @@ export function CreateBuiltinFunction(
 
   func.Realm = realm;
   func.Prototype = prototype;
-  func.Extensible = true;
+  func.Extensible = Value.true;
   func.ScriptOrModule = null;
 
   return func;

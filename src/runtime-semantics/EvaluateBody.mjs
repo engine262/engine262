@@ -127,10 +127,10 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   for (const paramName of parameterNames) {
     const alreadyDeclared = envRec.HasBinding(paramName);
-    if (alreadyDeclared.isFalse()) {
+    if (alreadyDeclared === Value.false) {
       X(envRec.CreateMutableBinding(paramName, false));
       if (hasDuplicates === true) {
-        X(envRec.InitializeBinding(paramName, new Value(undefined)));
+        X(envRec.InitializeBinding(paramName, Value.undefined));
       }
     }
   }
@@ -144,7 +144,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       ao = CreateMappedArgumentsObject(func, formals, argumentsList, envRec);
     }
     if (strict) {
-      X(envRec.CreateImmutableBinding(new Value('arguments'), new Value(false)));
+      X(envRec.CreateImmutableBinding(new Value('arguments'), Value.false));
     } else {
       X(envRec.CreateMutableBinding(new Value('arguments'), false));
     }
@@ -156,7 +156,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
   if (hasDuplicates) {
-    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, new Value(undefined)));
+    Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined));
   } else {
     Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
   }
@@ -169,7 +169,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       if (!instantiatedVarNames.includes(n)) {
         instantiatedVarNames.push(n);
         X(envRec.CreateMutableBinding(n, false));
-        envRec.InitializeBinding(n, new Value(undefined));
+        envRec.InitializeBinding(n, Value.undefined);
       }
     }
     varEnv = env;
@@ -185,9 +185,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
         X(varEnvRec.CreateMutableBinding(n, false));
         let initialValue;
         if (!parameterBindings.includes(n) || functionNames.includes(n)) {
-          initialValue = new Value(undefined);
+          initialValue = Value.undefined;
         } else {
-          initialValue = envRec.GetBindingValue(n, new Value(false));
+          initialValue = envRec.GetBindingValue(n, Value.false);
         }
         varEnvRec.InitializeBinding(n, initialValue);
       }
@@ -225,7 +225,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        X(lexEnvRec.CreateImmutableBinding(dn, new Value(true)));
+        X(lexEnvRec.CreateImmutableBinding(dn, Value.true));
       } else {
         X(lexEnvRec.CreateMutableBinding(dn, false));
       }
@@ -235,7 +235,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   for (const f of functionsToInitialize) {
     const fn = BoundNames_FunctionDeclaration(f)[0];
     const fo = InstantiateFunctionObject(f, lexEnv);
-    X(varEnvRec.SetMutableBinding(new Value(fn), fo, new Value(false)));
+    X(varEnvRec.SetMutableBinding(new Value(fn), fo, Value.false));
   }
 
   return new NormalCompletion(undefined);

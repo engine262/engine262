@@ -44,14 +44,6 @@ export function Value(value) {
     return undefined;
   }
 
-  if (value === null) {
-    return nullValue;
-  }
-
-  if (value === undefined) {
-    return undefinedValue;
-  }
-
   if (typeof value === 'string') {
     if (stringMap.has(value)) {
       return stringMap.get(value);
@@ -70,10 +62,6 @@ export function Value(value) {
     return s;
   }
 
-  if (typeof value === 'boolean') {
-    return value ? trueValue : falseValue;
-  }
-
   if (typeof value === 'function') {
     return new BuiltinFunctionValue(value);
   }
@@ -88,19 +76,22 @@ export class UndefinedValue extends PrimitiveValue {}
 export class NullValue extends PrimitiveValue {}
 
 export class BooleanValue extends PrimitiveValue {
-  constructor(boolean) {
+  constructor(v) {
     super();
-    this.boolean = boolean;
+    this.value = v;
   }
 
-  isTrue() {
-    return this === trueValue;
-  }
-
-  isFalse() {
-    return this === falseValue;
+  [Symbol.for('nodejs.util.inspect.custom')]() {
+    return `Boolean { ${this.value} }`;
   }
 }
+
+Object.defineProperties(Value, {
+  undefined: { value: new UndefinedValue(), configurable: false, writable: false },
+  null: { value: new NullValue(), configurable: false, writable: false },
+  true: { value: new BooleanValue(true), configurable: false, writable: false },
+  false: { value: new BooleanValue(false), configurable: false, writable: false },
+});
 
 export class NumberValue extends PrimitiveValue {
   constructor(number) {
@@ -228,19 +219,19 @@ export class ArrayExoticObjectValue extends ObjectValue {
       Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;
       const index = X(ToUint32(P));
-      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable.isFalse()) {
-        return new Value(false);
+      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+        return Value.false;
       }
       const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
-      if (succeeded.isFalse()) {
-        return new Value(false);
+      if (succeeded === Value.false) {
+        return Value.false;
       }
       if (index.numberValue() >= oldLen.numberValue()) {
         oldLenDesc.Value = new Value(index.numberValue() + 1);
         const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
-        Assert(succeeded.isTrue());
+        Assert(succeeded === Value.true);
       }
-      return new Value(true);
+      return Value.true;
     }
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }
@@ -257,14 +248,14 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
     const len = F.properties.get(length).Value.numberValue();
     for (let i = 0; i < len; i += 1) {
       if (argumentsList[i] === undefined) {
-        argumentsList[i] = undefinedValue;
+        argumentsList[i] = Value.undefined;
       }
     }
   }
 
   return F.nativeFunction(argumentsList, {
-    thisValue: thisArgument || undefinedValue,
-    NewTarget: newTarget || undefinedValue,
+    thisValue: thisArgument || Value.undefined,
+    NewTarget: newTarget || Value.undefined,
     callLength,
   });
 }
@@ -381,7 +372,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     }
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
-    if (isMapped.isTrue()) {
+    if (isMapped === Value.true) {
       desc.Value = Get(map, P);
     }
     return desc;
@@ -392,37 +383,37 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const map = args.ParameterMap;
     const isMapped = HasOwnProperty(map, P);
     let newArgDesc = Desc;
-    if (isMapped.isTrue() && IsDataDescriptor(Desc).isTrue()) {
-      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable.isFalse()) {
+    if (isMapped === Value.true && IsDataDescriptor(Desc) === Value.true) {
+      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
         newArgDesc = { ...Desc };
         newArgDesc.Value = Get(map, P);
       }
     }
     const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
-    if (allowed.isFalse()) {
-      return new Value(false);
+    if (allowed === Value.false) {
+      return Value.false;
     }
-    if (isMapped.isTrue()) {
-      if (IsAccessorDescriptor(Desc).isTrue()) {
+    if (isMapped === Value.true) {
+      if (IsAccessorDescriptor(Desc) === Value.true) {
         map.Delete(P);
       } else {
         if (Desc.Value !== undefined) {
-          const setStatus = Set(map, P, Desc.Value, new Value(false));
-          Assert(setStatus.isTrue());
+          const setStatus = Set(map, P, Desc.Value, Value.false);
+          Assert(setStatus === Value.true);
         }
-        if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
+        if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
           map.Delete(P);
         }
       }
     }
-    return new Value(true);
+    return Value.true;
   }
 
   Get(P, Receiver) {
     const args = this;
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
-    if (isMapped.isFalse()) {
+    if (isMapped === Value.false) {
       return Q(OrdinaryGet(args, P, Receiver));
     } else {
       return Get(map, P);
@@ -433,15 +424,15 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const args = this;
     let isMapped;
     let map;
-    if (SameValue(args, Receiver) === false) {
+    if (SameValue(args, Receiver) === Value.false) {
       isMapped = false;
     } else {
       map = args.ParameterMap;
-      isMapped = X(HasOwnProperty(map, P)).isTrue();
+      isMapped = X(HasOwnProperty(map, P)) === Value.true;
     }
     if (isMapped) {
-      const setStatus = Set(map, P, V, new Value(false));
-      Assert(setStatus.isTrue());
+      const setStatus = Set(map, P, V, Value.false);
+      Assert(setStatus === Value.true);
     }
     return Q(OrdinarySet(args, P, V, Receiver));
   }
@@ -451,7 +442,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
     const result = Q(OrdinaryDelete(map, P));
-    if (result.isTrue() && isMapped.isTrue()) {
+    if (result === Value.true && isMapped === Value.true) {
       map.Delete(P);
     }
     return result;
@@ -462,10 +453,10 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
 function SetImmutablePrototype(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
   const current = Q(O.GetPrototypeOf());
-  if (SameValue(V, current)) {
-    return new Value(true);
+  if (SameValue(V, current) === Value.true) {
+    return Value.true;
   }
-  return new Value(false);
+  return Value.false;
 }
 
 // 9.4.6 #sec-module-namespace-exotic-objects
@@ -474,7 +465,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     super();
     this.Module = null;
     this.Exports = [];
-    this.Prototype = new Value(null);
+    this.Prototype = Value.null;
   }
 
   SetPrototypeOf(V) {
@@ -484,11 +475,11 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
   }
 
   IsExtensible() {
-    return new Value(false);
+    return Value.false;
   }
 
   PreventExtensions() {
-    return new Value(true);
+    return Value.true;
   }
 
   GetOwnProperty(P) {
@@ -499,7 +490,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (!exports.includes(P)) {
-      return new Value(undefined);
+      return Value.undefined;
     }
     const value = Q(O.Get(P, O));
     return {
@@ -519,24 +510,24 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
 
     const current = O.GetOwnProperty(P);
     if (Type(current) === 'Undefined') {
-      return new Value(false);
+      return Value.false;
     }
-    if (IsAccessorDescriptor(Desc).isTrue()) {
-      return new Value(false);
+    if (IsAccessorDescriptor(Desc) === Value.true) {
+      return Value.false;
     }
-    if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
-      return new Value(false);
+    if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
+      return Value.false;
     }
-    if (Desc.Enumerable !== undefined && Desc.Enumerable.isFalse()) {
-      return new Value(false);
+    if (Desc.Enumerable !== undefined && Desc.Enumerable === Value.false) {
+      return Value.false;
     }
-    if (Desc.Configurable !== undefined && Desc.Configurable.isTrue()) {
-      return new Value(true);
+    if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
+      return Value.true;
     }
-    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value)) {
-      return new Value(false);
+    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.true) {
+      return Value.false;
     }
-    return new Value(true);
+    return Value.true;
   }
 
   HasProperty(P) {
@@ -547,9 +538,9 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (exports.includes(P)) {
-      return new Value(true);
+      return Value.true;
     } else {
-      return new Value(false);
+      return Value.false;
     }
   }
 
@@ -562,7 +553,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (!exports.includes(P)) {
-      return new Value(undefined);
+      return Value.undefined;
     }
     const m = O.Module;
     const binding = m.ResolveExport(P, []);
@@ -574,11 +565,11 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
     }
     const targetEnvRec = targetEnv.EnvironmentRecord;
-    return Q(targetEnvRec.GetBindingValue(binding.BindingName, new Value(true)));
+    return Q(targetEnvRec.GetBindingValue(binding.BindingName, Value.true));
   }
 
   Set() {
-    return new Value(false);
+    return Value.false;
   }
 
   Delete(P) {
@@ -590,9 +581,9 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const exports = O.Exports;
     if (exports.includes(P)) {
-      return new Value(false);
+      return Value.false;
     }
-    return new Value(true);
+    return Value.true;
   }
 
   OwnPropertyKeys() {
@@ -635,7 +626,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return handlerProto;
     }
     const targetProto = Q(target.GetPrototypeOf());
-    if (SameValue(handlerProto, targetProto) === false) {
+    if (SameValue(handlerProto, targetProto) === Value.false) {
       return surroundingAgent.Throw('TypeError');
     }
     return handlerProto;
@@ -656,7 +647,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.SetPrototypeOf(V));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, V])));
-    if (booleanTrapResult.isFalse()) {
+    if (booleanTrapResult === Value.false) {
       return false;
     }
     const extensibleTarget = Q(IsExtensible(target));
@@ -664,7 +655,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return true;
     }
     const targetProto = Q(target.GetPrototypeOf());
-    if (SameValue(V, targetProto)) {
+    if (SameValue(V, targetProto) === Value.true) {
       return surroundingAgent.Throw('TypeError');
     }
     return true;
@@ -685,7 +676,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
     const targetResult = Q(target.IsExtensible());
-    if (SameValue(booleanTrapResult, targetResult) === false) {
+    if (SameValue(booleanTrapResult, targetResult) === Value.false) {
       return surroundingAgent.Throw('TypeError');
     }
     return booleanTrapResult;
@@ -705,7 +696,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.PreventExtensions());
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
-    if (booleanTrapResult.isTrue()) {
+    if (booleanTrapResult === Value.true) {
       const targetIsExtensible = Q(target.IsExtensible());
       if (targetIsExtensible === true) {
         return surroundingAgent.Throw('TypeError');
@@ -735,27 +726,27 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetDesc = Q(target.GetOwnProperty(P));
     if (Type(trapResultObj) === 'Undefined') {
       if (Type(targetDesc) === 'Undefined') {
-        return new Value(undefined);
+        return Value.undefined;
       }
-      if (targetDesc.Configurable.isFalse()) {
+      if (targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
       const extensibleTarget = Q(IsExtensible(target));
       Assert(Type(extensibleTarget) === 'Boolean');
-      if (extensibleTarget.isFalse()) {
+      if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
-      return new Value(undefined);
+      return Value.undefined;
     }
     const extensibleTarget = Q(IsExtensible(target));
     const resultDesc = Q(ToPropertyDescriptor(trapResultObj));
     CompletePropertyDescriptor(resultDesc);
     const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
-    if (valid.isFalse()) {
+    if (valid === Value.false) {
       return surroundingAgent.Throw('TypeError');
     }
-    if (resultDesc.Configurable.isFalse()) {
-      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable.isFalse()) {
+    if (resultDesc.Configurable === Value.false) {
+      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -778,33 +769,33 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const descObj = FromPropertyDescriptor(Desc);
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, descObj])));
-    if (booleanTrapResult.isFalse()) {
-      return new Value(false);
+    if (booleanTrapResult === Value.false) {
+      return Value.false;
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     const extensibleTarget = Q(IsExtensible(target));
     let settingConfigFalse;
-    if (Desc.Configurable !== undefined && Desc.Configurable.isFalse()) {
+    if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
       settingConfigFalse = true;
     } else {
       settingConfigFalse = false;
     }
     if (Type(targetDesc) === 'Undefined') {
-      if (extensibleTarget.isFalse()) {
+      if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
       if (settingConfigFalse) {
         return surroundingAgent.Throw('TypeError');
       }
     } else if (Type(targetDesc) !== 'Undefined') {
-      if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc).isFalse()) {
+      if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
-      if (settingConfigFalse && targetDesc.Configurable.isFalse()) {
+      if (settingConfigFalse && targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
     }
-    return new Value(true);
+    return Value.true;
   }
 
   HasProperty(P) {
@@ -822,14 +813,14 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.HasProperty(P));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
-    if (booleanTrapResult.isFalse()) {
+    if (booleanTrapResult === Value.false) {
       const targetDesc = Q(target.GetOwnProperty(P));
       if (Type(targetDesc) !== 'Undefined') {
-        if (targetDesc.Configurable.isFalse()) {
+        if (targetDesc.Configurable === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
         const extensibleTarget = Q(IsExtensible(target));
-        if (extensibleTarget.isFalse()) {
+        if (extensibleTarget === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
@@ -853,13 +844,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable.isFalse()) {
-      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable.isFalse()) {
-        if (SameValue(trapResult, targetDesc.Value) === false) {
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === Value.false) {
+      if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
+        if (SameValue(trapResult, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
-      if (IsAccessorDescriptor(targetDesc).isTrue() && Type(targetDesc.Get) === 'Undefined') {
+      if (IsAccessorDescriptor(targetDesc) === Value.true && Type(targetDesc.Get) === 'Undefined') {
         if (Type(trapResult) === 'Undefined') {
           return surroundingAgent.Throw('TypeError');
         }
@@ -883,23 +874,23 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.Set(P, V, Receiver));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, Receiver])));
-    if (booleanTrapResult.isFalse()) {
-      return new Value(false);
+    if (booleanTrapResult === Value.false) {
+      return Value.false;
     }
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable.isFalse()) {
-      if (IsDataDescriptor(targetDesc).isTrue() && targetDesc.Writable.isFalse()) {
-        if (SameValue(V, targetDesc.Value) === false) {
+    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === Value.false) {
+      if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
+        if (SameValue(V, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
-      if (IsAccessorDescriptor(targetDesc).isTrue()) {
+      if (IsAccessorDescriptor(targetDesc) === Value.true) {
         if (Type(targetDesc.Set) === 'Undefined') {
           return surroundingAgent.Throw('TypeError');
         }
       }
     }
-    return new Value(true);
+    return Value.true;
   }
 
   Delete(P) {
@@ -917,17 +908,17 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.Delete(P));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
-    if (booleanTrapResult.isFalse()) {
-      return falseValue;
+    if (booleanTrapResult === Value.false) {
+      return Value.false;
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     if (Type(targetDesc) === 'Undefined') {
-      return trueValue;
+      return Value.true;
     }
-    if (targetDesc.Configurable.isFalse()) {
+    if (targetDesc.Configurable === Value.false) {
       return surroundingAgent.Throw('TypeError');
     }
-    return trueValue;
+    return Value.true;
   }
 
   OwnPropertyKeys() {
@@ -956,13 +947,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetNonconfigurableKeys = [];
     for (const key of targetKeys) {
       const desc = Q(target.GetOwnProperty(key));
-      if (Type(desc) !== 'Undefined' && desc.Configurable.isFalse()) {
+      if (Type(desc) !== 'Undefined' && desc.Configurable === Value.false) {
         targetNonconfigurableKeys.push(key);
       } else {
         targetConfigurableKeys.push(key);
       }
     }
-    if (extensibleTarget.isTrue() && targetNonconfigurableKeys.length === 0) {
+    if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
       return trapResult;
     }
     const uncheckedResultKeys = [...trapResult];
@@ -972,7 +963,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       }
       uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
     }
-    if (extensibleTarget.isTrue()) {
+    if (extensibleTarget === Value.true) {
       return trapResult;
     }
     for (const key of targetConfigurableKeys) {
@@ -1003,11 +994,6 @@ export class SuperReference extends Reference {
     this.thisValue = thisValue;
   }
 }
-
-const undefinedValue = new UndefinedValue();
-const nullValue = new NullValue();
-const trueValue = new BooleanValue(true);
-const falseValue = new BooleanValue(false);
 
 // TODO(devsnek): clean this up somehow
 const stringMap = new Map();

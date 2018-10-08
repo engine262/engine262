@@ -112,24 +112,24 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
       );
   }
   let v;
-  if (iteratorRecord.Done.isFalse()) {
+  if (iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       v = IteratorValue(next);
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(v);
     }
   }
-  if (iteratorRecord.Done.isTrue()) {
-    v = new Value(undefined);
+  if (iteratorRecord.Done === Value.true) {
+    v = Value.undefined;
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);
@@ -158,31 +158,31 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
   const bindingId = new Value(BindingIdentifier.name);
   const lhs = Q(ResolveBinding(bindingId, environment));
   let v;
-  if (iteratorRecord.Done.isFalse()) {
+  if (iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       v = IteratorValue(next);
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(v);
     }
   }
-  if (iteratorRecord.Done.isTrue()) {
-    v = new Value(undefined);
+  if (iteratorRecord.Done === Value.true) {
+    v = Value.undefined;
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-      if (hasNameProperty.isFalse()) {
+      if (hasNameProperty === Value.false) {
         X(SetFunctionName(v, bindingId));
       }
     }
@@ -241,17 +241,17 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
   let n = 0;
   while (true) {
     let next;
-    if (iteratorRecord.Done.isFalse()) {
+    if (iteratorRecord.Done === Value.false) {
       next = IteratorStep(iteratorRecord);
       if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(next);
-      if (Type(next) === 'Boolean' && next.isFalse()) {
-        iteratorRecord.Done = new Value(true);
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
       }
     }
-    if (iteratorRecord.Done.isTrue()) {
+    if (iteratorRecord.Done === Value.true) {
       if (Type(environment) === 'Undefined') {
         return Q(PutValue(lhs, A));
       }
@@ -259,12 +259,12 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(nextValue);
     const nStr = X(ToString(new Value(n)));
     const status = X(CreateDataProperty(A, nStr, nextValue));
-    Assert(status.isTrue());
+    Assert(status === Value.true);
     n += 1;
   }
 }
@@ -278,27 +278,27 @@ function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestEl
   let n = 0;
   while (true) {
     let next;
-    if (iteratorRecord.Done.isFalse()) {
+    if (iteratorRecord.Done === Value.false) {
       next = IteratorStep(iteratorRecord);
       if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(next);
-      if (Type(next) === 'Boolean' && next.isFalse()) {
-        iteratorRecord.Done = new Value(true);
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
       }
     }
-    if (iteratorRecord.Done.isTrue()) {
+    if (iteratorRecord.Done === Value.true) {
       return yield* BindingInitialization_BindingPattern(BindingPattern, A, environment);
     }
     const nextValue = IteratorValue(next);
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(nextValue);
     const nStr = X(ToString(new Value(n)));
     const status = X(CreateDataProperty(A, nStr, nextValue));
-    Assert(status.isTrue());
+    Assert(status === Value.true);
     n += 1;
   }
 }

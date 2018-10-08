@@ -25,14 +25,14 @@ import {
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function AddEntriesFromIterable(target, iterable, adder) {
-  if (IsCallable(adder).isFalse()) {
+  if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null');
   const iteratorRecord = Q(GetIterator(iterable));
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
-    if (Type(next) === 'Boolean' && next.isFalse()) {
+    if (next === Value.false) {
       return target;
     }
     const nextItem = Q(IteratorValue(next));
@@ -73,9 +73,9 @@ export function CreateMap(realmRec) {
 
   X(mapConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
     Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: new Value(undefined),
-    Enumerable: new Value(false),
-    Configurable: new Value(true),
+    Set: Value.undefined,
+    Enumerable: Value.false,
+    Configurable: Value.true,
   })));
 
   realmRec.Intrinsics['%Map%'] = mapConstructor;

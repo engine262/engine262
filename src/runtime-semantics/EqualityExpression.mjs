@@ -29,20 +29,20 @@ export function* Evaluate_EqualityExpression({
       return AbstractEqualityComparison(rval, lval);
     case '!=': {
       const r = AbstractEqualityComparison(rval, lval);
-      if (r.isTrue()) {
-        return new Value(false);
+      if (r === Value.true) {
+        return Value.false;
       } else {
-        return new Value(true);
+        return Value.true;
       }
     }
     case '===':
       return StrictEqualityComparison(rval, lval);
     case '!==': {
       const r = StrictEqualityComparison(rval, lval);
-      if (r.isTrue()) {
-        return new Value(false);
+      if (r === Value.true) {
+        return Value.false;
       } else {
-        return new Value(true);
+        return Value.true;
       }
     }
 

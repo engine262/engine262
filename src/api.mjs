@@ -34,12 +34,12 @@ class APIRealm {
     realm.hostDefinedOptions = options;
 
     const newContext = new ExecutionContext();
-    newContext.Function = new Value(null);
+    newContext.Function = Value.null;
     newContext.Realm = realm;
-    newContext.ScriptOrModule = new Value(null);
+    newContext.ScriptOrModule = Value.null;
     surroundingAgent.executionContextStack.push(newContext);
-    const global = new Value(undefined);
-    const thisValue = new Value(undefined);
+    const global = Value.undefined;
+    const thisValue = Value.undefined;
     SetRealmGlobalObject(realm, global, thisValue);
     this.global = SetDefaultGlobalBindings(realm);
 
@@ -58,7 +58,7 @@ class APIRealm {
     const callerScriptOrModule = callerContext.ScriptOrModule;
 
     const newContext = new ExecutionContext();
-    newContext.Function = new Value(null);
+    newContext.Function = Value.null;
     newContext.Realm = callerRealm;
     newContext.ScriptOrModule = callerScriptOrModule;
 
@@ -78,7 +78,7 @@ class APIRealm {
       }
       const nextPending = nextQueue.shift();
       const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
-      newContext.Function = new Value(null);
+      newContext.Function = Value.null;
       newContext.Realm = nextPending.Realm;
       newContext.ScriptOrModule = nextPending.ScriptOrModule;
       surroundingAgent.executionContextStack.push(newContext);
@@ -100,11 +100,25 @@ function APIObject(realm, intrinsic = '%ObjectPrototype%') {
   return ObjectCreate(realm.realm.Intrinsics[intrinsic]);
 }
 
-function APIValue(realm, v) {
-  if (typeof v === 'function') {
-    return CreateBuiltinFunction(v, [], realm.realm);
+class APIValue extends Value {
+  constructor(realm, value) {
+    if (typeof value === 'function') {
+      return CreateBuiltinFunction(value, [], realm.realm);
+    }
+    if (value === undefined) {
+      return Value.undefined;
+    }
+    if (value === null) {
+      return Value.null;
+    }
+    if (value === true) {
+      return Value.true;
+    }
+    if (value === false) {
+      return Value.false;
+    }
+    return new Value(value);
   }
-  return new Value(v, realm.realm);
 }
 
 export {

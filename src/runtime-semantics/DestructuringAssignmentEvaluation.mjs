@@ -123,7 +123,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
   if (AssignmentElementList.length > 0) {
     status = yield* IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord);
     if (status instanceof AbruptCompletion) {
-      if (iteratorRecord.Done.isFalse()) {
+      if (iteratorRecord.Done === Value.false) {
         return Q(IteratorClose(iteratorRecord, status));
       }
       return Completion(status);
@@ -138,7 +138,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
       //   `[` Elision AssignmentRestElement `]`
       //   `[` AssignmentElementList `,` Elision AssignmentRestElement_opt `]`
       if (status instanceof AbruptCompletion) {
-        Assert(iteratorRecord.Done.isTrue());
+        Assert(iteratorRecord.Done === Value.true);
         return Completion(status);
       }
     }
@@ -150,7 +150,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
   if (status === undefined) {
     return Q(IteratorClose(iteratorRecord, new NormalCompletion(undefined)));
   }
-  if (iteratorRecord.Done.isFalse()) {
+  if (iteratorRecord.Done === Value.false) {
     return Q(IteratorClose(iteratorRecord, status));
   }
   return Completion(status);
@@ -190,7 +190,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
       v = Q(GetValue(defaultValue));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-        if (hasNameProperty.isFalse()) {
+        if (hasNameProperty === Value.false) {
           X(SetFunctionName(v, P));
         }
       }
@@ -262,24 +262,24 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
     ReturnIfAbrupt(lref);
   }
   let value;
-  if (iteratorRecord.Done.isFalse()) {
+  if (iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       value = IteratorValue(next);
       if (value instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(value);
     }
   }
-  if (iteratorRecord.Done.isTrue()) {
-    value = new Value(undefined);
+  if (iteratorRecord.Done === Value.true) {
+    value = Value.undefined;
   }
   let v;
   if (Initializer !== undefined && Type(v) === 'Undefined') {
@@ -297,7 +297,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
     const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-    if (hasNameProperty.isFalse()) {
+    if (hasNameProperty === Value.false) {
       X(SetFunctionName(v, GetReferencedName(lref)));
     }
   }
@@ -310,14 +310,14 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
 //     Elision `,`
 export function IteratorDestructuringAssignmentEvaluation_Elision(Elision, iteratorRecord) {
   let remaining = Elision.length;
-  while (remaining > 0 && iteratorRecord.Done.isFalse()) {
+  while (remaining > 0 && iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (Type(next) === 'Boolean' && next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     }
     remaining -= 1;
   }
@@ -335,22 +335,22 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assig
   }
   const A = X(ArrayCreate(new Value(0)));
   let n = 0;
-  while (iteratorRecord.Done.isFalse()) {
+  while (iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = new Value(true);
+      iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(next);
-    if (next.isFalse()) {
-      iteratorRecord.Done = new Value(true);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       const nextValue = IteratorValue(next);
       if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = new Value(true);
+        iteratorRecord.Done = Value.true;
       }
       ReturnIfAbrupt(nextValue);
       const status = X(CreateDataProperty(A, ToString(new Value(n)), nextValue));
-      Assert(status.isTrue());
+      Assert(status === Value.true);
       n += 1;
     }
   }
@@ -393,7 +393,7 @@ function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentEle
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
     const hasNameProperty = Q(HasOwnProperty(rhsValue, new Value('name')));
-    if (hasNameProperty.isFalse()) {
+    if (hasNameProperty === Value.false) {
       X(SetFunctionName(rhsValue, GetReferencedName(lref)));
     }
   }

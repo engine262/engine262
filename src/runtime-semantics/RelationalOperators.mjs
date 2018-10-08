@@ -29,7 +29,7 @@ export function InstanceofOperator(V, target) {
   if (Type(instOfHandler) !== 'Undefined') {
     return ToBoolean(Q(Call(instOfHandler, target, [V])));
   }
-  if (IsCallable(target).isFalse()) {
+  if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return Q(OrdinaryHasInstance(target, V));
@@ -50,7 +50,7 @@ export function* Evaluate_RelationalExpression({
       const r = AbstractRelationalComparison(lval, rval);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined') {
-        return new Value(false);
+        return Value.false;
       }
       return r;
     }
@@ -58,25 +58,25 @@ export function* Evaluate_RelationalExpression({
       const r = AbstractRelationalComparison(rval, lval, false);
       ReturnIfAbrupt(r);
       if (Type(r) === 'Undefined') {
-        return new Value(false);
+        return Value.false;
       }
       return r;
     }
     case '<=': {
       const r = AbstractRelationalComparison(rval, lval, false);
       ReturnIfAbrupt(r);
-      if (Type(r) === 'Undefined' || r.isTrue()) {
-        return new Value(false);
+      if (Type(r) === 'Undefined' || r === Value.true) {
+        return Value.false;
       }
-      return new Value(true);
+      return Value.true;
     }
     case '>=': {
       const r = AbstractRelationalComparison(lval, rval);
       ReturnIfAbrupt(r);
-      if (Type(r) === 'Undefined' || r.isTrue()) {
-        return new Value(false);
+      if (Type(r) === 'Undefined' || r === Value.true) {
+        return Value.false;
       }
-      return new Value(true);
+      return Value.true;
     }
 
     case 'instanceof':

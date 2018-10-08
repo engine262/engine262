@@ -39,7 +39,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
       const value = Q(GetValue(rhs));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-        if (hasNameProperty.isFalse()) {
+        if (hasNameProperty === Value.false) {
           X(SetFunctionName(value, bindingId));
         }
       }
@@ -53,7 +53,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
       } = VariableDeclaration;
       const rhs = yield* Evaluate_Expression(Initializer);
       const rval = Q(GetValue(rhs));
-      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, new Value(undefined));
+      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
     }
 
     default:

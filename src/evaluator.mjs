@@ -239,6 +239,15 @@ function* Evaluate_ExpressionStatement(ExpressionStatement) {
 //   Literal : NumbericLiteral
 //   Literal : StringLiteral
 function Evaluate_Literal(Literal) {
+  if (Literal.value === null) {
+    return Value.null;
+  }
+  if (Literal.value === true) {
+    return Value.true;
+  }
+  if (Literal.value === false) {
+    return Value.false;
+  }
   return new Value(Literal.value);
 }
 

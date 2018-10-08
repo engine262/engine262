@@ -10,9 +10,9 @@ import { Q } from '../completion.mjs';
 function isNaN([number]) {
   const num = Q(ToNumber(number));
   if (num.isNaN()) {
-    return new Value(true);
+    return Value.true;
   }
-  return new Value(false);
+  return Value.false;
 }
 
 export function CreateFunctionProperties(realmRec) {

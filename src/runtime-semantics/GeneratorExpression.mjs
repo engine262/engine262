@@ -27,7 +27,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     funcEnv = NewDeclarativeEnvironment(scope);
     envRec = funcEnv.EnvironmentRecord;
     name = new Value(BindingIdentifier.name);
-    envRec.CreateImmutableBinding(name, new Value(false));
+    envRec.CreateImmutableBinding(name, Value.false);
   }
   const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv, strict));
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
@@ -36,9 +36,9 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     new Value('prototype'),
     Descriptor({
       Value: prototype,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     }),
   ));
   if (BindingIdentifier) {

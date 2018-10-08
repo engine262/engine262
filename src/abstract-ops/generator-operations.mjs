@@ -26,18 +26,18 @@ export function GeneratorStart(generator, generatorBody) {
     genContext.codeEvaluationState = null;
     let resultValue;
     if (result.Type === 'normal') {
-      resultValue = new Value(undefined);
+      resultValue = Value.undefined;
     } else if (result.Type === 'return') {
       resultValue = result.Value;
     } else {
       Assert(result.Type === 'throw');
       return Completion(result);
     }
-    return X(CreateIterResultObject(resultValue, new Value(true)));
+    return X(CreateIterResultObject(resultValue, Value.true));
   }());
   generator.GeneratorContext = genContext;
   generator.GeneratorState = 'suspendedStart';
-  return new NormalCompletion(new Value(undefined));
+  return new NormalCompletion(Value.undefined);
 }
 
 // 25.4.3.2 #sec-generatorvalidate
@@ -60,7 +60,7 @@ export function GeneratorValidate(generator) {
 export function GeneratorResume(generator, value) {
   const state = Q(GeneratorValidate(generator));
   if (state === 'completed') {
-    return X(CreateIterResultObject(new Value(undefined), new Value(true)));
+    return X(CreateIterResultObject(Value.undefined, Value.true));
   }
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
   const genContext = generator.GeneratorContext;
@@ -86,7 +86,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   }
   if (state === 'completed') {
     if (abruptCompletion.Type === 'return') {
-      return X(CreateIterResultObject(abruptCompletion.Value, new Value(true)));
+      return X(CreateIterResultObject(abruptCompletion.Value, Value.true));
     }
     return Completion(abruptCompletion);
   }

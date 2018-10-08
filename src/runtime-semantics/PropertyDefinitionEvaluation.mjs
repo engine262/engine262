@@ -89,7 +89,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   const propValue = Q(GetValue(exprValueRef));
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
     const hasNameProperty = Q(HasOwnProperty(propValue, new Value('name')));
-    if (hasNameProperty.isFalse()) {
+    if (hasNameProperty === Value.false) {
       X(SetFunctionName(propValue, propKey));
     }
   }
@@ -113,9 +113,9 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       X(SetFunctionName(methodDef.Closure, methodDef.Key));
       const desc = Descriptor({
         Value: methodDef.Closure,
-        Writable: new Value(true),
-        Enumerable: new Value(enumerable),
-        Configurable: new Value(true),
+        Writable: Value.true,
+        Enumerable: enumerable ? Value.true : Value.false,
+        Configurable: Value.true,
       });
       return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
     }
@@ -143,8 +143,8 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       X(SetFunctionName(closure, propKey, new Value('get')));
       const desc = Descriptor({
         Get: closure,
-        Enumerable: new Value(enumerable),
-        Configurable: new Value(true),
+        Enumerable: enumerable ? Value.true : Value.false,
+        Configurable: Value.true,
       });
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
@@ -163,8 +163,8 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       X(SetFunctionName(closure, propKey, new Value('set')));
       const desc = Descriptor({
         Set: closure,
-        Enumerable: new Value(enumerable),
-        Configurable: new Value(true),
+        Enumerable: enumerable ? Value.true : Value.false,
+        Configurable: Value.true,
       });
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
@@ -201,17 +201,17 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
     new Value('prototype'),
     Descriptor({
       Value: prototype,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     }),
   ));
   X(SetFunctionName(closure, propKey));
   const desc = Descriptor({
     Value: closure,
-    Writable: new Value(true),
+    Writable: Value.true,
     Enumerable: new Value(enumerable),
-    Configurable: new Value(true),
+    Configurable: Value.true,
   });
   return Q(DefinePropertyOrThrow(object, propKey, desc));
 }

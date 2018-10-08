@@ -48,20 +48,20 @@ export function GlobalDeclarationInstantiation(script, env) {
   const varNames = VarDeclaredNames_ScriptBody(script).map(Value);
 
   for (const name of lexNames) {
-    if (envRec.HasVarDeclaration(name).isTrue()) {
+    if (envRec.HasVarDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError');
     }
-    if (envRec.HasLexicalDeclaration(name).isTrue()) {
+    if (envRec.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError');
     }
     const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
-    if (hasRestrictedGlobal.isTrue()) {
+    if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError');
     }
   }
 
   for (const name of varNames) {
-    if (envRec.HasLexicalDeclaration(name).isTrue()) {
+    if (envRec.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError');
     }
   }
@@ -78,7 +78,7 @@ export function GlobalDeclarationInstantiation(script, env) {
       const fn = BoundNames_FunctionDeclaration(d)[0];
       if (!declaredFunctionNames.includes(fn)) {
         const fnDefinable = Q(envRec.CanDeclareGlobalFunction(new Value(fn)));
-        if (fnDefinable.isFalse()) {
+        if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
         declaredFunctionNames.push(fn);
@@ -102,7 +102,7 @@ export function GlobalDeclarationInstantiation(script, env) {
       for (const vn of boundNames.map(Value)) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
-          if (vnDefinable.isFalse()) {
+          if (vnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError');
           }
           if (!declaredVarNames.includes(vn)) {
@@ -120,9 +120,9 @@ export function GlobalDeclarationInstantiation(script, env) {
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        Q(envRec.CreateImmutableBinding(dn, new Value(true)));
+        Q(envRec.CreateImmutableBinding(dn, Value.true));
       } else {
-        Q(envRec.CreateMutableBinding(dn, new Value(false)));
+        Q(envRec.CreateMutableBinding(dn, Value.false));
       }
     }
   }
@@ -130,11 +130,11 @@ export function GlobalDeclarationInstantiation(script, env) {
   for (const f of functionsToInitialize) {
     const fn = new Value(BoundNames_FunctionDeclaration(f)[0]);
     const fo = InstantiateFunctionObject(f, env);
-    Q(envRec.CreateGlobalFunctionBinding(fn, fo, new Value(false)));
+    Q(envRec.CreateGlobalFunctionBinding(fn, fo, Value.false));
   }
 
   for (const vn of declaredVarNames) {
-    Q(envRec.CreateGlobalVarBinding(vn, new Value(false)));
+    Q(envRec.CreateGlobalVarBinding(vn, Value.false));
   }
 
   return new NormalCompletion(undefined);

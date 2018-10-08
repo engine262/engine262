@@ -31,7 +31,7 @@ import { Type, Value } from '../value.mjs';
 //     `yield` AssignmentExpression
 function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
   const generatorKind = X(GetGeneratorKind());
-  let value = new Value(undefined);
+  let value = Value.undefined;
   if (YieldExpression.argument) {
     const AssignmentExpression = YieldExpression.argument;
     const exprRef = yield* Evaluate_Expression(AssignmentExpression);
@@ -42,7 +42,7 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
   //   return Q(AsyncGeneratorYield(value));
   // }
   Assert(generatorKind === 'sync');
-  return Q(yield* GeneratorYield(CreateIterResultObject(value, new Value(false))));
+  return Q(yield* GeneratorYield(CreateIterResultObject(value, Value.false)));
 }
 
 // #sec-generator-function-definitions-runtime-semantics-evaluation
@@ -57,7 +57,7 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
   const value = Q(GetValue(exprRef));
   const iteratorRecord = Q(GetIterator(value, generatorKind));
   const iterator = iteratorRecord.Iterator;
-  let received = new NormalCompletion(new Value(undefined));
+  let received = new NormalCompletion(Value.undefined);
   while (true) {
     if (received.Type === 'normal') {
       const innerResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]));
@@ -69,7 +69,7 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
         return surroundingAgent.Throw('TypeError');
       }
       const done = Q(IteratorComplete(innerResult));
-      if (done.isTrue()) {
+      if (done === Value.true) {
         return Q(IteratorValue(innerResult));
       }
       // TODO(asynciterator)
@@ -90,7 +90,7 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
           return surroundingAgent.Throw('TypeError');
         }
         const done = Q(IteratorComplete(innerResult));
-        if (done.isTrue()) {
+        if (done === Value.true) {
           return Q(IteratorValue(innerResult));
         }
         // TODO(asynciterator)
@@ -128,7 +128,7 @@ function* Evaluate_YieldExpression_Star(YieldExpression) {
         return surroundingAgent.Throw('TypeError');
       }
       const done = Q(IteratorComplete(innerReturnResult));
-      if (done.isTrue()) {
+      if (done === Value.true) {
         const innerValue = Q(IteratorValue(innerReturnResult));
         return new ReturnCompletion(innerValue);
       }

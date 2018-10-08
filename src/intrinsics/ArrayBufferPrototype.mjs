@@ -93,7 +93,7 @@ function ArrayBufferProto_slice([start, end], { thisValue }) {
 export function CreateArrayBufferPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['slice', ArrayBufferProto_slice, 2],
-    [wellKnownSymbols.toStringTag, new Value('ArrayBuffer'), undefined, { Writable: new Value(false) }],
+    [wellKnownSymbols.toStringTag, new Value('ArrayBuffer'), undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   {
@@ -102,9 +102,9 @@ export function CreateArrayBufferPrototype(realmRec) {
     X(SetFunctionLength(fn, new Value(0)));
     X(proto.DefineOwnProperty(new Value('byteLength'), Descriptor({
       Get: fn,
-      Set: new Value(undefined),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
 

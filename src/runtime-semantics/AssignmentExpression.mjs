@@ -33,7 +33,7 @@ export function* Evaluate_AssignmentExpression(node) {
       if (IsAnonymousFunctionDefinition(AssignmentExpression)
           && IsIdentifierRef(LeftHandSideExpression)) {
         const hasNameProperty = Q(HasOwnProperty(rval, new Value('name')));
-        if (hasNameProperty.isFalse()) {
+        if (hasNameProperty === Value.false) {
           SetFunctionName(rval, GetReferencedName(lref));
         }
       }

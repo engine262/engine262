@@ -23,9 +23,9 @@ export function CreateIteratorPrototype(realmRec) {
 
   proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
     Value: fn,
-    Enumerable: new Value(false),
-    Configurable: new Value(false),
-    Writable: new Value(false),
+    Enumerable: Value.false,
+    Configurable: Value.false,
+    Writable: Value.false,
   }));
 
   realmRec.Intrinsics['%IteratorPrototype%'] = proto;

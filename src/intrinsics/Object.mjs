@@ -50,9 +50,9 @@ function Object_assign([target, ...sources]) {
       const keys = Q(from.OwnPropertyKeys());
       for (const nextKey of keys) {
         const desc = Q(from.GetOwnProperty(nextKey));
-        if (Type(desc) !== 'Undefined' && desc.Enumerable.isTrue()) {
+        if (Type(desc) !== 'Undefined' && desc.Enumerable === Value.true) {
           const propValue = Q(Get(from, nextKey));
-          Q(Set(to, nextKey, propValue, new Value(true)));
+          Q(Set(to, nextKey, propValue, Value.true));
         }
       }
     }
@@ -85,7 +85,7 @@ function ObjectDefineProperties(O, Properties) {
   const descriptors = [];
   for (const nextKey of keys) {
     const propDesc = Q(props.GetOwnProperty(nextKey));
-    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable.isTrue()) {
+    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable === Value.true) {
       const descObj = Q(Get(props, nextKey));
       const desc = Q(ToPropertyDescriptor(descObj));
       descriptors.push([nextKey, desc]);
@@ -122,7 +122,7 @@ function Object_freeze([O]) {
   }
 
   const status = Q(SetIntegrityLevel(O, 'frozen'));
-  if (status.isFalse()) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return O;
@@ -175,12 +175,12 @@ function Object_getPrototypeOf([O]) {
 }
 
 function Object_is([value1, value2]) {
-  return new Value(SameValue(value1, value2));
+  return SameValue(value1, value2);
 }
 
 function Object_isExtensible([O]) {
   if (Type(O) !== 'Object') {
-    return new Value(false);
+    return Value.false;
   }
 
   return IsExtensible(O);
@@ -188,7 +188,7 @@ function Object_isExtensible([O]) {
 
 function Object_isFrozen([O]) {
   if (Type(O) !== 'Object') {
-    return new Value(true);
+    return Value.true;
   }
 
   return Q(TestIntegrityLevel(O, 'frozen'));
@@ -196,7 +196,7 @@ function Object_isFrozen([O]) {
 
 function Object_isSealed([O]) {
   if (Type(O) !== 'Object') {
-    return new Value(true);
+    return Value.true;
   }
 
   return Q(TestIntegrityLevel(O, 'sealed'));
@@ -214,7 +214,7 @@ function Object_preventExtensions([O]) {
   }
 
   const status = Q(O.PreventExtensions());
-  if (status.isFalse()) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return O;
@@ -226,7 +226,7 @@ function Object_seal([O]) {
   }
 
   const status = Q(SetIntegrityLevel(O, 'sealed'));
-  if (status.isFalse()) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return O;
@@ -242,7 +242,7 @@ function Object_setPrototypeOf([O, proto]) {
   }
 
   const status = Q(O.SetPrototypeOf(proto));
-  if (status.isFalse()) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   return O;

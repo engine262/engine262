@@ -29,12 +29,12 @@ function ArrayBufferConstructor([length], { NewTarget }) {
 // 24.1.3.1 #sec-arraybuffer.isview
 function ArrayBuffer_isView([arg]) {
   if (Type(arg) !== 'Object') {
-    return new Value(false);
+    return Value.false;
   }
   if ('ViewedArrayBuffer' in arg) {
-    return new Value(true);
+    return Value.true;
   }
-  return new Value(false);
+  return Value.false;
 }
 
 // 24.1.3.3 #sec-get-arraybuffer-@@species
@@ -51,9 +51,9 @@ export function CreateArrayBuffer(realmRec) {
     X(SetFunctionName(isViewMethod, new Value('isView')));
     X(abConstructor.DefineOwnProperty(new Value('isView'), Descriptor({
       Value: isViewMethod,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
 
@@ -63,9 +63,9 @@ export function CreateArrayBuffer(realmRec) {
     X(SetFunctionName(speciesMethod, new Value('get [Symbol.species]')));
     X(abConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
       Get: speciesMethod,
-      Set: new Value(undefined),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     })));
   }
 

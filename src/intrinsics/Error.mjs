@@ -24,9 +24,9 @@ function ErrorConstructor([message], { NewTarget }) {
     const msg = Q(ToString(message));
     const msgDesc = Descriptor({
       Value: msg,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(true),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     });
     X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }

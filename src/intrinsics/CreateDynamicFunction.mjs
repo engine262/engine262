@@ -163,17 +163,17 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     })));
   } else if (kind === 'async generator') {
     const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
-      Writable: new Value(true),
-      Enumerable: new Value(false),
-      Configurable: new Value(false),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false,
     })));
   } else if (kind === 'normal') {
     MakeConstructor(F);

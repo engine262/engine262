@@ -39,7 +39,7 @@ export function BlockDeclarationInstantiation(code, env) {
   for (const d of declarations) {
     for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
-        X(envRec.CreateImmutableBinding(dn, new Value(true)));
+        X(envRec.CreateImmutableBinding(dn, Value.true));
       } else {
         X(envRec.CreateMutableBinding(dn, false));
       }

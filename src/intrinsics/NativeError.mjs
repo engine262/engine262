@@ -28,7 +28,7 @@ export function CreateNativeError(realmRec) {
       ['message', new Value('')],
     ], realmRec.Intrinsics['%ErrorPrototype%']);
 
-    const Constructor = ([message = new Value(undefined)], { NewTarget }) => {
+    const Constructor = ([message = Value.undefined], { NewTarget }) => {
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
         newTarget = surroundingAgent.activeFunctionObject;
@@ -40,9 +40,9 @@ export function CreateNativeError(realmRec) {
         const msg = Q(ToString(message));
         const msgDesc = Descriptor({
           Value: msg,
-          Writable: new Value(true),
-          Enumerable: new Value(false),
-          Configurable: new Value(true),
+          Writable: Value.true,
+          Enumerable: Value.false,
+          Configurable: Value.true,
         });
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }

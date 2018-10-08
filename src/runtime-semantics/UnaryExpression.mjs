@@ -34,19 +34,19 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   const ref = yield* Evaluate_Expression(UnaryExpression);
   ReturnIfAbrupt(ref);
   if (Type(ref) !== 'Reference') {
-    return new Value(true);
+    return Value.true;
   }
-  if (IsUnresolvableReference(ref).isTrue()) {
-    Assert(IsStrictReference(ref).isFalse());
-    return new Value(false);
+  if (IsUnresolvableReference(ref) === Value.true) {
+    Assert(IsStrictReference(ref) === Value.false);
+    return Value.false;
   }
-  if (IsPropertyReference(ref).isTrue()) {
-    if (IsSuperReference(ref).isTrue()) {
+  if (IsPropertyReference(ref) === Value.true) {
+    if (IsSuperReference(ref) === Value.true) {
       return surroundingAgent.Throw('ReferenceError');
     }
     const baseObj = X(ToObject(GetBase(ref)));
     const deleteStatus = Q(baseObj.Delete(GetReferencedName(ref)));
-    if (deleteStatus.isFalse() && IsStrictReference(ref).isTrue()) {
+    if (deleteStatus === Value.false && IsStrictReference(ref) === Value.true) {
       return surroundingAgent.Throw('TypeError');
     }
     return deleteStatus;
@@ -61,7 +61,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
 function* Evaluate_UnaryExpression_Void(UnaryExpression) {
   const expr = yield* Evaluate_Expression(UnaryExpression);
   Q(GetValue(expr));
-  return new Value(undefined);
+  return Value.undefined;
 }
 
 // #sec-typeof-operator-runtime-semantics-evaluation
@@ -69,7 +69,7 @@ function* Evaluate_UnaryExpression_Void(UnaryExpression) {
 function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
   let val = yield* Evaluate_Expression(UnaryExpression);
   if (Type(val) === 'Reference') {
-    if (IsUnresolvableReference(val).isTrue()) {
+    if (IsUnresolvableReference(val) === Value.true) {
       return new Value('undefined');
     }
   }
@@ -93,7 +93,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
     case 'Symbol':
       return new Value('symbol');
     case 'Object':
-      if (IsCallable(val).isTrue()) {
+      if (IsCallable(val) === Value.true) {
         return new Value('function');
       }
       return new Value('object');
@@ -137,10 +137,10 @@ function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
 function* Evaluate_UnaryExpression_Bang(UnaryExpression) {
   const expr = yield* Evaluate_Expression(UnaryExpression);
   const oldValue = ToBoolean(Q(GetValue(expr)));
-  if (oldValue.isTrue()) {
-    return new Value(false);
+  if (oldValue === Value.true) {
+    return Value.false;
   }
-  return new Value(true);
+  return Value.true;
 }
 
 export function* Evaluate_UnaryExpression(UnaryExpression) {

@@ -28,39 +28,39 @@ function NumberConstructor(args, { NewTarget }) {
 
 function Number_isFinite([number]) {
   if (Type(number) !== 'Number') {
-    return new Value(false);
+    return Value.false;
   }
 
   if (number.isNaN() || number.isInfinity()) {
-    return new Value(false);
+    return Value.false;
   }
-  return new Value(true);
+  return Value.true;
 }
 
 function Number_isInteger([number]) {
   if (Type(number) !== 'Number') {
-    return new Value(false);
+    return Value.false;
   }
 
   if (number.isNaN() || number.isInfinity()) {
-    return new Value(false);
+    return Value.false;
   }
   const integer = ToInteger(number);
   if (integer.numberValue() !== number.numberValue()) {
-    return new Value(false);
+    return Value.false;
   }
-  return new Value(true);
+  return Value.true;
 }
 
 function Number_isNaN([number]) {
   if (Type(number) !== 'Number') {
-    return new Value(false);
+    return Value.false;
   }
 
   if (number.isNaN()) {
-    return new Value(true);
+    return Value.true;
   }
-  return new Value(false);
+  return Value.false;
 }
 
 export function CreateNumber(realmRec) {

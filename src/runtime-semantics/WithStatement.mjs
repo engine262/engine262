@@ -25,5 +25,5 @@ export function* Evaluate_WithStatement({
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   const C = EnsureCompletion(yield* Evaluate_Statement(Statement));
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-  return Completion(UpdateEmpty(C, new Value(undefined)));
+  return Completion(UpdateEmpty(C, Value.undefined));
 }

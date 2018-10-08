@@ -34,21 +34,21 @@ function IsInTailPosition() {
 function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
   if (Type(ref) === 'Reference') {
-    if (IsPropertyReference(ref).isTrue()) {
+    if (IsPropertyReference(ref) === Value.true) {
       thisValue = GetThisValue(ref);
     } else {
       const refEnv = GetBase(ref);
       thisValue = refEnv.WithBaseObject();
     }
   } else {
-    thisValue = new Value(undefined);
+    thisValue = Value.undefined;
   }
   const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
-  if (IsCallable(func).isFalse()) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
   if (tailPosition) {
@@ -70,7 +70,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
 export function* Evaluate_CallExpression(CallExpression) {
   const ref = yield* Evaluate_Expression(CallExpression.callee);
   const func = Q(GetValue(ref));
-  if (Type(ref) === 'Reference' && IsPropertyReference(ref).isFalse()
+  if (Type(ref) === 'Reference' && IsPropertyReference(ref) === Value.false
     && (Type(GetReferencedName(ref)) === 'String'
       && GetReferencedName(ref).stringValue() === 'eval')) {
     // TODO(eval)
