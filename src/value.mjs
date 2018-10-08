@@ -318,6 +318,294 @@ export class BuiltinFunctionValue extends FunctionValue {
   }
 }
 
+// 9.4.3 #sec-string-exotic-objects
+export class StringExoticObjectValue extends ObjectValue {
+  GetOwnProperty(P) {
+    const S = this;
+    Assert(IsPropertyKey(P));
+    const desc = OrdinaryGetOwnProperty(S, P);
+    if (Type(desc) !== 'Undefined') {
+      return desc;
+    }
+    return X(StringGetOwnProperty(S, P));
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const S = this;
+    Assert(IsPropertyKey(P));
+    const stringDesc = X(StringGetOwnProperty(S, P));
+    if (Type(stringDesc) !== 'Undefined') {
+      const extensible = S.Extensible;
+      return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
+    }
+    return X(OrdinaryDefineOwnProperty(S, P, Desc));
+  }
+
+  OwnPropertyKeys() {
+    const O = this;
+    const keys = [];
+    const str = O.StringData.stringValue();
+    const len = str.length;
+    for (let i = 0; i < len; i += 1) {
+      keys.push(new Value(`${i}`));
+    }
+    for (const key of O.properties.keys()) {
+      if (Type(key) === 'String') {
+        const int = Number.parseInt(key.stringValue(), 10);
+        if (int > 0 && int < (2 ** 53) - 1) {
+          // keys.push(key);
+        } else {
+          keys.push(key);
+        }
+      } else if (Type(key) === 'Symbol') {
+        keys.push(key);
+      }
+    }
+    return keys;
+  }
+}
+
+// 9.4.4 #sec-arguments-exotic-objects
+export class ArgumentsExoticObjectValue extends ObjectValue {
+  constructor() {
+    super();
+
+    this.ParameterMap = undefined;
+  }
+
+  GetOwnProperty(P) {
+    const args = this;
+    const desc = OrdinaryGetOwnProperty(args, P);
+    if (Type(desc) === 'Undefined') {
+      return desc;
+    }
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    if (isMapped.isTrue()) {
+      desc.Value = Get(map, P);
+    }
+    return desc;
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = HasOwnProperty(map, P);
+    let newArgDesc = Desc;
+    if (isMapped.isTrue() && IsDataDescriptor(Desc).isTrue()) {
+      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable.isFalse()) {
+        newArgDesc = { ...Desc };
+        newArgDesc.Value = Get(map, P);
+      }
+    }
+    const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
+    if (allowed.isFalse()) {
+      return new Value(false);
+    }
+    if (isMapped.isTrue()) {
+      if (IsAccessorDescriptor(Desc).isTrue()) {
+        map.Delete(P);
+      } else {
+        if (Desc.Value !== undefined) {
+          const setStatus = Set(map, P, Desc.Value, new Value(false));
+          Assert(setStatus.isTrue());
+        }
+        if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
+          map.Delete(P);
+        }
+      }
+    }
+    return new Value(true);
+  }
+
+  Get(P, Receiver) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    if (isMapped.isFalse()) {
+      return Q(OrdinaryGet(args, P, Receiver));
+    } else {
+      return Get(map, P);
+    }
+  }
+
+  Set(P, V, Receiver) {
+    const args = this;
+    let isMapped;
+    let map;
+    if (SameValue(args, Receiver) === false) {
+      isMapped = false;
+    } else {
+      map = args.ParameterMap;
+      isMapped = X(HasOwnProperty(map, P)).isTrue();
+    }
+    if (isMapped) {
+      const setStatus = Set(map, P, V, new Value(false));
+      Assert(setStatus.isTrue());
+    }
+    return Q(OrdinarySet(args, P, V, Receiver));
+  }
+
+  Delete(P) {
+    const args = this;
+    const map = args.ParameterMap;
+    const isMapped = X(HasOwnProperty(map, P));
+    const result = Q(OrdinaryDelete(map, P));
+    if (result.isTrue() && isMapped.isTrue()) {
+      map.Delete(P);
+    }
+    return result;
+  }
+}
+
+// #sec-set-immutable-prototype
+function SetImmutablePrototype(O, V) {
+  Assert(Type(V) === 'Object' || Type(V) === 'Null');
+  const current = Q(O.GetPrototypeOf());
+  if (SameValue(V, current)) {
+    return new Value(true);
+  }
+  return new Value(false);
+}
+
+// 9.4.6 #sec-module-namespace-exotic-objects
+export class ModuleNamespaceExoticObjectValue extends ObjectValue {
+  constructor() {
+    super();
+    this.Module = null;
+    this.Exports = [];
+    this.Prototype = new Value(null);
+  }
+
+  SetPrototypeOf(V) {
+    const O = this;
+
+    return Q(SetImmutablePrototype(O, V));
+  }
+
+  IsExtensible() {
+    return new Value(false);
+  }
+
+  PreventExtensions() {
+    return new Value(true);
+  }
+
+  GetOwnProperty(P) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryGetOwnProperty(O, P);
+    }
+    const exports = O.Exports;
+    if (!exports.includes(P)) {
+      return new Value(undefined);
+    }
+    const value = Q(O.Get(P, O));
+    return {
+      Value: value,
+      Writable: true,
+      Enumerable: true,
+      Configurable: true,
+    };
+  }
+
+  DefineOwnProperty(P, Desc) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryDefineOwnProperty(O, P, Desc);
+    }
+
+    const current = O.GetOwnProperty(P);
+    if (Type(current) === 'Undefined') {
+      return new Value(false);
+    }
+    if (IsAccessorDescriptor(Desc).isTrue()) {
+      return new Value(false);
+    }
+    if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
+      return new Value(false);
+    }
+    if (Desc.Enumerable !== undefined && Desc.Enumerable.isFalse()) {
+      return new Value(false);
+    }
+    if (Desc.Configurable !== undefined && Desc.Configurable.isTrue()) {
+      return new Value(true);
+    }
+    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value)) {
+      return new Value(false);
+    }
+    return new Value(true);
+  }
+
+  HasProperty(P) {
+    const O = this;
+
+    if (Type(P) === 'Symbol') {
+      return OrdinaryHasProperty(O, P);
+    }
+    const exports = O.Exports;
+    if (exports.includes(P)) {
+      return new Value(true);
+    } else {
+      return new Value(false);
+    }
+  }
+
+  Get(P, Receiver) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'Symbol') {
+      return OrdinaryGet(O, P, Receiver);
+    }
+    const exports = O.Exports;
+    if (!exports.includes(P)) {
+      return new Value(undefined);
+    }
+    const m = O.Module;
+    const binding = m.ResolveExport(P, []);
+    // Assert: binding is a ResolvedBinding Record.
+    const targetModule = binding.Module;
+    Assert(Type(targetModule) !== 'Undefined');
+    const targetEnv = targetModule.Environment;
+    if (Type(targetEnv) === 'Undefined') {
+      return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
+    }
+    const targetEnvRec = targetEnv.EnvironmentRecord;
+    return Q(targetEnvRec.GetBindingValue(binding.BindingName, new Value(true)));
+  }
+
+  Set() {
+    return new Value(false);
+  }
+
+  Delete(P) {
+    const O = this;
+
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'Symbol') {
+      return OrdinaryDelete(O, P);
+    }
+    const exports = O.Exports;
+    if (exports.includes(P)) {
+      return new Value(false);
+    }
+    return new Value(true);
+  }
+
+  OwnPropertyKeys() {
+    const O = this;
+
+    const exports = [...O.Exports];
+    const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
+    exports.push(...symbolKeys);
+    return exports;
+  }
+}
+
+// 9.5 #sec-proxy-object-internal-methods-and-internal-slots
 export class ProxyExoticObjectValue extends ObjectValue {
   constructor() {
     super();
@@ -694,290 +982,6 @@ export class ProxyExoticObjectValue extends ObjectValue {
       uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
     }
     return trapResult;
-  }
-}
-
-export class StringExoticObjectValue extends ObjectValue {
-  GetOwnProperty(P) {
-    const S = this;
-    Assert(IsPropertyKey(P));
-    const desc = OrdinaryGetOwnProperty(S, P);
-    if (Type(desc) !== 'Undefined') {
-      return desc;
-    }
-    return X(StringGetOwnProperty(S, P));
-  }
-
-  DefineOwnProperty(P, Desc) {
-    const S = this;
-    Assert(IsPropertyKey(P));
-    const stringDesc = X(StringGetOwnProperty(S, P));
-    if (Type(stringDesc) !== 'Undefined') {
-      const extensible = S.Extensible;
-      return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
-    }
-    return X(OrdinaryDefineOwnProperty(S, P, Desc));
-  }
-
-  OwnPropertyKeys() {
-    const O = this;
-    const keys = [];
-    const str = O.StringData.stringValue();
-    const len = str.length;
-    for (let i = 0; i < len; i += 1) {
-      keys.push(new Value(`${i}`));
-    }
-    for (const key of O.properties.keys()) {
-      if (Type(key) === 'String') {
-        const int = Number.parseInt(key.stringValue(), 10);
-        if (int > 0 && int < (2 ** 53) - 1) {
-          // keys.push(key);
-        } else {
-          keys.push(key);
-        }
-      } else if (Type(key) === 'Symbol') {
-        keys.push(key);
-      }
-    }
-    return keys;
-  }
-}
-
-// #sec-set-immutable-prototype
-function SetImmutablePrototype(O, V) {
-  Assert(Type(V) === 'Object' || Type(V) === 'Null');
-  const current = Q(O.GetPrototypeOf());
-  if (SameValue(V, current)) {
-    return new Value(true);
-  }
-  return new Value(false);
-}
-
-export class ModuleNamespaceExoticObjectValue extends ObjectValue {
-  constructor() {
-    super();
-    this.Module = null;
-    this.Exports = [];
-    this.Prototype = new Value(null);
-  }
-
-  SetPrototypeOf(V) {
-    const O = this;
-
-    return Q(SetImmutablePrototype(O, V));
-  }
-
-  IsExtensible() {
-    return new Value(false);
-  }
-
-  PreventExtensions() {
-    return new Value(true);
-  }
-
-  GetOwnProperty(P) {
-    const O = this;
-
-    if (Type(P) === 'Symbol') {
-      return OrdinaryGetOwnProperty(O, P);
-    }
-    const exports = O.Exports;
-    if (!exports.includes(P)) {
-      return new Value(undefined);
-    }
-    const value = Q(O.Get(P, O));
-    return {
-      Value: value,
-      Writable: true,
-      Enumerable: true,
-      Configurable: true,
-    };
-  }
-
-  DefineOwnProperty(P, Desc) {
-    const O = this;
-
-    if (Type(P) === 'Symbol') {
-      return OrdinaryDefineOwnProperty(O, P, Desc);
-    }
-
-    const current = O.GetOwnProperty(P);
-    if (Type(current) === 'Undefined') {
-      return new Value(false);
-    }
-    if (IsAccessorDescriptor(Desc).isTrue()) {
-      return new Value(false);
-    }
-    if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
-      return new Value(false);
-    }
-    if (Desc.Enumerable !== undefined && Desc.Enumerable.isFalse()) {
-      return new Value(false);
-    }
-    if (Desc.Configurable !== undefined && Desc.Configurable.isTrue()) {
-      return new Value(true);
-    }
-    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value)) {
-      return new Value(false);
-    }
-    return new Value(true);
-  }
-
-  HasProperty(P) {
-    const O = this;
-
-    if (Type(P) === 'Symbol') {
-      return OrdinaryHasProperty(O, P);
-    }
-    const exports = O.Exports;
-    if (exports.includes(P)) {
-      return new Value(true);
-    } else {
-      return new Value(false);
-    }
-  }
-
-  Get(P, Receiver) {
-    const O = this;
-
-    Assert(IsPropertyKey(P));
-    if (Type(P) === 'Symbol') {
-      return OrdinaryGet(O, P, Receiver);
-    }
-    const exports = O.Exports;
-    if (!exports.includes(P)) {
-      return new Value(undefined);
-    }
-    const m = O.Module;
-    const binding = m.ResolveExport(P, []);
-    // Assert: binding is a ResolvedBinding Record.
-    const targetModule = binding.Module;
-    Assert(Type(targetModule) !== 'Undefined');
-    const targetEnv = targetModule.Environment;
-    if (Type(targetEnv) === 'Undefined') {
-      return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
-    }
-    const targetEnvRec = targetEnv.EnvironmentRecord;
-    return Q(targetEnvRec.GetBindingValue(binding.BindingName, new Value(true)));
-  }
-
-  Set() {
-    return new Value(false);
-  }
-
-  Delete(P) {
-    const O = this;
-
-    Assert(IsPropertyKey(P));
-    if (Type(P) === 'Symbol') {
-      return OrdinaryDelete(O, P);
-    }
-    const exports = O.Exports;
-    if (exports.includes(P)) {
-      return new Value(false);
-    }
-    return new Value(true);
-  }
-
-  OwnPropertyKeys() {
-    const O = this;
-
-    const exports = [...O.Exports];
-    const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
-    exports.push(...symbolKeys);
-    return exports;
-  }
-}
-
-export class ArgumentsExoticObjectValue extends ObjectValue {
-  constructor() {
-    super();
-
-    this.ParameterMap = undefined;
-  }
-
-  GetOwnProperty(P) {
-    const args = this;
-    const desc = OrdinaryGetOwnProperty(args, P);
-    if (Type(desc) === 'Undefined') {
-      return desc;
-    }
-    const map = args.ParameterMap;
-    const isMapped = X(HasOwnProperty(map, P));
-    if (isMapped.isTrue()) {
-      desc.Value = Get(map, P);
-    }
-    return desc;
-  }
-
-  DefineOwnProperty(P, Desc) {
-    const args = this;
-    const map = args.ParameterMap;
-    const isMapped = HasOwnProperty(map, P);
-    let newArgDesc = Desc;
-    if (isMapped.isTrue() && IsDataDescriptor(Desc).isTrue()) {
-      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable.isFalse()) {
-        newArgDesc = { ...Desc };
-        newArgDesc.Value = Get(map, P);
-      }
-    }
-    const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
-    if (allowed.isFalse()) {
-      return new Value(false);
-    }
-    if (isMapped.isTrue()) {
-      if (IsAccessorDescriptor(Desc).isTrue()) {
-        map.Delete(P);
-      } else {
-        if (Desc.Value !== undefined) {
-          const setStatus = Set(map, P, Desc.Value, new Value(false));
-          Assert(setStatus.isTrue());
-        }
-        if (Desc.Writable !== undefined && Desc.Writable.isFalse()) {
-          map.Delete(P);
-        }
-      }
-    }
-    return new Value(true);
-  }
-
-  Get(P, Receiver) {
-    const args = this;
-    const map = args.ParameterMap;
-    const isMapped = X(HasOwnProperty(map, P));
-    if (isMapped.isFalse()) {
-      return Q(OrdinaryGet(args, P, Receiver));
-    } else {
-      return Get(map, P);
-    }
-  }
-
-  Set(P, V, Receiver) {
-    const args = this;
-    let isMapped;
-    let map;
-    if (SameValue(args, Receiver) === false) {
-      isMapped = false;
-    } else {
-      map = args.ParameterMap;
-      isMapped = X(HasOwnProperty(map, P)).isTrue();
-    }
-    if (isMapped) {
-      const setStatus = Set(map, P, V, new Value(false));
-      Assert(setStatus.isTrue());
-    }
-    return Q(OrdinarySet(args, P, V, Receiver));
-  }
-
-  Delete(P) {
-    const args = this;
-    const map = args.ParameterMap;
-    const isMapped = X(HasOwnProperty(map, P));
-    const result = Q(OrdinaryDelete(map, P));
-    if (result.isTrue() && isMapped.isTrue()) {
-      map.Delete(P);
-    }
-    return result;
   }
 }
 

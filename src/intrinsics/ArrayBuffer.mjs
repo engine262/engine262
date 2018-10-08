@@ -2,7 +2,6 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   AllocateArrayBuffer,
   CreateBuiltinFunction,
-  ObjectCreate,
   SetFunctionLength,
   SetFunctionName,
   ToIndex,
