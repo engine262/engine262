@@ -19,7 +19,7 @@ function GetSuperConstructor() {
   Assert(activeFunction instanceof FunctionValue);
   const superConstructor = X(activeFunction.GetPrototypeOf());
   if (IsConstructor(superConstructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Class constructor is not a constructor');
   }
   return superConstructor;
 }

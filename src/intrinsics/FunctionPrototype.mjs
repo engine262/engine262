@@ -130,15 +130,16 @@ function FunctionProto_toString(args, { thisValue: func }) {
     }
     return new Value('function() { [native code] }');
   }
-  if ('ECMAScriptCode' in func) {
-    const scriptCtx = [...surroundingAgent.executionContextStack]
-      .reverse()
-      .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
-    Assert(scriptCtx !== undefined);
-    const { sourceText } = scriptCtx.HostDefined;
-    return new Value(sourceText.slice(func.ECMAScriptCode.start, func.ECMAScriptCode.end));
+  if (func.FunctionKind !== 'classConstructor' || !('ECMAScriptCode' in func)) {
+    return surroundingAgent.Throw('TypeError');
   }
-  return surroundingAgent.Throw('TypeError');
+  const scriptCtx = [...surroundingAgent.executionContextStack]
+    .reverse()
+    .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
+  Assert(scriptCtx !== undefined);
+  const { sourceText } = scriptCtx.HostDefined;
+  const { start, end } = func.hostToStringLocation || func.ECMAScriptCode;
+  return new Value(sourceText.slice(start, end));
 }
 
 function FunctionProto_hasInstance([V], { thisValue }) {

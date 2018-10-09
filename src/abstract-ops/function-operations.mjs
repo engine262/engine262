@@ -112,7 +112,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 
   Assert(F instanceof FunctionValue);
   if (F.FunctionKind === 'classConstructor') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
   }
 
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -152,7 +152,6 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
   const result = EnsureCompletion(Unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();
@@ -164,7 +163,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
       return new NormalCompletion(thisArgument);
     }
     if (Type(result.Value) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
     }
   } else {
     ReturnIfAbrupt(result);

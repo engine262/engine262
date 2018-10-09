@@ -14,7 +14,7 @@ import {
   isExpression,
   isSpreadElement,
 } from '../ast.mjs';
-import { Value, Type } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';
