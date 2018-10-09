@@ -22,6 +22,8 @@ import {
   ObjectCreate,
   ToLength,
   ToString,
+  ToNumber,
+  ToInteger,
   SetFunctionLength,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
@@ -86,11 +88,20 @@ function JSON_parse([text, reviver]) {
   }
 }
 
-/*
+const codeUnitTable = new Map([
+  ['\u0008', '\\b'],
+  ['\u0009', '\\t'],
+  ['\u000A', '\\n'],
+  ['\u000C', '\\f'],
+  ['\u000D', '\\r'],
+  ['\u0022', '\\"'],
+  ['\u005C', '\\\\'],
+]);
+
 function JSON_stringify([value, replacer, space]) {
   // #sec-serializejsonproperty
-  function SerializeJSONProperty(holder, key) {
-    let value = Q(Get(holder, key));
+  function SerializeJSONProperty(key, holder) {
+    let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
     if (Type(value) === 'Object') {
       const toJSON = Q(Get(value, new Value('toJSON')));
       if (IsCallable(toJSON) === Value.true) {
@@ -116,13 +127,13 @@ function JSON_stringify([value, replacer, space]) {
       return new Value('true');
     }
     if (value === Value.false) {
-      return Value.false;
+      return new Value('false');
     }
     if (Type(value) === 'String') {
       return QuoteJSONString(value);
     }
     if (Type(value) === 'Number') {
-      if (!value.isInfinite()) {
+      if (!value.isInfinity()) {
         return X(ToString(value));
       }
       return new Value('null');
@@ -137,16 +148,37 @@ function JSON_stringify([value, replacer, space]) {
     return Value.undefined;
   }
 
+  function QuoteJSONString(value) { // eslint-disable-line no-shadow
+    let product = '\u0022';
+    for (const C of value.stringValue()) {
+      if (codeUnitTable.has(C)) {
+        product = `${product}${codeUnitTable.get(C)}`;
+      } else if (C.charCodeAt(0) < 0x0020) {
+        product = `${product}${UnicodeEscape(C)}`;
+      } else {
+        product = `${product}${C}`;
+      }
+    }
+    product = `${product}\u0022`;
+    return new Value(product);
+  }
+
+  function UnicodeEscape(C) {
+    const n = C.charCodeAt(0);
+    Assert(n < 0xFFFF);
+    return `\u005Cu${n.toString(16).padStart(4, '0')}`;
+  }
+
   // #sec-serializejsonobject
-  function SerializeJSONObject(value) {
+  function SerializeJSONObject(value) { // eslint-disable-line no-shadow
     if (stack.includes(value)) {
       return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');
     }
-    value.push(stack);
+    stack.push(value);
     const stepback = indent;
     indent = `${indent}${gap}`;
     let K;
-    if (Type(PropertyList) !== 'Undefined') {
+    if (PropertyList !== Value.undefined) {
       K = PropertyList;
     } else {
       K = Q(EnumerableOwnPropertyNames(value, 'key'));
@@ -154,15 +186,66 @@ function JSON_stringify([value, replacer, space]) {
     const partial = [];
     for (const P of K) {
       const strP = Q(SerializeJSONProperty(P, value));
-      if (Type(strP) !== 'Undefined') {
-        let member = QuoteJSONString(P);
+      if (strP !== Value.undefined) {
+        let member = QuoteJSONString(P).stringValue();
         member = `${member}:`;
+        if (gap !== '') {
+          member = `${member} `;
+        }
+        member = `${member}${strP.stringValue()}`;
+        partial.push(member);
       }
     }
     let final;
     if (partial.length === 0) {
       final = new Value('{}');
     } else {
+      if (gap === '') {
+        const properties = partial.join(',');
+        final = new Value(`{${properties}}`);
+      } else {
+        const separator = `,\u000A${indent}`;
+        const properties = partial.join(separator);
+        final = new Value(`{\u000A${indent}${properties}\u000A${stepback}}`);
+      }
+    }
+    stack.pop();
+    indent = stepback;
+    return final;
+  }
+
+  // #sec-serializejsonarray
+  function SerializeJSONArray(value) { // eslint-disable-line no-shadow
+    if (stack.includes(value)) {
+      return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');
+    }
+    stack.push(value);
+    const stepback = indent;
+    indent = `${indent}${gap}`;
+    const partial = [];
+    const len = Q(Get(value, new Value('length'))).numberValue();
+    let index = 0;
+    while (index < len) {
+      const strP = Q(SerializeJSONProperty(X(ToString(new Value(index))), value));
+      if (strP === Value.undefined) {
+        partial.push('null');
+      } else {
+        partial.push(strP.stringValue());
+      }
+      index += 1;
+    }
+    let final;
+    if (partial.length === 0) {
+      final = new Value('[]');
+    } else {
+      if (gap === '') {
+        const properties = partial.join(',');
+        final = new Value(`[${properties}]`);
+      } else {
+        const separator = `,\u000A${indent}`;
+        const properties = partial.join(separator);
+        final = new Value(`[\u000A${indent}${properties}\u000A${stepback}]`);
+      }
     }
     stack.pop();
     indent = stepback;
@@ -211,23 +294,22 @@ function JSON_stringify([value, replacer, space]) {
     }
   }
   if (Type(space) === 'Number') {
-    space = new Value(Math.min(10, X(ToInteger(space)).numberValue()));
-    gap = new Value(' '.repeat(space));
+    space = Math.min(10, X(ToInteger(space)).numberValue());
+    gap = ' '.repeat(space >= 0 ? space : 0);
   } else if (Type(space) === 'String') {
     if (space.stringValue().length <= 10) {
-      gap = space;
+      gap = space.stringValue();
     } else {
-      gap = new Value(space.stringValue().slice(0, 10));
+      gap = space.stringValue().slice(0, 10);
     }
   } else {
-    gap = new Value('');
+    gap = '';
   }
   const wrapper = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   const status = CreateDataProperty(wrapper, new Value(''), value);
   Assert(status === Value.true);
   return Q(SerializeJSONProperty(new Value(''), wrapper));
 }
-*/
 
 export function CreateJSON(realmRec) {
   const json = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
@@ -243,7 +325,6 @@ export function CreateJSON(realmRec) {
     Configurable: Value.true,
   }));
 
-  /*
   const stringify = CreateBuiltinFunction(JSON_stringify, [], realmRec);
   SetFunctionName(stringify, new Value('stringify'));
   SetFunctionLength(stringify, new Value(3));
@@ -254,7 +335,6 @@ export function CreateJSON(realmRec) {
     Enumerable: Value.false,
     Configurable: Value.true,
   }));
-  */
 
   json.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
     Value: new Value('JSON'),
