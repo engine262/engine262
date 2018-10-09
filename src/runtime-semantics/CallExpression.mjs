@@ -16,6 +16,7 @@ import {
 import {
   ArgumentListEvaluation,
 } from './all.mjs';
+import { IsInTailPosition } from '../static-semantics/all.mjs';
 import {
   Completion,
   AbruptCompletion,
@@ -26,12 +27,7 @@ import {
   Evaluate_Expression,
 } from '../evaluator.mjs';
 
-
-function IsInTailPosition() {
-  return false;
-}
-
-function* EvaluateCall(func, ref, args, tailPosition) {
+export function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
   if (Type(ref) === 'Reference') {
     if (IsPropertyReference(ref) === Value.true) {

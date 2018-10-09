@@ -46,6 +46,7 @@ import {
   isReturnStatement,
   isSuperCall,
   isSuperProperty,
+  isTaggedTemplate,
   isTemplateLiteral,
   isThis,
   isThrowStatement,
@@ -98,6 +99,7 @@ import {
   Evaluate_ShiftExpression,
   Evaluate_SuperCall,
   Evaluate_SuperProperty,
+  Evaluate_TaggedTemplate,
   Evaluate_TemplateLiteral,
   Evaluate_ThisExpression,
   Evaluate_ThrowStatement,
@@ -335,6 +337,9 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isSuperCall(Expression):
       return yield* Evaluate_SuperCall(Expression);
+
+    case isTaggedTemplate(Expression):
+      return yield* Evaluate_TaggedTemplate(Expression);
 
       // case isMetaProperty(Expression):
       //   return Evaluate_MetaProperty(Expression);

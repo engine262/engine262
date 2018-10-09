@@ -188,6 +188,10 @@ export function isTemplateLiteral(node) {
   return node.type === 'TemplateLiteral';
 }
 
+export function isTaggedTemplate(node) {
+  return node.type === 'TaggedTemplateExpression';
+}
+
 // Used in #prod-MemberExpression and #prod-CallExpression
 export function isActualMemberExpression(node) {
   return node.type === 'MemberExpression' && node.object.type !== 'Super';

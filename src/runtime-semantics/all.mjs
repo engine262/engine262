@@ -49,6 +49,7 @@ export * from './ShiftExpression.mjs';
 export * from './SuperCall.mjs';
 export * from './SuperProperty.mjs';
 export * from './SwitchStatement.mjs';
+export * from './TaggedTemplate.mjs';
 export * from './TemplateLiteral.mjs';
 export * from './ThisExpression.mjs';
 export * from './ThrowStatement.mjs';

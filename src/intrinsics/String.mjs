@@ -1,17 +1,18 @@
 import {
-  CreateBuiltinFunction,
   GetPrototypeFromConstructor,
-  SetFunctionLength,
-  SetFunctionName,
   StringCreate,
   SymbolDescriptiveString,
   ToString,
+  ToObject,
+  Get,
+  ToLength,
 } from '../abstract-ops/all.mjs';
 import {
   Value,
   Type,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function StringConstructor(args, { NewTarget }) {
   let s;
@@ -32,10 +33,39 @@ function StringConstructor(args, { NewTarget }) {
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));
 }
 
+function String_raw([template, ...substitutions]) {
+  const numberOfSubstitutions = substitutions.length;
+  const cooked = Q(ToObject(template));
+  const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
+  const literalSegments = Q(ToLength(Q(Get(raw, new Value('length'))))).numberValue();
+  if (literalSegments <= 0) {
+    return new Value('');
+  }
+  const stringElements = [];
+  let nextIndex = 0;
+  while (true) {
+    const nextKey = X(ToString(new Value(nextIndex)));
+    const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
+    stringElements.push(nextSeg.stringValue());
+    if (nextIndex + 1 === literalSegments) {
+      return new Value(stringElements.join(''));
+    }
+    let next;
+    if (nextIndex < numberOfSubstitutions) {
+      next = substitutions[nextIndex];
+    } else {
+      next = new Value('');
+    }
+    const nextSub = Q(ToString(next));
+    stringElements.push(nextSub.stringValue());
+    nextIndex += 1;
+  }
+}
+
 export function CreateString(realmRec) {
-  const stringConstructor = CreateBuiltinFunction(StringConstructor, [], realmRec);
-  SetFunctionName(stringConstructor, new Value('String'));
-  SetFunctionLength(stringConstructor, new Value(1));
+  const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%StringPrototype%'], [
+    ['raw', String_raw, 1],
+  ]);
 
   realmRec.Intrinsics['%String%'] = stringConstructor;
 }

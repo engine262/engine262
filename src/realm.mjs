@@ -70,9 +70,9 @@ export class Realm {
 export function CreateRealm() {
   const realmRec = new Realm();
   CreateIntrinsics(realmRec);
-  realmRec.GlobalObject = undefined;
-  realmRec.GlobalEnv = undefined;
-  realmRec.TemplateMap = undefined;
+  realmRec.GlobalObject = Value.undefined;
+  realmRec.GlobalEnv = Value.undefined;
+  realmRec.TemplateMap = [];
   return realmRec;
 }
 

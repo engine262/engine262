@@ -1,12 +1,26 @@
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { Q } from '../completion.mjs';
+import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import { isTemplateLiteral } from '../ast.mjs';
 import {
+  Assert,
   GetIterator,
   GetValue,
   IteratorStep,
   IteratorValue,
 } from '../abstract-ops/all.mjs';
+import { GetTemplateObject } from './all.mjs';
 import { Value } from '../value.mjs';
+
+// #sec-runtime-semantics-substitutionevaluation
+function* SubstitutionEvaluation(Expressions) {
+  const preceding = [];
+  for (const Expression of Expressions) {
+    const nextRef = yield* Evaluate_Expression(Expression);
+    const next = Q(GetValue(nextRef));
+    preceding.push(next);
+  }
+  return preceding;
+}
 
 // #sec-argument-lists-runtime-semantics-argumentlistevaluation
 //   Arguments : `(` `)`
@@ -21,6 +35,23 @@ import { Value } from '../value.mjs';
 //     `(` ArgumentList `)`
 //     `(` ArgumentList `,` `)`
 export function* ArgumentListEvaluation(ArgumentList) {
+  if (isTemplateLiteral(ArgumentList)) {
+    if (ArgumentList.expressions.length === 0) {
+      const templateLiteral = ArgumentList;
+      const siteObj = GetTemplateObject(templateLiteral);
+      return [siteObj];
+    } else {
+      const templateLiteral = ArgumentList;
+      const siteObj = GetTemplateObject(templateLiteral);
+      const firstSubRef = yield* Evaluate_Expression(templateLiteral.expressions.shift());
+      const firstSub = Q(GetValue(firstSubRef));
+      const restSub = yield* SubstitutionEvaluation(templateLiteral.expressions);
+      ReturnIfAbrupt(restSub);
+      Assert(Array.isArray(restSub));
+      return [siteObj, firstSub, ...restSub];
+    }
+  }
+
   if (ArgumentList.length === 0) {
     return [];
   }
