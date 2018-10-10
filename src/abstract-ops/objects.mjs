@@ -1,6 +1,7 @@
 import {
   Descriptor,
   ObjectValue,
+  IntegerIndexedExoticObjectValue,
   Type,
   Value,
 } from '../value.mjs';
@@ -13,19 +14,25 @@ import {
   CreateDataProperty,
   Get,
   GetFunctionRealm,
+  GetValueFromBuffer,
   IsAccessorDescriptor,
   IsCallable,
   IsDataDescriptor,
+  IsDetachedBuffer,
   IsExtensible,
+  IsInteger,
   IsGenericDescriptor,
   IsPropertyKey,
   SameValue,
+  SetValueInBuffer,
+  ToNumber,
   isArrayIndex,
+  typedArrayInfo,
 } from './all.mjs';
 import {
   InstanceofOperator,
 } from '../runtime-semantics/all.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O) {
@@ -434,4 +441,87 @@ export function OrdinaryHasInstance(C, O) {
       return Value.true;
     }
   }
+}
+
+// 9.4.5.7 #sec-integerindexedobjectcreate
+export function IntegerIndexedObjectCreate(prototype, internalSlotsList) {
+  Assert(internalSlotsList.includes('ViewedArrayBuffer'));
+  Assert(internalSlotsList.includes('ArrayLength'));
+  Assert(internalSlotsList.includes('ByteOffset'));
+  Assert(internalSlotsList.includes('TypedArrayName'));
+
+  const A = new IntegerIndexedExoticObjectValue();
+  for (const slot of internalSlotsList) {
+    A[slot] = Value.undefined;
+  }
+  A.Prototype = prototype;
+  A.Extensible = Value.true;
+  return A;
+}
+
+// 9.4.5.8 #sec-integerindexedelementget
+export function IntegerIndexedElementGet(O, index) {
+  Assert(Type(index) === 'Number');
+  Assert(O instanceof ObjectValue
+      && 'ViewedArrayBuffer' in O
+      && 'ArrayLength' in O
+      && 'ByteOffset' in O
+      && 'TypedArrayName' in O);
+  const buffer = O.ViewedArrayBuffer;
+  if (IsDetachedBuffer(buffer)) {
+    return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+  }
+  if (!IsInteger(index)) {
+    return Value.undefined;
+  }
+  index = index.numberValue();
+  if (Object.is(index, -0)) {
+    return Value.undefined;
+  }
+  const length = O.ArrayLength.numberValue();
+  if (index < 0 || index >= length) {
+    return Value.undefined;
+  }
+  const offset = O.ByteOffset.numberValue();
+  const arrayTypeName = O.TypedArrayName.stringValue();
+  const {
+    ElementSize: elementSize,
+    ElementType: elementType,
+  } = typedArrayInfo.get(arrayTypeName);
+  const indexedPosition = (index * elementSize) + offset;
+  return GetValueFromBuffer(buffer, new Value(indexedPosition), elementType, true, 'Unordered');
+}
+
+// 9.4.5.9 #sec-integerindexedelementset
+export function IntegerIndexedElementSet(O, index, value) {
+  Assert(Type(index) === 'Number');
+  Assert(O instanceof ObjectValue
+      && 'ViewedArrayBuffer' in O
+      && 'ArrayLength' in O
+      && 'ByteOffset' in O
+      && 'TypedArrayName' in O);
+  const numValue = Q(ToNumber(value));
+  const buffer = O.ViewedArrayBuffer;
+  if (IsDetachedBuffer(buffer)) {
+    return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+  }
+  if (!IsInteger(index)) {
+    return Value.false;
+  }
+  if (Object.is(index.numberValue(), -0)) {
+    return Value.false;
+  }
+  const length = O.ArrayLength;
+  if (index.numberValue() < 0 || index.numberValue() >= length.numberValue()) {
+    return Value.false;
+  }
+  const offset = O.ByteOffset;
+  const arrayTypeName = O.TypedArrayName.stringValue();
+  const {
+    ElementSize: elementSize,
+    ElementType: elementType,
+  } = typedArrayInfo.get(arrayTypeName);
+  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  X(SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, 'Unordered'));
+  return Value.true;
 }

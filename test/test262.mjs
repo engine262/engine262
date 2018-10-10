@@ -34,10 +34,10 @@ const excludedFeatures = new Set([
   'dynamic-import',
   'export-star-as-namespace-from-module',
   'RegExp',
+  'SharedArrayBuffer',
   'caller',
   'WeakSet',
   'WeakMap',
-  'TypedArray',
 ]);
 
 const excludedTests = new Set([
@@ -75,6 +75,7 @@ function createRealm() {
   Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
   Abstract.CreateDataProperty($262, new Value(realm, 'print'), new Value(realm, () => Value.undefined));
+  Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
@@ -194,7 +195,7 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (filename.includes('annexB')
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
-      || /date|(reg ?exp?)/i.test(meta.description) || /date|(reg ?exp?)/.test(source)
+      || /\b(date|reg ?exp?)\b/i.test(meta.description) || /\b(date|reg ?exp?)\b/.test(source)
       || meta.includes.includes('nativeFunctionMatcher.js')
       || excludedTests.has(short)) {
     skipped += 1;

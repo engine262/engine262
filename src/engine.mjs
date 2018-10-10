@@ -18,7 +18,7 @@ import { Evaluate_Script } from './evaluator.mjs';
 
 export class Agent {
   constructor(options = {}) {
-    this.LittleEndian = false;
+    this.LittleEndian = Value.true;
     this.CanBlock = true;
     this.Signifier = Agent.Increment;
     Agent.Increment += 1;

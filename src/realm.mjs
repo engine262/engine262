@@ -63,6 +63,10 @@ import { CreateJSON } from './intrinsics/JSON.mjs';
 import { CreateEval } from './intrinsics/eval.mjs';
 import { CreateIsFinite } from './intrinsics/isFinite.mjs';
 import { CreateIsNaN } from './intrinsics/isNaN.mjs';
+import { CreateTypedArray } from './intrinsics/TypedArray.mjs';
+import { CreateTypedArrayPrototype } from './intrinsics/TypedArrayPrototype.mjs';
+import { CreateTypedArrayConstructors } from './intrinsics/TypedArrayConstructors.mjs';
+import { CreateTypedArrayPrototypes } from './intrinsics/TypedArrayPrototypes.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -199,6 +203,11 @@ export function CreateIntrinsics(realmRec) {
   CreateArrayBufferPrototype(realmRec);
   CreateArrayBuffer(realmRec);
 
+  CreateTypedArrayPrototype(realmRec);
+  CreateTypedArray(realmRec);
+  CreateTypedArrayPrototypes(realmRec);
+  CreateTypedArrayConstructors(realmRec);
+
   CreateJSON(realmRec);
 
   CreateEval(realmRec);
@@ -264,12 +273,12 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Date',
     'Error',
     'EvalError',
-    // 'Float32Array',
-    // 'Float64Array',
+    'Float32Array',
+    'Float64Array',
     'Function',
-    // 'Int8Array',
-    // 'Int16Array',
-    // 'Int32Array',
+    'Int8Array',
+    'Int16Array',
+    'Int32Array',
     'Map',
     'Number',
     'Object',
@@ -284,10 +293,10 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Symbol',
     'SyntaxError',
     'TypeError',
-    // 'Uint8Array',
-    // 'Uint8ClampedArray',
-    // 'Uint16Array',
-    // 'Uint32Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'Uint16Array',
+    'Uint32Array',
     'URIError',
     // 'WeakMap',
     // 'WeakSet',

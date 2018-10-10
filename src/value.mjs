@@ -3,6 +3,7 @@ import {
   ArraySetLength,
   Assert,
   Call,
+  CanonicalNumericIndexString,
   CompletePropertyDescriptor,
   CreateListFromArrayLike,
   FromPropertyDescriptor,
@@ -10,10 +11,14 @@ import {
   Set,
   GetMethod,
   HasOwnProperty,
+  IntegerIndexedElementGet,
+  IntegerIndexedElementSet,
   IsAccessorDescriptor,
   IsCompatiblePropertyDescriptor,
   IsDataDescriptor,
+  IsDetachedBuffer,
   IsExtensible,
+  IsInteger,
   IsPropertyKey,
   OrdinaryDefineOwnProperty,
   OrdinaryDelete,
@@ -32,7 +37,9 @@ import {
   ToPropertyDescriptor,
   ToUint32,
   ToInteger,
+  ToString,
   isArrayIndex,
+  isIntegerIndex,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Completion, Q, X } from './completion.mjs';
@@ -475,6 +482,168 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
   }
 }
 
+// 9.4.5 #sec-integer-indexed-exotic-objects
+export class IntegerIndexedExoticObjectValue extends ObjectValue {
+  constructor() {
+    super();
+    this.ViewedArrayBuffer = Value.undefined;
+    this.ArrayLength = Value.undefined;
+    this.ByteOffset = Value.undefined;
+    this.TypedArrayName = Value.undefined;
+  }
+
+  // 9.4.5.1 #sec-integer-indexed-exotic-objects-getownproperty-p
+  GetOwnProperty(P) {
+    const O = this;
+    Assert(IsPropertyKey(P));
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
+    if (Type(P) === 'String') {
+      const numericIndex = X(CanonicalNumericIndexString(P));
+      if (numericIndex !== Value.undefined) {
+        const value = Q(IntegerIndexedElementGet(O, numericIndex));
+        if (value === Value.undefined) {
+          return Value.undefined;
+        }
+        return Descriptor({
+          Value: value,
+          Writable: Value.true,
+          Enumerable: Value.true,
+          Configurable: Value.false,
+        });
+      }
+    }
+    return OrdinaryGetOwnProperty(O, P);
+  }
+
+  // 9.4.5.2 #sec-integer-indexed-exotic-objects-hasproperty-p
+  HasProperty(P) {
+    const O = this;
+    Assert(IsPropertyKey(P));
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
+    if (Type(P) === 'String') {
+      let numericIndex = X(CanonicalNumericIndexString(P));
+      if (numericIndex !== Value.undefined) {
+        const buffer = O.ViewedArrayBuffer;
+        if (IsDetachedBuffer(buffer)) {
+          return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+        }
+        if (!IsInteger(numericIndex)) {
+          return Value.false;
+        }
+        numericIndex = numericIndex.numberValue();
+        if (Object.is(numericIndex, -0)) {
+          return Value.false;
+        }
+        if (numericIndex < 0) {
+          return Value.false;
+        }
+        if (numericIndex >= O.ArrayLength.numberValue()) {
+          return Value.false;
+        }
+        return Value.true;
+      }
+    }
+    return Q(OrdinaryHasProperty(O, P));
+  }
+
+  // 9.4.5.3 #sec-integer-indexed-exotic-objects-defineownproperty-p-desc
+  DefineOwnProperty(P, Desc) {
+    const O = this;
+    Assert(IsPropertyKey(P));
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
+    if (Type(P) === 'String') {
+      const numericIndex = X(CanonicalNumericIndexString(P));
+      if (numericIndex !== Value.undefined) {
+        if (!IsInteger(numericIndex)) {
+          return Value.false;
+        }
+        if (Object.is(numericIndex.numberValue(), -0)) {
+          return Value.false;
+        }
+        if (numericIndex.numberValue() < 0) {
+          return Value.false;
+        }
+        const length = O.ArrayLength;
+        if (numericIndex.numberValue() >= length.numberValue()) {
+          return Value.false;
+        }
+        if (IsAccessorDescriptor(Desc)) {
+          return Value.false;
+        }
+        if (Desc.Configurable === Value.true) {
+          return Value.false;
+        }
+        if (Desc.Enumerable === Value.false) {
+          return Value.false;
+        }
+        if (Desc.Writable === Value.false) {
+          return Value.false;
+        }
+        if (Desc.Value !== undefined) {
+          const value = Desc.Value;
+          return Q(IntegerIndexedElementSet(O, numericIndex, value));
+        }
+        return Value.true;
+      }
+    }
+    return Q(OrdinaryDefineOwnProperty(O, P, Desc));
+  }
+
+  // 9.4.5.4 #sec-integer-indexed-exotic-objects-get-p-receiver
+  Get(P, Receiver) {
+    const O = this;
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'String') {
+      const numericIndex = X(CanonicalNumericIndexString(P));
+      if (numericIndex !== Value.undefined) {
+        return Q(IntegerIndexedElementGet(O, numericIndex));
+      }
+    }
+    return Q(OrdinaryGet(O, P, Receiver));
+  }
+
+  // 9.4.5.5 #sec-integer-indexed-exotic-objects-set-p-v-receiver
+  Set(P, V, Receiver) {
+    const O = this;
+    Assert(IsPropertyKey(P));
+    if (Type(P) === 'String') {
+      const numericIndex = X(CanonicalNumericIndexString(P));
+      if (numericIndex !== Value.undefined) {
+        return Q(IntegerIndexedElementSet(O, numericIndex, V));
+      }
+    }
+    return Q(OrdinarySet(O, P, V, Receiver));
+  }
+
+  // 9.4.5.6 #sec-integer-indexed-exotic-objects-ownpropertykeys
+  OwnPropertyKeys() {
+    const O = this;
+    const keys = [];
+    Assert(O instanceof ObjectValue
+        && 'ViewedArrayBuffer' in O
+        && 'ArrayLength' in O
+        && 'ByteOffset' in O
+        && 'TypedArrayName' in O);
+    const len = O.ArrayLength.numberValue();
+    for (let i = 0; i < len; i += 1) {
+      keys.push(X(ToString(new Value(i))));
+    }
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'String') {
+        if (!isIntegerIndex(P)) {
+          keys.push(P);
+        }
+      }
+    }
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'Symbol') {
+        keys.push(P);
+      }
+    }
+    return keys;
+  }
+}
+
 // #sec-set-immutable-prototype
 function SetImmutablePrototype(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
@@ -538,7 +707,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     if (Type(current) === 'Undefined') {
       return Value.false;
     }
-    if (IsAccessorDescriptor(Desc) === Value.true) {
+    if (IsAccessorDescriptor(Desc)) {
       return Value.false;
     }
     if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
@@ -1052,9 +1221,14 @@ Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
 };
 
 export class DataBlock extends Uint8Array {
-  constructor(size) {
-    Assert(typeof size === 'number');
-    super(size);
+  constructor(sizeOrBuffer, ...restArgs) {
+    if (sizeOrBuffer instanceof ArrayBuffer) {
+      // fine.
+      super(sizeOrBuffer, ...restArgs);
+    } else {
+      Assert(typeof sizeOrBuffer === 'number');
+      super(sizeOrBuffer);
+    }
   }
 }
 
