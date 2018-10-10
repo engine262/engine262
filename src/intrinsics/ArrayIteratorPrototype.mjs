@@ -10,10 +10,12 @@ import {
   CreateArrayFromList,
   CreateIterResultObject,
   Get,
+  IsDetachedBuffer,
   ToLength,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function ArrayIteratorPrototype_next(args, { thisValue }) {
@@ -34,8 +36,10 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   const itemKind = O.ArrayIterationKind;
   let len;
   if ('TypedArrayName' in a) {
-    // a. If IsDetachedBuffer(a.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    // b Let len be a.[[ArrayLength]].
+    if (IsDetachedBuffer(a.ViewedArrayBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+    len = a.ArrayLength;
   } else {
     const lenProp = Q(Get(a, new Value('length')));
     len = Q(ToLength(lenProp));

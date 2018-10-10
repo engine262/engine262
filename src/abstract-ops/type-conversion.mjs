@@ -187,8 +187,8 @@ export function ToUint32(argument) {
 
 // 7.1.7 #sec-toint16
 export function ToInt16(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
@@ -358,7 +358,7 @@ export function ToLength(argument) {
 export function CanonicalNumericIndexString(argument) {
   Assert(Type(argument) === 'String');
   if (argument.stringValue() === '-0') {
-    return -0;
+    return new Value(-0);
   }
   const n = X(ToNumber(argument));
   if (SameValue(X(ToString(n)), argument) === Value.false) {

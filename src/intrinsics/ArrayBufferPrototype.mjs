@@ -20,7 +20,7 @@ function ArrayBufferProto_byteLengthGetter(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object'
       || !('ArrayBufferData' in O)
-      || IsSharedArrayBuffer(O)) {
+      || IsSharedArrayBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'this value is not an ArrayBuffer');
   }
   if (IsDetachedBuffer(O)) {
@@ -35,7 +35,7 @@ function ArrayBufferProto_slice([start, end], { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object'
       || !('ArrayBufferData' in O)
-      || IsSharedArrayBuffer(O)) {
+      || IsSharedArrayBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'this value is not an ArrayBuffer');
   }
   if (IsDetachedBuffer(O)) {
@@ -64,7 +64,7 @@ function ArrayBufferProto_slice([start, end], { thisValue }) {
   const newLen = Math.max(final - first, 0);
   const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   const neww = Q(Construct(ctor, [new Value(newLen)]));
-  if (!('ArrayBufferData' in neww) || IsSharedArrayBuffer(neww)) {
+  if (!('ArrayBufferData' in neww) || IsSharedArrayBuffer(neww) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'Subclass constructor did not return a ArrayBuffer');
   }
   if (IsDetachedBuffer(neww)) {

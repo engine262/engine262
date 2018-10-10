@@ -9,6 +9,7 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
+  CanonicalNumericIndexString,
   ToNumber,
   ToPrimitive,
   ValidateAndApplyPropertyDescriptor,
@@ -16,18 +17,34 @@ import {
 import { Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-export function isArrayIndex(P) {
-  Assert(IsPropertyKey(P));
-  const type = Type(P);
-  if (type === 'Symbol') {
+// 6.1.7 #integer-index
+export function isIntegerIndex(V) {
+  if (Type(V) !== 'String') {
     return false;
   }
-
-  const index = Number.parseInt(P.stringValue(), 10);
-  if (index >= 0 && index < (2 ** 32) - 1) {
+  const numeric = X(CanonicalNumericIndexString(V));
+  if (numeric === Value.undefined) {
+    return false;
+  }
+  if (Object.is(numeric.numberValue(), +0)) {
     return true;
   }
-  return false;
+  return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
+}
+
+// 6.1.7 #array-index
+export function isArrayIndex(V) {
+  if (Type(V) !== 'String') {
+    return false;
+  }
+  const numeric = X(CanonicalNumericIndexString(V));
+  if (numeric === Value.undefined) {
+    return false;
+  }
+  if (Object.is(numeric.numberValue(), +0)) {
+    return true;
+  }
+  return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
 }
 
 // #sec-requireobjectcoercible

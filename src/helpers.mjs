@@ -74,12 +74,20 @@ const messages = {
   NotAFunction: (v) => `${inlineInspect(v)} is not a function`,
   NotAConstructor: (v) => `${inlineInspect(v)} is not a constructor`,
   NotAnObject: (v) => `${inlineInspect(v)} is not an object`,
+  NotATypeObject: (t, v) => `${inlineInspect(v)} is not a ${t} object`,
   PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
   PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
   ProxyRevoked: (n) => `Cannot perform '${n}' on a proxy that has been revoked`,
+  BufferDetachKeyMismatch: (k, b) => `${inlineInspect(k)} is not the [[ArrayBufferDetachKey]] of ${inlineInspect(b)}`,
+  BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
+  TypedArrayTooSmall: () => 'Derived TypedArray constructor created an array which was too small',
   NotDefined: (n) => `${inlineInspect(n)} is not defined`,
   CannotSetProperty: (p) => `Cannot set property ${inlineInspect(p)}`,
   AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
+  ConstructorRequiresNew: (n) => `${n} constructor requires new`,
+  TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
+  TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
+  TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
 };
 
 export function msg(key, ...args) {
