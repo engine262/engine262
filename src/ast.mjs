@@ -157,6 +157,10 @@ export function isFunctionExpressionWithBindingIdentifier(node) {
   return isFunctionExpression(node) && node.id !== null;
 }
 
+export function isAsyncFunctionExpressionWithBindingIdentifier(node) {
+  return isAsyncFunctionExpression(node) && node.id !== null;
+}
+
 // #prod-ClassExpression
 export function isClassExpression(node) {
   return node.type === 'ClassExpression';

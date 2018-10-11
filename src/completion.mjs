@@ -1,7 +1,12 @@
+import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
   Call,
+  NewPromiseCapability,
+  CreateBuiltinFunction,
+  SetFunctionLength,
 } from './abstract-ops/all.mjs';
+import { PerformPromiseThen } from './intrinsics/PromisePrototype.mjs';
 import { Value, Reference } from './value.mjs';
 
 // #sec-completion-record-specification-type
@@ -134,5 +139,42 @@ export function EnsureCompletion(val) {
   return new NormalCompletion(val);
 }
 
-// #await
-export function Await() {}
+function AwaitFulfilledFunctions([value]) {
+  const F = surroundingAgent.activeFunctionObject;
+  const asyncContext = F.AsyncContext;
+  const prevContext = surroundingAgent.runningExecutionContext;
+  // Suspend prevContext
+  surroundingAgent.executionContextStack.push(asyncContext);
+  asyncContext.codeEvaluationState.next(new NormalCompletion(value));
+  Assert(surroundingAgent.runningExecutionContext === prevContext);
+  return Value.undefined;
+}
+
+function AwaitRejectedFunctions([reason]) {
+  const F = surroundingAgent.activeFunctionObject;
+  const asyncContext = F.AsyncContext;
+  const prevContext = surroundingAgent.runningExecutionContext;
+  // Suspend prevContext
+  surroundingAgent.executionContextStack.push(asyncContext);
+  asyncContext.codeEvaluationState.next(new ThrowCompletion(reason));
+  Assert(surroundingAgent.runningExecutionContext === prevContext);
+  return Value.undefined;
+}
+
+export function* Await(promise) {
+  const asyncContext = surroundingAgent.runningExecutionContext;
+  const promiseCapability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+  X(Call(promiseCapability.Resolve, Value.undefined, [promise]));
+  const stepsFulfilled = AwaitFulfilledFunctions;
+  const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
+  X(SetFunctionLength(onFulfilled, new Value(1)));
+  onFulfilled.AsyncContext = asyncContext;
+  const stepsRejected = AwaitRejectedFunctions;
+  const onRejected = CreateBuiltinFunction(stepsRejected, ['AsyncContext']);
+  X(SetFunctionLength(onRejected, new Value(1)));
+  onRejected.AsyncContext = asyncContext;
+  X(PerformPromiseThen(promiseCapability.Promise, onFulfilled, onRejected));
+  surroundingAgent.executionContextStack.pop();
+  const completion = yield Value.undefined;
+  return completion;
+}

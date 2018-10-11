@@ -18,12 +18,12 @@ module.exports = ({ types: t, template }) => ({
         state.needAssertOrCall = false;
       },
       exit(path, state) {
-        if (!state.foundCompletion && state.needCompletion) {
+        if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
           const r = relative(state.file.opts.filename, COMPLETION_PATH).replace('../', './');
           path.node.body.unshift(t.ImportDeclaration([
             t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
             t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-          ], t.Literal(r)));
+          ], t.StringLiteral(r)));
         }
         if (!state.foundAssertOrCall && state.needAssertOrCall) {
           const r = relative(state.file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');

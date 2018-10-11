@@ -85,6 +85,16 @@ export class ExecutionContext {
     this.ScriptOrModule = undefined;
     this.LexicalEnvironment = undefined;
   }
+
+  copy() {
+    const e = new ExecutionContext();
+    e.codeEvaluationState = this.codeEvaluationState;
+    e.Function = this.Function;
+    e.Realm = this.Realm;
+    e.ScriptOrModule = this.ScriptOrModule;
+    e.LexicalEnvironment = this.LexicalEnvironment;
+    return e;
+  }
 }
 
 export function isArrayIndex(P) {

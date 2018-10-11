@@ -5,8 +5,10 @@ import {
   MakeConstructor,
   ObjectCreate,
   SetFunctionName,
+  AsyncFunctionCreate,
 } from '../abstract-ops/all.mjs';
 import {
+  isAsyncFunctionDeclaration,
   isFunctionDeclaration,
   isGeneratorDeclaration,
 } from '../ast.mjs';
@@ -55,6 +57,18 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   return F;
 }
 
+export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope) {
+  const {
+    id: BindingIdentifier,
+    params: FormalParameters,
+  } = AsyncFunctionDeclaration;
+  const strict = true; // TODO(IsStrict)
+  const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
+  const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope, strict));
+  SetFunctionName(F, name);
+  return F;
+}
+
 export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
   switch (true) {
     case isFunctionDeclaration(AnyFunctionDeclaration):
@@ -63,8 +77,8 @@ export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
     case isGeneratorDeclaration(AnyFunctionDeclaration):
       return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
 
-      // case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
-      //   return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
+    case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
+      return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
 
       // case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
       //   return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);

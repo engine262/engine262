@@ -2,16 +2,21 @@ import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   Assert,
+  Call,
   CreateListIteratorRecord,
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
   GeneratorStart,
   GetValue,
   OrdinaryCreateFromConstructor,
+  AsyncFunctionStart,
+  NewPromiseCapability,
 } from '../abstract-ops/all.mjs';
 import {
   isArrowFunction,
+  isAsyncArrowFunction,
   isAsyncFunctionDeclaration,
+  isAsyncFunctionExpression,
   isAsyncGeneratorDeclaration,
   isBindingIdentifier,
   isForBinding,
@@ -31,21 +36,26 @@ import {
   LexicallyDeclaredNames_ConciseBody,
   LexicallyDeclaredNames_FunctionBody,
   LexicallyDeclaredNames_GeneratorBody,
+  LexicallyDeclaredNames_AsyncFunctionBody,
   LexicallyScopedDeclarations_ConciseBody,
   LexicallyScopedDeclarations_FunctionBody,
   LexicallyScopedDeclarations_GeneratorBody,
+  LexicallyScopedDeclarations_AsyncFunctionBody,
   VarDeclaredNames_ConciseBody,
   VarDeclaredNames_FunctionBody,
   VarDeclaredNames_GeneratorBody,
+  VarDeclaredNames_AsyncFunctionBody,
   VarScopedDeclarations_ConciseBody,
   VarScopedDeclarations_FunctionBody,
   VarScopedDeclarations_GeneratorBody,
+  VarScopedDeclarations_AsyncFunctionBody,
 } from '../static-semantics/all.mjs';
 import {
+  Completion,
   NormalCompletion,
-  Q,
+  AbruptCompletion,
   ReturnCompletion,
-  X,
+  Q, X,
 } from '../completion.mjs';
 import {
   NewDeclarativeEnvironment,
@@ -85,6 +95,8 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       break;
     case 'ConciseBody_Expression':
     case 'ConciseBody_FunctionBody':
+    case 'AsyncConciseBody_AsyncFunctionBody':
+    case 'AsyncConciseBody_AssignmentExpression':
       varNames = VarDeclaredNames_ConciseBody(code.body).map(Value);
       varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
       lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(Value);
@@ -93,6 +105,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       varNames = VarDeclaredNames_GeneratorBody(code.body.body).map(Value);
       varDeclarations = VarScopedDeclarations_GeneratorBody(code.body.body);
       lexicalNames = LexicallyDeclaredNames_GeneratorBody(code.body.body).map(Value);
+      break;
+    case 'AsyncFunctionBody':
+      varNames = VarDeclaredNames_AsyncFunctionBody(code.body.body).map(Value);
+      varDeclarations = VarScopedDeclarations_AsyncFunctionBody(code.body.body);
+      lexicalNames = LexicallyDeclaredNames_AsyncFunctionBody(code.body.body).map(Value);
       break;
     default:
       throw outOfRange('FunctionDeclarationInstantiation', code);
@@ -214,10 +231,15 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       break;
     case 'ConciseBody_Expression':
     case 'ConciseBody_FunctionBody':
+    case 'AsyncConciseBody_AssignmentExpression':
+    case 'AsyncConciseBody_AsyncFunctionBody':
       lexDeclarations = LexicallyScopedDeclarations_ConciseBody(code.body);
       break;
     case 'GeneratorBody':
       lexDeclarations = LexicallyScopedDeclarations_GeneratorBody(code.body.body);
+      break;
+    case 'AsyncFunctionBody':
+      lexDeclarations = LexicallyScopedDeclarations_AsyncFunctionBody(code.body.body);
       break;
     default:
       throw outOfRange('FunctionDeclarationInstantiation', code);
@@ -256,10 +278,21 @@ export function getFunctionBodyType(ECMAScriptCode) {
     case isArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
       return 'ConciseBody_Expression';
 
+    case isAsyncArrowFunction(ECMAScriptCode) && !ECMAScriptCode.expression:
+      return 'AsyncConciseBody_AsyncFunctionBody';
+
+    case isAsyncArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
+      return 'AsyncConciseBody_AssignmentExpression';
+
     // GeneratorBody : FunctionBody
     case isGeneratorDeclaration(ECMAScriptCode)
       || isGeneratorExpression(ECMAScriptCode):
       return 'GeneratorBody';
+
+    // AsyncFunctionBody : FunctionBody
+    case isAsyncFunctionDeclaration(ECMAScriptCode)
+      || isAsyncFunctionExpression(ECMAScriptCode):
+      return 'AsyncFunctionBody';
 
     default:
       throw outOfRange('getFunctionBodyType', ECMAScriptCode);
@@ -289,4 +322,30 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   const G = Q(OrdinaryCreateFromConstructor(functionObject, new Value('%GeneratorPrototype%'), ['GeneratorState', 'GeneratorContext']));
   GeneratorStart(G, GeneratorBody);
   return new ReturnCompletion(G);
+}
+
+// #sec-async-function-definitions-EvaluateBody
+// AsyncFunctionBody : FunctionBody
+export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
+  const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  const declResult = Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  if (!(declResult instanceof AbruptCompletion)) {
+    X(AsyncFunctionStart(promiseCapability, FunctionBody));
+  } else {
+    X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
+  }
+  return new Completion('return', promiseCapability.Promise, undefined);
+}
+
+// #sec-async-arrow-function-definitions-EvaluateBody
+// AsyncConciseBody : AssignmentExpression
+export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentExpression, functionObject, argumentsList) {
+  const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  const declResult = Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  if (!(declResult instanceof AbruptCompletion)) {
+    X(AsyncFunctionStart(promiseCapability, AssignmentExpression));
+  } else {
+    X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
+  }
+  return new Completion('return', promiseCapability.Promise, undefined);
 }

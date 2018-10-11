@@ -88,7 +88,7 @@ export function PromiseReactionJob(reaction, argument) {
   const type = reaction.Type;
   const handler = reaction.Handler;
   let handlerResult;
-  if (Type(handler) === 'Undefined') {
+  if (handler === Value.undefined) {
     if (type === 'Fulfill') {
       handlerResult = new NormalCompletion(argument);
     } else {
@@ -97,6 +97,10 @@ export function PromiseReactionJob(reaction, argument) {
     }
   } else {
     handlerResult = Call(handler, Value.undefined, [argument]);
+  }
+  if (promiseCapability === Value.undefined) {
+    Assert(!(handlerResult instanceof AbruptCompletion));
+    return new NormalCompletion(undefined);
   }
   let status;
   if (handlerResult instanceof AbruptCompletion) {

@@ -79,7 +79,9 @@ export const LexicallyScopedDeclarations_FunctionBody = LexicallyScopedDeclarati
 
 // (implicit)
 //   GeneratorBody : FunctionBody
+//   AsyncFunctionBody : FunctionBody
 export const LexicallyScopedDeclarations_GeneratorBody = LexicallyScopedDeclarations_FunctionBody;
+export const LexicallyScopedDeclarations_AsyncFunctionBody = LexicallyScopedDeclarations_FunctionBody;
 
 // 14.2.11 #sec-arrow-function-definitions-static-semantics-lexicallyscopeddeclarations
 //   ConciseBody : AssignmentExpression

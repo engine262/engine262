@@ -52,6 +52,8 @@ import { CreateFunctionProperties } from './intrinsics/functionProperties.mjs';
 import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
 import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
+import { CreateAsyncFunctionPrototype } from './intrinsics/AsyncFunctionPrototype.mjs';
+import { CreateAsyncFunction } from './intrinsics/AsyncFunction.mjs';
 import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
 import { CreateArrayBufferPrototype } from './intrinsics/ArrayBufferPrototype.mjs';
 import { CreateJSON } from './intrinsics/JSON.mjs';
@@ -166,6 +168,9 @@ export function CreateIntrinsics(realmRec) {
   CreateGeneratorPrototype(realmRec);
   CreateGenerator(realmRec);
   CreateGeneratorFunction(realmRec);
+
+  CreateAsyncFunctionPrototype(realmRec);
+  CreateAsyncFunction(realmRec);
 
   CreateArrayBufferPrototype(realmRec);
   CreateArrayBuffer(realmRec);

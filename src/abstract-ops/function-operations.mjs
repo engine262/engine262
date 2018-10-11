@@ -34,6 +34,8 @@ import {
   EvaluateBody_ConciseBody_Expression,
   EvaluateBody_FunctionBody,
   EvaluateBody_GeneratorBody,
+  EvaluateBody_AsyncFunctionBody,
+  EvaluateBody_AsyncConciseBody_AssignmentExpression,
   getFunctionBodyType,
 } from '../runtime-semantics/all.mjs';
 import {
@@ -214,6 +216,13 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
     case 'GeneratorBody':
       return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
+    case 'AsyncFunctionBody':
+    case 'AsyncConciseBody_AsyncFunctionBody':
+      return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
+    case 'AsyncConciseBody_AssignmentExpression':
+      return yield* EvaluateBody_AsyncConciseBody_AssignmentExpression(F.ECMAScriptCode.body, F, argumentsList);
+
     default:
       throw outOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
   }
@@ -309,6 +318,12 @@ export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict
   const functionPrototype = surroundingAgent.intrinsic('%Generator%');
   const F = FunctionAllocate(functionPrototype, Strict, 'generator');
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
+}
+
+export function AsyncFunctionCreate(kind, parameters, body, Scope, Strict) {
+  const functionPrototype = surroundingAgent.intrinsic('%AsyncFunctionPrototype%');
+  const F = X(FunctionAllocate(functionPrototype, Strict, 'async'));
+  return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
 
 // #sec-makeconstructor

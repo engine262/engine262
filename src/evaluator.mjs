@@ -25,6 +25,9 @@ import {
   isActualUpdateExpression,
   isArrayLiteral,
   isArrowFunction,
+  isAsyncArrowFunction,
+  isAsyncFunctionExpression,
+  isAwaitExpression,
   isBlockStatement,
   isBreakStatement,
   isBreakableStatement,
@@ -67,6 +70,9 @@ import {
   Evaluate_AdditiveExpression,
   Evaluate_ArrayLiteral,
   Evaluate_ArrowFunction,
+  Evaluate_AsyncArrowFunction,
+  Evaluate_AsyncFunctionExpression,
+  Evaluate_AwaitExpression,
   Evaluate_AssignmentExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
@@ -317,8 +323,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isGeneratorExpression(Expression):
       return Evaluate_GeneratorExpression(Expression);
 
-      // case isAsyncFunctionExpression(Expression):
-      //   return Evaluate_AsyncFunctionExpression(Expression);
+    case isAsyncFunctionExpression(Expression):
+      return Evaluate_AsyncFunctionExpression(Expression);
 
       // case isAsyncGeneratorExpression(Expression):
       //   return Evaluate_AsyncGeneratorExpression(Expression);
@@ -356,8 +362,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isActualUnaryExpression(Expression):
       return yield* Evaluate_UnaryExpression(Expression);
 
-      // case isAwaitExpression(Expression):
-      //   return Evaluate_AwaitExpression(Expression);
+    case isAwaitExpression(Expression):
+      return yield* Evaluate_AwaitExpression(Expression);
 
     case isActualExponentiationExpression(Expression):
       return yield* Evaluate_ExponentiationExpression(Expression);
@@ -397,8 +403,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isArrowFunction(Expression):
       return Evaluate_ArrowFunction(Expression);
 
-      // case isAsyncArrowFunction(Expression):
-      //   return Evaluate_AsyncArrowFunction(Expression);
+    case isAsyncArrowFunction(Expression):
+      return Evaluate_AsyncArrowFunction(Expression);
 
     case isActualAssignmentExpression(Expression):
       return yield* Evaluate_AssignmentExpression(Expression);
