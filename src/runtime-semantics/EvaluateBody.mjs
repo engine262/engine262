@@ -328,7 +328,7 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
 // AsyncFunctionBody : FunctionBody
 export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  const declResult = Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
     X(AsyncFunctionStart(promiseCapability, FunctionBody));
   } else {
@@ -341,7 +341,7 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
 // AsyncConciseBody : AssignmentExpression
 export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentExpression, functionObject, argumentsList) {
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  const declResult = Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
     X(AsyncFunctionStart(promiseCapability, AssignmentExpression));
   } else {
