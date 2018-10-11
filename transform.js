@@ -110,7 +110,7 @@ module.exports = ({ types: t, template }) => {
           state.needAssertAndCall = false;
         },
         exit(path, state) {
-          if (!state.foundCompletion && state.needCompletion) {
+          if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
           if (!state.foundAssertAndCall && state.needAssertAndCall) {
