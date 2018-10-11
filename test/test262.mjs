@@ -199,9 +199,9 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   let skip = false;
   let fail = false;
-  if (!meta.flags.includes('noStrict')) {
+  if (!meta.flags.includes('onlyStrict')) {
     try {
-      const { status, error } = await run({ source, meta, strict: true });
+      const { status, error } = await run({ source, meta, strict: false });
       if (status === SKIP) {
         skip = true;
       } else if (status === FAIL) {
@@ -217,7 +217,7 @@ files.reduce((promise, filename) => promise.then(async () => {
       throw err;
     }
   }
-  if (!meta.flags.includes('onlyStrict')) {
+  if (!meta.flags.includes('noStrict')) {
     try {
       const { status, error } = await run({ source, meta, strict: true });
       if (status === SKIP) {
