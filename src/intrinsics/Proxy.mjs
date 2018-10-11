@@ -28,7 +28,7 @@ function ProxyCallSlot(thisArgument, argumentsList) {
 
   const handler = O.ProxyHandler;
   if (Type(handler) === 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot call a proxy that has been revoked');
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
@@ -45,7 +45,7 @@ function ProxyConstructSlot(argumentsList, newTarget) {
 
   const handler = O.ProxyHandler;
   if (Type(handler) === 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot construct a proxy that has been revoked');
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
@@ -57,7 +57,7 @@ function ProxyConstructSlot(argumentsList, newTarget) {
   const argArray = CreateArrayFromList(argumentsList);
   const newObj = Q(Call(trap, handler, [target, argArray, newTarget]));
   if (Type(newObj) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Proxy trap returned non-object');
   }
   return newObj;
 }
@@ -67,13 +67,13 @@ function ProxyCreate(target, handler) {
     return surroundingAgent.Throw('TypeError', 'Cannot create proxy with a non-object as target');
   }
   if (target instanceof ProxyExoticObjectValue && Type(target.ProxyHandler) === 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot create proxy with a revoked proxy as target');
   }
   if (Type(handler) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Cannot create proxy with a non-object as handler');
   }
   if (handler instanceof ProxyExoticObjectValue && Type(handler.ProxyHandler) === 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot create proxy with a revoked proxy as handler');
   }
   const P = new ProxyExoticObjectValue();
   if (IsCallable(P) === Value.true) {
@@ -89,7 +89,7 @@ function ProxyCreate(target, handler) {
 
 function ProxyConstructor([target, handler], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'costructor Proxy requires new');
+    return surroundingAgent.Throw('TypeError', 'Constructor Proxy requires \'new\'');
   }
   return Q(ProxyCreate(target, handler));
 }

@@ -62,7 +62,7 @@ function Object_assign([target, ...sources]) {
 
 function Object_create([O, Properties]) {
   if (Type(O) !== 'Object' && Type(O) !== 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Object prototype may only be an Object or null');
   }
   const obj = ObjectCreate(O);
   if (Type(Properties) !== 'Undefined') {
@@ -78,7 +78,7 @@ function Object_defineProperties([O, Properties]) {
 // #sec-objectdefineproperties ObjectDefineProperties
 function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not an object');
   }
   const props = Q(ToObject(Properties));
   const keys = Q(props.OwnPropertyKeys());
@@ -101,7 +101,7 @@ function ObjectDefineProperties(O, Properties) {
 
 function Object_defineProperty([O, P, Attributes]) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Value is not an object');
   }
   const key = Q(ToPropertyKey(P));
   const desc = Q(ToPropertyDescriptor(Attributes));
@@ -123,7 +123,7 @@ function Object_freeze([O]) {
 
   const status = Q(SetIntegrityLevel(O, 'frozen'));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Could not freeze object');
   }
   return O;
 }
@@ -215,7 +215,7 @@ function Object_preventExtensions([O]) {
 
   const status = Q(O.PreventExtensions());
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Could not prevent extensions on object');
   }
   return O;
 }
@@ -227,7 +227,7 @@ function Object_seal([O]) {
 
   const status = Q(SetIntegrityLevel(O, 'sealed'));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Could not seal object');
   }
   return O;
 }
@@ -235,7 +235,7 @@ function Object_seal([O]) {
 function Object_setPrototypeOf([O, proto]) {
   O = Q(RequireObjectCoercible(O));
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Prototype must be an Object or null');
   }
   if (Type(O) !== 'Object') {
     return O;
@@ -243,7 +243,7 @@ function Object_setPrototypeOf([O, proto]) {
 
   const status = Q(O.SetPrototypeOf(proto));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Could not set prototype of object');
   }
   return O;
 }

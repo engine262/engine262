@@ -19,10 +19,10 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function CreateMapIterator(map, kind) {
   if (Type(map) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot create map iterator from incompatable receiver');
   }
   if (!('MapData' in map)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Cannot create map iterator from incompatable receiver');
   }
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
     'Map',
@@ -37,10 +37,10 @@ function CreateMapIterator(map, kind) {
 function MapProto_clear(args, { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.clear called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.clear called on incompatable receiver');
   }
   const entries = M.MapData;
   for (const p of entries) {
@@ -53,10 +53,10 @@ function MapProto_clear(args, { thisValue }) {
 function MapProto_delete([key], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.delete called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.delete called on incompatable receiver');
   }
   const entries = M.MapData;
   for (let i = 0; i < entries.length; i += 1) {
@@ -84,13 +84,13 @@ function MapProto_entries(args, { thisValue }) {
 function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.entries called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.entries called on incompatable receiver');
   }
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'value is not a function');
   }
   let T;
   if (thisArg !== undefined) {
@@ -110,10 +110,10 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
 function MapProto_get([key], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.get called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.get called on incompatable receiver');
   }
   const entries = M.MapData;
   for (const p of entries) {
@@ -127,10 +127,10 @@ function MapProto_get([key], { thisValue }) {
 function MapProto_has([key], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.has called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.has called on incompatable receiver');
   }
   const entries = M.MapData;
   for (const p of entries) {
@@ -149,10 +149,10 @@ function MapProto_keys(args, { thisValue }) {
 function MapProto_set([key, value], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.set called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map.prototype.set called on incompatable receiver');
   }
   const entries = M.MapData;
   for (const p of entries) {
@@ -172,10 +172,10 @@ function MapProto_set([key, value], { thisValue }) {
 function MapProto_size(args, { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'get Map.prototype.size called on incompatable receiver');
   }
   if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'get Map.prototype.size called on incompatable receiver');
   }
   const entries = M.MapData;
   let count = 0;
