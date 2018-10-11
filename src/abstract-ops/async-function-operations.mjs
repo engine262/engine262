@@ -11,6 +11,7 @@ export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
   asyncContext.codeEvaluationState = (function* resumer() {
     const result = EnsureCompletion(yield* Evaluate_FunctionBody(asyncFunctionBody));
     // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+    Assert(surroundingAgent.runningExecutionContext === asyncContext);
     surroundingAgent.executionContextStack.pop();
     if (result.Type === 'normal') {
       Q(Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]));
