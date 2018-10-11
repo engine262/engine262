@@ -319,7 +319,7 @@ export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject
 // GeneratorBody : FunctionBody
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, new Value('%GeneratorPrototype%'), ['GeneratorState', 'GeneratorContext']));
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorPrototype%', ['GeneratorState', 'GeneratorContext']));
   GeneratorStart(G, GeneratorBody);
   return new ReturnCompletion(G);
 }
