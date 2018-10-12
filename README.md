@@ -10,6 +10,30 @@ Non-Goals
 - Speed
 - Security
 
+### Using engine262
+
+`$ npm run build`
+
+```js
+import { Realm } from './lib/api.mjs';
+
+const realm = new Realm({
+  // onDebugger() {},
+  // ensureCanCompileStrings() {},
+});
+
+const completion = realm.evaluateScript(`
+'use strict';
+
+1 + 1;
+`);
+
+console.log(completion.Value); // NumberValue { 2 }
+```
+
+`$ node --experimental-modules yourfile.mjs`
+
+Check out `test/test262.mjs` for an example of a `print` function.
 
 ### How Completions Work
 
