@@ -7,18 +7,14 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
 });
 
 function deepFreeze(obj) {
-  Object.freeze(obj);
-  for (const key of Reflect.ownKeys(obj)) {
-    let childObj;
-    try {
-      childObj = obj[key];
-    } catch (e) {
-      continue;
+  // Assume that the object we want to freeze doesn't have cycles or
+  // un-stringifyable parts.
+  return JSON.parse(JSON.stringify(obj), (key, value) => {
+    if (Object(value) === value) {
+      Object.freeze(value);
     }
-    if (Object(childObj) === childObj) {
-      Object.freeze(childObj);
-    }
-  }
+    return value;
+  });
 }
 
 // Copied from acorn/src/scopeflags.js.
