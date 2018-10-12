@@ -1,5 +1,11 @@
 import acorn from 'acorn';
 
+const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
+  constructor(options, source) {
+    super({ ...options, ecmaVersion: 2019 }, source);
+  }
+});
+
 function deepFreeze(obj) {
   Object.freeze(obj);
   for (const key of Reflect.ownKeys(obj)) {
@@ -27,9 +33,8 @@ function functionFlags(async, generator) {
 
 // Adapted from several different places in Acorn.
 function parseFuncBody(sourceText, async, generator) {
-  const parser = new acorn.Parser({
+  const parser = new Parser({
     sourceType: 'script',
-    ecmaVersion: 2019,
   }, sourceText);
 
   // Parser.prototype.parse()
@@ -72,9 +77,8 @@ export function ParseAsAsyncGeneratorBody(sourceText) {
 // `strict` refers to ContainsUseStrict of the corresponding function body.
 export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableYield) {
   // Adapted from different places in Acorn.
-  const parser = new acorn.Parser({
+  const parser = new Parser({
     sourceType: 'script',
-    ecmaVersion: 2019,
   }, sourceText);
 
   parser.strict = strict;
@@ -104,9 +108,8 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   let body;
   try {
-    body = acorn.parse(sourceText, {
+    body = Parser.parse(sourceText, {
       sourceType: 'script',
-      ecmaVersion: 2019,
     });
     deepFreeze(body);
   } catch (e) {
