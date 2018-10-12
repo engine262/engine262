@@ -94,14 +94,8 @@ export function UpdateEmpty(completionRecord, value) {
 }
 
 // #sec-returnifabrupt
-export function ReturnIfAbrupt(argument) {
-  if (argument instanceof AbruptCompletion) {
-    return argument;
-  }
-  if (argument instanceof Completion) {
-    return argument.Value;
-  }
-  return argument;
+export function ReturnIfAbrupt() {
+  throw new TypeError('ReturnIfAbrupt requires build');
 }
 
 // #sec-returnifabrupt-shorthands ? OperationName()
@@ -117,16 +111,8 @@ export function X(val) {
 }
 
 // #sec-ifabruptrejectpromise
-export function IfAbruptRejectPromise(value, capability) {
-  if (value instanceof AbruptCompletion) {
-    const hygenicTemp = Call(capability.Reject, Value.undefined, [value.Value]);
-    if (hygenicTemp instanceof AbruptCompletion) {
-      return hygenicTemp;
-    }
-    return capability.Promise;
-  } else if (value instanceof Completion) {
-    value = value.Value;
-  }
+export function IfAbruptRejectPromise() {
+  throw new TypeError('IfAbruptRejectPromise requires build');
 }
 
 export function EnsureCompletion(val) {

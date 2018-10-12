@@ -2,12 +2,11 @@
   "name": "engine262",
   "version": "0.0.1",
   "description": "Implementation of ECMA-262 in JavaScript",
-  "main": "lib/api.mjs",
+  "main": "dist/engine262",
   "dependencies": {
     "acorn": "^6.0.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
     "@babel/plugin-syntax-object-rest-spread": "^7.0.0",
     "babel-eslint": "^10.0.1",
@@ -17,14 +16,16 @@
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.10.0",
     "glob": "^7.1.3",
+    "rollup": "^0.66.6",
+    "rollup-plugin-babel": "^4.0.3",
     "source-map-support": "^0.5.9",
     "yaml": "^1.0.0-rc.8"
   },
   "scripts": {
     "test": "node --experimental-modules test/test262.mjs",
-    "lint": "eslint transform.js transform_do.js test/test262.mjs src/ --ext=js,mjs --cache",
-    "build": "babel src -d lib --keep-file-extension --source-maps --plugins=@babel/plugin-syntax-object-rest-spread,./transform.js",
-    "build-do": "babel src -d lib --keep-file-extension --source-maps --plugins=@babel/plugin-syntax-object-rest-spread,./transform_do.js"
+    "lint": "eslint transform.js transform_do.js build.js test/test262.mjs src/ --ext=js,mjs --cache",
+    "build": "rollup -c",
+    "build-do": "rollup -c --environment USE_DO_EXPRESSIONS"
   },
   "repository": {
     "type": "git",

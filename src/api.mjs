@@ -49,7 +49,7 @@ class APIRealm {
         if (global.$262 && global.$262.handlePrint) {
           global.$262.handlePrint(...args);
         } else {
-          console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+          console.log(...args.map((a) => Inspect(a))); // eslint-disable-line no-console
         }
         return Value.undefined;
       }, [], realm),
@@ -144,7 +144,7 @@ export {
   APIObject as Object,
 };
 
-export function inspect(value, realm = surroundingAgent.currentRealmRecord, quote = true, indent = 0) {
+export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quote = true, indent = 0) {
   const type = Type(value);
   if (type === 'Undefined') {
     return 'undefined';
@@ -181,7 +181,7 @@ export function inspect(value, realm = surroundingAgent.currentRealmRecord, quot
       indent += 1;
       for (const key of keys) {
         const C = value.properties.get(key);
-        out = `${out}\n${'  '.repeat(indent)}${inspect(key, realm, false, indent)}: ${inspect(C.Value, realm, false, indent)},`;
+        out = `${out}\n${'  '.repeat(indent)}${Inspect(key, realm, false, indent)}: ${Inspect(C.Value, realm, false, indent)},`;
       }
       indent -= 1;
       return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;

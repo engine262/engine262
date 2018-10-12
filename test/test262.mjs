@@ -11,8 +11,8 @@ import {
   Abstract,
   Completion,
   AbruptCompletion,
-  inspect,
-} from '../lib/api.mjs';
+  Inspect,
+} from '..';
 
 util.inspect.defaultOptions.depth = 2;
 
@@ -103,7 +103,7 @@ async function run({ source, meta, strict }) {
     if (meta.negative) {
       return { status: PASS };
     } else {
-      return { status: FAIL, error: inspect(completion.Value, $262.realm.realm) };
+      return { status: FAIL, error: Inspect(completion.Value, $262.realm.realm) };
     }
   }
 
