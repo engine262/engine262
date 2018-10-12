@@ -188,16 +188,12 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
     const intrinsics = realmRec.Intrinsics;
     globalObj = ObjectCreate(intrinsics['%ObjectPrototype%']);
   }
-
   if (Type(thisValue) === 'Undefined') {
     thisValue = globalObj;
   }
-
   realmRec.GlobalObject = globalObj;
-
   const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
   realmRec.GlobalEnv = newGlobalEnv;
-
   return realmRec;
 }
 

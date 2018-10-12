@@ -22,18 +22,14 @@ const realm = new Realm({
   // ensureCanCompileStrings() {},
 });
 
-const completion = realm.evaluateScript(`
+realm.evaluateScript(`
 'use strict';
 
-1 + 1;
+print(1 + 1); // prints "2" to the console
 `);
-
-console.log(completion.Value); // NumberValue { 2 }
 ```
 
 `$ node --experimental-modules yourfile.mjs`
-
-Check out `test/test262.mjs` for an example of a `print` function.
 
 ### How Completions Work
 

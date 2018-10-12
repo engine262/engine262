@@ -11,6 +11,7 @@ import {
 import { Value, Descriptor, Type } from './value.mjs';
 import { ParseScript } from './parse.mjs';
 import {
+  Q,
   Completion,
   NormalCompletion,
   ThrowCompletion,
@@ -41,7 +42,23 @@ class APIRealm {
     const global = Value.undefined;
     const thisValue = Value.undefined;
     SetRealmGlobalObject(realm, global, thisValue);
-    this.global = SetDefaultGlobalBindings(realm);
+    const globalObj = SetDefaultGlobalBindings(realm);
+    // Create any implementation-defined global object properties on globalObj.
+    globalObj.DefineOwnProperty(new Value('print'), Descriptor({
+      Value: CreateBuiltinFunction((args) => {
+        if (global.$262 && global.$262.handlePrint) {
+          global.$262.handlePrint(...args);
+        } else {
+          console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+        }
+        return Value.undefined;
+      }, [], realm),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    }));
+
+    this.global = globalObj;
 
     surroundingAgent.executionContextStack.pop();
 
@@ -126,3 +143,64 @@ export {
   APIValue as Value,
   APIObject as Object,
 };
+
+export function inspect(value, realm = surroundingAgent.currentRealmRecord, quote = true, indent = 0) {
+  const type = Type(value);
+  if (type === 'Undefined') {
+    return 'undefined';
+  } else if (type === 'Null') {
+    return 'null';
+  } else if (type === 'String') {
+    return quote ? `'${value.stringValue()}'` : value.stringValue();
+  } else if (type === 'Number') {
+    return value.numberValue().toString();
+  } else if (type === 'Boolean') {
+    return value.value.toString();
+  } else if (type === 'Symbol') {
+    return `Symbol(${value.Description.stringValue()})`;
+  } else if (type === 'Object') {
+    if ('Call' in value) {
+      const name = value.properties.get(new Value('name'));
+      if (name !== undefined) {
+        return `[Function: ${name.Value.stringValue()}]`;
+      }
+      return '[Function: <anonymous>]';
+    }
+    const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
+    const toString = Q(AbstractOps.Get(value, new Value('toString')));
+    if (toString.nativeFunction === errorToString.nativeFunction) {
+      return Q(toString.Call(value, [])).stringValue();
+    }
+    try {
+      const keys = Q(value.OwnPropertyKeys());
+      if (keys.length === 0) {
+        return '{}';
+      }
+      const isArray = AbstractOps.IsArray(value) === Value.true;
+      let out = isArray ? '[' : '{';
+      indent += 1;
+      for (const key of keys) {
+        const C = value.properties.get(key);
+        out = `${out}\n${'  '.repeat(indent)}${inspect(key, realm, false, indent)}: ${inspect(C.Value, realm, false, indent)},`;
+      }
+      indent -= 1;
+      return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
+    } catch (e) {
+      const objectToString = realm.Intrinsics['%ObjProto_toString%'];
+      if (toString.nativeFunction === objectToString.nativeFunction) {
+        return Q(toString.Call(value, [])).stringValue();
+      } else {
+        const ctor = Q(AbstractOps.Get(value, new Value('constructor')));
+        if (Type(ctor) === 'Object') {
+          const ctorName = Q(AbstractOps.Get(ctor, new Value('name'))).stringValue();
+          if (ctorName !== '') {
+            return `#<${ctorName}>`;
+          }
+          return '[object Unknown]';
+        }
+        return '[object Unknown]';
+      }
+    }
+  }
+  throw new RangeError();
+}

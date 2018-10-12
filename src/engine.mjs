@@ -23,12 +23,8 @@ import {
   IsPropertyKey,
   ToBoolean,
 } from './abstract-ops/all.mjs';
-import {
-  GlobalDeclarationInstantiation,
-} from './runtime-semantics/all.mjs';
-import {
-  Evaluate_Script,
-} from './evaluator.mjs';
+import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
+import { Evaluate_Script } from './evaluator.mjs';
 
 export class Agent {
   constructor() {
@@ -256,6 +252,3 @@ export function IsConcatSpreadable(O) {
   }
   return IsArray(O);
 }
-
-// 24.4.1.9 #sec-suspend
-export function Suspend() {}

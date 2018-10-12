@@ -11,6 +11,7 @@ import {
   Abstract,
   Completion,
   AbruptCompletion,
+  inspect,
 } from '../lib/api.mjs';
 
 util.inspect.defaultOptions.depth = 2;
@@ -47,60 +48,11 @@ function X(val) {
   return val;
 }
 
-function inspect(realm, value) {
-  const type = Abstract.Type(value);
-  if (type === 'Undefined') {
-    return 'undefined';
-  } else if (type === 'Null') {
-    return 'null';
-  } else if (type === 'String' || type === 'Number' || type === 'Boolean') {
-    return X(Abstract.ToString(value)).stringValue();
-  } else if (type === 'Symbol') {
-    return `Symbol(${value.Description.stringValue()})`;
-  } else if (type === 'Object') {
-    const funcToString = realm.realm.Intrinsics['%FunctionPrototype%'].properties.get(new Value(realm, 'toString')).Value;
-    const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
-    const objectToString = realm.realm.Intrinsics['%ObjProto_toString%'];
-    const toString = X(Abstract.Get(value, new Value(realm, 'toString')));
-    if (toString.nativeFunction === errorToString.nativeFunction
-        || toString.nativeFunction === objectToString.nativeFunction
-        || toString.nativeFunction === funcToString.nativeFunction) {
-      const s = X(toString.Call(value, [])).stringValue();
-      if (value.hostTrace) {
-        return `${s}\n${value.hostTrace}`;
-      }
-      return s;
-    } else {
-      const ctor = X(Abstract.Get(value, new Value(realm, 'constructor')));
-      if (Abstract.Type(ctor) === 'Object') {
-        const ctorName = X(Abstract.Get(ctor, new Value(realm, 'name'))).stringValue();
-        if (ctorName !== '') {
-          return `#<${ctorName}>`;
-        } else {
-          return '[object Unknown]';
-        }
-      } else {
-        return '[object Unknown]';
-      }
-    }
-  } else if (type === 'Completion') {
-    return inspect(realm, value.Value);
-  } else {
-    throw new RangeError();
-  }
-}
-
 function createRealm() {
   const realm = new Realm();
 
   const $262 = new APIObject(realm);
-
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
-    if ($262.handlePrint) {
-      $262.handlePrint(...args);
-    }
-    return new Value(realm, undefined);
-  }));
+  realm.global.$262 = $262;
 
   Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
   Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
@@ -151,7 +103,7 @@ async function run({ source, meta, strict }) {
     if (meta.negative) {
       return { status: PASS };
     } else {
-      return { status: FAIL, error: inspect($262.realm, completion) };
+      return { status: FAIL, error: inspect(completion.Value, $262.realm.realm) };
     }
   }
 
