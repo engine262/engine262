@@ -28,7 +28,7 @@ function* CaseClauseIsSelected(C, input) {
 //   `{` CaseClauses DefaultClause CaseClauses `}`
 function* CaseBlockEvaluation(CaseBlock, input) {
   if (CaseBlock.length === 0) {
-    return NormalCompletion(Value.undefined);
+    return new NormalCompletion(Value.undefined);
   }
 
   const defaultIndex = CaseBlock.findIndex((c) => c.test === null);
@@ -84,7 +84,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
       }
     }
     if (foundInB === true) {
-      return NormalCompletion(V);
+      return new NormalCompletion(V);
     }
     const R = EnsureCompletion(yield* Evaluate_StatementList(DefaultClause.consequent));
     if (R.Value !== undefined) {
@@ -102,7 +102,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
         return Completion(UpdateEmpty(R, V));
       }
     }
-    return NormalCompletion(V);
+    return new NormalCompletion(V);
   } else {
     // CaseBlock : `{` CaseClauses `}`
     let V = Value.undefined;
@@ -124,7 +124,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
       }
     }
 
-    return NormalCompletion(V);
+    return new NormalCompletion(V);
   }
 }
 

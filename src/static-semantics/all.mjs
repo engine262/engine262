@@ -17,6 +17,7 @@ export * from './IsConstantDeclaration.mjs';
 export * from './IsAnonymousFunctionDefinition.mjs';
 export * from './IsSimpleParameterList.mjs';
 export * from './IsStatic.mjs';
+export * from './IsStrict.mjs';
 export * from './HasName.mjs';
 export * from './IsFunctionDefinition.mjs';
 export * from './IsIdentifierRef.mjs';

@@ -423,9 +423,9 @@ function* Inner_Evaluate_Expression(Expression) {
 // (implicit)
 //   Script : ScriptBody
 //   ScriptBody : StatementList
-export function Evaluate_Script(Script, envRec) {
+export function Evaluate_Script(Script) {
   if (Script.length === 0) {
-    return new NormalCompletion();
+    return new NormalCompletion(undefined);
   }
-  return Unwind(Evaluate_StatementList(Script, envRec));
+  return Unwind(Evaluate_StatementList(Script));
 }

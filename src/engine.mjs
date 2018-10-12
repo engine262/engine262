@@ -236,7 +236,10 @@ export function HostReportErrors(errorList) {
   });
 }
 
-export function HostEnsureCanCompileStrings() {
+export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
+  if (calleeRealm.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
+    calleeRealm.hostDefinedOptions.ensureCanCompileStrings();
+  }
   return new NormalCompletion(undefined);
 }
 

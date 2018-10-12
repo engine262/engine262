@@ -8,13 +8,10 @@ import {
   CreateBuiltinFunction,
   DefinePropertyOrThrow,
   ObjectCreate,
+  SetFunctionLength,
 } from './abstract-ops/all.mjs';
-import {
-  NewGlobalEnvironment,
-} from './environment.mjs';
-import {
-  surroundingAgent,
-} from './engine.mjs';
+import { NewGlobalEnvironment } from './environment.mjs';
+import { surroundingAgent } from './engine.mjs';
 import { Q, X } from './completion.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
@@ -57,6 +54,8 @@ import { CreateAsyncFunction } from './intrinsics/AsyncFunction.mjs';
 import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
 import { CreateArrayBufferPrototype } from './intrinsics/ArrayBufferPrototype.mjs';
 import { CreateJSON } from './intrinsics/JSON.mjs';
+import { CreateEval } from './intrinsics/eval.mjs';
+
 // 8.2 #sec-code-realms
 export class Realm {
   constructor() {
@@ -111,6 +110,7 @@ export function CreateIntrinsics(realmRec) {
   intrinsics['%ThrowTypeError%'] = thrower;
 
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
+  SetFunctionLength(funcProto, new Value(0));
   intrinsics['%FunctionPrototype%'] = funcProto;
 
   thrower.SetPrototypeOf(funcProto);
@@ -176,6 +176,8 @@ export function CreateIntrinsics(realmRec) {
   CreateArrayBuffer(realmRec);
 
   CreateJSON(realmRec);
+
+  CreateEval(realmRec);
 
   return intrinsics;
 }
