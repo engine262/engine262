@@ -1,8 +1,7 @@
 import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
-  Call,
-  NewPromiseCapability,
+  PromiseResolve,
   CreateBuiltinFunction,
   SetFunctionLength,
 } from './abstract-ops/all.mjs';
@@ -147,10 +146,9 @@ function AwaitRejectedFunctions([reason]) {
   return Value.undefined;
 }
 
-export function* Await(promise) {
+export function* Await(value) {
   const asyncContext = surroundingAgent.runningExecutionContext;
-  const promiseCapability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-  X(Call(promiseCapability.Resolve, Value.undefined, [promise]));
+  const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   const stepsFulfilled = AwaitFulfilledFunctions;
   const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
   X(SetFunctionLength(onFulfilled, new Value(1)));
@@ -159,7 +157,7 @@ export function* Await(promise) {
   const onRejected = CreateBuiltinFunction(stepsRejected, ['AsyncContext']);
   X(SetFunctionLength(onRejected, new Value(1)));
   onRejected.AsyncContext = asyncContext;
-  X(PerformPromiseThen(promiseCapability.Promise, onFulfilled, onRejected));
+  X(PerformPromiseThen(promise, onFulfilled, onRejected));
   surroundingAgent.executionContextStack.pop();
   const completion = yield Value.undefined;
   return completion;

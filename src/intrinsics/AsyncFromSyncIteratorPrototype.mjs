@@ -8,10 +8,11 @@ import {
   IteratorNext,
   IteratorValue,
   NewPromiseCapability,
+  PromiseResolve,
 } from '../abstract-ops/all.mjs';
 import { PerformPromiseThen } from './PromisePrototype.mjs';
 import { Value, Type } from '../value.mjs';
-import { X, IfAbruptRejectPromise } from '../completion.mjs';
+import { Q, X, IfAbruptRejectPromise } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // #sec-async-from-sync-iterator-value-unwrap-functions
@@ -27,14 +28,11 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   IfAbruptRejectPromise(done, promiseCapability);
   const value = IteratorValue(result);
   IfAbruptRejectPromise(done, promiseCapability);
-  const valueWrapperCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  const valueWrapper = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  X(Call(valueWrapperCapability.Resolve, Value.undefined, [value]));
   const onFulfilled = CreateBuiltinFunction(steps, ['Done']);
   onFulfilled.Done = done;
-  X(PerformPromiseThen(
-    valueWrapperCapability.Promise, onFulfilled, Value.undefined, promiseCapability,
-  ));
+  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
   return promiseCapability.Promise;
 }
 
