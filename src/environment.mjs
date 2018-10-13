@@ -400,8 +400,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       const status = Q(ObjRec.DeleteBinding(N));
       if (status === Value.true) {
         const varNames = envRec.VarNames;
-        if (varNames.has(N)) {
-          varNames.delete(N);
+        if (varNames.includes(N)) {
+          varNames.splice(varNames.indexOf(N), 1);
         }
       }
       return status;
@@ -430,7 +430,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     Assert(IsPropertyKey(N));
     const envRec = this;
     const varDeclaredNames = envRec.VarNames;
-    if (varDeclaredNames.has(N)) {
+    if (varDeclaredNames.includes(N)) {
       return Value.true;
     }
     return Value.false;
@@ -502,8 +502,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       Q(ObjRec.InitializeBinding(N, Value.undefined));
     }
     const varDeclaredNames = envRec.VarNames;
-    if (!varDeclaredNames.has(N)) {
-      varDeclaredNames.add(N);
+    if (!varDeclaredNames.includes(N)) {
+      varDeclaredNames.push(N);
     }
     return new NormalCompletion(undefined);
   }
@@ -531,8 +531,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // Record that the binding for N in ObjRec has been initialized.
     Q(Set(globalObject, N, V, Value.false));
     const varDeclaredNames = envRec.VarNames;
-    if (!varDeclaredNames.has(N)) {
-      varDeclaredNames.add(N);
+    if (!varDeclaredNames.includes(N)) {
+      varDeclaredNames.push(N);
     }
     return new NormalCompletion(undefined);
   }
@@ -586,7 +586,7 @@ export function NewGlobalEnvironment(G, thisValue) {
   globalRec.ObjectRecord = objRec;
   globalRec.GlobalThisValue = thisValue;
   globalRec.DeclarativeRecord = dclRec;
-  globalRec.VarNames = new global.Set();
+  globalRec.VarNames = [];
 
   env.EnvironmentRecord = globalRec;
 

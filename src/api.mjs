@@ -46,8 +46,8 @@ class APIRealm {
     // Create any implementation-defined global object properties on globalObj.
     globalObj.DefineOwnProperty(new Value('print'), Descriptor({
       Value: CreateBuiltinFunction((args) => {
-        if (global.$262 && global.$262.handlePrint) {
-          global.$262.handlePrint(...args);
+        if (globalObj.$262 && globalObj.$262.handlePrint) {
+          globalObj.$262.handlePrint(...args);
         } else {
           console.log(...args.map((a) => Inspect(a))); // eslint-disable-line no-console
         }
@@ -181,7 +181,7 @@ export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quot
       indent += 1;
       for (const key of keys) {
         const C = value.properties.get(key);
-        out = `${out}\n${'  '.repeat(indent)}${Inspect(key, realm, false, indent)}: ${Inspect(C.Value, realm, false, indent)},`;
+        out = `${out}\n${'  '.repeat(indent)}${Inspect(key, realm, false, indent)}: ${Inspect(C.Value, realm, undefined, indent)},`;
       }
       indent -= 1;
       return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
