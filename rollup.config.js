@@ -22,6 +22,7 @@ module.exports = () => ({
       ],
     }),
   ],
+  treeshake: !process.env.USE_DO_EXPRESSIONS,
   ...process.env.USE_DO_EXPRESSIONS ? {
     acorn: {
       plugins: { doExpressions: true },
