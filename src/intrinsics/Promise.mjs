@@ -25,9 +25,10 @@ import {
   OrdinaryCreateFromConstructor,
   PromiseResolve,
   PromiseCapabilityRecord,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
-  Q,
+  Q, X,
   Completion,
   AbruptCompletion,
   IfAbruptRejectPromise,
@@ -66,7 +67,6 @@ function PromiseConstructor([executor], { NewTarget }) {
 // #sec-promise.all-resolve-element-functions
 function PromiseAllResolveElementFunctions([x]) {
   const F = surroundingAgent.activeFunctionObject;
-
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
     return Value.undefined;
@@ -101,9 +101,9 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     if (next === Value.false) {
       iteratorRecord.Done = Value.true;
       remainingElementsCount.Value -= 1;
-      if (remainingElementsCount === 0) {
+      if (remainingElementsCount.Value === 0) {
         const valuesArray = CreateArrayFromList(values);
-        Q(Call(resultCapability.Resolve), Value.undefined, [valuesArray]);
+        Q(Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
       }
       return resultCapability.Promise;
     }
@@ -118,6 +118,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     const resolveElement = CreateBuiltinFunction(steps, [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
     ]);
+    X(SetFunctionLength(resolveElement, new Value(1)));
     resolveElement.AlreadyCalled = { Value: false };
     resolveElement.Index = index;
     resolveElement.Values = values;
