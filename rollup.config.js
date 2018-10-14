@@ -22,6 +22,25 @@ module.exports = () => ({
       ],
     }),
   ],
+  ...process.env.USE_DO_EXPRESSIONS ? {
+    acorn: {
+      plugins: { doExpressions: true },
+    },
+    acornInjectPlugins: [(acorn) => {
+      acorn.plugins.doExpressions = function doExpressions(instance) {
+        instance.extend('parseExprAtom', (superF) => function parseExprAtom(...args) {
+          if (this.type === acorn.tokTypes._do) { // eslint-disable-line no-underscore-dangle
+            this.eat(acorn.tokTypes._do); // eslint-disable-line no-underscore-dangle
+            const node = this.startNode();
+            node.body = this.parseBlock();
+            return this.finishNode(node, 'DoExpression');
+          }
+          return Reflect.apply(superF, this, args);
+        });
+      };
+      return acorn;
+    }],
+  } : {},
   output: [
     {
       file: 'dist/engine262.js',

@@ -19,7 +19,7 @@ import {
   SetFunctionLength,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Value, Type, wellKnownSymbols } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
@@ -59,7 +59,7 @@ function CatchFinallyFunctions([reason]) {
 function PromiseProto_finally([onFinally], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise.prototype.finally called on incompatable receiver');
   }
   const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   Assert(IsConstructor(C) === Value.true);
@@ -127,7 +127,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
 function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise.prototype.then called on incompatable receiver');
   }
   const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   const resultCapability = Q(NewPromiseCapability(C));
@@ -139,6 +139,7 @@ export function CreatePromisePrototype(realmRec) {
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],
     ['then', PromiseProto_then, 2],
+    [wellKnownSymbols.toStringTag, new Value('Promise'), undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%PromiseProto_then%'] = X(Get(proto, new Value('then')));

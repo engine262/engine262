@@ -4,8 +4,8 @@ import {
 import {
   Value,
   Type,
-  Descriptor,
   wellKnownSymbols,
+  Descriptor,
 } from '../value.mjs';
 import {
   Assert,
@@ -132,7 +132,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
 function Promise_all([iterable], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise.all called on non-object');
   }
   const promiseCapability = Q(NewPromiseCapability(C));
   const iteratorRecord = GetIterator(iterable);
@@ -147,14 +147,51 @@ function Promise_all([iterable], { thisValue }) {
   return Completion(result);
 }
 
-function Promise_race() {
-  return Value.undefined;
+function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
+  Assert(IsConstructor(constructor) === Value.true);
+  Assert(resultCapability instanceof PromiseCapabilityRecord);
+  while (true) {
+    const next = IteratorStep(iteratorRecord);
+    if (next instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    ReturnIfAbrupt(next);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
+      return resultCapability.Promise;
+    }
+    const nextValue = IteratorValue(next);
+    if (nextValue instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    ReturnIfAbrupt(nextValue);
+    const nextPromise = Q(Invoke(constructor, new Value('resolve'), [nextValue]));
+    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
+  }
+}
+
+function Promise_race([iterable], { thisValue }) {
+  const C = thisValue;
+  if (Type(C) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'Promise.race called on non-object');
+  }
+  const promiseCapability = Q(NewPromiseCapability(C));
+  const iteratorRecord = GetIterator(iterable);
+  IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  let result = PerformPromiseRace(iteratorRecord, C, promiseCapability);
+  if (result instanceof AbruptCompletion) {
+    if (iteratorRecord.Done === Value.false) {
+      result = IteratorClose(iteratorRecord, result);
+    }
+    IfAbruptRejectPromise(result, promiseCapability);
+  }
+  return Completion(result);
 }
 
 function Promise_reject([r], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise.reject called on non-object');
   }
   const promiseCapability = NewPromiseCapability(C);
   Q(Call(promiseCapability.Reject, Value.undefined, [r]));
@@ -164,7 +201,7 @@ function Promise_reject([r], { thisValue }) {
 function Promise_resolve([x], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Promise.resolve called on non-object');
   }
   return Q(PromiseResolve(C, x));
 }
@@ -186,6 +223,12 @@ export function CreatePromise(realmRec) {
     Set: Value.undefined,
     Enumerable: Value.false,
     Configurable: Value.true,
+  }));
+
+  promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   }));
 
   realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, new Value('all'));

@@ -72,11 +72,13 @@ module.exports = ({ types: t, template }) => {
     Promise: {
       dontCare: template.statement(`
         if (ID instanceof AbruptCompletion) {
-          const hygenicTemp2 = Call(CAPABILITY.Reject, NewValue(undefined), [ID.Value]);
+          const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
           if (hygenicTemp2 instanceof AbruptCompletion) {
             return hygenicTemp2;
           }
           return CAPABILITY.Promise;
+        } else if (ID instanceof Completion) {
+          ID = ID.Value;
         }
       `),
     },
@@ -167,9 +169,6 @@ module.exports = ({ types: t, template }) => {
           if (t.isIdentifier(argument)) {
             // ReturnIfAbrupt(argument)
             const binding = path.scope.getBinding(argument.name);
-            if (!binding) {
-              throw new Error(`Unrecognized binding ${argument.name}`);
-            }
             binding.path.parent.kind = 'let';
 
             const parentStatement = findParentStatementPath(path);
@@ -199,6 +198,8 @@ module.exports = ({ types: t, template }) => {
           state.needCompletion = true;
           state.needAssertAndCall = true;
           const [ID, CAPABILITY] = path.node.arguments;
+          const binding = path.scope.getBinding(ID.name);
+          binding.path.parent.kind = 'let';
           path.parentPath.replaceWith(templates.Promise.dontCare({ ID, CAPABILITY }));
         } else if (path.node.callee.name === 'Assert') {
           path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));

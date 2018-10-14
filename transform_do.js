@@ -140,7 +140,7 @@ module.exports = ({ types: t, template }) => ({
 
         path.replaceWith(template(`
         if (VALUE instanceof AbruptCompletion) {
-          const HYGENIC_TEMP = Call(CAPABILITY.Reject, NewValue(undefined), [VALUE.Value]);
+          const HYGENIC_TEMP = Call(CAPABILITY.Reject, Value.undefined, [VALUE.Value]);
           if (HYGENIC_TEMP instanceof AbruptCompletion) {
             return HYGENIC_TEMP;
           }
