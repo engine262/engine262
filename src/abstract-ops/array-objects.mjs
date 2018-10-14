@@ -1,9 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   ArrayExoticObjectValue,
-  Value,
   Descriptor,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   Assert,

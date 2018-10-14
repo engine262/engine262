@@ -19,11 +19,11 @@ import {
   ToInteger,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
+  Descriptor,
   ObjectValue,
   Type,
+  Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 

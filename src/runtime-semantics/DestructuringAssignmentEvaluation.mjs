@@ -25,11 +25,11 @@ import {
   isObjectAssignmentPattern,
 } from '../ast.mjs';
 import {
-  Q, X,
-  ReturnIfAbrupt,
-  AbruptCompletion,
-  Completion,
+  AbruptCompletion, Completion,
   NormalCompletion,
+  Q,
+  ReturnIfAbrupt,
+  X,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -39,7 +39,7 @@ import {
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 
 // (implicit)
 //   AssignmentPattern :

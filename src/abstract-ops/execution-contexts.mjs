@@ -5,8 +5,8 @@ import {
   LexicalEnvironment,
 } from '../environment.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import { Assert } from './all.mjs';
 

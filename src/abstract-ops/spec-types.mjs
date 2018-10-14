@@ -2,10 +2,10 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Value,
-  Type,
   DataBlock,
   Descriptor,
+  Type,
+  Value,
 } from '../value.mjs';
 import {
   Assert,
@@ -16,7 +16,7 @@ import {
   ObjectCreate,
   ToBoolean,
 } from './all.mjs';
-import { Q, NormalCompletion } from '../completion.mjs';
+import { NormalCompletion, Q } from '../completion.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {

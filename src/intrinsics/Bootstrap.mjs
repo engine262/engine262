@@ -7,8 +7,8 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
-  Value,
   SymbolValue,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 

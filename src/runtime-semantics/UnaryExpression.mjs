@@ -1,12 +1,12 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  isUnaryExpressionWithDelete,
-  isUnaryExpressionWithVoid,
-  isUnaryExpressionWithTypeof,
-  isUnaryExpressionWithPlus,
-  isUnaryExpressionWithMinus,
-  isUnaryExpressionWithTilde,
   isUnaryExpressionWithBang,
+  isUnaryExpressionWithDelete,
+  isUnaryExpressionWithMinus,
+  isUnaryExpressionWithPlus,
+  isUnaryExpressionWithTilde,
+  isUnaryExpressionWithTypeof,
+  isUnaryExpressionWithVoid,
 } from '../ast.mjs';
 import {
   Assert,
@@ -14,18 +14,18 @@ import {
   GetReferencedName,
   GetValue,
   IsCallable,
-  IsUnresolvableReference,
+  IsPropertyReference,
   IsStrictReference,
   IsSuperReference,
-  IsPropertyReference,
+  IsUnresolvableReference,
   ToBoolean,
+  ToInt32,
   ToNumber,
   ToObject,
-  ToInt32,
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
-import { Value, Type } from '../value.mjs';
+import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+import { Type, Value } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-delete-operator-runtime-semantics-evaluation

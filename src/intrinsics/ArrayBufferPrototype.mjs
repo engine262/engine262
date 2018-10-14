@@ -11,7 +11,7 @@ import {
   SpeciesConstructor,
   ToInteger,
 } from '../abstract-ops/all.mjs';
-import { Type, Value, Descriptor } from '../value.mjs';
+import { Descriptor, Type, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 

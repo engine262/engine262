@@ -2,16 +2,16 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
   CreateBuiltinFunction,
-  ObjectCreate,
   IsCallable,
+  ObjectCreate,
   SameValueZero,
   SetFunctionLength,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Type,
   Value,
-  Descriptor,
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';

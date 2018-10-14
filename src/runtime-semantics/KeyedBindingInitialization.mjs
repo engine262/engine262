@@ -24,8 +24,8 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   BindingInitialization_BindingPattern,

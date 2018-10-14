@@ -1,10 +1,10 @@
 import {
+  Descriptor,
   FunctionValue,
-  Value,
   Reference,
   Type,
+  Value,
   wellKnownSymbols,
-  Descriptor,
 } from './value.mjs';
 import {
   surroundingAgent,

@@ -1,6 +1,6 @@
 import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { Q, Await } from '../completion.mjs';
+import { Await, Q } from '../completion.mjs';
 
 // #prod-AwaitExpression
 // AwaitExpression : `await` UnaryExpression

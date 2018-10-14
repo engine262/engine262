@@ -1,11 +1,11 @@
 import {
+  AsyncFunctionCreate,
   DefinePropertyOrThrow,
   FunctionCreate,
   GeneratorFunctionCreate,
   MakeConstructor,
   ObjectCreate,
   SetFunctionName,
-  AsyncFunctionCreate,
 } from '../abstract-ops/all.mjs';
 import {
   isAsyncFunctionDeclaration,

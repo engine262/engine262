@@ -1,9 +1,9 @@
 import {
-  Value,
+  Descriptor,
   SymbolValue,
   Type,
+  Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
   surroundingAgent,

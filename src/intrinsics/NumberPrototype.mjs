@@ -1,6 +1,6 @@
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   ToInteger,

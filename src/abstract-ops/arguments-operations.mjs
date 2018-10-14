@@ -8,10 +8,10 @@ import {
   ToString,
 } from './all.mjs';
 import {
+  ArgumentsExoticObjectValue,
   Descriptor,
   Value,
   wellKnownSymbols,
-  ArgumentsExoticObjectValue,
 } from '../value.mjs';
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';

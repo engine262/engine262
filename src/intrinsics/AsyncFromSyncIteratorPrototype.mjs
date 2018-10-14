@@ -11,8 +11,8 @@ import {
   PromiseResolve,
 } from '../abstract-ops/all.mjs';
 import { PerformPromiseThen } from './PromisePrototype.mjs';
-import { Value, Type } from '../value.mjs';
-import { Q, X, IfAbruptRejectPromise } from '../completion.mjs';
+import { Type, Value } from '../value.mjs';
+import { IfAbruptRejectPromise, Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // #sec-async-from-sync-iterator-value-unwrap-functions

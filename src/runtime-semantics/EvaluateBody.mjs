@@ -2,15 +2,15 @@ import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   Assert,
+  AsyncFunctionStart,
   Call,
   CreateListIteratorRecord,
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
   GeneratorStart,
   GetValue,
-  OrdinaryCreateFromConstructor,
-  AsyncFunctionStart,
   NewPromiseCapability,
+  OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
   isArrowFunction,
@@ -33,37 +33,37 @@ import {
   ContainsExpression,
   IsConstantDeclaration,
   IsSimpleParameterList,
+  LexicallyDeclaredNames_AsyncFunctionBody,
   LexicallyDeclaredNames_ConciseBody,
   LexicallyDeclaredNames_FunctionBody,
   LexicallyDeclaredNames_GeneratorBody,
-  LexicallyDeclaredNames_AsyncFunctionBody,
+  LexicallyScopedDeclarations_AsyncFunctionBody,
   LexicallyScopedDeclarations_ConciseBody,
   LexicallyScopedDeclarations_FunctionBody,
   LexicallyScopedDeclarations_GeneratorBody,
-  LexicallyScopedDeclarations_AsyncFunctionBody,
+  VarDeclaredNames_AsyncFunctionBody,
   VarDeclaredNames_ConciseBody,
   VarDeclaredNames_FunctionBody,
   VarDeclaredNames_GeneratorBody,
-  VarDeclaredNames_AsyncFunctionBody,
+  VarScopedDeclarations_AsyncFunctionBody,
   VarScopedDeclarations_ConciseBody,
   VarScopedDeclarations_FunctionBody,
   VarScopedDeclarations_GeneratorBody,
-  VarScopedDeclarations_AsyncFunctionBody,
 } from '../static-semantics/all.mjs';
 import {
+  AbruptCompletion,
   Completion,
   NormalCompletion,
-  AbruptCompletion,
-  ReturnCompletion,
-  Q, X,
+  Q,
+  ReturnCompletion, X,
 } from '../completion.mjs';
 import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import { outOfRange } from '../helpers.mjs';
 import {
-  InstantiateFunctionObject,
   Evaluate_FunctionStatementList,
+  InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
 import { Value } from '../value.mjs';

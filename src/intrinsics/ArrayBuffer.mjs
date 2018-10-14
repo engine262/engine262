@@ -7,10 +7,10 @@ import {
   ToIndex,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Type,
   Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
   Q, X,

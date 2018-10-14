@@ -11,7 +11,7 @@ import {
   isBindingPattern,
 } from '../ast.mjs';
 import {
-  NormalCompletion, ReturnIfAbrupt, Q, X,
+  NormalCompletion, Q, ReturnIfAbrupt, X,
 } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { outOfRange } from '../helpers.mjs';

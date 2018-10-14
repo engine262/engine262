@@ -7,10 +7,10 @@ import {
   ToBoolean,
 } from '../abstract-ops/all.mjs';
 import {
-  Q,
   Completion,
-  NormalCompletion,
   EnsureCompletion,
+  NormalCompletion,
+  Q,
   UpdateEmpty,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';

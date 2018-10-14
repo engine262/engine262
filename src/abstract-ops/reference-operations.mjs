@@ -8,9 +8,9 @@ import {
   ToObject,
 } from './all.mjs';
 import {
-  Value,
   PrimitiveValue,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   NormalCompletion,

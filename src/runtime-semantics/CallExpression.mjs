@@ -1,5 +1,5 @@
-import { surroundingAgent, HostEnsureCanCompileStrings } from '../engine.mjs';
-import { Value, Type } from '../value.mjs';
+import { HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
+import { Type, Value } from '../value.mjs';
 import {
   Assert,
   Call,
@@ -15,8 +15,8 @@ import {
 import { ArgumentListEvaluation } from './all.mjs';
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import {
-  Completion,
   AbruptCompletion,
+  Completion,
   Q,
   ReturnIfAbrupt,
 } from '../completion.mjs';

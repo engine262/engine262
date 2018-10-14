@@ -4,8 +4,8 @@ import {
 } from '../ast.mjs';
 import {
   Completion,
-  NormalCompletion,
   EnsureCompletion,
+  NormalCompletion,
 } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';

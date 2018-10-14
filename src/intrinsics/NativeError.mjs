@@ -8,8 +8,8 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';

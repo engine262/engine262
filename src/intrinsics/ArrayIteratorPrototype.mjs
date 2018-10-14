@@ -2,8 +2,8 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   Assert,

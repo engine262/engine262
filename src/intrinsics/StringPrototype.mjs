@@ -11,10 +11,10 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
+  Descriptor,
   StringExoticObjectValue,
   Type,
-  Descriptor,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';

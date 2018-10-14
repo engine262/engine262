@@ -1,6 +1,6 @@
 import {
-  Value,
   Type,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import {

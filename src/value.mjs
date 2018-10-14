@@ -1,14 +1,10 @@
-import {
-  ExecutionContext,
-  isArrayIndex,
-  surroundingAgent,
-} from './engine.mjs';
+import { ExecutionContext, surroundingAgent } from './engine.mjs';
 import {
   ArraySetLength,
   Assert,
   Call,
-  CreateListFromArrayLike,
   CompletePropertyDescriptor,
+  CreateListFromArrayLike,
   FromPropertyDescriptor,
   Get,
   GetMethod,
@@ -34,9 +30,10 @@ import {
   ToBoolean,
   ToPropertyDescriptor,
   ToUint32,
+  isArrayIndex,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import { Q, X, Completion } from './completion.mjs';
+import { Completion, Q, X } from './completion.mjs';
 import { outOfRange } from './helpers.mjs';
 
 export function Value(value) {
@@ -213,8 +210,7 @@ export class ArrayExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     if (Type(P) === 'String' && P.stringValue() === 'length') {
       return Q(ArraySetLength(A, Desc));
-    }
-    if (isArrayIndex(P)) {
+    } else if (isArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
       Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
       const oldLen = oldLenDesc.Value;

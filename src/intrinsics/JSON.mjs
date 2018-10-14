@@ -1,14 +1,14 @@
-import { surroundingAgent, ScriptEvaluationJob } from '../engine.mjs';
+import { ScriptEvaluationJob, surroundingAgent } from '../engine.mjs';
 import {
-  Type,
-  wellKnownSymbols,
-  Descriptor,
-  Value,
-  StringValue,
-  NumberValue,
   BooleanValue,
+  Descriptor,
   NullValue,
+  NumberValue,
   ObjectValue,
+  StringValue,
+  Type,
+  Value,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
@@ -20,14 +20,14 @@ import {
   IsArray,
   IsCallable,
   ObjectCreate,
-  ToLength,
-  ToString,
-  ToNumber,
-  ToInteger,
   SetFunctionLength,
   SetFunctionName,
+  ToInteger,
+  ToLength,
+  ToNumber,
+  ToString,
 } from '../abstract-ops/all.mjs';
-import { Q, X, EnsureCompletion } from '../completion.mjs';
+import { EnsureCompletion, Q, X } from '../completion.mjs';
 
 function JSON_parse([text, reviver]) {
   function InternalizeJSONProperty(holder, name) {

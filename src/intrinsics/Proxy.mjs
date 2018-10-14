@@ -16,10 +16,10 @@ import {
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
-  Type,
-  ProxyExoticObjectValue,
   Descriptor,
+  ProxyExoticObjectValue,
+  Type,
+  Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 

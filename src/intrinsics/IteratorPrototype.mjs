@@ -1,13 +1,13 @@
 import {
+  Descriptor,
   Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
   ObjectCreate,
-  SetFunctionName,
   SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 
 function IteratorPrototype_iterator(args, { thisValue }) {

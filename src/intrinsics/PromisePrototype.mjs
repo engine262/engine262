@@ -19,7 +19,7 @@ import {
   SetFunctionLength,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 

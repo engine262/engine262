@@ -1,31 +1,31 @@
-import { surroundingAgent, HostEnsureCanCompileStrings, ExecutionContext } from '../engine.mjs';
+import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
-  SetFunctionName,
   SetFunctionLength,
+  SetFunctionName,
   // GetThisEnvironment,
 } from '../abstract-ops/all.mjs';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
 import {
-  Q, X,
-  Completion,
-  AbruptCompletion,
+  AbruptCompletion, Completion,
   NormalCompletion,
+  Q,
+  X,
 } from '../completion.mjs';
 import { ParseScript } from '../parse.mjs';
 import {
-  IsStrict,
-  IsConstantDeclaration,
-  VarDeclaredNames_ScriptBody,
-  VarScopedDeclarations_ScriptBody,
-  LexicallyScopedDeclarations_ScriptBody,
-  BoundNames_FunctionDeclaration,
-  BoundNames_VariableDeclaration,
-  BoundNames_ForBinding,
   BoundNames_BindingIdentifier,
   BoundNames_Declaration,
+  BoundNames_ForBinding,
+  BoundNames_FunctionDeclaration,
+  BoundNames_VariableDeclaration,
+  IsConstantDeclaration,
+  IsStrict,
+  LexicallyScopedDeclarations_ScriptBody,
+  VarDeclaredNames_ScriptBody,
+  VarScopedDeclarations_ScriptBody,
 } from '../static-semantics/all.mjs';
 import {
   isAsyncFunctionDeclaration,

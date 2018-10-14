@@ -15,7 +15,7 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
-import { Value, Type, Descriptor } from '../value.mjs';
+import { Descriptor, Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 function Reflect_apply([target, thisArgument, argumentsList]) {

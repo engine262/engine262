@@ -1,8 +1,8 @@
 import {
-  Value,
+  Descriptor,
   ObjectValue,
   Type,
-  Descriptor,
+  Value,
 } from '../value.mjs';
 import {
   surroundingAgent,

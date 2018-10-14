@@ -1,14 +1,11 @@
+import { surroundingAgent } from '../engine.mjs';
 import {
   ArrayExoticObjectValue,
-  Value,
-  Type,
   Descriptor,
+  Type,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import {
-  IsConcatSpreadable,
-  surroundingAgent,
-} from '../engine.mjs';
 import {
   ArrayCreate,
   Assert,
@@ -22,10 +19,10 @@ import {
   Get,
   GetFunctionRealm,
   HasProperty,
+  Invoke,
   IsArray,
   IsCallable,
   IsConstructor,
-  Invoke,
   ObjectCreate,
   SameValue,
   SameValueZero,
@@ -39,9 +36,7 @@ import {
   ToObject,
   ToString,
 } from '../abstract-ops/all.mjs';
-import {
-  Q, X,
-} from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);
@@ -72,6 +67,17 @@ function ArraySpeciesCreate(originalArray, length) {
     return surroundingAgent.Throw('TypeError');
   }
   return Q(Construct(C, [length]));
+}
+
+function IsConcatSpreadable(O) {
+  if (Type(O) !== 'Object') {
+    return Value.false;
+  }
+  const spreadable = Q(Get(O, wellKnownSymbols.isConcatSpreadable));
+  if (spreadable !== Value.undefined) {
+    return ToBoolean(spreadable);
+  }
+  return Q(IsArray(O));
 }
 
 function ArrayProto_concat(args, { thisValue }) {

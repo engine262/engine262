@@ -8,34 +8,34 @@ import {
   DefinePropertyOrThrow,
   GetActiveScriptOrModule,
   HasOwnProperty,
+  IsConstructor,
   IsExtensible,
   ObjectCreate,
   OrdinaryCreateFromConstructor,
-  IsConstructor,
   ToInteger,
   ToObject,
 } from './all.mjs';
 import {
-  FunctionValue,
-  Value,
-  Type,
   Descriptor,
+  FunctionValue,
+  Type,
+  Value,
 } from '../value.mjs';
 import {
-  NormalCompletion, Q, ReturnIfAbrupt,
+  EnsureCompletion, NormalCompletion, Q,
+  ReturnIfAbrupt,
   X,
-  EnsureCompletion,
 } from '../completion.mjs';
 import {
   ExpectedArgumentCount_ArrowParameters,
   ExpectedArgumentCount_FormalParameters,
 } from '../static-semantics/all.mjs';
 import {
+  EvaluateBody_AsyncConciseBody_AssignmentExpression,
+  EvaluateBody_AsyncFunctionBody,
   EvaluateBody_ConciseBody_Expression,
   EvaluateBody_FunctionBody,
   EvaluateBody_GeneratorBody,
-  EvaluateBody_AsyncFunctionBody,
-  EvaluateBody_AsyncConciseBody_AssignmentExpression,
   getFunctionBodyType,
 } from '../runtime-semantics/all.mjs';
 import {
@@ -43,7 +43,7 @@ import {
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { outOfRange, Unwind } from '../helpers.mjs';
+import { Unwind, outOfRange } from '../helpers.mjs';
 
 // #sec-SetFunctionName
 export function SetFunctionName(F, name, prefix) {

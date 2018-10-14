@@ -1,24 +1,24 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  Get,
   CreateBuiltinFunction,
-  OrdinaryCreateFromConstructor,
-  IsCallable,
+  Get,
   GetIterator,
+  IsCallable,
   IteratorClose,
   IteratorStep,
   IteratorValue,
+  OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Type,
   Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
-  Q, X,
-  AbruptCompletion,
+  AbruptCompletion, Q,
+  X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 

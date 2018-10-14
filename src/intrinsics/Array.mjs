@@ -30,8 +30,8 @@ import {
   ToUint32,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
   Type,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';

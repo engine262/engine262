@@ -4,8 +4,8 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';

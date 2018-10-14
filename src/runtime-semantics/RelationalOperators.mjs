@@ -6,11 +6,11 @@ import {
   Call,
   GetMethod,
   GetValue,
+  HasProperty,
   IsCallable,
   OrdinaryHasInstance,
   ToBoolean,
   ToPropertyKey,
-  HasProperty,
 } from '../abstract-ops/all.mjs';
 import {
   Type,

@@ -1,10 +1,10 @@
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   Assert,
-  ToPropertyKey,
-  GetValue,
   GetThisEnvironment,
+  GetValue,
   RequireObjectCoercible,
+  ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { SuperReference, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';

@@ -9,8 +9,8 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   Q,

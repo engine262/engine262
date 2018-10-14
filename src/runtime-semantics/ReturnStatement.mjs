@@ -1,8 +1,8 @@
 import { Value } from '../value.mjs';
 import {
-  Q, X,
+  Await, Q,
   ReturnCompletion,
-  Await,
+  X,
 } from '../completion.mjs';
 import {
   GetGeneratorKind,

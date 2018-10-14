@@ -1,12 +1,12 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_Statement, Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate_Expression, Evaluate_Statement } from '../evaluator.mjs';
 import { NewObjectEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
-import { ToObject, GetValue } from '../abstract-ops/all.mjs';
+import { GetValue, ToObject } from '../abstract-ops/all.mjs';
 import {
-  Q,
   Completion,
   EnsureCompletion,
+  Q,
   UpdateEmpty,
 } from '../completion.mjs';
 

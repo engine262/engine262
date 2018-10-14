@@ -1,9 +1,9 @@
 import { Value } from '../value.mjs';
 import {
-  ToNumber,
   CreateBuiltinFunction,
-  SetFunctionName,
   SetFunctionLength,
+  SetFunctionName,
+  ToNumber,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 

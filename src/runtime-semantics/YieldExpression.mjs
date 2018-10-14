@@ -13,11 +13,11 @@ import {
   IteratorValue,
 } from '../abstract-ops/all.mjs';
 import {
-  Q, X,
-  Completion,
+  Completion, EnsureCompletion,
   NormalCompletion,
+  Q,
   ReturnCompletion,
-  EnsureCompletion,
+  X,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {

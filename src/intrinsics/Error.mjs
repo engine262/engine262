@@ -4,9 +4,9 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
-  Type,
   Descriptor,
+  Type,
+  Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';

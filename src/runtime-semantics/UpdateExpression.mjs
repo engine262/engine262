@@ -6,8 +6,8 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
-  EvaluateBinopValues_AdditiveExpression_Plus,
   EvaluateBinopValues_AdditiveExpression_Minus,
+  EvaluateBinopValues_AdditiveExpression_Plus,
 } from './all.mjs';
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';

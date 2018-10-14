@@ -1,8 +1,8 @@
 import {
-  Value,
   ArrayExoticObjectValue,
   ProxyExoticObjectValue,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -15,6 +15,20 @@ import {
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
+
+export function isArrayIndex(P) {
+  Assert(IsPropertyKey(P));
+  const type = Type(P);
+  if (type === 'Symbol') {
+    return false;
+  }
+
+  const index = Number.parseInt(P.stringValue(), 10);
+  if (index >= 0 && index < (2 ** 32) - 1) {
+    return true;
+  }
+  return false;
+}
 
 // #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {

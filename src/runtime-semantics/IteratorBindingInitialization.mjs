@@ -26,8 +26,8 @@ import {
   AbruptCompletion,
   NormalCompletion,
   Q,
-  X,
   ReturnIfAbrupt,
+  X,
 } from '../completion.mjs';
 import {
   surroundingAgent,
@@ -39,8 +39,8 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import {
   BindingInitialization_BindingPattern,

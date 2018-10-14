@@ -2,20 +2,20 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Value,
-  Type,
-  wellKnownSymbols,
   Descriptor,
+  Type,
+  Value,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
   Call,
-  Invoke,
   CreateArrayFromList,
   CreateBuiltinFunction,
   CreateResolvingFunctions,
   Get,
   GetIterator,
+  Invoke,
   IsCallable,
   IsConstructor,
   IteratorClose,
@@ -23,17 +23,17 @@ import {
   IteratorValue,
   NewPromiseCapability,
   OrdinaryCreateFromConstructor,
-  PromiseResolve,
   PromiseCapabilityRecord,
+  PromiseResolve,
   SetFunctionLength,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Q, X,
-  Completion,
-  AbruptCompletion,
+  AbruptCompletion, Completion,
   IfAbruptRejectPromise,
+  Q,
   ReturnIfAbrupt,
+  X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 

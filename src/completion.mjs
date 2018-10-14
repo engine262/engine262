@@ -1,12 +1,12 @@
 import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
-  PromiseResolve,
   CreateBuiltinFunction,
+  PromiseResolve,
   SetFunctionLength,
 } from './abstract-ops/all.mjs';
 import { PerformPromiseThen } from './intrinsics/PromisePrototype.mjs';
-import { Value, Reference } from './value.mjs';
+import { Reference, Value } from './value.mjs';
 
 // #sec-completion-record-specification-type
 export function Completion(type, value, target) {

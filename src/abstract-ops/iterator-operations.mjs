@@ -13,8 +13,8 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Value,
   Type,
+  Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import {

@@ -1,5 +1,5 @@
 import { Assert, Call } from './all.mjs';
-import { Q, EnsureCompletion } from '../completion.mjs';
+import { EnsureCompletion, Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';

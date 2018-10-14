@@ -1,7 +1,7 @@
 import {
+  Descriptor,
   Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,

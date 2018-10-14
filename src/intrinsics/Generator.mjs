@@ -1,4 +1,4 @@
-import { Value, Descriptor } from '../value.mjs';
+import { Descriptor, Value } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';

@@ -5,13 +5,13 @@ import path from 'path';
 import glob from 'glob';
 import yaml from 'yaml';
 import {
-  Realm,
-  Value,
   Object as APIObject,
+  AbruptCompletion,
   Abstract,
   Completion,
-  AbruptCompletion,
   Inspect,
+  Realm,
+  Value,
 } from '..';
 
 util.inspect.defaultOptions.depth = 2;
@@ -88,7 +88,7 @@ async function run({ source, meta, strict }) {
   if (meta.flags.includes('async')) {
     X($262.evalScript('harness/doneprintHandle.js', true));
     asyncPromise = new Promise((resolve) => {
-      $262.handlePrint = (m) => {
+      $262.realm.realm.hostDefinedOptions.handlePrint = (m) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {

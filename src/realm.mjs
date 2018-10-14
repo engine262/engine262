@@ -1,7 +1,7 @@
 import {
-  Value,
-  Type,
   Descriptor,
+  Type,
+  Value,
 } from './value.mjs';
 import {
   Assert,
@@ -109,7 +109,7 @@ export function CreateIntrinsics(realmRec) {
 
   {
     const thrower = CreateBuiltinFunction(
-    () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
+      () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
         + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
       [], realmRec, funcProto,
     );

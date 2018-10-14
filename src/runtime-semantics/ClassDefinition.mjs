@@ -18,7 +18,7 @@ import {
   InitializeBoundName,
   PropertyDefinitionEvaluation_ClassElement,
 } from './all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import {
   ConstructorMethod_ClassBody,
@@ -26,11 +26,11 @@ import {
   NonConstructorMethodDefinitions_ClassBody,
 } from '../static-semantics/all.mjs';
 import {
-  Q,
-  Completion,
-  ReturnIfAbrupt,
-  NormalCompletion,
   AbruptCompletion,
+  Completion,
+  NormalCompletion,
+  Q,
+  ReturnIfAbrupt,
 } from '../completion.mjs';
 
 const emptyConstructorNode = acorn.parse('(class { constructor() {} })').body[0].expression.body.body[0];

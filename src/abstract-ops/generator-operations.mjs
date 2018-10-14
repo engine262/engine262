@@ -3,15 +3,15 @@ import {
   CreateIterResultObject,
 } from './all.mjs';
 import {
-  Q, X,
-  Completion,
-  AbruptCompletion,
-  NormalCompletion,
+  AbruptCompletion, Completion,
   EnsureCompletion,
+  NormalCompletion,
+  Q,
+  X,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 
 // 25.4.3.1 #sec-generatorstart
 export function GeneratorStart(generator, generatorBody) {

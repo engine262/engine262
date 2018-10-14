@@ -11,8 +11,8 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import { outOfRange } from '../helpers.mjs';
 

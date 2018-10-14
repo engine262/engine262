@@ -12,10 +12,10 @@ import {
   Value,
 } from '../value.mjs';
 import {
-  Completion,
   AbruptCompletion,
-  UpdateEmpty,
+  Completion,
   EnsureCompletion,
+  UpdateEmpty,
   X,
 } from '../completion.mjs';
 import {

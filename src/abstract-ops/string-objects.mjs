@@ -1,8 +1,8 @@
 import {
-  Value,
+  Descriptor,
   StringExoticObjectValue,
   Type,
-  Descriptor,
+  Value,
 } from '../value.mjs';
 import {
   Assert,

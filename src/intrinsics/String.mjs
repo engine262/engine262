@@ -1,15 +1,15 @@
 import {
+  Get,
   GetPrototypeFromConstructor,
   StringCreate,
   SymbolDescriptiveString,
-  ToString,
-  ToObject,
-  Get,
   ToLength,
+  ToObject,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Value,
   Type,
+  Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';

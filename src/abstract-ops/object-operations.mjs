@@ -1,9 +1,9 @@
 import {
-  Value,
+  Descriptor,
   ProxyExoticObjectValue,
   Type,
+  Value,
   wellKnownSymbols,
-  Descriptor,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -23,8 +23,8 @@ import {
   ToString,
 } from './all.mjs';
 import {
-  Q, X,
-  NormalCompletion,
+  NormalCompletion, Q,
+  X,
 } from '../completion.mjs';
 
 // #sec-get-o-p Get

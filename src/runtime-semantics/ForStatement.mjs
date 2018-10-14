@@ -19,27 +19,27 @@ import {
   ToObject,
 } from '../abstract-ops/all.mjs';
 import {
-  Q, X, ReturnIfAbrupt,
-  Completion,
-  AbruptCompletion,
-  BreakCompletion,
-  NormalCompletion,
+  AbruptCompletion, BreakCompletion, Completion,
   EnsureCompletion,
+  NormalCompletion,
+  Q,
+  ReturnIfAbrupt,
   UpdateEmpty,
+  X,
 } from '../completion.mjs';
 import {
   isDoWhileStatement,
-  isForStatementWithExpression,
-  isForStatementWithVariableStatement,
-  isForStatementWithLexicalDeclaration,
+  isForBinding,
+  isForDeclaration,
   isForInStatementWithExpression,
   isForInStatementWithForDeclaration,
   isForInStatementWithVarForBinding,
   isForOfStatementWithExpression,
   isForOfStatementWithForDeclaration,
   isForOfStatementWithVarForBinding,
-  isForDeclaration,
-  isForBinding,
+  isForStatementWithExpression,
+  isForStatementWithLexicalDeclaration,
+  isForStatementWithVariableStatement,
   isWhileStatement,
 } from '../ast.mjs';
 import {

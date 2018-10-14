@@ -24,14 +24,14 @@ import {
   ObjectCreate,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { Value, Descriptor } from '../value.mjs';
+import { Descriptor, Value } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
   DefineMethod,
   Evaluate_PropertyName,
 } from './all.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
+import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { outOfRange } from '../helpers.mjs';
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation

@@ -1,21 +1,21 @@
 import {
   CreateRealm,
-  SetRealmGlobalObject,
   SetDefaultGlobalBindings,
+  SetRealmGlobalObject,
 } from './realm.mjs';
 import {
   ExecutionContext,
   ScriptEvaluation,
   surroundingAgent,
 } from './engine.mjs';
-import { Value, Descriptor, Type } from './value.mjs';
+import { Descriptor, Type, Value } from './value.mjs';
 import { ParseScript } from './parse.mjs';
 import {
-  Q,
+  AbruptCompletion,
   Completion,
   NormalCompletion,
+  Q,
   ThrowCompletion,
-  AbruptCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
 
@@ -46,8 +46,8 @@ class APIRealm {
     // Create any implementation-defined global object properties on globalObj.
     globalObj.DefineOwnProperty(new Value('print'), Descriptor({
       Value: CreateBuiltinFunction((args) => {
-        if (globalObj.$262 && globalObj.$262.handlePrint) {
-          globalObj.$262.handlePrint(...args);
+        if (options.handlePrint) {
+          Q(options.handlePrint(...args));
         } else {
           console.log(...args.map((a) => Inspect(a))); // eslint-disable-line no-console
         }
@@ -58,10 +58,9 @@ class APIRealm {
       Configurable: Value.true,
     }));
 
-    this.global = globalObj;
-
     surroundingAgent.executionContextStack.pop();
 
+    this.global = globalObj;
     this.realm = realm;
     this.context = newContext;
     this.agent = surroundingAgent;

@@ -4,12 +4,12 @@ import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import {
-  Q,
-  Completion,
-  NormalCompletion,
   AbruptCompletion,
-  UpdateEmpty,
+  Completion,
   EnsureCompletion,
+  NormalCompletion,
+  Q,
+  UpdateEmpty,
 } from '../completion.mjs';
 import { BlockDeclarationInstantiation } from './BlockStatement.mjs';
 

@@ -1,28 +1,18 @@
-import {
-  Value,
-  Type,
-  wellKnownSymbols,
-} from './value.mjs';
+import { Value } from './value.mjs';
 import { ParseModule, ParseScript } from './parse.mjs';
 import {
   AbruptCompletion,
+  EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
-  EnsureCompletion,
+  X,
 } from './completion.mjs';
 import {
   CreateRealm,
   SetDefaultGlobalBindings,
   SetRealmGlobalObject,
 } from './realm.mjs';
-import {
-  Assert,
-  Construct,
-  Get,
-  IsArray,
-  IsPropertyKey,
-  ToBoolean,
-} from './abstract-ops/all.mjs';
+import { Construct } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 
@@ -91,20 +81,6 @@ export class ExecutionContext {
     e.LexicalEnvironment = this.LexicalEnvironment;
     return e;
   }
-}
-
-export function isArrayIndex(P) {
-  Assert(IsPropertyKey(P));
-  const type = Type(P);
-  if (type === 'Symbol') {
-    return false;
-  }
-
-  const index = Number.parseInt(P.stringValue(), 10);
-  if (index >= 0 && index < (2 ** 32) - 1) {
-    return true;
-  }
-  return false;
 }
 
 // 8.4.1 #sec-enqueuejob
@@ -239,16 +215,12 @@ export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   return new NormalCompletion(undefined);
 }
 
-export function HostPromiseRejectionTracker() {}
-
-// 22.1.3.1 #sec-isconcatspreadable
-export function IsConcatSpreadable(O) {
-  if (Type(O) !== 'Object') {
-    return Value.false;
+export function HostPromiseRejectionTracker(promise, operation) {
+  const realm = surroundingAgent.currentRealmRecord;
+  if (!realm) {
+    return;
   }
-  const spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
-  if (spreadable.value !== undefined) {
-    return ToBoolean(spreadable);
+  if (realm.hostDefinedOptions.promiseRejectiontTracker) {
+    X(realm.hostDefinedOptions.promiseRejectiontTracker(promise, operation));
   }
-  return IsArray(O);
 }

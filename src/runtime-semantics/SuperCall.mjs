@@ -2,13 +2,13 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   Construct,
-  GetThisEnvironment,
   GetNewTarget,
+  GetThisEnvironment,
   IsConstructor,
 } from '../abstract-ops/all.mjs';
-import { Value, Type, FunctionValue } from '../value.mjs';
+import { FunctionValue, Type, Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
+import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
 
 // #sec-getsuperconstructor
