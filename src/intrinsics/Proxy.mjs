@@ -27,13 +27,13 @@ function ProxyCallSlot(thisArgument, argumentsList) {
   const O = this;
 
   const handler = O.ProxyHandler;
-  if (Type(handler) === 'Null') {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'Cannot call a proxy that has been revoked');
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('apply')));
-  if (Type(trap) === 'Undefined') {
+  if (trap === Value.undefined) {
     return Q(Call(target, thisArgument, argumentsList));
   }
   const argArray = CreateArrayFromList(argumentsList);
@@ -44,13 +44,13 @@ function ProxyConstructSlot(argumentsList, newTarget) {
   const O = this;
 
   const handler = O.ProxyHandler;
-  if (Type(handler) === 'Null') {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'Cannot construct a proxy that has been revoked');
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('construct')));
-  if (Type(trap) === 'Undefined') {
+  if (trap === Value.undefined) {
     Assert(IsConstructor(target) === Value.true);
     return Q(Construct(target, argumentsList, newTarget));
   }
@@ -76,7 +76,7 @@ function ProxyCreate(target, handler) {
     return surroundingAgent.Throw('TypeError', 'Cannot create proxy with a revoked proxy as handler');
   }
   const P = new ProxyExoticObjectValue();
-  if (IsCallable(P) === Value.true) {
+  if (IsCallable(target) === Value.true) {
     P.Call = ProxyCallSlot;
     if (IsConstructor(target) === Value.true) {
       P.Construct = ProxyConstructSlot;
@@ -127,6 +127,8 @@ export function CreateProxy(realmRec) {
 
   {
     const fn = CreateBuiltinFunction(Proxy_revocable, [], realmRec);
+    SetFunctionName(fn, new Value('revocable'));
+    SetFunctionLength(fn, new Value(2));
     proxyConstructor.DefineOwnProperty(new Value('revocable'), Descriptor({
       Value: fn,
       Writable: Value.true,

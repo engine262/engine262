@@ -45,6 +45,7 @@ import {
   isIfStatement,
   isLexicalDeclaration,
   isLiteral,
+  isMetaProperty,
   isObjectLiteral,
   isReturnStatement,
   isSuperCall,
@@ -97,6 +98,7 @@ import {
   Evaluate_LogicalANDExpression,
   Evaluate_LogicalORExpression,
   Evaluate_MemberExpression,
+  Evaluate_MetaProperty,
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
   Evaluate_ObjectLiteral,
@@ -347,8 +349,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isTaggedTemplate(Expression):
       return yield* Evaluate_TaggedTemplate(Expression);
 
-      // case isMetaProperty(Expression):
-      //   return Evaluate_MetaProperty(Expression);
+    case isMetaProperty(Expression):
+      return yield* Evaluate_MetaProperty(Expression);
 
     case isActualNewExpression(Expression):
       return yield* Evaluate_NewExpression(Expression);

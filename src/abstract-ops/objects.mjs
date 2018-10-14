@@ -40,13 +40,13 @@ export function OrdinarySetPrototypeOf(O, V) {
   if (SameValue(V, current) === Value.true) {
     return Value.true;
   }
-  if (extensible === false) {
+  if (extensible === Value.false) {
     return Value.false;
   }
   let p = V;
   let done = false;
   while (done === false) {
-    if (Type(p) === 'Null') {
+    if (p === Value.null) {
       done = true;
     } else if (SameValue(p, O) === Value.true) {
       return Value.false;
@@ -105,9 +105,9 @@ export function OrdinaryDefineOwnProperty(O, P, Desc) {
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-  Assert(Type(O) === 'Undefined' || IsPropertyKey(P));
+  Assert(O === Value.undefined || IsPropertyKey(P));
 
-  if (Type(current) === 'Undefined') {
+  if (current === Value.undefined) {
     if (extensible === Value.false) {
       return Value.false;
     }

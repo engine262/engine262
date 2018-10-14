@@ -607,14 +607,15 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
   GetPrototypeOf() {
     const O = this;
+
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform getPrototypeOf on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('getPrototypeOf')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.GetPrototypeOf());
     }
     const handlerProto = Q(Call(trap, handler, [target]));
@@ -622,7 +623,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return surroundingAgent.Throw('TypeError');
     }
     const extensibleTarget = Q(IsExtensible(target));
-    if (extensibleTarget === true) {
+    if (extensibleTarget === Value.true) {
       return handlerProto;
     }
     const targetProto = Q(target.GetPrototypeOf());
@@ -637,41 +638,41 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform setPrototypeOf on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('setPrototypeOf')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.SetPrototypeOf(V));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, V])));
     if (booleanTrapResult === Value.false) {
-      return false;
+      return Value.false;
     }
     const extensibleTarget = Q(IsExtensible(target));
-    if (extensibleTarget === true) {
-      return true;
+    if (extensibleTarget === Value.true) {
+      return Value.true;
     }
     const targetProto = Q(target.GetPrototypeOf());
     if (SameValue(V, targetProto) === Value.true) {
       return surroundingAgent.Throw('TypeError');
     }
-    return true;
+    return Value.true;
   }
 
   IsExtensible() {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform isExtensible on proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('isExtensible')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.IsExtensible());
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
@@ -686,19 +687,19 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform preventExtensions on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('preventExtensions')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.PreventExtensions());
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
     if (booleanTrapResult === Value.true) {
       const targetIsExtensible = Q(target.IsExtensible());
-      if (targetIsExtensible === true) {
+      if (targetIsExtensible === Value.true) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -710,13 +711,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform getOwnPropertyDescriptor on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('getOwnPropertyDescriptor')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.GetOwnProperty(P));
     }
     const trapResultObj = Q(Call(trap, handler, [target, P]));
@@ -724,8 +725,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return surroundingAgent.Throw('TypeError');
     }
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(trapResultObj) === 'Undefined') {
-      if (Type(targetDesc) === 'Undefined') {
+    if (trapResultObj === Value.undefined) {
+      if (targetDesc === Value.undefined) {
         return Value.undefined;
       }
       if (targetDesc.Configurable === Value.false) {
@@ -746,7 +747,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return surroundingAgent.Throw('TypeError');
     }
     if (resultDesc.Configurable === Value.false) {
-      if (Type(targetDesc) === 'Undefined' || targetDesc.Configurable === Value.false) {
+      if (targetDesc === Value.undefined || targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -758,13 +759,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform defineProperty on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('defineProperty')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.DefineOwnProperty(P, Desc));
     }
     const descObj = FromPropertyDescriptor(Desc);
@@ -780,18 +781,18 @@ export class ProxyExoticObjectValue extends ObjectValue {
     } else {
       settingConfigFalse = false;
     }
-    if (Type(targetDesc) === 'Undefined') {
+    if (targetDesc === Value.undefined) {
       if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
-      if (settingConfigFalse) {
+      if (settingConfigFalse === true) {
         return surroundingAgent.Throw('TypeError');
       }
-    } else if (Type(targetDesc) !== 'Undefined') {
+    } else {
       if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
         return surroundingAgent.Throw('TypeError');
       }
-      if (settingConfigFalse && targetDesc.Configurable === Value.false) {
+      if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
         return surroundingAgent.Throw('TypeError');
       }
     }
@@ -803,19 +804,19 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform has on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(target, new Value('has')));
-    if (Type(trap) === 'Undefined') {
+    const trap = Q(GetMethod(handler, new Value('has')));
+    if (trap === Value.undefined) {
       return Q(target.HasProperty(P));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
     if (booleanTrapResult === Value.false) {
       const targetDesc = Q(target.GetOwnProperty(P));
-      if (Type(targetDesc) !== 'Undefined') {
+      if (targetDesc !== Value.undefined) {
         if (targetDesc.Configurable === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -833,25 +834,25 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform get on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('get')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.Get(P, Receiver));
     }
     const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === Value.false) {
+    if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
         if (SameValue(trapResult, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
-      if (IsAccessorDescriptor(targetDesc) === Value.true && Type(targetDesc.Get) === 'Undefined') {
-        if (Type(trapResult) === 'Undefined') {
+      if (IsAccessorDescriptor(targetDesc) === Value.true && targetDesc.Get === Value.undefined) {
+        if (trapResult !== Value.undefined) {
           return surroundingAgent.Throw('TypeError');
         }
       }
@@ -864,28 +865,28 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform set on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('set')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.Set(P, V, Receiver));
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, Receiver])));
+    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, V, Receiver])));
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) !== 'Undefined' && targetDesc.Configurable === Value.false) {
+    if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
         if (SameValue(V, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
       if (IsAccessorDescriptor(targetDesc) === Value.true) {
-        if (Type(targetDesc.Set) === 'Undefined') {
+        if (targetDesc.Set === Value.undefined) {
           return surroundingAgent.Throw('TypeError');
         }
       }
@@ -898,13 +899,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform deleteProperty on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('deleteProperty')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.Delete(P));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
@@ -912,7 +913,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Value.false;
     }
     const targetDesc = Q(target.GetOwnProperty(P));
-    if (Type(targetDesc) === 'Undefined') {
+    if (targetDesc === Value.undefined) {
       return Value.true;
     }
     if (targetDesc.Configurable === Value.false) {
@@ -925,13 +926,13 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const O = this;
 
     const handler = O.ProxyHandler;
-    if (Type(handler) === 'Null') {
+    if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'cannot perform ownKeys on a proxy that has been revoked');
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('ownKeys')));
-    if (Type(trap) === 'Undefined') {
+    if (trap === Value.undefined) {
       return Q(target.OwnPropertyKeys());
     }
     const trapResultArray = Q(Call(trap, handler, [target]));
@@ -947,7 +948,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const targetNonconfigurableKeys = [];
     for (const key of targetKeys) {
       const desc = Q(target.GetOwnProperty(key));
-      if (Type(desc) !== 'Undefined' && desc.Configurable === Value.false) {
+      if (desc !== Value.undefined && desc.Configurable === Value.false) {
         targetNonconfigurableKeys.push(key);
       } else {
         targetConfigurableKeys.push(key);

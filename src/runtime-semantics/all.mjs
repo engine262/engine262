@@ -39,6 +39,7 @@ export * from './LexicalDeclaration.mjs';
 export * from './LogicalANDExpression.mjs';
 export * from './LogicalORExpression.mjs';
 export * from './MemberExpression.mjs';
+export * from './MetaProperty.mjs';
 export * from './MultiplicativeExpression.mjs';
 export * from './NewExpression.mjs';
 export * from './ObjectLiteral.mjs';

@@ -129,7 +129,7 @@ function Reflect_setPrototypeOf([target, proto]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
-  if (Type(proto) !== 'Object' || Type(proto) !== 'Null') {
+  if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
     return surroundingAgent.Throw('TypeError', 'proto is not an object or null');
   }
   return Q(target.SetPrototypeOf(proto));
