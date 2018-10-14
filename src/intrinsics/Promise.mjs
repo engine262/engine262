@@ -26,6 +26,7 @@ import {
   PromiseResolve,
   PromiseCapabilityRecord,
   SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   Q, X,
@@ -194,7 +195,7 @@ function Promise_reject([r], { thisValue }) {
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.reject called on non-object');
   }
-  const promiseCapability = NewPromiseCapability(C);
+  const promiseCapability = Q(NewPromiseCapability(C));
   Q(Call(promiseCapability.Reject, Value.undefined, [r]));
   return promiseCapability.Promise;
 }
@@ -219,12 +220,17 @@ export function CreatePromise(realmRec) {
     ['resolve', Promise_resolve, 1],
   ]);
 
-  promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
-    Get: CreateBuiltinFunction(Promise_symbolSpecies, [], realmRec),
-    Set: Value.undefined,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  }));
+  {
+    const fn = CreateBuiltinFunction(Promise_symbolSpecies, [], realmRec);
+    X(SetFunctionName(fn, wellKnownSymbols.species, new Value('get')));
+    X(SetFunctionLength(fn, new Value(0)));
+    promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
+      Get: fn,
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    }));
+  }
 
   promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
     Writable: Value.false,
