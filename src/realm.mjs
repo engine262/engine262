@@ -103,18 +103,25 @@ export function CreateIntrinsics(realmRec) {
   const objProto = ObjectCreate(Value.null);
   intrinsics['%ObjectPrototype%'] = objProto;
 
-  const thrower = CreateBuiltinFunction(
-    () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
-      + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
-    [], realmRec, Value.null,
-  );
-  intrinsics['%ThrowTypeError%'] = thrower;
-
   const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
   SetFunctionLength(funcProto, new Value(0));
   intrinsics['%FunctionPrototype%'] = funcProto;
 
-  thrower.SetPrototypeOf(funcProto);
+  {
+    const thrower = CreateBuiltinFunction(
+    () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
+        + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
+      [], realmRec, funcProto,
+    );
+    thrower.DefineOwnProperty(new Value('length'), Descriptor({
+      Value: new Value(0),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false,
+    }));
+    thrower.Extensible = Value.false;
+    intrinsics['%ThrowTypeError%'] = thrower;
+  }
 
   AddRestrictedFunctionProperties(funcProto, realmRec);
 
