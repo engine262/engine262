@@ -7,7 +7,6 @@ import {
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mjs';
-import { Value, wellKnownSymbols } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // #sec-generator.prototype.next
@@ -35,8 +34,7 @@ export function CreateGeneratorPrototype(realmRec) {
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],
     ['throw', GeneratorProto_throw, 1],
-    [wellKnownSymbols.toStringTag, new Value('Generator'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
 
   realmRec.Intrinsics['%GeneratorPrototype%'] = generatorPrototype;
 }

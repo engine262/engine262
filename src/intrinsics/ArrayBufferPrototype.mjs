@@ -11,12 +11,7 @@ import {
   SpeciesConstructor,
   ToInteger,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-  Descriptor,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { Type, Value, Descriptor } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
@@ -93,8 +88,7 @@ function ArrayBufferProto_slice([start, end], { thisValue }) {
 export function CreateArrayBufferPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['slice', ArrayBufferProto_slice, 2],
-    [wellKnownSymbols.toStringTag, new Value('ArrayBuffer'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%ObjectPrototype%'], 'ArrayBuffer');
 
   {
     const fn = CreateBuiltinFunction(ArrayBufferProto_byteLengthGetter, [], realmRec);

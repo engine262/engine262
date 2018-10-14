@@ -1,10 +1,7 @@
-import { Value, wellKnownSymbols } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 export function CreateAsyncFunctionPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
-    [wellKnownSymbols.toStringTag, new Value('AsyncFunction'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%FunctionPrototype%']);
+  const proto = BootstrapPrototype(realmRec, [], realmRec.Intrinsics['%FunctionPrototype%'], 'AsyncFunction');
 
   realmRec.Intrinsics['%AsyncFunctionPrototype%'] = proto;
 }

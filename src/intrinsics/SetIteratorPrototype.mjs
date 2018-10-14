@@ -4,7 +4,7 @@ import {
   CreateArrayFromList,
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
-import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function SetIteratorPrototype_next(args, { thisValue }) {
@@ -42,8 +42,7 @@ function SetIteratorPrototype_next(args, { thisValue }) {
 export function CreateSetIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['next', SetIteratorPrototype_next, 0],
-    [wellKnownSymbols.toStringTag, new Value('Set Iterator')],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
 
   realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
 }

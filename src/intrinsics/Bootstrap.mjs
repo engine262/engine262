@@ -9,9 +9,10 @@ import {
   Descriptor,
   Value,
   SymbolValue,
+  wellKnownSymbols,
 } from '../value.mjs';
 
-export function BootstrapPrototype(realmRec, props, Prototype) {
+export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
   const proto = ObjectCreate(Prototype);
 
   for (const [n, v, len, descriptor] of props) {
@@ -31,6 +32,15 @@ export function BootstrapPrototype(realmRec, props, Prototype) {
       Enumerable: Value.false,
       Configurable: Value.true,
       ...descriptor,
+    }));
+  }
+
+  if (stringTag !== undefined) {
+    proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
+      Value: new Value(stringTag),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true,
     }));
   }
 

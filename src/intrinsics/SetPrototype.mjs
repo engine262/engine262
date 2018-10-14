@@ -171,8 +171,7 @@ export function CreateSetPrototype(realmRec) {
     ['forEach', SetProto_forEach, 1],
     ['has', SetProto_has, 1],
     ['values', SetProto_values, 0],
-    [wellKnownSymbols.toStringTag, new Value('Set'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Set');
 
   {
     const fn = CreateBuiltinFunction(SetProto_size, [], realmRec);

@@ -4,7 +4,7 @@ import {
   CreateArrayFromList,
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
-import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function MapIteratorPrototype_next(args, { thisValue }) {
@@ -48,8 +48,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
 export function CreateMapIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
-    [wellKnownSymbols.toStringTag, new Value('Map Iterator')],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
 
   realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
 }

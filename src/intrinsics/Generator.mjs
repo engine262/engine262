@@ -1,4 +1,4 @@
-import { Value, wellKnownSymbols, Descriptor } from '../value.mjs';
+import { Value, Descriptor } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
@@ -8,8 +8,8 @@ export function CreateGenerator(realmRec) {
 
   const generator = BootstrapPrototype(realmRec, [
     ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
-    [wellKnownSymbols.toStringTag, new Value('GeneratorFunction'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%FunctionPrototype%']);
+  ], realmRec.Intrinsics['%FunctionPrototype%'], 'GeneratorFunction');
+
   X(DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
     Value: generator,
     Writable: Value.false,

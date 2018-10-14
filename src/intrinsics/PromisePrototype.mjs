@@ -19,7 +19,7 @@ import {
   SetFunctionLength,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
-import { Value, Type, wellKnownSymbols } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
@@ -139,8 +139,7 @@ export function CreatePromisePrototype(realmRec) {
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],
     ['then', PromiseProto_then, 2],
-    [wellKnownSymbols.toStringTag, new Value('Promise'), undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Promise');
 
   realmRec.Intrinsics['%PromiseProto_then%'] = X(Get(proto, new Value('then')));
 

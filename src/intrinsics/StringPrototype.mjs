@@ -15,7 +15,9 @@ import {
   StringExoticObjectValue,
   Type,
   Descriptor,
+  wellKnownSymbols,
 } from '../value.mjs';
+import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q } from '../completion.mjs';
 
 function thisStringValue(value) {
@@ -54,8 +56,15 @@ function StringProto_charCodeAt([pos], { thisValue }) {
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
+
 function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
+}
+
+function StringProto_symbolIterator(args, { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  return Q(CreateStringIterator(S));
 }
 
 export function CreateStringPrototype(realmRec) {
@@ -67,13 +76,41 @@ export function CreateStringPrototype(realmRec) {
   [
     ['charAt', StringProto_charAt, 1],
     ['charCodeAt', StringProto_charCodeAt, 1],
+    // codePointAt
+    // concat
+    // endsWith
+    // includes
+    // indexOf
+    // lastIndexOf
+    // localeCompare
+    // match
+    // normalize
+    // padEnd
+    // padStart
+    // padEnd
+    // repeat
+    // replace
+    // search
+    // slice
+    // split
+    // startsWith
+    // substring
+    // toLocaleLowerCase
+    // toLocaleUpperCase
+    // toLowerCase
     ['toString', StringProto_toString, 0],
+    // toUpperCase
+    // trim
     ['valueOf', StringProto_valueOf, 0],
+    [wellKnownSymbols.iterator, StringProto_symbolIterator, 0],
   ].forEach(([name, fn, length]) => {
+    if (!(name instanceof Value)) {
+      name = new Value(name);
+    }
     const n = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(n, new Value(name));
+    SetFunctionName(n, name);
     SetFunctionLength(n, new Value(length));
-    proto.DefineOwnProperty(new Value(name), Descriptor({
+    proto.DefineOwnProperty(name, Descriptor({
       Value: n,
       Writable: Value.true,
       Enumerable: Value.false,
