@@ -18,7 +18,7 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 import { Value, Type } from '../value.mjs';
-import { Resume } from '../helpers.mjs';
+import { Resume, HandleInResume } from '../helpers.mjs';
 
 // #sec-asyncgeneratorrequest-records
 class AsyncGeneratorRequestRecord {
@@ -178,7 +178,7 @@ export function* AsyncGeneratorYield(value) {
   value = Q(yield* Await(value));
   generator.AsyncGeneratorState = 'suspendedYield';
   surroundingAgent.executionContextStack.pop();
-  const resumptionValue = EnsureCompletion(yield [AsyncGeneratorResolve, generator, value, Value.false]);
+  const resumptionValue = EnsureCompletion(yield HandleInResume(AsyncGeneratorResolve, generator, value, Value.false));
   if (resumptionValue.Type !== 'return') {
     return Completion(resumptionValue);
   }

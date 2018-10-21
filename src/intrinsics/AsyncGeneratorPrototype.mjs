@@ -30,7 +30,7 @@ export function CreateAsyncGeneratorPrototype(realmRec) {
     ['next', AsyncGeneratorPrototype_next, 1],
     ['return', AsyncGeneratorPrototype_return, 1],
     ['throw', AsyncGeneratorPrototype_throw, 1],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'AsyncGenerator');
+  ], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
 
   realmRec.Intrinsics['%AsyncGeneratorPrototype%'] = proto;
 }

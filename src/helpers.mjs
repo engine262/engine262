@@ -20,13 +20,18 @@ export function Unwind(iterator, maxSteps = 1) {
   }
 }
 
+const kSafeToResume = Symbol('kSameToResume');
+
+export function HandleInResume(fn, ...args) {
+  const bound = () => fn(...args);
+  bound[kSafeToResume] = true;
+  return bound;
+}
+
 export function Resume(context, completion) {
   const { value } = context.codeEvaluationState.next(completion);
-  // When we suspend and return a function with side effects that might
-  // include resuming, instead of calling the function, we return an array
-  // which is called here, after the actual resume, like it should be.
-  if (Array.isArray(value) && typeof value[0] === 'function') {
-    X(value[0](...value.slice(1)));
+  if (typeof value === 'function' && value[kSafeToResume] === true) {
+    return X(value());
   }
   return value;
 }

@@ -407,9 +407,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         left: LeftHandSideExpression,
         right: AssignmentExpression,
         body: Statement,
+        await: isAwait,
       } = IterationStatement;
-      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, isAwait ? 'async' : 'sync'));
     }
 
     case isForOfStatementWithVarForBinding(IterationStatement): {
@@ -419,9 +420,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         },
         right: AssignmentExpression,
         body: Statement,
+        await: isAwait,
       } = IterationStatement;
-      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet));
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, isAwait ? 'async' : 'sync'));
     }
 
     case isForOfStatementWithForDeclaration(IterationStatement): {
@@ -429,9 +431,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         left: ForDeclaration,
         right: AssignmentExpression,
         body: Statement,
+        await: isAwait,
       } = IterationStatement;
-      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), AssignmentExpression, 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, isAwait ? 'async' : 'sync'));
     }
 
     default:
