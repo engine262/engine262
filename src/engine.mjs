@@ -5,7 +5,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
-  X,
+  Q, X,
 } from './completion.mjs';
 import {
   CreateRealm,
@@ -17,7 +17,7 @@ import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 
 export class Agent {
-  constructor() {
+  constructor(options = {}) {
     this.LittleEndian = false;
     this.CanBlock = true;
     this.Signifier = Agent.Increment;
@@ -29,6 +29,8 @@ export class Agent {
     this.executionContextStack = [];
 
     this.jobQueue = [];
+
+    this.hostDefinedOptions = options;
   }
 
   get isStrictCode() {
@@ -61,7 +63,11 @@ export class Agent {
 }
 Agent.Increment = 0;
 
-export const surroundingAgent = new Agent();
+export let surroundingAgent;
+
+export function setSurroundingAgent(a) {
+  surroundingAgent = a;
+}
 
 export class ExecutionContext {
   constructor() {
@@ -209,18 +215,14 @@ export function HostReportErrors(errorList) {
 }
 
 export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
-  if (calleeRealm.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
-    calleeRealm.hostDefinedOptions.ensureCanCompileStrings();
+  if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
+    Q(surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm));
   }
   return new NormalCompletion(undefined);
 }
 
 export function HostPromiseRejectionTracker(promise, operation) {
-  const realm = surroundingAgent.currentRealmRecord;
-  if (!realm) {
-    return;
-  }
-  if (realm.hostDefinedOptions.promiseRejectiontTracker) {
-    X(realm.hostDefinedOptions.promiseRejectiontTracker(promise, operation));
+  if (surroundingAgent.hostDefinedOptions.promiseRejectiontTracker) {
+    X(surroundingAgent.hostDefinedOptions.promiseRejectiontTracker(promise, operation));
   }
 }

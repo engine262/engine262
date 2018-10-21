@@ -15,12 +15,15 @@ Non-Goals
 `$ npm run build`
 
 ```js
-import { Realm } from './lib/api.mjs';
+import { Realm, initializeAgent } from './lib/api.mjs';
 
-const realm = new Realm({
+initializeAgent({
   // onDebugger() {},
   // ensureCanCompileStrings() {},
-});
+  // promiseRejectionTracker() {},
+})
+
+const realm = new Realm();
 
 realm.evaluateScript(`
 'use strict';

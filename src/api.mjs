@@ -7,6 +7,8 @@ import {
   ExecutionContext,
   ScriptEvaluation,
   surroundingAgent,
+  setSurroundingAgent,
+  Agent,
 } from './engine.mjs';
 import { Descriptor, Type, Value } from './value.mjs';
 import { ParseScript } from './parse.mjs';
@@ -28,11 +30,16 @@ export {
   Descriptor,
 };
 
+export function initializeAgent(options = {}) {
+  const agent = new Agent(options);
+  setSurroundingAgent(agent);
+}
+
 class APIRealm {
   constructor(options = {}) {
     const realm = CreateRealm();
 
-    realm.hostDefinedOptions = options;
+    this.hostDefinedOptions = options;
 
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;

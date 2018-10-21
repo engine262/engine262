@@ -1,10 +1,10 @@
 import { surroundingAgent } from '../engine.mjs';
+import { Q } from '../completion.mjs';
 
 // #sec-debugger-statement-runtime-semantics-evaluation
 // DebuggerStatement : `debugger` `;`
 export function Evaluate_DebuggerStatement() {
-  const realm = surroundingAgent.currentRealmRecord;
-  if (realm.hostDefinedOptions.onDebugger) {
-    realm.hostDefinedOptions.onDebugger();
+  if (surroundingAgent.hostDefinedOptions.onDebugger) {
+    Q(surroundingAgent.hostDefinedOptions.onDebugger());
   }
 }

@@ -12,6 +12,7 @@ import {
   Inspect,
   Realm,
   Value,
+  initializeAgent,
 } from '..';
 
 util.inspect.defaultOptions.depth = 2;
@@ -87,7 +88,7 @@ async function run({ source, meta, strict }) {
   if (meta.flags.includes('async')) {
     X($262.evalScript('harness/doneprintHandle.js', true));
     asyncPromise = new Promise((resolve) => {
-      $262.realm.realm.hostDefinedOptions.handlePrint = (m) => {
+      $262.realm.hostDefinedOptions.handlePrint = (m) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {
@@ -131,6 +132,8 @@ process.on('exit', () => {
     process.exitCode = 1;
   }
 });
+
+initializeAgent();
 
 files.reduce((promise, filename) => promise.then(async () => {
   const short = path.relative(testdir, filename);
