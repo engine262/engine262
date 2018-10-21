@@ -3,6 +3,7 @@ import {
   DefinePropertyOrThrow,
   FunctionCreate,
   GeneratorFunctionCreate,
+  AsyncGeneratorFunctionCreate,
   MakeConstructor,
   ObjectCreate,
   SetFunctionName,
@@ -11,6 +12,7 @@ import {
   isAsyncFunctionDeclaration,
   isFunctionDeclaration,
   isGeneratorDeclaration,
+  isAsyncGeneratorDeclaration,
 } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -69,6 +71,25 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
   return F;
 }
 
+export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope) {
+  const {
+    id: BindingIdentifier,
+    params: FormalParameters,
+  } = AsyncGeneratorDeclaration;
+  const strict = true; // TODO(IsStrict)
+  const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
+  const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope, strict));
+  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
+  X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+    Value: prototype,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  })));
+  SetFunctionName(F, name);
+  return F;
+}
+
 export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
   switch (true) {
     case isFunctionDeclaration(AnyFunctionDeclaration):
@@ -80,8 +101,8 @@ export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
     case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
       return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
 
-      // case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
-      //   return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
+    case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
+      return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
     default:
       throw outOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);

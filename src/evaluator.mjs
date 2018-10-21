@@ -27,6 +27,7 @@ import {
   isArrowFunction,
   isAsyncArrowFunction,
   isAsyncFunctionExpression,
+  isAsyncGeneratorExpression,
   isAwaitExpression,
   isBlockStatement,
   isBreakStatement,
@@ -74,6 +75,7 @@ import {
   Evaluate_AssignmentExpression,
   Evaluate_AsyncArrowFunction,
   Evaluate_AsyncFunctionExpression,
+  Evaluate_AsyncGeneratorExpression,
   Evaluate_AwaitExpression,
   Evaluate_BinaryBitwiseExpression,
   Evaluate_BlockStatement,
@@ -328,8 +330,8 @@ function* Inner_Evaluate_Expression(Expression) {
     case isAsyncFunctionExpression(Expression):
       return Evaluate_AsyncFunctionExpression(Expression);
 
-      // case isAsyncGeneratorExpression(Expression):
-      //   return Evaluate_AsyncGeneratorExpression(Expression);
+    case isAsyncGeneratorExpression(Expression):
+      return Evaluate_AsyncGeneratorExpression(Expression);
 
       // case isRegularExpressionLiteral(Expression):
       //   return Evaluate_RegularExpressionLiteral(Expression);

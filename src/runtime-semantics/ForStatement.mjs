@@ -17,6 +17,7 @@ import {
   ResolveBinding,
   ToBoolean,
   ToObject,
+  AsyncIteratorClose,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion, BreakCompletion, Completion,
@@ -26,6 +27,7 @@ import {
   ReturnIfAbrupt,
   UpdateEmpty,
   X,
+  Await,
 } from '../completion.mjs';
 import {
   isDoWhileStatement,
@@ -168,7 +170,7 @@ function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
 }
 
 // 13.7.5.13 #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet/* , iteratorKind = 'sync' */) {
+function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind = 'sync') {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let V = Value.undefined;
   const destructuring = lhs.type === 'VariableDeclaration'
@@ -178,9 +180,10 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     assignmentPattern = lhs;
   }
   while (true) {
-    const nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
-    // TODO(asynciteration)
-    // if (iteratorKind === 'async')
+    let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
+    if (iteratorKind === 'async') {
+      nextResult = Q(yield* Await(nextResult));
+    }
     if (Type(nextResult) !== 'Object') {
       return surroundingAgent.Throw('TypeError');
     }
@@ -232,10 +235,9 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     }
     if (status instanceof AbruptCompletion) {
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      // TODO(asynciteration)
-      // if (iteratorKind === 'async') {
-      //   return Q(AsyncIteratorClose(iteratorRecord, status));
-      // }
+      if (iteratorKind === 'async') {
+        return Q(yield* AsyncIteratorClose(iteratorRecord, status));
+      }
       if (iterationKind === 'enumerate') {
         return status;
       } else {
@@ -251,10 +253,9 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       } else {
         Assert(iterationKind === 'iterate');
         status = UpdateEmpty(result, V);
-        // TODO(asynciteration)
-        // if (iteratorKind === 'async') {
-        //   return Q(AsyncIteratorClose(iteratorRecord, status));
-        // }
+        if (iteratorKind === 'async') {
+          return Q(yield* AsyncIteratorClose(iteratorRecord, status));
+        }
         return Q(IteratorClose(iteratorRecord, status));
       }
     }
@@ -397,7 +398,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: Expression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), Expression, 'enumerate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), Expression, 'enumerate'));
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
     }
 
@@ -429,7 +430,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
       } = IterationStatement;
-      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration), AssignmentExpression, 'iterate'));
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), AssignmentExpression, 'iterate'));
       return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
     }
 

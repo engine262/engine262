@@ -22,7 +22,6 @@ const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.j
 
 const excludedFeatures = new Set([
   'BigInt',
-  'async-iteration',
   'class-fields-private',
   'class-fields-public',
   'class-methods-private',

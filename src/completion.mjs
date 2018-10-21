@@ -7,6 +7,7 @@ import {
 } from './abstract-ops/all.mjs';
 import { PerformPromiseThen } from './intrinsics/PromisePrototype.mjs';
 import { Reference, Value } from './value.mjs';
+import { Resume } from './helpers.mjs';
 
 // #sec-completion-record-specification-type
 export function Completion(type, value, target) {
@@ -130,7 +131,7 @@ function AwaitFulfilledFunctions([value]) {
   const prevContext = surroundingAgent.runningExecutionContext;
   // Suspend prevContext
   surroundingAgent.executionContextStack.push(asyncContext);
-  asyncContext.codeEvaluationState.next(new NormalCompletion(value));
+  Resume(asyncContext, new NormalCompletion(value));
   Assert(surroundingAgent.runningExecutionContext === prevContext);
   return Value.undefined;
 }
@@ -141,7 +142,7 @@ function AwaitRejectedFunctions([reason]) {
   const prevContext = surroundingAgent.runningExecutionContext;
   // Suspend prevContext
   surroundingAgent.executionContextStack.push(asyncContext);
-  asyncContext.codeEvaluationState.next(new ThrowCompletion(reason));
+  Resume(asyncContext, new ThrowCompletion(reason));
   Assert(surroundingAgent.runningExecutionContext === prevContext);
   return Value.undefined;
 }

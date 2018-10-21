@@ -5,6 +5,7 @@ export * from './ArrowFunction.mjs';
 export * from './AssignmentExpression.mjs';
 export * from './AsyncArrowFunction.mjs';
 export * from './AsyncFunctionExpression.mjs';
+export * from './AsyncGeneratorExpression.mjs';
 export * from './AwaitExpression.mjs';
 export * from './BindingInitialization.mjs';
 export * from './BitwiseOperators.mjs';

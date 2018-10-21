@@ -21,6 +21,7 @@ import {
   Completion,
   EnsureCompletion,
   Q, X,
+  Await,
 } from '../completion.mjs';
 
 // #sec-createasyncfromsynciterator
@@ -123,6 +124,31 @@ export function IteratorClose(
     return surroundingAgent.Throw('TypeError');
   }
   return completion;
+}
+
+// #sec-asynciteratorclose
+export function* AsyncIteratorClose(iteratorRecord, completion) {
+  Assert(Type(iteratorRecord.Iterator) === 'Object');
+  Assert(completion instanceof Completion);
+  const iterator = iteratorRecord.Iterator;
+  const ret = Q(GetMethod(iterator, new Value('return')));
+  if (ret === Value.undefined) {
+    return Completion(completion);
+  }
+  let innerResult = Q(Call(ret, iterator, []));
+  if (innerResult.Type === 'normal') {
+    innerResult = yield* Await(innerResult.Value);
+  }
+  if (completion.Type === 'throw') {
+    return Completion(completion);
+  }
+  if (innerResult.Type === 'throw') {
+    return Completion(innerResult);
+  }
+  if (Type(innerResult.Value) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  return Completion(completion);
 }
 
 // #sec-createiterresultobject

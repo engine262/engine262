@@ -11,6 +11,7 @@ import {
   GetValue,
   NewPromiseCapability,
   OrdinaryCreateFromConstructor,
+  AsyncGeneratorStart,
 } from '../abstract-ops/all.mjs';
 import {
   isArrowFunction,
@@ -18,6 +19,7 @@ import {
   isAsyncFunctionDeclaration,
   isAsyncFunctionExpression,
   isAsyncGeneratorDeclaration,
+  isAsyncGeneratorExpression,
   isBindingIdentifier,
   isForBinding,
   isFunctionDeclaration,
@@ -97,6 +99,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     case 'ConciseBody_FunctionBody':
     case 'AsyncConciseBody_AsyncFunctionBody':
     case 'AsyncConciseBody_AssignmentExpression':
+    case 'AsyncGeneratorBody':
       varNames = VarDeclaredNames_ConciseBody(code.body).map(Value);
       varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
       lexicalNames = LexicallyDeclaredNames_ConciseBody(code.body).map(Value);
@@ -239,6 +242,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexDeclarations = LexicallyScopedDeclarations_GeneratorBody(code.body.body);
       break;
     case 'AsyncFunctionBody':
+    case 'AsyncGeneratorBody':
       lexDeclarations = LexicallyScopedDeclarations_AsyncFunctionBody(code.body.body);
       break;
     default:
@@ -294,6 +298,10 @@ export function getFunctionBodyType(ECMAScriptCode) {
       || isAsyncFunctionExpression(ECMAScriptCode):
       return 'AsyncFunctionBody';
 
+    case isAsyncGeneratorDeclaration(ECMAScriptCode)
+      || isAsyncGeneratorExpression(ECMAScriptCode):
+      return 'AsyncGeneratorBody';
+
     default:
       throw outOfRange('getFunctionBodyType', ECMAScriptCode);
   }
@@ -348,4 +356,15 @@ export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentEx
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
   return new Completion('return', promiseCapability.Promise, undefined);
+}
+
+export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
+  Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
+  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorPrototype%', [
+    'AsyncGeneratorState',
+    'AsyncGeneratorContext',
+    'AsyncGeneratorQueue',
+  ]));
+  X(AsyncGeneratorStart(generator, FunctionBody));
+  return new Completion('return', generator, undefined);
 }

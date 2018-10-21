@@ -12,6 +12,7 @@ import {
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
+import { Resume } from '../helpers.mjs';
 
 // 25.4.3.1 #sec-generatorstart
 export function GeneratorStart(generator, generatorBody) {
@@ -69,10 +70,10 @@ export function GeneratorResume(generator, value) {
   // Suspend methodContext.
   generator.GeneratorState = 'executing';
   surroundingAgent.executionContextStack.push(genContext);
-  const iter = genContext.codeEvaluationState.next(new NormalCompletion(value));
+  const result = Resume(genContext, new NormalCompletion(value));
   Assert(surroundingAgent.runningExecutionContext === methodContext);
   Assert(surroundingAgent.executionContextStack.length === originalStackLength);
-  return Completion(iter.value);
+  return Completion(result);
 }
 
 // 25.4.3.4 #sec-generatorresumeabrupt
@@ -97,10 +98,10 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   // Suspend methodContext.
   generator.GeneratorState = 'executing';
   surroundingAgent.executionContextStack.push(genContext);
-  const { value } = genContext.codeEvaluationState.next(abruptCompletion);
+  const result = Resume(genContext, abruptCompletion);
   Assert(surroundingAgent.runningExecutionContext === methodContext);
   Assert(surroundingAgent.executionContextStack.length === originalStackLength);
-  return Completion(value);
+  return Completion(result);
 }
 
 // 25.4.3.5 #sec-getgeneratorkind
