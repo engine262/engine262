@@ -31,6 +31,9 @@ export class Agent {
     this.jobQueue = [];
 
     this.hostDefinedOptions = options;
+    if (!options.flags) {
+      options.flags = [];
+    }
   }
 
   get isStrictCode() {

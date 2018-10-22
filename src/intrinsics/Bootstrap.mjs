@@ -11,11 +11,17 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
+
+const kFlagDisabled = Symbol('kFlagDisabled');
 
 export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
   const proto = ObjectCreate(Prototype);
 
   for (const [n, v, len, descriptor] of props) {
+    if (n === kFlagDisabled) {
+      continue;
+    }
     let value;
     const name = n instanceof Value ? n : new Value(n);
     if (typeof v === 'function') {
@@ -68,6 +74,9 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
   }));
 
   for (const [n, v, len] of props) {
+    if (n === kFlagDisabled) {
+      continue;
+    }
     let value;
     const name = n instanceof Value ? n : new Value(n); // eslint-disable-line no-shadow
     if (typeof v === 'function') {
@@ -86,4 +95,11 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
   }
 
   return cons;
+}
+
+export function FlaggedFeature(name, ...args) {
+  if (surroundingAgent.hostDefinedOptions.flags.includes(name)) {
+    return args;
+  }
+  return [kFlagDisabled];
 }

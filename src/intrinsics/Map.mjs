@@ -24,7 +24,7 @@ import {
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function AddEntriesFromIterable(target, iterable, adder) {
+export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }

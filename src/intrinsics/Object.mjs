@@ -6,6 +6,9 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  Assert,
+  CreateBuiltinFunction,
+  CreateDataPropertyOrThrow,
   CreateArrayFromList,
   CreateDataProperty,
   DefinePropertyOrThrow,
@@ -25,7 +28,8 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { AddEntriesFromIterable } from './Map.mjs';
+import { BootstrapConstructor, FlaggedFeature } from './Bootstrap.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
   if (Type(NewTarget) !== 'Undefined'
@@ -276,6 +280,25 @@ export function CreateObject(realmRec) {
     ['seal', Object_seal, 1],
     ['setPrototypeOf', Object_setPrototypeOf, 2],
     ['values', Object_values, 1],
+    FlaggedFeature(
+      'Object.fromEntries',
+      'fromEntries',
+      function Object_fromEntries([iterable]) { // eslint-disable-line prefer-arrow-callback
+        Q(RequireObjectCoercible(iterable));
+        const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+        Assert(obj.Extensible === Value.true && obj.properties.size === 0);
+        const stepsDefine = function CreateDataPropertyOnObjectFunctions([key, value], { thisValue }) {
+          const O = thisValue;
+          Assert(Type(O) === 'Object');
+          Assert(O.Extensible === Value.true);
+          const propertyKey = Q(ToPropertyKey(key));
+          X(CreateDataPropertyOrThrow(O, propertyKey, value));
+        };
+        const adder = CreateBuiltinFunction(stepsDefine, []);
+        return Q(AddEntriesFromIterable(obj, iterable, adder));
+      },
+      1,
+    ),
   ]);
 
   realmRec.Intrinsics['%Object%'] = objectConstructor;
