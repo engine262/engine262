@@ -45,7 +45,6 @@ import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
 import { CreateMap } from './intrinsics/Map.mjs';
 import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
 import { CreateSet } from './intrinsics/Set.mjs';
-import { CreateFunctionProperties } from './intrinsics/functionProperties.mjs';
 import { CreateGenerator } from './intrinsics/Generator.mjs';
 import { CreateGeneratorFunction } from './intrinsics/GeneratorFunction.mjs';
 import { CreateGeneratorPrototype } from './intrinsics/GeneratorPrototype.mjs';
@@ -59,6 +58,8 @@ import { CreateArrayBuffer } from './intrinsics/ArrayBuffer.mjs';
 import { CreateArrayBufferPrototype } from './intrinsics/ArrayBufferPrototype.mjs';
 import { CreateJSON } from './intrinsics/JSON.mjs';
 import { CreateEval } from './intrinsics/eval.mjs';
+import { CreateIsFinite } from './intrinsics/isFinite.mjs';
+import { CreateIsNaN } from './intrinsics/isNaN.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -175,8 +176,6 @@ export function CreateIntrinsics(realmRec) {
   CreateMapPrototype(realmRec);
   CreateMap(realmRec);
 
-  CreateFunctionProperties(realmRec);
-
   CreateGeneratorPrototype(realmRec);
   CreateGenerator(realmRec);
   CreateGeneratorFunction(realmRec);
@@ -196,6 +195,8 @@ export function CreateIntrinsics(realmRec) {
   CreateJSON(realmRec);
 
   CreateEval(realmRec);
+  CreateIsFinite(realmRec);
+  CreateIsNaN(realmRec);
 
   return intrinsics;
 }
@@ -241,12 +242,12 @@ export function SetDefaultGlobalBindings(realmRec) {
     'eval',
     'isFinite',
     'isNaN',
-    'parseFloat',
-    'parseInt',
-    'decodeURI',
-    'decodeURIComponent',
-    'encodeURI',
-    'encodeURIComponent',
+    // 'parseFloat',
+    // 'parseInt',
+    // 'decodeURI',
+    // 'decodeURIComponent',
+    // 'encodeURI',
+    // 'encodeURIComponent',
 
     // Constructor Properties of the Global Object
     'Array',
