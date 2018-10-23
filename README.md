@@ -8,7 +8,6 @@ Goals
 
 Non-Goals
 - Speed
-- Security
 
 Join us on [#engine262 on freenode](https://webchat.freenode.net/?channels=engine262)
 
@@ -17,7 +16,9 @@ Join us on [#engine262 on freenode](https://webchat.freenode.net/?channels=engin
 `$ npm run build`
 
 ```js
-import { Realm, initializeAgent } from './lib/api.mjs';
+'use strict';
+
+const { Realm, initializeAgent } = require('engine262');
 
 initializeAgent({
   // onDebugger() {},
@@ -33,8 +34,6 @@ realm.evaluateScript(`
 print(1 + 1); // prints "2" to the console
 `);
 ```
-
-`$ node --experimental-modules yourfile.mjs`
 
 ### How Completions Work
 
