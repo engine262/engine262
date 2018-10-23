@@ -10,6 +10,8 @@ Non-Goals
 - Speed
 - Security
 
+Join us on [#engine262 on freenode](https://webchat.freenode.net/?channels=engine262)
+
 ### Using engine262
 
 `$ npm run build`
