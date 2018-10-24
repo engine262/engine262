@@ -30,6 +30,7 @@ import {
   ToBoolean,
   ToPropertyDescriptor,
   ToUint32,
+  ToInteger,
   isArrayIndex,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
@@ -333,21 +334,38 @@ export class StringExoticObjectValue extends ObjectValue {
     const keys = [];
     const str = O.StringData.stringValue();
     const len = str.length;
+
     for (let i = 0; i < len; i += 1) {
       keys.push(new Value(`${i}`));
     }
-    for (const key of O.properties.keys()) {
-      if (Type(key) === 'String') {
-        const int = Number.parseInt(key.stringValue(), 10);
-        if (int > 0 && int < (2 ** 53) - 1) {
-          // keys.push(key);
-        } else {
-          keys.push(key);
-        }
-      } else if (Type(key) === 'Symbol') {
-        keys.push(key);
+
+    // For each own property key P of O such that P is an array index and
+    // ToInteger(P) ≥ len, in ascending numeric index order, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      if (isArrayIndex(P) && X(ToInteger(P)).numberValue() >= len) {
+        keys.push(P);
       }
     }
+
+    // For each own property key P of O such that Type(P) is String and
+    // P is not an array index, in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'String' && isArrayIndex(P) === false) {
+        keys.push(P);
+      }
+    }
+
+    // For each own property key P of O such that Type(P) is Symbol,
+    // in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'Symbol') {
+        keys.push(P);
+      }
+    }
+
     return keys;
   }
 }

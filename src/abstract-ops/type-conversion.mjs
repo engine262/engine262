@@ -131,7 +131,7 @@ export function ToNumber(argument) {
       // FIXME(devsnek): https://tc39.github.io/ecma262/#sec-runtime-semantics-mv-s
       return new Value(+(argument.stringValue()));
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'Can not convert a Symbol value to a number');
     case 'Object': {
       const primValue = Q(ToPrimitive(argument, 'Number'));
       return Q(ToNumber(primValue));
