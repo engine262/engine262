@@ -25,3 +25,4 @@ export * from './IsInTailPosition.mjs';
 export * from './NonConstructorMethodDefinitions.mjs';
 export * from './ConstructorMethod.mjs';
 export * from './TemplateStrings.mjs';
+export * from './UTF16Decode.mjs';
