@@ -36,11 +36,6 @@ export class Agent {
     }
   }
 
-  get isStrictCode() {
-    // TODO(strict)
-    return true;
-  }
-
   get runningExecutionContext() {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }

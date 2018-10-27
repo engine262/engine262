@@ -72,9 +72,7 @@ export function* Evaluate_CallExpression(CallExpression) {
         return Value.undefined;
       }
       const evalText = argList[0];
-      // If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
-      // TODO(strict)
-      const strictCaller = true;
+      const strictCaller = CallExpression.strict;
       const evalRealm = surroundingAgent.currentRealmRecord;
       Q(HostEnsureCanCompileStrings(evalRealm, evalRealm));
       return Q(PerformEval(evalText, evalRealm, strictCaller, true));

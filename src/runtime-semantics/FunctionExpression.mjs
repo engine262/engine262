@@ -1,6 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   isFunctionExpressionWithBindingIdentifier,
+  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import {
   FunctionCreate,
@@ -17,7 +18,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   } = FunctionExpression;
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = true;
+  const strict = directivePrologueContainsUseStrictDirective(FunctionExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
@@ -39,7 +40,7 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = true;
+  const strict = directivePrologueContainsUseStrictDirective(FunctionExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, scope, strict);
   MakeConstructor(closure);

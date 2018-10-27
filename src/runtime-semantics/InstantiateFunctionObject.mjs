@@ -13,6 +13,7 @@ import {
   isFunctionDeclaration,
   isGeneratorDeclaration,
   isAsyncGeneratorDeclaration,
+  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -28,9 +29,9 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
     id: BindingIdentifier,
     params: FormalParameters,
   } = FunctionDeclaration;
-  const strict = true; // TODO(IsStrict)
+  const strict = directivePrologueContainsUseStrictDirective(FunctionDeclaration.body.body);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict);
+  const F = X(FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict));
   MakeConstructor(F);
   SetFunctionName(F, name);
   return F;
@@ -45,7 +46,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     id: BindingIdentifier,
     params: FormalParameters,
   } = GeneratorDeclaration;
-  const strict = true; // TODO(IsStrict)
+  const strict = directivePrologueContainsUseStrictDirective(GeneratorDeclaration.body.body);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorDeclaration, scope, strict));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%')));
@@ -64,7 +65,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncFunctionDeclaration;
-  const strict = true; // TODO(IsStrict)
+  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionDeclaration.body.body);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope, strict));
   SetFunctionName(F, name);
@@ -76,7 +77,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorDeclaration;
-  const strict = true; // TODO(IsStrict)
+  const strict = directivePrologueContainsUseStrictDirective(AsyncGeneratorDeclaration.body.body);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope, strict));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));

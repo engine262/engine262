@@ -8,5 +8,5 @@ import { Q } from '../completion.mjs';
 //   yield
 //   await
 export function Evaluate_Identifier(Identifier) {
-  return Q(ResolveBinding(new Value(Identifier.name)));
+  return Q(ResolveBinding(new Value(Identifier.name), undefined, Identifier.strict));
 }

@@ -33,9 +33,9 @@ import { outOfRange } from '../helpers.mjs';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
-  const { id: BindingIdentifier, init: Initializer } = LexicalBinding;
+  const { id: BindingIdentifier, init: Initializer, strict } = LexicalBinding;
   const bindingId = new Value(BindingIdentifier.name);
-  const lhs = X(ResolveBinding(bindingId));
+  const lhs = X(ResolveBinding(bindingId, undefined, strict));
 
   if (Initializer) {
     const rhs = yield* Evaluate_Expression(Initializer);

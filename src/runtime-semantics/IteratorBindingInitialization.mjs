@@ -156,7 +156,7 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
       throw outOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
   const bindingId = new Value(BindingIdentifier.name);
-  const lhs = Q(ResolveBinding(bindingId, environment));
+  const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
   let v;
   if (iteratorRecord.Done === Value.false) {
     const next = IteratorStep(iteratorRecord);
@@ -236,7 +236,7 @@ function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorR
 //   BindingRestElement : `...` BindingIdentifier
 function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment) {
   const BindingIdentifier = BindingRestElement.argument;
-  const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment));
+  const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment, BindingIdentifier.strict));
   const A = X(ArrayCreate(new Value(0)));
   let n = 0;
   while (true) {

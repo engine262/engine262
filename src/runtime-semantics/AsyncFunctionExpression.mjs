@@ -1,5 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
-import { isAsyncFunctionExpressionWithBindingIdentifier } from '../ast.mjs';
+import {
+  isAsyncFunctionExpressionWithBindingIdentifier,
+  directivePrologueContainsUseStrictDirective,
+} from '../ast.mjs';
 import { AsyncFunctionCreate, SetFunctionName } from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
@@ -13,7 +16,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = true;
+  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
@@ -35,7 +38,7 @@ export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = true;
+  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope, strict));
   return closure;

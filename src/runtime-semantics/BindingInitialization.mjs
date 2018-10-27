@@ -36,7 +36,7 @@ export function InitializeBoundName(name, value, environment) {
     env.InitializeBinding(name, value);
     return new NormalCompletion(Value.undefined);
   } else {
-    const lhs = ResolveBinding(name);
+    const lhs = ResolveBinding(name, undefined, false);
     return Q(PutValue(lhs, value));
   }
 }

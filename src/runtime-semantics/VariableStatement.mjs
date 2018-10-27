@@ -34,7 +34,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
         init: Initializer,
       } = VariableDeclaration;
       const bindingId = new Value(BindingIdentifier.name);
-      const lhs = Q(ResolveBinding(bindingId));
+      const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
       const rhs = yield* Evaluate_Expression(Initializer);
       const value = Q(GetValue(rhs));
       if (IsAnonymousFunctionDefinition(Initializer)) {

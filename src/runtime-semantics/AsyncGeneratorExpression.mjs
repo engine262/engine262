@@ -4,6 +4,7 @@ import {
   ObjectCreate,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
+import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
@@ -18,7 +19,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorExpression;
-  const strict = true; // TODO(IsStrict)
+  const strict = directivePrologueContainsUseStrictDirective(AsyncGeneratorExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let funcEnv = scope;
   let envRec;

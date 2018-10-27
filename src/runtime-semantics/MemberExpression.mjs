@@ -1,7 +1,4 @@
 import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
   isActualMemberExpressionWithBrackets,
   isActualMemberExpressionWithDot,
 } from '../ast.mjs';
@@ -28,7 +25,7 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
-  const strict = surroundingAgent.isStrictCode;
+  const strict = MemberExpression.strict;
   return new Reference(bv, propertyKey, strict ? Value.true : Value.false);
 }
 
@@ -40,7 +37,7 @@ function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierN
   const baseValue = Q(GetValue(baseReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = new Value(IdentifierName.name);
-  const strict = Value.true; // TODO(IsStrict)
+  const strict = MemberExpression.strict;
   return new Reference(bv, propertyNameString, strict);
 }
 

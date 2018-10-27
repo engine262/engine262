@@ -4,6 +4,11 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options, source) {
     super({ ...options, ecmaVersion: 2019 }, source);
   }
+
+  finishNode(node, type) {
+    node.strict = this.strict;
+    return super.finishNode(node, type);
+  }
 });
 
 function deepFreeze(obj) {

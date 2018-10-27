@@ -183,7 +183,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
     }
 
     const P = IdentifierReference.name;
-    const lref = Q(ResolveBinding(P));
+    const lref = Q(ResolveBinding(P, undefined, IdentifierReference.strict));
     let v = Q(GetV(value, P));
     if (Initializer !== undefined && Type(v) === 'Undefined') {
       const defaultValue = yield* Evaluate_Expression(Initializer);

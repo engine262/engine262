@@ -25,12 +25,11 @@ export function GetActiveScriptOrModule() {
 }
 
 // 8.3.2 #sec-resolvebinding
-export function ResolveBinding(name, env) {
+export function ResolveBinding(name, env, strict) {
   if (!env || Type(env) === 'Undefined') {
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
   Assert(env instanceof LexicalEnvironment);
-  const strict = surroundingAgent.isStrictCode;
   return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 

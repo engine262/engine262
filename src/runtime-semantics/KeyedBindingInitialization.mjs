@@ -81,7 +81,7 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
   }
 
   const bindingId = new Value(BindingIdentifier.name);
-  const lhs = Q(ResolveBinding(bindingId, environment));
+  const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
     const defaultValue = yield* Evaluate_Expression(Initializer);

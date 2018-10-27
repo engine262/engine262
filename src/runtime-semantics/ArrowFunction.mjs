@@ -5,8 +5,7 @@ import {
 import { FunctionCreate } from '../abstract-ops/all.mjs';
 
 export function Evaluate_ArrowFunction(ArrowFunction) {
-  const { params: ArrowParameters } = ArrowFunction;
-  const strict = true; // TODO(IsStrict)
+  const { params: ArrowParameters, strict } = ArrowFunction;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const parameters = ArrowParameters;
   const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope, strict);

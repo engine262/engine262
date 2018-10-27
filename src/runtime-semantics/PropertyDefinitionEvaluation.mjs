@@ -10,6 +10,7 @@ import {
   isPropertyDefinitionIdentifierReference,
   isPropertyDefinitionKeyValue,
   isPropertyDefinitionSpread,
+  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import {
   Assert,
@@ -135,7 +136,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = true;
+      const strict = directivePrologueContainsUseStrictDirective(MethodDefinition.value.body.body);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const formalParameterList = [];
       const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
@@ -156,7 +157,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = true;
+      const strict = directivePrologueContainsUseStrictDirective(MethodDefinition.value.body.body);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
       X(MakeMethod(closure, object));
@@ -188,10 +189,9 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   } = GeneratorMethod;
   const UniqueFormalParameters = GeneratorExpression.params;
 
+  const strict = directivePrologueContainsUseStrictDirective(GeneratorExpression.body.body);
   const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
-  // TODO(IsStrict)
-  const strict = true;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope, strict));
   MakeMethod(closure, object);

@@ -15,7 +15,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   Assert(env.HasSuperBinding() === Value.true);
   const baseValue = Q(env.GetSuperBase());
   const bv = Q(RequireObjectCoercible(baseValue));
-  return new SuperReference(bv, propertyKey, actualThis, strict);
+  return new SuperReference(bv, propertyKey, actualThis, strict ? Value.true : Value.false);
 }
 
 // #sec-super-keyword-runtime-semantics-evaluation
@@ -31,7 +31,7 @@ export function* Evaluate_SuperProperty(SuperProperty) {
     const propertyNameReference = yield* Evaluate_Expression(Expression);
     const propertyNameValue = Q(GetValue(propertyNameReference));
     const propertyKey = Q(ToPropertyKey(propertyNameValue));
-    const strict = true; // TODO(strict)
+    const strict = SuperProperty.strict;
     return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
   } else {
     const IdentifierName = SuperProperty.property;
@@ -39,7 +39,7 @@ export function* Evaluate_SuperProperty(SuperProperty) {
     const env = GetThisEnvironment();
     const actualThis = Q(env.GetThisBinding());
     const propertyKey = new Value(IdentifierName.name);
-    const strict = true; // TODO(strict)
+    const strict = SuperProperty.strict;
     return Q(MakeSuperPropertyReference(actualThis, propertyKey, strict));
   }
 }

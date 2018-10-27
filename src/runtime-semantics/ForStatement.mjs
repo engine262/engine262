@@ -170,7 +170,7 @@ function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
 }
 
 // 13.7.5.13 #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind = 'sync') {
+function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind = 'sync', strict) {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let V = Value.undefined;
   const destructuring = lhs.type === 'VariableDeclaration'
@@ -209,7 +209,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         const lhsNames = BoundNames_ForDeclaration(lhs);
         Assert(lhsNames.length === 1);
         const lhsName = new Value(lhsNames[0]);
-        lhsRef = X(ResolveBinding(lhsName));
+        lhsRef = X(ResolveBinding(lhsName, undefined, strict));
       }
     }
     let status;
@@ -375,9 +375,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         left: LeftHandSideExpression,
         right: Expression,
         body: Statement,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet, 'sync', strict));
     }
 
     case isForInStatementWithVarForBinding(IterationStatement): {
@@ -387,9 +388,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         },
         right: Expression,
         body: Statement,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet, 'sync', strict));
     }
 
     case isForInStatementWithForDeclaration(IterationStatement): {
@@ -397,9 +399,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         left: ForDeclaration,
         right: Expression,
         body: Statement,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), Expression, 'enumerate'));
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet, 'sync', strict));
     }
 
     case isForOfStatementWithExpression(IterationStatement): {
@@ -408,9 +411,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
         await: isAwait,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, isAwait ? 'async' : 'sync'));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, isAwait ? 'async' : 'sync', strict));
     }
 
     case isForOfStatementWithVarForBinding(IterationStatement): {
@@ -421,9 +425,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
         await: isAwait,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, isAwait ? 'async' : 'sync'));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, isAwait ? 'async' : 'sync', strict));
     }
 
     case isForOfStatementWithForDeclaration(IterationStatement): {
@@ -432,9 +437,10 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         right: AssignmentExpression,
         body: Statement,
         await: isAwait,
+        strict,
       } = IterationStatement;
       const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames_ForDeclaration(ForDeclaration).map(Value), AssignmentExpression, isAwait ? 'async-iterate' : 'iterate'));
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, isAwait ? 'async' : 'sync'));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, isAwait ? 'async' : 'sync', strict));
     }
 
     default:
