@@ -31,7 +31,19 @@ const realm = new Realm();
 realm.evaluateScript(`
 'use strict';
 
-print(1 + 1); // prints "2" to the console
+async function* numbers() {
+  let i = 0;
+  while (true) {
+    const n = await Promise.resolve(i++);
+    yield n;
+  }
+}
+
+(async () => {
+  for await (const item of numbers()) {
+    print(item);
+  }
+})();
 `);
 ```
 
