@@ -90,3 +90,11 @@ if (a instanceof Completion) {
   a = a.Value;
 }
 ```
+
+### Related Projects
+
+- https://github.com/facebook/prepack
+- https://github.com/mozilla/narcissus
+- https://github.com/NeilFraser/JS-Interpreter
+- https://github.com/metaes/metaes
+- https://github.com/Siubaak/sval
