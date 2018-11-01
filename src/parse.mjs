@@ -11,15 +11,18 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   }
 });
 
-function deepFreeze(obj) {
-  // Assume that the object we want to freeze doesn't have cycles or
-  // un-stringifyable parts.
-  return JSON.parse(JSON.stringify(obj), (key, value) => {
-    if (Object(value) === value) {
-      Object.freeze(value);
+const HasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
+function deepFreeze(o) {
+  Object.freeze(o);
+  Object.getOwnPropertyNames(o).forEach((prop) => {
+    if (HasOwnProperty(o, prop)
+        && o[prop] !== null
+        && (typeof o[prop] === 'object' || typeof o[prop] === 'function')
+        && !Object.isFrozen(o[prop])) {
+      deepFreeze(o[prop]);
     }
-    return value;
   });
+  return o;
 }
 
 // Copied from acorn/src/scopeflags.js.

@@ -130,8 +130,8 @@ function FunctionProto_toString(args, { thisValue: func }) {
     }
     return new Value('function() { [native code] }');
   }
-  if (func.FunctionKind !== 'classConstructor' || !('ECMAScriptCode' in func)) {
-    return surroundingAgent.Throw('TypeError');
+  if (func.FunctionKind !== 'classConstructor' && !('ECMAScriptCode' in func)) {
+    return surroundingAgent.Throw('TypeError', 'Function.prototype.toString called on incompatible reciever');
   }
   const scriptCtx = [...surroundingAgent.executionContextStack]
     .reverse()
