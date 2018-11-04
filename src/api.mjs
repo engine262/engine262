@@ -9,6 +9,7 @@ import {
   surroundingAgent,
   setSurroundingAgent,
   Agent,
+  HostReportErrors,
 } from './engine.mjs';
 import { Descriptor, Type, Value } from './value.mjs';
 import { ParseScript } from './parse.mjs';
@@ -22,7 +23,7 @@ import {
 import * as AbstractOps from './abstract-ops/all.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
-const { ObjectCreate, CreateBuiltinFunction } = Abstract;
+const { ObjectCreate, CreateBuiltinFunction, Assert } = Abstract;
 export {
   AbruptCompletion,
   NormalCompletion,
@@ -33,6 +34,26 @@ export {
 export function initializeAgent(options = {}) {
   const agent = new Agent(options);
   setSurroundingAgent(agent);
+}
+
+function runJobQueue() {
+  while (true) { // eslint-disable-line no-constant-condition
+    const nextQueue = surroundingAgent.jobQueue;
+    if (nextQueue.length === 0) {
+      break;
+    }
+    const nextPending = nextQueue.shift();
+    const newContext = new ExecutionContext();
+    newContext.Function = Value.null;
+    newContext.Realm = nextPending.Realm;
+    newContext.ScriptOrModule = nextPending.ScriptOrModule;
+    surroundingAgent.executionContextStack.push(newContext);
+    const result = nextPending.Job(...nextPending.Arguments);
+    surroundingAgent.executionContextStack.pop();
+    if (result instanceof AbruptCompletion) {
+      HostReportErrors(result.Value);
+    }
+  }
 }
 
 class APIRealm {
@@ -65,56 +86,45 @@ class APIRealm {
       Configurable: Value.true,
     }));
 
+    Assert(surroundingAgent.runningExecutionContext === newContext);
     surroundingAgent.executionContextStack.pop();
 
     this.global = globalObj;
     this.realm = realm;
     this.context = newContext;
     this.agent = surroundingAgent;
+
+    this.active = false;
   }
 
   evaluateScript(sourceText) {
+    return this.scope(() => {
+      // BEGIN ScriptEvaluationJob
+      const realm = surroundingAgent.currentRealmRecord;
+      const s = ParseScript(sourceText, realm, undefined);
+      if (Array.isArray(s)) {
+        return new ThrowCompletion(s[0]);
+      }
+      // END ScriptEvaluationJob
+
+      const res = ScriptEvaluation(s);
+
+      runJobQueue();
+
+      return res;
+    });
+  }
+
+  scope(cb) {
+    if (this.active) {
+      return cb();
+    }
+    this.active = true;
     surroundingAgent.executionContextStack.push(this.context);
-
-    const callerContext = surroundingAgent.runningExecutionContext;
-    const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = callerContext.ScriptOrModule;
-
-    const newContext = new ExecutionContext();
-    newContext.Function = Value.null;
-    newContext.Realm = callerRealm;
-    newContext.ScriptOrModule = callerScriptOrModule;
-
-    surroundingAgent.executionContextStack.push(newContext);
-
-    const realm = this.realm;
-    const s = ParseScript(sourceText, realm, undefined);
-    if (Array.isArray(s)) {
-      return new ThrowCompletion(s[0]);
-    }
-    const res = ScriptEvaluation(s);
-
-    while (true) { // eslint-disable-line no-constant-condition
-      const nextQueue = surroundingAgent.jobQueue;
-      if (nextQueue.length === 0) {
-        break;
-      }
-      const nextPending = nextQueue.shift();
-      const newContext = new ExecutionContext(); // eslint-disable-line no-shadow
-      newContext.Function = Value.null;
-      newContext.Realm = nextPending.Realm;
-      newContext.ScriptOrModule = nextPending.ScriptOrModule;
-      surroundingAgent.executionContextStack.push(newContext);
-      const result = nextPending.Job(...nextPending.Arguments);
-      surroundingAgent.executionContextStack.pop();
-      if (result instanceof AbruptCompletion) {
-        return result;
-      }
-    }
-
+    const res = cb();
+    Assert(surroundingAgent.runningExecutionContext === this.context);
     surroundingAgent.executionContextStack.pop();
-    surroundingAgent.executionContextStack.pop();
-
+    this.active = false;
     return res;
   }
 }
