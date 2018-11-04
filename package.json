@@ -6,6 +6,9 @@
   "dependencies": {
     "acorn": "^6.0.2"
   },
+  "bin": {
+    "engine262": "repl.js"
+  },
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/plugin-syntax-object-rest-spread": "^7.0.0",

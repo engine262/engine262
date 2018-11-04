@@ -21,6 +21,7 @@ import {
   ThrowCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
+import { outOfRange } from './helpers.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const { ObjectCreate, CreateBuiltinFunction, Assert } = Abstract;
@@ -161,8 +162,13 @@ export {
 };
 
 export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quote = true, indent = 0) {
+  if (realm instanceof APIRealm) {
+    realm = realm.realm;
+  }
   const type = Type(value);
-  if (type === 'Undefined') {
+  if (type === 'Completion') {
+    return Inspect(value.Value, realm, quote, indent);
+  } else if (type === 'Undefined') {
     return 'undefined';
   } else if (type === 'Null') {
     return 'null';
@@ -219,5 +225,5 @@ export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quot
       }
     }
   }
-  throw new RangeError();
+  throw outOfRange('Inspect', type);
 }
