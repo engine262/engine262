@@ -20,6 +20,7 @@ import {
   IsGenericDescriptor,
   IsPropertyKey,
   SameValue,
+  isArrayIndex,
 } from './all.mjs';
 import {
   InstanceofOperator,
@@ -334,33 +335,32 @@ export function OrdinaryDelete(O, P) {
 export function OrdinaryOwnPropertyKeys(O) {
   const keys = [];
 
-  const integerIndexes = [];
-  const strings = [];
-  const symbols = [];
-  for (const key of O.properties.keys()) {
-    if (Type(key) === 'String') {
-      const int = Number.parseInt(key.stringValue(), 10);
-      if (int >= 0 && int < (2 ** 53) - 1) {
-        integerIndexes.push(key);
-      } else {
-        strings.push(key);
-      }
-    } else if (Type(key) === 'Symbol') {
-      symbols.push(key);
+  // For each own property key P of O that is an array index, in ascending numeric index order, do
+  //   Add P as the last element of keys.
+  for (const P of O.properties.keys()) {
+    if (isArrayIndex(P)) {
+      keys.push(P);
+    }
+  }
+  keys.sort((a, b) => Number.parseInt(a.stringValue(), 10) - Number.parseInt(b.stringValue(), 10));
+
+  // For each own property key P of O such that Type(P) is String and
+  // P is not an array index, in ascending chronological order of property creation, do
+  //   Add P as the last element of keys.
+  for (const P of O.properties.keys()) {
+    if (Type(P) === 'String' && isArrayIndex(P) === false) {
+      keys.push(P);
     }
   }
 
-  integerIndexes.forEach((P) => {
-    keys.push(P);
-  });
-
-  strings.forEach((P) => {
-    keys.push(P);
-  });
-
-  symbols.forEach((P) => {
-    keys.push(P);
-  });
+  // For each own property key P of O such that Type(P) is Symbol,
+  // in ascending chronological order of property creation, do
+  //   Add P as the last element of keys.
+  for (const P of O.properties.keys()) {
+    if (Type(P) === 'Symbol') {
+      keys.push(P);
+    }
+  }
 
   return keys;
 }
