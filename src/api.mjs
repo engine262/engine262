@@ -191,8 +191,11 @@ export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quot
     const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
     const toString = Q(AbstractOps.Get(value, new Value('toString')));
     if (toString.nativeFunction === errorToString.nativeFunction) {
-      const e = Q(toString.Call(value, [])).stringValue();
-      return `${e}\n${value.hostTrace}`;
+      let e = Q(AbstractOps.Get(value, new Value('stack')));
+      if (!e.stringValue) {
+        e = Q(AbstractOps.Call(toString, value));
+      }
+      return `${e.stringValue()}\n${value.hostTrace || ''}`.trim();
     }
     try {
       const keys = Q(value.OwnPropertyKeys());

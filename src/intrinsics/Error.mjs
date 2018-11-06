@@ -11,6 +11,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
+import { captureStack } from '../helpers.mjs';
 
 function ErrorConstructor([message], { NewTarget }) {
   let newTarget;
@@ -30,6 +31,9 @@ function ErrorConstructor([message], { NewTarget }) {
     });
     X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }
+
+  X(captureStack(O)); // non-spec
+
   return O;
 }
 

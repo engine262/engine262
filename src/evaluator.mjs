@@ -126,7 +126,7 @@ import {
 import {
   GetValue,
 } from './abstract-ops/all.mjs';
-import { Unwind, outOfRange } from './helpers.mjs';
+import { unwind, outOfRange } from './helpers.mjs';
 
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
@@ -431,5 +431,5 @@ export function Evaluate_Script(Script) {
   if (Script.length === 0) {
     return new NormalCompletion(undefined);
   }
-  return Unwind(Evaluate_StatementList(Script));
+  return unwind(Evaluate_StatementList(Script));
 }

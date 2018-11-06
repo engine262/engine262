@@ -44,7 +44,7 @@ import {
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { Unwind, outOfRange } from '../helpers.mjs';
+import { unwind, outOfRange } from '../helpers.mjs';
 
 // #sec-SetFunctionName
 export function SetFunctionName(F, name, prefix) {
@@ -123,7 +123,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
 
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  const result = EnsureCompletion(Unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
 
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
@@ -154,7 +154,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   }
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
-  const result = EnsureCompletion(Unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();

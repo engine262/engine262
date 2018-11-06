@@ -1,3 +1,6 @@
+import { surroundingAgent } from './engine.mjs';
+import { Value, Descriptor } from './value.mjs';
+import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 
 export function outOfRange(fn, arg) {
@@ -6,7 +9,7 @@ export function outOfRange(fn, arg) {
   return e;
 }
 
-export function Unwind(iterator, maxSteps = 1) {
+export function unwind(iterator, maxSteps = 1) {
   let steps = 0;
   while (true) {
     const { done, value } = iterator.next('Unwind');
@@ -22,16 +25,40 @@ export function Unwind(iterator, maxSteps = 1) {
 
 const kSafeToResume = Symbol('kSameToResume');
 
-export function HandleInResume(fn, ...args) {
+export function handleInResume(fn, ...args) {
   const bound = () => fn(...args);
   bound[kSafeToResume] = true;
   return bound;
 }
 
-export function Resume(context, completion) {
+export function resume(context, completion) {
   const { value } = context.codeEvaluationState.next(completion);
   if (typeof value === 'function' && value[kSafeToResume] === true) {
     return X(value());
   }
   return value;
+}
+
+export function captureStack(O) {
+  const stack = surroundingAgent.executionContextStack
+    .slice(0, -1) // remove current Error constructor frame
+    .filter((e) => e.Function !== Value.null)
+    .map((e) => {
+      const name = e.Function.properties.get(new Value('name'));
+      if (name) {
+        return `\n  at ${X(ToString(name.Value)).stringValue()}`;
+      }
+      return '\n  at <anonymous>';
+    })
+    .reverse();
+
+  const errorString = X(ToString(O)).stringValue();
+  const trace = `${errorString}${stack.join('')}`;
+
+  X(DefinePropertyOrThrow(O, new Value('stack'), Descriptor({
+    Value: new Value(trace),
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  })));
 }

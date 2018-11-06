@@ -3,7 +3,7 @@ import { EnsureCompletion, Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
-import { Resume } from '../helpers.mjs';
+import { resume } from '../helpers.mjs';
 
 // #sec-async-functions-abstract-operations-async-function-start
 export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
@@ -25,7 +25,7 @@ export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
     return Value.undefined;
   }());
   surroundingAgent.executionContextStack.push(asyncContext);
-  const result = EnsureCompletion(Resume(asyncContext, undefined));
+  const result = EnsureCompletion(resume(asyncContext, undefined));
   Assert(surroundingAgent.runningExecutionContext === runningContext);
   Assert(result.Type === 'normal' && result.Value === Value.undefined);
   return Value.undefined;

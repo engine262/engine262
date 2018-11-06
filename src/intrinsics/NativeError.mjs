@@ -13,6 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
+import { captureStack } from '../helpers.mjs';
 
 export function CreateNativeError(realmRec) {
   for (const name of [
@@ -46,6 +47,9 @@ export function CreateNativeError(realmRec) {
         });
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }
+
+      X(captureStack(O)); // non-spec
+
       return O;
     };
     Object.defineProperty(Constructor, 'name', {
