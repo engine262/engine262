@@ -2,6 +2,7 @@ import { surroundingAgent } from './engine.mjs';
 import { Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
+import { inspect } from './api.mjs';
 
 export function outOfRange(fn, arg) {
   const e = new RangeError(`${fn}() argument out of range`);
@@ -61,4 +62,19 @@ export function captureStack(O) {
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
+}
+
+function inlineInspect(V) {
+  return inspect(V, surroundingAgent.currentRealmRecord, true);
+}
+
+const messages = {
+  NotAFunction: (v) => `${inlineInspect(v)} is not a function`,
+  NotAConstructor: (v) => `${inlineInspect(v)} is not a constructor`,
+  PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
+  PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
+};
+
+export function msg(key, ...args) {
+  return messages[key](...args);
 }

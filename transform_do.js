@@ -14,8 +14,8 @@ module.exports = ({ types: t, template }) => ({
         }
         state.foundCompletion = false;
         state.needCompletion = false;
-        state.foundAssertOrCall = false;
-        state.needAssertOrCall = false;
+        state.foundCall = false;
+        state.needCall = false;
       },
       exit(path, state) {
         if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
@@ -25,10 +25,9 @@ module.exports = ({ types: t, template }) => ({
             t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
           ], t.StringLiteral(r)));
         }
-        if (!state.foundAssertOrCall && state.needAssertOrCall) {
+        if (!state.foundCall && state.needCall) {
           const r = relative(state.file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
           path.node.body.unshift(t.ImportDeclaration([
-            t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
             t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
           ], t.StringLiteral(r)));
         }
@@ -52,12 +51,7 @@ module.exports = ({ types: t, template }) => ({
         if (state.file.opts.filename.endsWith('api.mjs')) {
           return;
         }
-        state.foundAssertOrCall = true;
-        if (!path.node.specifiers.find((s) => s.local.name === 'Assert')) {
-          path.node.specifiers.push(
-            t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
-          );
-        }
+        state.foundCall = true;
         if (!state.file.opts.filename.endsWith('object-operations.mjs')
             && !path.node.specifiers.find((s) => s.local.name === 'Call')) {
           path.node.specifiers.push(
@@ -111,7 +105,7 @@ module.exports = ({ types: t, template }) => ({
         }
       } else if (path.node.callee.name === 'X') {
         state.needCompletion = true;
-        state.needAssertOrCall = true;
+        state.needCall = true;
 
         const [argument] = path.node.arguments;
         const val = path.scope.generateUidIdentifier('val');
@@ -119,7 +113,9 @@ module.exports = ({ types: t, template }) => ({
         path.replaceWith(template(`
         (do {
           const VAL = ARGUMENT;
-          Assert(!(VAL instanceof AbruptCompletion), "!(VAL instanceof AbruptCompletion)");
+          if (VAL instanceof AbruptCompletion) {
+            throw new TypeError('!(VAL instanceof AbruptCompletion)');
+          }
           if (VAL instanceof Completion) {
             VAL.Value;
           } else {
@@ -129,7 +125,7 @@ module.exports = ({ types: t, template }) => ({
         `, { plugins: ['doExpressions'] })({ VAL: val, ARGUMENT: argument }));
       } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
         state.needCompletion = true;
-        state.needAssertOrCall = true;
+        state.needCall = true;
 
         const [value, capability] = path.node.arguments;
 

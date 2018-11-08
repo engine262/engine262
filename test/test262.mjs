@@ -9,7 +9,7 @@ import {
   AbruptCompletion,
   Abstract,
   Completion,
-  Inspect,
+  inspect,
   Realm,
   Value,
   initializeAgent,
@@ -103,7 +103,7 @@ async function run({ source, meta, strict }) {
     if (meta.negative) {
       return { status: PASS };
     } else {
-      return { status: FAIL, error: Inspect(completion.Value, $262.realm.realm) };
+      return { status: FAIL, error: inspect(completion.Value, $262.realm.realm) };
     }
   }
 

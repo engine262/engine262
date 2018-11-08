@@ -10,6 +10,7 @@ import { Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 // #sec-evaluatenew
 function* EvaluateNew(constructExpr, args = []) {
@@ -21,7 +22,7 @@ function* EvaluateNew(constructExpr, args = []) {
   const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (IsConstructor(constructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', constructor));
   }
   return Q(Construct(constructor, argList));
 }

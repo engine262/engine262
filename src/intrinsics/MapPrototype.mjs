@@ -16,6 +16,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function CreateMapIterator(map, kind) {
   if (Type(map) !== 'Object') {
@@ -90,7 +91,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'Map.prototype.entries called on incompatable receiver');
   }
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
   }
   let T;
   if (thisArg !== undefined) {

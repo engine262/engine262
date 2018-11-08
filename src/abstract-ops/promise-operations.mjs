@@ -3,10 +3,7 @@ import {
   HostPromiseRejectionTracker,
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import {
   Assert,
   Call,
@@ -25,6 +22,7 @@ import {
   Q,
   ThrowCompletion,
 } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 export function PromiseResolve(C, x) {
   Assert(Type(C) === 'Object');
@@ -64,7 +62,7 @@ export class PromiseCapabilityRecord {
 
 export function NewPromiseCapability(C) {
   if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
   }
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
@@ -73,10 +71,10 @@ export function NewPromiseCapability(C) {
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Promise resolve function is not callable');
+    return surroundingAgent.Throw('TypeError', msg('PromiseResolveFunction', promiseCapability.Resolve));
   }
   if (IsCallable(promiseCapability.Reject) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Promise reject function is not callable');
+    return surroundingAgent.Throw('TypeError', msg('PromiseRejectFunction', promiseCapability.Reject));
   }
   promiseCapability.Promise = promise;
   return promiseCapability;

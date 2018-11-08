@@ -4,7 +4,7 @@
 
 require('source-map-support/register');
 const repl = require('repl');
-const { initializeAgent, Realm, Inspect } = require('.');
+const { initializeAgent, Realm, inspect } = require('.');
 
 initializeAgent({
   flags: [
@@ -19,8 +19,7 @@ repl.start({
   prompt: '> ',
   eval: (cmd, context, filename, callback) => {
     const result = realm.evaluateScript(cmd);
-    const inspected = Inspect(result, realm);
-    callback(null, inspected);
+    callback(null, result);
   },
-  writer: (o) => o,
+  writer: (o) => inspect(o, realm),
 });

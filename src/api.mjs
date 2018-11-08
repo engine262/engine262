@@ -17,7 +17,7 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q,
+  Q, X,
   ThrowCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
@@ -78,7 +78,7 @@ class APIRealm {
         if (options.handlePrint) {
           Q(options.handlePrint(...args));
         } else {
-          console.log(...args.map((a) => Inspect(a))); // eslint-disable-line no-console
+          console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
         }
         return Value.undefined;
       }, [], realm),
@@ -161,72 +161,87 @@ export {
   APIObject as Object,
 };
 
-export function Inspect(value, realm = surroundingAgent.currentRealmRecord, quote = true, indent = 0) {
+export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact = false) {
   if (realm instanceof APIRealm) {
     realm = realm.realm;
   }
-  const type = Type(value);
-  if (type === 'Completion') {
-    return Inspect(value.Value, realm, quote, indent);
-  } else if (type === 'Undefined') {
-    return 'undefined';
-  } else if (type === 'Null') {
-    return 'null';
-  } else if (type === 'String') {
-    return quote ? `'${value.stringValue()}'` : value.stringValue();
-  } else if (type === 'Number') {
-    return value.numberValue().toString();
-  } else if (type === 'Boolean') {
-    return value.value.toString();
-  } else if (type === 'Symbol') {
-    return `Symbol(${value.Description.stringValue()})`;
-  } else if (type === 'Object') {
-    if ('Call' in value) {
-      const name = value.properties.get(new Value('name'));
-      if (name !== undefined) {
-        return `[Function: ${name.Value.stringValue()}]`;
-      }
-      return '[Function: <anonymous>]';
-    }
-    const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
-    const toString = Q(AbstractOps.Get(value, new Value('toString')));
-    if (toString.nativeFunction === errorToString.nativeFunction) {
-      let e = Q(AbstractOps.Get(value, new Value('stack')));
-      if (!e.stringValue) {
-        e = Q(AbstractOps.Call(toString, value));
-      }
-      return `${e.stringValue()}\n${value.hostTrace || ''}`.trim();
-    }
-    try {
-      const keys = Q(value.OwnPropertyKeys());
-      if (keys.length === 0) {
-        return '{}';
-      }
-      const isArray = AbstractOps.IsArray(value) === Value.true;
-      let out = isArray ? '[' : '{';
-      indent += 1;
-      for (const key of keys) {
-        const C = value.properties.get(key);
-        out = `${out}\n${'  '.repeat(indent)}${Inspect(key, realm, false, indent)}: ${Inspect(C.Value, realm, undefined, indent)},`;
-      }
-      indent -= 1;
-      return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
-    } catch (e) {
-      const objectToString = realm.Intrinsics['%ObjProto_toString%'];
-      if (toString.nativeFunction === objectToString.nativeFunction) {
-        return Q(toString.Call(value, [])).stringValue();
-      } else {
-        const ctor = Q(AbstractOps.Get(value, new Value('constructor')));
-        if (Type(ctor) === 'Object') {
-          const ctorName = Q(AbstractOps.Get(ctor, new Value('name'))).stringValue();
-          if (ctorName !== '') {
-            return `#<${ctorName}>`;
+  let indent = 0;
+  const innerInspect = (value, quote = true) => {
+    const compactObject = (toString) => {
+      try {
+        const objectToString = realm.Intrinsics['%ObjProto_toString%'];
+        if (toString.nativeFunction === objectToString.nativeFunction) {
+          return X(AbstractOps.Call(toString, value, [])).stringValue();
+        } else {
+          const ctor = X(AbstractOps.Get(value, new Value('constructor')));
+          if (Type(ctor) === 'Object') {
+            const ctorName = X(AbstractOps.Get(ctor, new Value('name'))).stringValue();
+            if (ctorName !== '') {
+              return `#<${ctorName}>`;
+            }
+            return '[object Unknown]';
           }
           return '[object Unknown]';
         }
+      } catch (e) {
         return '[object Unknown]';
       }
+    };
+
+    const type = Type(value);
+    if (type === 'Completion') {
+      return innerInspect(value.Value, quote);
+    } else if (type === 'Undefined') {
+      return 'undefined';
+    } else if (type === 'Null') {
+      return 'null';
+    } else if (type === 'String') {
+      return quote ? `'${value.stringValue()}'` : value.stringValue();
+    } else if (type === 'Number') {
+      return value.numberValue().toString();
+    } else if (type === 'Boolean') {
+      return value.value.toString();
+    } else if (type === 'Symbol') {
+      return `Symbol(${value.Description.stringValue()})`;
+    } else if (type === 'Object') {
+      if ('Call' in value) {
+        const name = value.properties.get(new Value('name'));
+        if (name !== undefined) {
+          return `[Function: ${name.Value.stringValue()}]`;
+        }
+        return '[Function: <anonymous>]';
+      }
+      const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
+      const toString = Q(AbstractOps.Get(value, new Value('toString')));
+      if (toString.nativeFunction === errorToString.nativeFunction) {
+        let e = Q(AbstractOps.Get(value, new Value('stack')));
+        if (!e.stringValue) {
+          e = X(AbstractOps.Call(toString, value));
+        }
+        return e.stringValue();
+      }
+      if (compact === true) {
+        return compactObject(toString);
+      }
+      try {
+        const keys = X(value.OwnPropertyKeys());
+        if (keys.length === 0) {
+          return '{}';
+        }
+        const isArray = AbstractOps.IsArray(value) === Value.true;
+        let out = isArray ? '[' : '{';
+        indent += 1;
+        for (const key of keys) {
+          const C = value.properties.get(key);
+          out = `${out}\n${'  '.repeat(indent)}${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
+        }
+        indent -= 1;
+        return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
+      } catch (e) {
+        return compactObject(toString);
+      }
     }
-  }
-  throw outOfRange('Inspect', type);
+    throw outOfRange('inspect', type);
+  };
+  return innerInspect(v);
 }

@@ -36,13 +36,14 @@ import {
   X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function PromiseConstructor([executor], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'value is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
   }
   if (IsCallable(executor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Promise resolver is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', executor));
   }
   const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%PromisePrototype%', [
     'PromiseState',

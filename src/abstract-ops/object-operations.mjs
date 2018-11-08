@@ -26,6 +26,7 @@ import {
   NormalCompletion, Q,
   X,
 } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 // #sec-get-o-p Get
 export function Get(O, P) {
@@ -122,7 +123,7 @@ export function GetMethod(V, P) {
     return Value.undefined;
   }
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
   }
   return func;
 }
@@ -152,7 +153,7 @@ export function Call(F, V, argumentsList) {
   }
 
   if (IsCallable(F) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', F));
   }
 
   return Q(F.Call(V, argumentsList));

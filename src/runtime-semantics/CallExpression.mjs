@@ -22,6 +22,7 @@ import {
 } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { PerformEval } from '../intrinsics/eval.mjs';
+import { msg } from '../helpers.mjs';
 
 export function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
@@ -38,10 +39,10 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   const argList = yield* ArgumentListEvaluation(args);
   ReturnIfAbrupt(argList);
   if (Type(func) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'value is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
   }
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'value is not a function');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
   }
   if (tailPosition) {
     PrepareForTailCall();
