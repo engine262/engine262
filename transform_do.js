@@ -135,16 +135,18 @@ module.exports = ({ types: t, template }) => ({
         const hygenicTemp = path.scope.generateUidIdentifier('hygenicTemp');
 
         path.replaceWith(template(`
-        if (VALUE instanceof AbruptCompletion) {
-          const HYGENIC_TEMP = Call(CAPABILITY.Reject, Value.undefined, [VALUE.Value]);
-          if (HYGENIC_TEMP instanceof AbruptCompletion) {
-            return HYGENIC_TEMP;
+        (do {
+          if (VALUE instanceof AbruptCompletion) {
+            const HYGENIC_TEMP = Call(CAPABILITY.Reject, Value.undefined, [VALUE.Value]);
+            if (HYGENIC_TEMP instanceof AbruptCompletion) {
+              return HYGENIC_TEMP;
+            }
+            return CAPABILITY.Promise;
+          } else if (VALUE instanceof Completion) {
+            VALUE = VALUE.Value;
           }
-          return CAPABILITY.Promise;
-        } else if (VALUE instanceof Completion) {
-          VALUE = VALUE.Value;
-        }
-        `)({ VALUE: value, CAPABILITY: capability, HYGENIC_TEMP: hygenicTemp }));
+        });
+        `, { plugins: ['doExpressions'] })({ VALUE: value, CAPABILITY: capability, HYGENIC_TEMP: hygenicTemp }));
       } else if (path.node.callee.name === 'Assert') {
         path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));
       }

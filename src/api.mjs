@@ -202,7 +202,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     } else if (type === 'Boolean') {
       return value.value.toString();
     } else if (type === 'Symbol') {
-      return `Symbol(${value.Description.stringValue()})`;
+      return `Symbol(${value.Description.stringValue ? value.Description.stringValue() : ''})`;
     } else if (type === 'Object') {
       if ('Call' in value) {
         const name = value.properties.get(new Value('name'));
