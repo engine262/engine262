@@ -220,6 +220,18 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         }
         return e.stringValue();
       }
+      if ('BooleanData' in value) {
+        return `[Boolean: ${innerInspect(value.BooleanData)}]`;
+      }
+      if ('NumberData' in value) {
+        return `[Number: ${innerInspect(value.NumberData)}]`;
+      }
+      if ('StringData' in value) {
+        return `[String: ${innerInspect(value.StringData)}]`;
+      }
+      if ('SymbolData' in value) {
+        return `[Symbol: ${innerInspect(value.SymbolData)}]`;
+      }
       if (compact === true) {
         return compactObject(toString);
       }
