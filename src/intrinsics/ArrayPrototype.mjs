@@ -812,6 +812,7 @@ function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLeng
     Q(Set(O, X(ToString(new Value(k))), E, Value.true));
     k += 1;
   }
+  Q(Set(O, new Value('length'), new Value(len - actualDeleteCount + itemCount), Value.true));
   return A;
 }
 
