@@ -14,7 +14,7 @@ import {
   Type,
   Value,
 } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   const lprim = Q(ToPrimitive(lval));
@@ -68,6 +68,6 @@ export function* Evaluate_AdditiveExpression(AdditiveExpression) {
       );
 
     default:
-      throw outOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
+      throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
   }
 }

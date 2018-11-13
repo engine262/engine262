@@ -42,6 +42,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncGeneratorExpression);
   if (BindingIdentifier) {
     X(SetFunctionName(closure, name));
     envRec.InitializeBinding(name, closure);

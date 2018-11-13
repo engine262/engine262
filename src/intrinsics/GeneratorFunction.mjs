@@ -3,7 +3,7 @@ import { Descriptor, Value } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { CreateDynamicFunction } from './CreateDynamicFunction.mjs';
+import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 
 function GeneratorFunctionConstructor(args, { NewTarget }) {
   const C = surroundingAgent.activeFunctionObject;

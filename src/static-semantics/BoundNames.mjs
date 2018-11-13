@@ -18,7 +18,7 @@ import {
   isObjectBindingPattern,
   isSingleNameBinding,
 } from '../ast.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // 12.1.2 #sec-identifiers-static-semantics-boundnames
 //   BindingIdentifier :
@@ -49,7 +49,7 @@ export function BoundNames_LexicalDeclaration(LexicalDeclaration) {
         names.push(...BoundNames_BindingPattern(declarator.id));
         break;
       default:
-        throw outOfRange('BoundNames_LexicalDeclaration', LexicalDeclaration);
+        throw new OutOfRange('BoundNames_LexicalDeclaration', LexicalDeclaration);
     }
   }
   return names;
@@ -79,7 +79,7 @@ export function BoundNames_VariableDeclaration(VariableDeclaration) {
     case isBindingPattern(VariableDeclaration.id):
       return BoundNames_BindingPattern(VariableDeclaration.id);
     default:
-      throw outOfRange('BoundNames_VariableDeclaration', VariableDeclaration);
+      throw new OutOfRange('BoundNames_VariableDeclaration', VariableDeclaration);
   }
 }
 
@@ -101,7 +101,7 @@ export function BoundNames_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return BoundNames_BindingIdentifier(SingleNameBinding.left);
     default:
-      throw outOfRange('BoundNames_SingleNameBinding', SingleNameBinding);
+      throw new OutOfRange('BoundNames_SingleNameBinding', SingleNameBinding);
   }
 }
 
@@ -121,7 +121,7 @@ export function BoundNames_BindingElement(BindingElement) {
     case isBindingPatternAndInitializer(BindingElement):
       return BoundNames_BindingPattern(BindingElement.left);
     default:
-      throw outOfRange('BoundNames_BindingElement', BindingElement);
+      throw new OutOfRange('BoundNames_BindingElement', BindingElement);
   }
 }
 
@@ -136,7 +136,7 @@ export function BoundNames_BindingRestElement(BindingRestElement) {
     case isBindingPattern(BindingRestElement.argument):
       return BoundNames_BindingPattern(BindingRestElement.argument);
     default:
-      throw outOfRange('BoundNames_BindingRestElement argument', BindingRestElement.argument);
+      throw new OutOfRange('BoundNames_BindingRestElement argument', BindingRestElement.argument);
   }
 }
 
@@ -167,7 +167,7 @@ export function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
         break;
       }
       default:
-        throw outOfRange('BoundNames_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
+        throw new OutOfRange('BoundNames_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
     }
   }
   return names;
@@ -185,7 +185,7 @@ export function BoundNames_BindingProperty(BindingProperty) {
     case isBindingPropertyWithColon(BindingProperty):
       return BoundNames_BindingElement(BindingProperty.value);
     default:
-      throw outOfRange('BoundNames_BindingProperty', BindingProperty);
+      throw new OutOfRange('BoundNames_BindingProperty', BindingProperty);
   }
 }
 
@@ -193,7 +193,7 @@ export function BoundNames_BindingProperty(BindingProperty) {
 //   BindingRestProperty : `...` BindingIdentifier
 export function BoundNames_BindingRestProperty(BindingRestProperty) {
   if (!isBindingIdentifier(BindingRestProperty.argument)) {
-    throw outOfRange('BoundNames_BindingRestProperty argument', BindingRestProperty.argument);
+    throw new OutOfRange('BoundNames_BindingRestProperty argument', BindingRestProperty.argument);
   }
   return BoundNames_BindingIdentifier(BindingRestProperty.argument);
 }
@@ -224,7 +224,7 @@ function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
         break;
       }
       default:
-        throw outOfRange('BoundNames_ObjectBindingPattern property', BindingPropertyOrBindingRestProperty);
+        throw new OutOfRange('BoundNames_ObjectBindingPattern property', BindingPropertyOrBindingRestProperty);
     }
   }
   return names;
@@ -241,7 +241,7 @@ function BoundNames_BindingPattern(BindingPattern) {
     case isArrayBindingPattern(BindingPattern):
       return BoundNames_ArrayBindingPattern(BindingPattern);
     default:
-      throw outOfRange('BoundNames_BindingPattern', BindingPattern);
+      throw new OutOfRange('BoundNames_BindingPattern', BindingPattern);
   }
 }
 
@@ -262,7 +262,7 @@ function BoundNames_BindingIdentifierOrBindingPattern(
     case isBindingPattern(BindingIdentifierOrBindingPattern):
       return BoundNames_BindingPattern(BindingIdentifierOrBindingPattern);
     default:
-      throw outOfRange(`BoundNames_BindingIdentifierOrBindingPattern ${targetTypeForErrorMessage}`, BindingIdentifierOrBindingPattern);
+      throw new OutOfRange(`BoundNames_BindingIdentifierOrBindingPattern ${targetTypeForErrorMessage}`, BindingIdentifierOrBindingPattern);
   }
 }
 
@@ -318,7 +318,7 @@ export function BoundNames_FormalParameters(FormalParameters) {
         break;
 
       default:
-        throw outOfRange('BoundNames_FormalParameters element', FormalParameterOrFunctionRestParameter);
+        throw new OutOfRange('BoundNames_FormalParameters element', FormalParameterOrFunctionRestParameter);
     }
   }
   return names;
@@ -389,6 +389,6 @@ export function BoundNames_Declaration(Declaration) {
     case isLexicalDeclaration(Declaration):
       return BoundNames_LexicalDeclaration(Declaration);
     default:
-      throw outOfRange('BoundNames_Declaration', Declaration);
+      throw new OutOfRange('BoundNames_Declaration', Declaration);
   }
 }

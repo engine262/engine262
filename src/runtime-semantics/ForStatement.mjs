@@ -62,7 +62,7 @@ import {
   DeclarativeEnvironmentRecord,
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // 13.7.1.2 #sec-loopcontinues
 function LoopContinues(completion, labelSet) {
@@ -444,7 +444,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
     }
 
     default:
-      throw outOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
+      throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
   }
 }
 

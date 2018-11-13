@@ -479,7 +479,7 @@ function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
   const T = thisArg || Value.undefined;
-  const A = Q(ArraySpeciesCreate(O, 0));
+  const A = Q(ArraySpeciesCreate(O, new Value(0)));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(new Value(k)));

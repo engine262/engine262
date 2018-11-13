@@ -44,7 +44,7 @@ import {
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind, outOfRange } from '../helpers.mjs';
+import { unwind, OutOfRange } from '../helpers.mjs';
 
 // #sec-SetFunctionName
 export function SetFunctionName(F, name, prefix) {
@@ -228,7 +228,7 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
       return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
     default:
-      throw outOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
+      throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
   }
 }
 
@@ -286,7 +286,7 @@ export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
       break;
 
     default:
-      throw outOfRange('FunctionInitialize kind', kind);
+      throw new OutOfRange('FunctionInitialize kind', kind);
   }
   X(SetFunctionLength(F, new Value(len)));
   const Strict = F.Strict;

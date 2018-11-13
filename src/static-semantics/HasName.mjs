@@ -8,7 +8,7 @@ import {
   isGeneratorExpression,
 } from '../ast.mjs';
 import { IsFunctionDefinition_Expression } from './all.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-semantics-static-semantics-hasname
 //   PrimaryExpression : CoverParenthesizedExpressionAndArrowParameterList
@@ -66,6 +66,6 @@ export function HasName_Expression(Expression) {
       return false;
 
     default:
-      throw outOfRange('HasName_Expression', Expression);
+      throw new OutOfRange('HasName_Expression', Expression);
   }
 }

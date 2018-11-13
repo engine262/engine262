@@ -5,7 +5,7 @@ import {
 import { Value } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 /* eslint-disable no-bitwise */
 
@@ -44,6 +44,6 @@ export function* Evaluate_BinaryBitwiseExpression({ left: A, operator, right: B 
       return EvaluateBinopValues_BitwiseORExpression(lval, rval);
 
     default:
-      throw outOfRange('Evaluate_BinaryBiwise', operator);
+      throw new OutOfRange('Evaluate_BinaryBiwise', operator);
   }
 }

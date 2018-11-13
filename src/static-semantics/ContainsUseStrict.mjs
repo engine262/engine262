@@ -3,7 +3,7 @@ import {
   isBlockStatement,
   isExpression,
 } from '../ast.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-function-definitions-static-semantics-containsusestrict
 //   FunctionBody : FunctionStatementList
@@ -23,6 +23,6 @@ export function ContainsUseStrict_ConciseBody(ConciseBody) {
     case isBlockStatement(ConciseBody):
       return ContainsUseStrict_FunctionBody(ConciseBody.body);
     default:
-      throw outOfRange('ContainsUseStrict_ConciseBody', ConciseBody);
+      throw new OutOfRange('ContainsUseStrict_ConciseBody', ConciseBody);
   }
 }

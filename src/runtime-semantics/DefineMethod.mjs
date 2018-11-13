@@ -26,6 +26,7 @@ export function* DefineMethod(MethodDefinition, object, functionPrototype) {
   }
   const closure = FunctionCreate(kind, UniqueFormalParameters, MethodDefinition.value, scope, strict, prototype);
   X(MakeMethod(closure, object));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(MethodDefinition);
   return {
     Key: propKey,
     Closure: closure,

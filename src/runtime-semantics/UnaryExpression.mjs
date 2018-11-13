@@ -26,7 +26,7 @@ import {
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Type, Value } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
@@ -99,7 +99,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
       return new Value('object');
 
     default:
-      throw outOfRange('Evaluate_UnaryExpression_Typeof', type);
+      throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
   }
 }
 
@@ -161,6 +161,6 @@ export function* Evaluate_UnaryExpression(UnaryExpression) {
       return yield* Evaluate_UnaryExpression_Bang(UnaryExpression.argument);
 
     default:
-      throw outOfRange('Evaluate_UnaryExpression', UnaryExpression);
+      throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
   }
 }

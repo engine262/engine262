@@ -9,5 +9,6 @@ export function Evaluate_ArrowFunction(ArrowFunction) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const parameters = ArrowParameters;
   const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope, strict);
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(ArrowFunction);
   return closure;
 }

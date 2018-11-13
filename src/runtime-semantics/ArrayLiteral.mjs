@@ -17,7 +17,7 @@ import {
 import { Value } from '../value.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
   const spreadRef = yield* Evaluate_Expression(SpreadElement.argument);
@@ -65,7 +65,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         break;
 
       default:
-        throw outOfRange('ArrayAccumulation', element);
+        throw new OutOfRange('ArrayAccumulation', element);
     }
   }
   return postIndex;

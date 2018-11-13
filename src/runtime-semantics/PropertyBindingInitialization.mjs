@@ -11,7 +11,7 @@ import {
   Q,
   ReturnIfAbrupt,
 } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 
 // #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
@@ -51,6 +51,6 @@ export function* PropertyBindingInitialization_BindingProperty(BindingProperty, 
       return [P];
     }
     default:
-      throw outOfRange('PropertyBindingInitialization_BindingProperty', BindingProperty);
+      throw new OutOfRange('PropertyBindingInitialization_BindingProperty', BindingProperty);
   }
 }

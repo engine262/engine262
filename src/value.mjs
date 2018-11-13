@@ -35,7 +35,7 @@ import {
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Completion, Q, X } from './completion.mjs';
-import { outOfRange } from './helpers.mjs';
+import { OutOfRange } from './helpers.mjs';
 
 export function Value(value) {
   if (new.target !== undefined && new.target !== Value) {
@@ -64,7 +64,7 @@ export function Value(value) {
     return new BuiltinFunctionValue(value);
   }
 
-  throw outOfRange('new Value', value);
+  throw new OutOfRange('new Value', value);
 }
 
 export class PrimitiveValue extends Value {}
@@ -1096,5 +1096,5 @@ export function Type(val) {
     return 'Data Block';
   }
 
-  throw outOfRange('Type', val);
+  throw new OutOfRange('Type', val);
 }

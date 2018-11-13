@@ -62,7 +62,7 @@ import {
 import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   Evaluate_FunctionStatementList,
   InstantiateFunctionObject,
@@ -115,7 +115,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexicalNames = LexicallyDeclaredNames_AsyncFunctionBody(code.body.body).map(Value);
       break;
     default:
-      throw outOfRange('FunctionDeclarationInstantiation', code);
+      throw new OutOfRange('FunctionDeclarationInstantiation', code);
   }
 
   const functionNames = [];
@@ -246,7 +246,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexDeclarations = LexicallyScopedDeclarations_AsyncFunctionBody(code.body.body);
       break;
     default:
-      throw outOfRange('FunctionDeclarationInstantiation', code);
+      throw new OutOfRange('FunctionDeclarationInstantiation', code);
   }
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_Declaration(d).map(Value)) {
@@ -303,7 +303,7 @@ export function getFunctionBodyType(ECMAScriptCode) {
       return 'AsyncGeneratorBody';
 
     default:
-      throw outOfRange('getFunctionBodyType', ECMAScriptCode);
+      throw new OutOfRange('getFunctionBodyType', ECMAScriptCode);
   }
 }
 

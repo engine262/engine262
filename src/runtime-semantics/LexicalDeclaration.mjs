@@ -26,7 +26,7 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import { BindingInitialization_BindingPattern } from './all.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :
@@ -71,7 +71,7 @@ export function* Evaluate_LexicalBinding(LexicalBinding) {
       return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
     default:
-      throw outOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
+      throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
   }
 }
 

@@ -33,7 +33,7 @@ import {
 } from './all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition
@@ -142,6 +142,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('get')));
+      closure.SourceText = surroundingAgent.sourceTextMatchedBy(MethodDefinition);
       const desc = Descriptor({
         Get: closure,
         Enumerable: enumerable ? Value.true : Value.false,
@@ -162,6 +163,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('set')));
+      closure.SourceText = surroundingAgent.sourceTextMatchedBy(MethodDefinition);
       const desc = Descriptor({
         Set: closure,
         Enumerable: enumerable ? Value.true : Value.false,
@@ -170,7 +172,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
     default:
-      throw outOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
+      throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
   }
 }
 
@@ -207,6 +209,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
     }),
   ));
   X(SetFunctionName(closure, propKey));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorExpression);
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,
@@ -239,6 +242,6 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
       );
 
     default:
-      throw outOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
+      throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
   }
 }

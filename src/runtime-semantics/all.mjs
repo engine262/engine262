@@ -16,6 +16,7 @@ export * from './CallExpression.mjs';
 export * from './ClassDefinition.mjs';
 export * from './ConditionalExpression.mjs';
 export * from './ContinueStatement.mjs';
+export * from './CreateDynamicFunction.mjs';
 export * from './DebuggerStatement.mjs';
 export * from './DefineMethod.mjs';
 export * from './DestructuringAssignmentEvaluation.mjs';

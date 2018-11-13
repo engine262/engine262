@@ -64,7 +64,7 @@ function createRealm() {
   $262.realm = realm;
   $262.evalScript = (sourceText, file) => {
     if (file) {
-      sourceText = fs.readFileSync(path.resolve(testdir, sourceText));
+      sourceText = fs.readFileSync(path.resolve(testdir, sourceText), 'utf8');
     }
     return realm.evaluateScript(sourceText);
   };
@@ -88,7 +88,7 @@ async function run({ source, meta, strict }) {
   if (meta.flags.includes('async')) {
     X($262.evalScript('harness/doneprintHandle.js', true));
     asyncPromise = new Promise((resolve) => {
-      $262.realm.hostDefinedOptions.handlePrint = (m) => {
+      $262.realm.realm.HostDefined.handlePrint = (m) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {

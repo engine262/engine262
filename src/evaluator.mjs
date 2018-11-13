@@ -126,7 +126,7 @@ import {
 import {
   GetValue,
 } from './abstract-ops/all.mjs';
-import { unwind, outOfRange } from './helpers.mjs';
+import { unwind, OutOfRange } from './helpers.mjs';
 
 // #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
@@ -232,7 +232,7 @@ function* Evaluate_StatementListItem(StatementListItem) {
       return yield* Evaluate_LexicalDeclaration(StatementListItem);
 
     default:
-      throw outOfRange('Evaluate_StatementListItem', StatementListItem);
+      throw new OutOfRange('Evaluate_StatementListItem', StatementListItem);
   }
 }
 
@@ -292,7 +292,7 @@ export function EvaluateBinopValues(operator, lval, rval) {
       return EvaluateBinopValues_ExponentiationExpression(lval, rval);
 
     default:
-      throw outOfRange('EvaluateBinopValues', operator);
+      throw new OutOfRange('EvaluateBinopValues', operator);
   }
 }
 
@@ -417,7 +417,7 @@ function* Inner_Evaluate_Expression(Expression) {
       return yield* Evaluate_ExpressionWithComma(Expression);
 
     default:
-      throw outOfRange('Evaluate_Expression', Expression);
+      throw new OutOfRange('Evaluate_Expression', Expression);
   }
 }
 

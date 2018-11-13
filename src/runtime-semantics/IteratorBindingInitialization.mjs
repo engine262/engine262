@@ -34,7 +34,7 @@ import {
 } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
@@ -107,7 +107,7 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
       Initializer = BindingElement.right;
       break;
     default:
-      throw outOfRange(
+      throw new OutOfRange(
         'IteratorBindingInitialization_BindingElement_BindingPattern', BindingElement,
       );
   }
@@ -153,7 +153,7 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
       Initializer = SingleNameBinding.right;
       break;
     default:
-      throw outOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
+      throw new OutOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
   const bindingId = new Value(BindingIdentifier.name);
   const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
@@ -228,7 +228,7 @@ function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorR
     case isBindingPattern(BindingElement) || isBindingPatternAndInitializer(BindingElement):
       return yield* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment);
     default:
-      throw outOfRange('IteratorBindingInitialization_BindingElement', BindingElement);
+      throw new OutOfRange('IteratorBindingInitialization_BindingElement', BindingElement);
   }
 }
 
@@ -310,7 +310,7 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
     case isBindingPattern(BindingRestElement.argument):
       return yield* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
     default:
-      throw outOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);
+      throw new OutOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);
   }
 }
 

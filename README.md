@@ -24,6 +24,7 @@ initializeAgent({
   // onDebugger() {},
   // ensureCanCompileStrings() {},
   // promiseRejectionTracker() {},
+  // hasSourceTextAvailable() {},
 })
 
 const realm = new Realm();

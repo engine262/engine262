@@ -21,7 +21,7 @@ import {
   NormalCompletion,
   Q,
 } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   IteratorBindingInitialization_ArrayBindingPattern,
   PropertyBindingInitialization_BindingPropertyList,
@@ -73,7 +73,7 @@ export function* BindingInitialization_BindingPattern(BindingPattern, value, env
     }
 
     default:
-      throw outOfRange('BindingInitialization_BindingPattern', BindingPattern);
+      throw new OutOfRange('BindingInitialization_BindingPattern', BindingPattern);
   }
 }
 
@@ -90,7 +90,7 @@ export function* BindingInitialization_ForBinding(ForBinding, value, environment
       return yield* BindingInitialization_BindingPattern(ForBinding, value, environment);
 
     default:
-      throw outOfRange('BindingInitialization_ForBinding', ForBinding);
+      throw new OutOfRange('BindingInitialization_ForBinding', ForBinding);
   }
 }
 
@@ -135,7 +135,7 @@ export function* BindingInitialization_CatchParameter(CatchParameter, value, env
       return yield* BindingInitialization_BindingPattern(CatchParameter, value, environment);
 
     default:
-      throw outOfRange('BindingInitialization_CatchParameter', CatchParameter);
+      throw new OutOfRange('BindingInitialization_CatchParameter', CatchParameter);
   }
 }
 

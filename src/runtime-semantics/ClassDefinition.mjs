@@ -40,7 +40,7 @@ Object.freeze(forwardingConstructorNode);
 
 // #sec-runtime-semantics-classdefinitionevaluation
 //   ClassTail : ClassHeritage `{` ClassBody `}`
-function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody, hostLocation }, className) {
+function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const classScope = NewDeclarativeEnvironment(lex);
   const classScopeEnvRec = classScope.EnvironmentRecord;
@@ -90,7 +90,6 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody, hostLocation }, 
   const constructorInfo = yield* DefineMethod(constructor, proto, constructorParent);
   Assert(!(constructorInfo instanceof AbruptCompletion));
   const F = constructorInfo.Closure;
-  F.hostToStringLocation = hostLocation;
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
@@ -124,14 +123,13 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody, hostLocation }, 
 
 // #sec-class-definitions-runtime-semantics-evaluation
 //   ClassExpression : `class` BindingIdentifier ClassTail
-export function* Evaluate_ClassExpression({
-  start, end,
-  id: BindingIdentifier,
-  body,
-  superClass,
-}) {
+export function* Evaluate_ClassExpression(ClassExpression) {
+  const {
+    id: BindingIdentifier,
+    body,
+    superClass,
+  } = ClassExpression;
   const ClassTail = {
-    hostLocation: { start, end },
     ClassHeritage: superClass,
     ClassBody: body.body,
   };
@@ -150,6 +148,7 @@ export function* Evaluate_ClassExpression({
       SetFunctionName(value, className);
     }
   }
+  value.SourceText = surroundingAgent.sourceTextMatchedBy(ClassExpression);
   return new NormalCompletion(value);
 }
 
@@ -157,14 +156,13 @@ export function* Evaluate_ClassExpression({
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
-export function* BindingClassDeclarationEvaluation_ClassDeclaration({
-  start, end,
-  id: BindingIdentifier,
-  body,
-  superClass: ClassHeritage,
-}) {
+export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration) {
+  const {
+    id: BindingIdentifier,
+    body,
+    superClass: ClassHeritage,
+  } = ClassDeclaration;
   const ClassTail = {
-    hostLocation: { start, end },
     ClassHeritage,
     ClassBody: body.body,
   };
@@ -185,6 +183,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration({
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     Q(InitializeBoundName(className, value, env));
   }
+  value.SourceText = surroundingAgent.sourceTextMatchedBy(ClassDeclaration);
   return new NormalCompletion(value);
 }
 

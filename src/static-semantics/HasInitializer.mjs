@@ -5,9 +5,7 @@ import {
   isBindingPatternAndInitializer,
   isSingleNameBinding,
 } from '../ast.mjs';
-import {
-  outOfRange,
-} from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-destructuring-binding-patterns-static-semantics-hasinitializer
 //   SingleNameBinding :
@@ -22,7 +20,7 @@ export function HasInitializer_SingleNameBinding(SingleNameBinding) {
       return true;
 
     default:
-      throw outOfRange('HasInitializer_SingleNameBinding', SingleNameBinding);
+      throw new OutOfRange('HasInitializer_SingleNameBinding', SingleNameBinding);
   }
 }
 
@@ -45,7 +43,7 @@ export function HasInitializer_BindingElement(BindingElement) {
       return HasInitializer_SingleNameBinding(BindingElement);
 
     default:
-      throw outOfRange('HasInitializer_BindingElement', BindingElement);
+      throw new OutOfRange('HasInitializer_BindingElement', BindingElement);
   }
 }
 

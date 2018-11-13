@@ -34,7 +34,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
@@ -90,7 +90,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     return array;
   }
 
-  throw outOfRange('ArrayConstructor', numberOfArgs);
+  throw new OutOfRange('ArrayConstructor', numberOfArgs);
 }
 
 function ArrayFrom(argList, { thisValue }) {

@@ -21,7 +21,7 @@ import {
   ThrowCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
-import { outOfRange } from './helpers.mjs';
+import { OutOfRange } from './helpers.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const { ObjectCreate, CreateBuiltinFunction, Assert } = Abstract;
@@ -33,6 +33,9 @@ export {
 };
 
 export function initializeAgent(options = {}) {
+  if (surroundingAgent) {
+    throw new Error('Surrounding Agent is already initialized');
+  }
   const agent = new Agent(options);
   setSurroundingAgent(agent);
 }
@@ -61,7 +64,7 @@ class APIRealm {
   constructor(options = {}) {
     const realm = CreateRealm();
 
-    this.hostDefinedOptions = options;
+    realm.HostDefined = options;
 
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;
@@ -72,6 +75,7 @@ class APIRealm {
     const thisValue = Value.undefined;
     SetRealmGlobalObject(realm, global, thisValue);
     const globalObj = SetDefaultGlobalBindings(realm);
+
     // Create any implementation-defined global object properties on globalObj.
     globalObj.DefineOwnProperty(new Value('print'), Descriptor({
       Value: CreateBuiltinFunction((args) => {
@@ -99,6 +103,9 @@ class APIRealm {
   }
 
   evaluateScript(sourceText) {
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
+    }
     return this.scope(() => {
       // BEGIN ScriptEvaluationJob
       const realm = surroundingAgent.currentRealmRecord;
@@ -196,7 +203,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     } else if (type === 'Null') {
       return 'null';
     } else if (type === 'String') {
-      return quote ? `'${value.stringValue()}'` : value.stringValue();
+      return quote ? `'${value.stringValue().replace(/\n/g, '\\n')}'` : value.stringValue();
     } else if (type === 'Number') {
       return value.numberValue().toString();
     } else if (type === 'Boolean') {
@@ -253,7 +260,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         return compactObject(toString);
       }
     }
-    throw outOfRange('inspect', type);
+    throw new OutOfRange('inspect', type);
   };
   return innerInspect(v);
 }

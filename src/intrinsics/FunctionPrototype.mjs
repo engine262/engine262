@@ -1,5 +1,6 @@
 import {
   surroundingAgent,
+  HostHasSourceTextAvailable,
 } from '../engine.mjs';
 import {
   Assert,
@@ -26,6 +27,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
@@ -126,20 +128,17 @@ function FunctionProto_toString(args, { thisValue: func }) {
   if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
     const name = func.properties.get(new Value('name'));
     if (name !== undefined) {
-      return new Value(`function ${name.Value.stringValue()} { [native code] }`);
+      return new Value(`function ${name.Value.stringValue()}() { [native code] }`);
     }
     return new Value('function() { [native code] }');
   }
-  if (func.FunctionKind !== 'classConstructor' && !('ECMAScriptCode' in func)) {
-    return surroundingAgent.Throw('TypeError', 'Function.prototype.toString called on incompatible reciever');
+  if ('SourceText' in func && Type(func.SourceText) === 'String' && X(HostHasSourceTextAvailable(func)) === Value.true) {
+    return func.SourceText;
   }
-  const scriptCtx = [...surroundingAgent.executionContextStack]
-    .reverse()
-    .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
-  Assert(scriptCtx !== undefined);
-  const { sourceText } = scriptCtx.HostDefined;
-  const { start, end } = func.hostToStringLocation || func.ECMAScriptCode;
-  return new Value(sourceText.slice(start, end));
+  if (Type(func) === 'Object' && IsCallable(func) === Value.true) {
+    return new Value('function() { [native code] }');
+  }
+  return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
 }
 
 function FunctionProto_hasInstance([V], { thisValue }) {

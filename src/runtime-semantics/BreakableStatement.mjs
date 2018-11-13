@@ -7,7 +7,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
 } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 import {
   Evaluate_SwitchStatement,
@@ -56,6 +56,6 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
     }
 
     default:
-      throw outOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
+      throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
   }
 }

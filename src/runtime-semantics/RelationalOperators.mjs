@@ -19,7 +19,7 @@ import {
 } from '../value.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 export function InstanceofOperator(V, target) {
   if (Type(target) !== 'Object') {
@@ -89,6 +89,6 @@ export function* Evaluate_RelationalExpression({
       return Q(HasProperty(rval, ToPropertyKey(lval)));
 
     default:
-      throw outOfRange('Evaluate_RelationalExpression', operator);
+      throw new OutOfRange('Evaluate_RelationalExpression', operator);
   }
 }

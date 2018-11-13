@@ -17,7 +17,7 @@ import {
 } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { Descriptor, Value } from '../value.mjs';
 
 // #sec-function-definitions-runtime-semantics-instantiatefunctionobject
@@ -34,6 +34,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
   const F = X(FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict));
   MakeConstructor(F);
   SetFunctionName(F, name);
+  F.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionDeclaration);
   return F;
 }
 
@@ -57,6 +58,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     Configurable: Value.false,
   })));
   SetFunctionName(F, name);
+  F.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorDeclaration);
   return F;
 }
 
@@ -69,6 +71,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope, strict));
   SetFunctionName(F, name);
+  F.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionDeclaration);
   return F;
 }
 
@@ -88,6 +91,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     Configurable: Value.false,
   })));
   SetFunctionName(F, name);
+  F.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncGeneratorDeclaration);
   return F;
 }
 
@@ -106,6 +110,6 @@ export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
       return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
     default:
-      throw outOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
+      throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
   }
 }

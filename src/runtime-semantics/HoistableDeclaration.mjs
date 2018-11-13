@@ -6,7 +6,7 @@ import {
 } from '../ast.mjs';
 import { Evaluate_FunctionDeclaration } from './all.mjs';
 import { NormalCompletion } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-statement-semantics-runtime-semantics-evaluation
 //   HoistableDeclaration :
@@ -25,6 +25,6 @@ export function Evaluate_HoistableDeclaration(HoistableDeclaration) {
       return Evaluate_FunctionDeclaration(HoistableDeclaration);
 
     default:
-      throw outOfRange('Evaluate_HoistableDeclaration', HoistableDeclaration);
+      throw new OutOfRange('Evaluate_HoistableDeclaration', HoistableDeclaration);
   }
 }

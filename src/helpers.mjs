@@ -4,10 +4,12 @@ import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 import { inspect } from './api.mjs';
 
-export function outOfRange(fn, arg) {
-  const e = new RangeError(`${fn}() argument out of range`);
-  e.detail = arg;
-  return e;
+export class OutOfRange extends RangeError {
+  constructor(fn, detail) {
+    super(`${fn}() argument out of range`);
+
+    this.detail = detail;
+  }
 }
 
 export function unwind(iterator, maxSteps = 1) {

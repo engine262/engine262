@@ -25,6 +25,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
   const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, funcEnv, strict));
   X(SetFunctionName(closure, name));
   X(envRec.InitializeBinding(name, closure));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }
 
@@ -41,5 +42,6 @@ export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
   const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionExpression.body.body);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope, strict));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }

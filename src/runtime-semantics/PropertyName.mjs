@@ -10,7 +10,7 @@ import {
 } from '../ast.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 
 // #sec-object-initializer-runtime-semantics-evaluation
@@ -30,7 +30,7 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
     }
 
     default:
-      throw outOfRange('Evaluate_LiteralPropertyName', LiteralPropertyName);
+      throw new OutOfRange('Evaluate_LiteralPropertyName', LiteralPropertyName);
   }
 }
 

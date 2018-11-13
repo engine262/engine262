@@ -14,7 +14,7 @@ import {
   ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 export function isArrayIndex(P) {
   Assert(IsPropertyKey(P));
@@ -45,7 +45,7 @@ export function RequireObjectCoercible(argument) {
     case 'Object':
       return argument;
     default:
-      throw outOfRange('RequireObjectCoercible', argument);
+      throw new OutOfRange('RequireObjectCoercible', argument);
   }
 }
 

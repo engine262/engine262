@@ -25,7 +25,7 @@ import {
   BindingInitialization_CatchParameter,
   Evaluate_Block,
 } from './all.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.
@@ -108,6 +108,6 @@ export function* Evaluate_TryStatement(Expression) {
       return yield* Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
     default:
-      throw outOfRange('Evaluate_TryStatement', Expression);
+      throw new OutOfRange('Evaluate_TryStatement', Expression);
   }
 }

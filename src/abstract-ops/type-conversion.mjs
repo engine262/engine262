@@ -18,7 +18,7 @@ import {
   StringCreate,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // 7.1.1 #sec-toprimitive
 export function ToPrimitive(input, PreferredType) {
@@ -109,7 +109,7 @@ export function ToBoolean(argument) {
     return Value.true;
   }
 
-  throw outOfRange('ToBoolean', argument);
+  throw new OutOfRange('ToBoolean', argument);
 }
 
 // 7.1.3 #sec-tonumber
@@ -137,7 +137,7 @@ export function ToNumber(argument) {
       return Q(ToNumber(primValue));
     }
     default:
-      throw outOfRange('ToNumber', argument);
+      throw new OutOfRange('ToNumber', argument);
   }
 }
 
@@ -279,7 +279,7 @@ export function ToString(argument) {
       return Q(ToString(primValue));
     }
     default:
-      throw outOfRange('ToString', argument);
+      throw new OutOfRange('ToString', argument);
   }
 }
 
@@ -330,7 +330,7 @@ export function ToObject(argument) {
     case 'Object':
       return argument;
     default:
-      throw outOfRange('ToObject', argument);
+      throw new OutOfRange('ToObject', argument);
   }
 }
 

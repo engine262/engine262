@@ -42,6 +42,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorExpression);
   if (BindingIdentifier) {
     X(SetFunctionName(closure, name));
     envRec.InitializeBinding(name, closure);

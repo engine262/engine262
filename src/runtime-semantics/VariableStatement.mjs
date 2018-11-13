@@ -14,7 +14,7 @@ import {
   NormalCompletion, Q, ReturnIfAbrupt, X,
 } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
 
@@ -57,7 +57,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
     }
 
     default:
-      throw outOfRange('Evaluate_VariableDeclaration', VariableDeclaration);
+      throw new OutOfRange('Evaluate_VariableDeclaration', VariableDeclaration);
   }
 }
 

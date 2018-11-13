@@ -47,6 +47,14 @@ function hasIntersection(reference, check) {
   return false;
 }
 
+// #table-dynamic-function-sourcetext-prefixes
+const DynamicFunctionSourceTextPrefixes = {
+  'normal': 'function',
+  'generator': 'function*',
+  'async': 'async function',
+  'async generator': 'async function*',
+};
+
 // #sec-createdynamicfunction
 export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   Assert(surroundingAgent.executionContextStack.length >= 2);
@@ -179,5 +187,8 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     MakeConstructor(F);
   }
   SetFunctionName(F, new Value('anonymous'));
+  const prefix = DynamicFunctionSourceTextPrefixes[kind];
+  const sourceText = `${prefix} anonymous(${P}\u000A) {\u000A${bodyText}\u000A}`;
+  F.SourceText = new Value(sourceText);
   return F;
 }

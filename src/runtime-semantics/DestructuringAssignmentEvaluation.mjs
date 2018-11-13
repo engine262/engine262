@@ -31,7 +31,7 @@ import {
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
@@ -54,7 +54,7 @@ export function* DestructuringAssignmentEvaluation_AssignmentPattern(AssignmentP
       return yield* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(AssignmentPattern, value);
 
     default:
-      throw outOfRange('DestructuringAssignmentEvaluation_AssignmentPattern', AssignmentPattern);
+      throw new OutOfRange('DestructuringAssignmentEvaluation_AssignmentPattern', AssignmentPattern);
   }
 }
 

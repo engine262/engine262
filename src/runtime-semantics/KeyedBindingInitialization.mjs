@@ -19,7 +19,7 @@ import {
   X,
 } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
@@ -51,7 +51,7 @@ export function* KeyedBindingInitialization_BindingElement(BindingElement, value
       Initializer = BindingElement.right;
       break;
     default:
-      throw outOfRange('KeyedBindingInitialization_BindingElement', BindingElement);
+      throw new OutOfRange('KeyedBindingInitialization_BindingElement', BindingElement);
   }
 
   let v = Q(GetV(value, propertyName));
@@ -77,7 +77,7 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
       Initializer = SingleNameBinding.right;
       break;
     default:
-      throw outOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
+      throw new OutOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
 
   const bindingId = new Value(BindingIdentifier.name);

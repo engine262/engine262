@@ -13,7 +13,7 @@ import {
   Reference,
   Value,
 } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`
@@ -59,6 +59,6 @@ export function* Evaluate_MemberExpression(MemberExpression) {
         MemberExpression.object, MemberExpression.property,
       );
     default:
-      throw outOfRange('Evaluate_MemberExpression', MemberExpression);
+      throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
   }
 }

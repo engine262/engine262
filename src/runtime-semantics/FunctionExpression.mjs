@@ -27,6 +27,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv, strict);
   MakeConstructor(closure);
   SetFunctionName(closure, name);
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionExpression);
   envRec.InitializeBinding(name, closure);
   return closure;
 }
@@ -44,5 +45,6 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, scope, strict);
   MakeConstructor(closure);
+  closure.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionExpression);
   return closure;
 }

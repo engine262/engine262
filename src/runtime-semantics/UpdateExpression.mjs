@@ -1,5 +1,5 @@
 import { Evaluate_Expression } from '../evaluator.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   GetValue,
   PutValue,
@@ -67,6 +67,6 @@ export function* Evaluate_UpdateExpression({
     }
 
     default:
-      throw outOfRange('Evaluate_UpdateExpression', operator, prefix);
+      throw new OutOfRange('Evaluate_UpdateExpression', operator, prefix);
   }
 }

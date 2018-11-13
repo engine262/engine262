@@ -6,7 +6,7 @@ import {
 import { Q } from '../completion.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // #sec-equality-operators-runtime-semantics-evaluation
 // EqualityExpression :
@@ -47,6 +47,6 @@ export function* Evaluate_EqualityExpression({
     }
 
     default:
-      throw outOfRange('Evaluate_EqualityExpression', operator);
+      throw new OutOfRange('Evaluate_EqualityExpression', operator);
   }
 }

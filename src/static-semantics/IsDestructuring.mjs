@@ -1,4 +1,4 @@
-import { outOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   isBindingIdentifier,
   isBindingPattern,
@@ -21,6 +21,6 @@ export function IsDestructuring_ForBinding(ForBinding) {
     case isBindingPattern(ForBinding):
       return true;
     default:
-      throw outOfRange('IsDestructuring_ForBinding', ForBinding);
+      throw new OutOfRange('IsDestructuring_ForBinding', ForBinding);
   }
 }

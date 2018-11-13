@@ -12,7 +12,7 @@ import {
   SetDefaultGlobalBindings,
   SetRealmGlobalObject,
 } from './realm.mjs';
-import { Construct } from './abstract-ops/all.mjs';
+import { Assert, Construct } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 
@@ -46,6 +46,19 @@ export class Agent {
 
   get activeFunctionObject() {
     return this.runningExecutionContext.Function;
+  }
+
+  // The source text matched by a grammar production is the portion of the source
+  // text that starts at the beginning of the first terminal that participated in
+  // the match and ends at the end of the last terminal that participated in the match.
+  sourceTextMatchedBy(node) {
+    const scriptCtx = [...this.executionContextStack]
+      .reverse()
+      .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
+    Assert(scriptCtx !== undefined);
+    const { sourceText } = scriptCtx.HostDefined;
+    const { start, end } = node;
+    return new Value(sourceText.slice(start, end));
   }
 
   intrinsic(name) {
@@ -223,4 +236,11 @@ export function HostPromiseRejectionTracker(promise, operation) {
   if (surroundingAgent.hostDefinedOptions.promiseRejectiontTracker) {
     X(surroundingAgent.hostDefinedOptions.promiseRejectiontTracker(promise, operation));
   }
+}
+
+export function HostHasSourceTextAvailable(func) {
+  if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
+    return X(surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func));
+  }
+  return Value.true;
 }
