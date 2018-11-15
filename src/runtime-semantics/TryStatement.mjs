@@ -29,10 +29,15 @@ import { OutOfRange } from '../helpers.mjs';
 
 // #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.
-//    Catch : catch `(` CatchParameter `)` Block
-function* CatchClauseEvaluation(Catch, thrownValue) {
-  const CatchParameter = Catch.param;
-  const Block = Catch.body;
+//    Catch :
+//      `catch` `(` CatchParameter `)` Block
+//      `catch` Block
+function* CatchClauseEvaluation({ param: CatchParameter, body: Block }, thrownValue) {
+  if (!CatchParameter) {
+    //  Catch : `catch` Block
+    return yield* Evaluate_Block(Block);
+  }
+
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const catchEnv = NewDeclarativeEnvironment(oldEnv);
   const catchEnvRec = catchEnv.EnvironmentRecord;
