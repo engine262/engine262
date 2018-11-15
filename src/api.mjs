@@ -216,7 +216,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         if (name !== undefined) {
           return `[Function: ${name.Value.stringValue()}]`;
         }
-        return '[Function: <anonymous>]';
+        return '[Function]';
       }
       const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
       const toString = Q(AbstractOps.Get(value, new Value('toString')));

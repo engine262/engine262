@@ -10,6 +10,7 @@ import { FunctionValue, Type, Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
+import { msg } from '../helpers.mjs';
 
 // #sec-getsuperconstructor
 function GetSuperConstructor() {
@@ -19,7 +20,7 @@ function GetSuperConstructor() {
   Assert(activeFunction instanceof FunctionValue);
   const superConstructor = X(activeFunction.GetPrototypeOf());
   if (IsConstructor(superConstructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Class constructor is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', superConstructor));
   }
   return superConstructor;
 }

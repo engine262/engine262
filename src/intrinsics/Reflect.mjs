@@ -17,6 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Descriptor, Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 function Reflect_apply([target, thisArgument, argumentsList]) {
   if (IsCallable(target) === Value.false) {
@@ -29,12 +30,12 @@ function Reflect_apply([target, thisArgument, argumentsList]) {
 
 function Reflect_construct([target, argumentsList, newTarget]) {
   if (IsConstructor(target) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'target is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', target));
   }
   if (!newTarget) {
     newTarget = target;
   } else if (IsConstructor(newTarget) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'newTarget is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', newTarget));
   }
   const args = Q(CreateListFromArrayLike(argumentsList));
   return Q(Construct(target, args, newTarget));

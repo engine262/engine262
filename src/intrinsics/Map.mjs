@@ -23,6 +23,7 @@ import {
   X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {
@@ -57,7 +58,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
 
 function MapConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'undefined is not a constructor');
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
   }
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%MapPrototype%', ['MapData']));
   map.MapData = [];
