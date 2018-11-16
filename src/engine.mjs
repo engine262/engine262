@@ -12,7 +12,7 @@ import {
   SetDefaultGlobalBindings,
   SetRealmGlobalObject,
 } from './realm.mjs';
-import { Assert, Construct } from './abstract-ops/all.mjs';
+import { Construct } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 
@@ -52,13 +52,7 @@ export class Agent {
   // text that starts at the beginning of the first terminal that participated in
   // the match and ends at the end of the last terminal that participated in the match.
   sourceTextMatchedBy(node) {
-    const scriptCtx = [...this.executionContextStack]
-      .reverse()
-      .find((c) => c.HostDefined !== undefined && c.HostDefined.sourceText !== undefined);
-    Assert(scriptCtx !== undefined);
-    const { sourceText } = scriptCtx.HostDefined;
-    const { start, end } = node;
-    return new Value(sourceText.slice(start, end));
+    return new Value(node.source);
   }
 
   intrinsic(name) {

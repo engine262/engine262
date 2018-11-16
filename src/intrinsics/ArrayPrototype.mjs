@@ -358,15 +358,15 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   return Value.false;
 }
 
-function ArrayProto_indexOf([searchElement, fromIndex = new Value(0)], { thisValue }) {
+function ArrayProto_indexOf([searchElement, fromIndex = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
   if (len === 0) {
     return new Value(-1);
   }
   const n = Q(ToInteger(fromIndex)).numberValue();
   // Assert: If fromIndex is undefined, then n is 0.
+  Assert(!(fromIndex === Value.undefined) || n === 0);
   if (n >= len) {
     return new Value(-1);
   }
@@ -384,10 +384,9 @@ function ArrayProto_indexOf([searchElement, fromIndex = new Value(0)], { thisVal
     }
   }
   while (k < len) {
-    const kStr = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, kStr));
+    const kPresent = Q(HasProperty(O, X(ToString(new Value(k)))));
     if (kPresent === Value.true) {
-      const elementK = Get(O, X(ToString(new Value(k))));
+      const elementK = Q(Get(O, X(ToString(new Value(k)))));
       const same = StrictEqualityComparison(searchElement, elementK);
       if (same === Value.true) {
         return new Value(k);

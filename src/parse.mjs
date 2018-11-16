@@ -7,7 +7,9 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
 
   finishNode(node, type) {
     node.strict = this.strict;
-    return super.finishNode(node, type);
+    const ret = super.finishNode(node, type);
+    node.source = this.input.slice(node.start, node.end);
+    return ret;
   }
 });
 

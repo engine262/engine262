@@ -5,8 +5,9 @@ import { Q } from '../completion.mjs';
 // #sec-comma-operator-runtime-semantics-evaluation
 // Expression : Expression `,` AssignmentExpression
 export function* Evaluate_ExpressionWithComma(ExpressionWithComma) {
-  const AssignmentExpression = ExpressionWithComma.expressions[0];
-  for (const Expression of ExpressionWithComma.expressions.slice(1)) {
+  const expressions = [...ExpressionWithComma.expressions];
+  const AssignmentExpression = expressions.pop();
+  for (const Expression of expressions) {
     const lref = yield* Evaluate_Expression(Expression);
     Q(GetValue(lref));
   }

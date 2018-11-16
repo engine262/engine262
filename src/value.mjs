@@ -7,6 +7,7 @@ import {
   CreateListFromArrayLike,
   FromPropertyDescriptor,
   Get,
+  Set,
   GetMethod,
   HasOwnProperty,
   IsAccessorDescriptor,

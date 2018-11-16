@@ -61,9 +61,9 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
 
   cons.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: Prototype,
-    Writable: Value.true,
+    Writable: Value.false,
     Enumerable: Value.false,
-    Configurable: Value.true,
+    Configurable: Value.false,
   }));
 
   Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
