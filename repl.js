@@ -21,5 +21,6 @@ repl.start({
     const result = realm.evaluateScript(cmd);
     callback(null, result);
   },
+  completer: () => [],
   writer: (o) => inspect(o, realm),
 });
