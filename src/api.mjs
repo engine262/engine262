@@ -173,6 +173,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     realm = realm.realm;
   }
   let indent = 0;
+  const inspected = new WeakSet();
   const innerInspect = (value, quote = true) => {
     const compactObject = (toString) => {
       try {
@@ -211,6 +212,10 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     } else if (type === 'Symbol') {
       return `Symbol(${value.Description.stringValue ? value.Description.stringValue() : ''})`;
     } else if (type === 'Object') {
+      if (inspected.has(value)) {
+        return '[Circular]';
+      }
+      inspected.add(value);
       if ('Call' in value) {
         const name = value.properties.get(new Value('name'));
         if (name !== undefined) {
@@ -239,7 +244,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
       if ('SymbolData' in value) {
         return `[Symbol: ${innerInspect(value.SymbolData)}]`;
       }
-      if (compact === true) {
+      if (compact === true || indent > 2) {
         return compactObject(toString);
       }
       try {
