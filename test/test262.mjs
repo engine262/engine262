@@ -72,6 +72,9 @@ function createRealm() {
   return $262;
 }
 
+const agentOpt = { promiseRejectionTracker: undefined };
+initializeAgent(agentOpt);
+
 async function run({ source, meta, strict }) {
   const $262 = createRealm();
 
@@ -85,31 +88,54 @@ async function run({ source, meta, strict }) {
   }
 
   let asyncPromise;
+  let timeout;
   if (meta.flags.includes('async')) {
     X($262.evalScript('harness/doneprintHandle.js', true));
-    asyncPromise = new Promise((resolve) => {
+    asyncPromise = new Promise((resolve, reject) => {
+      const tracked = new Set();
+      timeout = setTimeout(() => {
+        const failure = [...tracked][0];
+        if (failure) {
+          resolve({ status: FAIL, error: inspect(failure.PromiseResult, $262.realm) });
+        } else {
+          reject(new Error('timeout'));
+        }
+      }, 2500);
+      agentOpt.promiseRejectionTracker = (promise, operation) => {
+        if (operation === 'reject') {
+          tracked.add(promise);
+        } else if (operation === 'handle') {
+          tracked.remove(promise);
+        }
+      };
       $262.realm.realm.HostDefined.handlePrint = (m) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {
-          resolve({ status: FAIL, error: m });
+          resolve({ status: FAIL, error: inspect(m, $262.realm) });
         }
       };
+    });
+    asyncPromise.finally(() => {
+      agentOpt.promiseRejectionTracker = undefined;
     });
   }
 
   const completion = $262.evalScript(strict ? `'use strict';\n${source}` : source);
   if (completion instanceof AbruptCompletion) {
+    clearTimeout(timeout);
     if (meta.negative) {
       return { status: PASS };
     } else {
-      return { status: FAIL, error: inspect(completion.Value, $262.realm.realm) };
+      return { status: FAIL, error: inspect(completion, $262.realm) };
     }
   }
 
   if (asyncPromise !== undefined) {
     return asyncPromise;
   }
+
+  clearTimeout(timeout);
 
   return { status: PASS };
 }
@@ -132,8 +158,6 @@ process.on('exit', () => {
     process.exitCode = 1;
   }
 });
-
-initializeAgent();
 
 files.reduce((promise, filename) => promise.then(async () => {
   const short = path.relative(testdir, filename);

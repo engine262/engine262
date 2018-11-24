@@ -1,5 +1,5 @@
-import acorn from 'acorn';
 import { surroundingAgent } from '../engine.mjs';
+import { emptyConstructorNode, forwardingConstructorNode } from '../parse.mjs';
 import {
   Assert,
   CreateMethodProperty,
@@ -32,11 +32,6 @@ import {
   Q,
   ReturnIfAbrupt,
 } from '../completion.mjs';
-
-const emptyConstructorNode = acorn.parse('(class { constructor() {} })').body[0].expression.body.body[0];
-const forwardingConstructorNode = acorn.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
-Object.freeze(emptyConstructorNode);
-Object.freeze(forwardingConstructorNode);
 
 // #sec-runtime-semantics-classdefinitionevaluation
 //   ClassTail : ClassHeritage `{` ClassBody `}`

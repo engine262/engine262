@@ -52,7 +52,7 @@ export class Agent {
   // text that starts at the beginning of the first terminal that participated in
   // the match and ends at the end of the last terminal that participated in the match.
   sourceTextMatchedBy(node) {
-    return new Value(node.source);
+    return new Value(node.source());
   }
 
   intrinsic(name) {
@@ -227,8 +227,8 @@ export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
 }
 
 export function HostPromiseRejectionTracker(promise, operation) {
-  if (surroundingAgent.hostDefinedOptions.promiseRejectiontTracker) {
-    X(surroundingAgent.hostDefinedOptions.promiseRejectiontTracker(promise, operation));
+  if (surroundingAgent.hostDefinedOptions.promiseRejectionTracker) {
+    X(surroundingAgent.hostDefinedOptions.promiseRejectionTracker(promise, operation));
   }
 }
 

@@ -254,13 +254,21 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         }
         const isArray = AbstractOps.IsArray(value) === Value.true;
         let out = isArray ? '[' : '{';
-        indent += 1;
-        for (const key of keys) {
-          const C = value.properties.get(key);
-          out = `${out}\n${'  '.repeat(indent)}${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
+        if (value.properties.size > 5) {
+          indent += 1;
+          for (const key of keys) {
+            const C = value.properties.get(key);
+            out = `${out}\n${'  '.repeat(indent)}${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
+          }
+          indent -= 1;
+          return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
+        } else {
+          for (const key of keys) {
+            const C = value.properties.get(key);
+            out = `${out} ${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
+          }
+          return `${out.slice(0, -1)} ${isArray ? ']' : '}'}`;
         }
-        indent -= 1;
-        return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
       } catch (e) {
         return compactObject(toString);
       }

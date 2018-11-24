@@ -8,7 +8,7 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   finishNode(node, type) {
     node.strict = this.strict;
     const ret = super.finishNode(node, type);
-    node.source = this.input.slice(node.start, node.end);
+    node.source = () => this.input.slice(node.start, node.end);
     return ret;
   }
 });
@@ -110,6 +110,11 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
 
   return params;
 }
+
+export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.body.body[0];
+export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
+Object.freeze(emptyConstructorNode);
+Object.freeze(forwardingConstructorNode);
 
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   let body;

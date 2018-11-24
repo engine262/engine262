@@ -29,7 +29,7 @@ function PromiseProto_catch([onRejected], { thisValue }) {
 }
 
 function ThenFinallyFunctions([value]) {
-  const F = this;
+  const F = surroundingAgent.activeFunctionObject;
 
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
@@ -43,7 +43,7 @@ function ThenFinallyFunctions([value]) {
 }
 
 function CatchFinallyFunctions([reason]) {
-  const F = this;
+  const F = surroundingAgent.activeFunctionObject;
 
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
@@ -121,7 +121,11 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
     EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
   }
   promise.PromiseIsHandled = true;
-  return resultCapability.Promise;
+  if (resultCapability === Value.undefined) {
+    return Value.undefined;
+  } else {
+    return resultCapability.Promise;
+  }
 }
 
 function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
