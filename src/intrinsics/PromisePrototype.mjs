@@ -30,7 +30,6 @@ function PromiseProto_catch([onRejected], { thisValue }) {
 
 function ThenFinallyFunctions([value]) {
   const F = surroundingAgent.activeFunctionObject;
-
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
   const result = Q(Call(onFinally, Value.undefined));
@@ -44,7 +43,6 @@ function ThenFinallyFunctions([value]) {
 
 function CatchFinallyFunctions([reason]) {
   const F = surroundingAgent.activeFunctionObject;
-
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
   const result = Q(Call(onFinally, Value.undefined));

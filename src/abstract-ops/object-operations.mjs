@@ -151,6 +151,7 @@ export function Call(F, V, argumentsList) {
   if (!argumentsList) {
     argumentsList = [];
   }
+  Assert(argumentsList.every((a) => a instanceof Value));
 
   if (IsCallable(F) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', F));

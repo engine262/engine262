@@ -21,6 +21,7 @@ import {
   NormalCompletion,
   Q,
   ThrowCompletion,
+  EnsureCompletion,
 } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -104,7 +105,7 @@ export function PromiseReactionJob(reaction, argument) {
   if (handlerResult instanceof AbruptCompletion) {
     status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
   } else {
-    status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
+    status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
   }
   return status;
 }
