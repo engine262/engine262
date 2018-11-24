@@ -32,6 +32,7 @@ const excludedFeatures = new Set([
   'dynamic-import',
   'export-star-as-namespace-from-module',
   'RegExp',
+  'caller',
 ]);
 
 const PASS = Symbol('PASS');

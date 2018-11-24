@@ -418,7 +418,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   WithBaseObject() {
-    return Value.false;
+    return Value.undefined;
   }
 
   GetThisBinding() {

@@ -117,18 +117,14 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   if (F.FunctionKind === 'classConstructor') {
     return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
   }
-
   // const callerContext = surroundingAgent.runningExecutionContext;
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
-
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop();
-
   if (result.Type === 'return') {
     return new NormalCompletion(result.Value);
   }
@@ -185,7 +181,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   if (thisMode === 'strict') {
     thisValue = thisArgument;
   } else {
-    if (Type(thisArgument) === 'Undefined' || Type(thisArgument) === 'Null') {
+    if (thisArgument === Value.undefined || thisArgument === Value.null) {
       const globalEnv = calleeRealm.GlobalEnv;
       const globalEnvRec = globalEnv.EnvironmentRecord;
       Assert(globalEnvRec instanceof GlobalEnvironmentRecord);
