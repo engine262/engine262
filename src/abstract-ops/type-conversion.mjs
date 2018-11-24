@@ -167,9 +167,9 @@ export function ToInt32(argument) {
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int32bit = int % (2 ** 32);
   if (int32bit >= (2 ** 31)) {
-    return int32bit - (2 ** 32);
+    return new Value(int32bit - (2 ** 32));
   }
-  return int32bit;
+  return new Value(int32bit);
 }
 
 // 7.1.6 #sec-touint32
@@ -192,9 +192,9 @@ export function ToInt16(argument) {
   const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
   const int16bit = int % (2 ** 16);
   if (int16bit >= (2 ** 15)) {
-    return int16bit - (2 ** 16);
+    return new Value(int16bit - (2 ** 16));
   }
-  return int16bit;
+  return new Value(int16bit);
 }
 
 // 7.1.8 #sec-touint16

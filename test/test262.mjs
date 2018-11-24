@@ -37,6 +37,10 @@ const excludedFeatures = new Set([
   'caller',
 ]);
 
+const excludedTests = new Set([
+  'test/built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
+]);
+
 const PASS = Symbol('PASS');
 const FAIL = Symbol('FAIL');
 const SKIP = Symbol('SKIP');
@@ -177,7 +181,8 @@ files.reduce((promise, filename) => promise.then(async () => {
   if (filename.includes('annexB')
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
       || /date|regex/i.test(meta.description) || /date|regex/.test(source)
-      || meta.includes.includes('nativeFunctionMatcher.js')) {
+      || meta.includes.includes('nativeFunctionMatcher.js')
+      || excludedTests.has(short)) {
     skipped += 1;
     console.log('\u001b[33mSKIP\u001b[39m', short);
     return;

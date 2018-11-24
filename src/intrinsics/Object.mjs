@@ -33,14 +33,13 @@ import { BootstrapConstructor, FlaggedFeature } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
-  if (NewTarget !== Value.undefined
-      && NewTarget !== surroundingAgent.activeFunctionObject) {
+  if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
     return OrdinaryCreateFromConstructor(NewTarget, '%ObjectPrototype%');
   }
-  if (value === Value.null || Value === Value.undefined) {
+  if (value === Value.null || value === Value.undefined || value === undefined) {
     return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%ObjectPrototype%']);
   }
-  return ToObject(value);
+  return X(ToObject(value));
 }
 
 function Object_assign([target, ...sources]) {

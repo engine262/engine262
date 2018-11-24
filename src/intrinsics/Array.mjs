@@ -34,7 +34,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, msg } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
@@ -93,19 +93,18 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
   throw new OutOfRange('ArrayConstructor', numberOfArgs);
 }
 
-function ArrayFrom(argList, { thisValue }) {
-  const [items, mapfn = Value.undefined, thisArg] = argList;
+function Array_from([items, mapfn = Value.undefined, thisArg], { thisValue }) {
   const C = thisValue;
   let mapping;
   let T;
   let A;
-  if (Type(mapfn) === 'Undefined') {
+  if (mapfn === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapfn) === false) {
-      return surroundingAgent.Throw('TypeError');
+    if (IsCallable(mapfn) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('NotAFunction', mapfn));
     }
-    if (argList.length >= 3) {
+    if (thisArg !== undefined) {
       T = thisArg;
     } else {
       T = Value.undefined;
@@ -113,7 +112,7 @@ function ArrayFrom(argList, { thisValue }) {
     mapping = true;
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
-  if (Type(usingIterator) !== 'Undefined') {
+  if (usingIterator !== Value.undefined) {
     if (IsConstructor(C) === Value.true) {
       A = Q(Construct(C));
     } else {
@@ -122,8 +121,8 @@ function ArrayFrom(argList, { thisValue }) {
     const iteratorRecord = Q(GetIterator(items, 'sync', usingIterator));
     let k = 0;
     while (true) { // eslint-disable-line no-constant-condition
-      if (k > (2 ** 53) - 1) {
-        const error = new ThrowCompletion(Construct(surroundingAgent.intrinsic('%TypeError%')));
+      if (k >= (2 ** 53) - 1) {
+        const error = new ThrowCompletion(surroundingAgent.Throw('TypeError').Value);
         return Q(IteratorClose(iteratorRecord, error));
       }
       const Pk = X(ToString(new Value(k)));
@@ -132,7 +131,7 @@ function ArrayFrom(argList, { thisValue }) {
         Q(Set(A, new Value('length'), new Value(k), Value.true));
         return A;
       }
-      const nextValue = IteratorValue(next);
+      const nextValue = Q(IteratorValue(next));
       let mappedValue;
       if (mapping) {
         mappedValue = Call(mapfn, T, [nextValue, new Value(k)]);
@@ -175,17 +174,17 @@ function ArrayFrom(argList, { thisValue }) {
   return A;
 }
 
-function ArrayIsArray([arg]) {
+function Array_isArray([arg]) {
   return Q(IsArray(arg));
 }
 
-function ArrayOf([...items], { thisValue }) {
+function Array_of([...items], { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
   if (IsConstructor(C) === Value.true) {
-    A = Q(Construct(C, [len]));
+    A = Q(Construct(C, [new Value(len)]));
   } else {
     A = Q(ArrayCreate(new Value(len)));
   }
@@ -204,9 +203,9 @@ export function CreateArray(realmRec) {
   const proto = realmRec.Intrinsics['%ArrayPrototype%'];
 
   const cons = BootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
-    ['from', ArrayFrom, 1],
-    ['isArray', ArrayIsArray, 1],
-    ['of', ArrayOf, 0],
+    ['from', Array_from, 1],
+    ['isArray', Array_isArray, 1],
+    ['of', Array_of, 0],
   ]);
 
   realmRec.Intrinsics['%Array%'] = cons;

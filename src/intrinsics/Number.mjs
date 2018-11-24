@@ -71,8 +71,8 @@ export function CreateNumber(realmRec) {
     ['MIN_SAFE_INTEGER', new Value(Number.MIN_SAFE_INTEGER)],
     ['MIN_VALUE', new Value(Number.MIN_VALUE)],
     ['NaN', new Value(NaN)],
-    ['NEGATIVE_INFINITY', new Value(Infinity)],
-    ['POSITIVE_INFINITY', new Value(-Infinity)],
+    ['NEGATIVE_INFINITY', new Value(-Infinity)],
+    ['POSITIVE_INFINITY', new Value(Infinity)],
 
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],
