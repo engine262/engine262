@@ -14,20 +14,20 @@ import {
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function StringConstructor(args, { NewTarget }) {
+function StringConstructor(args, { callLength, NewTarget }) {
   let s;
-  if (args.length === 0) {
+  if (callLength === 0) {
     // String ( )
     s = new Value('');
   } else {
     // String ( value )
     const [value] = args;
-    if (Type(NewTarget) === 'Undefined' && Type(value) === 'Symbol') {
+    if (NewTarget === Value.undefined && Type(value) === 'Symbol') {
       return X(SymbolDescriptiveString(value));
     }
     s = Q(ToString(value));
   }
-  if (Type(NewTarget) === 'Undefined') {
+  if (NewTarget === Value.undefined) {
     return s;
   }
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));

@@ -30,13 +30,14 @@ import {
 import { Q, X } from '../completion.mjs';
 import { AddEntriesFromIterable } from './Map.mjs';
 import { BootstrapConstructor, FlaggedFeature } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
-  if (Type(NewTarget) !== 'Undefined'
+  if (NewTarget !== Value.undefined
       && NewTarget !== surroundingAgent.activeFunctionObject) {
     return OrdinaryCreateFromConstructor(NewTarget, '%ObjectPrototype%');
   }
-  if (Type(value) === 'Null' || Type(value) === 'Undefined') {
+  if (value === Value.null || Value === Value.undefined) {
     return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%ObjectPrototype%']);
   }
   return ToObject(value);
@@ -69,7 +70,7 @@ function Object_create([O, Properties]) {
     return surroundingAgent.Throw('TypeError', 'Object prototype may only be an Object or null');
   }
   const obj = ObjectCreate(O);
-  if (Type(Properties) !== 'Undefined') {
+  if (Properties !== Value.undefined) {
     return Q(ObjectDefineProperties(obj, Properties));
   }
   return obj;
@@ -82,14 +83,14 @@ function Object_defineProperties([O, Properties]) {
 // #sec-objectdefineproperties ObjectDefineProperties
 function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'value is not an object');
+    return surroundingAgent.Throw('TypeError', msg('NotAnObject', O));
   }
   const props = Q(ToObject(Properties));
   const keys = Q(props.OwnPropertyKeys());
   const descriptors = [];
   for (const nextKey of keys) {
     const propDesc = Q(props.GetOwnProperty(nextKey));
-    if (Type(propDesc) !== 'Undefined' && propDesc.Enumerable === Value.true) {
+    if (propDesc !== Value.undefined && propDesc.Enumerable === Value.true) {
       const descObj = Q(Get(props, nextKey));
       const desc = Q(ToPropertyDescriptor(descObj));
       descriptors.push([nextKey, desc]);
@@ -146,7 +147,7 @@ function Object_getOwnPropertyDescriptors([O]) {
   for (const key of ownKeys) {
     const desc = Q(obj.GetOwnProperty(key));
     const descriptor = X(FromPropertyDescriptor(desc));
-    if (Type(descriptor) !== 'Undefined') {
+    if (descriptor !== Value.undefined) {
       X(CreateDataProperty(descriptors, key, descriptor));
     }
   }

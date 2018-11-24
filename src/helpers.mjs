@@ -73,6 +73,7 @@ function inlineInspect(V) {
 const messages = {
   NotAFunction: (v) => `${inlineInspect(v)} is not a function`,
   NotAConstructor: (v) => `${inlineInspect(v)} is not a constructor`,
+  NotAnObject: (v) => `${inlineInspect(v)} is not an object`,
   PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
   PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
 };

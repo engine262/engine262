@@ -1,6 +1,4 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   DataBlock,
   Descriptor,
@@ -17,6 +15,7 @@ import {
   ToBoolean,
 } from './all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
@@ -88,7 +87,7 @@ export function FromPropertyDescriptor(Desc) {
 // 6.2.5.5 #sec-topropertydescriptor
 export function ToPropertyDescriptor(Obj) {
   if (Type(Obj) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('NotAnObject', Obj));
   }
 
   const desc = Descriptor({});
@@ -116,7 +115,7 @@ export function ToPropertyDescriptor(Obj) {
   if (hasGet === Value.true) {
     const getter = Q(Get(Obj, new Value('get')));
     if (IsCallable(getter) === Value.false && Type(getter) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('NotAFunction', getter));
     }
     desc.Get = getter;
   }
@@ -124,7 +123,7 @@ export function ToPropertyDescriptor(Obj) {
   if (hasSet === Value.true) {
     const setter = Q(Get(Obj, new Value('set')));
     if (IsCallable(setter) === Value.false && Type(setter) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('NotAFunction', setter));
     }
     desc.Set = setter;
   }

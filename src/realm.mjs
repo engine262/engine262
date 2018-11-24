@@ -8,6 +8,7 @@ import {
   DefinePropertyOrThrow,
   ObjectCreate,
   SetFunctionLength,
+  SetFunctionName,
 } from './abstract-ops/all.mjs';
 import { NewGlobalEnvironment } from './environment.mjs';
 import { surroundingAgent } from './engine.mjs';
@@ -107,8 +108,9 @@ export function CreateIntrinsics(realmRec) {
   const objProto = ObjectCreate(Value.null);
   intrinsics['%ObjectPrototype%'] = objProto;
 
-  const funcProto = CreateBuiltinFunction(() => {}, [], realmRec, objProto);
+  const funcProto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, objProto);
   SetFunctionLength(funcProto, new Value(0));
+  SetFunctionName(funcProto, new Value(''));
   intrinsics['%FunctionPrototype%'] = funcProto;
 
   {

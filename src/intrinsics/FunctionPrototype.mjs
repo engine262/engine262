@@ -37,7 +37,7 @@ function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
     PrepareForTailCall();
     return Q(Call(func, thisArg));
   }
-  const argList = CreateListFromArrayLike(argArray);
+  const argList = Q(CreateListFromArrayLike(argArray));
   PrepareForTailCall();
   return Q(Call(func, thisArg, argList));
 }
@@ -156,8 +156,8 @@ export function CreateFunctionPrototype(realmRec) {
     ['bind', FunctionProto_bind, 1],
     ['call', FunctionProto_call, 1],
     ['toString', FunctionProto_toString, 0],
-    [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1],
-  ].forEach(([name, fn, length]) => {
+    [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, { Writable: Value.false, Configurable: Value.false }],
+  ].forEach(([name, fn, length, override]) => {
     if (typeof name === 'string') {
       name = new Value(name);
     }
@@ -169,6 +169,7 @@ export function CreateFunctionPrototype(realmRec) {
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
+      ...override,
     }));
   });
 }

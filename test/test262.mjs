@@ -17,6 +17,8 @@ import {
 
 util.inspect.defaultOptions.depth = 2;
 
+const hidePassing = process.argv.includes('--hide-passing');
+
 const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
 
 const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.js'));
@@ -165,15 +167,20 @@ files.reduce((promise, filename) => promise.then(async () => {
   const source = await fs.promises.readFile(filename, 'utf8');
   const meta = yaml.default.parse(source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')));
 
+  if (meta.flags === undefined) {
+    meta.flags = [];
+  }
+  if (meta.includes === undefined) {
+    meta.includes = [];
+  }
+
   if (filename.includes('annexB')
-      || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))) {
+      || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
+      || /date|regex/i.test(meta.description) || /date|regex/.test(source)
+      || meta.includes.includes('nativeFunctionMatcher.js')) {
     skipped += 1;
     console.log('\u001b[33mSKIP\u001b[39m', short);
     return;
-  }
-
-  if (meta.flags === undefined) {
-    meta.flags = [];
   }
 
   let skip = false;
@@ -224,7 +231,9 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (!skip && !fail) {
     passed += 1;
-    console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
+    if (!hidePassing) {
+      console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
+    }
   }
 }), Promise.resolve())
   .catch((e) => {
