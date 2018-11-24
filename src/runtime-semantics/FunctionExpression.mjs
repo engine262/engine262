@@ -1,12 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   isFunctionExpressionWithBindingIdentifier,
-  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import {
   FunctionCreate,
   MakeConstructor,
   SetFunctionName,
+  isStrictModeCode,
+  sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
@@ -18,7 +19,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   } = FunctionExpression;
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = directivePrologueContainsUseStrictDirective(FunctionExpression.body.body);
+  const strict = isStrictModeCode(FunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
@@ -27,7 +28,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv, strict);
   MakeConstructor(closure);
   SetFunctionName(closure, name);
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionExpression);
+  closure.SourceText = sourceTextMatchedBy(FunctionExpression);
   envRec.InitializeBinding(name, closure);
   return closure;
 }
@@ -41,10 +42,10 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = directivePrologueContainsUseStrictDirective(FunctionExpression.body.body);
+  const strict = isStrictModeCode(FunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, scope, strict);
   MakeConstructor(closure);
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionExpression);
+  closure.SourceText = sourceTextMatchedBy(FunctionExpression);
   return closure;
 }

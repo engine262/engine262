@@ -7,13 +7,14 @@ import {
   MakeConstructor,
   ObjectCreate,
   SetFunctionName,
+  sourceTextMatchedBy,
+  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
 import {
   isAsyncFunctionDeclaration,
   isFunctionDeclaration,
   isGeneratorDeclaration,
   isAsyncGeneratorDeclaration,
-  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -29,12 +30,12 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
     id: BindingIdentifier,
     params: FormalParameters,
   } = FunctionDeclaration;
-  const strict = directivePrologueContainsUseStrictDirective(FunctionDeclaration.body.body);
+  const strict = isStrictModeCode(FunctionDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict));
   MakeConstructor(F);
   SetFunctionName(F, name);
-  F.SourceText = surroundingAgent.sourceTextMatchedBy(FunctionDeclaration);
+  F.SourceText = sourceTextMatchedBy(FunctionDeclaration);
   return F;
 }
 
@@ -47,7 +48,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     id: BindingIdentifier,
     params: FormalParameters,
   } = GeneratorDeclaration;
-  const strict = directivePrologueContainsUseStrictDirective(GeneratorDeclaration.body.body);
+  const strict = isStrictModeCode(GeneratorDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorDeclaration, scope, strict));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%')));
@@ -58,7 +59,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     Configurable: Value.false,
   })));
   SetFunctionName(F, name);
-  F.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorDeclaration);
+  F.SourceText = sourceTextMatchedBy(GeneratorDeclaration);
   return F;
 }
 
@@ -67,11 +68,11 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncFunctionDeclaration;
-  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionDeclaration.body.body);
+  const strict = isStrictModeCode(AsyncFunctionDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope, strict));
   SetFunctionName(F, name);
-  F.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionDeclaration);
+  F.SourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   return F;
 }
 
@@ -80,7 +81,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorDeclaration;
-  const strict = directivePrologueContainsUseStrictDirective(AsyncGeneratorDeclaration.body.body);
+  const strict = isStrictModeCode(AsyncGeneratorDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope, strict));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
@@ -91,7 +92,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     Configurable: Value.false,
   })));
   SetFunctionName(F, name);
-  F.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncGeneratorDeclaration);
+  F.SourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
   return F;
 }
 

@@ -11,6 +11,7 @@ import {
   MakeConstructor,
   ObjectCreate,
   SetFunctionName,
+  sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
 import {
@@ -143,7 +144,7 @@ export function* Evaluate_ClassExpression(ClassExpression) {
       SetFunctionName(value, className);
     }
   }
-  value.SourceText = surroundingAgent.sourceTextMatchedBy(ClassExpression);
+  value.SourceText = sourceTextMatchedBy(ClassExpression);
   return new NormalCompletion(value);
 }
 
@@ -178,7 +179,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     Q(InitializeBoundName(className, value, env));
   }
-  value.SourceText = surroundingAgent.sourceTextMatchedBy(ClassDeclaration);
+  value.SourceText = sourceTextMatchedBy(ClassDeclaration);
   return new NormalCompletion(value);
 }
 

@@ -1,9 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   isAsyncFunctionExpressionWithBindingIdentifier,
-  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
-import { AsyncFunctionCreate, SetFunctionName } from '../abstract-ops/all.mjs';
+import {
+  AsyncFunctionCreate,
+  SetFunctionName,
+  sourceTextMatchedBy,
+  isStrictModeCode,
+} from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
 import { X } from '../completion.mjs';
@@ -16,7 +20,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionExpression.body.body);
+  const strict = isStrictModeCode(AsyncFunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
@@ -25,7 +29,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
   const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, funcEnv, strict));
   X(SetFunctionName(closure, name));
   X(envRec.InitializeBinding(name, closure));
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionExpression);
+  closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }
 
@@ -39,9 +43,9 @@ export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
 
   // If the function code for FunctionExpression is strict mode
   // code, let strict be true. Otherwise let strict be false.
-  const strict = directivePrologueContainsUseStrictDirective(AsyncFunctionExpression.body.body);
+  const strict = isStrictModeCode(AsyncFunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope, strict));
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncFunctionExpression);
+  closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }

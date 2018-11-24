@@ -10,7 +10,6 @@ import {
   isPropertyDefinitionIdentifierReference,
   isPropertyDefinitionKeyValue,
   isPropertyDefinitionSpread,
-  directivePrologueContainsUseStrictDirective,
 } from '../ast.mjs';
 import {
   Assert,
@@ -24,6 +23,8 @@ import {
   MakeMethod,
   ObjectCreate,
   SetFunctionName,
+  isStrictModeCode,
+  sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { Evaluate_Expression } from '../evaluator.mjs';
@@ -136,13 +137,13 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = directivePrologueContainsUseStrictDirective(MethodDefinition.value.body.body);
+      const strict = isStrictModeCode(MethodDefinition);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const formalParameterList = [];
       const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('get')));
-      closure.SourceText = surroundingAgent.sourceTextMatchedBy(MethodDefinition);
+      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
       const desc = Descriptor({
         Get: closure,
         Enumerable: enumerable ? Value.true : Value.false,
@@ -158,12 +159,12 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = directivePrologueContainsUseStrictDirective(MethodDefinition.value.body.body);
+      const strict = isStrictModeCode(MethodDefinition);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('set')));
-      closure.SourceText = surroundingAgent.sourceTextMatchedBy(MethodDefinition);
+      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
       const desc = Descriptor({
         Set: closure,
         Enumerable: enumerable ? Value.true : Value.false,
@@ -191,7 +192,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   } = GeneratorMethod;
   const UniqueFormalParameters = GeneratorExpression.params;
 
-  const strict = directivePrologueContainsUseStrictDirective(GeneratorExpression.body.body);
+  const strict = isStrictModeCode(GeneratorExpression);
   const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -209,7 +210,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
     }),
   ));
   X(SetFunctionName(closure, propKey));
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorExpression);
+  closure.SourceText = sourceTextMatchedBy(GeneratorExpression);
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,

@@ -3,8 +3,9 @@ import {
   GeneratorFunctionCreate,
   ObjectCreate,
   SetFunctionName,
+  sourceTextMatchedBy,
+  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
-import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
@@ -19,7 +20,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     id: BindingIdentifier,
     params: FormalParameters,
   } = GeneratorExpression;
-  const strict = directivePrologueContainsUseStrictDirective(GeneratorExpression.body.body);
+  const strict = isStrictModeCode(GeneratorExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let funcEnv = scope;
   let envRec;
@@ -42,7 +43,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(GeneratorExpression);
+  closure.SourceText = sourceTextMatchedBy(GeneratorExpression);
   if (BindingIdentifier) {
     X(SetFunctionName(closure, name));
     envRec.InitializeBinding(name, closure);

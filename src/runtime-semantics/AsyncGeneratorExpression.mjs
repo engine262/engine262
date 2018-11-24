@@ -3,8 +3,9 @@ import {
   AsyncGeneratorFunctionCreate,
   ObjectCreate,
   SetFunctionName,
+  sourceTextMatchedBy,
+  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
-import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
@@ -19,7 +20,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorExpression;
-  const strict = directivePrologueContainsUseStrictDirective(AsyncGeneratorExpression.body.body);
+  const strict = isStrictModeCode(AsyncGeneratorExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let funcEnv = scope;
   let envRec;
@@ -42,7 +43,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
-  closure.SourceText = surroundingAgent.sourceTextMatchedBy(AsyncGeneratorExpression);
+  closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
   if (BindingIdentifier) {
     X(SetFunctionName(closure, name));
     envRec.InitializeBinding(name, closure);

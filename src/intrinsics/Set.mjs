@@ -21,6 +21,7 @@ import {
   X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function SetConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {

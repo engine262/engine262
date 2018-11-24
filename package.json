@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "node --experimental-modules test/test262.mjs",
-    "lint": "eslint transform.js transform_do.js build.js test/test262.mjs src/ --ext=js,mjs --cache",
+    "lint": "eslint transform.js transform_do.js test/test262.mjs src/ --ext=js,mjs --cache",
     "build": "rollup -c",
     "build-do": "rollup -c --environment USE_DO_EXPRESSIONS"
   },

@@ -48,13 +48,6 @@ export class Agent {
     return this.runningExecutionContext.Function;
   }
 
-  // The source text matched by a grammar production is the portion of the source
-  // text that starts at the beginning of the first terminal that participated in
-  // the match and ends at the end of the last terminal that participated in the match.
-  sourceTextMatchedBy(node) {
-    return new Value(node.source());
-  }
-
   intrinsic(name) {
     return this.currentRealmRecord.Intrinsics[name];
   }
