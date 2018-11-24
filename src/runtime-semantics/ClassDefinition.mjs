@@ -34,7 +34,7 @@ import {
 } from '../completion.mjs';
 
 const emptyConstructorNode = acorn.parse('(class { constructor() {} })').body[0].expression.body.body[0];
-const forwardingConstructorNode = acorn.parse('(class { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
+const forwardingConstructorNode = acorn.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
 Object.freeze(emptyConstructorNode);
 Object.freeze(forwardingConstructorNode);
 
