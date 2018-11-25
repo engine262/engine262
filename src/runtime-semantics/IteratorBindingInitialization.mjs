@@ -326,7 +326,9 @@ function* IteratorBindingInitialization_FormalParameter(FormalParameter, iterato
   const currentContext = surroundingAgent.runningExecutionContext;
   const originalEnv = currentContext.VariableEnvironment;
   Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);
-  Assert(environment === originalEnv);
+  if (environment !== Value.undefined) {
+    Assert(environment === originalEnv);
+  }
   const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
   currentContext.VariableEnvironment = paramVarEnv;
   currentContext.LexicalEnvironment = paramVarEnv;
@@ -350,7 +352,9 @@ function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParame
   const currentContext = surroundingAgent.runningExecutionContext;
   const originalEnv = currentContext.VariableEnvironment;
   Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);
-  Assert(environment === originalEnv);
+  if (environment !== Value.undefined) {
+    Assert(environment === originalEnv);
+  }
   const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
   currentContext.VariableEnvironment = paramVarEnv;
   currentContext.LexicalEnvironment = paramVarEnv;

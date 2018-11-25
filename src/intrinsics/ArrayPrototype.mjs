@@ -37,6 +37,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);
@@ -63,8 +64,8 @@ function ArraySpeciesCreate(originalArray, length) {
   if (Type(C) === 'Undefined') {
     return Q(ArrayCreate(length));
   }
-  if (IsConstructor(C) === Value.true) {
-    return surroundingAgent.Throw('TypeError');
+  if (IsConstructor(C) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
   }
   return Q(Construct(C, [length]));
 }
@@ -119,7 +120,7 @@ function ArrayProto_concat(args, { thisValue }) {
   return Value.true;
 }
 
-function ArrayProto_copyWithin([target, start, end], { thisValue }) {
+function ArrayProto_copyWithin([target, start, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp));
@@ -138,7 +139,7 @@ function ArrayProto_copyWithin([target, start, end], { thisValue }) {
     from = Math.min(relativeStart.numberValue(), len.numberValue());
   }
   let relativeEnd;
-  if (Type(end) === 'Undefined') {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     relativeEnd = Q(ToInteger(end));
@@ -209,7 +210,7 @@ function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
   return Value.true;
 }
 
-function ArrayProto_fill([value, start, end], { thisValue }) {
+function ArrayProto_fill([value, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
@@ -233,7 +234,7 @@ function ArrayProto_fill([value, start, end], { thisValue }) {
     final = Math.min(relativeEnd, len);
   }
   while (k < final) {
-    const Pk = X(ToString(k));
+    const Pk = X(ToString(new Value(k)));
     Q(Set(O, Pk, value, Value.true));
     k += 1;
   }
@@ -248,7 +249,7 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
   const T = thisArg || Value.undefined;
-  const A = Q(ArraySpeciesCreate(O, 0));
+  const A = Q(ArraySpeciesCreate(O, new Value(0)));
   let k = 0;
   let to = 0;
   while (k < len) {

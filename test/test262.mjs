@@ -39,7 +39,7 @@ const excludedFeatures = new Set([
 
 const excludedTests = new Set([
   'test/built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
-  'test/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js'
+  'test/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js',
 ]);
 
 const PASS = Symbol('PASS');
@@ -181,7 +181,7 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (filename.includes('annexB')
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
-      || /date|regex/i.test(meta.description) || /date|regex/.test(source)
+      || /date|reg ?exp?/i.test(meta.description) || /date|reg ?exp?/.test(source)
       || meta.includes.includes('nativeFunctionMatcher.js')
       || excludedTests.has(short)) {
     skipped += 1;

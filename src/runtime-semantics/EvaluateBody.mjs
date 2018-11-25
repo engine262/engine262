@@ -79,9 +79,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const strict = func.Strict;
   const formals = func.FormalParameters;
   const parameterNames = BoundNames_FormalParameters(formals).map(Value);
-  const hasDuplicates = !parameterNames.every(
-    (e) => parameterNames.indexOf(e) === parameterNames.lastIndexOf(e),
-  );
+  const hasDuplicates = parameterNames.some((e) => parameterNames.indexOf(e) !== parameterNames.lastIndexOf(e));
   const simpleParameterList = IsSimpleParameterList(formals);
   const hasParameterExpressions = ContainsExpression(formals);
 
