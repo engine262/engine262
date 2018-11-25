@@ -601,7 +601,7 @@ export function GetIdentifierReference(lex, name, strict) {
     return new Reference(Value.undefined, name, strict);
   }
   const envRec = lex.EnvironmentRecord;
-  const exists = envRec.HasBinding(name);
+  const exists = Q(envRec.HasBinding(name));
   if (exists === Value.true) {
     return new Reference(envRec, name, strict);
   } else {

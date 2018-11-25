@@ -36,7 +36,7 @@ import {
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
 import { Completion, Q, X } from './completion.mjs';
-import { OutOfRange } from './helpers.mjs';
+import { OutOfRange, msg } from './helpers.mjs';
 
 export function Value(value) {
   if (new.target !== undefined && new.target !== Value) {
@@ -398,7 +398,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const map = args.ParameterMap;
     const isMapped = HasOwnProperty(map, P);
     let newArgDesc = Desc;
-    if (isMapped === Value.true && IsDataDescriptor(Desc) === Value.true) {
+    if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
       if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
         newArgDesc = { ...Desc };
         newArgDesc.Value = Get(map, P);
@@ -409,7 +409,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
       return Value.false;
     }
     if (isMapped === Value.true) {
-      if (IsAccessorDescriptor(Desc) === Value.true) {
+      if (IsAccessorDescriptor(Desc) === true) {
         map.Delete(P);
       } else {
         if (Desc.Value !== undefined) {
@@ -625,7 +625,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform getPrototypeOf on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'getPrototypeOf'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -635,7 +635,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const handlerProto = Q(Call(trap, handler, [target]));
     if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'getPrototypeOf\' on proxy: trap returned neither object nor null');
     }
     const extensibleTarget = Q(IsExtensible(target));
     if (extensibleTarget === Value.true) {
@@ -643,7 +643,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const targetProto = Q(target.GetPrototypeOf());
     if (SameValue(handlerProto, targetProto) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'getPrototypeOf\' on proxy: proxy target is non-extensible but the trap did not return its actual prototype');
     }
     return handlerProto;
   }
@@ -654,7 +654,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(Type(V) === 'Object' || Type(V) === 'Null');
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform setPrototypeOf on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'setPrototypeOf'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -671,8 +671,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Value.true;
     }
     const targetProto = Q(target.GetPrototypeOf());
-    if (SameValue(V, targetProto) === Value.true) {
-      return surroundingAgent.Throw('TypeError');
+    if (SameValue(V, targetProto) === Value.false) {
+      return surroundingAgent.Throw('TypeError', '\'setPrototypeOf\' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target');
     }
     return Value.true;
   }
@@ -682,7 +682,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform isExtensible on proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'isExtensible'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -693,7 +693,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
     const targetResult = Q(target.IsExtensible());
     if (SameValue(booleanTrapResult, targetResult) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'isExtensible\' on proxy: trap result does not reflect extensibility of proxy target');
     }
     return booleanTrapResult;
   }
@@ -703,7 +703,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform preventExtensions on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'preventExtensions'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -715,7 +715,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (booleanTrapResult === Value.true) {
       const targetIsExtensible = Q(target.IsExtensible());
       if (targetIsExtensible === Value.true) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'preventExtensions\' on proxy: trap returned truthy but the proxy target is extensible');
       }
     }
     return booleanTrapResult;
@@ -727,7 +727,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform getOwnPropertyDescriptor on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'getOwnPropertyDescriptor'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -736,8 +736,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Q(target.GetOwnProperty(P));
     }
     const trapResultObj = Q(Call(trap, handler, [target, P]));
-    if (Type(trapResultObj) !== 'Object' || Type(trapResultObj) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError');
+    if (Type(trapResultObj) !== 'Object' && Type(trapResultObj) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned neither object nor undefined for property');
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     if (trapResultObj === Value.undefined) {
@@ -745,12 +745,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
         return Value.undefined;
       }
       if (targetDesc.Configurable === Value.false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned undefined for property which is non-configurable in the proxy target');
       }
       const extensibleTarget = Q(IsExtensible(target));
       Assert(Type(extensibleTarget) === 'Boolean');
       if (extensibleTarget === Value.false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned undefined for property which exists in the non-extensible proxy target');
       }
       return Value.undefined;
     }
@@ -759,11 +759,11 @@ export class ProxyExoticObjectValue extends ObjectValue {
     CompletePropertyDescriptor(resultDesc);
     const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
     if (valid === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned descriptor for property that is incompatible with the existing property in the proxy target');
     }
     if (resultDesc.Configurable === Value.false) {
-      if (targetDesc === Value.undefined || targetDesc.Configurable === Value.false) {
-        return surroundingAgent.Throw('TypeError');
+      if (targetDesc === Value.undefined || targetDesc.Configurable === Value.true) {
+        return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap reported non-configurability for property which is either non-existant or configurable in the proxy target');
       }
     }
     return resultDesc;
@@ -775,7 +775,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform defineProperty on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'defineProperty'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -820,7 +820,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform has on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'has'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -850,7 +850,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform get on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'get'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -861,12 +861,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
     const targetDesc = Q(target.GetOwnProperty(P));
     if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
-      if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
+      if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(trapResult, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
-      if (IsAccessorDescriptor(targetDesc) === Value.true && targetDesc.Get === Value.undefined) {
+      if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
         if (trapResult !== Value.undefined) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -881,7 +881,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform set on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'set'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -895,12 +895,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const targetDesc = Q(target.GetOwnProperty(P));
     if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
-      if (IsDataDescriptor(targetDesc) === Value.true && targetDesc.Writable === Value.false) {
+      if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(V, targetDesc.Value) === Value.false) {
           return surroundingAgent.Throw('TypeError');
         }
       }
-      if (IsAccessorDescriptor(targetDesc) === Value.true) {
+      if (IsAccessorDescriptor(targetDesc) === true) {
         if (targetDesc.Set === Value.undefined) {
           return surroundingAgent.Throw('TypeError');
         }
@@ -915,7 +915,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     Assert(IsPropertyKey(P));
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform deleteProperty on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'deleteProperty'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -942,7 +942,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
 
     const handler = O.ProxyHandler;
     if (handler === Value.null) {
-      return surroundingAgent.Throw('TypeError', 'cannot perform ownKeys on a proxy that has been revoked');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'ownKeys'));
     }
     Assert(Type(handler) === 'Object');
     const target = O.ProxyTarget;
@@ -953,7 +953,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const trapResultArray = Q(Call(trap, handler, [target]));
     const trapResult = Q(CreateListFromArrayLike(trapResultArray, ['String', 'Symbol']));
     if (trapResult.some((e) => trapResult.indexOf(e) !== trapResult.lastIndexOf(e))) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap returned duplicate keys');
     }
     const extensibleTarget = Q(IsExtensible(target));
     const targetKeys = Q(target.OwnPropertyKeys());
@@ -972,21 +972,24 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
       return trapResult;
     }
-    const uncheckedResultKeys = [...trapResult];
+    const uncheckedResultKeys = new global.Set(trapResult);
     for (const key of targetNonconfigurableKeys) {
-      if (!uncheckedResultKeys.includes(key)) {
-        return surroundingAgent.Throw('TypeError', 'ownKeys trap result does not include non-configurable key');
+      if (!uncheckedResultKeys.has(key)) {
+        return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap result does not include non-configurable key');
       }
-      uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
+      uncheckedResultKeys.delete(key);
     }
     if (extensibleTarget === Value.true) {
       return trapResult;
     }
     for (const key of targetConfigurableKeys) {
-      if (!uncheckedResultKeys.includes(key)) {
-        return surroundingAgent.Throw('TypeError');
+      if (!uncheckedResultKeys.has(key)) {
+        return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap result does not include configurable key');
       }
-      uncheckedResultKeys.splice(uncheckedResultKeys.indexOf(key), 1);
+      uncheckedResultKeys.delete(key);
+    }
+    if (uncheckedResultKeys.size > 0) {
+      return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap returned extra keys but proxy target is non-extensible');
     }
     return trapResult;
   }

@@ -76,6 +76,7 @@ const messages = {
   NotAnObject: (v) => `${inlineInspect(v)} is not an object`,
   PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
   PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
+  ProxyRevoked: (n) => `Cannot perform '${n}' on a proxy that has been revoked`,
 };
 
 export function msg(key, ...args) {
