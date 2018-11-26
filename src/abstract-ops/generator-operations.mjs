@@ -21,8 +21,7 @@ export function GeneratorStart(generator, generatorBody) {
   genContext.Generator = generator;
   genContext.codeEvaluationState = (function* resumer() {
     const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
-    Assert(surroundingAgent.runningExecutionContext === genContext);
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(genContext);
     generator.GeneratorState = 'completed';
     genContext.codeEvaluationState = null;
     let resultValue;
@@ -123,7 +122,7 @@ export function* GeneratorYield(iterNextObj) {
   const generator = genContext.Generator;
   Assert(GetGeneratorKind() === 'sync');
   generator.GeneratorState = 'suspendedYield';
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(genContext);
   const resumptionValue = yield new NormalCompletion(iterNextObj);
   return resumptionValue;
 }

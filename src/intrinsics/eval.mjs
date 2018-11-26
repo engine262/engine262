@@ -234,7 +234,7 @@ export function PerformEval(x, evalRealm, strictCaller, direct) {
   if (result.Type === 'normal' && result.Value === undefined) {
     result = new NormalCompletion(Value.undefined);
   }
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(evalCtx);
   // Resume the context that is now on the top of the execution context stack as the running execution context.
   return Completion(result);
 }

@@ -4,6 +4,7 @@ import {
   NormalCompletion,
   ThrowCompletion,
 } from '../completion.mjs';
+import { Value, Descriptor } from '../value.mjs';
 import { AsyncGeneratorEnqueue } from '../abstract-ops/all.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
@@ -31,6 +32,13 @@ export function CreateAsyncGeneratorPrototype(realmRec) {
     ['return', AsyncGeneratorPrototype_return, 1],
     ['throw', AsyncGeneratorPrototype_throw, 1],
   ], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
+
+  X(realmRec.Intrinsics['%AsyncGenerator%'].DefineOwnProperty(new Value('prototype'), Descriptor({
+    Value: proto,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
 
   realmRec.Intrinsics['%AsyncGeneratorPrototype%'] = proto;
 }

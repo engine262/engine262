@@ -37,8 +37,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   genContext.codeEvaluationState = (function* resumer() {
     const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
     // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
-    Assert(surroundingAgent.runningExecutionContext === genContext);
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(genContext);
     generator.AsyncGeneratorState = 'completed';
     let resultValue;
     if (result instanceof NormalCompletion) {
@@ -177,7 +176,7 @@ export function* AsyncGeneratorYield(value) {
   Assert(GetGeneratorKind() === 'async');
   value = Q(yield* Await(value));
   generator.AsyncGeneratorState = 'suspendedYield';
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(genContext);
   const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false));
   if (resumptionValue.Type !== 'return') {
     return Completion(resumptionValue);

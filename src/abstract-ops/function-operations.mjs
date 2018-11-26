@@ -124,7 +124,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(calleeContext);
   if (result.Type === 'return') {
     return new NormalCompletion(result.Value);
   }
@@ -153,7 +153,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(calleeContext);
   if (result.Type === 'return') {
     if (Type(result.Value) === 'Object') {
       return new NormalCompletion(result.Value);

@@ -281,7 +281,7 @@ export class BuiltinFunctionValue extends FunctionValue {
         const result = nativeCall(F, argumentsList, undefined, newTarget);
         // Remove calleeContext from the execution context stack and
         // restore callerContext as the running execution context.
-        surroundingAgent.executionContextStack.pop();
+        surroundingAgent.executionContextStack.pop(calleeContext);
         return result;
       };
     }
@@ -302,7 +302,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     const result = nativeCall(F, argumentsList, thisArgument, undefined);
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(calleeContext);
     return result;
   }
 }

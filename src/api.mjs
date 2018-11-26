@@ -53,7 +53,7 @@ function runJobQueue() {
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
     const result = nextPending.Job(...nextPending.Arguments);
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(newContext);
     if (result instanceof AbruptCompletion) {
       HostReportErrors(result.Value);
     }
@@ -91,8 +91,7 @@ class APIRealm {
       Configurable: Value.true,
     }));
 
-    Assert(surroundingAgent.runningExecutionContext === newContext);
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(newContext);
 
     this.global = globalObj;
     this.realm = realm;
@@ -130,8 +129,7 @@ class APIRealm {
     this.active = true;
     surroundingAgent.executionContextStack.push(this.context);
     const res = cb();
-    Assert(surroundingAgent.runningExecutionContext === this.context);
-    surroundingAgent.executionContextStack.pop();
+    surroundingAgent.executionContextStack.pop(this.context);
     this.active = false;
     return res;
   }

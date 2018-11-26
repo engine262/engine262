@@ -12,7 +12,7 @@ import {
   SetDefaultGlobalBindings,
   SetRealmGlobalObject,
 } from './realm.mjs';
-import { Construct } from './abstract-ops/all.mjs';
+import { Construct, Assert } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 
@@ -27,6 +27,13 @@ export class Agent {
     this.CandidateExecution = undefined;
 
     this.executionContextStack = [];
+    const stackPop = this.executionContextStack.pop;
+    this.executionContextStack.pop = function pop(...args) {
+      const popped = stackPop.call(this);
+      if (args.length === 1) {
+        Assert(args[0] === popped);
+      }
+    };
 
     this.jobQueue = [];
 
@@ -180,7 +187,7 @@ export function ScriptEvaluation(scriptRecord) {
     result = new NormalCompletion(Value.undefined);
   }
   // Suspend scriptCtx
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(scriptCtx);
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;

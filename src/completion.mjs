@@ -159,7 +159,7 @@ export function* Await(value) {
   X(SetFunctionLength(onRejected, new Value(1)));
   onRejected.AsyncContext = asyncContext;
   X(PerformPromiseThen(promise, onFulfilled, onRejected));
-  surroundingAgent.executionContextStack.pop();
+  surroundingAgent.executionContextStack.pop(asyncContext);
   const completion = yield Value.undefined;
   return completion;
 }
