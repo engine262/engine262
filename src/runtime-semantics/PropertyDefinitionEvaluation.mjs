@@ -2,6 +2,8 @@ import {
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
+  isAsyncMethod,
+  isAsyncGeneratorMethod,
   isGeneratorMethod,
   isMethodDefinition,
   isMethodDefinitionGetter,
@@ -18,6 +20,8 @@ import {
   DefinePropertyOrThrow,
   FunctionCreate,
   GeneratorFunctionCreate,
+  AsyncGeneratorFunctionCreate,
+  AsyncFunctionCreate,
   GetValue,
   HasOwnProperty,
   MakeMethod,
@@ -125,11 +129,11 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
     case isGeneratorMethod(MethodDefinition):
       return yield* PropertyDefinitionEvaluation_GeneratorMethod(MethodDefinition, object, enumerable);
 
-      // case isAsyncMethod(MethodDefinition):
-      //   return yield* PropertyDefinitionEvaluation_AsyncMethod(MethodDefinition, object, enumerable);
+    case isAsyncMethod(MethodDefinition):
+      return yield* PropertyDefinitionEvaluation_AsyncMethod(MethodDefinition, object, enumerable);
 
-      // case isAsyncGeneratorMethod(MethodDefinition):
-      //   return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(MethodDefinition, object, enumerable);
+    case isAsyncGeneratorMethod(MethodDefinition):
+      return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(MethodDefinition, object, enumerable);
 
     case isMethodDefinitionGetter(MethodDefinition): {
       const PropertyName = MethodDefinition.key;
@@ -214,7 +218,62 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,
-    Enumerable: new Value(enumerable),
+    Enumerable: enumerable ? Value.true : Value.false,
+    Configurable: Value.true,
+  });
+  return Q(DefinePropertyOrThrow(object, propKey, desc));
+}
+
+// AsyncMethod : `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
+  const {
+    key: PropertyName,
+    value: AsyncExpression,
+  } = AsyncMethod;
+  const UniqueFormalParameters = AsyncExpression.params;
+
+  const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncMethod.computed);
+  ReturnIfAbrupt(propKey);
+  const strict = isStrictModeCode(AsyncExpression);
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const closure = X(AsyncFunctionCreate('Method', UniqueFormalParameters, AsyncExpression, scope, strict));
+  X(MakeMethod(closure, object));
+  X(SetFunctionName(closure, propKey));
+  const desc = Descriptor({
+    Value: closure,
+    Writable: Value.true,
+    Enumerable: enumerable ? Value.true : Value.false,
+    Configurable: Value.true,
+  });
+  return Q(DefinePropertyOrThrow(object, propKey, desc));
+}
+
+// AsyncGeneratorMethod : `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorFunctionBody `}`
+function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
+  const {
+    key: PropertyName,
+    value: AsyncGeneratorExpression,
+  } = AsyncGeneratorMethod;
+  const UniqueFormalParameters = AsyncGeneratorExpression.params;
+
+  const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncGeneratorMethod.computed);
+  ReturnIfAbrupt(propKey);
+  const strict = isStrictModeCode(AsyncGeneratorExpression);
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const closure = X(AsyncGeneratorFunctionCreate('Method', UniqueFormalParameters, AsyncGeneratorExpression, scope, strict));
+  X(MakeMethod(closure, object));
+  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
+  X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    Value: prototype,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  })));
+  X(SetFunctionName(closure, propKey));
+  const desc = Descriptor({
+    Value: closure,
+    Writable: Value.true,
+    Enumerable: enumerable ? Value.true : Value.false,
     Configurable: Value.true,
   });
   return Q(DefinePropertyOrThrow(object, propKey, desc));

@@ -126,7 +126,7 @@ export function isMethodDefinition(node) {
   return isMethodDefinitionRegularFunction(node)
     || isGeneratorMethod(node)
     || isAsyncMethod(node)
-    || isAsyncGeneratorExpression(node)
+    || isAsyncGeneratorMethod(node)
     || isMethodDefinitionGetter(node)
     || isMethodDefinitionSetter(node);
 }
