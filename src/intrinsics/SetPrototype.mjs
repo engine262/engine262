@@ -175,7 +175,7 @@ export function CreateSetPrototype(realmRec) {
 
   {
     const fn = CreateBuiltinFunction(SetProto_size, [], realmRec);
-    SetFunctionName(fn, new Value('size'));
+    SetFunctionName(fn, new Value('size'), new Value('get'));
     SetFunctionLength(fn, new Value(0));
     X(proto.DefineOwnProperty(new Value('size'), Descriptor({
       Get: fn,

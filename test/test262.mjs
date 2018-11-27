@@ -41,7 +41,6 @@ const excludedFeatures = new Set([
 
 const excludedTests = new Set([
   'test/built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
-  'test/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js',
 ]);
 
 const PASS = Symbol('PASS');

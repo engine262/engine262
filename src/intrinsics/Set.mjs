@@ -9,6 +9,8 @@ import {
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -51,15 +53,24 @@ function SetConstructor([iterable], { NewTarget }) {
   }
 }
 
-export function CreateSet(realmRec) {
-  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 1, realmRec.Intrinsics['%SetPrototype%'], []);
+function Set_symbolSpecies(args, { thisValue }) {
+  return thisValue;
+}
 
-  X(setConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
-    Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: Value.undefined,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
+export function CreateSet(realmRec) {
+  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%SetPrototype%'], []);
+
+  {
+    const fn = CreateBuiltinFunction(Set_symbolSpecies, [], realmRec);
+    X(SetFunctionLength(fn, new Value(0)));
+    X(SetFunctionName(fn, wellKnownSymbols.species, new Value('get')));
+    X(setConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
+      Get: fn,
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    })));
+  }
 
   realmRec.Intrinsics['%Set%'] = setConstructor;
 }
