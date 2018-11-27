@@ -2,7 +2,6 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   Call,
-  CreateBuiltinFunction,
   Get,
   GetIterator,
   IsCallable,
@@ -10,17 +9,20 @@ import {
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
+  CreateBuiltinFunction,
+  SetFunctionName,
+  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   Type,
   Value,
+  Descriptor,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  AbruptCompletion, Q,
+  AbruptCompletion,
   ThrowCompletion,
-  X,
+  Q, X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
@@ -69,15 +71,24 @@ function MapConstructor([iterable], { NewTarget }) {
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 
-export function CreateMap(realmRec) {
-  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 1, realmRec.Intrinsics['%MapPrototype%'], []);
+function Map_symbolSpecies(args, { thisValue }) {
+  return thisValue;
+}
 
-  X(mapConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
-    Get: CreateBuiltinFunction((a, { thisValue }) => thisValue, [], realmRec),
-    Set: Value.undefined,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
+export function CreateMap(realmRec) {
+  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%MapPrototype%'], []);
+
+  {
+    const fn = CreateBuiltinFunction(Map_symbolSpecies, [], realmRec);
+    X(SetFunctionLength(fn, new Value(0)));
+    X(SetFunctionName(fn, wellKnownSymbols.species, new Value('get')));
+    X(mapConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
+      Get: fn,
+      Set: Value.undefined,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    })));
+  }
 
   realmRec.Intrinsics['%Map%'] = mapConstructor;
 }

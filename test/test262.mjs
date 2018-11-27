@@ -35,6 +35,8 @@ const excludedFeatures = new Set([
   'export-star-as-namespace-from-module',
   'RegExp',
   'caller',
+  'WeakSet',
+  'WeakMap',
 ]);
 
 const excludedTests = new Set([

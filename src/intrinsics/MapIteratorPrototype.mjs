@@ -10,19 +10,19 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'Map Iterator.prototype.next called on incompatible receiver');
   }
-  if (!('IteratedMap' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError');
+  if (!('Map' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
+    return surroundingAgent.Throw('TypeError', 'Map Iterator.prototype.next called on incompatible receiver');
   }
-  const s = O.IteratedMap;
+  const m = O.Map;
   let index = O.MapNextIndex;
   const itemKind = O.MapIterationKind;
-  if (Type(s) === 'Undefined') {
+  if (m === Value.undefined) {
     return CreateIterResultObject(Value.undefined, Value.true);
   }
-  Assert('MapData' in s);
-  const entries = s.MapData;
+  Assert('MapData' in m);
+  const entries = m.MapData;
   const numEntries = entries.length;
   while (index < numEntries) {
     const e = entries[index];
@@ -41,7 +41,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
       return CreateIterResultObject(result, Value.false);
     }
   }
-  O.IteratedMap = Value.undefined;
+  O.Map = Value.undefined;
   return CreateIterResultObject(Value.undefined, Value.true);
 }
 

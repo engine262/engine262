@@ -33,6 +33,7 @@ function CreateMapIterator(map, kind) {
   iterator.Map = map;
   iterator.MapNextIndex = 0;
   iterator.MapIterationKind = kind;
+  return iterator;
 }
 
 function MapProto_clear(args, { thisValue }) {
@@ -69,7 +70,7 @@ function MapProto_delete([key], { thisValue }) {
       // The value empty is used as a specification device to indicate that an
       // entry has been deleted. Actual implementations may take other actions
       // such as physically removing the entry from internal data structures.
-      entries.splice(i, 1);
+      // entries.splice(i, 1);
 
       return Value.true;
     }
