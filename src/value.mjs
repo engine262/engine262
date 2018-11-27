@@ -309,6 +309,12 @@ export class BuiltinFunctionValue extends FunctionValue {
 
 // 9.4.3 #sec-string-exotic-objects
 export class StringExoticObjectValue extends ObjectValue {
+  constructor() {
+    super();
+
+    this.StringData = undefined;
+  }
+
   GetOwnProperty(P) {
     const S = this;
     Assert(IsPropertyKey(P));

@@ -36,7 +36,7 @@ export function CreateNativeError(realmRec) {
       } else {
         newTarget = NewTarget;
       }
-      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`), ['ErrorData']);
+      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`, ['ErrorData']));
       if (Type(message) !== 'Undefined') {
         const msg = Q(ToString(message));
         const msgDesc = Descriptor({

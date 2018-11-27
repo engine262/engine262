@@ -51,7 +51,7 @@ function StringProto_charCodeAt([pos], { thisValue }) {
   if (position < 0 || position >= size) {
     return new Value(NaN);
   }
-  return S.stringValue().charCodeAt(position);
+  return new Value(S.stringValue().charCodeAt(position));
 }
 
 function StringProto_codePointAt([pos], { thisValue }) {
