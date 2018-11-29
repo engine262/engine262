@@ -237,6 +237,12 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         }
         return '[Function]';
       }
+      if ('PromiseState' in value) {
+        return `Promise {
+  [[PromiseState]]: '${value.PromiseState}',
+  [[PromiseResult]]: ${innerInspect(value.PromiseResult)},
+}`;
+      }
       const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
       const toString = Q(AbstractOps.Get(value, new Value('toString')));
       if (toString.nativeFunction === errorToString.nativeFunction) {
