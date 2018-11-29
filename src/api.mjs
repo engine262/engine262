@@ -19,6 +19,7 @@ import {
   NormalCompletion,
   Q, X,
   ThrowCompletion,
+  EnsureCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
 import { OutOfRange } from './helpers.mjs';
@@ -130,11 +131,11 @@ class APIRealm {
       }
       // END ScriptEvaluationJob
 
-      const res = ScriptEvaluation(s);
+      const res = Q(ScriptEvaluation(s));
 
       runJobQueue();
 
-      return res;
+      return EnsureCompletion(res);
     });
   }
 
