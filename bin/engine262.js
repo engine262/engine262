@@ -10,6 +10,9 @@ const {
   inspect,
   Realm,
   AbruptCompletion,
+  Value,
+  Object: APIObject,
+  Abstract,
 } = require('..');
 
 initializeAgent({
@@ -19,9 +22,27 @@ initializeAgent({
   ],
 });
 
-const realm = new Realm();
+function createRealm() {
+  const realm = new Realm();
+
+  const $ = new APIObject(realm);
+  realm.$ = $;
+
+  Abstract.CreateDataProperty($, new Value(realm, 'global'), realm.global);
+  Abstract.CreateDataProperty($, new Value(realm, 'createRealm'), new Value(realm, () => {
+    const r = createRealm();
+    return r.$;
+  }));
+  Abstract.CreateDataProperty($, new Value(realm, 'evalScript'),
+    new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
+
+  Abstract.CreateDataProperty(realm.global, new Value(realm, '$'), $);
+
+  return realm;
+}
 
 if (process.argv[2]) {
+  const realm = createRealm();
   const source = fs.readFileSync(process.argv[2], 'utf8');
   const result = realm.evaluateScript(source);
   if (result instanceof AbruptCompletion) {
@@ -32,6 +53,7 @@ if (process.argv[2]) {
     process.exit(0);
   }
 } else {
+  const realm = createRealm();
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
