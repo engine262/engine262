@@ -221,7 +221,11 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     } else if (type === 'String') {
       return quote ? `'${value.stringValue().replace(/\n/g, '\\n')}'` : value.stringValue();
     } else if (type === 'Number') {
-      return value.numberValue().toString();
+      const n = value.numberValue();
+      if (Object.is(n, -0)) {
+        return '-0';
+      }
+      return n.toString();
     } else if (type === 'Boolean') {
       return value.value.toString();
     } else if (type === 'Symbol') {

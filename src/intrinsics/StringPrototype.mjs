@@ -85,6 +85,32 @@ function StringProto_concat([...args], { thisValue }) {
   return new Value(R);
 }
 
+function StringProto_indexOf([searchString, position = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const searchStr = Q(ToString(searchString)).stringValue();
+  const pos = Q(ToInteger(position));
+  Assert(!(position === Value.undefined) || pos.numberValue() === 0);
+  const len = S.length;
+  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const searchLen = searchStr.length;
+  let k = start;
+  while (k + searchLen <= len) {
+    let match = true;
+    for (let j = 0; j < searchLen; j += 1) {
+      if (searchStr[j] !== S[k + j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      return new Value(k);
+    }
+    k += 1;
+  }
+  return new Value(-1);
+}
+
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
@@ -119,7 +145,7 @@ export function CreateStringPrototype(realmRec) {
     ['concat', StringProto_concat, 1],
     // endsWith
     // includes
-    // indexOf
+    ['indexOf', StringProto_indexOf, 1],
     // lastIndexOf
     // localeCompare
     // match

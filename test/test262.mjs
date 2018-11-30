@@ -182,7 +182,7 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (filename.includes('annexB')
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
-      || /date|reg ?exp?/i.test(meta.description) || /date|reg ?exp?/.test(source)
+      || /date|(reg ?exp?)/i.test(meta.description) || /date|(reg ?exp?)/.test(source)
       || meta.includes.includes('nativeFunctionMatcher.js')
       || excludedTests.has(short)) {
     skipped += 1;

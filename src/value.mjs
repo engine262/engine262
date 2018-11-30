@@ -53,6 +53,9 @@ export function Value(value) {
   }
 
   if (typeof value === 'number') {
+    if (Object.is(value, -0)) {
+      return negativeZero;
+    }
     if (numberMap.has(value)) {
       return numberMap.get(value);
     }
@@ -110,6 +113,8 @@ export class NumberValue extends PrimitiveValue {
     return !Number.isFinite(this.number) && !this.isNaN();
   }
 }
+
+const negativeZero = new NumberValue(-0);
 
 export class StringValue extends PrimitiveValue {
   constructor(string) {

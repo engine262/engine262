@@ -10,14 +10,14 @@ import {
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function NumberConstructor(args, { NewTarget }) {
+function NumberConstructor(args, { NewTarget, callLength }) {
   let n;
-  if (args.length === 0) {
+  if (callLength === 0) {
     n = new Value(0);
   } else {
     n = Q(ToNumber(args[0]));
   }
-  if (Type(NewTarget) === 'Undefined') {
+  if (NewTarget === Value.undefined) {
     return n;
   }
 
@@ -64,15 +64,20 @@ function Number_isNaN([number]) {
 }
 
 export function CreateNumber(realmRec) {
+  const override = {
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  };
   const numberConstructor = BootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%NumberPrototype%'], [
-    ['EPSILON', new Value(Number.EPSILON)],
-    ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER)],
-    ['MAX_VALUE', new Value(Number.MAX_VALUE)],
-    ['MIN_SAFE_INTEGER', new Value(Number.MIN_SAFE_INTEGER)],
-    ['MIN_VALUE', new Value(Number.MIN_VALUE)],
-    ['NaN', new Value(NaN)],
-    ['NEGATIVE_INFINITY', new Value(-Infinity)],
-    ['POSITIVE_INFINITY', new Value(Infinity)],
+    ['EPSILON', new Value(Number.EPSILON), undefined, override],
+    ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER), undefined, override],
+    ['MAX_VALUE', new Value(Number.MAX_VALUE), undefined, override],
+    ['MIN_SAFE_INTEGER', new Value(Number.MIN_SAFE_INTEGER), undefined, override],
+    ['MIN_VALUE', new Value(Number.MIN_VALUE), undefined, override],
+    ['NaN', new Value(NaN), undefined, override],
+    ['NEGATIVE_INFINITY', new Value(-Infinity), undefined, override],
+    ['POSITIVE_INFINITY', new Value(Infinity), undefined, override],
 
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],

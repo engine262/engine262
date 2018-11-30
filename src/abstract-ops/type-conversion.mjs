@@ -141,32 +141,34 @@ export function ToNumber(argument) {
   }
 }
 
+const sign = (n) => (n >= 0 ? 1 : -1);
+const mod = (n, m) => {
+  const r = n % m;
+  return Math.floor(r >= 0 ? r : r + m);
+};
+
 // 7.1.4 #sec-tointeger
 export function ToInteger(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN()) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number)) {
     return new Value(0);
   }
-  if (number.numberValue() === 0
-  //  || number.value === -0
-      || number.isInfinity()) {
-    return number;
+  if (number === 0 || !Number.isFinite(number)) {
+    return new Value(number);
   }
-  // Return the number value that is the same sign
-  // as number and whose magnitude is floor(abs(number)).
-  const mag = Math.floor(Math.abs(number.numberValue()));
-  return new Value(number.numberValue() >= 0 ? mag : -mag);
+  const int = sign(number) * Math.floor(Math.abs(number));
+  return new Value(int);
 }
 
 // 7.1.5 #sec-toint32
 export function ToInt32(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
-    return new Value(0);
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+    return new Value(number);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int32bit = int % (2 ** 32);
-  if (int32bit >= (2 ** 31)) {
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int32bit = mod(int, 2 ** 32);
+  if (int32bit > (2 ** 31)) {
     return new Value(int32bit - (2 ** 32));
   }
   return new Value(int32bit);
@@ -174,12 +176,12 @@ export function ToInt32(argument) {
 
 // 7.1.6 #sec-touint32
 export function ToUint32(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
-    return new Value(0);
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+    return new Value(number);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int32bit = int % (2 ** 32);
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int32bit = mod(int, 2 ** 32);
   return new Value(int32bit);
 }
 
@@ -189,9 +191,9 @@ export function ToInt16(argument) {
   if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
     return new Value(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int16bit = int % (2 ** 16);
-  if (int16bit >= (2 ** 15)) {
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int16bit = mod(int, 2 ** 16);
+  if (int16bit > (2 ** 15)) {
     return new Value(int16bit - (2 ** 16));
   }
   return new Value(int16bit);
@@ -199,37 +201,37 @@ export function ToInt16(argument) {
 
 // 7.1.8 #sec-touint16
 export function ToUint16(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
     return new Value(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int16bit = int % (2 ** 16);
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int16bit = mod(int, 2 ** 16);
   return new Value(int16bit);
 }
 
 // 7.1.9 #sec-toint8
 export function ToInt8(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
     return new Value(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int8bit = int % (2 ** 8);
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int8bit = mod(int, 2 ** 8);
   if (int8bit >= (2 ** 7)) {
-    return int8bit - (2 ** 8);
+    return new Value(int8bit - (2 ** 8));
   }
-  return int8bit;
+  return new Value(int8bit);
 }
 
 // 7.1.10 #sec-touint8
 export function ToUint8(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN() || number.isInfinity() || number.numberValue() === 0) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
     return new Value(0);
   }
-  const int = Math.floor(Math.abs(number.numberValue())) * (number.numberValue() > 0 ? 1 : -1);
-  const int8bit = int % (2 ** 8);
+  const int = sign(number) * Math.floor(Math.abs(number));
+  const int8bit = mod(int, 2 ** 8);
   return new Value(int8bit);
 }
 
