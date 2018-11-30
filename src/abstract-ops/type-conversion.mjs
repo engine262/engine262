@@ -164,7 +164,7 @@ export function ToInteger(argument) {
 export function ToInt32(argument) {
   const number = Q(ToNumber(argument)).numberValue();
   if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
-    return new Value(number);
+    return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod(int, 2 ** 32);
@@ -178,7 +178,7 @@ export function ToInt32(argument) {
 export function ToUint32(argument) {
   const number = Q(ToNumber(argument)).numberValue();
   if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
-    return new Value(number);
+    return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod(int, 2 ** 32);

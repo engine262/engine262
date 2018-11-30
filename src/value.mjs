@@ -393,7 +393,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
   GetOwnProperty(P) {
     const args = this;
     const desc = OrdinaryGetOwnProperty(args, P);
-    if (Type(desc) === 'Undefined') {
+    if (desc === Value.undefined) {
       return desc;
     }
     const map = args.ParameterMap;
@@ -407,12 +407,12 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
   DefineOwnProperty(P, Desc) {
     const args = this;
     const map = args.ParameterMap;
-    const isMapped = HasOwnProperty(map, P);
+    const isMapped = X(HasOwnProperty(map, P));
     let newArgDesc = Desc;
     if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
       if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
         newArgDesc = Descriptor({ ...Desc });
-        newArgDesc.Value = Get(map, P);
+        newArgDesc.Value = X(Get(map, P));
       }
     }
     const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
@@ -467,7 +467,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const args = this;
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
-    const result = Q(OrdinaryDelete(map, P));
+    const result = Q(OrdinaryDelete(args, P));
     if (result === Value.true && isMapped === Value.true) {
       map.Delete(P);
     }

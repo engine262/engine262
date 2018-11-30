@@ -17,7 +17,7 @@ import {
 
 util.inspect.defaultOptions.depth = 2;
 
-const hidePassing = process.argv.includes('--hide-passing');
+const onlyFailures = process.argv.includes('--only-failures');
 
 const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
 
@@ -186,7 +186,9 @@ files.reduce((promise, filename) => promise.then(async () => {
       || meta.includes.includes('nativeFunctionMatcher.js')
       || excludedTests.has(short)) {
     skipped += 1;
-    console.log('\u001b[33mSKIP\u001b[39m', short);
+    if (!onlyFailures) {
+      console.log('\u001b[33mSKIP\u001b[39m', short);
+    }
     return;
   }
 
@@ -233,12 +235,14 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (skip) {
     skipped += 1;
-    console.log('\u001b[33mSKIP\u001b[39m', short);
+    if (!onlyFailures) {
+      console.log('\u001b[33mSKIP\u001b[39m', short);
+    }
   }
 
   if (!skip && !fail) {
     passed += 1;
-    if (!hidePassing) {
+    if (!onlyFailures) {
       console.log('\u001b[32mPASS\u001b[39m', meta.description ? meta.description.trim() : short);
     }
   }
