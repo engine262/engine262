@@ -410,7 +410,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     const isMapped = X(HasOwnProperty(map, P));
     let newArgDesc = Desc;
     if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
-      if (Value.Desc === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
+      if (Desc.Value === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
         newArgDesc = Descriptor({ ...Desc });
         newArgDesc.Value = X(Get(map, P));
       }

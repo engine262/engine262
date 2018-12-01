@@ -131,12 +131,12 @@ export function CreateIntrinsics(realmRec) {
 
   AddRestrictedFunctionProperties(funcProto, realmRec);
 
+  CreateObjectPrototype(realmRec);
+  CreateObject(realmRec);
+
   CreateErrorPrototype(realmRec);
   CreateError(realmRec);
   CreateNativeError(realmRec);
-
-  CreateObjectPrototype(realmRec);
-  CreateObject(realmRec);
 
   CreateFunction(realmRec);
   CreateFunctionPrototype(realmRec);

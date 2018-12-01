@@ -81,7 +81,10 @@ function createRealm() {
   return $262;
 }
 
-const agentOpt = { promiseRejectionTracker: undefined };
+const agentOpt = {
+  promiseRejectionTracker: undefined,
+  flags: ['Object.fromEntries'],
+};
 initializeAgent(agentOpt);
 
 async function run({ source, meta, strict }) {

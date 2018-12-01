@@ -17,6 +17,7 @@ import { X } from '../completion.mjs';
 const kFlagDisabled = Symbol('kFlagDisabled');
 
 export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
+  Assert(Prototype !== undefined);
   const proto = ObjectCreate(Prototype);
 
   for (const [n, v, len, descriptor] of props) {
