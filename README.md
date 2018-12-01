@@ -5,6 +5,7 @@ An implementation of ECMA-262 in JavaScript
 Goals
 - 100% Spec Compliance
 - Introspection
+- Ease of modification
 
 Non-Goals
 - Speed
@@ -16,26 +17,13 @@ Join us on [#engine262 on freenode][].
 While helping develop new features for JavaScript, I've found that one of the
 most useful methods of finding what works and what doesn't is being able to
 actually run code using the new feature. [Babel][] is fantastic for this, but
-sometimes features just can't be nicely represented with it.
+sometimes features just can't be nicely represented with it. Similarly,
+implementing a feature in one of the engines is a large undertaking, involving
+long compile times and annoying bugs with the optimizing compilers.
 
-The feature I wanted to test, and the reason I started building this engine,
-was [do expressions][]. At TC39, we were discussing the behaviour of keywords
-such as `return` and `break` inside do expressions, which was concerning
-because you could end up with code like
-`while (1) { while (do { break; }) {} }`, which was a very confusing situation
-to be in. V8 had an initial implementation of do expression, but it segfaulted
-when given this code, as `break` wasn't expected to occur while evaluating the
-initializer of the loop. It would not be simple to figure out all the intricate
-behaviours, at which point it would be quite annoying if something were to be
-changed.
-
-Similarly, the do expression transform for Babel didn't allow keywords such as
-`return`, `continue`, and `break`, so the behaviour we were investigating was
-unable to be tested with it.
-
-Cut to several months later, when this engine was finally mature enough to run
-some code. The diff for adding do expressions, complete with all their proposed
-behaviour, was as follows:
+engine262 is a tool to allow JavaScript developers to have a sandbox where new
+features can be quickly prototyped and explored. As an example, adding
+[do expressions][] to this engine is as simple as the following diff:
 
 ```diff
 --- a/src/evaluator.mjs
@@ -79,7 +67,7 @@ conforming JavaScript implementations.
 
 `$ npm run build`
 
-`$ node repl.js`
+`$ node bin/engine262.js`
 
 Or, use the API
 
