@@ -1,3 +1,4 @@
+import { Value } from '../value.mjs';
 import { BreakCompletion } from '../completion.mjs';
 
 // #sec-break-statement-runtime-semantics-evaluation
@@ -5,5 +6,10 @@ import { BreakCompletion } from '../completion.mjs';
 //   `break` `;`
 //   `break` LabelIdentifier `;`
 export function Evaluate_BreakStatement({ label: LabelIdentifier }) {
-  return new BreakCompletion(LabelIdentifier || undefined);
+  if (LabelIdentifier) {
+    const label = new Value(LabelIdentifier.name);
+    return new BreakCompletion(label);
+  } else {
+    return new BreakCompletion();
+  }
 }

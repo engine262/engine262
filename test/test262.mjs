@@ -37,10 +37,17 @@ const excludedFeatures = new Set([
   'caller',
   'WeakSet',
   'WeakMap',
+  'TypedArray',
 ]);
 
 const excludedTests = new Set([
   'test/built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
+  'test/language/statements/while/let-block-with-newline.js',
+  'test/language/statements/while/let-identifier-with-newline.js',
+  'test/language/statements/for-in/let-block-with-newline.js',
+  'test/language/statements/for-in/let-identifier-with-newline.js',
+  'test/language/statements/for-of/let-block-with-newline.js',
+  'test/language/statements/for-of/let-identifier-with-newline.js',
 ]);
 
 const PASS = Symbol('PASS');

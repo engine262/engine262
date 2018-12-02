@@ -94,7 +94,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
       }
     }
     const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
-    if (!LoopContinues(result, labelSet)) {
+    if (LoopContinues(result, labelSet) === false) {
       return Completion(UpdateEmpty(result, V));
     }
     if (result.Value !== undefined) {
@@ -247,7 +247,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     }
     const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-    if (!LoopContinues(result, labelSet)) {
+    if (LoopContinues(result, labelSet) === false) {
       if (iterationKind === 'enumerate') {
         return Completion(UpdateEmpty(result, V));
       } else {

@@ -37,6 +37,7 @@ export * from './IfStatement.mjs';
 export * from './InstantiateFunctionObject.mjs';
 export * from './IteratorBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
+export * from './LabelledStatement.mjs';
 export * from './LexicalDeclaration.mjs';
 export * from './LogicalANDExpression.mjs';
 export * from './LogicalORExpression.mjs';

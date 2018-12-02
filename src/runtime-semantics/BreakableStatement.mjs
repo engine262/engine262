@@ -25,7 +25,7 @@ export function* Evaluate_BreakableStatement(BreakableStatement) {
 
 // #sec-statement-semantics-runtime-semantics-labelledevaluation
 //   BreakableStatement : IterationStatement
-function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
+export function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   switch (true) {
     case isIterationStatement(BreakableStatement): {
       let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet));

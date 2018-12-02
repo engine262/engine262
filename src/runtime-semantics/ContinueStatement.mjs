@@ -1,3 +1,4 @@
+import { Value } from '../value.mjs';
 import { ContinueCompletion } from '../completion.mjs';
 
 // #sec-continue-statement-runtime-semantics-evaluation
@@ -5,5 +6,10 @@ import { ContinueCompletion } from '../completion.mjs';
 //   `continue` `;`
 //   `continue` LabelIdentifier `;`
 export function Evaluate_ContinueStatement({ label: LabelIdentifier }) {
-  return new ContinueCompletion(LabelIdentifier || undefined);
+  if (LabelIdentifier) {
+    const label = new Value(LabelIdentifier.name);
+    return new ContinueCompletion(label);
+  } else {
+    return new ContinueCompletion(undefined);
+  }
 }

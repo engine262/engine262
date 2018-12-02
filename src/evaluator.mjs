@@ -44,6 +44,7 @@ import {
   isHoistableDeclaration,
   isIdentifierReference,
   isIfStatement,
+  isLabelledStatement,
   isLexicalDeclaration,
   isLiteral,
   isMetaProperty,
@@ -96,6 +97,7 @@ import {
   Evaluate_HoistableDeclaration,
   Evaluate_Identifier,
   Evaluate_IfStatement,
+  Evaluate_LabelledStatement,
   Evaluate_LexicalDeclaration,
   Evaluate_LogicalANDExpression,
   Evaluate_LogicalORExpression,
@@ -212,6 +214,9 @@ function* Evaluate_StatementListItem(StatementListItem) {
 
     case isWithStatement(StatementListItem):
       return yield* Evaluate_WithStatement(StatementListItem);
+
+    case isLabelledStatement(StatementListItem):
+      return yield* Evaluate_LabelledStatement(StatementListItem);
 
     case isThrowStatement(StatementListItem):
       return yield* Evaluate_ThrowStatement(StatementListItem.argument);

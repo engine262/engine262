@@ -162,11 +162,12 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
 // (implicit)
 //   AssignmentPropertyList : AssignmentProperty
 function* PropertyDestructuringAssignmentEvaluation_AssignmentPropertyList(AssignmentPropertyList, value) {
-  const names = [];
+  const propertyNames = [];
   for (const AssignmentProperty of AssignmentPropertyList) {
-    names.push(...yield* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value));
+    const nextNames = Q(yield* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(AssignmentProperty, value));
+    propertyNames.push(...nextNames);
   }
-  return names;
+  return propertyNames;
 }
 
 // 12.15.5.3 #sec-runtime-semantics-propertydestructuringassignmentevaluation
@@ -182,7 +183,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
       Initializer = AssignmentProperty.value.right;
     }
 
-    const P = IdentifierReference.name;
+    const P = new Value(IdentifierReference.name);
     const lref = Q(ResolveBinding(P, undefined, IdentifierReference.strict));
     let v = Q(GetV(value, P));
     if (Initializer !== undefined && Type(v) === 'Undefined') {
@@ -282,7 +283,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
     value = Value.undefined;
   }
   let v;
-  if (Initializer !== undefined && Type(v) === 'Undefined') {
+  if (Initializer !== undefined && value === Value.undefined) {
     const defaultValue = yield* Evaluate_Expression(Initializer);
     v = Q(GetValue(defaultValue));
   } else {
@@ -293,7 +294,6 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
     return yield* DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, v);
   }
   if (Initializer !== undefined
-      && Type(v) === 'Undefined'
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
     const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
@@ -389,7 +389,6 @@ function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentEle
     return yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rhsValue);
   }
   if (Initializer !== undefined
-      && Type(v) === 'Undefined'
       && IsAnonymousFunctionDefinition(Initializer)
       && IsIdentifierRef(DestructuringAssignmentTarget)) {
     const hasNameProperty = Q(HasOwnProperty(rhsValue, new Value('name')));
