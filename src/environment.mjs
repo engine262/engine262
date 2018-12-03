@@ -6,9 +6,7 @@ import {
   Value,
   wellKnownSymbols,
 } from './value.mjs';
-import {
-  surroundingAgent,
-} from './engine.mjs';
+import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -22,6 +20,7 @@ import {
   ToBoolean,
 } from './abstract-ops/all.mjs';
 import { NormalCompletion, Q } from './completion.mjs';
+import { msg } from './helpers.mjs';
 
 export class LexicalEnvironment {
   constructor() {
@@ -82,7 +81,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     if (!this.bindings.has(N)) {
       if (S === Value.true) {
-        return surroundingAgent.Throw('ReferenceError', `'${N.stringValue()}' is not defined`);
+        return surroundingAgent.Throw('ReferenceError', msg('NotDefined', N));
       }
       envRec.CreateMutableBinding(N, true);
       envRec.InitializeBinding(N, V);
@@ -96,7 +95,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
 
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', `'${N.stringValue()}' is not defined`);
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', N));
     } else if (binding.mutable === true) {
       binding.value = V;
     } else if (S === Value.true) {
@@ -109,7 +108,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     Assert(IsPropertyKey(N));
     const binding = this.bindings.get(N);
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', `'${N.stringValue()}' is not defined`);
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', N));
     }
     return binding.value;
   }
@@ -218,7 +217,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       if (S === Value.false) {
         return Value.undefined;
       } else {
-        return surroundingAgent.Throw('ReferenceError', `Identifier '${N.stringValue()}' is not defined`);
+        return surroundingAgent.Throw('ReferenceError', msg('NotDefined', N));
       }
     }
     return Q(Get(bindings, N));
@@ -338,7 +337,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N) === Value.true) {
-      return surroundingAgent.Throw('TypeError', `Identifier '${N.stringValue()}' has already been declared`);
+      return surroundingAgent.Throw('TypeError', msg('AlreadyDeclared', N));
     }
     return DclRec.CreateMutableBinding(N, D);
   }
@@ -348,7 +347,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     const DclRec = envRec.DeclarativeRecord;
     if (DclRec.HasBinding(N) === Value.true) {
-      return surroundingAgent.Throw('TypeError', `Identifier '${N.stringValue()}' has already been declared`);
+      return surroundingAgent.Throw('TypeError', msg('AlreadyDeclared', N));
     }
     return DclRec.CreateImmutableBinding(N, S);
   }

@@ -77,6 +77,9 @@ const messages = {
   PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
   PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
   ProxyRevoked: (n) => `Cannot perform '${n}' on a proxy that has been revoked`,
+  NotDefined: (n) => `${inlineInspect(n)} is not defined`,
+  CannotSetProperty: (p) => `Cannot set property ${inlineInspect(p)}`,
+  AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
 };
 
 export function msg(key, ...args) {

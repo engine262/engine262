@@ -1,32 +1,18 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   GetGlobalObject,
-  SymbolDescriptiveString,
   ToObject,
   Set,
 } from './all.mjs';
-import {
-  PrimitiveValue,
-  Type,
-  Value,
-} from '../value.mjs';
+import { PrimitiveValue, Type, Value } from '../value.mjs';
 import {
   NormalCompletion,
   Q,
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
-
-function NameToString(value) {
-  if (Type(value) === 'String') {
-    return value.stringValue();
-  }
-  Assert(Type(value) === 'Symbol');
-  return X(SymbolDescriptiveString(value)).stringValue();
-}
+import { msg } from '../helpers.mjs';
 
 // 6.2.4.1 #sec-getbase
 export function GetBase(V) {
@@ -67,7 +53,7 @@ export function IsPropertyReference(V) {
 // 6.2.4.6 #sec-isunresolvablereference
 export function IsUnresolvableReference(V) {
   Assert(Type(V) === 'Reference');
-  if (Type(V.BaseValue) === 'Undefined') {
+  if (V.BaseValue === Value.undefined) {
     return Value.true;
   }
   return Value.false;
@@ -87,11 +73,11 @@ export function GetValue(V) {
   }
   let base = GetBase(V);
   if (IsUnresolvableReference(V) === Value.true) {
-    return surroundingAgent.Throw('ReferenceError', `${NameToString(GetReferencedName(V))} is not defined`);
+    return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
   }
   if (IsPropertyReference(V) === Value.true) {
     if (HasPrimitiveBase(V) === Value.true) {
-      Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
+      Assert(base !== Value.undefined && base !== Value.null);
       base = X(ToObject(base));
     }
     return base.Get(GetReferencedName(V), GetThisValue(V));
@@ -110,7 +96,7 @@ export function PutValue(V, W) {
   let base = GetBase(V);
   if (IsUnresolvableReference(V) === Value.true) {
     if (IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', `${NameToString(GetReferencedName(V))} is not defined`);
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
     }
     const globalObj = GetGlobalObject();
     return Q(Set(globalObj, GetReferencedName(V), W, Value.false));
@@ -121,7 +107,7 @@ export function PutValue(V, W) {
     }
     const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
     if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('TypeError', `Cannot set property ${NameToString(GetReferencedName(V))}`);
+      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferenedName(V)));
     }
     return new NormalCompletion(undefined);
   } else {
