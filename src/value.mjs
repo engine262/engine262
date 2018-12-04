@@ -809,17 +809,17 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     if (targetDesc === Value.undefined) {
       if (extensibleTarget === Value.false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'defineProperty\' on proxy: trap returned truthy for defining non-configurable property which is either non-existant or configurable in the proxy target');
       }
       if (settingConfigFalse === true) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'defineProperty\' on proxy: trap returned truthy for adding property to the non-extensible proxy target');
       }
     } else {
       if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'defineProperty\' on proxy: trap returned truthy for adding property that is incompatible with the existing property in the proxy target');
       }
       if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', '\'defineProperty\' on proxy: trap returned truthy for defining non-configurable property which is either non-existant or configurable in the proxy target');
       }
     }
     return Value.true;
@@ -844,11 +844,11 @@ export class ProxyExoticObjectValue extends ObjectValue {
       const targetDesc = Q(target.GetOwnProperty(P));
       if (targetDesc !== Value.undefined) {
         if (targetDesc.Configurable === Value.false) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'has\' on proxy: trap returned falsy for property which exists in the proxy target as non-configurable');
         }
         const extensibleTarget = Q(IsExtensible(target));
         if (extensibleTarget === Value.false) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'has\' on proxy: trap returned falsy for property but the proxy target is not extensible');
         }
       }
     }
@@ -874,12 +874,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(trapResult, targetDesc.Value) === Value.false) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'get\' on proxy: property is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value');
         }
       }
       if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
         if (trapResult !== Value.undefined) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'get\' on proxy: property is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return undefined');
         }
       }
     }
@@ -908,12 +908,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(V, targetDesc.Value) === Value.false) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'set\' on proxy: trap returned truthy for property which exists in the proxy target as a non-configurable and non-writable data property with a different value');
         }
       }
       if (IsAccessorDescriptor(targetDesc) === true) {
         if (targetDesc.Set === Value.undefined) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', '\'set\' on proxy: trap returned truish for property which exists in the proxy target as a non-configurable and non-writable accessor property without a setter');
         }
       }
     }
@@ -943,7 +943,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
       return Value.true;
     }
     if (targetDesc.Configurable === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', '\'deleteProperty\' on proxy: trap returned truthy for property which is non-configurable in the proxy target');
     }
     return Value.true;
   }

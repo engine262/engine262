@@ -5,6 +5,15 @@
 require('source-map-support/register');
 const repl = require('repl');
 const fs = require('fs');
+
+let engine262;
+try {
+  engine262 = require('..');
+} catch (e) {
+  require('v8').setFlagsFromString('--harmony-do-expressions');
+  engine262 = require('..');
+}
+
 const {
   initializeAgent,
   inspect,
@@ -13,7 +22,7 @@ const {
   Value,
   Object: APIObject,
   Abstract,
-} = require('..');
+} = engine262;
 
 initializeAgent({
   flags: [

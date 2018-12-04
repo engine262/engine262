@@ -107,7 +107,7 @@ export function PutValue(V, W) {
     }
     const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
     if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferenedName(V)));
+      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferencedName(V)));
     }
     return new NormalCompletion(undefined);
   } else {
