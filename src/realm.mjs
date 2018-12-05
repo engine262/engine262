@@ -27,6 +27,8 @@ import { CreateFunction } from './intrinsics/Function.mjs';
 import { CreateSymbolPrototype } from './intrinsics/SymbolPrototype.mjs';
 import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
+import { CreateDatePrototype } from './intrinsics/DatePrototype.mjs';
+import { CreateDate } from './intrinsics/Date.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreateProxy } from './intrinsics/Proxy.mjs';
@@ -172,6 +174,9 @@ export function CreateIntrinsics(realmRec) {
 
   CreateMath(realmRec);
 
+  CreateDatePrototype(realmRec);
+  CreateDate(realmRec);
+
   CreateSetPrototype(realmRec);
   CreateSet(realmRec);
 
@@ -256,7 +261,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'ArrayBuffer',
     'Boolean',
     // 'DataView',
-    // 'Date',
+    'Date',
     'Error',
     'EvalError',
     // 'Float32Array',
