@@ -243,9 +243,12 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         return '[Function]';
       }
       if ('PromiseState' in value) {
+        indent += 1;
+        const result = innerInspect(value.PromiseResult);
+        indent -= 1;
         return `Promise {
   [[PromiseState]]: '${value.PromiseState}',
-  [[PromiseResult]]: ${innerInspect(value.PromiseResult)},
+  [[PromiseResult]]: ${result},
 }`;
       }
       const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
@@ -288,10 +291,13 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
           indent -= 1;
           return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
         } else {
+          const oc = compact;
+          compact = true;
           for (const key of keys) {
             const C = value.properties.get(key);
             out = `${out} ${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
           }
+          compact = oc;
           return `${out.slice(0, -1)} ${isArray ? ']' : '}'}`;
         }
       } catch (e) {
