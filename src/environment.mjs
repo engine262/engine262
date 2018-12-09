@@ -52,7 +52,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       initialized: false,
       mutable: true,
       strict: undefined,
-      deletable: D,
+      deletable: D === Value.true,
       value: undefined,
     });
   }
