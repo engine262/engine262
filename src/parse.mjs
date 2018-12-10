@@ -1,18 +1,5 @@
 import acorn from 'acorn';
 
-const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
-  constructor(options, source) {
-    super({ ...options, ecmaVersion: 2019 }, source);
-  }
-
-  finishNode(node, type) {
-    node.strict = this.strict;
-    const ret = super.finishNode(node, type);
-    node.source = () => this.input.slice(node.start, node.end);
-    return ret;
-  }
-});
-
 const HasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 function deepFreeze(o) {
   Object.freeze(o);
@@ -37,46 +24,68 @@ function functionFlags(async, generator) {
   return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
 }
 
-// Adapted from several different places in Acorn.
-function parseFuncBody(sourceText, async, generator) {
-  const parser = new Parser({
-    sourceType: 'script',
-  }, sourceText);
-
-  // Parser.prototype.parse()
-  const node = parser.startNode();
-  parser.nextToken();
-
-  // Parser.prototype.parseFunction()
-  parser.initFunction(node);
-  parser.enterScope(functionFlags(async, generator));
-
-  // Parser.prototype.parseBlock()
-  const body = [];
-  while (!parser.eat(acorn.tokTypes.eof)) {
-    const stmt = parser.parseStatement(null);
-    body.push(stmt);
+const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
+  constructor(options, source) {
+    super({ ...options, ecmaVersion: 2019 }, source);
   }
 
-  // Parser.prototype.parseFunctionBody()
-  parser.adaptDirectivePrologue(body);
-  return body;
-}
+  finishNode(node, type) {
+    node.strict = this.strict;
+    const ret = super.finishNode(node, type);
+    node.source = () => this.input.slice(node.start, node.end);
+    return ret;
+  }
+
+  parse() {
+    const body = super.parse();
+    deepFreeze(body);
+    return body;
+  }
+
+  // Adapted from several different places in Acorn.
+  static parseFunctionBody(sourceText, async, generator) {
+    const parser = new Parser({
+      sourceType: 'script',
+    }, sourceText);
+
+    // Parser.prototype.parse()
+    const node = parser.startNode();
+    parser.nextToken();
+
+    // Parser.prototype.parseFunction()
+    parser.initFunction(node);
+    parser.enterScope(functionFlags(async, generator));
+
+    // Parser.prototype.parseBlock()
+    const body = [];
+    while (!parser.eat(acorn.tokTypes.eof)) {
+      const stmt = parser.parseStatement(null);
+      body.push(stmt);
+    }
+
+    // Parser.prototype.parseFunctionBody()
+    parser.adaptDirectivePrologue(body);
+
+    deepFreeze(body);
+
+    return body;
+  }
+});
 
 export function ParseAsFunctionBody(sourceText) {
-  return parseFuncBody(sourceText, false, false);
+  return Parser.parseFunctionBody(sourceText, false, false);
 }
 
 export function ParseAsGeneratorBody(sourceText) {
-  return parseFuncBody(sourceText, false, true);
+  return Parser.parseFunctionBody(sourceText, false, true);
 }
 
 export function ParseAsAsyncFunctionBody(sourceText) {
-  return parseFuncBody(sourceText, true, false);
+  return Parser.parseFunctionBody(sourceText, true, false);
 }
 
 export function ParseAsAsyncGeneratorBody(sourceText) {
-  return parseFuncBody(sourceText, true, true);
+  return Parser.parseFunctionBody(sourceText, true, true);
 }
 
 // Adapted from several different places in Acorn.
@@ -108,13 +117,13 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
   }
   parser.checkParams({ params }, !strict && simple);
 
+  deepFreeze(params);
+
   return params;
 }
 
 export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.body.body[0];
 export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
-Object.freeze(emptyConstructorNode);
-Object.freeze(forwardingConstructorNode);
 
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   let body;
@@ -122,7 +131,6 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
     body = Parser.parse(sourceText, {
       sourceType: 'script',
     });
-    deepFreeze(body);
   } catch (e) {
     body = [e];
   }
