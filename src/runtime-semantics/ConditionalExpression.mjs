@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
@@ -10,13 +10,13 @@ export function* Evaluate_ConditionalExpression({
   consequent: FirstAssignmentExpression,
   alternate: SecondAssignmentExpression,
 }) {
-  const lref = yield* Evaluate_Expression(LogicalORExpression);
+  const lref = yield* Evaluate(LogicalORExpression);
   const lval = ToBoolean(Q(GetValue(lref)));
   if (lval === Value.true) {
-    const trueRef = yield* Evaluate_Expression(FirstAssignmentExpression);
+    const trueRef = yield* Evaluate(FirstAssignmentExpression);
     return Q(GetValue(trueRef));
   } else {
-    const falseRef = yield* Evaluate_Expression(SecondAssignmentExpression);
+    const falseRef = yield* Evaluate(SecondAssignmentExpression);
     return Q(GetValue(falseRef));
   }
 }

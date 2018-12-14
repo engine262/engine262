@@ -33,7 +33,7 @@ import {
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
@@ -187,7 +187,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
     const lref = Q(ResolveBinding(P, undefined, IdentifierReference.strict));
     let v = Q(GetV(value, P));
     if (Initializer !== undefined && Type(v) === 'Undefined') {
-      const defaultValue = yield* Evaluate_Expression(Initializer);
+      const defaultValue = yield* Evaluate(Initializer);
       v = Q(GetValue(defaultValue));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
@@ -215,7 +215,7 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
 //   AssignmentRestProperty : `...` DestructuringAssignmentTarget
 function* RestDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, value, excludedNames) {
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
-  const lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
+  const lref = yield* Evaluate(DestructuringAssignmentTarget);
   ReturnIfAbrupt(lref);
   const restObj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
@@ -259,7 +259,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
 
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   let value;
@@ -284,7 +284,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
   }
   let v;
   if (Initializer !== undefined && value === Value.undefined) {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     v = Q(GetValue(defaultValue));
   } else {
     v = value;
@@ -330,7 +330,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assig
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   const A = X(ArrayCreate(new Value(0)));
@@ -373,13 +373,13 @@ function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentEle
 
   let lref;
   if (!isAssignmentPattern(DestructuringAssignmentTarget)) {
-    lref = yield* Evaluate_Expression(DestructuringAssignmentTarget);
+    lref = yield* Evaluate(DestructuringAssignmentTarget);
     ReturnIfAbrupt(lref);
   }
   const v = Q(GetV(value, propertyName));
   let rhsValue;
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     rhsValue = Q(GetValue(defaultValue));
   } else {
     rhsValue = v;

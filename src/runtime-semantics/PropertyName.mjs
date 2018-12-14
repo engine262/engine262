@@ -9,7 +9,7 @@ import {
   isStringLiteral,
 } from '../ast.mjs';
 import { Q, X } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 
@@ -38,7 +38,7 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
 //   ComputedPropertyName : `[` AssignmentExpression `]`
 function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
   const AssignmentExpression = ComputedPropertyName;
-  const exprValue = yield* Evaluate_Expression(AssignmentExpression);
+  const exprValue = yield* Evaluate(AssignmentExpression);
   const propName = Q(GetValue(exprValue));
   return Q(ToPropertyKey(propName));
 }

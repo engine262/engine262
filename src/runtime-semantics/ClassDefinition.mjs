@@ -13,7 +13,7 @@ import {
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   DefineMethod,
   InitializeBoundName,
@@ -50,7 +50,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
   } else {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
-    const superclassRef = yield* Evaluate_Expression(ClassHeritage);
+    const superclassRef = yield* Evaluate(ClassHeritage);
     surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
     const superclass = Q(GetValue(superclassRef));
     if (Type(superclass) === 'Null') {

@@ -31,7 +31,7 @@ import {
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   DefineMethod,
   Evaluate_PropertyName,
@@ -64,7 +64,7 @@ export function* PropertyDefinitionEvaluation_PropertyDefinitionList(
 function* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
   const AssignmentExpression = PropertyDefinition.argument;
 
-  const exprValue = yield* Evaluate_Expression(AssignmentExpression);
+  const exprValue = yield* Evaluate(AssignmentExpression);
   const fromValue = Q(GetValue(exprValue));
   const excludedNames = [];
   return Q(CopyDataProperties(object, fromValue, excludedNames));
@@ -77,7 +77,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
 ) {
   const IdentifierReference = PropertyDefinition.key;
   const propName = new Value(IdentifierReference.name);
-  const exprValue = yield* Evaluate_Expression(IdentifierReference);
+  const exprValue = yield* Evaluate(IdentifierReference);
   const propValue = Q(GetValue(exprValue));
   Assert(enumerable);
   return CreateDataPropertyOrThrow(object, propName, propValue);
@@ -91,7 +91,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
   const propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
   ReturnIfAbrupt(propKey);
-  const exprValueRef = yield* Evaluate_Expression(AssignmentExpression);
+  const exprValueRef = yield* Evaluate(AssignmentExpression);
   const propValue = Q(GetValue(exprValueRef));
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
     const hasNameProperty = Q(HasOwnProperty(propValue, new Value('name')));

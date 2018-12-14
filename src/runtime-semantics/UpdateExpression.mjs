@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   GetValue,
@@ -22,7 +22,7 @@ export function* Evaluate_UpdateExpression({
     case operator === '++' && !prefix: {
       const LeftHandSideExpression = argument;
 
-      const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
+      const lhs = yield* Evaluate(LeftHandSideExpression);
       const lhsValue = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsValue));
       const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
@@ -34,7 +34,7 @@ export function* Evaluate_UpdateExpression({
     case operator === '--' && !prefix: {
       const LeftHandSideExpression = argument;
 
-      const lhs = yield* Evaluate_Expression(LeftHandSideExpression);
+      const lhs = yield* Evaluate(LeftHandSideExpression);
       const lhsVal = Q(GetValue(lhs));
       const oldValue = Q(ToNumber(lhsVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));
@@ -46,7 +46,7 @@ export function* Evaluate_UpdateExpression({
     case operator === '++' && prefix: {
       const UnaryExpression = argument;
 
-      const expr = yield* Evaluate_Expression(UnaryExpression);
+      const expr = yield* Evaluate(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
@@ -58,7 +58,7 @@ export function* Evaluate_UpdateExpression({
     case operator === '--' && prefix: {
       const UnaryExpression = argument;
 
-      const expr = yield* Evaluate_Expression(UnaryExpression);
+      const expr = yield* Evaluate(UnaryExpression);
       const exprVal = Q(GetValue(expr));
       const oldValue = Q(ToNumber(exprVal));
       const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));

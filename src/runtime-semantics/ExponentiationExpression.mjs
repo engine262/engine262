@@ -1,7 +1,7 @@
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToNumber } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 
 export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
   const base = Q(ToNumber(lval));
@@ -15,9 +15,9 @@ export function* Evaluate_ExponentiationExpression({
   left: UpdateExpression,
   right: ExponentiationExpression,
 }) {
-  const left = yield* Evaluate_Expression(UpdateExpression);
+  const left = yield* Evaluate(UpdateExpression);
   const leftValue = Q(GetValue(left));
-  const right = yield* Evaluate_Expression(ExponentiationExpression);
+  const right = yield* Evaluate(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
   return EvaluateBinopValues_ExponentiationExpression(leftValue, rightValue);
 }

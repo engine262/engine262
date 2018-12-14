@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToInt32, ToUint32 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
@@ -43,9 +43,9 @@ export function* Evaluate_ShiftExpression({
   operator,
   right: AdditiveExpression,
 }) {
-  const lref = yield* Evaluate_Expression(ShiftExpression);
+  const lref = yield* Evaluate(ShiftExpression);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(AdditiveExpression);
+  const rref = yield* Evaluate(AdditiveExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
 }

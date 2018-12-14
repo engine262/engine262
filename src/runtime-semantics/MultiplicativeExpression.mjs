@@ -2,7 +2,7 @@ import {
   GetValue,
   ToNumber,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
   Value,
@@ -33,9 +33,9 @@ export function* Evaluate_MultiplicativeExpression({
   operator: MultiplicativeOperator,
   right: ExponentiationExpression,
 }) {
-  const left = yield* Evaluate_Expression(MultiplicativeExpression);
+  const left = yield* Evaluate(MultiplicativeExpression);
   const leftValue = Q(GetValue(left));
-  const right = yield* Evaluate_Expression(ExponentiationExpression);
+  const right = yield* Evaluate(ExponentiationExpression);
   const rightValue = Q(GetValue(right));
   return EvaluateBinopValues_MultiplicativeExpression(
     MultiplicativeOperator, leftValue, rightValue,

@@ -3,7 +3,7 @@ import {
   ToInt32,
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -29,9 +29,9 @@ export function EvaluateBinopValues_BitwiseORExpression(lval, rval) {
 
 // #sec-binary-bitwise-operators-runtime-semantics-evaluation
 export function* Evaluate_BinaryBitwiseExpression({ left: A, operator, right: B }) {
-  const lref = yield* Evaluate_Expression(A);
+  const lref = yield* Evaluate(A);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(B);
+  const rref = yield* Evaluate(B);
   const rval = Q(GetValue(rref));
 
   // Return the result of applying the bitwise operator @ to lnum and rnum.

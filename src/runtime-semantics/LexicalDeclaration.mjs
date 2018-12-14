@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   NormalCompletion,
   Q,
@@ -38,7 +38,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   const lhs = X(ResolveBinding(bindingId, undefined, strict));
 
   if (Initializer) {
-    const rhs = yield* Evaluate_Expression(Initializer);
+    const rhs = yield* Evaluate(Initializer);
     const value = Q(GetValue(rhs));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
@@ -56,7 +56,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { id: BindingPattern, init: Initializer } = LexicalBinding;
-  const rhs = yield* Evaluate_Expression(Initializer);
+  const rhs = yield* Evaluate(Initializer);
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   return yield* BindingInitialization_BindingPattern(BindingPattern, value, env);

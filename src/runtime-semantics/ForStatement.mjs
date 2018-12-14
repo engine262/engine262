@@ -57,7 +57,7 @@ import {
   BindingInitialization_ForDeclaration,
   DestructuringAssignmentEvaluation_AssignmentPattern,
 } from './all.mjs';
-import { Evaluate_Expression, Evaluate_Statement } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   DeclarativeEnvironmentRecord,
   NewDeclarativeEnvironment,
@@ -87,13 +87,13 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   Q(CreatePerIterationEnvironment(perIterationBindings));
   while (true) {
     if (test) {
-      const testRef = yield* Evaluate_Expression(test);
+      const testRef = yield* Evaluate(test);
       const testValue = Q(GetValue(testRef));
       if (ToBoolean(testValue) === Value.false) {
         return new NormalCompletion(V);
       }
     }
-    const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
+    const result = EnsureCompletion(yield* Evaluate(stmt));
     if (LoopContinues(result, labelSet) === false) {
       return Completion(UpdateEmpty(result, V));
     }
@@ -102,7 +102,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
     }
     Q(CreatePerIterationEnvironment(perIterationBindings));
     if (increment) {
-      const incRef = yield* Evaluate_Expression(increment);
+      const incRef = yield* Evaluate(increment);
       Q(GetValue(incRef));
     }
   }
@@ -153,7 +153,7 @@ function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
     }
     surroundingAgent.runningExecutionContext.LexicalEnvironment = TDZ;
   }
-  const exprRef = yield* Evaluate_Expression(expr);
+  const exprRef = yield* Evaluate(expr);
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   const exprValue = Q(GetValue(exprRef));
   if (iterationKind === 'enumerate') {
@@ -197,7 +197,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     let lhsRef;
     if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
       if (!destructuring) {
-        lhsRef = yield* Evaluate_Expression(lhs);
+        lhsRef = yield* Evaluate(lhs);
       }
     } else {
       Assert(lhsKind === 'lexicalBinding');
@@ -245,7 +245,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         return Q(IteratorClose(iteratorRecord, status));
       }
     }
-    const result = EnsureCompletion(yield* Evaluate_Statement(stmt));
+    const result = EnsureCompletion(yield* Evaluate(stmt));
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     if (LoopContinues(result, labelSet) === false) {
       if (iterationKind === 'enumerate') {
@@ -296,14 +296,14 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 
       let V = Value.undefined;
       while (true) {
-        const stmtResult = EnsureCompletion(yield* Evaluate_Statement(Statement));
+        const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
         if (!LoopContinues(stmtResult, labelSet)) {
           return Completion(UpdateEmpty(stmtResult, V));
         }
         if (stmtResult.Value !== undefined) {
           V = stmtResult.Value;
         }
-        const exprRef = yield* Evaluate_Expression(Expression);
+        const exprRef = yield* Evaluate(Expression);
         const exprValue = Q(GetValue(exprRef));
         if (ToBoolean(exprValue) === Value.false) {
           return new NormalCompletion(V);
@@ -317,12 +317,12 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 
       let V = Value.undefined;
       while (true) {
-        const exprRef = yield* Evaluate_Expression(Expression);
+        const exprRef = yield* Evaluate(Expression);
         const exprValue = Q(GetValue(exprRef));
         if (ToBoolean(exprValue) === Value.false) {
           return new NormalCompletion(V);
         }
-        const stmtResult = EnsureCompletion(yield* Evaluate_Statement(Statement));
+        const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
         if (!LoopContinues(stmtResult, labelSet)) {
           return Completion(UpdateEmpty(stmtResult, V));
         }
@@ -334,13 +334,13 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 
     case isForStatementWithExpression(IterationStatement):
       if (IterationStatement.init) {
-        const exprRef = yield* Evaluate_Expression(IterationStatement.init);
+        const exprRef = yield* Evaluate(IterationStatement.init);
         Q(GetValue(exprRef));
       }
       return Q(yield* ForBodyEvaluation(IterationStatement.test, IterationStatement.update, IterationStatement.body, [], labelSet));
 
     case isForStatementWithVariableStatement(IterationStatement): {
-      const varDcl = yield* Evaluate_Statement(IterationStatement.init);
+      const varDcl = yield* Evaluate(IterationStatement.init);
       ReturnIfAbrupt(varDcl);
       return Q(yield* ForBodyEvaluation(IterationStatement.test, IterationStatement.update, IterationStatement.body, [], labelSet));
     }
@@ -359,7 +359,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
         }
       }
       surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv;
-      const forDcl = yield* Evaluate_Statement(IterationStatement.init);
+      const forDcl = yield* Evaluate(IterationStatement.init);
       if (forDcl instanceof AbruptCompletion) {
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         return Completion(forDcl);

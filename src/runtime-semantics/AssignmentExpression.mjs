@@ -14,7 +14,7 @@ import {
   isArrayLiteral,
   isObjectLiteral,
 } from '../ast.mjs';
-import { EvaluateBinopValues, Evaluate_Expression } from '../evaluator.mjs';
+import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 
 // #sec-assignment-operators-runtime-semantics-evaluation
@@ -26,9 +26,9 @@ export function* Evaluate_AssignmentExpression(node) {
   const AssignmentExpression = node.right;
   if (node.operator === '=') {
     if (!isObjectLiteral(LeftHandSideExpression) && !isArrayLiteral(LeftHandSideExpression)) {
-      const lref = yield* Evaluate_Expression(LeftHandSideExpression);
+      const lref = yield* Evaluate(LeftHandSideExpression);
       ReturnIfAbrupt(lref);
-      const rref = yield* Evaluate_Expression(AssignmentExpression);
+      const rref = yield* Evaluate(AssignmentExpression);
       const rval = Q(GetValue(rref));
       if (IsAnonymousFunctionDefinition(AssignmentExpression)
           && IsIdentifierRef(LeftHandSideExpression)) {
@@ -43,9 +43,9 @@ export function* Evaluate_AssignmentExpression(node) {
   } else {
     const AssignmentOperator = node.operator;
 
-    const lref = yield* Evaluate_Expression(LeftHandSideExpression);
+    const lref = yield* Evaluate(LeftHandSideExpression);
     const lval = Q(GetValue(lref));
-    const rref = yield* Evaluate_Expression(AssignmentExpression);
+    const rref = yield* Evaluate(AssignmentExpression);
     const rval = Q(GetValue(rref));
     // Let op be the @ where AssignmentOperator is @=.
     const op = AssignmentOperator.slice(0, -1);

@@ -23,7 +23,7 @@ import {
   ToNumber,
   ToObject,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Type, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -31,7 +31,7 @@ import { OutOfRange } from '../helpers.mjs';
 // #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
 function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
-  const ref = yield* Evaluate_Expression(UnaryExpression);
+  const ref = yield* Evaluate(UnaryExpression);
   ReturnIfAbrupt(ref);
   if (Type(ref) !== 'Reference') {
     return Value.true;
@@ -59,7 +59,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
 // #sec-void-operator-runtime-semantics-evaluation
 // UnaryExpression : `void` UnaryExpression
 function* Evaluate_UnaryExpression_Void(UnaryExpression) {
-  const expr = yield* Evaluate_Expression(UnaryExpression);
+  const expr = yield* Evaluate(UnaryExpression);
   Q(GetValue(expr));
   return Value.undefined;
 }
@@ -67,7 +67,7 @@ function* Evaluate_UnaryExpression_Void(UnaryExpression) {
 // #sec-typeof-operator-runtime-semantics-evaluation
 // UnaryExpression : `typeof` UnaryExpression
 function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
-  let val = yield* Evaluate_Expression(UnaryExpression);
+  let val = yield* Evaluate(UnaryExpression);
   if (Type(val) === 'Reference') {
     if (IsUnresolvableReference(val) === Value.true) {
       return new Value('undefined');
@@ -106,7 +106,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 // #sec-unary-plus-operator-runtime-semantics-evaluation
 // UnaryExpression : `+` UnaryExpression
 function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
-  const expr = yield* Evaluate_Expression(UnaryExpression);
+  const expr = yield* Evaluate(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   return Q(ToNumber(exprVal));
 }
@@ -114,7 +114,7 @@ function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
 // #sec-unary-minus-operator-runtime-semantics-evaluation
 // UnaryExpression : `-` UnaryExpression
 function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
-  const expr = yield* Evaluate_Expression(UnaryExpression);
+  const expr = yield* Evaluate(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToNumber(exprVal));
   if (oldValue.isNaN()) {
@@ -126,7 +126,7 @@ function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
 // #sec-bitwise-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `~` UnaryExpression
 function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
-  const expr = yield* Evaluate_Expression(UnaryExpression);
+  const expr = yield* Evaluate(UnaryExpression);
   const exprVal = Q(GetValue(expr));
   const oldValue = Q(ToInt32(exprVal));
   return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
@@ -135,7 +135,7 @@ function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
 // #sec-logical-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `!` UnaryExpression
 function* Evaluate_UnaryExpression_Bang(UnaryExpression) {
-  const expr = yield* Evaluate_Expression(UnaryExpression);
+  const expr = yield* Evaluate(UnaryExpression);
   const oldValue = ToBoolean(Q(GetValue(expr)));
   if (oldValue === Value.true) {
     return Value.false;

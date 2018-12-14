@@ -1,6 +1,6 @@
 import { Value } from '../value.mjs';
 import { Completion, EnsureCompletion, NormalCompletion } from '../completion.mjs';
-import { Evaluate_Statement } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { isBreakableStatement, isLabelledStatement, isStatement } from '../ast.mjs';
 import { SameValue } from '../abstract-ops/all.mjs';
 import {
@@ -25,7 +25,7 @@ function* LabelledEvaluation({
       stmtResult = yield* LabelledEvaluation(LabelledItem, labelSet);
       break;
     case isStatement(LabelledItem):
-      stmtResult = yield* Evaluate_Statement(LabelledItem);
+      stmtResult = yield* Evaluate(LabelledItem);
       break;
     default:
       throw new OutOfRange('LabelledEvaluation', LabelledItem);

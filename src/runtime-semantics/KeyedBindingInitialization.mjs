@@ -18,7 +18,7 @@ import {
   Q,
   X,
 } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   IsAnonymousFunctionDefinition,
@@ -56,7 +56,7 @@ export function* KeyedBindingInitialization_BindingElement(BindingElement, value
 
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     v = Q(GetValue(defaultValue));
   }
   return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
@@ -84,7 +84,7 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
   const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));

@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_Expression, Evaluate_StatementList } from '../evaluator.mjs';
+import { Evaluate, Evaluate_StatementList } from '../evaluator.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
@@ -16,7 +16,7 @@ import { BlockDeclarationInstantiation } from './BlockStatement.mjs';
 // #sec-runtime-semantics-caseclauseisselected
 function* CaseClauseIsSelected(C, input) {
   // Assert: C is an instance of the production CaseClause : `case` Expression : StatementList.
-  const exprRef = yield* Evaluate_Expression(C.test);
+  const exprRef = yield* Evaluate(C.test);
   const clauseSelector = Q(GetValue(exprRef));
   return StrictEqualityComparison(input, clauseSelector);
 }
@@ -134,7 +134,7 @@ export function* Evaluate_SwitchStatement({
   discriminant: Expression,
   cases: CaseBlock,
 }) {
-  const exprRef = yield* Evaluate_Expression(Expression);
+  const exprRef = yield* Evaluate(Expression);
   const switchValue = Q(GetValue(exprRef));
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const blockEnv = NewDeclarativeEnvironment(oldEnv);

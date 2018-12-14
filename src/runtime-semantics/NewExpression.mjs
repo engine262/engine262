@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -16,7 +16,7 @@ import { msg } from '../helpers.mjs';
 function* EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = yield* Evaluate_Expression(constructExpr.callee);
+  const ref = yield* Evaluate(constructExpr.callee);
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
   const argList = yield* ArgumentListEvaluation(args);

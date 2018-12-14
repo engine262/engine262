@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   Assert,
   AsyncFunctionStart,
@@ -309,7 +309,7 @@ export function getFunctionBodyType(ECMAScriptCode) {
 // ConciseBody : AssignmentExpression
 export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const exprRef = yield* Evaluate_Expression(AssignmentExpression);
+  const exprRef = yield* Evaluate(AssignmentExpression);
   const exprValue = Q(GetValue(exprRef));
   return new ReturnCompletion(exprValue);
 }

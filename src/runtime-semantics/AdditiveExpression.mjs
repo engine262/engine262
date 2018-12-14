@@ -8,7 +8,7 @@ import {
   ToPrimitive,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import {
   Type,
@@ -32,9 +32,9 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
 // #sec-addition-operator-plus-runtime-semantics-evaluation
 //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
-  const lref = yield* Evaluate_Expression(AdditiveExpression);
+  const lref = yield* Evaluate(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(MultiplicativeExpression);
+  const rref = yield* Evaluate(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
 }
@@ -49,9 +49,9 @@ export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
 function* Evaluate_AdditiveExpression_Minus(
   AdditiveExpression, MultiplicativeExpression,
 ) {
-  const lref = yield* Evaluate_Expression(AdditiveExpression);
+  const lref = yield* Evaluate(AdditiveExpression);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(MultiplicativeExpression);
+  const rref = yield* Evaluate(MultiplicativeExpression);
   const rval = Q(GetValue(rref));
   return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
 }

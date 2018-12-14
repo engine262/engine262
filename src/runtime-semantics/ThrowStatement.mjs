@@ -1,5 +1,5 @@
 import {
-  Evaluate_Expression,
+  Evaluate,
 } from '../evaluator.mjs';
 import {
   GetValue,
@@ -11,7 +11,7 @@ import {
 
 // ThrowStatement : throw Expression ;
 export function* Evaluate_ThrowStatement(Expression) {
-  const exprRef = yield* Evaluate_Expression(Expression);
+  const exprRef = yield* Evaluate(Expression);
   const exprValue = Q(GetValue(exprRef));
   return new ThrowCompletion(exprValue);
 }

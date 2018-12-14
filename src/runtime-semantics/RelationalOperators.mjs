@@ -18,7 +18,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 export function InstanceofOperator(V, target) {
@@ -40,9 +40,9 @@ export function* Evaluate_RelationalExpression({
   right: ShiftExpression,
   operator,
 }) {
-  const lref = yield* Evaluate_Expression(RelationalExpression);
+  const lref = yield* Evaluate(RelationalExpression);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(ShiftExpression);
+  const rref = yield* Evaluate(ShiftExpression);
   const rval = Q(GetValue(rref));
 
   switch (operator) {

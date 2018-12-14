@@ -24,7 +24,7 @@ import {
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Evaluate_Expression,
+  Evaluate,
 } from '../evaluator.mjs';
 import { Type, Value } from '../value.mjs';
 
@@ -37,7 +37,7 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
   let value = Value.undefined;
   if (YieldExpression.argument) {
     const AssignmentExpression = YieldExpression.argument;
-    const exprRef = yield* Evaluate_Expression(AssignmentExpression);
+    const exprRef = yield* Evaluate(AssignmentExpression);
     value = Q(GetValue(exprRef));
   }
   if (generatorKind === 'async') {
@@ -52,7 +52,7 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
 //     `yield` `*` AssignmentExpression
 function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {
   const generatorKind = X(GetGeneratorKind());
-  const exprRef = yield* Evaluate_Expression(AssignmentExpression);
+  const exprRef = yield* Evaluate(AssignmentExpression);
   const value = Q(GetValue(exprRef));
   const iteratorRecord = Q(GetIterator(value, generatorKind));
   const iterator = iteratorRecord.Iterator;

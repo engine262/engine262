@@ -4,7 +4,7 @@ import {
   GetValue,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 
 // #sec-template-literals-runtime-semantics-evaluation
 //   TemplateLiteral : NoSubstitutionTemplate
@@ -23,7 +23,7 @@ export function* Evaluate_TemplateLiteral(TemplateLiteral) {
     const Expression = TemplateLiteral.expressions[i];
     const head = TemplateHead.value.cooked;
     // https://github.com/tc39/ecma262/issues/935
-    const subRef = yield* Evaluate_Expression(Expression);
+    const subRef = yield* Evaluate(Expression);
     const sub = Q(GetValue(subRef));
     const middle = Q(ToString(sub));
     str += head;

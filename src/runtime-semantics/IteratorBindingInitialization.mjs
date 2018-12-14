@@ -33,7 +33,7 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   IsAnonymousFunctionDefinition,
@@ -132,7 +132,7 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
     v = Value.undefined;
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     v = Q(GetValue(defaultValue));
   }
   return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
@@ -178,7 +178,7 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
     v = Value.undefined;
   }
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate_Expression(Initializer);
+    const defaultValue = yield* Evaluate(Initializer);
     v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
       const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));

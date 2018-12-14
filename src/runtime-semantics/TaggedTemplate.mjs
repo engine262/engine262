@@ -8,7 +8,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { EvaluateCall } from './all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { IsInTailPosition, TemplateStrings } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
@@ -61,7 +61,7 @@ export function* Evaluate_TaggedTemplate({
   tag: Expression,
   quasi: TemplateLiteral,
 }) {
-  const tagRef = yield* Evaluate_Expression(Expression);
+  const tagRef = yield* Evaluate(Expression);
   const tagFunc = Q(GetValue(tagRef));
   const thisCall = Expression;
   const tailCall = IsInTailPosition(thisCall);

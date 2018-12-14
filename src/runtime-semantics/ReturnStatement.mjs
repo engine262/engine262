@@ -8,7 +8,7 @@ import {
   GetGeneratorKind,
   GetValue,
 } from '../abstract-ops/all.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 
 // #sec-return-statement-runtime-semantics-evaluation
 export function* Evaluate_ReturnStatement({ argument: Expression }) {
@@ -17,7 +17,7 @@ export function* Evaluate_ReturnStatement({ argument: Expression }) {
     return new ReturnCompletion(Value.undefined);
   } else {
     // ReturnStatement : return Expression `;`
-    const exprRef = yield* Evaluate_Expression(Expression);
+    const exprRef = yield* Evaluate(Expression);
     let exprValue = Q(GetValue(exprRef));
     if (X(GetGeneratorKind()) === 'async') {
       exprValue = Q(yield* Await(exprValue));

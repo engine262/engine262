@@ -4,7 +4,7 @@ import {
   StrictEqualityComparison,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -19,9 +19,9 @@ export function* Evaluate_EqualityExpression({
   operator,
   right: RelationalExpression,
 }) {
-  const lref = yield* Evaluate_Expression(EqualityExpression);
+  const lref = yield* Evaluate(EqualityExpression);
   const lval = Q(GetValue(lref));
-  const rref = yield* Evaluate_Expression(RelationalExpression);
+  const rref = yield* Evaluate(RelationalExpression);
   const rval = Q(GetValue(rref));
 
   switch (operator) {

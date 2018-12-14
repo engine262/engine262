@@ -20,7 +20,7 @@ import {
   Q,
   ReturnIfAbrupt,
 } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { PerformEval } from '../intrinsics/eval.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -61,7 +61,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
 export function* Evaluate_CallExpression(CallExpression) {
-  const ref = yield* Evaluate_Expression(CallExpression.callee);
+  const ref = yield* Evaluate(CallExpression.callee);
   const func = Q(GetValue(ref));
   if (Type(ref) === 'Reference'
       && IsPropertyReference(ref) === Value.false

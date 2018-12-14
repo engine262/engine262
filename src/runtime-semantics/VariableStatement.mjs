@@ -13,7 +13,7 @@ import {
 import {
   NormalCompletion, Q, ReturnIfAbrupt, X,
 } from '../completion.mjs';
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
@@ -35,7 +35,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
       } = VariableDeclaration;
       const bindingId = new Value(BindingIdentifier.name);
       const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
-      const rhs = yield* Evaluate_Expression(Initializer);
+      const rhs = yield* Evaluate(Initializer);
       const value = Q(GetValue(rhs));
       if (IsAnonymousFunctionDefinition(Initializer)) {
         const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
@@ -51,7 +51,7 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
         id: BindingPattern,
         init: Initializer,
       } = VariableDeclaration;
-      const rhs = yield* Evaluate_Expression(Initializer);
+      const rhs = yield* Evaluate(Initializer);
       const rval = Q(GetValue(rhs));
       return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
     }

@@ -36,7 +36,9 @@ import {
   isClassExpression,
   isContinueStatement,
   isDebuggerStatement,
+  isDeclaration,
   isEmptyStatement,
+  isExpression,
   isExpressionStatement,
   isExpressionWithComma,
   isFunctionExpression,
@@ -50,6 +52,7 @@ import {
   isMetaProperty,
   isObjectLiteral,
   isReturnStatement,
+  isStatement,
   isSuperCall,
   isSuperProperty,
   isTaggedTemplate,
@@ -128,6 +131,7 @@ import {
 import {
   GetValue,
 } from './abstract-ops/all.mjs';
+import { surroundingAgent } from './engine.mjs';
 import { unwind, OutOfRange } from './helpers.mjs';
 
 // #sec-block-runtime-semantics-evaluation
@@ -140,14 +144,14 @@ export function* Evaluate_StatementList(StatementList) {
     return new NormalCompletion(undefined);
   }
 
-  let sl = yield* Evaluate_StatementListItem(StatementList[0]);
+  let sl = yield* Evaluate(StatementList[0]);
   if (StatementList.length === 1) {
     return sl;
   }
 
   for (const StatementListItem of StatementList.slice(1)) {
     ReturnIfAbrupt(sl);
-    let s = yield* Evaluate_StatementListItem(StatementListItem);
+    let s = yield* Evaluate(StatementListItem);
     // We don't always return a Completion value, but here we actually need it
     // to be a Completion.
     s = EnsureCompletion(s);
@@ -246,7 +250,7 @@ export const Evaluate_Statement = Evaluate_StatementListItem;
 // #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
 function* Evaluate_ExpressionStatement(ExpressionStatement) {
-  const exprRef = yield* Evaluate_Expression(ExpressionStatement.expression);
+  const exprRef = yield* Evaluate(ExpressionStatement.expression);
   return GetValue(exprRef);
 }
 
@@ -437,4 +441,18 @@ export function Evaluate_Script(Script) {
     return new NormalCompletion(undefined);
   }
   return unwind(Evaluate_StatementList(Script));
+}
+
+export function Evaluate(Production) {
+  if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
+    surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production);
+  }
+
+  if (isStatement(Production) || isDeclaration(Production)) {
+    return Evaluate_Statement(Production);
+  }
+  if (isExpression(Production)) {
+    return Evaluate_Expression(Production);
+  }
+  throw new OutOfRange('Evaluate', Production);
 }

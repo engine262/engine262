@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import {
   Assert,
   GetThisEnvironment,
@@ -28,7 +28,7 @@ export function* Evaluate_SuperProperty(SuperProperty) {
 
     const env = GetThisEnvironment();
     const actualThis = Q(env.GetThisBinding());
-    const propertyNameReference = yield* Evaluate_Expression(Expression);
+    const propertyNameReference = yield* Evaluate(Expression);
     const propertyNameValue = Q(GetValue(propertyNameReference));
     const propertyKey = Q(ToPropertyKey(propertyNameValue));
     const strict = SuperProperty.strict;

@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -9,12 +9,12 @@ export function* Evaluate_LogicalORExpression({
   left: LogicalORExpression,
   right: LogicalANDExpression,
 }) {
-  const lref = yield* Evaluate_Expression(LogicalORExpression);
+  const lref = yield* Evaluate(LogicalORExpression);
   const lval = Q(GetValue(lref));
   const lbool = ToBoolean(lval);
   if (lbool === Value.true) {
     return lval;
   }
-  const rref = yield* Evaluate_Expression(LogicalANDExpression);
+  const rref = yield* Evaluate(LogicalANDExpression);
   return Q(GetValue(rref));
 }

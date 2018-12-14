@@ -4,9 +4,7 @@ import {
 import {
   EnvironmentRecord,
 } from '../environment.mjs';
-import {
-  Assert,
-} from '../abstract-ops/all.mjs';
+import { Assert } from '../abstract-ops/all.mjs';
 import {
   BoundNames_BindingIdentifier,
   BoundNames_Declaration,
@@ -31,13 +29,12 @@ import {
   isGeneratorDeclaration,
   isVariableDeclaration,
 } from '../ast.mjs';
-import {
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import {
   NormalCompletion,
   Q,
 } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 // 15.1.11 #sec-globaldeclarationinstantiation
 export function GlobalDeclarationInstantiation(script, env) {
@@ -49,20 +46,20 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   for (const name of lexNames) {
     if (envRec.HasVarDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
     if (envRec.HasLexicalDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
     const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
     if (hasRestrictedGlobal === Value.true) {
-      return surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
   }
 
   for (const name of varNames) {
     if (envRec.HasLexicalDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError');
+      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
   }
 

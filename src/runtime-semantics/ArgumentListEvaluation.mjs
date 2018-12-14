@@ -1,4 +1,4 @@
-import { Evaluate_Expression } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import { isTemplateLiteral } from '../ast.mjs';
 import {
@@ -15,7 +15,7 @@ import { Value } from '../value.mjs';
 function* SubstitutionEvaluation(Expressions) {
   const preceding = [];
   for (const Expression of Expressions) {
-    const nextRef = yield* Evaluate_Expression(Expression);
+    const nextRef = yield* Evaluate(Expression);
     const next = Q(GetValue(nextRef));
     preceding.push(next);
   }
@@ -43,7 +43,7 @@ export function* ArgumentListEvaluation(ArgumentList) {
     } else {
       const templateLiteral = ArgumentList;
       const siteObj = GetTemplateObject(templateLiteral);
-      const firstSubRef = yield* Evaluate_Expression(templateLiteral.expressions.shift());
+      const firstSubRef = yield* Evaluate(templateLiteral.expressions.shift());
       const firstSub = Q(GetValue(firstSubRef));
       const restSub = yield* SubstitutionEvaluation(templateLiteral.expressions);
       ReturnIfAbrupt(restSub);
@@ -58,7 +58,7 @@ export function* ArgumentListEvaluation(ArgumentList) {
 
   const precedingArgs = [];
   for (const AssignmentExpression of ArgumentList.slice(0, -1)) {
-    const ref = yield* Evaluate_Expression(AssignmentExpression);
+    const ref = yield* Evaluate(AssignmentExpression);
     const arg = Q(GetValue(ref));
     precedingArgs.push(arg);
   }
@@ -66,7 +66,7 @@ export function* ArgumentListEvaluation(ArgumentList) {
   const last = ArgumentList[ArgumentList.length - 1];
   if (last.type === 'SpreadElement') {
     const AssignmentExpression = last.argument;
-    const spreadRef = yield* Evaluate_Expression(AssignmentExpression);
+    const spreadRef = yield* Evaluate(AssignmentExpression);
     const spreadObj = Q(GetValue(spreadRef));
     const iteratorRecord = Q(GetIterator(spreadObj));
     while (true) {
@@ -79,7 +79,7 @@ export function* ArgumentListEvaluation(ArgumentList) {
     }
   } else {
     const AssignmentExpression = last;
-    const ref = yield* Evaluate_Expression(AssignmentExpression);
+    const ref = yield* Evaluate(AssignmentExpression);
     const arg = Q(GetValue(ref));
     precedingArgs.push(arg);
   }
