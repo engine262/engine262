@@ -453,6 +453,7 @@ export function isExpression(node) {
     // CallExpression)
       || isActualMemberExpression(node)
       || isSuperProperty(node)
+      || isSuperCall(node)
       || isMetaProperty(node)
       || isActualNewExpression(node)
       || isActualCallExpression(node)

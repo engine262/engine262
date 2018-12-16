@@ -74,6 +74,7 @@ function createRealm() {
   Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
   Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
+  Abstract.CreateDataProperty($262, new Value(realm, 'print'), new Value(realm, () => Value.undefined));
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
@@ -127,13 +128,14 @@ async function run({ source, meta, strict }) {
           tracked.remove(promise);
         }
       };
-      $262.realm.realm.HostDefined.handlePrint = (m) => {
+      X(Abstract.CreateDataProperty($262.realm.global, new Value($262.realm, 'print'), new Value($262.realm, ([m]) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {
           resolve({ status: FAIL, error: inspect(m, $262.realm) });
         }
-      };
+        return Value.undefined;
+      })));
     });
     asyncPromise.finally(() => {
       agentOpt.promiseRejectionTracker = undefined;

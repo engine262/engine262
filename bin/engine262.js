@@ -34,6 +34,17 @@ initializeAgent({
 function createRealm() {
   const realm = new Realm();
 
+  const print = new Value(realm, (args) => {
+    console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+    return Value.undefined;
+  }, [], realm);
+  const raw = new Value(realm, (args) => {
+    console.log(...args); // eslint-disable-line no-console
+    return Value.undefined;
+  }, [], realm);
+  Abstract.CreateDataProperty(print, new Value(realm, 'raw'), raw);
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
+
   const $ = new APIObject(realm);
   realm.$ = $;
 

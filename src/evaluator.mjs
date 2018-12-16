@@ -445,7 +445,7 @@ export function Evaluate_Script(Script) {
 
 export function Evaluate(Production) {
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
-    surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production);
+    surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production, surroundingAgent.currentRealmRecord);
   }
 
   if (isStatement(Production) || isDeclaration(Production)) {

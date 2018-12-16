@@ -78,35 +78,6 @@ class APIRealm {
     const globalObj = SetDefaultGlobalBindings(realm);
 
     // Create any implementation-defined global object properties on globalObj.
-    {
-      const print = CreateBuiltinFunction((args) => {
-        if (options.handlePrint) {
-          Q(options.handlePrint(...args));
-        } else {
-          console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
-        }
-        return Value.undefined;
-      }, [], realm);
-
-      const raw = CreateBuiltinFunction((args) => {
-        console.log(...args); // eslint-disable-line no-console
-        return Value.undefined;
-      }, [], realm);
-
-      X(print.DefineOwnProperty(new Value('raw'), Descriptor({
-        Value: raw,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true,
-      })));
-
-      X(globalObj.DefineOwnProperty(new Value('print'), Descriptor({
-        Value: print,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true,
-      })));
-    }
 
     surroundingAgent.executionContextStack.pop(newContext);
 
