@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 const babel = require('rollup-plugin-babel');
+const resolve = require('rollup-plugin-node-resolve');
+const commonjs = require('rollup-plugin-commonjs');
 const { name, version } = require('./package.json');
 
 const banner = `/*
@@ -14,6 +16,13 @@ const banner = `/*
 module.exports = () => ({
   input: './src/api.mjs',
   plugins: [
+    resolve({
+      module: false,
+      jsnext: false,
+      browser: false,
+      main: true,
+    }),
+    commonjs(),
     babel({
       exclude: 'node_modules/**',
       plugins: [
