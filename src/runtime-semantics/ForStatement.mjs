@@ -481,6 +481,7 @@ function EnumerateObjectProperties(O) {
   const iterator = X(ObjectCreate(Value.null));
   const nextMethod = CreateBuiltinFunction(() => {
     const { value, done } = internalIterator.next();
+    ReturnIfAbrupt(value);
     return X(CreateIterResultObject(
       value === undefined ? Value.undefined : value,
       done ? Value.true : Value.false,
