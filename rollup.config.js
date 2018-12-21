@@ -64,4 +64,11 @@ module.exports = () => ({
       banner,
     },
   ],
+  onwarn(warning, defaultOnWarnHandler) {
+    if (warning.code === 'CIRCULAR_DEPENDENCY') {
+      // Squelch.
+      return;
+    }
+    return defaultOnWarnHandler(warning);
+  }
 });
