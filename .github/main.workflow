@@ -1,9 +1,15 @@
-workflow "New workflow" {
-  resolves = ["GitHub Action for npm"]
+workflow "Build and Lint" {
   on = "push"
+  resolves = ["Lint"]
 }
 
-action "GitHub Action for npm" {
-  uses = "actions/npm@e7aaefe"
-  runs = "test"
+action "Build" {
+  uses = "actions/npm@master"
+  args = "install"
+}
+
+action "Lint" {
+  needs = "Build"
+  uses = "actions/npm@master"
+  runs = "run lint"
 }
