@@ -699,7 +699,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       Value: value,
       Writable: Value.true,
       Enumerable: Value.true,
-      Configurable: Value.true,
+      Configurable: Value.false,
     });
   }
 
@@ -724,10 +724,10 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return Value.false;
     }
     if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-      return Value.true;
-    }
-    if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.true) {
       return Value.false;
+    }
+    if (Desc.Value !== undefined) {
+      return SameValue(Desc.Value, current.Value);
     }
     return Value.true;
   }
@@ -778,7 +778,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
 
     Assert(IsPropertyKey(P));
     if (Type(P) === 'Symbol') {
-      return OrdinaryDelete(O, P);
+      return Q(OrdinaryDelete(O, P));
     }
     const exports = O.Exports;
     if (exports.includes(P)) {
@@ -1182,20 +1182,22 @@ export class ProxyExoticObjectValue extends ObjectValue {
 }
 
 export class Reference {
-  constructor(
-    BaseValue,
-    ReferencedName,
-    StrictReference,
-  ) {
+  constructor({ BaseValue, ReferencedName, StrictReference }) {
     this.BaseValue = BaseValue;
     this.ReferencedName = ReferencedName;
+    Assert(Type(StrictReference) === 'Boolean');
     this.StrictReference = StrictReference;
   }
 }
 
 export class SuperReference extends Reference {
-  constructor(BaseValue, ReferencedName, thisValue, StrictReference) {
-    super(BaseValue, ReferencedName, StrictReference);
+  constructor({
+    BaseValue,
+    ReferencedName,
+    thisValue,
+    StrictReference,
+  }) {
+    super({ BaseValue, ReferencedName, StrictReference });
     this.thisValue = thisValue;
   }
 }

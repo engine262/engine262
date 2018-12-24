@@ -505,6 +505,9 @@ function createRealm() {
   const realm = new Realm({
     resolveImportedModule(referencingModule, specifier) {
       const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
+      if (resolved === $262.moduleEntry.specifier) {
+        return $262.moduleEntry;
+      }
       const source = fs.readFileSync(resolved, 'utf8');
       return realm.createSourceTextModule(resolved, source);
     },
@@ -604,6 +607,7 @@ async function run({
     completion = $262.realm.createSourceTextModule(specifier, source);
     if (!(completion instanceof AbruptCompletion)) {
       const module = completion;
+      $262.moduleEntry = module;
       completion = module.Instantiate();
       if (!(completion instanceof AbruptCompletion)) {
         completion = module.Evaluate();

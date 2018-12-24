@@ -142,8 +142,8 @@ class APIRealm {
       Evaluate: () => this.scope(() => {
         Assert(module.Status === 'instantiated');
         const stack = [];
-
         let index = 0;
+
         // InnerModuleEvaluation
         module.Status = 'evaluating';
         module.DFSIndex = index;

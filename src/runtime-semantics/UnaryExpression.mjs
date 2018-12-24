@@ -26,7 +26,7 @@ import {
 import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Type, Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, msg } from '../helpers.mjs';
 
 // 12.5.3.2 #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
@@ -47,7 +47,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
     const baseObj = X(ToObject(GetBase(ref)));
     const deleteStatus = Q(baseObj.Delete(GetReferencedName(ref)));
     if (deleteStatus === Value.false && IsStrictReference(ref) === Value.true) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('StrictModeDelete', GetReferencedName(ref)));
     }
     return deleteStatus;
   } else {

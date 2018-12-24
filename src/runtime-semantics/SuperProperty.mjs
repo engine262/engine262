@@ -15,7 +15,12 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   Assert(env.HasSuperBinding() === Value.true);
   const baseValue = Q(env.GetSuperBase());
   const bv = Q(RequireObjectCoercible(baseValue));
-  return new SuperReference(bv, propertyKey, actualThis, strict ? Value.true : Value.false);
+  return new SuperReference({
+    BaseValue: bv,
+    ReferencedName: propertyKey,
+    thisValue: actualThis,
+    StrictReference: strict ? Value.true : Value.false,
+  });
 }
 
 // 12.3.5.1 #sec-super-keyword-runtime-semantics-evaluation

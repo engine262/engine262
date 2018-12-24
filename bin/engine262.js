@@ -36,6 +36,9 @@ function createRealm() {
   const realm = new Realm({
     resolveImportedModule(referencingModule, specifier) {
       const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
+      if (resolved === realm.moduleEntry.specifier) {
+        return realm.moduleEntry;
+      }
       const source = fs.readFileSync(resolved, 'utf8');
       return realm.createSourceTextModule(resolved, source);
     },
@@ -76,6 +79,7 @@ if (process.argv[2]) {
     result = realm.createSourceTextModule(path.resolve(process.argv[2]), source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
+      realm.moduleEntry = module;
       result = module.Instantiate();
       if (!(result instanceof AbruptCompletion)) {
         result = module.Evaluate();

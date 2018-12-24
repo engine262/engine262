@@ -26,7 +26,11 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
   const strict = MemberExpression.strict;
-  return new Reference(bv, propertyKey, strict ? Value.true : Value.false);
+  return new Reference({
+    BaseValue: bv,
+    ReferencedName: propertyKey,
+    StrictReference: strict ? Value.true : Value.false,
+  });
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
@@ -38,7 +42,11 @@ function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierN
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyNameString = new Value(IdentifierName.name);
   const strict = MemberExpression.strict;
-  return new Reference(bv, propertyNameString, strict);
+  return new Reference({
+    BaseValue: bv,
+    ReferencedName: propertyNameString,
+    StrictReference: strict ? Value.true : Value.false,
+  });
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation

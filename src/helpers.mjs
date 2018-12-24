@@ -1,5 +1,5 @@
 import { surroundingAgent } from './engine.mjs';
-import { Value, Descriptor } from './value.mjs';
+import { Value, Descriptor, ModuleRecord } from './value.mjs';
 import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 import { inspect } from './api.mjs';
@@ -51,6 +51,9 @@ export function captureStack(O) {
       if (name) {
         return `\n  at ${X(ToString(name.Value)).stringValue()}`;
       }
+      if (e.ScriptOrModule instanceof ModuleRecord) {
+        return `\n  at ${e.ScriptOrModule.HostDefined.specifier}`;
+      }
       return '\n  at <anonymous>';
     })
     .reverse();
@@ -83,6 +86,7 @@ const messages = {
   BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
   TypedArrayTooSmall: () => 'Derived TypedArray constructor created an array which was too small',
   NotDefined: (n) => `${inlineInspect(n)} is not defined`,
+  StrictModeDelete: (n) => `Cannot not delete property ${inlineInspect(n)}`,
   CannotSetProperty: (p) => `Cannot set property ${inlineInspect(p)}`,
   AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
   ConstructorRequiresNew: (n) => `${n} constructor requires new`,

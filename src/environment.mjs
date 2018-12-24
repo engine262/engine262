@@ -656,12 +656,20 @@ export function NewModuleEnvironment(E) {
 // 8.1.2.1 #sec-getidentifierreference
 export function GetIdentifierReference(lex, name, strict) {
   if (Type(lex) === 'Null') {
-    return new Reference(Value.undefined, name, strict);
+    return new Reference({
+      BaseValue: Value.undefined,
+      ReferencedName: name,
+      StrictReference: strict,
+    });
   }
   const envRec = lex.EnvironmentRecord;
   const exists = Q(envRec.HasBinding(name));
   if (exists === Value.true) {
-    return new Reference(envRec, name, strict);
+    return new Reference({
+      BaseValue: envRec,
+      ReferencedName: name,
+      StrictReference: strict,
+    });
   } else {
     const outer = lex.outerEnvironmentReference;
     return GetIdentifierReference(outer, name, strict);
