@@ -1232,11 +1232,26 @@ export class DataBlock extends Uint8Array {
   }
 }
 
+// #importentry-record
 export class ImportEntryRecord {
   constructor(O) {
     Assert(Type(O.ModuleRequest) === 'String');
     Assert(Type(O.ImportName) === 'String');
     Assert(Type(O.LocalName) === 'String');
+    this.ModuleRequest = O.ModuleRequest;
+    this.ImportName = O.ImportName;
+    this.LocalName = O.LocalName;
+  }
+}
+
+// #exportentry-record
+export class ExportEntryRecord {
+  constructor(O) {
+    Assert(Type(O.ExportName) === 'String');
+    Assert(Type(O.ModuleRequest) === 'String' || Type(O.ModuleRequest) === 'Null');
+    Assert(Type(O.ImportName) === 'String' || Type(O.ImportName) === 'Null');
+    Assert(Type(O.LocalName) === 'String' || Type(O.LocalName) === 'Null');
+    this.ExportName = O.ExportName;
     this.ModuleRequest = O.ModuleRequest;
     this.ImportName = O.ImportName;
     this.LocalName = O.LocalName;
