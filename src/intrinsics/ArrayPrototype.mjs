@@ -7,23 +7,19 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  ArrayCreate,
+  ArraySpeciesCreate,
   Assert,
   Call,
-  Construct,
   CreateArrayIterator,
   CreateDataProperty,
   CreateDataPropertyOrThrow,
   DeletePropertyOrThrow,
   Get,
-  GetFunctionRealm,
   HasProperty,
   Invoke,
-  IsArray,
   IsCallable,
-  IsConstructor,
+  IsConcatSpreadable,
   ObjectCreate,
-  SameValue,
   SameValueZero,
   Set,
   StrictEqualityComparison,
@@ -34,51 +30,9 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-function ArraySpeciesCreate(originalArray, length) {
-  Assert(Type(length) === 'Number' && length.numberValue() >= 0);
-  const isArray = Q(IsArray(originalArray));
-  if (isArray === Value.false) {
-    return Q(ArrayCreate(length));
-  }
-  let C = Q(Get(originalArray, new Value('constructor')));
-  if (IsConstructor(C) === Value.true) {
-    const thisRealm = surroundingAgent.currentRealmRecord;
-    const realmC = Q(GetFunctionRealm(C));
-    if (thisRealm !== realmC) {
-      if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
-        C = Value.undefined;
-      }
-    }
-  }
-  if (Type(C) === 'Object') {
-    C = Q(Get(C, wellKnownSymbols.species));
-    if (Type(C) === 'Null') {
-      C = Value.undefined;
-    }
-  }
-  if (Type(C) === 'Undefined') {
-    return Q(ArrayCreate(length));
-  }
-  if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
-  }
-  return Q(Construct(C, [length]));
-}
-
-function IsConcatSpreadable(O) {
-  if (Type(O) !== 'Object') {
-    return Value.false;
-  }
-  const spreadable = Q(Get(O, wellKnownSymbols.isConcatSpreadable));
-  if (spreadable !== Value.undefined) {
-    return ToBoolean(spreadable);
-  }
-  return Q(IsArray(O));
-}
-
+// 22.1.3.1 #sec-array.prototype.concat
 function ArrayProto_concat(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, new Value(0)));
@@ -118,6 +72,7 @@ function ArrayProto_concat(args, { thisValue }) {
   return Value.true;
 }
 
+// 22.1.3.3 #sec-array.prototype.copywithin
 function ArrayProto_copyWithin([target, start, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -174,11 +129,13 @@ function ArrayProto_copyWithin([target, start, end = Value.undefined], { thisVal
   return O;
 }
 
+// 22.1.3.4 #sec-array.prototype.entries
 function ArrayProto_entries(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
+// 22.1.3.5 #sec-array.prototype.every
 function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -208,6 +165,7 @@ function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
   return Value.true;
 }
 
+// 22.1.3.6 #sec-array.prototype.fill
 function ArrayProto_fill([value, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -239,6 +197,7 @@ function ArrayProto_fill([value, start = Value.undefined, end = Value.undefined]
   return O;
 }
 
+// 22.1.3.7 #sec-array.prototype.filter
 function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -266,6 +225,7 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
+// 22.1.3.8 #sec-array.prototype.find
 function ArrayProto_find([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -287,6 +247,7 @@ function ArrayProto_find([predicate, thisArg], { thisValue }) {
   return Value.undefined;
 }
 
+// 22.1.3.9 #sec-array.prototype.findindex
 function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -308,6 +269,7 @@ function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
   return new Value(-1);
 }
 
+// 22.1.3.10 #sec-array.prototype.foreach
 function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -329,6 +291,7 @@ function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
   return Value.undefined;
 }
 
+// 22.1.3.11 #sec-array.prototype.includes
 function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -357,6 +320,7 @@ function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   return Value.false;
 }
 
+// 22.1.3.12 #sec-array.prototype.indexof
 function ArrayProto_indexOf([searchElement, fromIndex = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -396,6 +360,7 @@ function ArrayProto_indexOf([searchElement, fromIndex = Value.undefined], { this
   return new Value(-1);
 }
 
+// 22.1.3.13 #sec-array.prototype.join
 function ArrayProto_join([separator = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -426,11 +391,13 @@ function ArrayProto_join([separator = Value.undefined], { thisValue }) {
   return new Value(R);
 }
 
+// 22.1.3.14 #sec-array.prototype.keys
 function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
 }
 
+// 22.1.3.15 #sec-array.prototype.lastindexof
 function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -469,6 +436,7 @@ function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
   return new Value(-1);
 }
 
+// 22.1.3.16 #sec-array.prototype.map
 function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
@@ -492,6 +460,7 @@ function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
+// 22.1.3.17 #sec-array.prototype.pop
 function ArrayProto_pop(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -508,6 +477,7 @@ function ArrayProto_pop(args, { thisValue }) {
   }
 }
 
+// 22.1.3.18 #sec-array.prototype.push
 function ArrayProto_push([...items], { thisValue }) {
   const O = Q(ToObject(thisValue));
   let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -524,6 +494,7 @@ function ArrayProto_push([...items], { thisValue }) {
   return new Value(len);
 }
 
+// 22.1.3.19 #sec-array.prototype.reduce
 function ArrayProto_reduce([callbackfn, initialValue], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -563,6 +534,7 @@ function ArrayProto_reduce([callbackfn, initialValue], { thisValue }) {
   return accumulator;
 }
 
+// 22.1.3.20 #sec-array.prototype.reduceright
 function ArrayProto_reduceRight([callbackfn, initialValue], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -602,6 +574,7 @@ function ArrayProto_reduceRight([callbackfn, initialValue], { thisValue }) {
   return accumulator;
 }
 
+// 22.1.3.21 #sec-array.prototype.reverse
 function ArrayProto_reverse(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -638,6 +611,7 @@ function ArrayProto_reverse(args, { thisValue }) {
   return O;
 }
 
+// 22.1.3.22 #sec-array.prototype.shift
 function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -664,6 +638,7 @@ function ArrayProto_shift(args, { thisValue }) {
   return first;
 }
 
+// 22.1.3.23 #sec-array.prototype.slice
 function ArrayProto_slice([start, end], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -703,6 +678,7 @@ function ArrayProto_slice([start, end], { thisValue }) {
   return A;
 }
 
+// 22.1.3.24 #sec-array.prototype.some
 function ArrayProto_some([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -731,6 +707,7 @@ function ArrayProto_some([callbackfn, thisArg], { thisValue }) {
   return Value.true;
 }
 
+// 22.1.3.26 #sec-array.prototype.splice
 function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLength }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
@@ -814,6 +791,7 @@ function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLeng
   return A;
 }
 
+// 22.1.3.27 #sec-array.prototype.tolocalestring
 function ArrayProto_toLocaleString(args, { thisValue }) {
   const array = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(array, new Value('length'))))).numberValue();
@@ -834,6 +812,7 @@ function ArrayProto_toLocaleString(args, { thisValue }) {
   return R;
 }
 
+// 22.1.3.28 #sec-array.prototype.tostring
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, new Value('join')));
@@ -843,6 +822,7 @@ function ArrayProto_toString(a, { thisValue }) {
   return Q(Call(func, array));
 }
 
+// 22.1.3.30 #sec-array.prototype.values
 function ArrayProto_values(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');

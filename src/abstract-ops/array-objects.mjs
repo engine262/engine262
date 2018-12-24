@@ -4,18 +4,27 @@ import {
   Descriptor,
   Type,
   Value,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
+  Construct,
+  Get,
+  GetFunctionRealm,
   IsAccessorDescriptor,
+  IsArray,
+  IsConstructor,
   ObjectCreate,
   OrdinaryDefineOwnProperty,
   OrdinaryGetOwnProperty,
+  SameValue,
+  ToBoolean,
   ToNumber,
   ToString,
   ToUint32,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 
 // This file covers abstract operations defined in
 // 9.4.2 #sec-array-exotic-objects
@@ -50,6 +59,38 @@ export function ArrayCreate(length, proto) {
   })));
 
   return A;
+}
+
+// 9.4.2.3 #sec-arrayspeciescreate
+export function ArraySpeciesCreate(originalArray, length) {
+  Assert(Type(length) === 'Number' && length.numberValue() >= 0);
+  const isArray = Q(IsArray(originalArray));
+  if (isArray === Value.false) {
+    return Q(ArrayCreate(length));
+  }
+  let C = Q(Get(originalArray, new Value('constructor')));
+  if (IsConstructor(C) === Value.true) {
+    const thisRealm = surroundingAgent.currentRealmRecord;
+    const realmC = Q(GetFunctionRealm(C));
+    if (thisRealm !== realmC) {
+      if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
+        C = Value.undefined;
+      }
+    }
+  }
+  if (Type(C) === 'Object') {
+    C = Q(Get(C, wellKnownSymbols.species));
+    if (Type(C) === 'Null') {
+      C = Value.undefined;
+    }
+  }
+  if (Type(C) === 'Undefined') {
+    return Q(ArrayCreate(length));
+  }
+  if (IsConstructor(C) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+  }
+  return Q(Construct(C, [length]));
 }
 
 // 9.4.2.4 #sec-arraysetlength
@@ -101,6 +142,18 @@ export function ArraySetLength(A, Desc) {
     OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
   }
   return Value.true;
+}
+
+// 22.1.3.1.1 #sec-isconcatspreadable
+export function IsConcatSpreadable(O) {
+  if (Type(O) !== 'Object') {
+    return Value.false;
+  }
+  const spreadable = Q(Get(O, wellKnownSymbols.isConcatSpreadable));
+  if (spreadable !== Value.undefined) {
+    return ToBoolean(spreadable);
+  }
+  return Q(IsArray(O));
 }
 
 // 22.1.5.1 #sec-createarrayiterator

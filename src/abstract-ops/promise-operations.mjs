@@ -213,7 +213,7 @@ export function CreateResolvingFunctions(promise) {
   };
 }
 
-// #sec-performpromisethen
+// 25.6.5.4.1 #sec-performpromisethen
 export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   Assert(IsPromise(promise) === Value.true);
   if (resultCapability) {
