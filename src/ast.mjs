@@ -876,6 +876,11 @@ export function isLexicalDeclaration(node) {
   return node.type === 'VariableDeclaration' && (node.kind === 'let' || node.kind === 'const');
 }
 
+// #prod-StatementListItem
+export function isStatementListItem(node) {
+  return isStatement(node) || isDeclaration(node);
+}
+
 // #prod-ForDeclaration
 export const isForDeclaration = isLexicalDeclaration;
 
