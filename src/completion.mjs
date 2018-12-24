@@ -2,10 +2,10 @@ import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
+  PerformPromiseThen,
   PromiseResolve,
   SetFunctionLength,
 } from './abstract-ops/all.mjs';
-import { PerformPromiseThen } from './intrinsics/PromisePrototype.mjs';
 import { Reference, Value } from './value.mjs';
 import { resume } from './helpers.mjs';
 

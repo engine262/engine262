@@ -4,10 +4,10 @@ import {
   Call,
   CreateBuiltinFunction,
   CreateIterResultObject,
-  NewPromiseCapability,
   GetGeneratorKind,
+  NewPromiseCapability,
+  PerformPromiseThen,
 } from './all.mjs';
-import { PerformPromiseThen } from '../intrinsics/PromisePrototype.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import {
   Q, X,
