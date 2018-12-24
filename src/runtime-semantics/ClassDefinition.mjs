@@ -34,7 +34,7 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 
-// #sec-runtime-semantics-classdefinitionevaluation
+// 14.6.13 #sec-runtime-semantics-classdefinitionevaluation
 //   ClassTail : ClassHeritage `{` ClassBody `}`
 function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -117,7 +117,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   return F;
 }
 
-// #sec-class-definitions-runtime-semantics-evaluation
+// 14.6.15 #sec-class-definitions-runtime-semantics-evaluation
 //   ClassExpression : `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassExpression(ClassExpression) {
   const {
@@ -148,7 +148,7 @@ export function* Evaluate_ClassExpression(ClassExpression) {
   return new NormalCompletion(value);
 }
 
-// #sec-runtime-semantics-bindingclassdeclarationevaluation
+// 14.6.14 #sec-runtime-semantics-bindingclassdeclarationevaluation
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
@@ -183,7 +183,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
   return new NormalCompletion(value);
 }
 
-// #sec-class-definitions-runtime-semantics-evaluation
+// 14.6.15 #sec-class-definitions-runtime-semantics-evaluation
 //   ClassDeclaration : `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassDeclaration(ClassDeclaration) {
   Q(yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration));

@@ -28,7 +28,7 @@ import {
 } from '../evaluator.mjs';
 import { Type, Value } from '../value.mjs';
 
-// #sec-generator-function-definitions-runtime-semantics-evaluation
+// 14.4.13 #sec-generator-function-definitions-runtime-semantics-evaluation
 //   YieldExpression :
 //     `yield`
 //     `yield` AssignmentExpression
@@ -47,7 +47,7 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
   return Q(yield* GeneratorYield(CreateIterResultObject(value, Value.false)));
 }
 
-// #sec-generator-function-definitions-runtime-semantics-evaluation
+// 14.4.13 #sec-generator-function-definitions-runtime-semantics-evaluation
 //   YieldExpression :
 //     `yield` `*` AssignmentExpression
 function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {

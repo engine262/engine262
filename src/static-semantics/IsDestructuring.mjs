@@ -5,13 +5,13 @@ import {
   isActualMemberExpression,
 } from '../ast.mjs';
 
-// #sec-for-in-and-for-of-statements-static-semantics-isdestructuring
+// 13.7.5.6 #sec-for-in-and-for-of-statements-static-semantics-isdestructuring
 //   ForDeclaration : LetOrConst ForBinding
 export function IsDestructuring_ForDeclaration(ForDeclaration) {
   return IsDestructuring_ForBinding(ForDeclaration.declarations[0].id);
 }
 
-// #sec-for-in-and-for-of-statements-static-semantics-isdestructuring
+// 13.7.5.6 #sec-for-in-and-for-of-statements-static-semantics-isdestructuring
 //   ForBinding :
 //     BindingIdentifier
 //     BindingPattern

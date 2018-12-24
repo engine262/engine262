@@ -2,7 +2,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { GetValue } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-comma-operator-runtime-semantics-evaluation
+// 12.16.3 #sec-comma-operator-runtime-semantics-evaluation
 // Expression : Expression `,` AssignmentExpression
 export function* Evaluate_ExpressionWithComma(ExpressionWithComma) {
   const expressions = [...ExpressionWithComma.expressions];

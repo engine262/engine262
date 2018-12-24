@@ -40,7 +40,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition
 //
 // (implicit)
@@ -59,7 +59,7 @@ export function* PropertyDefinitionEvaluation_PropertyDefinitionList(
   return lastReturn;
 }
 
-// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : `...` AssignmentExpression
 function* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
   const AssignmentExpression = PropertyDefinition.argument;
@@ -70,7 +70,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinit
   return Q(CopyDataProperties(object, fromValue, excludedNames));
 }
 
-// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : IdentifierReference
 function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   PropertyDefinition, object, enumerable,
@@ -83,7 +83,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   return CreateDataPropertyOrThrow(object, propName, propValue);
 }
 
-// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinition : PropertyName `:` AssignmentExpression
 function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   PropertyDefinition, object, enumerable,
@@ -103,7 +103,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   return CreateDataPropertyOrThrow(object, propKey, propValue);
 }
 
-// #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
+// 14.3.8 #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
 //   MethodDefinition :
 //     PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //     `get` PropertyName `(` `)` `{` FunctionBody `}`
@@ -187,7 +187,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
 //     `static` MethodDefinition
 export const PropertyDefinitionEvaluation_ClassElement = PropertyDefinitionEvaluation_MethodDefinition;
 
-// #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+// 14.4.12 #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 //   GeneratorMethod : `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
 function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
   const {

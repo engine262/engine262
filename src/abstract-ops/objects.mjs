@@ -416,7 +416,7 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
   return proto;
 }
 
-// #sec-OrdinaryHasInstance
+// 7.3.19 #sec-ordinaryhasinstance
 export function OrdinaryHasInstance(C, O) {
   if (IsCallable(C) === Value.false) {
     return Value.false;

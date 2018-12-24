@@ -265,13 +265,13 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   }
 }
 
-// #sec-do-while-statement-runtime-semantics-labelledevaluation
+// 13.7.2.6 #sec-do-while-statement-runtime-semantics-labelledevaluation
 //   IterationStatement : `do` Statement `while` `(` Expression `)` `;`
 //
-// #sec-while-statement-runtime-semantics-labelledevaluation
+// 13.7.3.6 #sec-while-statement-runtime-semantics-labelledevaluation
 //   IterationStatement : `while` `(` Expression `)` Statement
 //
-// #sec-for-statement-runtime-semantics-labelledevaluation
+// 13.7.4.7 #sec-for-statement-runtime-semantics-labelledevaluation
 //   IterationStatement :
 //     `for` `(` Expression `;` Expression `;` Expression `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression `;` Expression `)` Statement

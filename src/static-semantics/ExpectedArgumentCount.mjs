@@ -5,7 +5,7 @@ import {
 } from '../ast.mjs';
 import { HasInitializer_BindingElement } from './all.mjs';
 
-// #sec-function-definitions-static-semantics-expectedargumentcount
+// 14.1.7 #sec-function-definitions-static-semantics-expectedargumentcount
 //   FormalParameters :
 //     [empty]
 //     FormalParameterList `,` FunctionRestParameter
@@ -45,7 +45,7 @@ export function ExpectedArgumentCount_FormalParameters(FormalParameters) {
   return count + 1;
 }
 
-// #sec-arrow-function-definitions-static-semantics-expectedargumentcount
+// 14.2.6 #sec-arrow-function-definitions-static-semantics-expectedargumentcount
 //   ArrowParameters : BindingIdentifier
 //
 // (implicit)
@@ -54,12 +54,12 @@ export function ExpectedArgumentCount_FormalParameters(FormalParameters) {
 //   UniqueFormalParameters : FormalParameters
 export const ExpectedArgumentCount_ArrowParameters = ExpectedArgumentCount_FormalParameters;
 
-// #sec-method-definitions-static-semantics-expectedargumentcount
+// 14.3.3 #sec-method-definitions-static-semantics-expectedargumentcount
 //   PropertySetParameterList : FormalParameter
 //
 // Not implemented. Use ExpectedArgumentCount_FormalParameters instead.
 
-// #sec-async-arrow-function-definitions-static-semantics-ExpectedArgumentCount
+// 14.8.6 #sec-async-arrow-function-definitions-static-semantics-ExpectedArgumentCount
 //   AsyncArrowBindingIdentifier : BindingIdentifier
 //
 // Not implemented. Use ExpectedArgumentCount_ArrowParameters instead.

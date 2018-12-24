@@ -21,7 +21,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { Descriptor, Value } from '../value.mjs';
 
-// #sec-function-definitions-runtime-semantics-instantiatefunctionobject
+// 14.1.20 #sec-function-definitions-runtime-semantics-instantiatefunctionobject
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -39,7 +39,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
   return F;
 }
 
-// #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
+// 14.4.11 #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`

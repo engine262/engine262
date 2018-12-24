@@ -14,7 +14,7 @@ import {
 import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
+// 13.3.3.6 #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 //   BindingPropertyList : BindingPropertyList `,` BindingProperty
 //
 // (implicit)
@@ -32,7 +32,7 @@ export function* PropertyBindingInitialization_BindingPropertyList(
   return boundNames;
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
+// 13.3.3.6 #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 //   BindingProperty :
 //     SingleNameBinding
 //     PropertyName `:` BindingElement

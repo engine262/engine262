@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { ReturnIfAbrupt, X } from '../completion.mjs';
 
-// #sec-runtime-semantics-definemethod
+// 14.3.7 #sec-runtime-semantics-definemethod
 // MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 export function* DefineMethod(MethodDefinition, object, functionPrototype) {
   const PropertyName = MethodDefinition.key;

@@ -10,40 +10,40 @@ import {
 import { IsFunctionDefinition_Expression } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-semantics-static-semantics-hasname
+// 12.2.1.2 #sec-semantics-static-semantics-hasname
 //   PrimaryExpression : CoverParenthesizedExpressionAndArrowParameterList
 //
-// #sec-function-definitions-static-semantics-hasname
+// 14.1.9 #sec-function-definitions-static-semantics-hasname
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //
-// #sec-arrow-function-definitions-static-semantics-hasname
+// 14.2.7 #sec-arrow-function-definitions-static-semantics-hasname
 //   ArrowFunction : ArrowParameters `=>` ConciseBody
 //
-// #sec-generator-function-definitions-static-semantics-hasname
+// 14.4.6 #sec-generator-function-definitions-static-semantics-hasname
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //
-// #sec-async-generator-function-definitions-static-semantics-hasname
+// 14.5.6 #sec-async-generator-function-definitions-static-semantics-hasname
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //
-// #sec-class-definitions-static-semantics-hasname
+// 14.6.6 #sec-class-definitions-static-semantics-hasname
 //   ClassExpression :
 //     `class` ClassTail
 //     `class` BindingIdentifier ClassTail
 //
-// #sec-async-function-definitions-static-semantics-HasName
+// 14.7.6 #sec-async-function-definitions-static-semantics-HasName
 //   AsyncFunctionExpression :
 //     `async` [no LineTerminator here] `function` `(` FormalParameters `)`
 //       `{` AsyncFunctionBody `}`
 //     `async` [no LineTerminator here] `function` BindingIdentifier `(` FormalParameters `)`
 //       `{` AsyncFunctionBody `}`
 //
-// #sec-async-arrow-function-definitions-static-semantics-HasName
+// 14.8.7 #sec-async-arrow-function-definitions-static-semantics-HasName
 //   AsyncArrowFunction:
 //     `async` [no LineTerminator here] AsyncArrowBindingIdentifier [no LineTerminator here]
 //       `=>` AsyncConciseBody

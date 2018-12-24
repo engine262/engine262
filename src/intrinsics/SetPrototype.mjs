@@ -13,7 +13,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// #sec-CreateSetIterator
+// 23.2.5.1 #sec-createsetiterator
 function CreateSetIterator(set, kind) {
   if (Type(set) !== 'Object') {
     return surroundingAgent.Throw('TypeError');

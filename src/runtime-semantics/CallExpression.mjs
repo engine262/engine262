@@ -56,7 +56,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   return result;
 }
 
-// #sec-function-calls-runtime-semantics-evaluation
+// 12.3.4.1 #sec-function-calls-runtime-semantics-evaluation
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments

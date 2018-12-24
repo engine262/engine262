@@ -11,7 +11,7 @@ import {
 import { GetTemplateObject } from './all.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-runtime-semantics-substitutionevaluation
+// 12.2.9.5 #sec-runtime-semantics-substitutionevaluation
 function* SubstitutionEvaluation(Expressions) {
   const preceding = [];
   for (const Expression of Expressions) {
@@ -22,7 +22,7 @@ function* SubstitutionEvaluation(Expressions) {
   return preceding;
 }
 
-// #sec-argument-lists-runtime-semantics-argumentlistevaluation
+// 12.3.6.1 #sec-argument-lists-runtime-semantics-argumentlistevaluation
 //   Arguments : `(` `)`
 //   ArgumentList :
 //     AssignmentExpression

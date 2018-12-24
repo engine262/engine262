@@ -9,7 +9,7 @@ import {
 import { SuperReference, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-makesuperpropertyreference
+// 12.3.5.3 #sec-makesuperpropertyreference
 function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   const env = GetThisEnvironment();
   Assert(env.HasSuperBinding() === Value.true);
@@ -18,7 +18,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   return new SuperReference(bv, propertyKey, actualThis, strict ? Value.true : Value.false);
 }
 
-// #sec-super-keyword-runtime-semantics-evaluation
+// 12.3.5.1 #sec-super-keyword-runtime-semantics-evaluation
 // SuperProperty :
 //   `super` `[` Expression `]`
 //   `super` `.` IdentifierName

@@ -9,20 +9,20 @@ import {
 } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// #sec-generator.prototype.next
+// 25.4.1.2 #sec-generator.prototype.next
 function GeneratorProto_next([value], { thisValue }) {
   const g = thisValue;
   return Q(GeneratorResume(g, value));
 }
 
-// #sec-generator.prototype.return
+// 25.4.1.3 #sec-generator.prototype.return
 function GeneratorProto_return([value], { thisValue }) {
   const g = thisValue;
   const C = new ReturnCompletion(value);
   return Q(GeneratorResumeAbrupt(g, C));
 }
 
-// #sec-generator.prototype.throw
+// 25.4.1.4 #sec-generator.prototype.throw
 function GeneratorProto_throw([exception], { thisValue }) {
   const g = thisValue;
   const C = new ThrowCompletion(exception);

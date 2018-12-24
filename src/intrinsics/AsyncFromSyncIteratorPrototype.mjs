@@ -15,14 +15,14 @@ import { Type, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// #sec-async-from-sync-iterator-value-unwrap-functions
+// 25.1.4.2.5 #sec-async-from-sync-iterator-value-unwrap-functions
 function AsyncFromSyncIteratorValueUnwrapFunctions([value]) {
   const F = this;
 
   return X(CreateIterResultObject(value, F.Done));
 }
 
-// #sec-async-from-sync-iterator-continuation
+// 25.1.4.4 #sec-async-from-sync-iterator-continuation
 function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   const done = IteratorComplete(result);
   IfAbruptRejectPromise(done, promiseCapability);

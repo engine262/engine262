@@ -31,7 +31,7 @@ import {
   BindingInitialization_BindingPattern,
 } from './all.mjs';
 
-// #sec-runtime-semantics-keyedbindinginitialization
+// 13.3.3.9 #sec-runtime-semantics-keyedbindinginitialization
 //   BindingElement : BindingPattern Initializer
 //
 // (implicit)
@@ -62,7 +62,7 @@ export function* KeyedBindingInitialization_BindingElement(BindingElement, value
   return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
 }
 
-// #sec-runtime-semantics-keyedbindinginitialization
+// 13.3.3.9 #sec-runtime-semantics-keyedbindinginitialization
 //   SingleNameBinding : BindingIdentifier Initializer
 export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, value, environment, propertyName) {
   let BindingIdentifier;

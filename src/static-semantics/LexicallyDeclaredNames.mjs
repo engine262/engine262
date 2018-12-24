@@ -48,13 +48,13 @@ export function LexicallyDeclaredNames_StatementListItem(StatementListItem) {
   }
 }
 
-// 13.13.6 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
+// 13.13.10 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
 export function LexicallyDeclaredNames_LabelledStatement(LabelledStatement) {
   return LexicallyDeclaredNames_LabelledItem(LabelledStatement.body);
 }
 
-// 13.13.6 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
+// 13.13.10 #sec-labelled-statements-static-semantics-toplevelvardeclarednames
 //   LabelledItem :
 //     Statement
 //     FunctionDeclaration

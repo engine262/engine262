@@ -1,4 +1,4 @@
-// #sec-static-semantics-nonconstructormethoddefinitions
+// 14.6.10 #sec-static-semantics-nonconstructormethoddefinitions
 //   ClassElementList :
 //     ClassElement
 //     ClassElementList ClassElement

@@ -1,7 +1,7 @@
 import { Value } from '../value.mjs';
 import { ContinueCompletion } from '../completion.mjs';
 
-// #sec-continue-statement-runtime-semantics-evaluation
+// 13.8.3 #sec-continue-statement-runtime-semantics-evaluation
 // ContinueStatement :
 //   `continue` `;`
 //   `continue` LabelIdentifier `;`

@@ -6,7 +6,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
-// #sec-template-literals-runtime-semantics-evaluation
+// 12.2.9.6 #sec-template-literals-runtime-semantics-evaluation
 //   TemplateLiteral : NoSubstitutionTemplate
 //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
 //   TemplateSpans : TemplateTail

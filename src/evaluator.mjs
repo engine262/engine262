@@ -134,7 +134,7 @@ import {
 import { surroundingAgent } from './engine.mjs';
 import { unwind, OutOfRange } from './helpers.mjs';
 
-// #sec-block-runtime-semantics-evaluation
+// 13.2.13 #sec-block-runtime-semantics-evaluation
 //   StatementList : StatementList StatementListItem
 //
 // (implicit)
@@ -247,14 +247,14 @@ function* Evaluate_StatementListItem(StatementListItem) {
 
 export const Evaluate_Statement = Evaluate_StatementListItem;
 
-// #sec-expression-statement-runtime-semantics-evaluation
+// 13.5.1 #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
 function* Evaluate_ExpressionStatement(ExpressionStatement) {
   const exprRef = yield* Evaluate(ExpressionStatement.expression);
   return GetValue(exprRef);
 }
 
-// #sec-literals-runtime-semantics-evaluation
+// 12.2.4.1 #sec-literals-runtime-semantics-evaluation
 //   Literal : NullLiteral
 //   Literal : BooleanLiteral
 //   Literal : NumbericLiteral
@@ -430,7 +430,7 @@ function* Inner_Evaluate_Expression(Expression) {
   }
 }
 
-// #sec-script-semantics-runtime-semantics-evaluation
+// 15.1.7 #sec-script-semantics-runtime-semantics-evaluation
 //   Script : [empty]
 //
 // (implicit)

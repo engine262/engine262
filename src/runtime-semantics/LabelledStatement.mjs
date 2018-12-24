@@ -9,7 +9,7 @@ import {
 } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-labelled-statements-runtime-semantics-labelledevaluation
+// 13.13.14 #sec-labelled-statements-runtime-semantics-labelledevaluation
 function* LabelledEvaluation({
   label: LabelIdentifier,
   body: LabelledItem,
@@ -37,7 +37,7 @@ function* LabelledEvaluation({
   return Completion(stmtResult);
 }
 
-// #sec-labelled-statements-runtime-semantics-evaluation
+// 13.13.15 #sec-labelled-statements-runtime-semantics-evaluation
 export function* Evaluate_LabelledStatement(LabelledStatement) {
   const newLabelSet = [];
   return yield* LabelledEvaluation(LabelledStatement, newLabelSet);

@@ -28,7 +28,7 @@ import {
 import { BindingInitialization_BindingPattern } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
+// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
@@ -52,7 +52,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   }
 }
 
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
+// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { id: BindingPattern, init: Initializer } = LexicalBinding;
@@ -75,7 +75,7 @@ export function* Evaluate_LexicalBinding(LexicalBinding) {
   }
 }
 
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
+// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   BindingList : BindingList `,` LexicalBinding
 //
 // (implicit)
@@ -89,7 +89,7 @@ export function* Evaluate_BindingList(BindingList) {
   return last;
 }
 
-// #sec-let-and-const-declarations-runtime-semantics-evaluation
+// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalDeclaration : LetOrConst BindingList `;`
 export function* Evaluate_LexicalDeclaration({ declarations: BindingList }) {
   const next = yield* Evaluate_BindingList(BindingList);

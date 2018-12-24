@@ -68,7 +68,7 @@ export function CreateDataProperty(O, P, V) {
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
-// #sec-createmethodproperty
+// 7.3.5 #sec-createmethodproperty
 export function CreateMethodProperty(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -104,7 +104,7 @@ export function DefinePropertyOrThrow(O, P, desc) {
   return success;
 }
 
-// #sec-deletepropertyorthrow
+// 7.3.8 #sec-deletepropertyorthrow
 export function DeletePropertyOrThrow(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -282,7 +282,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
   return properties;
 }
 
-// #sec-speciesconstructor
+// 7.3.20 #sec-speciesconstructor
 export function SpeciesConstructor(O, defaultConstructor) {
   Assert(Type(O) === 'Object');
   const C = Q(Get(O, new Value('constructor')));
@@ -325,7 +325,7 @@ export function GetFunctionRealm(obj) {
   return surroundingAgent.currentRealmRecord;
 }
 
-// #sec-copydataproperties
+// 7.3.23 #sec-copydataproperties
 export function CopyDataProperties(target, source, excludedItems) {
   Assert(Type(target) === 'Object');
   Assert(excludedItems.every((i) => IsPropertyKey(i)));
@@ -352,7 +352,7 @@ export function CopyDataProperties(target, source, excludedItems) {
   return target;
 }
 
-// #sec-CreateListFromArrayLike
+// 7.3.17 #sec-createlistfromarraylike
 export function CreateListFromArrayLike(obj, elementTypes) {
   if (elementTypes === undefined) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];

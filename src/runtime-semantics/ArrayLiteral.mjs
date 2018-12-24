@@ -71,7 +71,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
   return postIndex;
 }
 
-// #sec-array-initializer-runtime-semantics-evaluation
+// 12.2.5.3 #sec-array-initializer-runtime-semantics-evaluation
 // ArrayLiteral :
 //   `[` Elision `]`
 //   `[` ElementList `]`

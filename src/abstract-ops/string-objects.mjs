@@ -13,7 +13,7 @@ import {
 } from './all.mjs';
 import { X } from '../completion.mjs';
 
-// #sec-stringcreate
+// 9.4.3.4 #sec-stringcreate
 export function StringCreate(value, prototype) {
   Assert(Type(value) === 'String');
   const S = new StringExoticObjectValue();

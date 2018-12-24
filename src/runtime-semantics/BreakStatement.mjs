@@ -1,7 +1,7 @@
 import { Value } from '../value.mjs';
 import { BreakCompletion } from '../completion.mjs';
 
-// #sec-break-statement-runtime-semantics-evaluation
+// 13.9.3 #sec-break-statement-runtime-semantics-evaluation
 // BreakStatement :
 //   `break` `;`
 //   `break` LabelIdentifier `;`

@@ -1,4 +1,4 @@
-// #sec-static-semantics-templatestrings
+// 12.2.9.2 #sec-static-semantics-templatestrings
 // TemplateLiteral : NoSubstituionTemplate
 // SubstitutionTemplate : TemplateHead Expresison TemplateSpans
 // TemplateSpans :

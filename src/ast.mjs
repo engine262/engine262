@@ -991,7 +991,7 @@ export function isExportDeclaration(node) {
          || isExportDeclarationWithDefaultAndExpression(node);
 }
 
-// #sec-directive-prologues-and-the-use-strict-directive
+// 14.1.1 #sec-directive-prologues-and-the-use-strict-directive
 export function directivePrologueContainsUseStrictDirective(nodes) {
   for (const node of nodes) {
     if (isExpressionStatement(node) && isStringLiteral(node.expression)) {

@@ -47,7 +47,7 @@ import {
   IteratorDestructuringAssignmentEvaluation_Elision,
 } from './all.mjs';
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   ArrayBindingPattern :
 //     `[` `]`
 //     `[` Elision `]`
@@ -92,7 +92,7 @@ export function* IteratorBindingInitialization_ArrayBindingPattern(ArrayBindingP
   return status;
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElement : BindingPattern Initializer
 function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment) {
   let BindingPattern;
@@ -138,7 +138,7 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
   return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   SingleNameBinding : BindingIdentifier Initializer
 function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, iteratorRecord, environment) {
   let BindingIdentifier;
@@ -193,7 +193,7 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
   return InitializeReferencedBinding(lhs, v);
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElementList : BindingElementList `,` BindingElisionElement
 //
 // (implicit)
@@ -207,7 +207,7 @@ function* IteratorBindingInitialization_BindingElementList(BindingElementList, i
   return result;
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElisionElement :
 //     BindingElement
 //     Elision BindingElement
@@ -219,7 +219,7 @@ function* IteratorBindingInitialization_BindingElisionElement(BindingElisionElem
   return yield* IteratorBindingInitialization_BindingElement(BindingElisionElement, iteratorRecord, environment);
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingElement : SingleNameBinding
 function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
   switch (true) {
@@ -232,7 +232,7 @@ function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorR
   }
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingRestElement : `...` BindingIdentifier
 function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRestElement, iteratorRecord, environment) {
   const BindingIdentifier = BindingRestElement.argument;
@@ -269,7 +269,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
   }
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
+// 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
 //   BindingRestElement :
 //     `...` BindingPattern
 function* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment) {
@@ -314,7 +314,7 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
   }
 }
 
-// #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
+// 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FormalParameter : BindingElement
 function* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
   const BindingElement = FormalParameter;
@@ -340,7 +340,7 @@ function* IteratorBindingInitialization_FormalParameter(FormalParameter, iterato
   return result;
 }
 
-// #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
+// 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FunctionRestParameter : BindingRestElement
 function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
   const BindingRestElement = FunctionRestParameter;
@@ -366,7 +366,7 @@ function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParame
   return result;
 }
 
-// #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
+// 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FormalParameters :
 //     [empty]
 //     FormalParameterList `,` FunctionRestParameter

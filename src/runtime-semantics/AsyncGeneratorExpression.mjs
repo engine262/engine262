@@ -11,7 +11,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Descriptor, Value } from '../value.mjs';
 
-// #sec-generator-function-definitions-runtime-semantics-evaluation
+// 14.4.13 #sec-generator-function-definitions-runtime-semantics-evaluation
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`

@@ -54,7 +54,7 @@ export function ResolveThisBinding() {
   return Q(envRec.GetThisBinding());
 }
 
-// #sec-getnewtarget
+// 8.3.5 #sec-getnewtarget
 export function GetNewTarget() {
   const envRec = GetThisEnvironment();
   Assert('NewTarget' in envRec);

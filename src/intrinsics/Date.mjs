@@ -18,7 +18,7 @@ import { Q, X } from '../completion.mjs';
 function DateConstructor([year, month, date, hours, minutes, seconds, ms], { NewTarget, callLength }) {
   const numberOfArgs = callLength;
   if (numberOfArgs >= 2) {
-    // #sec-date-year-month-date-hours-minutes-seconds-ms
+    // 20.3.2.1 #sec-date-year-month-date-hours-minutes-seconds-ms
     Assert(numberOfArgs >= 2);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
@@ -49,7 +49,7 @@ function DateConstructor([year, month, date, hours, minutes, seconds, ms], { New
     }
   } else if (numberOfArgs === 1) {
     const value = year;
-    // #sec-date-value
+    // 20.3.2.2 #sec-date-value
     Assert(numberOfArgs === 1);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
@@ -71,7 +71,7 @@ function DateConstructor([year, month, date, hours, minutes, seconds, ms], { New
       return O;
     }
   } else {
-    // #sec-date-constructor-date
+    // 20.3.2.3 #sec-date-constructor-date
     Assert(numberOfArgs === 0);
     if (NewTarget === Value.undefined) {
       const now = Date.now();

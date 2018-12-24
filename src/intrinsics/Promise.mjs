@@ -65,7 +65,7 @@ function PromiseConstructor([executor], { NewTarget }) {
   return promise;
 }
 
-// #sec-promise.all-resolve-element-functions
+// 25.6.4.1.2 #sec-promise.all-resolve-element-functions
 function PromiseAllResolveElementFunctions([x]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
@@ -86,7 +86,7 @@ function PromiseAllResolveElementFunctions([x]) {
   return Value.undefined;
 }
 
-// #sec-performpromiseall
+// 25.6.4.1.1 #sec-performpromiseall
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);

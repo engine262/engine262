@@ -65,7 +65,7 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   return Q(Construct(target, args, newTarget));
 }
 
-// #sec-boundfunctioncreate
+// 9.4.1.3 #sec-boundfunctioncreate
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   Assert(Type(targetFunction) === 'Object');
   const proto = Q(targetFunction.GetPrototypeOf());

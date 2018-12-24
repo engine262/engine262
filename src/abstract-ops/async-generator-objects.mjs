@@ -20,7 +20,7 @@ import {
 import { Value, Type } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
 
-// #sec-asyncgeneratorrequest-records
+// 25.5.3.1 #sec-asyncgeneratorrequest-records
 class AsyncGeneratorRequestRecord {
   constructor(completion, promiseCapability) {
     this.Completion = completion;
@@ -28,7 +28,7 @@ class AsyncGeneratorRequestRecord {
   }
 }
 
-// #sec-asyncgeneratorstart
+// 25.5.3.2 #sec-asyncgeneratorstart
 export function AsyncGeneratorStart(generator, generatorBody) {
   // Assert: generator is an AsyncGenerator instance.
   Assert(generator.AsyncGeneratorState === Value.undefined);
@@ -56,7 +56,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   return Value.undefined;
 }
 
-// #sec-asyncgeneratorresolve
+// 25.5.3.3 #sec-asyncgeneratorresolve
 function AsyncGeneratorResolve(generator, value, done) {
   // Assert: generator is an AsyncGenerator instance.
   const queue = generator.AsyncGeneratorQueue;
@@ -69,7 +69,7 @@ function AsyncGeneratorResolve(generator, value, done) {
   return Value.undefined;
 }
 
-// #sec-asyncgeneratorreject
+// 25.5.3.4 #sec-asyncgeneratorreject
 function AsyncGeneratorReject(generator, exception) {
   // Assert: generator is an AsyncGenerator instance.
   const queue = generator.AsyncGeneratorQueue;
@@ -95,7 +95,7 @@ function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason]) {
   return X(AsyncGeneratorReject(F.Generator, reason));
 }
 
-// #sec-asyncgeneratorresumenext
+// 25.5.3.5 #sec-asyncgeneratorresumenext
 function AsyncGeneratorResumeNext(generator) {
   // Assert: generator is an AsyncGenerator instance.
   let state = generator.AsyncGeneratorState;
@@ -149,7 +149,7 @@ function AsyncGeneratorResumeNext(generator) {
   return Value.undefined;
 }
 
-// #sec-asyncgeneratorenqueue
+// 25.5.3.6 #sec-asyncgeneratorenqueue
 export function AsyncGeneratorEnqueue(generator, completion) {
   Assert(completion instanceof Completion);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -168,7 +168,7 @@ export function AsyncGeneratorEnqueue(generator, completion) {
   return promiseCapability.Promise;
 }
 
-// #sec-asyncgeneratoryield
+// 25.5.3.7 #sec-asyncgeneratoryield
 export function* AsyncGeneratorYield(value) {
   const genContext = surroundingAgent.runningExecutionContext;
   Assert(genContext.Generator !== Value.undefined);

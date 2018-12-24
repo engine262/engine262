@@ -644,7 +644,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
   }
 }
 
-// #sec-set-immutable-prototype
+// 9.4.7.2 #sec-set-immutable-prototype
 function SetImmutablePrototype(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
   const current = Q(O.GetPrototypeOf());

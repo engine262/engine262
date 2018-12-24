@@ -1,4 +1,4 @@
-// #sec-static-semantics-constructormethod
+// 14.6.3 #sec-static-semantics-constructormethod
 //   ClassElementList :
 //     ClassElement
 //     ClassElementList ClassElement

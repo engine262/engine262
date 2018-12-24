@@ -1,6 +1,6 @@
 import { GetNewTarget } from '../abstract-ops/all.mjs';
 
-// #sec-meta-properties-runtime-semantics-evaluation<Paste>
+// 12.3.8.1 #sec-meta-properties-runtime-semantics-evaluation
 // NewTarget : `new` `.` `target`
 function Evaluate_NewTarget() {
   return GetNewTarget();

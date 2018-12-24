@@ -13,7 +13,7 @@ import {
 } from '../completion.mjs';
 import { BlockDeclarationInstantiation } from './BlockStatement.mjs';
 
-// #sec-runtime-semantics-caseclauseisselected
+// 13.12.10 #sec-runtime-semantics-caseclauseisselected
 function* CaseClauseIsSelected(C, input) {
   // Assert: C is an instance of the production CaseClause : `case` Expression : StatementList.
   const exprRef = yield* Evaluate(C.test);
@@ -21,7 +21,7 @@ function* CaseClauseIsSelected(C, input) {
   return StrictEqualityComparison(input, clauseSelector);
 }
 
-// #sec-runtime-semantics-caseblockevaluation
+// 13.12.9 #sec-runtime-semantics-caseblockevaluation
 // CaseBlock :
 //   `{` `}`
 //   `{` CaseClauses `}`
@@ -128,7 +128,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
   }
 }
 
-// #sec-switch-statement-runtime-semantics-evaluation
+// 13.12.11 #sec-switch-statement-runtime-semantics-evaluation
 // SwitchStatement : `switch` `(` Expression `)` CaseBlock
 export function* Evaluate_SwitchStatement({
   discriminant: Expression,

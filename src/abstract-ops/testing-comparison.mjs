@@ -47,7 +47,7 @@ export function isArrayIndex(V) {
   return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
 }
 
-// #sec-requireobjectcoercible
+// 7.2.1 #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
@@ -150,7 +150,7 @@ export function SameValue(x, y) {
   return SameValueNonNumber(x, y);
 }
 
-// #sec-samevaluezero
+// 7.2.11 #sec-samevaluezero
 export function SameValueZero(x, y) {
   if (Type(x) !== Type(y)) {
     return Value.false;
@@ -204,7 +204,7 @@ export function SameValueNonNumber(x, y) {
   return x === y ? Value.true : Value.false;
 }
 
-// #sec-ispromise
+// 25.6.1.6 #sec-ispromise
 export function IsPromise(x) {
   if (Type(x) !== 'Object') {
     return Value.false;
@@ -215,7 +215,7 @@ export function IsPromise(x) {
   return Value.true;
 }
 
-// #sec-isinteger
+// 7.2.6 #sec-isinteger
 export function IsInteger(argument) {
   if (Type(argument) !== 'Number') {
     return false;
@@ -229,21 +229,21 @@ export function IsInteger(argument) {
   return true;
 }
 
-// #sec-isstringprefix
+// 7.2.9 #sec-isstringprefix
 export function IsStringPrefix(p, q) {
   Assert(Type(p) === 'String');
   Assert(Type(q) === 'String');
   return p.stringValue().startsWith(q.stringValue());
 }
 
-// #sec-iscompatiblepropertydescriptor
+// 9.1.6.2 #sec-iscompatiblepropertydescriptor
 export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
   return ValidateAndApplyPropertyDescriptor(
     Value.undefined, Value.undefined, Extensible, Desc, Current,
   );
 }
 
-// #sec-abstract-relational-comparison
+// 7.2.13 #sec-abstract-relational-comparison
 export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let px;
   let py;
@@ -306,7 +306,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   }
 }
 
-// #sec-abstract-equality-comparison
+// 7.2.14 #sec-abstract-equality-comparison
 export function AbstractEqualityComparison(x, y) {
   if (Type(x) === Type(y)) {
     return StrictEqualityComparison(x, y);
@@ -338,7 +338,7 @@ export function AbstractEqualityComparison(x, y) {
   return Value.false;
 }
 
-// #sec-strict-equality-comparison
+// 7.2.15 #sec-strict-equality-comparison
 export function StrictEqualityComparison(x, y) {
   if (Type(x) !== Type(y)) {
     return Value.false;

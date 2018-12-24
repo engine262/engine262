@@ -7,7 +7,7 @@ import {
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-destructuring-binding-patterns-static-semantics-hasinitializer
+// 13.3.3.3 #sec-destructuring-binding-patterns-static-semantics-hasinitializer
 //   SingleNameBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
@@ -24,7 +24,7 @@ export function HasInitializer_SingleNameBinding(SingleNameBinding) {
   }
 }
 
-// #sec-destructuring-binding-patterns-static-semantics-hasinitializer
+// 13.3.3.3 #sec-destructuring-binding-patterns-static-semantics-hasinitializer
 //   BindingElement :
 //     BindingPattern
 //     BindingPattern Initializer
@@ -47,6 +47,6 @@ export function HasInitializer_BindingElement(BindingElement) {
   }
 }
 
-// #sec-function-definitions-static-semantics-hasinitializer
+// 14.1.8 #sec-function-definitions-static-semantics-hasinitializer
 //   FormalParameterList : FormalParameterList `,` FormalParameter
 // is implemented directly as part of ExpectedArgumentCount for FormalParameters.

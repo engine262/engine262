@@ -17,7 +17,7 @@ import {
 import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-assignment-operators-runtime-semantics-evaluation
+// 12.15.4 #sec-assignment-operators-runtime-semantics-evaluation
 // AssignmentExpression :
 //   LeftHandSideExpression = AssignmentExpression
 //   LeftHandSideExpression AssignmentOperator AssignmentExpression

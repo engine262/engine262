@@ -9,7 +9,7 @@ import { PerformPromiseThen } from './intrinsics/PromisePrototype.mjs';
 import { Reference, Value } from './value.mjs';
 import { resume } from './helpers.mjs';
 
-// #sec-completion-record-specification-type
+// 6.2.3 #sec-completion-record-specification-type
 export function Completion(type, value, target) {
   if (new.target === Completion) {
     if (typeof type !== 'string') {
@@ -22,7 +22,7 @@ export function Completion(type, value, target) {
   return type;
 }
 
-// #sec-normalcompletion
+// 6.2.3.2 #sec-normalcompletion
 export class NormalCompletion {
   constructor(value) {
     return new Completion('normal', value);
@@ -59,7 +59,7 @@ export class ContinueCompletion {
   }
 }
 
-// #sec-normalcompletion
+// 6.2.3.2 #sec-normalcompletion
 export class ReturnCompletion {
   constructor(value) {
     return new Completion('return', value);
@@ -70,7 +70,7 @@ export class ReturnCompletion {
   }
 }
 
-// #sec-throwcompletion
+// 6.2.3.3 #sec-throwcompletion
 export class ThrowCompletion {
   constructor(value) {
     return new Completion('throw', value);
@@ -81,7 +81,7 @@ export class ThrowCompletion {
   }
 }
 
-// #sec-updateempty
+// 6.2.3.4 #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
   Assert(completionRecord instanceof Completion);
   if (completionRecord.Type === 'return' || completionRecord.Type === 'throw') {
@@ -93,7 +93,7 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion(completionRecord.Type, value, completionRecord.Target);
 }
 
-// #sec-returnifabrupt
+// 5.2.3.3 #sec-returnifabrupt
 export function ReturnIfAbrupt() {
   throw new TypeError('ReturnIfAbrupt requires build');
 }
@@ -110,7 +110,7 @@ export function X(val) {
   return val;
 }
 
-// #sec-ifabruptrejectpromise
+// 25.6.1.1.1 #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise() {
   throw new TypeError('IfAbruptRejectPromise requires build');
 }

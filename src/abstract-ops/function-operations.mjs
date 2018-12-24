@@ -46,7 +46,7 @@ import {
 } from '../environment.mjs';
 import { unwind, OutOfRange } from '../helpers.mjs';
 
-// #sec-SetFunctionName
+// 9.2.13 #sec-setfunctionname
 export function SetFunctionName(F, name, prefix) {
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
   Assert(Type(name) === 'Symbol' || Type(name) === 'String');
@@ -70,7 +70,7 @@ export function SetFunctionName(F, name, prefix) {
   })));
 }
 
-// #sec-SetFunctionLength
+// 9.2.14 #sec-setfunctionlength
 export function SetFunctionLength(F, length) {
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
   Assert(Type(length) === 'Number');
@@ -83,7 +83,7 @@ export function SetFunctionLength(F, length) {
   })));
 }
 
-// #sec-PrepareForTailCall
+// 14.9.3 #sec-preparefortailcall
 export function PrepareForTailCall() {
   // const leafContext = surroundingAgent.runningExecutionContext;
   // Suspend(leafContext);
@@ -92,7 +92,7 @@ export function PrepareForTailCall() {
   // be activated as the running execution context.
 }
 
-// #sec-prepareforordinarycall
+// 9.2.1.1 #sec-prepareforordinarycall
 function PrepareForOrdinaryCall(F, newTarget) {
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -109,7 +109,7 @@ function PrepareForOrdinaryCall(F, newTarget) {
   return calleeContext;
 }
 
-// #sec-ecmascript-function-objects-call-thisargument-argumentslist
+// 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
 function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
@@ -197,7 +197,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   return envRec.BindThisValue(thisValue);
 }
 
-// #sec-ordinarycallevaluatebody
+// 9.2.1.3 #sec-ordinarycallevaluatebody
 export function* OrdinaryCallEvaluateBody(F, argumentsList) {
   switch (getFunctionBodyType(F.ECMAScriptCode)) {
     // FunctionBody : FunctionStatementList
@@ -228,7 +228,7 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
   }
 }
 
-// #sec-ecmascript-function-objects
+// 9.2 #sec-ecmascript-function-objects
 const esFunctionInternalSlots = Object.freeze([
   'Environment',
   'FormalParameters',
@@ -242,7 +242,7 @@ const esFunctionInternalSlots = Object.freeze([
   'HomeObject',
 ]);
 
-// #sec-functionallocate
+// 9.2.3 #sec-functionallocate
 export function FunctionAllocate(functionPrototype, strict, functionKind) {
   Assert(Type(functionPrototype) === 'Object');
   Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
@@ -268,7 +268,7 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
   return F;
 }
 
-// #sec-functioninitialize
+// 9.2.4 #sec-functioninitialize
 export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
   let len;
   switch (kind) {
@@ -300,7 +300,7 @@ export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
   return F;
 }
 
-// #sec-FunctionCreate
+// 9.2.5 #sec-functioncreate
 // Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
 // instead take in the entire function node as Body and save it in
 // ECMAScriptCode as such.
@@ -313,28 +313,28 @@ export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototy
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
-// #sec-generatorfunctioncreate
+// 9.2.6 #sec-generatorfunctioncreate
 export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict) {
   const functionPrototype = surroundingAgent.intrinsic('%Generator%');
   const F = FunctionAllocate(functionPrototype, Strict, 'generator');
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
-// #sec-asyncgeneratorfunctioncreate
+// 9.2.7 #sec-asyncgeneratorfunctioncreate
 export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncGenerator%');
   const F = X(FunctionAllocate(functionPrototype, Strict, 'generator'));
   return X(FunctionInitialize(F, kind, ParameterList, Body, Scope));
 }
 
-// #sec-async-functions-abstract-operations-async-function-create
+// 9.2.8 #sec-async-functions-abstract-operations-async-function-create
 export function AsyncFunctionCreate(kind, parameters, body, Scope, Strict) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncFunctionPrototype%');
   const F = X(FunctionAllocate(functionPrototype, Strict, 'async'));
   return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
 
-// #sec-makeconstructor
+// 9.2.10 #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(F instanceof FunctionValue);
   Assert(IsConstructor(F) === Value.true);
@@ -360,7 +360,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   return new NormalCompletion(Value.undefined);
 }
 
-// #sec-makeclassconstructor
+// 9.2.11 #sec-makeclassconstructor
 export function MakeClassConstructor(F) {
   Assert(F instanceof FunctionValue);
   Assert(F.FunctionKind === 'normal');
@@ -368,7 +368,7 @@ export function MakeClassConstructor(F) {
   return new NormalCompletion(Value.undefined);
 }
 
-// #sec-makemethod
+// 9.2.12 #sec-makemethod
 export function MakeMethod(F, homeObject) {
   Assert(F instanceof FunctionValue);
   Assert(Type(homeObject) === 'Object');

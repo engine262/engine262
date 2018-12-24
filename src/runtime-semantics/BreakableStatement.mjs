@@ -14,7 +14,7 @@ import {
   LabelledEvaluation_IterationStatement,
 } from './all.mjs';
 
-// #sec-statement-semantics-runtime-semantics-evaluation
+// 13.1.8 #sec-statement-semantics-runtime-semantics-evaluation
 //   BreakableStatement :
 //     IterationStatement
 //     SwitchStatement
@@ -23,7 +23,7 @@ export function* Evaluate_BreakableStatement(BreakableStatement) {
   return yield* LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
 }
 
-// #sec-statement-semantics-runtime-semantics-labelledevaluation
+// 13.1.7 #sec-statement-semantics-runtime-semantics-labelledevaluation
 //   BreakableStatement : IterationStatement
 export function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   switch (true) {

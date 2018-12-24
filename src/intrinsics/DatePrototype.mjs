@@ -9,7 +9,7 @@ export function thisTimeValue(value) {
   return surroundingAgent.Throw('TypeError', 'this is not a Date object');
 }
 
-// #sec-todatestring
+// 20.3.4.41.4 #sec-todatestring
 export function ToDateString() {}
 
 export function CreateDatePrototype(realmRec) {

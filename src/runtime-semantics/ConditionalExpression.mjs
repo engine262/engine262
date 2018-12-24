@@ -3,7 +3,7 @@ import { Value } from '../value.mjs';
 import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-conditional-operator-runtime-semantics-evaluation
+// 12.14.3 #sec-conditional-operator-runtime-semantics-evaluation
 // ConditionalExpression : LogicalORExpression `?` AssignmentExpression `:` AssignmentExpression
 export function* Evaluate_ConditionalExpression({
   test: LogicalORExpression,

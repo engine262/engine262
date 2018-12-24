@@ -15,7 +15,7 @@ import {
 } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-property-accessors-runtime-semantics-evaluation
+// 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
 function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
@@ -29,7 +29,7 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   return new Reference(bv, propertyKey, strict ? Value.true : Value.false);
 }
 
-// #sec-property-accessors-runtime-semantics-evaluation
+// 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
 function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
@@ -41,7 +41,7 @@ function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierN
   return new Reference(bv, propertyNameString, strict);
 }
 
-// #sec-property-accessors-runtime-semantics-evaluation
+// 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression :
 //     MemberExpression `[` Expression `]`
 //     MemberEXpression `.` IdentifierName

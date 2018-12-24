@@ -12,7 +12,7 @@ import {
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-if-statement-runtime-semantics-evaluation
+// 13.6.7 #sec-if-statement-runtime-semantics-evaluation
 //   IfStatement :
 //     `if` `(` Expression `)` Statement `else` Statement
 //     `if` `(` Expression `)` Statement

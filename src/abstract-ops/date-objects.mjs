@@ -1,20 +1,20 @@
-// #sec-local-time-zone-adjustment
+// 20.3.1.7 #sec-local-time-zone-adjustment
 export function LocalTZA() {}
 
-// #sec-localtime
+// 20.3.1.8 #sec-localtime
 export function LocalTime() {}
 
-// #sec-utc-t
+// 20.3.1.9 #sec-utc-t
 export function UTC() {}
 
-// #sec-maketime
+// 20.3.1.11 #sec-maketime
 export function MakeTime() {}
 
-// #sec-makeday
+// 20.3.1.12 #sec-makeday
 export function MakeDay() {}
 
-// #sec-makedate
+// 20.3.1.13 #sec-makedate
 export function MakeDate() {}
 
-// #sec-timeclip
+// 20.3.1.14 #sec-timeclip
 export function TimeClip() {}

@@ -27,7 +27,7 @@ export function EvaluateBinopValues_BitwiseORExpression(lval, rval) {
   return new Value(lnum.numberValue() | rnum.numberValue());
 }
 
-// #sec-binary-bitwise-operators-runtime-semantics-evaluation
+// 12.12.3 #sec-binary-bitwise-operators-runtime-semantics-evaluation
 export function* Evaluate_BinaryBitwiseExpression({ left: A, operator, right: B }) {
   const lref = yield* Evaluate(A);
   const lval = Q(GetValue(lref));

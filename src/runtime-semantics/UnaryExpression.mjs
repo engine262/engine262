@@ -28,7 +28,7 @@ import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { Type, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-delete-operator-runtime-semantics-evaluation
+// 12.5.3.2 #sec-delete-operator-runtime-semantics-evaluation
 // UnaryExpression : `delete` UnaryExpression
 function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   const ref = yield* Evaluate(UnaryExpression);
@@ -56,7 +56,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   }
 }
 
-// #sec-void-operator-runtime-semantics-evaluation
+// 12.5.4.1 #sec-void-operator-runtime-semantics-evaluation
 // UnaryExpression : `void` UnaryExpression
 function* Evaluate_UnaryExpression_Void(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);
@@ -64,7 +64,7 @@ function* Evaluate_UnaryExpression_Void(UnaryExpression) {
   return Value.undefined;
 }
 
-// #sec-typeof-operator-runtime-semantics-evaluation
+// 12.5.5.1 #sec-typeof-operator-runtime-semantics-evaluation
 // UnaryExpression : `typeof` UnaryExpression
 function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
   let val = yield* Evaluate(UnaryExpression);
@@ -103,7 +103,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
   }
 }
 
-// #sec-unary-plus-operator-runtime-semantics-evaluation
+// 12.5.6.1 #sec-unary-plus-operator-runtime-semantics-evaluation
 // UnaryExpression : `+` UnaryExpression
 function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);
@@ -111,7 +111,7 @@ function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
   return Q(ToNumber(exprVal));
 }
 
-// #sec-unary-minus-operator-runtime-semantics-evaluation
+// 12.5.7.1 #sec-unary-minus-operator-runtime-semantics-evaluation
 // UnaryExpression : `-` UnaryExpression
 function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);
@@ -123,7 +123,7 @@ function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
   return new Value(-oldValue.numberValue());
 }
 
-// #sec-bitwise-not-operator-runtime-semantics-evaluation
+// 12.5.8.1 #sec-bitwise-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `~` UnaryExpression
 function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);
@@ -132,7 +132,7 @@ function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
   return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
 }
 
-// #sec-logical-not-operator-runtime-semantics-evaluation
+// 12.5.9.1 #sec-logical-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `!` UnaryExpression
 function* Evaluate_UnaryExpression_Bang(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);

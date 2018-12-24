@@ -2,7 +2,7 @@ import { Value } from '../value.mjs';
 import { ResolveBinding } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-identifiers-runtime-semantics-evaluation
+// 12.1.6 #sec-identifiers-runtime-semantics-evaluation
 // IdentifierReference :
 //   Identifier
 //   yield

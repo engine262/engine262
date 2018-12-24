@@ -95,7 +95,7 @@ const codeUnitTable = new Map([
 ]);
 
 function JSON_stringify([value, replacer, space]) {
-  // #sec-serializejsonproperty
+  // 24.5.2.1 #sec-serializejsonproperty
   function SerializeJSONProperty(key, holder) {
     let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
     if (Type(value) === 'Object') {
@@ -165,7 +165,7 @@ function JSON_stringify([value, replacer, space]) {
     return `\u005Cu${n.toString(16).padStart(4, '0')}`;
   }
 
-  // #sec-serializejsonobject
+  // 24.5.2.4 #sec-serializejsonobject
   function SerializeJSONObject(value) { // eslint-disable-line no-shadow
     if (stack.includes(value)) {
       return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');
@@ -210,7 +210,7 @@ function JSON_stringify([value, replacer, space]) {
     return final;
   }
 
-  // #sec-serializejsonarray
+  // 24.5.2.5 #sec-serializejsonarray
   function SerializeJSONArray(value) { // eslint-disable-line no-shadow
     if (stack.includes(value)) {
       return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');

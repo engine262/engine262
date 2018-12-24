@@ -7,7 +7,7 @@ import {
 import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-object-initializer-runtime-semantics-evaluation
+// 12.2.6.7 #sec-object-initializer-runtime-semantics-evaluation
 //   ObjectLiteral :
 //     `{` `}`
 //     `{` PropertyDefintionList `}`

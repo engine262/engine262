@@ -55,7 +55,7 @@ const DynamicFunctionSourceTextPrefixes = {
   'async generator': 'async function*',
 };
 
-// #sec-createdynamicfunction
+// 19.2.1.1.1 #sec-createdynamicfunction
 export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   Assert(surroundingAgent.executionContextStack.length >= 2);
   const callerContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];

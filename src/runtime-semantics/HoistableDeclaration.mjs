@@ -8,7 +8,7 @@ import { Evaluate_FunctionDeclaration } from './all.mjs';
 import { NormalCompletion } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-statement-semantics-runtime-semantics-evaluation
+// 13.1.8 #sec-statement-semantics-runtime-semantics-evaluation
 //   HoistableDeclaration :
 //     GeneratorDeclaration
 //     AsyncFunctionDeclaration

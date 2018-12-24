@@ -1,4 +1,4 @@
-// #sec-static-semantics-isstatic
+// 14.6.9 #sec-static-semantics-isstatic
 //   ClassElement :
 //     MethodDefinition
 //     `static` MethodDefinition

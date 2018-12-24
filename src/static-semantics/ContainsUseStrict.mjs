@@ -5,13 +5,13 @@ import {
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-function-definitions-static-semantics-containsusestrict
+// 14.1.6 #sec-function-definitions-static-semantics-containsusestrict
 //   FunctionBody : FunctionStatementList
 export function ContainsUseStrict_FunctionBody(FunctionBody) {
   return directivePrologueContainsUseStrictDirective(FunctionBody);
 }
 
-// #sec-arrow-function-definitions-static-semantics-containsusestrict
+// 14.2.5 #sec-arrow-function-definitions-static-semantics-containsusestrict
 //   ConciseBody : AssignmentExpression
 //
 // (implicit)

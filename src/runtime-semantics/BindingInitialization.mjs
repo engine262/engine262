@@ -28,7 +28,7 @@ import {
   RestBindingInitialization_BindingRestProperty,
 } from './all.mjs';
 
-// #sec-initializeboundname
+// 12.1.5.1 #sec-initializeboundname
 export function InitializeBoundName(name, value, environment) {
   Assert(Type(name) === 'String');
   if (Type(environment) !== 'Undefined') {
@@ -41,7 +41,7 @@ export function InitializeBoundName(name, value, environment) {
   }
 }
 
-// #sec-identifiers-runtime-semantics-bindinginitialization
+// 12.1.5 #sec-identifiers-runtime-semantics-bindinginitialization
 //   BindingIdentifier :
 //     Identifier
 //     `yield`
@@ -51,7 +51,7 @@ export function BindingInitialization_BindingIdentifier(BindingIdentifier, value
   return Q(InitializeBoundName(name, value, environment));
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
+// 13.3.3.5 #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
 //   BindingPattern :
 //     ObjectBindingPattern
 //     ArrayBindingPattern
@@ -94,7 +94,7 @@ export function* BindingInitialization_ForBinding(ForBinding, value, environment
   }
 }
 
-// #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
+// 13.3.3.5 #sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
 //   ObjectBindingPattern :
 //     `{` `}`
 //     `{` BindingPropertyList `}`
@@ -139,7 +139,7 @@ export function* BindingInitialization_CatchParameter(CatchParameter, value, env
   }
 }
 
-// #sec-for-in-and-for-of-statements-runtime-semantics-bindinginitialization
+// 13.7.5.9 #sec-for-in-and-for-of-statements-runtime-semantics-bindinginitialization
 //   ForDeclaration : LetOrConst ForBinding
 export function* BindingInitialization_ForDeclaration(ForDeclaration, value, environment) {
   return yield* BindingInitialization_ForBinding(ForDeclaration.declarations[0].id, value, environment);

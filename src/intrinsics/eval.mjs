@@ -44,7 +44,7 @@ import {
   ObjectEnvironmentRecord,
 } from '../environment.mjs';
 
-// #sec-evaldeclarationinstantiation
+// 18.2.1.3 #sec-evaldeclarationinstantiation
 function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
   const varNames = VarDeclaredNames_ScriptBody(body).map(Value);
   const varDeclarations = VarScopedDeclarations_ScriptBody(body);
@@ -166,7 +166,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
   return new NormalCompletion(undefined);
 }
 
-// #sec-performeval
+// 18.2.1.1 #sec-performeval
 export function PerformEval(x, evalRealm, strictCaller, direct) {
   // Assert: If direct is false, then strictCaller is also false.
   Assert(!(direct === false) || strictCaller === false);

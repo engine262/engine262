@@ -12,7 +12,7 @@ import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
 import { msg } from '../helpers.mjs';
 
-// #sec-getsuperconstructor
+// 12.3.5.2 #sec-getsuperconstructor
 function GetSuperConstructor() {
   const envRec = GetThisEnvironment();
   Assert(envRec instanceof FunctionEnvironmentRecord);
@@ -25,7 +25,7 @@ function GetSuperConstructor() {
   return superConstructor;
 }
 
-// #sec-super-keyword-runtime-semantics-evaluation
+// 12.3.5.1 #sec-super-keyword-runtime-semantics-evaluation
 // SuperCall : `super` Arguments
 export function* Evaluate_SuperCall({ arguments: Arguments }) {
   const newTarget = GetNewTarget();

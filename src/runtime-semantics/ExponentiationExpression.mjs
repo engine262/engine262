@@ -9,7 +9,7 @@ export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
   return new Value(base.numberValue() ** exponent.numberValue());
 }
 
-// #sec-exp-operator-runtime-semantics-evaluation
+// 12.6.3 #sec-exp-operator-runtime-semantics-evaluation
 // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
 export function* Evaluate_ExponentiationExpression({
   left: UpdateExpression,

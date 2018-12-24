@@ -16,7 +16,7 @@ import {
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 
-// #sec-CreateUnmappedArgumentsObject
+// 9.4.4.6 #sec-createunmappedargumentsobject
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'), ['ParameterMap']);
@@ -55,7 +55,7 @@ function ArgGetterSteps() {
   return env.GetBindingValue(name, Value.false);
 }
 
-// #sec-makearggetter
+// 9.4.4.7.1 #sec-makearggetter
 function MakeArgGetter(name, env) {
   const steps = ArgGetterSteps;
   const getter = CreateBuiltinFunction(steps, ['Name', 'Env']);
@@ -71,7 +71,7 @@ function ArgSetterSteps([value]) {
   return env.SetMutableBinding(name, value, Value.false);
 }
 
-// #sec-makeargsetter
+// 9.4.4.7.2 #sec-makeargsetter
 function MakeArgSetter(name, env) {
   const steps = ArgSetterSteps;
   const setter = CreateBuiltinFunction(steps, ['Name', 'Env']);
@@ -81,7 +81,7 @@ function MakeArgSetter(name, env) {
   return setter;
 }
 
-// #sec-CreateMappedArgumentsObject
+// 9.4.4.7 #sec-createmappedargumentsobject
 export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   // Assert: formals does not contain a rest parameter, any binding
   // patterns, or any initializers. It may contain duplicate identifiers.

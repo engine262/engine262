@@ -8,7 +8,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-equality-operators-runtime-semantics-evaluation
+// 12.11.3 #sec-equality-operators-runtime-semantics-evaluation
 // EqualityExpression :
 //   EqualityExpression `==` RelationalExpression
 //   EqualityExpression `!=` RelationalExpression

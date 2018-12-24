@@ -10,7 +10,7 @@ import {
   UpdateEmpty,
 } from '../completion.mjs';
 
-// #sec-with-statement-runtime-semantics-evaluation
+// 13.11.7 #sec-with-statement-runtime-semantics-evaluation
 // WithStatement : `with` `(` Expression `)` Statement
 export function* Evaluate_WithStatement({
   object: Expression,

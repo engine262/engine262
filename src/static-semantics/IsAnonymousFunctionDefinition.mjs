@@ -3,7 +3,7 @@ import {
   IsFunctionDefinition_Expression,
 } from './all.mjs';
 
-// #sec-isanonymousfunctiondefinition
+// 14.1.10 #sec-isanonymousfunctiondefinition
 export function IsAnonymousFunctionDefinition(expr) {
   if (IsFunctionDefinition_Expression(expr) === false) {
     return false;

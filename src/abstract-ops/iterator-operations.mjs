@@ -24,7 +24,7 @@ import {
   Await,
 } from '../completion.mjs';
 
-// #sec-createasyncfromsynciterator
+// 25.1.4.1 #sec-createasyncfromsynciterator
 export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   const asyncIterator = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
     'SyncIteratorRecord',
@@ -33,7 +33,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   return Q(GetIterator(asyncIterator, 'async'));
 }
 
-// #sec-getiterator
+// 7.4.1 #sec-getiterator
 export function GetIterator(obj, hint, method) {
   if (!hint) {
     hint = 'sync';
@@ -63,7 +63,7 @@ export function GetIterator(obj, hint, method) {
   return EnsureCompletion(iteratorRecord);
 }
 
-// #sec-iteratornext
+// 7.4.2 #sec-iteratornext
 export function IteratorNext(iteratorRecord, value) {
   let result;
   if (!value) {
@@ -77,19 +77,19 @@ export function IteratorNext(iteratorRecord, value) {
   return EnsureCompletion(result);
 }
 
-// #sec-iteratorcomplete
+// 7.4.3 #sec-iteratorcomplete
 export function IteratorComplete(iterResult) {
   Assert(Type(iterResult) === 'Object');
   return EnsureCompletion(ToBoolean(Q(Get(iterResult, new Value('done')))));
 }
 
-// #sec-iteratorvalue
+// 7.4.4 #sec-iteratorvalue
 export function IteratorValue(iterResult) {
   Assert(Type(iterResult) === 'Object');
   return EnsureCompletion(Q(Get(iterResult, new Value('value'))));
 }
 
-// #sec-iteratorstep
+// 7.4.5 #sec-iteratorstep
 export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
@@ -99,7 +99,7 @@ export function IteratorStep(iteratorRecord) {
   return EnsureCompletion(result);
 }
 
-// #sec-iteratorclose
+// 7.4.6 #sec-iteratorclose
 export function IteratorClose(
   iteratorRecord,
   completion,
@@ -126,7 +126,7 @@ export function IteratorClose(
   return completion;
 }
 
-// #sec-asynciteratorclose
+// 7.4.7 #sec-asynciteratorclose
 export function* AsyncIteratorClose(iteratorRecord, completion) {
   Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
@@ -151,7 +151,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   return Completion(completion);
 }
 
-// #sec-createiterresultobject
+// 7.4.8 #sec-createiterresultobject
 export function CreateIterResultObject(value, done) {
   Assert(Type(done) === 'Boolean');
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
@@ -174,7 +174,7 @@ function ListIteratorNextSteps(args, { thisValue }) {
   return CreateIterResultObject(list[index], Value.false);
 }
 
-// #sec-createlistiteratorRecord
+// 7.4.9 #sec-createlistiteratorRecord
 export function CreateListIteratorRecord(list) {
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
     'IteratedList',

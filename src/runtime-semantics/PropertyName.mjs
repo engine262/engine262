@@ -13,7 +13,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-object-initializer-runtime-semantics-evaluation
+// 12.2.6.7 #sec-object-initializer-runtime-semantics-evaluation
 //   LiteralPropertyName :
 //     IdentifierName
 //     StringLiteral
@@ -34,7 +34,7 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
   }
 }
 
-// #sec-object-initializer-runtime-semantics-evaluation
+// 12.2.6.7 #sec-object-initializer-runtime-semantics-evaluation
 //   ComputedPropertyName : `[` AssignmentExpression `]`
 function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
   const AssignmentExpression = ComputedPropertyName;
@@ -43,7 +43,7 @@ function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
   return Q(ToPropertyKey(propName));
 }
 
-// #sec-object-initializer-runtime-semantics-evaluation
+// 12.2.6.7 #sec-object-initializer-runtime-semantics-evaluation
 //   PropertyName :
 //     LiteralPropertyName
 //     ComputedPropertyName

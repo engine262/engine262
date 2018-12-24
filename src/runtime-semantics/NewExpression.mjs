@@ -12,7 +12,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
-// #sec-evaluatenew
+// 12.3.3.1.1 #sec-evaluatenew
 function* EvaluateNew(constructExpr, args = []) {
   Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
@@ -27,7 +27,7 @@ function* EvaluateNew(constructExpr, args = []) {
   return Q(Construct(constructor, argList));
 }
 
-// #sec-new-operator-runtime-semantics-evaluation
+// 12.3.3.1 #sec-new-operator-runtime-semantics-evaluation
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments

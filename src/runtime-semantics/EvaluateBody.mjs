@@ -70,7 +70,7 @@ import {
 } from './all.mjs';
 import { Value } from '../value.mjs';
 
-// #sec-functiondeclarationinstantiation
+// 9.2.15 #sec-functiondeclarationinstantiation
 export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const calleeContext = surroundingAgent.runningExecutionContext;
   const env = calleeContext.LexicalEnvironment;
@@ -305,7 +305,7 @@ export function getFunctionBodyType(ECMAScriptCode) {
   }
 }
 
-// #sec-arrow-function-definitions-runtime-semantics-evaluatebody
+// 14.2.15 #sec-arrow-function-definitions-runtime-semantics-evaluatebody
 // ConciseBody : AssignmentExpression
 export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
@@ -314,14 +314,14 @@ export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, funct
   return new ReturnCompletion(exprValue);
 }
 
-// #sec-function-definitions-runtime-semantics-evaluatebody
+// 14.1.18 #sec-function-definitions-runtime-semantics-evaluatebody
 // FunctionBody : FunctionStatementList
 export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-// #sec-generator-function-definitions-runtime-semantics-evaluatebody
+// 14.4.10 #sec-generator-function-definitions-runtime-semantics-evaluatebody
 // GeneratorBody : FunctionBody
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
@@ -330,7 +330,7 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   return new ReturnCompletion(G);
 }
 
-// #sec-async-function-definitions-EvaluateBody
+// 14.7.11 #sec-async-function-definitions-EvaluateBody
 // AsyncFunctionBody : FunctionBody
 export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -343,7 +343,7 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
   return new Completion('return', promiseCapability.Promise, undefined);
 }
 
-// #sec-async-arrow-function-definitions-EvaluateBody
+// 14.8.14 #sec-async-arrow-function-definitions-EvaluateBody
 // AsyncConciseBody : AssignmentExpression
 export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentExpression, functionObject, argumentsList) {
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));

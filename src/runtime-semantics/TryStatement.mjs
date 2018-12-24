@@ -27,7 +27,7 @@ import {
 } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// #sec-runtime-semantics-catchclauseevaluation
+// 13.15.7 #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.
 //    Catch :
 //      `catch` `(` CatchParameter `)` Block
@@ -59,7 +59,7 @@ function* CatchClauseEvaluation({ param: CatchParameter, body: Block }, thrownVa
 //   Finally : `finally` Block
 const Evaluate_Finally = Evaluate_Block;
 
-// #sec-try-statement-runtime-semantics-evaluation
+// 13.15.8 #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch
 function* Evaluate_TryStatement_Catch(Block, Catch) {
   const B = EnsureCompletion(yield* Evaluate_Block(Block));
@@ -72,7 +72,7 @@ function* Evaluate_TryStatement_Catch(Block, Catch) {
   return Completion(UpdateEmpty(C, Value.undefined));
 }
 
-// #sec-try-statement-runtime-semantics-evaluation
+// 13.15.8 #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Finally
 function* Evaluate_TryStatement_Finally(Block, Finally) {
   const B = EnsureCompletion(yield* Evaluate_Block(Block));
@@ -83,7 +83,7 @@ function* Evaluate_TryStatement_Finally(Block, Finally) {
   return Completion(UpdateEmpty(F, Value.undefined));
 }
 
-// #sec-try-statement-runtime-semantics-evaluation
+// 13.15.8 #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement : `try` Block Catch Finally
 function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
   const B = EnsureCompletion(yield* Evaluate_Block(Block));
@@ -100,7 +100,7 @@ function* Evaluate_TryStatement_CatchFinally(Block, Catch, Finally) {
   return Completion(UpdateEmpty(F, Value.undefined));
 }
 
-// #sec-try-statement-runtime-semantics-evaluation
+// 13.15.8 #sec-try-statement-runtime-semantics-evaluation
 export function* Evaluate_TryStatement(Expression) {
   switch (true) {
     case isTryStatementWithCatch(Expression) && isTryStatementWithFinally(Expression):

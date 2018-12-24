@@ -10,7 +10,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
-// #sec-return-statement-runtime-semantics-evaluation
+// 13.10.1 #sec-return-statement-runtime-semantics-evaluation
 export function* Evaluate_ReturnStatement({ argument: Expression }) {
   if (Expression === null) {
     // ReturnStatement : return `;`

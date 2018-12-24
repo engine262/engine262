@@ -31,7 +31,7 @@ import {
 } from '../completion.mjs';
 import { Evaluate_StatementList } from '../evaluator.mjs';
 
-// #sec-blockdeclarationinstantiation
+// 13.2.14 #sec-blockdeclarationinstantiation
 export function BlockDeclarationInstantiation(code, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof DeclarativeEnvironmentRecord);
@@ -53,7 +53,7 @@ export function BlockDeclarationInstantiation(code, env) {
   }
 }
 
-// #sec-block-runtime-semantics-evaluation
+// 13.2.13 #sec-block-runtime-semantics-evaluation
 //   Block :
 //     `{` `}`
 //     `{` StatementList `}`

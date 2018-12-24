@@ -29,7 +29,7 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   return new Value(lnum.numberValue() + rnum.numberValue());
 }
 
-// #sec-addition-operator-plus-runtime-semantics-evaluation
+// 12.8.3.1 #sec-addition-operator-plus-runtime-semantics-evaluation
 //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
 function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
   const lref = yield* Evaluate(AdditiveExpression);
@@ -45,7 +45,7 @@ export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
   return new Value(lnum.numberValue() - rnum.numberValue());
 }
 
-// #sec-subtraction-operator-minus-runtime-semantics-evaluation
+// 12.8.4.1 #sec-subtraction-operator-minus-runtime-semantics-evaluation
 function* Evaluate_AdditiveExpression_Minus(
   AdditiveExpression, MultiplicativeExpression,
 ) {

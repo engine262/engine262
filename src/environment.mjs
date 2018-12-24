@@ -537,7 +537,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
-// #sec-newdeclarativeenvironment
+// 8.1.2.2 #sec-newdeclarativeenvironment
 export function NewDeclarativeEnvironment(E) {
   const env = new LexicalEnvironment();
   const envRec = new DeclarativeEnvironmentRecord();
@@ -546,7 +546,7 @@ export function NewDeclarativeEnvironment(E) {
   return env;
 }
 
-// #sec-newobjectenvironment
+// 8.1.2.3 #sec-newobjectenvironment
 export function NewObjectEnvironment(O, E) {
   const env = new LexicalEnvironment();
   const envRec = new ObjectEnvironmentRecord(O);
@@ -555,7 +555,7 @@ export function NewObjectEnvironment(O, E) {
   return env;
 }
 
-// #sec-newfunctionenvironment
+// 8.1.2.4 #sec-newfunctionenvironment
 export function NewFunctionEnvironment(F, newTarget) {
   Assert(F instanceof FunctionValue);
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
@@ -594,7 +594,7 @@ export function NewGlobalEnvironment(G, thisValue) {
   return env;
 }
 
-// #sec-getidentifierreference
+// 8.1.2.1 #sec-getidentifierreference
 export function GetIdentifierReference(lex, name, strict) {
   if (Type(lex) === 'Null') {
     return new Reference(Value.undefined, name, strict);

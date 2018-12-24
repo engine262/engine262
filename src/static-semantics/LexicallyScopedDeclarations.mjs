@@ -66,7 +66,7 @@ export function LexicallyScopedDeclarations_LabelledItem(LabelledItem) {
   }
 }
 
-// 14.1.15 #sec-function-definitions-static-semantics-lexicallydeclarednames
+// 14.1.14 #sec-function-definitions-static-semantics-lexicallydeclarednames
 //   FunctionStatementList :
 //     [empty]
 //     StatementList
