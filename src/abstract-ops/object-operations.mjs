@@ -28,21 +28,24 @@ import {
 } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
-// #sec-get-o-p Get
+// This file covers abstract operations defined in
+// 7.3 #sec-operations-on-objects
+
+// 7.3.1 #sec-get-o-p
 export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return new NormalCompletion(Q(O.Get(P, O)));
 }
 
-// #sec-getv GetV
+// 7.3.2 #sec-getv
 export function GetV(V, P) {
   Assert(IsPropertyKey(P));
   const O = Q(ToObject(V));
   return Q(O.Get(P, V));
 }
 
-// #sec-set-o-p-v-throw Set
+// 7.3.3 #sec-set-o-p-v-throw
 export function Set(O, P, V, Throw) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -54,7 +57,7 @@ export function Set(O, P, V, Throw) {
   return success;
 }
 
-// 7.3.4 CreateDataProperty
+// 7.3.4 #sec-createdataproperty
 export function CreateDataProperty(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -82,7 +85,7 @@ export function CreateMethodProperty(O, P, V) {
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
-// 7.3.6 CreateDataPropertyOrThrow
+// 7.3.6 #sec-createdatapropertyorthrow
 export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -93,7 +96,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   return success;
 }
 
-// #sec-definepropertyorthrow DefinePropertyOrThrow
+// 7.3.7 #sec-definepropertyorthrow
 export function DefinePropertyOrThrow(O, P, desc) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -115,7 +118,7 @@ export function DeletePropertyOrThrow(O, P) {
   return success;
 }
 
-// 7.3.9 GetMethod
+// 7.3.9 #sec-getmethod
 export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
@@ -128,14 +131,14 @@ export function GetMethod(V, P) {
   return func;
 }
 
-// 7.3.10 HasProperty
+// 7.3.10 #sec-hasproperty
 export function HasProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   return Q(O.HasProperty(P));
 }
 
-// 7.3.11 HasOwnProperty
+// 7.3.11 #sec-hasownproperty
 export function HasOwnProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
@@ -146,7 +149,7 @@ export function HasOwnProperty(O, P) {
   return Value.true;
 }
 
-// 7.3.12 Call
+// 7.3.12 #sec-call
 export function Call(F, V, argumentsList) {
   if (!argumentsList) {
     argumentsList = [];
@@ -160,7 +163,7 @@ export function Call(F, V, argumentsList) {
   return Q(F.Call(V, argumentsList));
 }
 
-// 7.3.13 Construct
+// 7.3.13 #sec-construct
 export function Construct(F, argumentsList, newTarget) {
   if (!newTarget) {
     newTarget = F;
@@ -173,7 +176,7 @@ export function Construct(F, argumentsList, newTarget) {
   return Q(F.Construct(argumentsList, newTarget));
 }
 
-// #sec-setintegritylevel SetIntegrityLevel
+// 7.3.14 #sec-setintegritylevel
 export function SetIntegrityLevel(O, level) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
@@ -203,7 +206,7 @@ export function SetIntegrityLevel(O, level) {
   return Value.true;
 }
 
-// #sec-testintegritylevel TestIntegrityLevel
+// 7.3.15 #sec-testintegritylevel
 export function TestIntegrityLevel(O, level) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
@@ -228,7 +231,7 @@ export function TestIntegrityLevel(O, level) {
   return Value.true;
 }
 
-// 7.3.16 CreateArrayFromList
+// 7.3.16 #sec-createarrayfromlist
 export function CreateArrayFromList(elements) {
   Assert(elements.every((e) => e instanceof Value));
   const array = X(ArrayCreate(new Value(0)));
@@ -241,7 +244,31 @@ export function CreateArrayFromList(elements) {
   return array;
 }
 
-// 7.3.18 Invoke
+// 7.3.17 #sec-createlistfromarraylike
+export function CreateListFromArrayLike(obj, elementTypes) {
+  if (elementTypes === undefined) {
+    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
+  }
+  if (Type(obj) !== 'Object') {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const lenProp = Q(Get(obj, new Value('length')));
+  const len = Q(ToLength(lenProp));
+  const list = [];
+  let index = 0;
+  while (index < len.numberValue()) {
+    const indexName = X(ToString(new Value(index)));
+    const next = Q(Get(obj, indexName));
+    if (!elementTypes.includes(Type(next))) {
+      return surroundingAgent.Throw('TypeError');
+    }
+    list.push(next);
+    index += 1;
+  }
+  return list;
+}
+
+// 7.3.18 #sec-invoke
 export function Invoke(V, P, argumentsList) {
   Assert(IsPropertyKey(P));
   if (!argumentsList) {
@@ -252,7 +279,7 @@ export function Invoke(V, P, argumentsList) {
 }
 
 
-// #sec-enumerableownpropertynames EnumerableOwnPropertyNames
+// 7.3.21 #sec-enumerableownpropertynames
 export function EnumerableOwnPropertyNames(O, kind) {
   Assert(Type(O) === 'Object');
   const ownKeys = Q(O.OwnPropertyKeys());
@@ -302,7 +329,7 @@ export function SpeciesConstructor(O, defaultConstructor) {
   return surroundingAgent.Throw('TypeError');
 }
 
-// 7.3.22 GetFunctionRealm
+// 7.3.22 #sec-getfunctionrealm
 export function GetFunctionRealm(obj) {
   Assert(IsCallable(obj) === Value.true);
   if ('Realm' in obj) {
@@ -350,28 +377,4 @@ export function CopyDataProperties(target, source, excludedItems) {
     }
   }
   return target;
-}
-
-// 7.3.17 #sec-createlistfromarraylike
-export function CreateListFromArrayLike(obj, elementTypes) {
-  if (elementTypes === undefined) {
-    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
-  }
-  if (Type(obj) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  const lenProp = Q(Get(obj, new Value('length')));
-  const len = Q(ToLength(lenProp));
-  const list = [];
-  let index = 0;
-  while (index < len.numberValue()) {
-    const indexName = X(ToString(new Value(index)));
-    const next = Q(Get(obj, indexName));
-    if (!elementTypes.includes(Type(next))) {
-      return surroundingAgent.Throw('TypeError');
-    }
-    list.push(next);
-    index += 1;
-  }
-  return list;
 }

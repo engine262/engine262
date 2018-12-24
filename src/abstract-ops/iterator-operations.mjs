@@ -7,11 +7,11 @@ import {
   GetMethod,
   GetV,
   ObjectCreate,
+  PerformPromiseThen,
+  PromiseResolve,
   ToBoolean,
 } from './all.mjs';
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Type,
   Value,
@@ -20,18 +20,15 @@ import {
 import {
   Completion,
   EnsureCompletion,
+  IfAbruptRejectPromise,
   Q, X,
   Await,
 } from '../completion.mjs';
 
-// 25.1.4.1 #sec-createasyncfromsynciterator
-export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-  const asyncIterator = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
-    'SyncIteratorRecord',
-  ]));
-  asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  return Q(GetIterator(asyncIterator, 'async'));
-}
+// This file covers abstract operations defined in
+// 7.4 #sec-operations-on-iterator-objects
+// and
+// 25.1 #sec-iteration
 
 // 7.4.1 #sec-getiterator
 export function GetIterator(obj, hint, method) {
@@ -160,6 +157,7 @@ export function CreateIterResultObject(value, done) {
   return obj;
 }
 
+// 7.4.9.1 #sec-listiterator-next
 function ListIteratorNextSteps(args, { thisValue }) {
   const O = thisValue;
   Assert(Type(O) === 'Object');
@@ -189,4 +187,34 @@ export function CreateListIteratorRecord(list) {
     NextMethod: next,
     Done: Value.false,
   };
+}
+
+// 25.1.4.1 #sec-createasyncfromsynciterator
+export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
+  const asyncIterator = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
+    'SyncIteratorRecord',
+  ]));
+  asyncIterator.SyncIteratorRecord = syncIteratorRecord;
+  return Q(GetIterator(asyncIterator, 'async'));
+}
+
+// 25.1.4.2.5 #sec-async-from-sync-iterator-value-unwrap-functions
+function AsyncFromSyncIteratorValueUnwrapFunctions([value]) {
+  const F = this;
+
+  return X(CreateIterResultObject(value, F.Done));
+}
+
+// 25.1.4.4 #sec-async-from-sync-iterator-continuation
+export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
+  const done = IteratorComplete(result);
+  IfAbruptRejectPromise(done, promiseCapability);
+  const value = IteratorValue(result);
+  IfAbruptRejectPromise(value, promiseCapability);
+  const valueWrapper = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
+  const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
+  const onFulfilled = CreateBuiltinFunction(steps, ['Done']);
+  onFulfilled.Done = done;
+  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
+  return promiseCapability.Promise;
 }

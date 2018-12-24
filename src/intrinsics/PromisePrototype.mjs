@@ -1,8 +1,4 @@
-import {
-  EnqueueJob,
-  HostPromiseRejectionTracker,
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   Call,
@@ -13,8 +9,7 @@ import {
   IsConstructor,
   IsPromise,
   NewPromiseCapability,
-  PromiseCapabilityRecord,
-  PromiseReactionJob,
+  PerformPromiseThen,
   PromiseResolve,
   SetFunctionLength,
   SpeciesConstructor,
@@ -79,51 +74,6 @@ function PromiseProto_finally([onFinally], { thisValue }) {
     catchFinally.OnFinally = onFinally;
   }
   return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
-}
-
-export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
-  Assert(IsPromise(promise) === Value.true);
-  if (resultCapability) {
-    Assert(resultCapability instanceof PromiseCapabilityRecord);
-  } else {
-    resultCapability = Value.undefined;
-  }
-  if (IsCallable(onFulfilled) === Value.false) {
-    onFulfilled = Value.undefined;
-  }
-  if (IsCallable(onRejected) === Value.false) {
-    onRejected = Value.undefined;
-  }
-  const fulfillReaction = {
-    Capability: resultCapability,
-    Type: 'Fulfill',
-    Handler: onFulfilled,
-  };
-  const rejectReaction = {
-    Capability: resultCapability,
-    Type: 'Reject',
-    Handler: onRejected,
-  };
-  if (promise.PromiseState === 'pending') {
-    promise.PromiseFulfillReactions.push(fulfillReaction);
-    promise.PromiseRejectReactions.push(rejectReaction);
-  } else if (promise.PromiseState === 'fulfilled') {
-    const value = promise.PromiseResult;
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [fulfillReaction, value]);
-  } else {
-    Assert(promise.PromiseState === 'rejected');
-    const reason = promise.PromiseResult;
-    if (promise.PromiseIsHandled === false) {
-      HostPromiseRejectionTracker(promise, 'handler');
-    }
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
-  }
-  promise.PromiseIsHandled = true;
-  if (resultCapability === Value.undefined) {
-    return Value.undefined;
-  } else {
-    return resultCapability.Promise;
-  }
 }
 
 function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {

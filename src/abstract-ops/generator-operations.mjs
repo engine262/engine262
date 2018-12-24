@@ -14,6 +14,9 @@ import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
 
+// This file covers abstract operations defined in
+// 25.4 #sec-generator-objects
+
 // 25.4.3.1 #sec-generatorstart
 export function GeneratorStart(generator, generatorBody) {
   Assert(Type(generator.GeneratorState) === 'Undefined');

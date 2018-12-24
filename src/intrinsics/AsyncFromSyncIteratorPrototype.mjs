@@ -1,41 +1,17 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  AsyncFromSyncIteratorContinuation,
   Call,
-  CreateBuiltinFunction,
   CreateIterResultObject,
   GetMethod,
-  IteratorComplete,
   IteratorNext,
-  IteratorValue,
   NewPromiseCapability,
-  PromiseResolve,
 } from '../abstract-ops/all.mjs';
-import { PerformPromiseThen } from './PromisePrototype.mjs';
 import { Type, Value } from '../value.mjs';
-import { IfAbruptRejectPromise, Q, X } from '../completion.mjs';
+import { IfAbruptRejectPromise, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// 25.1.4.2.5 #sec-async-from-sync-iterator-value-unwrap-functions
-function AsyncFromSyncIteratorValueUnwrapFunctions([value]) {
-  const F = this;
-
-  return X(CreateIterResultObject(value, F.Done));
-}
-
-// 25.1.4.4 #sec-async-from-sync-iterator-continuation
-function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
-  const done = IteratorComplete(result);
-  IfAbruptRejectPromise(done, promiseCapability);
-  const value = IteratorValue(result);
-  IfAbruptRejectPromise(value, promiseCapability);
-  const valueWrapper = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
-  const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  const onFulfilled = CreateBuiltinFunction(steps, ['Done']);
-  onFulfilled.Done = done;
-  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
-  return promiseCapability.Promise;
-}
-
+// 25.1.4.2.1 #sec-%asyncfromsynciteratorprototype%.next
 function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -50,6 +26,7 @@ function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
+// 25.1.4.2.2 #sec-%asyncfromsynciteratorprototype%.return
 function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -76,6 +53,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
+// 25.1.4.2.3 #sec-%asyncfromsynciteratorprototype%.throw
 function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -108,7 +86,7 @@ export function CreateAsyncFromSyncIteratorPrototype(realmRec) {
     ['next', AsyncFromSyncIteratorPrototype_next, 1],
     ['return', AsyncFromSyncIteratorPrototype_return, 1],
     ['throw', AsyncFromSyncIteratorPrototype_throw, 1],
-  ], realmRec.Intrinsics['%AsyncIteratorPrototype%']);
+  ], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'Async-from-Sync Iterator');
 
   realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
 }
