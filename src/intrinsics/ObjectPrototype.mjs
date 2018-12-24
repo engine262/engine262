@@ -100,7 +100,7 @@ export function CreateObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%ObjectPrototype%'];
   Assert(proto);
 
-  assignProps(proto, [
+  assignProps(realmRec, proto, [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],
     ['isPrototypeOf', ObjectProto_isPrototypeOf, 1],
     ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1],

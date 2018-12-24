@@ -125,7 +125,7 @@ export function CreateProxy(realmRec) {
   SetFunctionName(proxyConstructor, new Value('Proxy'));
   SetFunctionLength(proxyConstructor, new Value(2));
 
-  assignProps(proxyConstructor, [
+  assignProps(realmRec, proxyConstructor, [
     ['revocable', Proxy_revocable, 2],
   ]);
 

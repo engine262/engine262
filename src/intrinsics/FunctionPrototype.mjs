@@ -152,7 +152,7 @@ export function CreateFunctionPrototype(realmRec) {
   proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
 
   const readonly = Descriptor({ Writable: Value.false, Configurable: Value.false });
-  assignProps(proto, [
+  assignProps(realmRec, proto, [
     ['apply', FunctionProto_apply, 2],
     ['bind', FunctionProto_bind, 1],
     ['call', FunctionProto_call, 1],
