@@ -392,3 +392,7 @@ export function BoundNames_Declaration(Declaration) {
       throw new OutOfRange('BoundNames_Declaration', Declaration);
   }
 }
+
+// (implict)
+//   ImportedBinding : BindingIdentifier
+export const BoundNames_ImportedBinding = BoundNames_BindingIdentifier;

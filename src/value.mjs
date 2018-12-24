@@ -1232,6 +1232,17 @@ export class DataBlock extends Uint8Array {
   }
 }
 
+export class ImportEntryRecord {
+  constructor(O) {
+    Assert(Type(O.ModuleRequest) === 'String');
+    Assert(Type(O.ImportName) === 'String');
+    Assert(Type(O.LocalName) === 'String');
+    this.ModuleRequest = O.ModuleRequest;
+    this.ImportName = O.ImportName;
+    this.LocalName = O.LocalName;
+  }
+}
+
 export function Type(val) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';

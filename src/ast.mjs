@@ -889,9 +889,46 @@ export function isLexicalBinding(node) {
   return node.type === 'VariableDeclarator';
 }
 
+// Used in #prod-ImportDeclaration
+//
+// Note:
+//     import {} from 'abc';
+// is treated the same as
+//     import 'abc';
+// and this method returns false with such constructs.
+export function isImportDeclarationWithClause(node) {
+  return isImportDeclaration(node) && node.specifiers.length !== 0;
+}
+
+// Used in #prod-ImportDeclaration
+//
+// Note:
+//     import {} from 'abc';
+// is treated the same as
+//     import 'abc';
+// and this method returns true with such constructs.
+export function isImportDeclarationWithSpecifierOnly(node) {
+  return isImportDeclaration(node) && node.specifiers.length === 0;
+}
+
 // #prod-ImportDeclaration
 export function isImportDeclaration(node) {
   return node.type === 'ImportDeclaration';
+}
+
+// #prod-ImportedDefaultBinding
+export function isImportedDefaultBinding(node) {
+  return node.type === 'ImportDefaultSpecifier';
+}
+
+// #prod-NameSpaceImport
+export function isNameSpaceImport(node) {
+  return node.type === 'ImportNamespaceSpecifier';
+}
+
+// #prod-ImportSpecifier
+export function isImportSpecifier(node) {
+  return node.type === 'ImportSpecifier';
 }
 
 // Used in #prod-ExportDeclaration
