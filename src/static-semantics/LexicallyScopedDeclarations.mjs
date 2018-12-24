@@ -6,11 +6,23 @@ import {
   isLabelledStatement,
   isStatement,
   isSwitchCase,
+  isImportDeclaration,
+  isExportDeclaration,
+  isExportDeclarationWithStar,
+  isExportDeclarationWithVariable,
+  isExportDeclarationWithDeclaration,
+  isExportDeclarationWithExport,
+  isExportDeclarationWithExportAndFrom,
+  isExportDeclarationWithDefaultAndHoistable,
+  isExportDeclarationWithDefaultAndClass,
+  isExportDeclarationWithDefaultAndExpression,
+  isStatementListItem,
 } from '../ast.mjs';
 import {
   TopLevelLexicallyScopedDeclarations_StatementList,
-} from './TopLevelLexicallyScopedDeclarations.mjs';
+} from './all.mjs';
 import { DeclarationPart_Declaration } from './DeclarationPart.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 // 13.2.6 #sec-block-static-semantics-lexicallyscopeddeclarations
 //   StatementList : StatementList StatementListItem
@@ -109,5 +121,47 @@ export const LexicallyScopedDeclarations_AsyncConciseBody = LexicallyScopedDecla
 
 // 15.1.4 #sec-scripts-static-semantics-lexicallyscopeddeclarations
 //   ScriptBody : StatementList
-export const
-  LexicallyScopedDeclarations_ScriptBody = TopLevelLexicallyScopedDeclarations_StatementList;
+export const LexicallyScopedDeclarations_ScriptBody = TopLevelLexicallyScopedDeclarations_StatementList;
+
+// ExportDeclaration :
+//   `export` `*` FromClause `;`
+//   `export` ExportClause FromClause `;`
+//   `export` ExportClause `;`
+export function LexicallyScopedDeclarations_ExportDeclaration(ExportDeclaration) {
+  switch (true) {
+    case isExportDeclarationWithStar(ExportDeclaration):
+    case isExportDeclarationWithExportAndFrom(ExportDeclaration):
+    case isExportDeclarationWithExport(ExportDeclaration):
+    case isExportDeclarationWithVariable(ExportDeclaration):
+      return [];
+    case isExportDeclarationWithDeclaration(ExportDeclaration):
+      return [ExportDeclaration.declaration];
+    case isExportDeclarationWithDefaultAndHoistable(ExportDeclaration):
+      return [ExportDeclaration.declaration];
+    case isExportDeclarationWithDefaultAndClass(ExportDeclaration):
+      return [ExportDeclaration.declaration];
+    case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
+      return [ExportDeclaration];
+    default:
+      throw new OutOfRange('LexicallyScopedDeclarations_ExportDeclaration', ExportDeclaration);
+  }
+}
+
+export function LexicallyScopedDeclarations_ModuleItemList(ModuleItemList) {
+  const declarations = [];
+  for (const ModuleItem of ModuleItemList) {
+    switch (true) {
+      case isImportDeclaration(ModuleItem):
+        break;
+      case isExportDeclaration(ModuleItem):
+        declarations.push(...LexicallyScopedDeclarations_ExportDeclaration(ModuleItem));
+        break;
+      case isStatementListItem(ModuleItem):
+        declarations.push(...LexicallyScopedDeclarations_StatementListItem(ModuleItem));
+        break;
+      default:
+        throw new OutOfRange('LexicallyScopedDeclarations_ModuleItemList');
+    }
+  }
+  return declarations;
+}

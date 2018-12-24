@@ -107,7 +107,7 @@ export function ExportEntries_ExportDeclaration(ExportDeclaration) {
 
     case isExportDeclarationWithExport(ExportDeclaration): {
       const ExportClause = ExportDeclaration.specifiers;
-      return ExportEntriesForModule_ExportClause(ExportClause, null);
+      return ExportEntriesForModule_ExportClause(ExportClause, Value.null);
     }
 
     case isExportDeclarationWithVariable(ExportDeclaration): {

@@ -491,7 +491,9 @@ const SKIP = Symbol('SKIP');
 
 function X(val) {
   if (val instanceof AbruptCompletion) {
-    throw new Error();
+    const e = new Error('val was abrupt');
+    e.detail = val;
+    throw e;
   }
   if (val instanceof Completion) {
     return val.Value;
@@ -500,16 +502,30 @@ function X(val) {
 }
 
 function createRealm() {
-  const realm = new Realm();
+  const realm = new Realm({
+    resolveImportedModule(referencingModule, specifier) {
+      const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
+      const source = fs.readFileSync(resolved, 'utf8');
+      return realm.createSourceTextModule(resolved, source);
+    },
+  });
 
   const $262 = new APIObject(realm);
   realm.global.$262 = $262;
+
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
+    if ($262.handlePrint) {
+      $262.handlePrint(...args);
+    } else {
+      console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+    }
+    return Value.undefined;
+  }));
 
   Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
   Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
   Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
-  Abstract.CreateDataProperty($262, new Value(realm, 'print'), new Value(realm, () => Value.undefined));
   Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
@@ -531,7 +547,12 @@ const agentOpt = {
 };
 initializeAgent(agentOpt);
 
-async function run({ source, meta, strict }) {
+async function run({
+  specifier,
+  source,
+  meta,
+  strict,
+}) {
   const $262 = createRealm();
 
   X($262.evalScript('harness/assert.js', true));
@@ -564,21 +585,34 @@ async function run({ source, meta, strict }) {
           tracked.remove(promise);
         }
       };
-      X(Abstract.CreateDataProperty($262.realm.global, new Value($262.realm, 'print'), new Value($262.realm, ([m]) => {
+      $262.handlePrint = (m) => {
         if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
           resolve({ status: PASS });
         } else {
           resolve({ status: FAIL, error: inspect(m, $262.realm) });
         }
-        return Value.undefined;
-      })));
+        $262.handlePrint = undefined;
+      };
     });
     asyncPromise.finally(() => {
       agentOpt.promiseRejectionTracker = undefined;
     });
   }
 
-  const completion = $262.evalScript(strict ? `'use strict';\n${source}` : source);
+  let completion;
+  if (meta.flags.includes('module')) {
+    completion = $262.realm.createSourceTextModule(specifier, source);
+    if (!(completion instanceof AbruptCompletion)) {
+      const module = completion;
+      completion = module.Instantiate();
+      if (!(completion instanceof AbruptCompletion)) {
+        completion = module.Evaluate();
+      }
+    }
+  } else {
+    completion = $262.evalScript(strict ? `'use strict';\n${source}` : source);
+  }
+
   if (completion instanceof AbruptCompletion) {
     clearTimeout(timeout);
     if (meta.negative) {
@@ -617,6 +651,10 @@ process.on('exit', () => {
 });
 
 files.reduce((promise, filename) => promise.then(async () => {
+  if (filename.includes('_FIXTURE')) {
+    return;
+  }
+
   const short = path.relative(testdir, filename);
   const source = await fs.promises.readFile(filename, 'utf8');
   const meta = yaml.default.parse(source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')));
@@ -640,17 +678,23 @@ files.reduce((promise, filename) => promise.then(async () => {
     return;
   }
 
-  let skip = false;
-  let fail = false;
-  if (!meta.flags.includes('onlyStrict')) {
+  const runArgs = {
+    specifier: filename,
+    source,
+    meta,
+  };
+
+  let skip;
+  let fail;
+  if (meta.flags.includes('module')) {
     try {
-      const { status, error } = await run({ source, meta, strict: false });
+      const { status, error } = await run({ ...runArgs });
       if (status === SKIP) {
         skip = true;
       } else if (status === FAIL) {
         fail = true;
         failed += 1;
-        console.error('\u001b[31mFAIL\u001b[39m (SLOPPY)', `${short} - ${meta.description.trim()}`);
+        console.error('\u001b[31mFAIL\u001b[39m (MODULE)', `${short} - ${meta.description.trim()}`);
         if (error) {
           console.error(error);
         }
@@ -659,25 +703,44 @@ files.reduce((promise, filename) => promise.then(async () => {
       console.error(filename);
       throw err;
     }
-  }
-  if (!meta.flags.includes('noStrict')) {
-    try {
-      const { status, error } = await run({ source, meta, strict: true });
-      if (status === SKIP) {
-        skip = true;
-      } else if (status === FAIL) {
-        if (!fail) {
+  } else {
+    if (!meta.flags.includes('onlyStrict')) {
+      try {
+        const { status, error } = await run({ ...runArgs, strict: false });
+        if (status === SKIP) {
+          skip = true;
+        } else if (status === FAIL) {
           fail = true;
           failed += 1;
+          console.error('\u001b[31mFAIL\u001b[39m (SLOPPY)', `${short} - ${meta.description.trim()}`);
+          if (error) {
+            console.error(error);
+          }
         }
-        console.error('\u001b[31mFAIL\u001b[39m (STRICT)', `${short} - ${meta.description.trim()}`);
-        if (error) {
-          console.error(error);
-        }
+      } catch (err) {
+        console.error(filename);
+        throw err;
       }
-    } catch (err) {
-      console.error(filename);
-      throw err;
+    }
+    if (!meta.flags.includes('noStrict')) {
+      try {
+        const { status, error } = await run({ ...runArgs, strict: true });
+        if (status === SKIP) {
+          skip = true;
+        } else if (status === FAIL) {
+          if (!fail) {
+            fail = true;
+            failed += 1;
+          }
+          console.error('\u001b[31mFAIL\u001b[39m (STRICT)', `${short} - ${meta.description.trim()}`);
+          if (error) {
+            console.error(error);
+          }
+        }
+      } catch (err) {
+        console.error(filename);
+        throw err;
+      }
     }
   }
 

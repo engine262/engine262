@@ -38,6 +38,7 @@ import {
   isDebuggerStatement,
   isDeclaration,
   isEmptyStatement,
+  isExportDeclaration,
   isExpression,
   isExpressionStatement,
   isExpressionWithComma,
@@ -46,6 +47,7 @@ import {
   isHoistableDeclaration,
   isIdentifierReference,
   isIfStatement,
+  isImportDeclaration,
   isLabelledStatement,
   isLexicalDeclaration,
   isLiteral,
@@ -95,6 +97,7 @@ import {
   Evaluate_EqualityExpression,
   Evaluate_ExponentiationExpression,
   Evaluate_ExpressionWithComma,
+  Evaluate_ExportDeclaration,
   Evaluate_FunctionExpression,
   Evaluate_GeneratorExpression,
   Evaluate_HoistableDeclaration,
@@ -139,7 +142,11 @@ import { unwind, OutOfRange } from './helpers.mjs';
 //
 // (implicit)
 //   StatementList : StatementListItem
-export function* Evaluate_StatementList(StatementList) {
+//
+// ModuleItemList :
+//   ModuleItem
+//   ModuleItemList ModuleItem
+export function* Evaluate_List(StatementList) {
   if (StatementList.length === 0) {
     return new NormalCompletion(undefined);
   }
@@ -160,6 +167,9 @@ export function* Evaluate_StatementList(StatementList) {
 
   return sl;
 }
+
+export const Evaluate_StatementList = Evaluate_List;
+export const Evaluate_ModuleItemList = Evaluate_List;
 
 // (implicit)
 //   StatementListItem :
@@ -443,16 +453,32 @@ export function Evaluate_Script(Script) {
   return unwind(Evaluate_StatementList(Script));
 }
 
-export function Evaluate(Production) {
+// #sec-module-semantics-runtime-semantics-evaluation
+//   Module : [empty]
+//   ModuleBody : ModuleItemList
+export function Evaluate_Module(ModuleBody) {
+  if (ModuleBody.length === 0) {
+    return new NormalCompletion(Value.undefined);
+  }
+  return unwind(Evaluate_ModuleItemList(ModuleBody));
+}
+
+export function* Evaluate(Production) {
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production, surroundingAgent.currentRealmRecord);
   }
 
-  if (isStatement(Production) || isDeclaration(Production)) {
-    return Evaluate_Statement(Production);
+  switch (true) {
+    case isImportDeclaration(Production):
+      return new NormalCompletion(undefined);
+    case isExportDeclaration(Production):
+      return yield* Evaluate_ExportDeclaration(Production);
+    case isStatement(Production):
+    case isDeclaration(Production):
+      return yield* Evaluate_Statement(Production);
+    case isExpression(Production):
+      return yield* Evaluate_Expression(Production);
+    default:
+      throw new OutOfRange('Evaluate', Production);
   }
-  if (isExpression(Production)) {
-    return Evaluate_Expression(Production);
-  }
-  throw new OutOfRange('Evaluate', Production);
 }

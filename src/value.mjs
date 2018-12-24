@@ -1,4 +1,4 @@
-import { ExecutionContext, surroundingAgent } from './engine.mjs';
+import { ExecutionContext, HostResolveImportedModule, surroundingAgent } from './engine.mjs';
 import {
   ArraySetLength,
   Assert,
@@ -38,11 +38,18 @@ import {
   ToUint32,
   ToInteger,
   ToString,
+  InnerModuleInstantiation,
+  InnerModuleEvaluation,
   isArrayIndex,
   isIntegerIndex,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import { Completion, Q, X } from './completion.mjs';
+import {
+  Completion,
+  AbruptCompletion,
+  Q,
+  X,
+} from './completion.mjs';
 import { OutOfRange, msg } from './helpers.mjs';
 
 export function Value(value) {
@@ -688,12 +695,12 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return Value.undefined;
     }
     const value = Q(O.Get(P, O));
-    return {
+    return Descriptor({
       Value: value,
-      Writable: true,
-      Enumerable: true,
-      Configurable: true,
-    };
+      Writable: Value.true,
+      Enumerable: Value.true,
+      Configurable: Value.true,
+    });
   }
 
   DefineOwnProperty(P, Desc) {
@@ -703,8 +710,8 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return OrdinaryDefineOwnProperty(O, P, Desc);
     }
 
-    const current = O.GetOwnProperty(P);
-    if (Type(current) === 'Undefined') {
+    const current = Q(O.GetOwnProperty(P));
+    if (current === Value.undefined) {
       return Value.false;
     }
     if (IsAccessorDescriptor(Desc)) {
@@ -734,9 +741,8 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     const exports = O.Exports;
     if (exports.includes(P)) {
       return Value.true;
-    } else {
-      return Value.false;
     }
+    return Value.false;
   }
 
   Get(P, Receiver) {
@@ -752,12 +758,12 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     }
     const m = O.Module;
     const binding = m.ResolveExport(P, []);
-    // Assert: binding is a ResolvedBinding Record.
+    Assert(binding instanceof ResolvedBindingRecord);
     const targetModule = binding.Module;
-    Assert(Type(targetModule) !== 'Undefined');
+    Assert(targetModule !== Value.undefined);
     const targetEnv = targetModule.Environment;
-    if (Type(targetEnv) === 'Undefined') {
-      return surroundingAgent.Throw('ReferenceError', `${P.stringValue()} is not defined`);
+    if (targetEnv === Value.undefined) {
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', P));
     }
     const targetEnvRec = targetEnv.EnvironmentRecord;
     return Q(targetEnvRec.GetBindingValue(binding.BindingName, Value.true));
@@ -1247,7 +1253,7 @@ export class ImportEntryRecord {
 // #exportentry-record
 export class ExportEntryRecord {
   constructor(O) {
-    Assert(Type(O.ExportName) === 'String');
+    Assert(Type(O.ExportName) === 'String' || Type(O.ExportName) === 'Null');
     Assert(Type(O.ModuleRequest) === 'String' || Type(O.ModuleRequest) === 'Null');
     Assert(Type(O.ImportName) === 'String' || Type(O.ImportName) === 'Null');
     Assert(Type(O.LocalName) === 'String' || Type(O.LocalName) === 'Null');
@@ -1255,6 +1261,172 @@ export class ExportEntryRecord {
     this.ModuleRequest = O.ModuleRequest;
     this.ImportName = O.ImportName;
     this.LocalName = O.LocalName;
+  }
+}
+
+export class ResolvedBindingRecord {
+  constructor({ Module, BindingName }) {
+    this.Module = Module;
+    this.BindingName = BindingName;
+  }
+}
+
+export class ModuleRecord {
+  constructor({
+    Realm,
+    Environment,
+    Namespace,
+    HostDefined,
+  }) {
+    this.Realm = Realm;
+    this.Environment = Environment;
+    this.Namespace = Namespace;
+    this.HostDefined = HostDefined;
+  }
+}
+
+export class SourceTextModuleRecord extends ModuleRecord {
+  constructor(init) {
+    super(init);
+
+    ({
+      ECMAScriptCode: this.ECMAScriptCode,
+      RequestedModules: this.RequestedModules,
+      ImportEntries: this.ImportEntries,
+      LocalExportEntries: this.LocalExportEntries,
+      IndirectExportEntries: this.IndirectExportEntries,
+      StarExportEntries: this.StarExportEntries,
+      Status: this.Status,
+      EvaluationError: this.EvaluationError,
+      DFSIndex: this.DFSIndex,
+      DFSAncestorIndex: this.DFSAncestorIndex,
+    } = init);
+  }
+
+  // #sec-getexportednames
+  GetExportedNames(exportStarSet) {
+    const module = this;
+    if (exportStarSet.includes(module)) {
+      // Assert: We've reached the starting point of an import * circularity.
+      return [];
+    }
+    exportStarSet.push(module);
+    const exportedNames = [];
+    for (const e of module.LocalExportEntries) {
+      // Assert: module provides the direct binding for this export.
+      exportedNames.push(e.ExportName);
+    }
+    for (const e of module.IndirectExportEntries) {
+      // Assert: module imports a specific binding for this export.
+      exportedNames.push(e.ExportName);
+    }
+    for (const e of module.StarExportEntries) {
+      const requestedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
+      const starNames = Q(requestedModule.GetExportedNames(exportStarSet));
+      for (const n of starNames) {
+        if (SameValue(n, new Value('default')) === Value.false) {
+          if (!exportedNames.includes(n)) {
+            exportedNames.push(n);
+          }
+        }
+      }
+    }
+    return exportedNames;
+  }
+
+  // #sec-resolveexport
+  ResolveExport(exportName, resolveSet) {
+    const module = this;
+    for (const r of resolveSet) {
+      if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
+        // Assert: This is a circular import request.
+        return null;
+      }
+    }
+    resolveSet.push({ Module: module, ExportName: exportName });
+    for (const e of module.LocalExportEntries) {
+      if (SameValue(exportName, e.ExportName) === Value.true) {
+        // Assert: module provides the direct binding for this export.
+        return new ResolvedBindingRecord({
+          Module: module,
+          BindingName: e.LocalName,
+        });
+      }
+    }
+    for (const e of module.IndirectExportEntries) {
+      if (SameValue(exportName, e.ExportName) === Value.true) {
+        // Assert: module provides the direct binding for this export.
+        const importedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
+        return importedModule.ResolveExport(e.ImportName, resolveSet);
+      }
+    }
+    if (SameValue(exportName, new Value('default')) === Value.true) {
+      // Assert: A default export was not explicitly defined by this module.
+      return null;
+      // NOTE: A default export cannot be provided by an export *.
+    }
+    let starResolution = null;
+    for (const e of module.StarExportEntries) {
+      const importedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
+      const resolution = Q(importedModule.ResolveExport(exportName, resolveSet));
+      if (resolution === 'ambiguous') {
+        return 'ambiguous';
+      }
+      if (resolution !== null) {
+        Assert(resolution instanceof ResolvedBindingRecord);
+        if (starResolution === null) {
+          starResolution = resolution;
+        } else {
+          // Assert: There is more than one * import that includes the requested name.
+          if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName, starResolution.BindingName) === Value.false) {
+            return 'ambiguous';
+          }
+        }
+      }
+    }
+    return starResolution;
+  }
+
+  // #sec-moduledeclarationinstantiation
+  Instantiate() {
+    const module = this;
+    Assert(module.Status !== 'instantiating' && module.Status !== 'evaluating');
+    const stack = [];
+    const result = InnerModuleInstantiation(module, stack, 0);
+    if (result instanceof AbruptCompletion) {
+      for (const m of stack) {
+        Assert(m.Status === 'instantiating');
+        m.Status = 'uninstantiated';
+        m.Environment = Value.undefined;
+        m.DFSIndex = Value.undefined;
+        m.DFSAncestorIndex = Value.undefined;
+      }
+      Assert(module.Status === 'uninstantiated');
+      return result;
+    }
+    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    Assert(stack.length === 0);
+    return Value.undefined;
+  }
+
+  // #sec-moduleevaluation
+  Evaluate() {
+    const module = this;
+    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    const stack = [];
+    const result = InnerModuleEvaluation(module, stack, 0);
+    if (result instanceof AbruptCompletion) {
+      for (const m of stack) {
+        Assert(m.Status === 'evaluating');
+        m.Status = 'evaluated';
+        m.EvaluationError = result;
+      }
+      Assert(module.Status === 'evaluated' && module.EvaluationError === result);
+      return result;
+    }
+    Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
+    Assert(stack.length === 0);
+    return Value.undefined;
   }
 }
 

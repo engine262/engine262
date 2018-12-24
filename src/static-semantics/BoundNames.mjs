@@ -17,6 +17,17 @@ import {
   isLexicalDeclaration,
   isObjectBindingPattern,
   isSingleNameBinding,
+  isImportDeclaration,
+  isImportDeclarationWithClause,
+  isExportDeclaration,
+  isExportDeclarationWithStar,
+  isExportDeclarationWithVariable,
+  isExportDeclarationWithDeclaration,
+  isExportDeclarationWithExport,
+  isExportDeclarationWithExportAndFrom,
+  isExportDeclarationWithDefaultAndHoistable,
+  isExportDeclarationWithDefaultAndClass,
+  isExportDeclarationWithDefaultAndExpression,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -380,6 +391,8 @@ export function BoundNames_ClassDeclaration(ClassDeclaration) {
 //     HoistableDeclaration
 //     ClassDeclaration
 //     LexicalDeclaration
+//
+//  ExportDeclaration
 export function BoundNames_Declaration(Declaration) {
   switch (true) {
     case isHoistableDeclaration(Declaration):
@@ -388,6 +401,8 @@ export function BoundNames_Declaration(Declaration) {
       return BoundNames_ClassDeclaration(Declaration);
     case isLexicalDeclaration(Declaration):
       return BoundNames_LexicalDeclaration(Declaration);
+    case isExportDeclaration(Declaration):
+      return BoundNames_ExportDeclaration(Declaration);
     default:
       throw new OutOfRange('BoundNames_Declaration', Declaration);
   }
@@ -396,3 +411,52 @@ export function BoundNames_Declaration(Declaration) {
 // (implict)
 //   ImportedBinding : BindingIdentifier
 export const BoundNames_ImportedBinding = BoundNames_BindingIdentifier;
+
+//  ImportDeclaration :
+//   `import` ImportClause FromClause `;`
+//   `import` ModuleSpecifier `;`
+export function BoundNames_ImportDeclaration(ImportDeclaration) {
+  switch (true) {
+    case isImportDeclarationWithClause(ImportDeclaration):
+      return ImportDeclaration.specfiers.map((s) => s.local);
+    case isImportDeclaration(ImportDeclaration):
+      return [];
+    default:
+      throw new OutOfRange('BoundNames_ImportDeclaration', ImportDeclaration);
+  }
+}
+
+// ExportDeclaration :
+//   `export` `*` FromClause `;`
+//   `export` ExportClause FromClause `;`
+//   `export` ExportClause `;`
+export function BoundNames_ExportDeclaration(ExportDeclaration) {
+  switch (true) {
+    case isExportDeclarationWithStar(ExportDeclaration):
+    case isExportDeclarationWithExportAndFrom(ExportDeclaration):
+    case isExportDeclarationWithExport(ExportDeclaration):
+      return [];
+    case isExportDeclarationWithVariable(ExportDeclaration):
+      return BoundNames_VariableStatement(ExportDeclaration.declaration);
+    case isExportDeclarationWithDeclaration(ExportDeclaration):
+      return BoundNames_Declaration(ExportDeclaration.declaration);
+    case isExportDeclarationWithDefaultAndHoistable(ExportDeclaration): {
+      const declarationNames = BoundNames_HoistableDeclaration(ExportDeclaration.declaration);
+      if (!declarationNames.includes('*default*')) {
+        declarationNames.push('*default*');
+      }
+      return declarationNames;
+    }
+    case isExportDeclarationWithDefaultAndClass(ExportDeclaration): {
+      const declarationNames = BoundNames_ClassDeclaration(ExportDeclaration.declaration);
+      if (!declarationNames.includes('*default*')) {
+        declarationNames.push('*default*');
+      }
+      return declarationNames;
+    }
+    case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
+      return ['*default*'];
+    default:
+      throw new OutOfRange('BoundNames_ExportDeclaration', ExportDeclaration);
+  }
+}

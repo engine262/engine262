@@ -8,7 +8,7 @@ import { ExportEntryRecord, Value } from '../value.mjs';
 export function ExportEntriesForModule_ExportList(ExportList, module) {
   const specs = [];
   for (const ExportSpecifier of ExportList) {
-    specs.push(ExportEntriesForModule_ExportSpecifier(ExportSpecifier, module));
+    specs.push(...ExportEntriesForModule_ExportSpecifier(ExportSpecifier, module));
   }
   return specs;
 }
@@ -27,16 +27,16 @@ export const ExportEntriesForModule_ExportClause = ExportEntriesForModule_Export
 //     IdentifierName
 //     IdentifierName `as` IdentifierName
 export function ExportEntriesForModule_ExportSpecifier(ExportSpecifier, module) {
-  const sourceName = ExportSpecifier.local.value;
-  const exportName = ExportSpecifier.exported.value;
+  const sourceName = new Value(ExportSpecifier.local.name);
+  const exportName = new Value(ExportSpecifier.exported.name);
   let localName;
   let importName;
-  if (module === null) {
-    localName = new Value(sourceName);
+  if (module === Value.null) {
+    localName = sourceName;
     importName = Value.null;
   } else {
     localName = Value.null;
-    importName = new Value(sourceName);
+    importName = sourceName;
   }
   return [new ExportEntryRecord({
     ModuleRequest: module,

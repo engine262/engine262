@@ -5,6 +5,7 @@
 require('source-map-support/register');
 const repl = require('repl');
 const fs = require('fs');
+const path = require('path');
 
 let engine262;
 try {
@@ -32,7 +33,13 @@ initializeAgent({
 });
 
 function createRealm() {
-  const realm = new Realm();
+  const realm = new Realm({
+    resolveImportedModule(referencingModule, specifier) {
+      const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
+      const source = fs.readFileSync(resolved, 'utf8');
+      return realm.createSourceTextModule(resolved, source);
+    },
+  });
 
   const print = new Value(realm, (args) => {
     console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
@@ -64,7 +71,19 @@ function createRealm() {
 if (process.argv[2]) {
   const realm = createRealm();
   const source = fs.readFileSync(process.argv[2], 'utf8');
-  const result = realm.evaluateScript(source);
+  let result;
+  if (process.argv[2].endsWith('.mjs')) {
+    result = realm.createSourceTextModule(path.resolve(process.argv[2]), source);
+    if (!(result instanceof AbruptCompletion)) {
+      const module = result;
+      result = module.Instantiate();
+      if (!(result instanceof AbruptCompletion)) {
+        result = module.Evaluate();
+      }
+    }
+  } else {
+    result = realm.evaluateScript(source);
+  }
   if (result instanceof AbruptCompletion) {
     const inspected = inspect(result, realm);
     process.stderr.write(inspected);

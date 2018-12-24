@@ -1,4 +1,11 @@
 import acorn from 'acorn';
+import { Value, SourceTextModuleRecord, ExportEntryRecord } from './value.mjs';
+import {
+  ModuleRequests_ModuleItemList,
+  ImportEntries_ModuleItemList,
+  ExportEntries_ModuleItemList,
+  ImportedLocalNames,
+} from './static-semantics/all.mjs';
 
 const HasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 function deepFreeze(o) {
@@ -134,12 +141,9 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   } catch (e) {
     body = [e];
   }
-
   if (Array.isArray(body)) {
     return body;
   }
-
-  hostDefined.sourceText = sourceText;
 
   return {
     Realm: realm,
@@ -149,4 +153,65 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   };
 }
 
-export function ParseModule() {}
+export function ParseModule(sourceText, realm, hostDefined = {}) {
+  // Assert: sourceText is an ECMAScript source text (see clause 10).
+  let body;
+  try {
+    body = Parser.parse(sourceText, {
+      sourceType: 'module',
+    });
+  } catch (e) {
+    body = [e];
+  }
+  if (Array.isArray(body)) {
+    return body;
+  }
+
+  const requestedModules = ModuleRequests_ModuleItemList(body.body);
+  const importEntries = ImportEntries_ModuleItemList(body.body);
+  const importedBoundNames = ImportedLocalNames(importEntries);
+  const indirectExportEntries = [];
+  const localExportEntries = [];
+  const starExportEntries = [];
+  const exportEntries = ExportEntries_ModuleItemList(body.body);
+  for (const ee of exportEntries) {
+    if (ee.ModuleRequest === Value.null) {
+      if (!importedBoundNames.includes(ee.LocalName)) {
+        localExportEntries.push(ee);
+      } else {
+        const ie = importEntries.find((e) => e.LocalName === ee.LocalName);
+        if (ie.ImportName === new Value('*')) {
+          // Assert: This is a re-export of an imported module namespace object.
+          localExportEntries.push(ee);
+        } else {
+          indirectExportEntries.push(new ExportEntryRecord({
+            ModuleRequest: ie.ModuleRequest,
+            ImportName: ie.ImportName,
+            LocalName: Value.null,
+            ExportName: ee.ExportName,
+          }));
+        }
+      }
+    } else if (ee.ImportName === new Value('*')) {
+      starExportEntries.push(ee);
+    } else {
+      indirectExportEntries.push(ee);
+    }
+  }
+  return new SourceTextModuleRecord({
+    Realm: realm,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
+    Status: 'uninstantiated',
+    EvaluationError: Value.undefined,
+    HostDefined: hostDefined,
+    ECMAScriptCode: body,
+    RequestedModules: requestedModules,
+    ImportEntries: importEntries,
+    LocalExportEntries: localExportEntries,
+    IndirectExportEntries: indirectExportEntries,
+    StarExportEntries: starExportEntries,
+    DFSIndex: Value.undefined,
+    DFSAncestorIndex: Value.undefined,
+  });
+}

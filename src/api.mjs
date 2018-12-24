@@ -10,9 +10,15 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
+  HostResolveImportedModule,
 } from './engine.mjs';
-import { Descriptor, Type, Value } from './value.mjs';
-import { ParseScript } from './parse.mjs';
+import {
+  Descriptor,
+  Type,
+  Value,
+  SourceTextModuleRecord,
+} from './value.mjs';
+import { ParseScript, ParseModule } from './parse.mjs';
 import {
   AbruptCompletion,
   Completion,
@@ -25,7 +31,14 @@ import * as AbstractOps from './abstract-ops/all.mjs';
 import { OutOfRange } from './helpers.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
-const { ObjectCreate, CreateBuiltinFunction } = Abstract;
+const {
+  ObjectCreate,
+  CreateBuiltinFunction,
+  Assert,
+  ModuleExecution,
+  InnerModuleEvaluation,
+  GetModuleNamespace,
+} = Abstract;
 export {
   AbruptCompletion,
   NormalCompletion,
@@ -110,6 +123,79 @@ class APIRealm {
     });
   }
 
+  createSourceTextModule(specifier, sourceText) {
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
+    }
+    if (typeof specifier !== 'string') {
+      throw new TypeError('specifier must be a string');
+    }
+    const module = ParseModule(sourceText, this.realm, { public: undefined, specifier });
+    if (Array.isArray(module)) {
+      return new ThrowCompletion(module[0]);
+    }
+    const wrapper = {
+      module,
+      specifier,
+      Instantiate: () => this.scope(() => Q(module.Instantiate())),
+      GetNamespace: () => this.scope(() => Q(GetModuleNamespace(module))),
+      Evaluate: () => this.scope(() => {
+        Assert(module.Status === 'instantiated');
+        const stack = [];
+
+        let index = 0;
+        // InnerModuleEvaluation
+        module.Status = 'evaluating';
+        module.DFSIndex = index;
+        module.DFSAncestorIndex = index;
+        stack.push(module);
+        for (const required of module.RequestedModules) {
+          const requiredModule = X(HostResolveImportedModule(module, required));
+          index = Q(InnerModuleEvaluation(requiredModule, stack, index));
+          Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
+          if (stack.includes(requiredModule)) {
+            Assert(requiredModule.Status === 'evaluating');
+          }
+          if (requiredModule.Status === 'evaluating') {
+            Assert(requiredModule instanceof SourceTextModuleRecord);
+            module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+          }
+        }
+        const result = Q(ModuleExecution(module));
+        Assert(stack.indexOf(module) === stack.lastIndexOf(module));
+        Assert(module.DFSAncestorIndex <= module.DFSIndex);
+        if (module.DFSAncestorIndex === module.DFSIndex) {
+          let done = false;
+          while (done === false) {
+            const requiredModule = stack.pop();
+            requiredModule.Status = 'evaluated';
+            if (requiredModule === module) {
+              done = true;
+            }
+          }
+        }
+        // END InnerModuleEvaluation
+
+        // Source Text Module Record Evaluate()
+        if (result instanceof AbruptCompletion) {
+          for (const m of stack) {
+            Assert(m.Status === 'evaluating');
+            m.Status = 'evaluated';
+            m.EvaluationError = result;
+          }
+          Assert(module.Status === 'evaluated' && module.EvaluationError === result);
+          return result;
+        }
+        Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
+        Assert(stack.length === 0);
+
+        return result;
+      }),
+    };
+    module.HostDefined.public = wrapper;
+    return wrapper;
+  }
+
   scope(cb) {
     if (this.active) {
       return cb();
@@ -148,10 +234,20 @@ class APIValue extends Value {
   }
 }
 
+function Throw(realm, V, ...args) {
+  return realm.scope(() => {
+    if (typeof V === 'string') {
+      return surroundingAgent.Throw(V, args[0]);
+    }
+    return new ThrowCompletion(V);
+  });
+}
+
 export {
   APIRealm as Realm,
   APIValue as Value,
   APIObject as Object,
+  Throw,
 };
 
 export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact = false) {
@@ -253,10 +349,10 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         }
         const isArray = AbstractOps.IsArray(value) === Value.true;
         let out = isArray ? '[' : '{';
-        if (value.properties.size > 5) {
+        if (keys.length > 5) {
           indent += 1;
           for (const key of keys) {
-            const C = value.properties.get(key);
+            const C = X(value.GetOwnProperty(key));
             out = `${out}\n${'  '.repeat(indent)}${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
           }
           indent -= 1;
@@ -265,7 +361,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
           const oc = compact;
           compact = true;
           for (const key of keys) {
-            const C = value.properties.get(key);
+            const C = X(value.GetOwnProperty(key));
             out = `${out} ${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
           }
           compact = oc;

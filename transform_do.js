@@ -148,7 +148,10 @@ module.exports = ({ types: t, template }) => ({
         });
         `, { plugins: ['doExpressions'] })({ VALUE: value, CAPABILITY: capability, HYGENIC_TEMP: hygenicTemp }));
       } else if (path.node.callee.name === 'Assert') {
-        path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));
+        const [assertion, message] = path.get('arguments');
+        if (!message) {
+          path.node.arguments.push(t.stringLiteral(assertion.getSource()));
+        }
       }
     },
   },

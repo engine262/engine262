@@ -59,7 +59,7 @@ export function ImportEntriesForModule_ImportedDefaultBinding(ImportedDefaultBin
   Assert(localNames.length === 1);
   const [localName] = localNames;
   const defaultEntry = new ImportEntryRecord({
-    ModuleRequest: new Value(module),
+    ModuleRequest: module,
     ImportName: new Value('default'),
     LocalName: new Value(localName),
   });
@@ -74,7 +74,7 @@ export function ImportEntriesForModule_NameSpaceImport(NameSpaceImport, module) 
   Assert(localNames.length === 1);
   const [localName] = localNames;
   const entry = new ImportEntryRecord({
-    ModuleRequest: new Value(module),
+    ModuleRequest: module,
     ImportName: new Value('*'),
     LocalName: new Value(localName),
   });
@@ -91,8 +91,8 @@ export function ImportEntriesForModule_ImportSpecifier(ImportSpecifier, module) 
     local: ImportedBinding,
   } = ImportSpecifier;
 
-  const importName = IdentifierName.value;
-  const localName = ImportedBinding.value;
+  const importName = IdentifierName.name;
+  const localName = ImportedBinding.name;
 
   const entry = new ImportEntryRecord({
     ModuleRequest: module,

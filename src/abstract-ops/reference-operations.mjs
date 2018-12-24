@@ -80,9 +80,9 @@ export function GetValue(V) {
       Assert(base !== Value.undefined && base !== Value.null);
       base = X(ToObject(base));
     }
-    return base.Get(GetReferencedName(V), GetThisValue(V));
+    return Q(base.Get(GetReferencedName(V), GetThisValue(V)));
   } else {
-    return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
+    return Q(base.GetBindingValue(GetReferencedName(V), IsStrictReference(V)));
   }
 }
 

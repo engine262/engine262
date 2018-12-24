@@ -90,6 +90,10 @@ const messages = {
   TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
   TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
   DataViewOOB: () => 'Offset is outside the bounds of the DataView',
+  ResolutionNullOrAmbiguous: (r, n, m) => (r === null
+    ? `Could not resolve import ${inlineInspect(n)} from ${m.HostDefined.specifier}`
+    : `Star export ${inlineInspect(n)} from ${m.HostDefined.specifier} is ambiguous`),
+  CouldNotResolveModule: (s) => `Could not resolve module ${inlineInspect(s)}`,
 };
 
 export function msg(key, ...args) {

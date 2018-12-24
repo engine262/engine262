@@ -15,6 +15,7 @@ import {
 import { Construct, Assert } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
+import { msg } from './helpers.mjs';
 
 export class Agent {
   constructor(options = {}) {
@@ -237,4 +238,22 @@ export function HostHasSourceTextAvailable(func) {
     return X(surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func));
   }
   return Value.true;
+}
+
+export function HostResolveImportedModule(referencingModule, specifier) {
+  const { Realm } = referencingModule;
+  if (Realm.HostDefined.resolveImportedModule) {
+    if (!Realm.HostDefined.moduleMap) {
+      Realm.HostDefined.moduleMap = new Map();
+    }
+    specifier = specifier.stringValue();
+    const key = `${referencingModule.HostDefined.specifier}\u0000${specifier}`;
+    if (Realm.HostDefined.moduleMap.has(key)) {
+      return Realm.HostDefined.moduleMap.get(key);
+    }
+    const apiModule = Q(Realm.HostDefined.resolveImportedModule(referencingModule.HostDefined.public, specifier));
+    Realm.HostDefined.moduleMap.set(key, apiModule.module);
+    return apiModule.module;
+  }
+  return surroundingAgent.Throw('Error', msg('CouldNotResolveModule', specifier));
 }

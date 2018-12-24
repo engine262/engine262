@@ -205,7 +205,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
         if (!parameterBindings.includes(n) || functionNames.includes(n)) {
           initialValue = Value.undefined;
         } else {
-          initialValue = envRec.GetBindingValue(n, Value.false);
+          initialValue = X(envRec.GetBindingValue(n, Value.false));
         }
         varEnvRec.InitializeBinding(n, initialValue);
       }

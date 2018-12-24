@@ -11,6 +11,7 @@ import {
   isImportDeclaration,
   isStatementListItem,
 } from '../ast.mjs';
+import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // 15.2.1.10 #sec-module-semantics-static-semantics-modulerequests
@@ -74,7 +75,7 @@ export function ModuleRequests_ImportDeclaration(ImportDeclaration) {
 // (implicit)
 //   FromClause : `from` ModuleSpecifier
 export function ModuleRequests_FromClause(FromClause) {
-  return [FromClause.value];
+  return [new Value(FromClause.value)];
 }
 
 // 15.2.3.9 #sec-exports-static-semantics-modulerequests

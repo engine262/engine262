@@ -5,6 +5,7 @@ import {
   Type,
   Value,
   wellKnownSymbols,
+  ModuleRecord,
 } from './value.mjs';
 import { surroundingAgent } from './engine.mjs';
 import {
@@ -49,6 +50,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   CreateMutableBinding(N, D) {
     Assert(IsPropertyKey(N));
     this.bindings.set(N, {
+      indirect: false,
       initialized: false,
       mutable: true,
       strict: undefined,
@@ -60,6 +62,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   CreateImmutableBinding(N, S) {
     Assert(IsPropertyKey(N));
     this.bindings.set(N, {
+      indirect: false,
       initialized: false,
       mutable: false,
       strict: S === Value.true,
@@ -382,7 +385,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       return DclRec.GetBindingValue(N, S);
     }
     const ObjRec = envRec.ObjectRecord;
-    return ObjRec.GetBindingValue(N, S);
+    return Q(ObjRec.GetBindingValue(N, S));
   }
 
   DeleteBinding(N) {
@@ -537,6 +540,53 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 }
 
+export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  GetBindingValue(N, S) {
+    Assert(S === Value.true);
+    const envRec = this;
+    Assert(envRec.bindings.has(N));
+    const binding = envRec.bindings.get(N);
+    if (binding.indirect === true) {
+      const [M, N2] = binding.target;
+      const targetEnv = M.Environment;
+      if (targetEnv === Value.undefined) {
+        return surroundingAgent.Throw('ReferenceError', 'targetEnv is undefined');
+      }
+      const targetER = targetEnv.EnvironmentRecord;
+      return Q(targetER.GetBindingValue(N2, Value.true));
+    }
+    if (binding.initialized === false) {
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', N));
+    }
+    return binding.value;
+  }
+
+  DeleteBinding() {
+    Assert(false, 'This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
+  }
+
+  HasThisBinding() {
+    return Value.true;
+  }
+
+  GetThisBinding() {
+    return Value.undefined;
+  }
+
+  CreateImportBinding(N, M, N2) {
+    const envRec = this;
+    Assert(envRec.HasBinding(N) === Value.false);
+    Assert(M instanceof ModuleRecord);
+    // Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
+    envRec.bindings.set(N, {
+      indirect: true,
+      target: [M, N2],
+      initialized: true,
+    });
+    return new NormalCompletion(undefined);
+  }
+}
+
 // 8.1.2.2 #sec-newdeclarativeenvironment
 export function NewDeclarativeEnvironment(E) {
   const env = new LexicalEnvironment();
@@ -591,6 +641,15 @@ export function NewGlobalEnvironment(G, thisValue) {
 
   env.outerEnvironmentReference = Value.null;
 
+  return env;
+}
+
+// #sec-newmodulenvironment
+export function NewModuleEnvironment(E) {
+  const env = new LexicalEnvironment();
+  const envRec = new ModuleEnvironmentRecord();
+  env.EnvironmentRecord = envRec;
+  env.outerEnvironmentReference = E;
   return env;
 }
 
