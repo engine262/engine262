@@ -20,6 +20,7 @@ import {
   Descriptor, Type, Value, wellKnownSymbols,
 } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.2.3.1 #sec-get-%typedarray%.prototype.buffer
 function TypedArrayProto_bufferGetter(args, { thisValue }) {
@@ -168,7 +169,6 @@ function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undef
 //   const O = thisValue;
 // }
 
-// 22.2.3.7 #sec-%typedarray%.prototype.every
 // 22.2.3.10 #sec-%typedarray%.prototype.find
 // 22.2.3.11 #sec-%typedarray%.prototype.findindex
 // 22.2.3.12 #sec-%typedarray%.prototype.foreach
@@ -281,6 +281,15 @@ export function CreateTypedArrayPrototype(realmRec) {
     ['toString', ArrayProto_toString],
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTagGetter]],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
+
+  CreateArrayPrototypeShared(
+    realmRec,
+    proto,
+    (thisValue) => {
+      Q(ValidateTypedArray(thisValue));
+    },
+    (O) => O.ArrayLength,
+  );
 
   // 22.2.3.31 #sec-%typedarray%.prototype-@@iterator
   {

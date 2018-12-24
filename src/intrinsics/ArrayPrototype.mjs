@@ -31,6 +31,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
+import { CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat
 function ArrayProto_concat(args, { thisValue }) {
@@ -133,36 +134,6 @@ function ArrayProto_copyWithin([target, start, end = Value.undefined], { thisVal
 function ArrayProto_entries(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
-}
-
-// 22.1.3.5 #sec-array.prototype.every
-function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp));
-  if (IsCallable(callbackFn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
-  }
-  let T;
-  if (thisArg instanceof Value) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
-  }
-  let k = 0;
-  while (k < len.numberValue()) {
-    const Pk = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, Pk));
-    if (kPresent === Value.true) {
-      const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(callbackFn, T, [kValue, new Value(k), O])));
-      if (testResult === Value.false) {
-        return Value.false;
-      }
-    }
-    k += 1;
-  }
-  return Value.true;
 }
 
 // 22.1.3.6 #sec-array.prototype.fill
@@ -843,7 +814,6 @@ export function CreateArrayPrototype(realmRec) {
     ['concat', ArrayProto_concat, 1],
     ['copyWithin', ArrayProto_copyWithin, 2],
     ['entries', ArrayProto_entries, 0],
-    ['every', ArrayProto_every, 1],
     ['fill', ArrayProto_fill, 1],
     ['filter', ArrayProto_filter, 1],
     ['find', ArrayProto_find, 1],
@@ -870,6 +840,13 @@ export function CreateArrayPrototype(realmRec) {
     // unshift
     ['values', ArrayProto_values, 0],
   ]);
+
+  CreateArrayPrototypeShared(
+    realmRec,
+    proto,
+    () => {},
+    (O) => Get(O, new Value('length')),
+  );
 
   proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
 
