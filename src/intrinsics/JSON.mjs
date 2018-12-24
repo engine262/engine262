@@ -1,33 +1,29 @@
 import { ScriptEvaluationJob, surroundingAgent } from '../engine.mjs';
 import {
   BooleanValue,
-  Descriptor,
   NullValue,
   NumberValue,
   ObjectValue,
   StringValue,
   Type,
   Value,
-  wellKnownSymbols,
 } from '../value.mjs';
 import {
   Assert,
   Call,
-  CreateBuiltinFunction,
   CreateDataProperty,
   EnumerableOwnPropertyNames,
   Get,
   IsArray,
   IsCallable,
   ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
   ToInteger,
   ToLength,
   ToNumber,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { EnsureCompletion, Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function JSON_parse([text, reviver]) {
   function InternalizeJSONProperty(holder, name) {
@@ -312,37 +308,11 @@ function JSON_stringify([value, replacer, space]) {
 }
 
 export function CreateJSON(realmRec) {
-  const json = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  const parse = CreateBuiltinFunction(JSON_parse, [], realmRec);
-  SetFunctionName(parse, new Value('parse'));
-  SetFunctionLength(parse, new Value(2));
-
-  json.DefineOwnProperty(new Value('parse'), Descriptor({
-    Value: parse,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  }));
-
-  const stringify = CreateBuiltinFunction(JSON_stringify, [], realmRec);
-  SetFunctionName(stringify, new Value('stringify'));
-  SetFunctionLength(stringify, new Value(3));
-
-  json.DefineOwnProperty(new Value('stringify'), Descriptor({
-    Value: stringify,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  }));
-
-  json.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-    Value: new Value('JSON'),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  }));
+  const json = BootstrapPrototype(realmRec, [
+    ['parse', JSON_parse, 2],
+    ['stringify', JSON_stringify, 3],
+  ], realmRec.Intrinsics['%ObjectPrototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSONParse%'] = parse;
+  realmRec.Intrinsics['%JSONParse%'] = X(json.Get(new Value('parse')));
 }

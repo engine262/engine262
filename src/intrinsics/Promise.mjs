@@ -26,7 +26,6 @@ import {
   PromiseCapabilityRecord,
   PromiseResolve,
   SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion, Completion,
@@ -219,19 +218,8 @@ export function CreatePromise(realmRec) {
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],
+    [wellKnownSymbols.species, [Promise_symbolSpecies]],
   ]);
-
-  {
-    const fn = CreateBuiltinFunction(Promise_symbolSpecies, [], realmRec);
-    X(SetFunctionName(fn, wellKnownSymbols.species, new Value('get')));
-    X(SetFunctionLength(fn, new Value(0)));
-    promiseConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }));
-  }
 
   promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
     Writable: Value.false,
@@ -239,9 +227,9 @@ export function CreatePromise(realmRec) {
     Configurable: Value.false,
   }));
 
-  realmRec.Intrinsics['%Promise_all%'] = Get(promiseConstructor, new Value('all'));
-  realmRec.Intrinsics['%Promise_reject%'] = Get(promiseConstructor, new Value('reject'));
-  realmRec.Intrinsics['%Promise_resolve%'] = Get(promiseConstructor, new Value('resolve'));
+  realmRec.Intrinsics['%Promise_all%'] = X(Get(promiseConstructor, new Value('all')));
+  realmRec.Intrinsics['%Promise_reject%'] = X(Get(promiseConstructor, new Value('reject')));
+  realmRec.Intrinsics['%Promise_resolve%'] = X(Get(promiseConstructor, new Value('resolve')));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }

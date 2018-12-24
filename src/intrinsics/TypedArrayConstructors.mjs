@@ -21,7 +21,12 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
-import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import {
+  Descriptor,
+  Type,
+  Value,
+  wellKnownSymbols,
+} from '../value.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function CreateTypedArrayConstructor(realmRec, TypedArray) {
@@ -180,8 +185,10 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
     }
   }
 
+  const readonly = Descriptor({ Writable: Value.false, Configurable: Value.false });
+
   const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}Prototype%`], [
-    ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, { Writable: Value.false, Configurable: Value.false }],
+    ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],
   ]);
   // TODO: this doesn't seem to be spec'd anywhere…
   X(taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']));

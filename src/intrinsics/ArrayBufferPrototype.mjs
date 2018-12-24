@@ -2,17 +2,14 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Construct,
   CopyDataBlockBytes,
-  CreateBuiltinFunction,
   IsDetachedBuffer,
   IsSharedArrayBuffer,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
   SpeciesConstructor,
   ToInteger,
 } from '../abstract-ops/all.mjs';
-import { Descriptor, Type, Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+import { Type, Value } from '../value.mjs';
+import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 24.1.4.1 #sec-get-arraybuffer.prototype.bytelength
@@ -87,20 +84,9 @@ function ArrayBufferProto_slice([start, end], { thisValue }) {
 
 export function CreateArrayBufferPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
+    ['byteLength', [ArrayBufferProto_byteLengthGetter]],
     ['slice', ArrayBufferProto_slice, 2],
   ], realmRec.Intrinsics['%ObjectPrototype%'], 'ArrayBuffer');
-
-  {
-    const fn = CreateBuiltinFunction(ArrayBufferProto_byteLengthGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get byteLength')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('byteLength'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   realmRec.Intrinsics['%ArrayBufferPrototype%'] = proto;
 }

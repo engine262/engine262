@@ -1,32 +1,15 @@
-import {
-  Descriptor,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
-import {
-  CreateBuiltinFunction,
-  ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
-} from '../abstract-ops/all.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
+import { wellKnownSymbols } from '../value.mjs';
 
+// 25.1.2.1 sec-%iteratorprototype%-@@iterator
 function IteratorPrototype_iterator(args, { thisValue }) {
   return thisValue;
 }
 
 export function CreateIteratorPrototype(realmRec) {
-  const proto = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  const fn = CreateBuiltinFunction(IteratorPrototype_iterator, [], realmRec);
-  SetFunctionName(fn, wellKnownSymbols.iterator);
-  SetFunctionLength(fn, new Value(0));
-
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
-    Value: fn,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-    Writable: Value.false,
-  }));
+  const proto = BootstrapPrototype(realmRec, [
+    [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%IteratorPrototype%'] = proto;
 }

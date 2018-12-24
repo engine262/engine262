@@ -4,6 +4,7 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Type,
   Value,
 } from '../value.mjs';
@@ -64,11 +65,11 @@ function Number_isNaN([number]) {
 }
 
 export function CreateNumber(realmRec) {
-  const override = {
+  const override = Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
-  };
+  });
   const numberConstructor = BootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%NumberPrototype%'], [
     ['EPSILON', new Value(Number.EPSILON), undefined, override],
     ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER), undefined, override],

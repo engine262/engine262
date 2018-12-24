@@ -907,19 +907,19 @@ export function CreateArrayPrototype(realmRec) {
 
   {
     const unscopableList = ObjectCreate(Value.null);
-    CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true);
-    CreateDataProperty(unscopableList, new Value('entries'), Value.true);
-    CreateDataProperty(unscopableList, new Value('fill'), Value.true);
-    CreateDataProperty(unscopableList, new Value('find'), Value.true);
-    CreateDataProperty(unscopableList, new Value('findIndex'), Value.true);
-    CreateDataProperty(unscopableList, new Value('includes'), Value.true);
-    CreateDataProperty(unscopableList, new Value('keys'), Value.true);
-    CreateDataProperty(unscopableList, new Value('values'), Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true);
     X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,
       Writable: Value.false,
       Enumerable: Value.false,
-      Configurable: Value.false,
+      Configurable: Value.true,
     })));
   }
 

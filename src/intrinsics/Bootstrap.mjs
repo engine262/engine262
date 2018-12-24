@@ -7,7 +7,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
-  SymbolValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -16,32 +15,73 @@ import { X } from '../completion.mjs';
 
 const kFlagDisabled = Symbol('kFlagDisabled');
 
-export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
-  Assert(Prototype !== undefined);
-  const proto = ObjectCreate(Prototype);
-
+// 17 #sec-ecmascript-standard-built-in-objects
+function assignProps(realmRec, obj, props) {
   for (const [n, v, len, descriptor] of props) {
     if (n === kFlagDisabled) {
       continue;
     }
     let value;
     const name = n instanceof Value ? n : new Value(n);
-    if (typeof v === 'function') {
-      Assert(typeof len === 'number');
-      value = CreateBuiltinFunction(v, [], realmRec);
-      X(SetFunctionName(value, name));
-      X(SetFunctionLength(value, new Value(len)));
-    } else {
-      value = v;
+    if (descriptor !== undefined) {
+      Assert(descriptor instanceof Descriptor);
     }
-    X(proto.DefineOwnProperty(name, Descriptor({
-      Value: value,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-      ...descriptor,
-    })));
+    if (Array.isArray(v)) {
+      // Every accessor property described in clauses 18 through 26 and in
+      // Annex B.2 has the attributes { [[Enumerable]]: false,
+      // [[Configurable]]: true } unless otherwise specified. If only a get
+      // accessor function is described, the set accessor function is the
+      // default value, undefined. If only a set accessor is described the get
+      // accessor is the default value, undefined.
+      let [
+        getter = Value.undefined,
+        setter = Value.undefined,
+      ] = v;
+      if (typeof getter === 'function') {
+        getter = CreateBuiltinFunction(getter, [], realmRec);
+        X(SetFunctionName(getter, name, new Value('get')));
+        X(SetFunctionLength(getter, new Value(0)));
+      }
+      if (typeof setter === 'function') {
+        setter = CreateBuiltinFunction(setter, [], realmRec);
+        X(SetFunctionName(setter, name, new Value('set')));
+        X(SetFunctionLength(setter, new Value(1)));
+      }
+      X(obj.DefineOwnProperty(name, Descriptor({
+        Get: getter,
+        Set: setter,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+        ...descriptor,
+      })));
+    } else {
+      // Every other data property described in clauses 18 through 26 and in
+      // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
+      // false, [[Configurable]]: true } unless otherwise specified.
+      if (typeof v === 'function') {
+        Assert(typeof len === 'number');
+        value = CreateBuiltinFunction(v, [], realmRec);
+        X(SetFunctionName(value, name));
+        X(SetFunctionLength(value, new Value(len)));
+      } else {
+        value = v;
+      }
+      X(obj.DefineOwnProperty(name, Descriptor({
+        Value: value,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+        ...descriptor,
+      })));
+    }
   }
+}
+
+export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
+  Assert(Prototype !== undefined);
+  const proto = ObjectCreate(Prototype);
+
+  assignProps(realmRec, proto, props);
 
   if (stringTag !== undefined) {
     X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
@@ -75,27 +115,7 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
     Configurable: Value.true,
   })));
 
-  for (const [n, v, len, descriptor] of props) {
-    if (n === kFlagDisabled) {
-      continue;
-    }
-    let value;
-    const name = n instanceof Value ? n : new Value(n); // eslint-disable-line no-shadow
-    if (typeof v === 'function') {
-      value = CreateBuiltinFunction(v, [], realmRec);
-      X(SetFunctionName(value, name));
-      X(SetFunctionLength(value, new Value(len)));
-    } else {
-      value = v;
-    }
-    X(cons.DefineOwnProperty(name, Descriptor({
-      Value: value,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: value instanceof SymbolValue ? Value.false : Value.true,
-      ...descriptor,
-    })));
-  }
+  assignProps(realmRec, cons, props);
 
   return cons;
 }

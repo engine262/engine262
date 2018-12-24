@@ -3,21 +3,18 @@ import {
   Call,
   Construct,
   CreateArrayFromList,
-  CreateBuiltinFunction,
   CreateListFromArrayLike,
   FromPropertyDescriptor,
   IsCallable,
   IsConstructor,
-  ObjectCreate,
   PrepareForTailCall,
-  SetFunctionLength,
-  SetFunctionName,
   ToPropertyDescriptor,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
-import { Descriptor, Type, Value } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function Reflect_apply([target, thisArgument, argumentsList]) {
   if (IsCallable(target) === Value.false) {
@@ -137,9 +134,7 @@ function Reflect_setPrototypeOf([target, proto]) {
 }
 
 export function CreateReflect(realmRec) {
-  const reflect = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
-
-  [
+  const reflect = BootstrapPrototype(realmRec, [
     ['apply', Reflect_apply, 3],
     ['construct', Reflect_construct, 2],
     ['defineProperty', Reflect_defineProperty, 3],
@@ -153,17 +148,7 @@ export function CreateReflect(realmRec) {
     ['preventExtensions', Reflect_preventExtensions, 1],
     ['set', Reflect_set, 3],
     ['setPrototypeOf', Reflect_setPrototypeOf, 2],
-  ].forEach(([name, fn, len]) => {
-    fn = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(fn, new Value(name));
-    SetFunctionLength(fn, new Value(len));
-    reflect.DefineOwnProperty(new Value(name), Descriptor({
-      Value: fn,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }));
-  });
+  ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%Reflect%'] = reflect;
 }

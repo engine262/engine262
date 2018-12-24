@@ -1,23 +1,16 @@
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
-import {
-  Descriptor,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { Value, wellKnownSymbols } from '../value.mjs';
 import {
   Assert,
   Call,
-  CreateBuiltinFunction,
   Get,
   GetMethod,
   IsCallable,
   IsConstructor,
   IterableToList,
   Set,
-  SetFunctionLength,
-  SetFunctionName,
   ToLength,
   ToObject,
   ToString,
@@ -119,19 +112,8 @@ export function CreateTypedArray(realmRec) {
   const typedArrayConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArrayPrototype%'], [
     ['from', TypedArray_from, 1],
     ['of', TypedArray_of, 0],
+    [wellKnownSymbols.species, [TypedArray_speciesGetter]],
   ]);
-
-  {
-    const speciesMethod = CreateBuiltinFunction(TypedArray_speciesGetter, [], realmRec);
-    X(SetFunctionLength(speciesMethod, new Value(0)));
-    X(SetFunctionName(speciesMethod, new Value('get [Symbol.species]')));
-    X(typedArrayConstructor.DefineOwnProperty(wellKnownSymbols.species, Descriptor({
-      Get: speciesMethod,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
 }

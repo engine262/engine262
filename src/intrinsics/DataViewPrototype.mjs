@@ -1,17 +1,14 @@
 import {
   Assert,
-  CreateBuiltinFunction,
   GetViewValue,
   SetViewValue,
   IsDetachedBuffer,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { Descriptor, Type, Value } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 
 // 24.3.4.1 #sec-get-dataview.prototype.buffer
 function DataViewProto_bufferGetter(args, { thisValue }) {
@@ -188,6 +185,9 @@ function DataViewProto_setUint32([byteOffset, value, littleEndian], { thisValue 
 
 export function CreateDataViewPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
+    ['buffer', [DataViewProto_bufferGetter]],
+    ['byteLength', [DataViewProto_byteLengthGetter]],
+    ['byteOffset', [DataViewProto_byteOffsetGetter]],
     ['getFloat32', DataViewProto_getFloat32, 1],
     ['getFloat64', DataViewProto_getFloat64, 1],
     ['getInt8', DataViewProto_getInt8, 1],
@@ -205,42 +205,6 @@ export function CreateDataViewPrototype(realmRec) {
     ['setUint16', DataViewProto_setUint16, 2],
     ['setUint32', DataViewProto_setUint32, 2],
   ], realmRec.Intrinsics['%ObjectPrototype%'], 'DataView');
-
-  {
-    const fn = CreateBuiltinFunction(DataViewProto_bufferGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get buffer')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('buffer'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(DataViewProto_byteLengthGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get byteLength')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('byteLength'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(DataViewProto_byteOffsetGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get byteOffset')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('byteOffset'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   realmRec.Intrinsics['%DataViewPrototype%'] = proto;
 }

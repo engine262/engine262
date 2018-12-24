@@ -1,15 +1,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  CreateBuiltinFunction,
   IsCallable,
   ObjectCreate,
   SameValueZero,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   Type,
   Value,
   wellKnownSymbols,
@@ -144,7 +140,7 @@ function SetProto_values(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'value'));
 }
 
-function SetProto_size(args, { thisValue }) {
+function SetProto_sizeGetter(args, { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -170,20 +166,9 @@ export function CreateSetPrototype(realmRec) {
     ['entries', SetProto_entries, 0],
     ['forEach', SetProto_forEach, 1],
     ['has', SetProto_has, 1],
+    ['size', [SetProto_sizeGetter]],
     ['values', SetProto_values, 0],
   ], realmRec.Intrinsics['%ObjectPrototype%'], 'Set');
-
-  {
-    const fn = CreateBuiltinFunction(SetProto_size, [], realmRec);
-    SetFunctionName(fn, new Value('size'), new Value('get'));
-    SetFunctionLength(fn, new Value(0));
-    X(proto.DefineOwnProperty(new Value('size'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   const valuesFunc = X(proto.GetOwnProperty(new Value('values')));
   X(proto.DefineOwnProperty(new Value('keys'), valuesFunc));

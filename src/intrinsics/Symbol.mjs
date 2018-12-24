@@ -53,15 +53,10 @@ function Symbol_keyFor([sym]) {
   return Value.undefined;
 }
 
-function Symbol_symbolSpecies(args, { thisValue }) {
-  return thisValue;
-}
-
 export function CreateSymbol(realmRec) {
   const symbolConstructor = BootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 1, realmRec.Intrinsics['%SymbolPrototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],
-    [wellKnownSymbols.species, Symbol_symbolSpecies, 0],
   ]);
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {

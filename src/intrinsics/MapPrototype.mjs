@@ -1,15 +1,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  CreateBuiltinFunction,
   IsCallable,
   ObjectCreate,
   SameValueZero,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   Type,
   Value,
   wellKnownSymbols,
@@ -171,7 +167,7 @@ function MapProto_set([key, value], { thisValue }) {
   return M;
 }
 
-function MapProto_size(args, { thisValue }) {
+function MapProto_sizeGetter(args, { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'get Map.prototype.size called on incompatable receiver');
@@ -204,20 +200,9 @@ export function CreateMapPrototype(realmRec) {
     ['has', MapProto_has, 1],
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
+    ['size', [MapProto_sizeGetter]],
     ['values', MapProto_values, 0],
   ], realmRec.Intrinsics['%ObjectPrototype%'], 'Map');
-
-  {
-    const fn = CreateBuiltinFunction(MapProto_size, [], realmRec);
-    SetFunctionName(fn, new Value('get size'));
-    SetFunctionLength(fn, new Value(0));
-    X(proto.DefineOwnProperty(new Value('size'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   const entriesFunc = X(proto.GetOwnProperty(new Value('entries')));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));

@@ -1,13 +1,10 @@
 import {
   Assert,
   CreateArrayIterator,
-  CreateBuiltinFunction,
   Get,
   GetValueFromBuffer,
   IsDetachedBuffer,
   Set,
-  SetFunctionLength,
-  SetFunctionName,
   SetValueInBuffer,
   ToInteger,
   ToNumber,
@@ -270,63 +267,20 @@ export function CreateTypedArrayPrototype(realmRec) {
   Assert(Type(ArrayProto_toString) === 'Object');
 
   const proto = BootstrapPrototype(realmRec, [
+    ['buffer', [TypedArrayProto_bufferGetter]],
+    ['byteLength', [TypedArrayProto_byteLengthGetter]],
+    ['byteOffset', [TypedArrayProto_byteOffsetGetter]],
     ['copyWithin', TypedArrayProto_copyWithin, 2],
     ['entries', TypedArrayProto_entries, 0],
     ['fill', TypedArrayProto_fill, 1],
     // ['filter', TypedArrayProto_filter, 1],
     ['keys', TypedArrayProto_keys, 0],
+    ['length', [TypedArrayProto_lengthGetter]],
     ['subarray', TypedArrayProto_subarray, 2],
     ['values', TypedArrayProto_values, 0],
     ['toString', ArrayProto_toString],
+    [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTagGetter]],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
-
-  {
-    const fn = CreateBuiltinFunction(TypedArrayProto_bufferGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get buffer')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('buffer'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(TypedArrayProto_byteLengthGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get byteLength')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('byteLength'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(TypedArrayProto_byteOffsetGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get byteOffset')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('byteOffset'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(TypedArrayProto_lengthGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get length')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(new Value('length'), Descriptor({
-      Get: fn,
-      Set: Value.undefined,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   // 22.2.3.31 #sec-%typedarray%.prototype-@@iterator
   {
@@ -334,18 +288,6 @@ export function CreateTypedArrayPrototype(realmRec) {
     X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
       Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
-
-  {
-    const fn = CreateBuiltinFunction(TypedArrayProto_toStringTagGetter, [], realmRec);
-    X(SetFunctionName(fn, new Value('get [Symbol.toStringTag]')));
-    X(SetFunctionLength(fn, new Value(0)));
-    X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-      Get: fn,
-      Set: Value.undefined,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));
