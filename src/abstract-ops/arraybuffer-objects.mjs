@@ -12,6 +12,11 @@ import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
 import { Value, Type } from '../value.mjs';
 
+// This file covers abstract operations defined in
+// 24.1 #sec-arraybuffer-objects
+// and, for now
+// 24.2 #sec-sharedarraybuffer-objects
+
 // 24.1.1.1 #sec-allocatearraybuffer
 export function AllocateArrayBuffer(constructor, byteLength) {
   const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBufferPrototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']));

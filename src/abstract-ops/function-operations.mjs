@@ -46,51 +46,11 @@ import {
 } from '../environment.mjs';
 import { unwind, OutOfRange } from '../helpers.mjs';
 
-// 9.2.13 #sec-setfunctionname
-export function SetFunctionName(F, name, prefix) {
-  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
-  Assert(Type(name) === 'Symbol' || Type(name) === 'String');
-  Assert(!prefix || Type(prefix) === 'String');
-  if (Type(name) === 'Symbol') {
-    const description = name.Description;
-    if (Type(description) === 'Undefined') {
-      name = new Value('');
-    } else {
-      name = new Value(`[${description.stringValue()}]`);
-    }
-  }
-  if (prefix !== undefined) {
-    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
-  }
-  return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
-    Value: name,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
-}
-
-// 9.2.14 #sec-setfunctionlength
-export function SetFunctionLength(F, length) {
-  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
-  Assert(Type(length) === 'Number');
-  Assert(length.numberValue() >= 0 && X(ToInteger(length)).numberValue() === length.numberValue());
-  return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
-    Value: length,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
-}
-
-// 14.9.3 #sec-preparefortailcall
-export function PrepareForTailCall() {
-  // const leafContext = surroundingAgent.runningExecutionContext;
-  // Suspend(leafContext);
-  // surroundingAgent.executionContextStack.pop();
-  // Assert: leafContext has no further use. It will never
-  // be activated as the running execution context.
-}
+// This file covers abstract operations defined in
+// 9.2 #sec-ecmascript-function-objects
+// 9.3 #sec-built-in-function-objects
+// and
+// 14.9 #sec-tail-position-calls
 
 // 9.2.1.1 #sec-prepareforordinarycall
 function PrepareForOrdinaryCall(F, newTarget) {
@@ -109,67 +69,7 @@ function PrepareForOrdinaryCall(F, newTarget) {
   return calleeContext;
 }
 
-// 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
-function FunctionCallSlot(thisArgument, argumentsList) {
-  const F = this;
-
-  Assert(F instanceof FunctionValue);
-  if (F.FunctionKind === 'classConstructor') {
-    return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
-  }
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
-  Assert(surroundingAgent.runningExecutionContext === calleeContext);
-  OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  if (result.Type === 'return') {
-    return new NormalCompletion(result.Value);
-  }
-  ReturnIfAbrupt(result);
-  return new NormalCompletion(Value.undefined);
-}
-
-function FunctionConstructSlot(argumentsList, newTarget) {
-  const F = this;
-
-  Assert(F instanceof FunctionValue);
-  Assert(Type(newTarget) === 'Object');
-  // const callerContext = surroundingAgent.runningExecutionContext;
-  const kind = F.ConstructorKind;
-  let thisArgument;
-  if (kind === 'base') {
-    thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%ObjectPrototype%'));
-  }
-  const calleeContext = PrepareForOrdinaryCall(F, newTarget);
-  Assert(surroundingAgent.runningExecutionContext === calleeContext);
-  if (kind === 'base') {
-    OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  }
-  const constructorEnv = calleeContext.LexicalEnvironment;
-  const envRec = constructorEnv.EnvironmentRecord;
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
-  surroundingAgent.executionContextStack.pop(calleeContext);
-  if (result.Type === 'return') {
-    if (Type(result.Value) === 'Object') {
-      return new NormalCompletion(result.Value);
-    }
-    if (kind === 'base') {
-      return new NormalCompletion(thisArgument);
-    }
-    if (Type(result.Value) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
-    }
-  } else {
-    ReturnIfAbrupt(result);
-  }
-  return Q(envRec.GetThisBinding());
-}
-
+// 9.2.1.2 #sec-ordinarycallbindthis
 function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   const thisMode = F.ThisMode;
   if (thisMode === 'lexical') {
@@ -226,6 +126,68 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
     default:
       throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
   }
+}
+
+// 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
+function FunctionCallSlot(thisArgument, argumentsList) {
+  const F = this;
+
+  Assert(F instanceof FunctionValue);
+  if (F.FunctionKind === 'classConstructor') {
+    return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
+  }
+  // const callerContext = surroundingAgent.runningExecutionContext;
+  const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
+  Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  OrdinaryCallBindThis(F, calleeContext, thisArgument);
+  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  if (result.Type === 'return') {
+    return new NormalCompletion(result.Value);
+  }
+  ReturnIfAbrupt(result);
+  return new NormalCompletion(Value.undefined);
+}
+
+// 9.2.2 #sec-ecmascript-function-objects-construct-argumentslist-newtarget
+function FunctionConstructSlot(argumentsList, newTarget) {
+  const F = this;
+
+  Assert(F instanceof FunctionValue);
+  Assert(Type(newTarget) === 'Object');
+  // const callerContext = surroundingAgent.runningExecutionContext;
+  const kind = F.ConstructorKind;
+  let thisArgument;
+  if (kind === 'base') {
+    thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%ObjectPrototype%'));
+  }
+  const calleeContext = PrepareForOrdinaryCall(F, newTarget);
+  Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  if (kind === 'base') {
+    OrdinaryCallBindThis(F, calleeContext, thisArgument);
+  }
+  const constructorEnv = calleeContext.LexicalEnvironment;
+  const envRec = constructorEnv.EnvironmentRecord;
+  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  if (result.Type === 'return') {
+    if (Type(result.Value) === 'Object') {
+      return new NormalCompletion(result.Value);
+    }
+    if (kind === 'base') {
+      return new NormalCompletion(thisArgument);
+    }
+    if (Type(result.Value) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
+    }
+  } else {
+    ReturnIfAbrupt(result);
+  }
+  return Q(envRec.GetThisBinding());
 }
 
 // 9.2 #sec-ecmascript-function-objects
@@ -376,6 +338,43 @@ export function MakeMethod(F, homeObject) {
   return new NormalCompletion(Value.undefined);
 }
 
+// 9.2.13 #sec-setfunctionname
+export function SetFunctionName(F, name, prefix) {
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
+  Assert(Type(name) === 'Symbol' || Type(name) === 'String');
+  Assert(!prefix || Type(prefix) === 'String');
+  if (Type(name) === 'Symbol') {
+    const description = name.Description;
+    if (Type(description) === 'Undefined') {
+      name = new Value('');
+    } else {
+      name = new Value(`[${description.stringValue()}]`);
+    }
+  }
+  if (prefix !== undefined) {
+    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
+  }
+  return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
+    Value: name,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
+}
+
+// 9.2.14 #sec-setfunctionlength
+export function SetFunctionLength(F, length) {
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
+  Assert(Type(length) === 'Number');
+  Assert(length.numberValue() >= 0 && X(ToInteger(length)).numberValue() === length.numberValue());
+  return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
+    Value: length,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
+}
+
 // 9.3.3 CreateBuiltinFunction
 export function CreateBuiltinFunction(
   steps,
@@ -406,4 +405,13 @@ export function CreateBuiltinFunction(
   func.ScriptOrModule = null;
 
   return func;
+}
+
+// 14.9.3 #sec-preparefortailcall
+export function PrepareForTailCall() {
+  // const leafContext = surroundingAgent.runningExecutionContext;
+  // Suspend(leafContext);
+  // surroundingAgent.executionContextStack.pop();
+  // Assert: leafContext has no further use. It will never
+  // be activated as the running execution context.
 }

@@ -13,6 +13,9 @@ import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
 import { Type, Value } from '../value.mjs';
 
+// This file covers abstract operations defined in
+// 24.3 #sec-dataview-objects
+
 // 24.3.1.1 #sec-getviewvalue
 export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   if (Type(view) !== 'Object' || !('DataView' in view)) {

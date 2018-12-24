@@ -16,6 +16,9 @@ import {
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 
+// This file covers abstract operations defined in
+// 9.4.4 #sec-arguments-exotic-objects
+
 // 9.4.4.6 #sec-createunmappedargumentsobject
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;

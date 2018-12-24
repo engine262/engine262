@@ -5,6 +5,9 @@ import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
 
+// This file covers abstract operations defined in
+// 25.7 #sec-async-function-objects
+
 // 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
 export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
   const runningContext = surroundingAgent.runningExecutionContext;

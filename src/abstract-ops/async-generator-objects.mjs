@@ -20,6 +20,9 @@ import {
 import { Value, Type } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
 
+// This file covers abstract operations defined in
+// 25.5 #sec-asyncgenerator-objects
+
 // 25.5.3.1 #sec-asyncgeneratorrequest-records
 class AsyncGeneratorRequestRecord {
   constructor(completion, promiseCapability) {
@@ -81,14 +84,14 @@ function AsyncGeneratorReject(generator, exception) {
   return Value.undefined;
 }
 
-// #async-generator-resume-next-return-processor-fulfilled
+// 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
 function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value]) {
   const F = surroundingAgent.activeFunctionObject;
   F.Generator.AsyncGeneratorState = 'completed';
   return X(AsyncGeneratorResolve(F.Generator, value, Value.true));
 }
 
-// #async-generator-resume-next-return-processor-rejected
+// 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
 function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason]) {
   const F = surroundingAgent.activeFunctionObject;
   F.Generator.AsyncGeneratorState = 'completed';

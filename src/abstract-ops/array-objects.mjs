@@ -17,6 +17,12 @@ import {
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 
+// This file covers abstract operations defined in
+// 9.4.2 #sec-array-exotic-objects
+// and
+// 22.1 #sec-array-objects
+
+// 9.4.2.2 #sec-arraycreate
 export function ArrayCreate(length, proto) {
   Assert(length.numberValue() >= 0);
   if (Object.is(length.numberValue(), -0)) {
@@ -46,20 +52,7 @@ export function ArrayCreate(length, proto) {
   return A;
 }
 
-export function CreateArrayIterator(array, kind) {
-  Assert(Type(array) === 'Object');
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), [
-    'IteratedObject',
-    'ArrayIteratorNextIndex',
-    'ArrayIterationKind',
-  ]);
-  iterator.IteratedObject = array;
-  iterator.ArrayIteratorNextIndex = 0;
-  iterator.ArrayIterationKind = kind;
-  return iterator;
-}
-
-// 9.4.2.4 ArraySetLength
+// 9.4.2.4 #sec-arraysetlength
 export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
@@ -108,4 +101,18 @@ export function ArraySetLength(A, Desc) {
     OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
   }
   return Value.true;
+}
+
+// 22.1.5.1 #sec-createarrayiterator
+export function CreateArrayIterator(array, kind) {
+  Assert(Type(array) === 'Object');
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), [
+    'IteratedObject',
+    'ArrayIteratorNextIndex',
+    'ArrayIterationKind',
+  ]);
+  iterator.IteratedObject = array;
+  iterator.ArrayIteratorNextIndex = 0;
+  iterator.ArrayIterationKind = kind;
+  return iterator;
 }

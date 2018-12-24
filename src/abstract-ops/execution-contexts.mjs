@@ -10,6 +10,9 @@ import {
 } from '../value.mjs';
 import { Assert } from './all.mjs';
 
+// This file covers abstract operations defined in
+// 8.3 #sec-execution-contexts
+
 // 8.3.1 #sec-getactivescriptormodule
 export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
