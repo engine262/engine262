@@ -75,6 +75,7 @@ const messages = {
   NotAConstructor: (v) => `${inlineInspect(v)} is not a constructor`,
   NotAnObject: (v) => `${inlineInspect(v)} is not an object`,
   NotATypeObject: (t, v) => `${inlineInspect(v)} is not a ${t} object`,
+  NotAnTypeObject: (t, v) => `${inlineInspect(v)} is not an ${t} object`,
   PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
   PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
   ProxyRevoked: (n) => `Cannot perform '${n}' on a proxy that has been revoked`,
@@ -88,6 +89,7 @@ const messages = {
   TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
   TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
   TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
+  DataViewOOB: () => 'Offset is outside the bounds of the DataView',
 };
 
 export function msg(key, ...args) {

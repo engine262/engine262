@@ -68,6 +68,7 @@ const throwawayArray = new Uint8Array(throwawayBuffer);
 // 24.1.1.5 #sec-rawbytestonumber
 // Sigh…
 export function RawBytesToNumber(type, rawBytes, isLittleEndian) {
+  isLittleEndian = isLittleEndian === Value.true;
   const elementSize = numericTypeInfo.get(type).ElementSize;
   Assert(elementSize === rawBytes.length);
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;

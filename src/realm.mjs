@@ -67,6 +67,8 @@ import { CreateTypedArray } from './intrinsics/TypedArray.mjs';
 import { CreateTypedArrayPrototype } from './intrinsics/TypedArrayPrototype.mjs';
 import { CreateTypedArrayConstructors } from './intrinsics/TypedArrayConstructors.mjs';
 import { CreateTypedArrayPrototypes } from './intrinsics/TypedArrayPrototypes.mjs';
+import { CreateDataView } from './intrinsics/DataView.mjs';
+import { CreateDataViewPrototype } from './intrinsics/DataViewPrototype.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -208,6 +210,9 @@ export function CreateIntrinsics(realmRec) {
   CreateTypedArrayPrototypes(realmRec);
   CreateTypedArrayConstructors(realmRec);
 
+  CreateDataViewPrototype(realmRec);
+  CreateDataView(realmRec);
+
   CreateJSON(realmRec);
 
   CreateEval(realmRec);
@@ -269,7 +274,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Array',
     'ArrayBuffer',
     'Boolean',
-    // 'DataView',
+    'DataView',
     'Date',
     'Error',
     'EvalError',
