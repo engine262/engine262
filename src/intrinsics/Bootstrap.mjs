@@ -16,7 +16,7 @@ import { X } from '../completion.mjs';
 const kFlagDisabled = Symbol('kFlagDisabled');
 
 // 17 #sec-ecmascript-standard-built-in-objects
-function assignProps(realmRec, obj, props) {
+export function assignProps(realmRec, obj, props) {
   for (const [n, v, len, descriptor] of props) {
     if (n === kFlagDisabled) {
       continue;

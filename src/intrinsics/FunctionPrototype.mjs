@@ -6,7 +6,6 @@ import {
   Assert,
   Call,
   Construct,
-  CreateBuiltinFunction,
   CreateListFromArrayLike,
   Get,
   HasOwnProperty,
@@ -28,6 +27,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
+import { assignProps } from './Bootstrap.mjs';
 
 function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
@@ -151,25 +151,12 @@ export function CreateFunctionPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%FunctionPrototype%'];
   proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
 
-  [
+  const readonly = Descriptor({ Writable: Value.false, Configurable: Value.false });
+  assignProps(proto, [
     ['apply', FunctionProto_apply, 2],
     ['bind', FunctionProto_bind, 1],
     ['call', FunctionProto_call, 1],
     ['toString', FunctionProto_toString, 0],
-    [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, { Writable: Value.false, Configurable: Value.false }],
-  ].forEach(([name, fn, length, override]) => {
-    if (typeof name === 'string') {
-      name = new Value(name);
-    }
-    const n = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(n, name);
-    SetFunctionLength(n, new Value(length));
-    proto.DefineOwnProperty(name, Descriptor({
-      Value: n,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-      ...override,
-    }));
-  });
+    [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, readonly],
+  ]);
 }

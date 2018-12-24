@@ -16,12 +16,12 @@ import {
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   ProxyExoticObjectValue,
   Type,
   Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
+import { assignProps } from './Bootstrap.mjs';
 
 function ProxyCallSlot(thisArgument, argumentsList) {
   const O = this;
@@ -125,17 +125,9 @@ export function CreateProxy(realmRec) {
   SetFunctionName(proxyConstructor, new Value('Proxy'));
   SetFunctionLength(proxyConstructor, new Value(2));
 
-  {
-    const fn = CreateBuiltinFunction(Proxy_revocable, [], realmRec);
-    SetFunctionName(fn, new Value('revocable'));
-    SetFunctionLength(fn, new Value(2));
-    proxyConstructor.DefineOwnProperty(new Value('revocable'), Descriptor({
-      Value: fn,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }));
-  }
+  assignProps(proxyConstructor, [
+    ['revocable', Proxy_revocable, 2],
+  ]);
 
   realmRec.Intrinsics['%Proxy%'] = proxyConstructor;
 }

@@ -1,17 +1,11 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
-  CreateBuiltinFunction,
   RequireObjectCoercible,
-  SetFunctionLength,
-  SetFunctionName,
   ToInteger,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   StringExoticObjectValue,
   Type,
   Value,
@@ -20,6 +14,7 @@ import {
 import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q } from '../completion.mjs';
+import { assignProps } from './Bootstrap.mjs';
 
 function thisStringValue(value) {
   if (Type(value) === 'String') {
@@ -126,7 +121,7 @@ function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
-function StringProto_symbolIterator(args, { thisValue }) {
+function StringProto_iterator(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   return Q(CreateStringIterator(S));
@@ -138,7 +133,7 @@ export function CreateStringPrototype(realmRec) {
   proto.Extensible = Value.true;
   proto.StringData = new Value('');
 
-  [
+  assignProps(realmRec, proto, [
     ['charAt', StringProto_charAt, 1],
     ['charCodeAt', StringProto_charCodeAt, 1],
     ['codePointAt', StringProto_codePointAt, 1],
@@ -167,21 +162,8 @@ export function CreateStringPrototype(realmRec) {
     // toUpperCase
     ['trim', StringProto_trim, 0],
     ['valueOf', StringProto_valueOf, 0],
-    [wellKnownSymbols.iterator, StringProto_symbolIterator, 0],
-  ].forEach(([name, fn, length]) => {
-    if (!(name instanceof Value)) {
-      name = new Value(name);
-    }
-    const n = CreateBuiltinFunction(fn, [], realmRec);
-    SetFunctionName(n, name);
-    SetFunctionLength(n, new Value(length));
-    proto.DefineOwnProperty(name, Descriptor({
-      Value: n,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }));
-  });
+    [wellKnownSymbols.iterator, StringProto_iterator, 0],
+  ]);
 
   realmRec.Intrinsics['%StringPrototype%'] = proto;
 }

@@ -1,7 +1,6 @@
 import {
   Type,
   Value,
-  Descriptor,
   wellKnownSymbols,
   StringExoticObjectValue,
 } from '../value.mjs';
@@ -14,11 +13,9 @@ import {
   ToObject,
   ToPropertyKey,
   Assert,
-  CreateBuiltinFunction,
-  SetFunctionName,
-  SetFunctionLength,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { assignProps } from './Bootstrap.mjs';
 
 function ObjectProto_hasOwnProperty([V], { thisValue }) {
   const P = Q(ToPropertyKey(V));
@@ -103,24 +100,14 @@ export function CreateObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%ObjectPrototype%'];
   Assert(proto);
 
-  for (const [name, nativefn, len] of [
+  assignProps(proto, [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],
     ['isPrototypeOf', ObjectProto_isPrototypeOf, 1],
     ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1],
     ['toLocaleString', ObjectProto_toLocaleString, 0],
     ['toString', ObjectProto_toString, 0],
     ['valueOf', ObjectProto_valueOf, 0],
-  ]) {
-    const fn = CreateBuiltinFunction(nativefn, [], realmRec);
-    X(SetFunctionName(fn, new Value(name)));
-    X(SetFunctionLength(fn, new Value(len)));
-    X(proto.DefineOwnProperty(new Value(name), Descriptor({
-      Value: fn,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
+  ]);
 
   realmRec.Intrinsics['%ObjProto_toString%'] = X(Get(proto, new Value('toString')));
   realmRec.Intrinsics['%ObjProto_valueOf%'] = X(Get(proto, new Value('valueOf')));

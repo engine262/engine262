@@ -12,7 +12,6 @@ import {
   Call,
   Construct,
   CreateArrayIterator,
-  CreateBuiltinFunction,
   CreateDataProperty,
   CreateDataPropertyOrThrow,
   DeletePropertyOrThrow,
@@ -27,8 +26,6 @@ import {
   SameValue,
   SameValueZero,
   Set,
-  SetFunctionLength,
-  SetFunctionName,
   StrictEqualityComparison,
   ToBoolean,
   ToInteger,
@@ -38,6 +35,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
+import { assignProps } from './Bootstrap.mjs';
 
 function ArraySpeciesCreate(originalArray, length) {
   Assert(Type(length) === 'Number' && length.numberValue() >= 0);
@@ -861,7 +859,7 @@ export function CreateArrayPrototype(realmRec) {
     Configurable: Value.false,
   }));
 
-  [
+  assignProps(realmRec, proto, [
     ['concat', ArrayProto_concat, 1],
     ['copyWithin', ArrayProto_copyWithin, 2],
     ['entries', ArrayProto_entries, 0],
@@ -891,17 +889,7 @@ export function CreateArrayPrototype(realmRec) {
     ['toString', ArrayProto_toString, 0],
     // unshift
     ['values', ArrayProto_values, 0],
-  ].forEach(([name, nativeFunction, length]) => {
-    const fn = CreateBuiltinFunction(nativeFunction, [], realmRec);
-    SetFunctionName(fn, new Value(name));
-    SetFunctionLength(fn, new Value(length));
-    proto.DefineOwnProperty(new Value(name), Descriptor({
-      Value: fn,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }));
-  });
+  ]);
 
   proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
 
