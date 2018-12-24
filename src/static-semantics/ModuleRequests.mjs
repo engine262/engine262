@@ -28,6 +28,17 @@ export function ModuleRequests_ModuleItemList(ModuleItemList) {
   return [...moduleNames];
 }
 
+// (implicit)
+//   ModuleBody : ModuleItemList
+export const ModuleRequests_ModuleBody = ModuleRequests_ModuleItemList;
+
+// 15.2.1.10 #sec-module-semantics-static-semantics-modulerequests
+//   Module : [empty]
+//
+// (implicit)
+//   Module : ModuleBody
+export const ModuleRequests_Module = ModuleRequests_ModuleBody;
+
 // 15.2.1.10 #sec-module-semantics-static-semantics-modulerequests
 //   ModuleItem : StatementListItem
 //
