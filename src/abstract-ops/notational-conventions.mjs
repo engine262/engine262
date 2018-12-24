@@ -8,7 +8,7 @@ export function Assert(invariant, source) {
 }
 
 export function sourceTextMatchedBy(node) {
-  return new Value(node.source());
+  return new Value(node.sourceText());
 }
 
 // An ECMAScript Script syntactic unit may be processed using either unrestricted or strict mode syntax and semantics.
