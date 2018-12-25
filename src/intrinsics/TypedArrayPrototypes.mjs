@@ -9,7 +9,7 @@ function CreateTypedArrayPrototype(realmRec, TypedArray) {
   const info = typedArrayInfo.get(TypedArray);
   Assert(info !== undefined);
 
-  const readonly = Descriptor({ Writable: Value.false, Configurable: Value.false });
+  const readonly = { Writable: Value.false, Configurable: Value.false };
 
   const proto = BootstrapPrototype(realmRec, [
     ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],

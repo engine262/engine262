@@ -21,11 +21,7 @@ export function assignProps(realmRec, obj, props) {
     if (n === kFlagDisabled) {
       continue;
     }
-    let value;
     const name = n instanceof Value ? n : new Value(n);
-    if (descriptor !== undefined) {
-      Assert(descriptor instanceof Descriptor);
-    }
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
       // Annex B.2 has the attributes { [[Enumerable]]: false,
@@ -58,6 +54,7 @@ export function assignProps(realmRec, obj, props) {
       // Every other data property described in clauses 18 through 26 and in
       // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
       // false, [[Configurable]]: true } unless otherwise specified.
+      let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
         value = CreateBuiltinFunction(v, [], realmRec);

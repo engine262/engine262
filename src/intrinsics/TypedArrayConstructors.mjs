@@ -185,7 +185,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
     }
   }
 
-  const readonly = Descriptor({ Writable: Value.false, Configurable: Value.false });
+  const readonly = { Writable: Value.false, Configurable: Value.false };
 
   const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}Prototype%`], [
     ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],

@@ -7,7 +7,7 @@ export function CreateGenerator(realmRec) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorPrototype%'];
 
   const generator = BootstrapPrototype(realmRec, [
-    ['prototype', generatorPrototype, undefined, Descriptor({ Writable: Value.false })],
+    ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%FunctionPrototype%'], 'GeneratorFunction');
 
   X(DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
