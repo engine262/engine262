@@ -52,7 +52,7 @@ export function Set(O, P, V, Throw) {
   Assert(Type(Throw) === 'Boolean');
   const success = Q(O.Set(P, V, O));
   if (success === Value.false && Throw === Value.true) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', P, O));
   }
   return success;
 }

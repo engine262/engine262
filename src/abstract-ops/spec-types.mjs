@@ -146,7 +146,7 @@ export function CompletePropertyDescriptor(Desc) {
     Enumerable: false,
     Configurable: false,
   });
-  if (IsGenericDescriptor(Desc) === Value.true || IsDataDescriptor(Desc) === Value.true) {
+  if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
     if (Desc.Value === undefined) {
       Desc.Value = like.Value;
     }

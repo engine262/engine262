@@ -22,7 +22,6 @@ import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
 import {
-  Descriptor,
   Type,
   Value,
   wellKnownSymbols,

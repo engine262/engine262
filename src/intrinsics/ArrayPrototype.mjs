@@ -16,13 +16,10 @@ import {
   DeletePropertyOrThrow,
   Get,
   HasProperty,
-  Invoke,
   IsCallable,
   IsConcatSpreadable,
   ObjectCreate,
-  SameValueZero,
   Set,
-  StrictEqualityComparison,
   ToBoolean,
   ToInteger,
   ToLength,
@@ -196,149 +193,10 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
-// 22.1.3.11 #sec-array.prototype.includes
-function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  if (len === 0) {
-    return Value.false;
-  }
-  const n = fromIndex ? Q(ToInteger(fromIndex)) : 0;
-  let k;
-  if (n >= 0) {
-    k = n;
-  } else {
-    k = len + n;
-    if (k < 0) {
-      k = 0;
-    }
-  }
-  while (k < len) {
-    const kStr = X(ToString(new Value(k)));
-    const elementK = Q(Get(O, kStr));
-    if (SameValueZero(searchElement, elementK) === Value.true) {
-      return Value.true;
-    }
-    k += 1;
-  }
-  return Value.false;
-}
-
-// 22.1.3.12 #sec-array.prototype.indexof
-function ArrayProto_indexOf([searchElement, fromIndex = Value.undefined], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  if (len === 0) {
-    return new Value(-1);
-  }
-  const n = Q(ToInteger(fromIndex)).numberValue();
-  // Assert: If fromIndex is undefined, then n is 0.
-  Assert(!(fromIndex === Value.undefined) || n === 0);
-  if (n >= len) {
-    return new Value(-1);
-  }
-  let k;
-  if (n >= 0) {
-    if (Object.is(-0, n)) {
-      k = 0;
-    } else {
-      k = n;
-    }
-  } else {
-    k = len + n;
-    if (k < 0) {
-      k = 0;
-    }
-  }
-  while (k < len) {
-    const kPresent = Q(HasProperty(O, X(ToString(new Value(k)))));
-    if (kPresent === Value.true) {
-      const elementK = Q(Get(O, X(ToString(new Value(k)))));
-      const same = StrictEqualityComparison(searchElement, elementK);
-      if (same === Value.true) {
-        return new Value(k);
-      }
-    }
-    k += 1;
-  }
-  return new Value(-1);
-}
-
-// 22.1.3.13 #sec-array.prototype.join
-function ArrayProto_join([separator = Value.undefined], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  let sep;
-  if (Type(separator) === 'Undefined') {
-    sep = ',';
-  } else {
-    sep = Q(ToString(separator)).stringValue();
-  }
-  let R = '';
-  let k = 0;
-  while (k < len) {
-    if (k > 0) {
-      R = `${R}${sep}`;
-    }
-    const kStr = X(ToString(new Value(k)));
-    const element = Q(Get(O, kStr));
-    let next;
-    if (Type(element) === 'Undefined' || Type(element) === 'Null') {
-      next = '';
-    } else {
-      next = Q(ToString(element)).stringValue();
-    }
-    R = `${R}${next}`;
-    k += 1;
-  }
-  return new Value(R);
-}
-
 // 22.1.3.14 #sec-array.prototype.keys
 function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
-}
-
-// 22.1.3.15 #sec-array.prototype.lastindexof
-function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  if (len === 0) {
-    return new Value(-1);
-  }
-  let n;
-  if (fromIndex !== undefined) {
-    n = Q(ToInteger(fromIndex)).numberValue();
-  } else {
-    n = len - 1;
-  }
-  let k;
-  if (n >= 0) {
-    if (Object.is(n, -0)) {
-      k = 0;
-    } else {
-      k = Math.min(n, len - 1);
-    }
-  } else {
-    k = len + n;
-  }
-  while (k >= 0) {
-    const kStr = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, kStr));
-    if (kPresent === Value.true) {
-      const elementK = Q(Get(O, kStr));
-      const same = StrictEqualityComparison(searchElement, elementK);
-      if (same === Value.true) {
-        return new Value(k);
-      }
-    }
-    k -= 1;
-  }
-  return new Value(-1);
 }
 
 // 22.1.3.16 #sec-array.prototype.map
@@ -397,123 +255,6 @@ function ArrayProto_push([...items], { thisValue }) {
   }
   Q(Set(O, new Value('length'), new Value(len), Value.true));
   return new Value(len);
-}
-
-// 22.1.3.19 #sec-array.prototype.reduce
-function ArrayProto_reduce([callbackfn, initialValue], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (len === 0 && initialValue === undefined) {
-    return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
-  }
-  let k = 0;
-  let accumulator = Value.undefined;
-  if (initialValue !== undefined) {
-    accumulator = initialValue;
-  } else {
-    let kPresent = false;
-    while (kPresent === false && k < len) {
-      const Pk = X(ToString(new Value(k)));
-      kPresent = Q(HasProperty(O, Pk)) === Value.true;
-      if (kPresent === true) {
-        accumulator = Q(Get(O, Pk));
-      }
-      k += 1;
-    }
-    if (kPresent === false) {
-      return surroundingAgent.Throw('TypeError');
-    }
-  }
-  while (k < len) {
-    const Pk = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, Pk));
-    if (kPresent === Value.true) {
-      const kValue = Q(Get(O, Pk));
-      accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, new Value(k), O]));
-    }
-    k += 1;
-  }
-  return accumulator;
-}
-
-// 22.1.3.20 #sec-array.prototype.reduceright
-function ArrayProto_reduceRight([callbackfn, initialValue], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (len === 0 && initialValue === undefined) {
-    return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
-  }
-  let k = len - 1;
-  let accumulator = Value.undefined;
-  if (initialValue !== undefined) {
-    accumulator = initialValue;
-  } else {
-    let kPresent = false;
-    while (kPresent === false && k >= 0) {
-      const Pk = X(ToString(new Value(k)));
-      kPresent = Q(HasProperty(O, Pk)) === Value.true;
-      if (kPresent === true) {
-        accumulator = Q(Get(O, Pk));
-      }
-      k -= 1;
-    }
-    if (kPresent === false) {
-      return surroundingAgent.Throw('TypeError');
-    }
-  }
-  while (k >= 0) {
-    const Pk = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, Pk));
-    if (kPresent === Value.true) {
-      const kValue = Q(Get(O, Pk));
-      accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, new Value(k), O]));
-    }
-    k -= 1;
-  }
-  return accumulator;
-}
-
-// 22.1.3.21 #sec-array.prototype.reverse
-function ArrayProto_reverse(args, { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  const middle = Math.floor(len / 2);
-  let lower = 0;
-  while (lower !== middle) {
-    const upper = len - lower - 1;
-    const upperP = X(ToString(new Value(upper)));
-    const lowerP = X(ToString(new Value(lower)));
-    const lowerExists = Q(HasProperty(O, lowerP));
-    let lowerValue;
-    let upperValue;
-    if (lowerExists === Value.true) {
-      lowerValue = Q(Get(O, lowerP));
-    }
-    const upperExists = Q(HasProperty(O, upperP));
-    if (upperExists === Value.true) {
-      upperValue = Q(Get(O, upperP));
-    }
-    if (lowerExists === Value.true && upperExists === Value.true) {
-      Q(Set(O, lowerP, upperValue, Value.true));
-      Q(Set(O, upperP, lowerValue, Value.true));
-    } else if (lowerExists === Value.false && upperExists === Value.true) {
-      Q(Set(O, lowerP, upperValue, Value.true));
-      Q(DeletePropertyOrThrow(O, upperP));
-    } else if (lowerExists === Value.true && upperExists === Value.false) {
-      Q(DeletePropertyOrThrow(O, lowerP));
-      Q(Set(O, upperP, lowerValue, Value.true));
-    } else {
-      // no further action is required
-    }
-    lower += 1;
-  }
-  return O;
 }
 
 // 22.1.3.22 #sec-array.prototype.shift
@@ -581,35 +322,6 @@ function ArrayProto_slice([start, end], { thisValue }) {
   }
   Q(Set(A, new Value('length'), new Value(n), Value.true));
   return A;
-}
-
-// 22.1.3.24 #sec-array.prototype.some
-function ArrayProto_some([callbackfn, thisArg], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
-  }
-  let T;
-  if (thisArg !== undefined) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
-  }
-  let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, Pk));
-    if (kPresent === Value.true) {
-      const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(callbackfn, T, [kValue, new Value(k), O])));
-      if (testResult === Value.true) {
-        return Value.true;
-      }
-    }
-    k += 1;
-  }
-  return Value.true;
 }
 
 // 22.1.3.26 #sec-array.prototype.splice
@@ -696,27 +408,6 @@ function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLeng
   return A;
 }
 
-// 22.1.3.27 #sec-array.prototype.tolocalestring
-function ArrayProto_toLocaleString(args, { thisValue }) {
-  const array = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(array, new Value('length'))))).numberValue();
-  const separator = ', ';
-  let R = '';
-  let k = 0;
-  while (k < len) {
-    if (k > 0) {
-      R = `${R}${separator}`;
-    }
-    const nextElement = Q(Get(array, X(ToString(new Value(k)))));
-    if (Type(nextElement) !== 'Undefined' && Type(nextElement) !== 'Null') {
-      const S = Q(Invoke(nextElement, new Value('toLocaleString')));
-      R = `${R}${S}`;
-    }
-    k += 1;
-  }
-  return R;
-}
-
 // 22.1.3.28 #sec-array.prototype.tostring
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
@@ -750,23 +441,13 @@ export function CreateArrayPrototype(realmRec) {
     ['entries', ArrayProto_entries, 0],
     ['fill', ArrayProto_fill, 1],
     ['filter', ArrayProto_filter, 1],
-    ['includes', ArrayProto_includes, 1],
-    ['indexOf', ArrayProto_indexOf, 1],
-    ['join', ArrayProto_join, 1],
     ['keys', ArrayProto_keys, 0],
-    ['lastIndexOf', ArrayProto_lastIndexOf, 1],
     ['map', ArrayProto_map, 1],
     ['pop', ArrayProto_pop, 0],
     ['push', ArrayProto_push, 1],
-    ['reduce', ArrayProto_reduce, 1],
-    ['reduceRight', ArrayProto_reduceRight, 1],
-    ['reverse', ArrayProto_reverse, 1],
     ['shift', ArrayProto_shift, 0],
     ['slice', ArrayProto_slice, 2],
-    ['some', ArrayProto_some, 1],
-    // sort
     ['splice', ArrayProto_splice, 2],
-    ['toLocaleString', ArrayProto_toLocaleString, 0],
     ['toString', ArrayProto_toString, 0],
     // unshift
     ['values', ArrayProto_values, 0],

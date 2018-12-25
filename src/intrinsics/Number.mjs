@@ -4,7 +4,6 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   Type,
   Value,
 } from '../value.mjs';

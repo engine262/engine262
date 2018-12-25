@@ -484,7 +484,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     if (existingProp.Configurable === Value.true) {
       return Value.true;
     }
-    if (IsDataDescriptor(existingProp) === Value.true
+    if (IsDataDescriptor(existingProp) === true
         && existingProp.Writable === Value.true
         && existingProp.Enumerable === Value.true) {
       return Value.true;

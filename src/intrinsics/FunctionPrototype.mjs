@@ -19,7 +19,6 @@ import {
   ToInteger,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
   ObjectValue,
   Type,
   Value,

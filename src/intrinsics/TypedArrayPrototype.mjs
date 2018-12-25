@@ -169,18 +169,6 @@ function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undef
 //   const O = thisValue;
 // }
 
-// 22.2.3.13 #sec-%typedarray%.prototype.includes
-// 22.2.3.14 #sec-%typedarray%.prototype.indexof
-// 22.2.3.15 #sec-%typedarray%.prototype.join
-// 22.2.3.17 #sec-%typedarray%.prototype.lastindexof
-// 22.2.3.20 #sec-%typedarray%.prototype.reduce
-// 22.2.3.21 #sec-%typedarray%.prototype.reduceright
-// 22.2.3.22 #sec-%typedarray%.prototype.reverse
-// 22.2.3.25 #sec-%typedarray%.prototype.some
-// 22.2.3.26 #sec-%typedarray%.prototype.sort
-// 22.2.3.28 #sec-%typedarray%.prototype.tolocalestring
-// Defined in terms of Array.prototype versions.
-
 // 22.2.3.16 #sec-%typedarray%.prototype.keys
 function TypedArrayProto_keys(args, { thisValue }) {
   const O = thisValue;

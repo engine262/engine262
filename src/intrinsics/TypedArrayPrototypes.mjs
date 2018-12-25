@@ -2,7 +2,7 @@ import {
   Assert,
   typedArrayInfo,
 } from '../abstract-ops/all.mjs';
-import { Descriptor, Value } from '../value.mjs';
+import { Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function CreateTypedArrayPrototype(realmRec, TypedArray) {
