@@ -171,7 +171,6 @@ function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undef
 
 // 22.2.3.10 #sec-%typedarray%.prototype.find
 // 22.2.3.11 #sec-%typedarray%.prototype.findindex
-// 22.2.3.12 #sec-%typedarray%.prototype.foreach
 // 22.2.3.13 #sec-%typedarray%.prototype.includes
 // 22.2.3.14 #sec-%typedarray%.prototype.indexof
 // 22.2.3.15 #sec-%typedarray%.prototype.join

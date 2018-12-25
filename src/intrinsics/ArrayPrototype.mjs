@@ -240,28 +240,6 @@ function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
   return new Value(-1);
 }
 
-// 22.1.3.10 #sec-array.prototype.foreach
-function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
-  }
-  const T = thisArg || Value.undefined;
-  let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(new Value(k)));
-    const kPresent = Q(HasProperty(O, Pk));
-    if (kPresent === Value.true) {
-      const kValue = Q(Get(O, Pk));
-      Q(Call(callbackfn, T, [kValue, new Value(k), O]));
-    }
-    k += 1;
-  }
-  return Value.undefined;
-}
-
 // 22.1.3.11 #sec-array.prototype.includes
 function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
@@ -818,7 +796,6 @@ export function CreateArrayPrototype(realmRec) {
     ['filter', ArrayProto_filter, 1],
     ['find', ArrayProto_find, 1],
     ['findIndex', ArrayProto_findIndex, 1],
-    ['forEach', ArrayProto_forEach, 1],
     ['includes', ArrayProto_includes, 1],
     ['indexOf', ArrayProto_indexOf, 1],
     ['join', ArrayProto_join, 1],
