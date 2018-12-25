@@ -196,50 +196,6 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   return A;
 }
 
-// 22.1.3.8 #sec-array.prototype.find
-function ArrayProto_find([predicate, thisArg], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  if (IsCallable(predicate) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'predicate is not callable');
-  }
-  const T = thisArg || Value.undefined;
-  let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(new Value(k)));
-    const kValue = Q(Get(O, Pk));
-    const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
-    if (testResult === Value.true) {
-      return kValue;
-    }
-    k += 1;
-  }
-  return Value.undefined;
-}
-
-// 22.1.3.9 #sec-array.prototype.findindex
-function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
-  const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
-  if (IsCallable(predicate) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'predicate is not callable');
-  }
-  const T = thisArg || Value.undefined;
-  let k = 0;
-  while (k < len) {
-    const Pk = X(ToString(new Value(k)));
-    const kValue = Q(Get(O, Pk));
-    const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
-    if (testResult === Value.true) {
-      return new Value(k);
-    }
-    k += 1;
-  }
-  return new Value(-1);
-}
-
 // 22.1.3.11 #sec-array.prototype.includes
 function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
   const O = Q(ToObject(thisValue));
@@ -794,8 +750,6 @@ export function CreateArrayPrototype(realmRec) {
     ['entries', ArrayProto_entries, 0],
     ['fill', ArrayProto_fill, 1],
     ['filter', ArrayProto_filter, 1],
-    ['find', ArrayProto_find, 1],
-    ['findIndex', ArrayProto_findIndex, 1],
     ['includes', ArrayProto_includes, 1],
     ['indexOf', ArrayProto_indexOf, 1],
     ['join', ArrayProto_join, 1],

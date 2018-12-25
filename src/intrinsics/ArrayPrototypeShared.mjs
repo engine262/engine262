@@ -48,6 +48,54 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return Value.true;
   }
 
+  // 22.1.3.8 #sec-array.prototype.find
+  // 22.2.3.10 #sec-%typedarray%.prototype.find
+  function ArrayProto_find([predicate, thisArg], { thisValue }) {
+    Q(priorToEvaluatingAlgorithm(thisValue));
+    const O = Q(ToObject(thisValue));
+    const lenProp = Q(objectToLength(O));
+    const len = Q(ToLength(lenProp)).numberValue();
+    if (IsCallable(predicate) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+    }
+    const T = thisArg || Value.undefined;
+    let k = 0;
+    while (k < len) {
+      const Pk = X(ToString(new Value(k)));
+      const kValue = Q(Get(O, Pk));
+      const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
+      if (testResult === Value.true) {
+        return kValue;
+      }
+      k += 1;
+    }
+    return Value.undefined;
+  }
+
+  // 22.1.3.9 #sec-array.prototype.findindex
+  // 22.2.3.11 #sec-%typedarray%.prototype.findindex
+  function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
+    Q(priorToEvaluatingAlgorithm(thisValue));
+    const O = Q(ToObject(thisValue));
+    const lenProp = Q(objectToLength(O));
+    const len = Q(ToLength(lenProp)).numberValue();
+    if (IsCallable(predicate) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+    }
+    const T = thisArg || Value.undefined;
+    let k = 0;
+    while (k < len) {
+      const Pk = X(ToString(new Value(k)));
+      const kValue = Q(Get(O, Pk));
+      const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
+      if (testResult === Value.true) {
+        return new Value(k);
+      }
+      k += 1;
+    }
+    return new Value(-1);
+  }
+
   // 22.1.3.10 #sec-array.prototype.foreach
   // 22.2.3.12 #sec-%typedarray%.prototype.foreach
   function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
@@ -74,6 +122,8 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   assignProps(realmRec, proto, [
     ['every', ArrayProto_every, 1],
+    ['find', ArrayProto_find, 1],
+    ['findIndex', ArrayProto_findIndex, 1],
     ['forEach', ArrayProto_forEach, 1],
   ]);
 }
