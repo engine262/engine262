@@ -3,7 +3,7 @@
 const { relative, resolve } = require('path');
 
 const COMPLETION_PATH = resolve('./src/completion.mjs');
-const NOTATIONAL_CONVENTIONS_PATH = resolve('./src/abstract-ops/all.mjs');
+const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
 
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
@@ -13,10 +13,17 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
-  function createImportAssertAndCall(file) {
-    const r = relative(file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
+  function createImportAssert(file) {
+    const r = relative(file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
     return template.ast(`
-      import { Assert, Call } from "${r}";
+      import { Assert } from "${r}";
+    `);
+  }
+
+  function createImportCall(file) {
+    const r = relative(file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
+    return template.ast(`
+      import { Call } from "${r}";
     `);
   }
 
@@ -69,19 +76,17 @@ module.exports = ({ types: t, template }) => {
         }
       `),
     },
-    Promise: {
-      dontCare: template.statement(`
-        if (ID instanceof AbruptCompletion) {
-          const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
-          if (hygenicTemp2 instanceof AbruptCompletion) {
-            return hygenicTemp2;
-          }
-          return CAPABILITY.Promise;
-        } else if (ID instanceof Completion) {
-          ID = ID.Value;
+    IfAbruptRejectPromise: template.statement(`
+      if (ID instanceof AbruptCompletion) {
+        const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
+        if (hygenicTemp2 instanceof AbruptCompletion) {
+          return hygenicTemp2;
         }
-      `),
-    },
+        return CAPABILITY.Promise;
+      } else if (ID instanceof Completion) {
+        ID = ID.Value;
+      }
+    `),
   };
 
   function findParentStatementPath(path) {
@@ -108,15 +113,20 @@ module.exports = ({ types: t, template }) => {
           }
           state.foundCompletion = false;
           state.needCompletion = false;
-          state.foundAssertAndCall = false;
-          state.needAssertAndCall = false;
+          state.foundAssert = false;
+          state.needAssert = false;
+          state.foundCall = false;
+          state.needCall = false;
         },
         exit(path, state) {
           if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
-          if (!state.foundAssertAndCall && state.needAssertAndCall) {
-            path.node.body.unshift(createImportAssertAndCall(state.file));
+          if (!state.foundAssert && state.needAssert) {
+            path.node.body.unshift(createImportAssert(state.file));
+          }
+          if (!state.foundCall && state.needCall) {
+            path.node.body.unshift(createImportCall(state.file));
           }
         },
       },
@@ -131,23 +141,6 @@ module.exports = ({ types: t, template }) => {
           if (!path.node.specifiers.find((s) => s.local.name === 'AbruptCompletion')) {
             path.node.specifiers.push(
               t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-            );
-          }
-        }
-        if (path.node.source.value.endsWith('abstract-ops/all.mjs')
-            || (state.file.opts.filename.includes('abstract-ops') && path.node.source.value === './all.mjs')) {
-          if (state.file.opts.filename.endsWith('api.mjs')) {
-            return;
-          }
-          state.foundAssertAndCall = true;
-          if (!path.node.specifiers.find((s) => s.local.name === 'Assert')) {
-            path.node.specifiers.push(
-              t.ImportSpecifier(t.Identifier('Assert'), t.Identifier('Assert')),
-            );
-          }
-          if (!path.node.specifiers.find((s) => s.local.name === 'Call') && !state.file.opts.filename.endsWith('object-operations.mjs')) {
-            path.node.specifiers.push(
-              t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
             );
           }
         }
@@ -192,17 +185,32 @@ module.exports = ({ types: t, template }) => {
           }
         } else if (path.node.callee.name === 'X') {
           state.needCompletion = true;
-          state.needAssertAndCall = true;
+          state.needAssert = true;
+          if (path.scope.getBinding('Assert') !== undefined) {
+            state.foundAssert = true;
+          }
           replace(templates.X, 'val');
         } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
           state.needCompletion = true;
-          state.needAssertAndCall = true;
+          state.needCall = true;
+          if (path.scope.getBinding('Call') !== undefined) {
+            state.foundCall = true;
+          }
           const [ID, CAPABILITY] = path.node.arguments;
+          if (!t.isIdentifier(ID)) {
+            throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier');
+          }
+          if (!t.isIdentifier(CAPABILITY)) {
+            throw path.get('arguments.1').buildCodeFrameError('Second argument to IfAbruptRejectPromise should be an identifier');
+          }
           const binding = path.scope.getBinding(ID.name);
+          if (!binding) {
+            throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier pointing to a variable');
+          }
           binding.path.parent.kind = 'let';
-          path.parentPath.replaceWith(templates.Promise.dontCare({ ID, CAPABILITY }));
+          path.parentPath.replaceWith(templates.IfAbruptRejectPromise({ ID, CAPABILITY }));
         } else if (path.node.callee.name === 'Assert') {
-          path.node.arguments.push(t.stringLiteral(path.get('arguments')[0].getSource()));
+          path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
         }
 
         function replace(templateObj, temporaryVariableName) {
