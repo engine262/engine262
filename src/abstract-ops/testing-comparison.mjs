@@ -233,7 +233,7 @@ export function IsInteger(argument) {
 export function IsStringPrefix(p, q) {
   Assert(Type(p) === 'String');
   Assert(Type(q) === 'String');
-  return p.stringValue().startsWith(q.stringValue());
+  return q.stringValue().startsWith(p.stringValue());
 }
 
 // 9.1.6.2 #sec-iscompatiblepropertydescriptor
