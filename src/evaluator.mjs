@@ -453,7 +453,7 @@ export function Evaluate_Script(Script) {
   return unwind(Evaluate_StatementList(Script));
 }
 
-// #sec-module-semantics-runtime-semantics-evaluation
+// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
 //   Module : [empty]
 //   ModuleBody : ModuleItemList
 export function Evaluate_Module(ModuleBody) {

@@ -7,7 +7,7 @@ import {
 } from '../value.mjs';
 import { Assert } from './all.mjs';
 
-// #sec-modulenamespacecreate
+// 9.4.6.11 #sec-modulenamespacecreate
 export function ModuleNamespaceCreate(module, exports) {
   Assert(module instanceof ModuleRecord);
   Assert(module.Namespace === Value.undefined);
@@ -21,7 +21,7 @@ export function ModuleNamespaceCreate(module, exports) {
   }));
   M.Module = module;
   const sortedExports = exports.sort((x, y) => {
-    // #sec-sortcompare
+    // 22.1.3.25.1 #sec-sortcompare
     const xString = x.stringValue();
     const yString = y.stringValue();
     const xSmaller = xString < yString;

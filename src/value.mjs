@@ -1305,7 +1305,7 @@ export class SourceTextModuleRecord extends ModuleRecord {
     } = init);
   }
 
-  // #sec-getexportednames
+  // 15.2.1.16.2 #sec-getexportednames
   GetExportedNames(exportStarSet) {
     const module = this;
     if (exportStarSet.includes(module)) {
@@ -1336,7 +1336,7 @@ export class SourceTextModuleRecord extends ModuleRecord {
     return exportedNames;
   }
 
-  // #sec-resolveexport
+  // 15.2.1.16.3 #sec-resolveexport
   ResolveExport(exportName, resolveSet) {
     const module = this;
     for (const r of resolveSet) {
@@ -1389,7 +1389,7 @@ export class SourceTextModuleRecord extends ModuleRecord {
     return starResolution;
   }
 
-  // #sec-moduledeclarationinstantiation
+  // 15.2.1.16.4 #sec-moduledeclarationinstantiation
   Instantiate() {
     const module = this;
     Assert(module.Status !== 'instantiating' && module.Status !== 'evaluating');
@@ -1411,7 +1411,7 @@ export class SourceTextModuleRecord extends ModuleRecord {
     return Value.undefined;
   }
 
-  // #sec-moduleevaluation
+  // 15.2.1.16.5 #sec-moduleevaluation
   Evaluate() {
     const module = this;
     Assert(module.Status === 'instantiated' || module.Status === 'evaluated');

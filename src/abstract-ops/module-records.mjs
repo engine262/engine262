@@ -30,7 +30,7 @@ import {
 } from '../ast.mjs';
 import { msg } from '../helpers.mjs';
 
-// #sec-innermoduleinstantiation
+// 15.2.1.16.4.1 #sec-innermoduleinstantiation
 export function InnerModuleInstantiation(module, stack, index) {
   if (!(module instanceof SourceTextModuleRecord)) {
     Q(module.Instantiate());
@@ -73,7 +73,7 @@ export function InnerModuleInstantiation(module, stack, index) {
   return index;
 }
 
-// #sec-moduledeclarationenvironmentsetup
+// 15.2.1.16.4.2 #sec-moduledeclarationenvironmentsetup
 export function ModuleDeclarationEnvironmentSetup(module) {
   for (const e of module.IndirectExportEntries) {
     const resolution = Q(module.ResolveExport(e.ExportName, []));
@@ -132,7 +132,7 @@ export function ModuleDeclarationEnvironmentSetup(module) {
   return new NormalCompletion(undefined);
 }
 
-// #sec-getmodulenamespace
+// 15.2.1.18 #sec-getmodulenamespace
 export function GetModuleNamespace(module) {
   Assert(module instanceof ModuleRecord);
   Assert(module.Status !== 'uninstantiated');
@@ -151,7 +151,7 @@ export function GetModuleNamespace(module) {
   return namespace;
 }
 
-// #sec-innermoduleevaluation
+// 15.2.1.16.5.1 #sec-innermoduleevaluation
 export function InnerModuleEvaluation(module, stack, index) {
   if (!(module instanceof SourceTextModuleRecord)) {
     Q(module.Evaluate());

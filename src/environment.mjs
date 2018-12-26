@@ -587,6 +587,29 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   }
 }
 
+// 8.1.2.1 #sec-getidentifierreference
+export function GetIdentifierReference(lex, name, strict) {
+  if (Type(lex) === 'Null') {
+    return new Reference({
+      BaseValue: Value.undefined,
+      ReferencedName: name,
+      StrictReference: strict,
+    });
+  }
+  const envRec = lex.EnvironmentRecord;
+  const exists = Q(envRec.HasBinding(name));
+  if (exists === Value.true) {
+    return new Reference({
+      BaseValue: envRec,
+      ReferencedName: name,
+      StrictReference: strict,
+    });
+  } else {
+    const outer = lex.outerEnvironmentReference;
+    return GetIdentifierReference(outer, name, strict);
+  }
+}
+
 // 8.1.2.2 #sec-newdeclarativeenvironment
 export function NewDeclarativeEnvironment(E) {
   const env = new LexicalEnvironment();
@@ -644,34 +667,11 @@ export function NewGlobalEnvironment(G, thisValue) {
   return env;
 }
 
-// #sec-newmodulenvironment
+// 8.1.2.6 #sec-newmoduleenvironment
 export function NewModuleEnvironment(E) {
   const env = new LexicalEnvironment();
   const envRec = new ModuleEnvironmentRecord();
   env.EnvironmentRecord = envRec;
   env.outerEnvironmentReference = E;
   return env;
-}
-
-// 8.1.2.1 #sec-getidentifierreference
-export function GetIdentifierReference(lex, name, strict) {
-  if (Type(lex) === 'Null') {
-    return new Reference({
-      BaseValue: Value.undefined,
-      ReferencedName: name,
-      StrictReference: strict,
-    });
-  }
-  const envRec = lex.EnvironmentRecord;
-  const exists = Q(envRec.HasBinding(name));
-  if (exists === Value.true) {
-    return new Reference({
-      BaseValue: envRec,
-      ReferencedName: name,
-      StrictReference: strict,
-    });
-  } else {
-    const outer = lex.outerEnvironmentReference;
-    return GetIdentifierReference(outer, name, strict);
-  }
 }
