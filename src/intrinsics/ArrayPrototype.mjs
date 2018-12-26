@@ -20,6 +20,7 @@ import {
   IsConcatSpreadable,
   ObjectCreate,
   Set,
+  SortCompare,
   ToBoolean,
   ToInteger,
   ToLength,
@@ -27,8 +28,9 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { msg } from '../helpers.mjs';
 import { assignProps } from './Bootstrap.mjs';
-import { CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat
 function ArrayProto_concat(args, { thisValue }) {
@@ -324,6 +326,18 @@ function ArrayProto_slice([start, end], { thisValue }) {
   return A;
 }
 
+// 22.1.3.25 #sec-array.prototype.sort
+function ArrayProto_sort([comparefn], { thisValue }) {
+  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
+  }
+  const obj = Q(ToObject(thisValue));
+  const lenProp = Q(Get(obj, new Value('length')));
+  const len = Q(ToLength(lenProp));
+
+  return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
+}
+
 // 22.1.3.26 #sec-array.prototype.splice
 function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLength }) {
   const O = Q(ToObject(thisValue));
@@ -447,6 +461,7 @@ export function CreateArrayPrototype(realmRec) {
     ['push', ArrayProto_push, 1],
     ['shift', ArrayProto_shift, 0],
     ['slice', ArrayProto_slice, 2],
+    ['sort', ArrayProto_sort, 1],
     ['splice', ArrayProto_splice, 2],
     ['toString', ArrayProto_toString, 0],
     // unshift

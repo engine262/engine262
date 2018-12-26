@@ -7,7 +7,9 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
+  AbstractRelationalComparison,
   Assert,
+  Call,
   Construct,
   Get,
   GetFunctionRealm,
@@ -154,6 +156,38 @@ export function IsConcatSpreadable(O) {
     return ToBoolean(spreadable);
   }
   return Q(IsArray(O));
+}
+
+// 22.1.3.25.1 #sec-sortcompare
+export function SortCompare(x, y, comparefn) {
+  if (x === Value.undefined && y === Value.undefined) {
+    return new Value(+0);
+  }
+  if (x === Value.undefined) {
+    return new Value(1);
+  }
+  if (y === Value.undefined) {
+    return new Value(-1);
+  }
+  if (comparefn !== Value.undefined) {
+    const callRes = Q(Call(comparefn, Value.undefined, [x, y]));
+    const v = Q(ToNumber(callRes));
+    if (v.isNaN()) {
+      return new Value(+0);
+    }
+    return v;
+  }
+  const xString = Q(ToString(x));
+  const yString = Q(ToString(y));
+  const xSmaller = AbstractRelationalComparison(xString, yString);
+  if (xSmaller === Value.true) {
+    return new Value(-1);
+  }
+  const ySmaller = AbstractRelationalComparison(yString, xString);
+  if (ySmaller === Value.true) {
+    return new Value(1);
+  }
+  return new Value(+0);
 }
 
 // 22.1.5.1 #sec-createarrayiterator

@@ -3,6 +3,7 @@ import {
   Call,
   DeletePropertyOrThrow,
   Get,
+  HasOwnProperty,
   HasProperty,
   Invoke,
   IsCallable,
@@ -20,7 +21,111 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-// Algorithms shared between %ArrayPrototype% and %TypedArrayPrototype%.
+// Algorithms and methods shared between %ArrayPrototype% and
+// %TypedArrayPrototype%.
+
+// 22.1.3.25 #sec-array.prototype.sort
+// 22.2.3.26 #sec-%typedarray%.prototype.sort
+//
+// If internalMethodsRestricted is true, then Asserts are used to ensure that
+// "The only internal methods of the this object that the algorithm may call
+// are [[Get]] and [[Set]]," a requirement of %TypedArray%.prototype.sort.
+export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = false) {
+  len = len.numberValue();
+
+  // Collect all elements. Count how many holes we have for error checking.
+  const collected = [];
+  let holes = 0;
+  for (let k = 0; k < len; k += 1) {
+    const curProp = X(ToString(new Value(k)));
+    const prop = Q(obj.Get(curProp, obj));
+    if (prop === Value.undefined) {
+      Assert(!internalMethodsRestricted);
+      const hasOwn = Q(HasOwnProperty(obj, curProp));
+      if (hasOwn === Value.false) {
+        holes += 1;
+      } else {
+        collected.push(prop);
+      }
+    } else {
+      collected.push(prop);
+    }
+  }
+  if (internalMethodsRestricted) {
+    Assert(holes === 0);
+  }
+  Assert(collected.length + holes === len);
+
+  // Get rid of holes by deleting properties at the end.
+  // See Note 1: Because non-existent property values always compare greater
+  // than undefined property values, and undefined always compares greater
+  // than any other value, undefined property values always sort to the end
+  // of the result, followed by non-existent property values.
+  for (let k = collected.length; k < len; k += 1) {
+    const curProp = X(ToString(new Value(k)));
+    Q(DeletePropertyOrThrow(obj, curProp));
+  }
+
+  // Mergesort.
+  const lBuffer = [];
+  const rBuffer = [];
+  for (let step = 1; step < collected.length; step *= 2) {
+    for (let start = 0; start < collected.length - 1; start += 2 * step) {
+      const sizeLeft = step;
+      const mid = start + sizeLeft;
+      const sizeRight = Math.min(step, collected.length - mid);
+      if (sizeRight < 0) {
+        continue;
+      }
+
+      // Merge.
+      for (let l = 0; l < sizeLeft; l += 1) {
+        lBuffer[l] = collected[start + l];
+      }
+      for (let r = 0; r < sizeRight; r += 1) {
+        rBuffer[r] = collected[mid + r];
+      }
+
+      {
+        let l = 0;
+        let r = 0;
+        let o = start;
+        while (l < sizeLeft && r < sizeRight) {
+          const cmp = Q(SortCompare(lBuffer[l], rBuffer[r])).numberValue();
+          if (cmp <= 0) {
+            collected[o] = lBuffer[l];
+            o += 1;
+            l += 1;
+          } else {
+            collected[o] = rBuffer[r];
+            o += 1;
+            r += 1;
+          }
+        }
+        while (l < sizeLeft) {
+          collected[o] = lBuffer[l];
+          o += 1;
+          l += 1;
+        }
+        while (r < sizeRight) {
+          collected[o] = rBuffer[r];
+          o += 1;
+          r += 1;
+        }
+      }
+    }
+  }
+
+  // Copy the sorted results back to the array.
+  for (let k = 0; k < collected.length; k += 1) {
+    const curProp = X(ToString(new Value(k)));
+    if (Q(obj.Set(curProp, collected[k], obj)) !== Value.true) {
+      return surroundingAgent.Throw('CannotSetProperty', curProp, obj);
+    }
+  }
+
+  return obj;
+}
 
 export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   // 22.1.3.5 #sec-array.prototype.every
@@ -437,9 +542,6 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     }
     return Value.false;
   }
-
-  // 22.2.3.26 #sec-%typedarray%.prototype.sort
-  // Missing.
 
   // 22.1.3.27 #sec-array.prototype.tolocalestring
   // 22.2.3.28 #sec-%typedarray%.prototype.tolocalestring

@@ -1,13 +1,16 @@
 import {
   Assert,
+  Call,
   CreateArrayIterator,
   Get,
   GetValueFromBuffer,
+  IsCallable,
   IsDetachedBuffer,
   Set,
   SetValueInBuffer,
   ToInteger,
   ToNumber,
+  ToObject,
   ToString,
   TypedArraySpeciesCreate,
   ValidateTypedArray,
@@ -20,7 +23,7 @@ import {
   Descriptor, Type, Value, wellKnownSymbols,
 } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.2.3.1 #sec-get-%typedarray%.prototype.buffer
 function TypedArrayProto_bufferGetter(args, { thisValue }) {
@@ -191,6 +194,59 @@ function TypedArrayProto_lengthGetter(args, { thisValue }) {
   return length;
 }
 
+// 22.2.3.26 #sec-%typedarray%.prototype.sort
+function TypedArrayProto_sort([comparefn], { thisValue }) {
+  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
+  }
+  const obj = Q(ToObject(thisValue));
+  const buffer = Q(ValidateTypedArray(obj));
+  const len = obj.ArrayLength;
+
+  return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn, buffer), true);
+}
+
+function TypedArraySortCompare(x, y, comparefn, buffer) {
+  Assert(Type(x) === 'Number');
+  Assert(Type(y) === 'Number');
+  if (comparefn !== Value.undefined) {
+    const callRes = Q(Call(comparefn, Value.undefined, [x, y]));
+    const v = Q(ToNumber(callRes));
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+    if (v.isNaN()) {
+      return new Value(+0);
+    }
+    return v;
+  }
+  if (x.isNaN() && y.isNaN()) {
+    return new Value(+0);
+  }
+  if (x.isNaN()) {
+    return new Value(1);
+  }
+  if (y.isNaN()) {
+    return new Value(-1);
+  }
+
+  x = x.numberValue();
+  y = y.numberValue();
+  if (x < y) {
+    return new Value(-1);
+  }
+  if (x > y) {
+    return new Value(1);
+  }
+  if (Object.is(x, -0) && Object.is(y, +0)) {
+    return new Value(-1);
+  }
+  if (Object.is(x, +0) && Object.is(y, -0)) {
+    return new Value(1);
+  }
+  return new Value(+0);
+}
+
 // 22.2.3.27 #sec-%typedarray%.prototype.subarray
 function TypedArrayProto_subarray([begin, end], { thisValue }) {
   const O = thisValue;
@@ -261,6 +317,7 @@ export function CreateTypedArrayPrototype(realmRec) {
     // ['filter', TypedArrayProto_filter, 1],
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_lengthGetter]],
+    ['sort', TypedArrayProto_sort, 1],
     ['subarray', TypedArrayProto_subarray, 2],
     ['values', TypedArrayProto_values, 0],
     ['toString', ArrayProto_toString],
