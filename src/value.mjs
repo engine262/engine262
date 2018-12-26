@@ -278,13 +278,13 @@ function nativeCall(F, argumentsList, thisArgument, newTarget) {
 }
 
 export class BuiltinFunctionValue extends FunctionValue {
-  constructor(nativeFunction) {
+  constructor(nativeFunction, isConstructor = Value.false) {
     super();
     this.nativeFunction = nativeFunction;
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
 
-    if (this.nativeFunction.toString().includes('NewTarget')) {
+    if (isConstructor === Value.true) {
       this.Construct = function Construct(argumentsList, newTarget) {
         const F = this;
 
@@ -318,7 +318,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
     surroundingAgent.executionContextStack.push(calleeContext);
-    const result = nativeCall(F, argumentsList, thisArgument, undefined);
+    const result = nativeCall(F, argumentsList, thisArgument, Value.undefined);
     // Remove calleeContext from the execution context stack and
     // restore callerContext as the running execution context.
     surroundingAgent.executionContextStack.pop(calleeContext);

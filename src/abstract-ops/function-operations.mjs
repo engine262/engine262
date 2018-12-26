@@ -15,7 +15,9 @@ import {
   ToInteger,
   ToObject,
 } from './all.mjs';
+import { Realm } from '../realm.mjs';
 import {
+  BuiltinFunctionValue,
   Descriptor,
   FunctionValue,
   Type,
@@ -375,34 +377,26 @@ export function SetFunctionLength(F, length) {
   })));
 }
 
-// 9.3.3 CreateBuiltinFunction
-export function CreateBuiltinFunction(
-  steps,
-  internalSlotsList,
-  realm,
-  prototype,
-) {
-  if (!realm) {
-    // If realm is not present, set realm to the current Realm Record.
+// 9.3.3 #sec-createbuiltinfunction
+export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isConstructor = Value.false) {
+  Assert(typeof steps === 'function');
+  if (realm === undefined) {
     realm = surroundingAgent.currentRealmRecord;
   }
-
-  if (!prototype) {
+  Assert(realm instanceof Realm);
+  if (prototype === undefined) {
     prototype = realm.Intrinsics['%FunctionPrototype%'];
   }
 
-  // Let func be a new built-in function object that when
-  // called performs the action described by steps.
-  const func = new Value(steps, realm);
-
-  internalSlotsList.forEach((slot) => {
-    func[slot] = undefined;
-  });
+  const func = new BuiltinFunctionValue(steps, isConstructor);
+  for (const slot of internalSlotsList) {
+    func[slot] = Value.undefined;
+  }
 
   func.Realm = realm;
   func.Prototype = prototype;
   func.Extensible = Value.true;
-  func.ScriptOrModule = null;
+  func.ScriptOrModule = Value.null;
 
   return func;
 }

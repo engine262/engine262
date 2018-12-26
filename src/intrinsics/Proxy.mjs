@@ -121,7 +121,7 @@ function Proxy_revocable([target, handler]) {
 }
 
 export function CreateProxy(realmRec) {
-  const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec);
+  const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec, undefined, Value.true);
   SetFunctionName(proxyConstructor, new Value('Proxy'));
   SetFunctionLength(proxyConstructor, new Value(2));
 

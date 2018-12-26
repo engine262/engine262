@@ -20,8 +20,6 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 22.2.1 #sec-%typedarray%-intrinsic-object
 function TypedArrayConstructor() {
-  // NewTarget
-  // This is to make sure this constructor has a [[Construct]] internal method.
   return surroundingAgent.Throw('TypeError', '%TypedArray% is not directly constructable');
 }
 

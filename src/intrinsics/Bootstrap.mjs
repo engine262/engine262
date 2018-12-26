@@ -93,7 +93,7 @@ export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
 }
 
 export function BootstrapConstructor(realmRec, Constructor, name, length, Prototype, props) {
-  const cons = CreateBuiltinFunction(Constructor, [], realmRec);
+  const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
 
   SetFunctionName(cons, new Value(name));
   SetFunctionLength(cons, new Value(length));
