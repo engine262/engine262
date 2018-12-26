@@ -130,7 +130,7 @@ class APIRealm {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
-    const module = ParseModule(sourceText, this.realm, { public: undefined, specifier });
+    const module = this.scope(() => ParseModule(sourceText, this.realm, { public: undefined, specifier }));
     if (Array.isArray(module)) {
       return new ThrowCompletion(module[0]);
     }

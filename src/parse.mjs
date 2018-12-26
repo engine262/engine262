@@ -1,4 +1,5 @@
 import acorn from 'acorn';
+import { surroundingAgent } from './engine.mjs';
 import { Value, SourceTextModuleRecord, ExportEntryRecord } from './value.mjs';
 import {
   ModuleRequests_ModuleItemList,
@@ -139,7 +140,7 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
       sourceType: 'script',
     });
   } catch (e) {
-    body = [e];
+    body = [surroundingAgent.Throw('SyntaxError', e.message).Value];
   }
   if (Array.isArray(body)) {
     return body;
@@ -161,7 +162,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
       sourceType: 'module',
     });
   } catch (e) {
-    body = [e];
+    body = [surroundingAgent.Throw('SyntaxError', e.message).Value];
   }
   if (Array.isArray(body)) {
     return body;
