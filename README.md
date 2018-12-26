@@ -74,30 +74,11 @@ is needed. Some of the newer features we use are:
 - Trailing commas in function declarations and calls (ES2017)
 - Object spread properties (ES2018)
 
-Additionally, the CLI (`bin/engine262.mjs`) test262 runner (`test/test262.mjs`)
-requires a recent version of Node.js.
+Additionally, the CLI (`bin/engine262.js`) and test262 runner
+(`test/test262.mjs`) require a recent version of Node.js.
 
-----
-
-engine262 strives to function as independently from the host JavaScript engine
-as possible. However, we still depend on the correctness of the host for a
-variety of tasks we deem too fundamental to the platform for us to implement.
-Some of them are:
-
-- Mathematical operations (including most arithmetic operators and most methods
-  on the `Math` global object)
-- Reasonably sound implementation of "regular" objects, `Map` and `Set`
-  objects, `TypedArray` objects, etc.
-
-Some other operations also depend on the host's correctness at this moment,
-though we hope to develop an independent implementation in the future:
-
-- String-to-number and number-to-string conversions
-- Regular expressions, when first implemented, will probably proxy the host's
-  implementation
-
-In particular, V8 versions between 6.7 and 7.0 (inclusive) had a bug that
-resulted in the following:
+V8 versions between 6.7 and 7.0 (inclusive) had a bug that resulted in the
+following:
 
 ```js
 // Generate a new array with the spread syntax, but then discard the resulting
