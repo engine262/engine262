@@ -248,7 +248,7 @@ function ArrayProto_push([...items], { thisValue }) {
   let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
   const argCount = items.length;
   if (len + argCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', 'Invalid array length');
+    return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
   }
   while (items.length > 0) {
     const E = items.shift();
@@ -432,6 +432,41 @@ function ArrayProto_toString(a, { thisValue }) {
   return Q(Call(func, array));
 }
 
+// #sec-array.prototype.unshift
+function ArrayProto_unshift(items, { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const lenProp = Q(Get(O, new Value('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
+  const argCount = items.length;
+  if (argCount > 0) {
+    if (len + argCount > (2 ** 53) - 1) {
+      return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+    }
+    let k = len;
+    while (k > 0) {
+      const from = X(ToString(new Value(k - 1)));
+      const to = X(ToString(new Value(k + argCount - 1)));
+      const fromPresent = Q(HasProperty(O, from));
+      if (fromPresent === Value.true) {
+        const fromValue = Q(Get(O, from));
+        Q(Set(O, to, fromValue, Value.true));
+      } else {
+        Q(DeletePropertyOrThrow(O, to));
+      }
+      k -= 1;
+    }
+    let j = 0;
+    while (items.length !== 0) {
+      const E = items.shift();
+      const jStr = X(ToString(new Value(j)));
+      Q(Set(O, jStr, E, Value.true));
+      j += 1;
+    }
+  }
+  Q(Set(O, new Value('length'), new Value(len + argCount), Value.true));
+  return new Value(len + argCount);
+}
+
 // 22.1.3.30 #sec-array.prototype.values
 function ArrayProto_values(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
@@ -464,7 +499,7 @@ export function CreateArrayPrototype(realmRec) {
     ['sort', ArrayProto_sort, 1],
     ['splice', ArrayProto_splice, 2],
     ['toString', ArrayProto_toString, 0],
-    // unshift
+    ['unshift', ArrayProto_unshift, 1],
     ['values', ArrayProto_values, 0],
   ]);
 

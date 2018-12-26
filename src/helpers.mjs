@@ -98,6 +98,7 @@ const messages = {
     ? `Could not resolve import ${inlineInspect(n)} from ${m.HostDefined.specifier}`
     : `Star export ${inlineInspect(n)} from ${m.HostDefined.specifier} is ambiguous`),
   CouldNotResolveModule: (s) => `Could not resolve module ${inlineInspect(s)}`,
+  ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds for a safe integer',
 };
 
 export function msg(key, ...args) {
