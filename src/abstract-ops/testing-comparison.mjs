@@ -263,7 +263,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     }
     let k = 0;
     while (true) {
-      if (px.stringValue()[k] !== py.stringValue[k]) {
+      if (px.stringValue()[k] !== py.stringValue()[k]) {
         break;
       }
       k += 1;
@@ -281,7 +281,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     if (nx.isNaN()) {
       return Value.undefined;
     }
-    if (y.isNaN()) {
+    if (ny.isNaN()) {
       return Value.undefined;
     }
     // If nx and ny are the same Number value, return false.
