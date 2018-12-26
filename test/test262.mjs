@@ -66,14 +66,6 @@ const excludedTests = new Set([
   'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/conversion-operation.js',
   'test/built-ins/TypedArrayConstructors/internals/Set/conversion-operation.js',
 
-  // -0 is apparently broken.
-  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js',
-  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-minus-zero.js',
-  'test/built-ins/TypedArrayConstructors/internals/Get/key-is-not-minus-zero.js',
-  'test/built-ins/TypedArrayConstructors/internals/GetOwnProperty/key-is-minus-zero.js',
-  'test/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-minus-zero.js',
-  'test/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js',
-
   // Unimplemented methods on %TypedArrayPrototype%.
   'test/built-ins/TypedArray/prototype/filter/arraylength-internal.js',
   'test/built-ins/TypedArray/prototype/filter/callbackfn-arguments-with-thisarg.js',
