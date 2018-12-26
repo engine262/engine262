@@ -152,6 +152,8 @@ async function* numbers() {
 // a stream of numbers fills your console. it fills you with determination.
 ```
 
+Documentation is available in [doc/api.md](doc/api.md)
+
 ## Related Projects
 
 Many people and organizations have attempted to write a JavaScript interpreter
