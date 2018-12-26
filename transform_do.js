@@ -3,7 +3,7 @@
 const { relative, resolve } = require('path');
 
 const COMPLETION_PATH = resolve('./src/completion.mjs');
-const NOTATIONAL_CONVENTIONS_PATH = resolve('./src/abstract-ops/all.mjs');
+const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
 
 module.exports = ({ types: t, template }) => ({
   visitor: {
@@ -20,16 +20,11 @@ module.exports = ({ types: t, template }) => ({
       exit(path, state) {
         if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
           const r = relative(state.file.opts.filename, COMPLETION_PATH).replace('../', './');
-          path.node.body.unshift(t.ImportDeclaration([
-            t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
-            t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-          ], t.StringLiteral(r)));
+          path.node.body.unshift(template.ast(`import { Completion, AbruptCompletion } from '${r}';`));
         }
         if (!state.foundCall && state.needCall) {
-          const r = relative(state.file.opts.filename, NOTATIONAL_CONVENTIONS_PATH).replace('../', './');
-          path.node.body.unshift(t.ImportDeclaration([
-            t.ImportSpecifier(t.Identifier('Call'), t.Identifier('Call')),
-          ], t.StringLiteral(r)));
+          const r = relative(state.file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
+          path.node.body.unshift(template.ast(`import { Call } from '${r}';`));
         }
       },
     },
@@ -106,6 +101,9 @@ module.exports = ({ types: t, template }) => ({
       } else if (path.node.callee.name === 'X') {
         state.needCompletion = true;
         state.needCall = true;
+        if (path.scope.getBinding('Call') !== undefined) {
+          state.foundCall = true;
+        }
 
         const [argument] = path.node.arguments;
         const val = path.scope.generateUidIdentifier('val');
@@ -126,8 +124,18 @@ module.exports = ({ types: t, template }) => ({
       } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
         state.needCompletion = true;
         state.needCall = true;
+        if (path.scope.getBinding('Call') !== undefined) {
+          state.foundCall = true;
+        }
 
         const [value, capability] = path.node.arguments;
+
+        if (!t.isIdentifier(value)) {
+          throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier');
+        }
+        if (!t.isIdentifier(capability)) {
+          throw path.get('arguments.1').buildCodeFrameError('Second argument to IfAbruptRejectPromise should be an identifier');
+        }
 
         const binding = path.scope.getBinding(value.name);
         binding.path.parent.kind = 'let';
