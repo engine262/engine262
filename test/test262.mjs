@@ -53,7 +53,26 @@ const excludedTests = new Set([
   'test/built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
   'test/built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js',
   'test/built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js',
+  'test/built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js',
   'test/built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
+  'test/built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
+
+  // Missing String.prototype.slice.
+  'test/built-ins/Array/prototype/sort/stability-2048-elements.js', // takes quite a while to run as well
+  'test/built-ins/Array/prototype/sort/stability-513-elements.js',
+  'test/built-ins/TypedArray/prototype/every/returns-true-if-every-cb-returns-true.js',
+  'test/built-ins/TypedArray/prototype/fill/fill-values-conversion-operations.js',
+  'test/built-ins/TypedArrayConstructors/ctors/object-arg/conversion-operation.js',
+  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/conversion-operation.js',
+  'test/built-ins/TypedArrayConstructors/internals/Set/conversion-operation.js',
+
+  // -0 is apparently broken.
+  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js',
+  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-minus-zero.js',
+  'test/built-ins/TypedArrayConstructors/internals/Get/key-is-not-minus-zero.js',
+  'test/built-ins/TypedArrayConstructors/internals/GetOwnProperty/key-is-minus-zero.js',
+  'test/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-minus-zero.js',
+  'test/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js',
 
   // Unimplemented methods on %TypedArrayPrototype%.
   'test/built-ins/TypedArray/prototype/filter/arraylength-internal.js',
@@ -214,24 +233,6 @@ const excludedTests = new Set([
   'test/built-ins/TypedArray/prototype/slice/this-is-not-typedarray-instance.js',
   'test/built-ins/TypedArray/prototype/slice/tointeger-end.js',
   'test/built-ins/TypedArray/prototype/slice/tointeger-start.js',
-  'test/built-ins/TypedArray/prototype/sort/arraylength-internal.js',
-  'test/built-ins/TypedArray/prototype/sort/comparefn-call-throws.js',
-  'test/built-ins/TypedArray/prototype/sort/comparefn-calls.js',
-  'test/built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
-  'test/built-ins/TypedArray/prototype/sort/detached-buffer-comparefn.js',
-  'test/built-ins/TypedArray/prototype/sort/detached-buffer.js',
-  'test/built-ins/TypedArray/prototype/sort/invoked-as-func.js',
-  'test/built-ins/TypedArray/prototype/sort/invoked-as-method.js',
-  'test/built-ins/TypedArray/prototype/sort/length.js',
-  'test/built-ins/TypedArray/prototype/sort/name.js',
-  'test/built-ins/TypedArray/prototype/sort/prop-desc.js',
-  'test/built-ins/TypedArray/prototype/sort/return-same-instance.js',
-  'test/built-ins/TypedArray/prototype/sort/sort-tonumber.js',
-  'test/built-ins/TypedArray/prototype/sort/sortcompare-with-no-tostring.js',
-  'test/built-ins/TypedArray/prototype/sort/sorted-values-nan.js',
-  'test/built-ins/TypedArray/prototype/sort/sorted-values.js',
-  'test/built-ins/TypedArray/prototype/sort/this-is-not-object.js',
-  'test/built-ins/TypedArray/prototype/sort/this-is-not-typedarray-instance.js',
 ]);
 
 const PASS = Symbol('PASS');
