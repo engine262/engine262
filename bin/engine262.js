@@ -23,6 +23,7 @@ const {
   Value,
   Object: APIObject,
   Abstract,
+  Throw,
 } = engine262;
 
 initializeAgent({
@@ -38,6 +39,9 @@ function createRealm() {
       const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
       if (resolved === realm.moduleEntry.specifier) {
         return realm.moduleEntry;
+      }
+      if (!fs.existsSync(resolved)) {
+        return Throw(realm, 'Error', `Cannot resolve module ${specifier}`);
       }
       const source = fs.readFileSync(resolved, 'utf8');
       return realm.createSourceTextModule(resolved, source);
