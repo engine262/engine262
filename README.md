@@ -92,7 +92,7 @@ Some of them are:
 Some other operations also depend on the host's correctness at this moment,
 though we hope to develop an independent implementation in the future:
 
-- String-to-number conversion
+- String-to-number and number-to-string conversions
 - Regular expressions, when first implemented, will probably proxy the host's
   implementation
 
