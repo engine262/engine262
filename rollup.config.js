@@ -26,7 +26,6 @@ module.exports = () => ({
     babel({
       exclude: 'node_modules/**',
       plugins: [
-        '@babel/plugin-syntax-object-rest-spread',
         process.env.USE_DO_EXPRESSIONS ? './transform_do.js' : './transform.js',
       ],
     }),
