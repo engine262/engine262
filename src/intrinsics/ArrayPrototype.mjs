@@ -433,11 +433,11 @@ function ArrayProto_toString(a, { thisValue }) {
 }
 
 // #sec-array.prototype.unshift
-function ArrayProto_unshift(items, { thisValue }) {
+function ArrayProto_unshift(args, { thisValue, callLength }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
-  const argCount = items.length;
+  const argCount = callLength;
   if (argCount > 0) {
     if (len + argCount > (2 ** 53) - 1) {
       return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
@@ -456,6 +456,7 @@ function ArrayProto_unshift(items, { thisValue }) {
       k -= 1;
     }
     let j = 0;
+    const items = [...args];
     while (items.length !== 0) {
       const E = items.shift();
       const jStr = X(ToString(new Value(j)));
