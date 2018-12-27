@@ -68,6 +68,10 @@ const excludedTests = new Set([
 
   // Missing parseInt
   'test/built-ins/Array/prototype/concat/create-species-non-ctor.js',
+  'test/built-ins/Array/prototype/filter/create-species-non-ctor.js',
+  'test/built-ins/Array/prototype/map/15.4.4.19-2-18.js',
+  'test/built-ins/Array/prototype/map/create-species-non-ctor.js',
+  'test/built-ins/Array/prototype/slice/create-species-non-ctor.js',
 
   // Unimplemented methods on %TypedArrayPrototype%.
   'test/built-ins/TypedArray/prototype/filter/arraylength-internal.js',

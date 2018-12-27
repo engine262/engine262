@@ -206,14 +206,14 @@ function ArrayProto_keys(args, { thisValue }) {
 function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(ToLength(lenProp));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
   const T = thisArg || Value.undefined;
-  const A = Q(ArraySpeciesCreate(O, new Value(0)));
+  const A = Q(ArraySpeciesCreate(O, len));
   let k = 0;
-  while (k < len) {
+  while (k < len.numberValue()) {
     const Pk = X(ToString(new Value(k)));
     const kPresent = Q(HasProperty(O, Pk));
     if (kPresent === Value.true) {
@@ -244,13 +244,16 @@ function ArrayProto_pop(args, { thisValue }) {
 }
 
 // 22.1.3.18 #sec-array.prototype.push
-function ArrayProto_push([...items], { thisValue }) {
+function ArrayProto_push([...items], { thisValue, callLength }) {
   const O = Q(ToObject(thisValue));
   let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  const argCount = items.length;
+  // TODO(27)
+  const argCount = callLength;
   if (len + argCount > (2 ** 53) - 1) {
     return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
   }
+  // TODO(27)
+  items = items.slice(0, callLength);
   while (items.length > 0) {
     const E = items.shift();
     Q(Set(O, X(ToString(new Value(len))), E, Value.true));
@@ -263,7 +266,8 @@ function ArrayProto_push([...items], { thisValue }) {
 // 22.1.3.22 #sec-array.prototype.shift
 function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const lenProp = Q(Get(O, new Value('length')));
+  const len = Q(ToLength(lenProp)).numberValue();
   if (len === 0) {
     Q(Set(O, new Value('length'), new Value(0), Value.true));
     return Value.undefined;
