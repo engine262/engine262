@@ -8,6 +8,7 @@ import {
   IsDetachedBuffer,
   Set,
   SetValueInBuffer,
+  ToBoolean,
   ToInteger,
   ToNumber,
   ToObject,
@@ -168,9 +169,41 @@ function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undef
 }
 
 // 22.2.3.9 #sec-%typedarray%.prototype.filter
-// function TypedArrayProto_filter([callbackfn, thisArg], { thisValue }) {
-//   const O = thisValue;
-// }
+function TypedArrayProto_filter([callbackfn, thisArg], { thisValue }) {
+  const O = thisValue;
+  Q(ValidateTypedArray(O));
+  const len = O.ArrayLength.numberValue();
+  if (IsCallable(callbackfn) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+  }
+  let T;
+  if (thisArg !== undefined) {
+    T = thisArg;
+  } else {
+    T = Value.undefined;
+  }
+  const kept = [];
+  let k = 0;
+  let captured = 0;
+  while (k < len) {
+    const Pk = X(ToString(new Value(k)));
+    const kValue = Q(Get(O, Pk));
+    const selected = ToBoolean(Q(Call(callbackfn, T, [kValue, new Value(k), O])));
+    if (selected === Value.true) {
+      kept.push(kValue);
+      captured += 1;
+    }
+    k += 1;
+  }
+  const A = Q(TypedArraySpeciesCreate(O, [new Value(captured)]));
+  let n = 0;
+  for (const e of kept) {
+    const nStr = X(ToString(new Value(n)));
+    X(Set(A, nStr, e, Value.true));
+    n += 1;
+  }
+  return A;
+}
 
 // 22.2.3.16 #sec-%typedarray%.prototype.keys
 function TypedArrayProto_keys(args, { thisValue }) {
@@ -314,7 +347,7 @@ export function CreateTypedArrayPrototype(realmRec) {
     ['copyWithin', TypedArrayProto_copyWithin, 2],
     ['entries', TypedArrayProto_entries, 0],
     ['fill', TypedArrayProto_fill, 1],
-    // ['filter', TypedArrayProto_filter, 1],
+    ['filter', TypedArrayProto_filter, 1],
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_lengthGetter]],
     ['sort', TypedArrayProto_sort, 1],

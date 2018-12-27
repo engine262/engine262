@@ -174,7 +174,7 @@ function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
   }
   const T = thisArg || Value.undefined;
   const A = Q(ArraySpeciesCreate(O, new Value(0)));
