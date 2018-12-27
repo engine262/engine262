@@ -11,5 +11,5 @@ action "Build" {
 action "Lint" {
   needs = "Build"
   uses = "actions/npm@master"
-  runs = "run lint"
+  args = "run lint"
 }
