@@ -106,6 +106,34 @@ function StringProto_indexOf([searchString, position = Value.undefined], { thisV
   return new Value(-1);
 }
 
+// 21.1.3.18 #sec-string.prototype.slice
+function StringProto_slice([start, end], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const len = S.length;
+  const intStart = Q(ToInteger(start)).numberValue();
+  let intEnd;
+  if (end === Value.undefined) {
+    intEnd = len;
+  } else {
+    intEnd = Q(ToInteger(end)).numberValue();
+  }
+  let from;
+  if (intStart < 0) {
+    from = Math.max(len + intStart, 0);
+  } else {
+    from = Math.min(intStart, len);
+  }
+  let to;
+  if (intEnd < 0) {
+    to = Math.max(len + intEnd, 0);
+  } else {
+    to = Math.min(intEnd, len);
+  }
+  const span = Math.max(to - from, 0);
+  return new Value(S.slice(from, from + span));
+}
+
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
@@ -151,7 +179,7 @@ export function CreateStringPrototype(realmRec) {
     // repeat
     // replace
     // search
-    // slice
+    ['slice', StringProto_slice, 2],
     // split
     // startsWith
     // substring

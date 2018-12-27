@@ -59,16 +59,6 @@ const excludedTests = new Set([
   'test/built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
   'test/built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
 
-  // Missing String.prototype.slice.
-  'test/built-ins/Array/prototype/sort/stability-2048-elements.js', // takes quite a while to run as well
-  'test/built-ins/Array/prototype/sort/stability-513-elements.js',
-  'test/built-ins/TypedArray/prototype/every/returns-true-if-every-cb-returns-true.js',
-  'test/built-ins/TypedArray/prototype/fill/fill-values-conversion-operations.js',
-  'test/built-ins/TypedArray/prototype/map/return-new-typedarray-conversion-operation.js',
-  'test/built-ins/TypedArrayConstructors/ctors/object-arg/conversion-operation.js',
-  'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/conversion-operation.js',
-  'test/built-ins/TypedArrayConstructors/internals/Set/conversion-operation.js',
-
   // Missing parseInt
   'test/built-ins/Array/prototype/concat/create-species-non-ctor.js',
   'test/built-ins/Array/prototype/every/15.4.4.16-2-18.js',
