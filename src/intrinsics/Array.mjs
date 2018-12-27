@@ -37,10 +37,11 @@ import {
 import { OutOfRange, msg } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// 22.1.1 #sec-array-constructor
 function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
   const numberOfArgs = callLength;
   if (numberOfArgs === 0) {
-    // 22.1.1.1 Array ( )
+    // 22.1.1.1 #sec-array-constructor-array
     Assert(numberOfArgs === 0);
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
@@ -48,7 +49,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
     return ArrayCreate(new Value(0), proto);
   } else if (numberOfArgs === 1) {
-    // #sec-array-len Array ( len )
+    // 22.1.1.2 #sec-array-len
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
     if (Type(NewTarget) === 'Undefined') {
@@ -70,7 +71,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     Set(array, new Value('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
-    // #sec-array-items Array ( ...items )
+    // 22.1.1.3 #sec-array-items
     Assert(numberOfArgs >= 2);
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
@@ -93,6 +94,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
   throw new OutOfRange('ArrayConstructor', numberOfArgs);
 }
 
+// 22.1.2.1 #sec-array.from
 function Array_from([items, mapfn = Value.undefined, thisArg], { thisValue }) {
   const C = thisValue;
   let mapping;
@@ -174,10 +176,12 @@ function Array_from([items, mapfn = Value.undefined, thisArg], { thisValue }) {
   return A;
 }
 
+// 22.1.2.2 #sec-array.isarray
 function Array_isArray([arg]) {
   return Q(IsArray(arg));
 }
 
+// 22.1.2.3 #sec-array.of
 function Array_of([...items], { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
@@ -199,6 +203,11 @@ function Array_of([...items], { thisValue }) {
   return A;
 }
 
+// 22.1.2.5 #sec-get-array-@@species
+function Array_speciesGetter(args, { thisValue }) {
+  return thisValue;
+}
+
 export function CreateArray(realmRec) {
   const proto = realmRec.Intrinsics['%ArrayPrototype%'];
 
@@ -206,6 +215,7 @@ export function CreateArray(realmRec) {
     ['from', Array_from, 1],
     ['isArray', Array_isArray, 1],
     ['of', Array_of, 0],
+    [wellKnownSymbols.species, [Array_speciesGetter]],
   ]);
 
   realmRec.Intrinsics['%Array%'] = cons;

@@ -24,6 +24,8 @@ const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 't
 const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.js'));
 
 const excludedFeatures = new Set([
+  'Array.prototype.flat',
+  'Array.prototype.flatMap',
   'BigInt',
   'class-fields-private',
   'class-fields-public',
@@ -68,10 +70,13 @@ const excludedTests = new Set([
 
   // Missing parseInt
   'test/built-ins/Array/prototype/concat/create-species-non-ctor.js',
+  'test/built-ins/Array/prototype/every/15.4.4.16-2-18.js',
   'test/built-ins/Array/prototype/filter/create-species-non-ctor.js',
   'test/built-ins/Array/prototype/map/15.4.4.19-2-18.js',
   'test/built-ins/Array/prototype/map/create-species-non-ctor.js',
   'test/built-ins/Array/prototype/slice/create-species-non-ctor.js',
+  'test/built-ins/Array/prototype/some/15.4.4.17-2-18.js',
+  'test/built-ins/Array/prototype/splice/create-species-non-ctor.js',
 
   // Unimplemented methods on %TypedArrayPrototype%.
   'test/built-ins/TypedArray/prototype/filter/arraylength-internal.js',
