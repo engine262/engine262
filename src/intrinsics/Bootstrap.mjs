@@ -10,17 +10,11 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
 import { X } from '../completion.mjs';
-
-const kFlagDisabled = Symbol('kFlagDisabled');
 
 // 17 #sec-ecmascript-standard-built-in-objects
 export function assignProps(realmRec, obj, props) {
   for (const [n, v, len, descriptor] of props) {
-    if (n === kFlagDisabled) {
-      continue;
-    }
     const name = n instanceof Value ? n : new Value(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
@@ -115,11 +109,4 @@ export function BootstrapConstructor(realmRec, Constructor, name, length, Protot
   assignProps(realmRec, cons, props);
 
   return cons;
-}
-
-export function FlaggedFeature(name, ...args) {
-  if (surroundingAgent.hostDefinedOptions.flags.includes(name)) {
-    return args;
-  }
-  return [kFlagDisabled];
 }

@@ -295,7 +295,6 @@ function createRealm() {
 
 const agentOpt = {
   promiseRejectionTracker: undefined,
-  flags: ['Object.fromEntries'],
 };
 initializeAgent(agentOpt);
 

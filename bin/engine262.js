@@ -26,12 +26,7 @@ const {
   Throw,
 } = engine262;
 
-initializeAgent({
-  flags: [
-    'globalThis',
-    'Object.fromEntries',
-  ],
-});
+initializeAgent();
 
 function createRealm() {
   const realm = new Realm({
