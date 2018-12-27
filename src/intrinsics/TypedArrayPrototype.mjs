@@ -227,6 +227,32 @@ function TypedArrayProto_lengthGetter(args, { thisValue }) {
   return length;
 }
 
+// 22.2.3.19 #sec-%typedarray%.prototype.map
+function TypedArrayProto_map([callbackfn, thisArg], { thisValue }) {
+  const O = thisValue;
+  Q(ValidateTypedArray(O));
+  const len = O.ArrayLength;
+  if (IsCallable(callbackfn) === Value.false) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+  }
+  let T;
+  if (thisArg !== undefined) {
+    T = thisArg;
+  } else {
+    T = Value.undefined;
+  }
+  const A = Q(TypedArraySpeciesCreate(O, [len]));
+  let k = 0;
+  while (k < len.numberValue()) {
+    const Pk = X(ToString(new Value(k)));
+    const kValue = Q(Get(O, Pk));
+    const mappedValue = Q(Call(callbackfn, T, [kValue, new Value(k), O]));
+    Q(Set(A, Pk, mappedValue, Value.true));
+    k += 1;
+  }
+  return A;
+}
+
 // 22.2.3.26 #sec-%typedarray%.prototype.sort
 function TypedArrayProto_sort([comparefn], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
@@ -350,6 +376,7 @@ export function CreateTypedArrayPrototype(realmRec) {
     ['filter', TypedArrayProto_filter, 1],
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_lengthGetter]],
+    ['map', TypedArrayProto_map, 1],
     ['sort', TypedArrayProto_sort, 1],
     ['subarray', TypedArrayProto_subarray, 2],
     ['values', TypedArrayProto_values, 0],
