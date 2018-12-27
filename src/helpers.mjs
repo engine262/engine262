@@ -90,8 +90,10 @@ const messages = {
   CannotSetProperty: (p, o) => `Cannot set property ${inlineInspect(p)} on ${inlineInspect(o)}`,
   AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
   ConstructorRequiresNew: (n) => `${n} constructor requires new`,
+  NegativeIndex: (n = 'Index') => `${n} cannot be negative`,
   TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
   TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
+  TypedArrayOOB: () => 'Sum of start offset and byte length should be less than the size of the TypedArray',
   TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
   DataViewOOB: () => 'Offset is outside the bounds of the DataView',
   ResolutionNullOrAmbiguous: (r, n, m) => (r === null

@@ -18,7 +18,7 @@ import {
   StringCreate,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, msg } from '../helpers.mjs';
 
 // 7.1.1 #sec-toprimitive
 export function ToPrimitive(input, PreferredType) {
@@ -375,7 +375,7 @@ export function ToIndex(value) {
   } else {
     const integerIndex = Q(ToInteger(value));
     if (integerIndex.numberValue() < 0) {
-      return surroundingAgent.Throw('RangeError', 'Index cannot be negative');
+      return surroundingAgent.Throw('RangeError', msg('NegativeIndex'));
     }
     index = X(ToLength(integerIndex));
     if (SameValueZero(integerIndex, index) === Value.false) {
