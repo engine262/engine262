@@ -372,6 +372,69 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
   }
 }
 
+// 22.2.3.24 #sec-%typedarray%.prototype.slice
+function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+  const O = thisValue;
+  Q(ValidateTypedArray(O));
+  const len = O.ArrayLength.numberValue();
+  const relativeStart = Q(ToInteger(start)).numberValue();
+  let k;
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  }
+  let relativeEnd;
+  if (end === Value.undefined) {
+    relativeEnd = len;
+  } else {
+    relativeEnd = Q(ToInteger(end)).numberValue();
+  }
+  let final;
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  }
+  const count = Math.max(final - k, 0);
+
+  const A = Q(TypedArraySpeciesCreate(O, [new Value(count)]));
+  const srcName = O.TypedArrayName.stringValue();
+  const srcInfo = typedArrayInfo.get(srcName);
+  const srcType = srcInfo.ElementType;
+  const targetName = A.TypedArrayName.stringValue();
+  const targetType = typedArrayInfo.get(targetName).ElementType;
+  if (srcType !== targetType) {
+    let n = 0;
+    while (k < final) {
+      const Pk = X(ToString(new Value(k)));
+      const kValue = Q(Get(O, Pk));
+      const nStr = X(ToString(new Value(n)));
+      X(Set(A, nStr, kValue, Value.true));
+      k += 1;
+      n += 1;
+    }
+  } else if (count > 0) {
+    const srcBuffer = O.ViewedArrayBuffer;
+    if (IsDetachedBuffer(srcBuffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+    const targetBuffer = A.ViewedArrayBuffer;
+    const elementSize = srcInfo.ElementSize;
+    const srcByteOffset = O.ByteOffset.numberValue();
+    let targetByteIndex = A.ByteOffset.numberValue();
+    let srcByteIndex = k * elementSize + srcByteOffset;
+    const limit = targetByteIndex + count * elementSize;
+    while (targetByteIndex < limit) {
+      const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8', true, 'Unordered');
+      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value, true, 'Unordered');
+      srcByteIndex += 1;
+      targetByteIndex += 1;
+    }
+  }
+  return A;
+}
+
 // 22.2.3.26 #sec-%typedarray%.prototype.sort
 function TypedArrayProto_sort([comparefn], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
@@ -497,6 +560,7 @@ export function CreateTypedArrayPrototype(realmRec) {
     ['length', [TypedArrayProto_lengthGetter]],
     ['map', TypedArrayProto_map, 1],
     ['set', TypedArrayProto_set, 1],
+    ['slice', TypedArrayProto_slice, 2],
     ['sort', TypedArrayProto_sort, 1],
     ['subarray', TypedArrayProto_subarray, 2],
     ['values', TypedArrayProto_values, 0],

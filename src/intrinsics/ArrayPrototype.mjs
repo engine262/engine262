@@ -322,7 +322,8 @@ function ArrayProto_slice([start, end], { thisValue }) {
     const kPresent = Q(HasProperty(O, Pk));
     if (kPresent === Value.true) {
       const kValue = Q(Get(O, Pk));
-      Q(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), kValue));
+      const nStr = X(ToString(new Value(n)));
+      Q(CreateDataPropertyOrThrow(A, nStr, kValue));
     }
     k += 1;
     n += 1;
