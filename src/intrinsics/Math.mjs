@@ -1,50 +1,72 @@
 import {
   Descriptor,
   Value,
-  wellKnownSymbols,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
-  ObjectCreate,
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// 20.2 The Math Object
+// 20.2.2.1 #sec-math.abs
+function Math_abs([x = Value.undefined]) {
+  x = Q(ToNumber(x));
+  if (x.isNaN()) {
+    return x;
+  } else if (Object.is(x.numberValue(), -0)) {
+    return new Value(0);
+  } else if (x.isInfinity()) {
+    return new Value(Infinity);
+  }
+
+  if (x.numberValue() < 0) {
+    return new Value(-x.numberValue());
+  }
+  return x;
+}
+
+// 20.2.2.2 #sec-math.acos
+function Math_acos([x = Value.undefined]) {
+  x = Q(ToNumber(x));
+  if (x.isNaN()) {
+    return x;
+  } else if (x.numberValue() > 1) {
+    return new Value(NaN);
+  } else if (x.numberValue() < -1) {
+    return new Value(NaN);
+  } else if (x.numberValue() === 1) {
+    return new Value(+0);
+  }
+
+  return new Value(Math.acos(x.numberValue()));
+}
+
+// 20.2 #sec-math-object
 export function CreateMath(realmRec) {
-  const mathObj = ObjectCreate(realmRec.Intrinsics['%ObjectPrototype%']);
+  // 20.2.1 #sec-value-properties-of-the-math-object
+  const readonly = { Writable: Value.false, Configurable: Value.false };
+  const valueProps = [
+    ['E', 2.7182818284590452354],
+    ['LN10', 2.302585092994046],
+    ['LN2', 0.6931471805599453],
+    ['LOG10E', 0.4342944819032518],
+    ['LOG2E', 1.4426950408889634],
+    ['PI', 3.1415926535897932],
+    ['SQRT1_2', 0.7071067811865476],
+    ['SQRT2', 1.4142135623730951],
+  ].map(([name, value]) => [name, new Value(value), undefined, readonly]);
+  // @@toStringTag is handled in the BootstrapPrototype() call.
 
-  // 20.2.1 Value Properties of the Math Object
-  [
-    ['E', Math.E],
-    ['LN10', Math.LN10],
-    ['LN2', Math.LN2],
-    ['LOG10E', Math.LOG10E],
-    ['LOG2E', Math.LOG2E],
-    ['PI', Math.PI],
-    ['SQRT1_2', Math.SQRT1_2],
-    ['SQRT2', Math.SQRT2],
-  ].forEach(([name, value]) => {
-    mathObj.DefineOwnProperty(new Value(name), Descriptor({
-      Value: new Value(value),
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-    }));
-  });
+  const mathObj = BootstrapPrototype(realmRec, [
+    ...valueProps,
+    ['abs', Math_abs, 1],
+    ['acos', Math_acos, 1],
+  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Math');
 
-  mathObj.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-    Value: new Value('Math'),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
-
-  // 20.2.2 Function Properties of the Math Object
+  // 20.2.2 #sec-function-properties-of-the-math-object
 
   [
-    ['abs'],
-    ['acos'],
     ['acosh'],
     ['asin'],
     ['asinh'],
