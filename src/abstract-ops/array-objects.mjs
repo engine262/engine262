@@ -65,7 +65,10 @@ export function ArrayCreate(length, proto) {
 
 // 9.4.2.3 #sec-arrayspeciescreate
 export function ArraySpeciesCreate(originalArray, length) {
-  Assert(Type(length) === 'Number' && length.numberValue() >= 0);
+  Assert(Type(length) === 'Number' && Number.isInteger(length.numberValue()) && length.numberValue() >= 0);
+  if (Object.is(length.numberValue(), -0)) {
+    length = new Value(+0);
+  }
   const isArray = Q(IsArray(originalArray));
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
@@ -82,11 +85,11 @@ export function ArraySpeciesCreate(originalArray, length) {
   }
   if (Type(C) === 'Object') {
     C = Q(Get(C, wellKnownSymbols.species));
-    if (Type(C) === 'Null') {
+    if (C === Value.null) {
       C = Value.undefined;
     }
   }
-  if (Type(C) === 'Undefined') {
+  if (C === Value.undefined) {
     return Q(ArrayCreate(length));
   }
   if (IsConstructor(C) === Value.false) {

@@ -15,7 +15,7 @@ import {
   ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, msg } from '../helpers.mjs';
 
 // 6.1.7 #integer-index
 export function isIntegerIndex(V) {
@@ -76,7 +76,7 @@ export function IsArray(argument) {
   }
   if (argument instanceof ProxyExoticObjectValue) {
     if (Type(argument.ProxyHandler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'IsArray'));
     }
     const target = argument.ProxyTarget;
     return IsArray(target);

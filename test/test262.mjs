@@ -66,6 +66,9 @@ const excludedTests = new Set([
   'test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/conversion-operation.js',
   'test/built-ins/TypedArrayConstructors/internals/Set/conversion-operation.js',
 
+  // Missing parseInt
+  'test/built-ins/Array/prototype/concat/create-species-non-ctor.js',
+
   // Unimplemented methods on %TypedArrayPrototype%.
   'test/built-ins/TypedArray/prototype/filter/arraylength-internal.js',
   'test/built-ins/TypedArray/prototype/filter/callbackfn-arguments-with-thisarg.js',

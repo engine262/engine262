@@ -33,22 +33,23 @@ import { assignProps } from './Bootstrap.mjs';
 import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat
-function ArrayProto_concat(args, { thisValue }) {
+function ArrayProto_concat(args, { thisValue, callLength }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, new Value(0)));
   let n = 0;
-  const items = [O, ...args];
-  while (items.length) {
+  // TODO(27)
+  const items = [O, ...args.slice(0, callLength)];
+  while (items.length > 0) {
     const E = items.shift();
     const spreadable = Q(IsConcatSpreadable(E));
     if (spreadable === Value.true) {
       let k = 0;
       const lenProp = Q(Get(E, new Value('length')));
-      const len = Q(ToLength(lenProp));
-      if (n + len.numberValue() > (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError');
+      const len = Q(ToLength(lenProp)).numberValue();
+      if (n + len > (2 ** 53) - 1) {
+        return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
       }
-      while (k < len.numberValue()) {
+      while (k < len) {
         const P = X(ToString(new Value(k)));
         const exists = Q(HasProperty(E, P));
         if (exists === Value.true) {
@@ -61,7 +62,7 @@ function ArrayProto_concat(args, { thisValue }) {
       }
     } else {
       if (n >= (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
       }
       const nStr = X(ToString(new Value(n)));
       Q(CreateDataPropertyOrThrow(A, nStr, E));
@@ -69,7 +70,7 @@ function ArrayProto_concat(args, { thisValue }) {
     }
   }
   Q(Set(A, new Value('length'), new Value(n), Value.true));
-  return Value.true;
+  return A;
 }
 
 // 22.1.3.3 #sec-array.prototype.copywithin
