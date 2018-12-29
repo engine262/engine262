@@ -6,6 +6,7 @@ import {
   isClassExpression,
   isFunctionExpression,
   isGeneratorExpression,
+  isParenthesizedExpression,
 } from '../ast.mjs';
 
 // At the time of implementation, only the following productions return true
@@ -58,6 +59,9 @@ import {
 // 12.15.2 #sec-assignment-operators-static-semantics-isfunctiondefinition
 // 12.16.1 #sec-comma-operator-static-semantics-isfunctiondefinition
 export function IsFunctionDefinition_Expression(Expression) {
+  if (isParenthesizedExpression(Expression)) {
+    return IsFunctionDefinition_Expression(Expression.expression);
+  }
   return isArrowFunction(Expression)
          || isAsyncArrowFunction(Expression)
          || isFunctionExpression(Expression)

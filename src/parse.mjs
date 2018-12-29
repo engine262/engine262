@@ -34,7 +34,12 @@ function functionFlags(async, generator) {
 
 const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options, source) {
-    super({ ...options, ecmaVersion: 2019 }, source);
+    super({
+      ...options,
+      ecmaVersion: 2019,
+      // adds needed ParenthesizedExpression production
+      preserveParens: true,
+    }, source);
   }
 
   finishNode(node, type) {
@@ -130,8 +135,8 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
   return params;
 }
 
-export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.body.body[0];
-export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.body.body[0];
+export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.expression.body.body[0];
+export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.expression.body.body[0];
 
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   let body;

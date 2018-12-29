@@ -432,6 +432,10 @@ export function isExpressionWithComma(node) {
   return node.type === 'SequenceExpression';
 }
 
+export function isParenthesizedExpression(node) {
+  return node.type === 'ParenthesizedExpression';
+}
+
 // #prod-Expression
 export function isExpression(node) {
   return (
@@ -509,6 +513,7 @@ export function isExpression(node) {
 
     // Expression
       || isExpressionWithComma(node)
+      || isParenthesizedExpression(node)
   );
 }
 

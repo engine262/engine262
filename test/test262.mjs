@@ -52,11 +52,6 @@ const excludedTests = new Set([
   'test/language/statements/for-of/let-block-with-newline.js',
   'test/language/statements/for-of/let-identifier-with-newline.js',
 
-  // ESTree does not allow determining whether the LeftHandSideExpression is a
-  // CoverParenthesizedExpressionAndArrowParameterList right now.
-  // Refs: https://github.com/estree/estree/issues/194
-  'test/language/expressions/assignment/fn-name-lhs-cover.js',
-
   // Uses regexes.
   'test/built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
   'test/built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js',

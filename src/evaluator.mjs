@@ -53,6 +53,7 @@ import {
   isLiteral,
   isMetaProperty,
   isObjectLiteral,
+  isParenthesizedExpression,
   isReturnStatement,
   isStatement,
   isSuperCall,
@@ -434,6 +435,10 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isExpressionWithComma(Expression):
       return yield* Evaluate_ExpressionWithComma(Expression);
+
+    // 12.2.10.4 #sec-grouping-operator-runtime-semantics-evaluation
+    case isParenthesizedExpression(Expression):
+      return yield* Evaluate(Expression.expression);
 
     default:
       throw new OutOfRange('Evaluate_Expression', Expression);
