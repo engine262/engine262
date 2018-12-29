@@ -6,6 +6,7 @@ import {
   isClassExpression,
   isFunctionExpression,
   isGeneratorExpression,
+  isParenthesizedExpression,
 } from '../ast.mjs';
 import { IsFunctionDefinition_Expression } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -64,6 +65,9 @@ export function HasName_Expression(Expression) {
     case isArrowFunction(Expression):
     case isAsyncArrowFunction(Expression):
       return false;
+
+    case isParenthesizedExpression(Expression):
+      return HasName_Expression(Expression.expression);
 
     default:
       throw new OutOfRange('HasName_Expression', Expression);

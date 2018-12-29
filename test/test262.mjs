@@ -160,7 +160,7 @@ function determineFiles() {
   }
   const out = [];
   for (const srcPath of srcPaths) {
-    out.push(...glob.sync(path.resolve(testdir, srcPath)));
+    out.push(...glob.sync(path.resolve(testdir, 'test', srcPath)));
   }
   return out;
 }
@@ -231,6 +231,8 @@ async function run({
   } else {
     completion = $262.evalScript(strict ? `'use strict';\n${source}` : source);
   }
+
+  $262.moduleEntry = undefined;
 
   if (completion instanceof AbruptCompletion) {
     clearTimeout(timeout);

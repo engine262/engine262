@@ -215,9 +215,11 @@ export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
 
 // 16.1 #sec-host-report-errors
 export function HostReportErrors(errorList) {
-  errorList.forEach((error) => {
-    console.log('[HostReportErrors]', error); // eslint-disable-line no-console
-  });
+  if (surroundingAgent.hostDefinedOptions.reportError) {
+    errorList.forEach((error) => {
+      surroundingAgent.hostDefinedOptions.reportError(error);
+    });
+  }
 }
 
 export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
