@@ -10,25 +10,23 @@ import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
-import {
-  isArrayLiteral,
-  isObjectLiteral,
-} from '../ast.mjs';
-import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
+import { DestructuringAssignmentEvaluation_AssignmentPattern } from './all.mjs';
+import { isAssignmentPattern } from '../ast.mjs';
+import { EvaluateBinopValues, Evaluate_Expression } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 
 // 12.15.4 #sec-assignment-operators-runtime-semantics-evaluation
-// AssignmentExpression :
-//   LeftHandSideExpression = AssignmentExpression
-//   LeftHandSideExpression AssignmentOperator AssignmentExpression
+//   AssignmentExpression :
+//     LeftHandSideExpression `=` AssignmentExpression
+//     LeftHandSideExpression AssignmentOperator AssignmentExpression
 export function* Evaluate_AssignmentExpression(node) {
   const LeftHandSideExpression = node.left;
   const AssignmentExpression = node.right;
   if (node.operator === '=') {
-    if (!isObjectLiteral(LeftHandSideExpression) && !isArrayLiteral(LeftHandSideExpression)) {
-      const lref = yield* Evaluate(LeftHandSideExpression);
+    if (!isAssignmentPattern(LeftHandSideExpression)) {
+      const lref = yield* Evaluate_Expression(LeftHandSideExpression);
       ReturnIfAbrupt(lref);
-      const rref = yield* Evaluate(AssignmentExpression);
+      const rref = yield* Evaluate_Expression(AssignmentExpression);
       const rval = Q(GetValue(rref));
       if (IsAnonymousFunctionDefinition(AssignmentExpression)
           && IsIdentifierRef(LeftHandSideExpression)) {
@@ -40,12 +38,17 @@ export function* Evaluate_AssignmentExpression(node) {
       Q(PutValue(lref, rval));
       return rval;
     }
+    const assignmentPattern = LeftHandSideExpression;
+    const rref = yield* Evaluate_Expression(AssignmentExpression);
+    const rval = Q(GetValue(rref));
+    Q(yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rval));
+    return rval;
   } else {
     const AssignmentOperator = node.operator;
 
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = yield* Evaluate_Expression(LeftHandSideExpression);
     const lval = Q(GetValue(lref));
-    const rref = yield* Evaluate(AssignmentExpression);
+    const rref = yield* Evaluate_Expression(AssignmentExpression);
     const rval = Q(GetValue(rref));
     // Let op be the @ where AssignmentOperator is @=.
     const op = AssignmentOperator.slice(0, -1);
