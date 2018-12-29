@@ -67,7 +67,11 @@ export function Value(value) {
   }
 
   if (typeof value === 'number') {
-    if (Object.is(value, -0)) {
+    // Redundant value === 0 added to work around a bug in some older versions
+    // of V8.
+    // Refs: https://github.com/nodejs/node/issues/25268
+    // Refs: https://crbug.com/903043
+    if (value === 0 && Object.is(value, -0)) {
       return negativeZero;
     }
     if (numberMap.has(value)) {
