@@ -36,6 +36,8 @@ import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
+  ContainsExpression_BindingElement,
+  ContainsExpression_BindingRestElement,
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
@@ -318,11 +320,11 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
 //   FormalParameter : BindingElement
 function* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
   const BindingElement = FormalParameter;
-  // if (!ContainsExpression_BindingElement(BindingElement)) {
-  //   return yield* IteratorBindingInitialization_BindingElement(
-  //     BindingElement, iteratorRecord, environment,
-  //   );
-  // }
+  if (!ContainsExpression_BindingElement(BindingElement)) {
+    return yield* IteratorBindingInitialization_BindingElement(
+      BindingElement, iteratorRecord, environment,
+    );
+  }
   const currentContext = surroundingAgent.runningExecutionContext;
   const originalEnv = currentContext.VariableEnvironment;
   Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);
@@ -344,11 +346,11 @@ function* IteratorBindingInitialization_FormalParameter(FormalParameter, iterato
 //   FunctionRestParameter : BindingRestElement
 function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
   const BindingRestElement = FunctionRestParameter;
-  // if (!ContainsExpression_BindingRestElement(BindingRestElement)) {
-  //   return yield* IteratorBindingInitialization_BindingRestElement(
-  //     BindingRestElement, iteratorRecord, environment,
-  //   );
-  // }
+  if (!ContainsExpression_BindingRestElement(BindingRestElement)) {
+    return yield* IteratorBindingInitialization_BindingRestElement(
+      BindingRestElement, iteratorRecord, environment,
+    );
+  }
   const currentContext = surroundingAgent.runningExecutionContext;
   const originalEnv = currentContext.VariableEnvironment;
   Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);

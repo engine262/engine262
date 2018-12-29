@@ -32,7 +32,7 @@ import {
   BoundNames_Declaration,
   BoundNames_FormalParameters,
   BoundNames_FunctionDeclaration,
-  ContainsExpression,
+  ContainsExpression_FormalParameters,
   IsConstantDeclaration,
   IsSimpleParameterList,
   LexicallyDeclaredNames_AsyncFunctionBody,
@@ -81,7 +81,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const hasDuplicates = parameterNames.some((e) => parameterNames.indexOf(e) !== parameterNames.lastIndexOf(e));
   const simpleParameterList = IsSimpleParameterList(formals);
-  const hasParameterExpressions = ContainsExpression(formals);
+  const hasParameterExpressions = ContainsExpression_FormalParameters(formals);
 
   let varNames;
   let varDeclarations;
