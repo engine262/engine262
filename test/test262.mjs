@@ -17,11 +17,11 @@ import {
 
 util.inspect.defaultOptions.depth = 2;
 
+/* eslint-disable no-console */
+
 const onlyFailures = process.argv.includes('--only-failures');
 
 const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
-
-const files = glob.sync(path.resolve(testdir, 'test', process.argv[2] || '**/*.js'));
 
 const excludedFeatures = new Set([
   'Array.prototype.flat',
@@ -37,6 +37,7 @@ const excludedFeatures = new Set([
   'export-star-as-namespace-from-module',
   'RegExp',
   'SharedArrayBuffer',
+  'tail-call-optimization',
   'caller',
   'WeakSet',
   'WeakMap',
@@ -50,6 +51,11 @@ const excludedTests = new Set([
   'test/language/statements/for-in/let-identifier-with-newline.js',
   'test/language/statements/for-of/let-block-with-newline.js',
   'test/language/statements/for-of/let-identifier-with-newline.js',
+
+  // ESTree does not allow determining whether the LeftHandSideExpression is a
+  // CoverParenthesizedExpressionAndArrowParameterList right now.
+  // Refs: https://github.com/estree/estree/issues/194
+  'test/language/expressions/assignment/fn-name-lhs-cover.js',
 
   // Uses regexes.
   'test/built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
@@ -69,6 +75,23 @@ const excludedTests = new Set([
   'test/built-ins/Array/prototype/some/15.4.4.17-2-18.js',
   'test/built-ins/Array/prototype/splice/create-species-non-ctor.js',
 ]);
+
+const readyTests = [
+  'test/harness/**/*.js',
+
+  'test/built-ins/Array/**/*.js',
+  'test/built-ins/TypedArray/**/*.js',
+  'test/built-ins/TypedArrayConstructors/**/*.js',
+
+  'test/language/expressions/addition/**/*.js',
+  'test/language/expressions/array/**/*.js',
+  'test/language/expressions/arrow-function/**/*.js',
+  'test/language/expressions/assignment/**/*.js',
+  'test/language/expressions/bitwise-*/**/*.js',
+  'test/language/expressions/logical-*/**/*.js',
+];
+
+const files = determineFiles();
 
 const PASS = Symbol('PASS');
 const FAIL = Symbol('FAIL');
@@ -105,7 +128,7 @@ function createRealm() {
     if ($262.handlePrint) {
       $262.handlePrint(...args);
     } else {
-      console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+      console.log(...args.map((a) => inspect(a)));
     }
     return Value.undefined;
   }));
@@ -133,6 +156,19 @@ const agentOpt = {
   promiseRejectionTracker: undefined,
 };
 initializeAgent(agentOpt);
+
+function determineFiles() {
+  let srcPaths = process.argv.slice(2);
+  if (srcPaths.length === 0) {
+    console.log('Using default test set');
+    srcPaths = readyTests;
+  }
+  const out = [];
+  for (const srcPath of srcPaths) {
+    out.push(...glob.sync(path.resolve(testdir, srcPath)));
+  }
+  return out;
+}
 
 async function run({
   specifier,
@@ -222,8 +258,6 @@ async function run({
 let passed = 0;
 let failed = 0;
 let skipped = 0;
-
-/* eslint-disable no-console */
 
 process.on('exit', () => {
   console.table({
