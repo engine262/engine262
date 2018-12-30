@@ -1,4 +1,4 @@
-import 'source-map-support/register';
+import '@snek/source-map-support/register';
 import fs from 'fs';
 import util from 'util';
 import path from 'path';

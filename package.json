@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
+    "@snek/source-map-support": "^1.0.0",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.6.1",
     "eslint-config-airbnb": "^17.0.0",
@@ -22,7 +23,6 @@
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
-    "source-map-support": "github:devsnek/node-source-map-support",
     "yaml": "^1.0.0-rc.8"
   },
   "scripts": {

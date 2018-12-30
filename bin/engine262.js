@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('source-map-support/register');
+require('@snek/source-map-support/register');
 const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
