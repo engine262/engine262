@@ -22,7 +22,7 @@
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
-    "source-map-support": "^0.5.9",
+    "source-map-support": "github:devsnek/node-source-map-support",
     "yaml": "^1.0.0-rc.8"
   },
   "scripts": {
