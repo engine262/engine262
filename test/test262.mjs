@@ -35,6 +35,7 @@ const excludedFeatures = new Set([
   'class-static-methods-private',
   'dynamic-import',
   'export-star-as-namespace-from-module',
+  'Object.fromEntries',
   'RegExp',
   'SharedArrayBuffer',
   'tail-call-optimization',
