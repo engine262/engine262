@@ -4,6 +4,7 @@ import util from 'util';
 import path from 'path';
 import glob from 'glob';
 import yaml from 'yaml';
+import minimatch from 'minimatch';
 import {
   Object as APIObject,
   AbruptCompletion,
@@ -24,6 +25,7 @@ const onlyFailures = process.argv.includes('--only-failures');
 const testdir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'test262');
 
 const excludedFeatures = new Set([
+  'Atomics',
   'Array.prototype.flat',
   'Array.prototype.flatMap',
   'BigInt',
@@ -44,47 +46,50 @@ const excludedFeatures = new Set([
   'WeakMap',
 ]);
 
-const excludedTests = new Set([
-  'test/built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
-  'test/language/statements/while/let-block-with-newline.js',
-  'test/language/statements/while/let-identifier-with-newline.js',
-  'test/language/statements/for-in/let-block-with-newline.js',
-  'test/language/statements/for-in/let-identifier-with-newline.js',
-  'test/language/statements/for-of/let-block-with-newline.js',
-  'test/language/statements/for-of/let-identifier-with-newline.js',
+const excludedTests = [
+  'built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
+  'language/statements/while/let-block-with-newline.js',
+  'language/statements/while/let-identifier-with-newline.js',
+  'language/statements/for-in/let-block-with-newline.js',
+  'language/statements/for-in/let-identifier-with-newline.js',
+  'language/statements/for-of/let-block-with-newline.js',
+  'language/statements/for-of/let-identifier-with-newline.js',
 
   // Uses regexes.
-  'test/built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
-  'test/built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js',
-  'test/built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js',
-  'test/built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js',
-  'test/built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
-  'test/built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
+  'built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
+  'built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js',
+  'built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js',
+  'built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js',
+  'built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
+  'built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
 
   // Missing parseInt
-  'test/built-ins/Array/prototype/concat/create-species-non-ctor.js',
-  'test/built-ins/Array/prototype/every/15.4.4.16-2-18.js',
-  'test/built-ins/Array/prototype/filter/create-species-non-ctor.js',
-  'test/built-ins/Array/prototype/map/15.4.4.19-2-18.js',
-  'test/built-ins/Array/prototype/map/create-species-non-ctor.js',
-  'test/built-ins/Array/prototype/slice/create-species-non-ctor.js',
-  'test/built-ins/Array/prototype/some/15.4.4.17-2-18.js',
-  'test/built-ins/Array/prototype/splice/create-species-non-ctor.js',
-]);
+  'built-ins/Array/prototype/concat/create-species-non-ctor.js',
+  'built-ins/Array/prototype/every/15.4.4.16-2-18.js',
+  'built-ins/Array/prototype/filter/create-species-non-ctor.js',
+  'built-ins/Array/prototype/map/15.4.4.19-2-18.js',
+  'built-ins/Array/prototype/map/create-species-non-ctor.js',
+  'built-ins/Array/prototype/slice/create-species-non-ctor.js',
+  'built-ins/Array/prototype/some/15.4.4.17-2-18.js',
+  'built-ins/Array/prototype/splice/create-species-non-ctor.js',
+
+  'built-ins/WeakMap/**/*.js',
+  'built-ins/WeakSet/**/*.js',
+];
 
 const readyTests = [
-  'test/harness/**/*.js',
+  'harness/**/*.js',
 
-  'test/built-ins/Array/**/*.js',
-  'test/built-ins/TypedArray/**/*.js',
-  'test/built-ins/TypedArrayConstructors/**/*.js',
+  'built-ins/Array/**/*.js',
+  'built-ins/TypedArray/**/*.js',
+  'built-ins/TypedArrayConstructors/**/*.js',
 
-  'test/language/expressions/addition/**/*.js',
-  'test/language/expressions/array/**/*.js',
-  'test/language/expressions/arrow-function/**/*.js',
-  'test/language/expressions/assignment/**/*.js',
-  'test/language/expressions/bitwise-*/**/*.js',
-  'test/language/expressions/logical-*/**/*.js',
+  'language/expressions/addition/**/*.js',
+  'language/expressions/array/**/*.js',
+  'language/expressions/arrow-function/**/*.js',
+  'language/expressions/assignment/**/*.js',
+  'language/expressions/bitwise-*/**/*.js',
+  'language/expressions/logical-*/**/*.js',
 ];
 
 const files = determineFiles();
@@ -275,7 +280,7 @@ files.reduce((promise, filename) => promise.then(async () => {
     return;
   }
 
-  const short = path.relative(testdir, filename);
+  const short = path.relative(path.join(testdir, 'test'), filename);
   const source = await fs.promises.readFile(filename, 'utf8');
   const meta = yaml.default.parse(source.slice(source.indexOf('/*---') + 5, source.indexOf('---*/')));
 
@@ -290,7 +295,7 @@ files.reduce((promise, filename) => promise.then(async () => {
       || (meta.features && meta.features.some((feature) => excludedFeatures.has(feature)))
       || /\b(date|reg ?exp?)\b/i.test(meta.description) || /\b(date|reg ?exp?)\b/.test(source)
       || meta.includes.includes('nativeFunctionMatcher.js')
-      || excludedTests.has(short)) {
+      || excludedTests.find((t) => minimatch(short, t))) {
     skipped += 1;
     if (!onlyFailures) {
       console.log('\u001b[33mSKIP\u001b[39m', short);

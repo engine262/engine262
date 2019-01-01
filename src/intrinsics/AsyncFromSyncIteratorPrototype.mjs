@@ -38,15 +38,16 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   const syncIterator = O.SyncIteratorRecord.Iterator;
   const ret = GetMethod(syncIterator, new Value('return'));
   IfAbruptRejectPromise(ret, promiseCapability);
-  if (Type(ret) === 'Undefined') {
+  if (ret === Value.undefined) {
     const iterResult = X(CreateIterResultObject(value, Value.true));
     X(Call(promiseCapability.Resolve, Value.undefined, [iterResult]));
     return promiseCapability.Promise;
   }
   const result = Call(ret, syncIterator, [value]);
+  IfAbruptRejectPromise(result, promiseCapability);
   if (Type(result) !== 'Object') {
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'iterator result was not an object'),
+      surroundingAgent.Throw('TypeError', 'iterator result was not an object').Value,
     ]));
     return promiseCapability.Promise;
   }
@@ -65,16 +66,15 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   const syncIterator = O.SyncIteratorRecord.Iterator;
   const thr = GetMethod(syncIterator, new Value('throw'));
   IfAbruptRejectPromise(thr, promiseCapability);
-  if (Type(thr) === 'Undefined') {
-    const iterResult = X(CreateIterResultObject(value, Value.true));
-    X(Call(promiseCapability.Resolve, Value.undefined, [iterResult]));
+  if (thr === Value.undefined) {
+    X(Call(promiseCapability.Reject, Value.undefined, [value]));
     return promiseCapability.Promise;
   }
   const result = Call(thr, syncIterator, [value]);
   IfAbruptRejectPromise(result, promiseCapability);
   if (Type(result) !== 'Object') {
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'iterator result was not an object'),
+      surroundingAgent.Throw('TypeError', 'iterator result was not an object').Value,
     ]));
     return promiseCapability.Promise;
   }

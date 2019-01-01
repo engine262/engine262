@@ -43,9 +43,10 @@ export function* ArgumentListEvaluation(ArgumentList) {
     } else {
       const templateLiteral = ArgumentList;
       const siteObj = GetTemplateObject(templateLiteral);
-      const firstSubRef = yield* Evaluate(templateLiteral.expressions.shift());
+      const [AssignmentExpression, ...TemplateSpans] = templateLiteral.expressions;
+      const firstSubRef = yield* Evaluate(AssignmentExpression);
       const firstSub = Q(GetValue(firstSubRef));
-      const restSub = yield* SubstitutionEvaluation(templateLiteral.expressions);
+      const restSub = yield* SubstitutionEvaluation(TemplateSpans);
       ReturnIfAbrupt(restSub);
       Assert(Array.isArray(restSub));
       return [siteObj, firstSub, ...restSub];

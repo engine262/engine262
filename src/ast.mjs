@@ -461,6 +461,7 @@ export function isExpression(node) {
       || isMetaProperty(node)
       || isActualNewExpression(node)
       || isActualCallExpression(node)
+      || isTaggedTemplate(node)
 
     // UpdateExpression
       || isActualUpdateExpression(node)

@@ -54,6 +54,7 @@ import {
   isMetaProperty,
   isObjectLiteral,
   isParenthesizedExpression,
+  isRegularExpressionLiteral,
   isReturnStatement,
   isStatement,
   isSuperCall,
@@ -353,8 +354,9 @@ function* Inner_Evaluate_Expression(Expression) {
     case isAsyncGeneratorExpression(Expression):
       return Evaluate_AsyncGeneratorExpression(Expression);
 
-      // case isRegularExpressionLiteral(Expression):
-      //   return Evaluate_RegularExpressionLiteral(Expression);
+    case isRegularExpressionLiteral(Expression):
+      return surroundingAgent.Throw('TypeError', 'RegExp is not implemented yet');
+      // yield* return Evaluate_RegularExpressionLiteral(Expression);
 
     case isTemplateLiteral(Expression):
       return yield* Evaluate_TemplateLiteral(Expression);

@@ -24,7 +24,7 @@ function thisStringValue(value) {
     Assert(Type(value.StringData) === 'String');
     return value.StringData;
   }
-  return surroundingAgent.TypeError('TypeError');
+  return surroundingAgent.Throw('TypeError');
 }
 
 function StringProto_charAt([pos], { thisValue }) {
