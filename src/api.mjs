@@ -17,6 +17,7 @@ import {
   Type,
   Value,
   SourceTextModuleRecord,
+  wellKnownSymbols,
 } from './value.mjs';
 import { ParseScript, ParseModule } from './parse.mjs';
 import {
@@ -253,12 +254,26 @@ export {
   Throw,
 };
 
+
+const getObjectTag = (value, wrap) => {
+  try {
+    const s = X(AbstractOps.Get(value, wellKnownSymbols.toStringTag)).stringValue();
+    if (wrap) {
+      return `[${s}] `;
+    }
+    return s;
+  } catch {
+    return '';
+  }
+};
+
 export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact = false) {
   if (realm instanceof APIRealm) {
     realm = realm.realm;
   }
   let indent = 0;
   const inspected = new WeakSet();
+
   const innerInspect = (value, quote = true) => {
     const compactObject = (toString) => {
       try {
@@ -266,15 +281,16 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         if (toString.nativeFunction === objectToString.nativeFunction) {
           return X(AbstractOps.Call(toString, value, [])).stringValue();
         } else {
+          const tag = getObjectTag(value, false) || 'Unknown';
           const ctor = X(AbstractOps.Get(value, new Value('constructor')));
           if (Type(ctor) === 'Object') {
             const ctorName = X(AbstractOps.Get(ctor, new Value('name'))).stringValue();
             if (ctorName !== '') {
               return `#<${ctorName}>`;
             }
-            return '[object Unknown]';
+            return `[object ${tag}]`;
           }
-          return '[object Unknown]';
+          return `[object ${tag}]`;
         }
       } catch (e) {
         return '[object Unknown]';
@@ -346,12 +362,13 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         return compactObject(toString);
       }
       try {
+        const tag = getObjectTag(value, true);
         const keys = X(value.OwnPropertyKeys());
         if (keys.length === 0) {
-          return '{}';
+          return `${tag}{}`;
         }
         const isArray = AbstractOps.IsArray(value) === Value.true;
-        let out = isArray ? '[' : '{';
+        let out = isArray ? '[' : `${tag}{`;
         if (keys.length > 5) {
           indent += 1;
           for (const key of keys) {
