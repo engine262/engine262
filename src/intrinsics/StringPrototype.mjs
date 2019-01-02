@@ -134,6 +134,25 @@ function StringProto_slice([start, end], { thisValue }) {
   return new Value(S.slice(from, from + span));
 }
 
+// 21.1.3.21 #sec-string.prototype.substring
+function StringProto_substring([start, end], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const len = S.length;
+  const intStart = Q(ToInteger(start)).numberValue();
+  let intEnd;
+  if (end === Value.undefined) {
+    intEnd = len;
+  } else {
+    intEnd = Q(ToInteger(end)).numberValue();
+  }
+  const finalStart = Math.min(Math.max(intStart, 0), len);
+  const finalEnd = Math.min(Math.max(intEnd, 0), len);
+  const from = Math.min(finalStart, finalEnd);
+  const to = Math.max(finalStart, finalEnd);
+  return new Value(S.slice(from, to));
+}
+
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
@@ -182,7 +201,7 @@ export function CreateStringPrototype(realmRec) {
     ['slice', StringProto_slice, 2],
     // split
     // startsWith
-    // substring
+    ['substring', StringProto_substring, 2],
     // toLocaleLowerCase
     // toLocaleUpperCase
     // toLowerCase
