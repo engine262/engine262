@@ -75,7 +75,11 @@ function StringProto_codePointAt([pos], { thisValue }) {
 }
 
 // 21.1.3.4 #sec-string.prototype.concat
-function StringProto_concat([...args], { thisValue }) {
+function StringProto_concat([...args], { callLength, thisValue }) {
+  if (callLength === 0) {
+    // Remove the undefined argument that was added based on the function's length.
+    args = [];
+  }
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   let R = S.stringValue();
