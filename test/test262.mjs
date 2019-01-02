@@ -137,6 +137,13 @@ const readyTests = [
   'harness/**/*.js',
 
   'built-ins/Array/**/*.js',
+  'built-ins/ArrayBuffer/**/*.js',
+  'built-ins/ArrayIteratorPrototype/**/*.js',
+  'built-ins/AsyncFromSyncIteratorPrototype/**/*.js',
+  'built-ins/AsyncFunction/**/*.js',
+  'built-ins/AsyncGeneratorFunction/**/*.js',
+  'built-ins/isFinite/**/*.js',
+  'built-ins/isNaN/**/*.js',
   'built-ins/TypedArray/**/*.js',
   'built-ins/TypedArrayConstructors/**/*.js',
 
