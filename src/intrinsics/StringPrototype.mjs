@@ -221,6 +221,21 @@ function StringProto_localeCompare([that], { thisValue }) {
   }
 }
 
+// 21.1.3.12 #sec-string.prototype.normalize
+function StringProto_normalize([form], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  if (!form || form === Value.undefined) {
+    form = new Value('NFC');
+  }
+  const f = Q(ToString(form)).stringValue();
+  if (!['NFC', 'NFD', 'NFKC', 'NFKD'].includes(f)) {
+    return surroundingAgent.Throw('RangeError');
+  }
+  const ns = S.stringValue().normalize(f);
+  return new Value(ns);
+}
+
 // 21.1.3.13 #sec-string.prototype.padend
 function StringProto_padEnd([maxLength, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -416,7 +431,7 @@ export function CreateStringPrototype(realmRec) {
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
     // match
-    // normalize
+    ['normalize', StringProto_normalize, 0],
     ['padEnd', StringProto_padEnd, 1],
     ['padStart', StringProto_padStart, 1],
     ['repeat', StringProto_repeat, 1],
