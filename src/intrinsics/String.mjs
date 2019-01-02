@@ -6,6 +6,7 @@ import {
   ToLength,
   ToObject,
   ToString,
+  ToUint16,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -32,6 +33,20 @@ function StringConstructor(args, { callLength, NewTarget }) {
     return s;
   }
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));
+}
+
+// 21.1.2.1 #sec-string.fromcharcode
+function String_fromCharCode(codeUnits, { callLength: length }) {
+  const elements = [];
+  let nextIndex = 0;
+  while (nextIndex < length) {
+    const next = codeUnits[nextIndex];
+    const nextCU = Q(ToUint16(next));
+    elements.push(nextCU);
+    nextIndex += 1;
+  }
+  const result = elements.reduce((previous, current) => previous + String.fromCharCode(current.numberValue()), '');
+  return new Value(result);
 }
 
 // 21.1.2.4 #sec-string.raw
@@ -66,7 +81,7 @@ function String_raw([template, ...substitutions]) {
 
 export function CreateString(realmRec) {
   const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%StringPrototype%'], [
-    // fromCharCode
+    ['fromCharCode', String_fromCharCode, 1],
     // fromCodePoint
     ['raw', String_raw, 1],
   ]);
