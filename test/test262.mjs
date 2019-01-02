@@ -167,6 +167,7 @@ const readyTests = [
   'built-ins/String/prototype/padStart/**/*.js',
   'built-ins/String/prototype/repeat/**/*.js',
   'built-ins/String/prototype/startsWith/**/*.js',
+  'built-ins/String/prototype/substring/**/*.js',
   'built-ins/String/prototype/toLowerCase/**/*.js',
   'built-ins/String/prototype/toUpperCase/**/*.js',
   'built-ins/TypedArray/**/*.js',

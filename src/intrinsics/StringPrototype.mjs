@@ -285,6 +285,25 @@ function StringProto_startsWith([searchString, position = Value.undefined], { th
   return Value.true;
 }
 
+// 21.1.3.21 #sec-string.prototype.substring
+function StringProto_substring([start, end], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const len = S.length;
+  const intStart = Q(ToInteger(start)).numberValue();
+  let intEnd;
+  if (end === Value.undefined) {
+    intEnd = len;
+  } else {
+    intEnd = Q(ToInteger(end)).numberValue();
+  }
+  const finalStart = Math.min(Math.max(intStart, 0), len);
+  const finalEnd = Math.min(Math.max(intEnd, 0), len);
+  const from = Math.min(finalStart, finalEnd);
+  const to = Math.max(finalStart, finalEnd);
+  return new Value(S.slice(from, to));
+}
+
 // 21.1.3.24 #sec-string.prototype.tolowercase
 function StringProto_toLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -352,7 +371,7 @@ export function CreateStringPrototype(realmRec) {
     ['slice', StringProto_slice, 2],
     // split
     ['startsWith', StringProto_startsWith, 1],
-    // substring
+    ['substring', StringProto_substring, 2],
     // toLocaleLowerCase
     // toLocaleUpperCase
     ['toLowerCase', StringProto_toLowerCase, 0],
