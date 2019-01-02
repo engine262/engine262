@@ -129,8 +129,11 @@ const excludedTests = [
   'built-ins/Array/prototype/some/15.4.4.17-2-18.js',
   'built-ins/Array/prototype/splice/create-species-non-ctor.js',
 
-  'built-ins/WeakMap/**/*.js',
-  'built-ins/WeakSet/**/*.js',
+  // Missing Date.
+  'built-ins/Function/prototype/bind/S15.3.4.5_A5.js',
+
+  // Missing String.prototype.split.
+  'built-ins/JSON/stringify/string-escape-ascii.js',
 ];
 
 const readyTests = [
@@ -142,10 +145,22 @@ const readyTests = [
   'built-ins/AsyncFromSyncIteratorPrototype/**/*.js',
   'built-ins/AsyncFunction/**/*.js',
   'built-ins/AsyncGenerator*/**/*.js',
+  'built-ins/AsyncIteratorPrototype/**/*.js',
+  'built-ins/Boolean/**/*.js',
+  'built-ins/DataView/**/*.js',
+  'built-ins/Error/**/*.js',
+  'built-ins/eval/**/*.js',
+  'built-ins/Function/**/*.js',
+  'built-ins/Generator*/**/*.js',
+  'built-ins/Infinity/**/*.js',
   'built-ins/isFinite/**/*.js',
   'built-ins/isNaN/**/*.js',
+  'built-ins/IteratorPrototype/**/*.js',
+  'built-ins/JSON/**/*.js',
+  'built-ins/NaN/**/*.js',
   'built-ins/TypedArray/**/*.js',
   'built-ins/TypedArrayConstructors/**/*.js',
+  'built-ins/undefined/**/*.js',
 
   'language/expressions/addition/**/*.js',
   'language/expressions/array/**/*.js',
