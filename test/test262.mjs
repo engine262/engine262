@@ -157,6 +157,7 @@ const readyTests = [
   'built-ins/IteratorPrototype/**/*.js',
   'built-ins/JSON/**/*.js',
   'built-ins/NaN/**/*.js',
+  'built-ins/NativeErrors/**/*.js',
   'built-ins/parseInt/**/*.js',
   'built-ins/TypedArray/**/*.js',
   'built-ins/TypedArrayConstructors/**/*.js',
