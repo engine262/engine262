@@ -102,7 +102,7 @@ const messages = {
   CouldNotResolveModule: (s) => `Could not resolve module ${inlineInspect(s)}`,
   ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds for a safe integer',
   SubclassSameValue: (v) => `Subclass constructor returned the same object ${inlineInspect(v)}`,
-  SubclassLengthTooSmall: (v) => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`
+  SubclassLengthTooSmall: (v) => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
 };
 
 export function msg(key, ...args) {
