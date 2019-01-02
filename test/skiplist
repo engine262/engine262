@@ -26,8 +26,22 @@ built-ins/Function/prototype/bind/15.3.4.5-2-9.js
 built-ins/Function/prototype/bind/S15.3.4.5_A5.js
 harness/assertRelativeDateMs.js
 
-// TODO(22): Missing String.prototype.split.
+// TODO(22): Missing String methods.
 built-ins/JSON/stringify/string-escape-ascii.js
+built-ins/String/prototype/localeCompare/*.js
+built-ins/String/prototype/match/*.js
+built-ins/String/prototype/matchAll/*.js
+built-ins/String/prototype/normalize/*.js
+built-ins/String/prototype/replace/*.js
+built-ins/String/prototype/search/*.js
+built-ins/String/prototype/split/*.js
+built-ins/String/prototype/toLocaleLowerCase/*.js
+built-ins/String/prototype/toLocaleUpperCase/*.js
+built-ins/String/prototype/trimEnd/*.js
+built-ins/String/prototype/trimStart/*.js
+
+// TODO(24): Broken String.raw
+built-ins/String/raw/*.js
 
 // TODO(31): Missing parseFloat
 built-ins/global/S10.2.3_A1.1_T2.js
