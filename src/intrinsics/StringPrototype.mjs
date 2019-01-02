@@ -134,6 +134,30 @@ function StringProto_slice([start, end], { thisValue }) {
   return new Value(S.slice(from, from + span));
 }
 
+// 21.1.3.20 #sec-string.prototype.startswith
+function StringProto_startsWith([searchString, position = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  // TODO:
+  // Let isRegExp be ? IsRegExp(searchString).
+  // If isRegExp is true, throw a TypeError exception.
+  const searchStr = Q(ToString(searchString)).stringValue();
+  const pos = Q(ToInteger(position)).numberValue();
+  Assert(!(position === Value.undefined) || pos === 0);
+  const len = S.length;
+  const start = Math.min(Math.max(pos, 0), len);
+  const searchLength = searchStr.length;
+  if (searchLength + start > len) {
+    return Value.false;
+  }
+  for (let i = 0; i < searchLength; i += 1) {
+    if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
+      return Value.false;
+    }
+  }
+  return Value.true;
+}
+
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
@@ -181,7 +205,7 @@ export function CreateStringPrototype(realmRec) {
     // search
     ['slice', StringProto_slice, 2],
     // split
-    // startsWith
+    ['startsWith', StringProto_startsWith, 1],
     // substring
     // toLocaleLowerCase
     // toLocaleUpperCase
