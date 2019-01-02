@@ -24,6 +24,8 @@ const {
   initializeAgent,
 } = engine262;
 
+const override = process.argv[2];
+
 let passed = 0;
 let failed = 0;
 let skipped = 0;
@@ -120,12 +122,14 @@ const FAIL = Symbol('FAIL');
 const SKIP = Symbol('SKIP');
 
 async function run({ file, contents, attrs }) {
-  if (!whitelist.find((t) => minimatch(file, t))
-      || (attrs.features && !attrs.features.every((feature) => features.includes(feature)))
-      || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
-      || attrs.includes.includes('nativeFunctionMatcher.js')
-      || skiplist.find((t) => minimatch(file, t))) {
-    return { status: SKIP };
+  if (!override) {
+    if (!whitelist.find((t) => minimatch(file, t))
+        || (attrs.features && !attrs.features.every((feature) => features.includes(feature)))
+        || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
+        || attrs.includes.includes('nativeFunctionMatcher.js')
+        || skiplist.find((t) => minimatch(file, t))) {
+      return { status: SKIP };
+    }
   }
 
   const $262 = createRealm();
@@ -203,11 +207,13 @@ const agentOpt = {
 };
 initializeAgent(agentOpt);
 
-const stream = new TestStream(path.resolve(__dirname, 'test262'));
+const stream = new TestStream(path.resolve(__dirname, 'test262'), {
+  paths: [override || 'test'],
+});
 
 (async () => {
   for await (const test of stream) {
-    if (test.file.includes('annexB')) {
+    if (!override && test.file.includes('annexB')) {
       continue;
     }
 
