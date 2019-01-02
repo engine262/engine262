@@ -119,16 +119,6 @@ const excludedTests = [
   'built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
   'built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
 
-  // Missing parseInt
-  'built-ins/Array/prototype/concat/create-species-non-ctor.js',
-  'built-ins/Array/prototype/every/15.4.4.16-2-18.js',
-  'built-ins/Array/prototype/filter/create-species-non-ctor.js',
-  'built-ins/Array/prototype/map/15.4.4.19-2-18.js',
-  'built-ins/Array/prototype/map/create-species-non-ctor.js',
-  'built-ins/Array/prototype/slice/create-species-non-ctor.js',
-  'built-ins/Array/prototype/some/15.4.4.17-2-18.js',
-  'built-ins/Array/prototype/splice/create-species-non-ctor.js',
-
   // Missing Date.
   'built-ins/Function/prototype/bind/S15.3.4.5_A5.js',
 
