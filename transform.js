@@ -5,23 +5,29 @@ const { relative, resolve } = require('path');
 const COMPLETION_PATH = resolve('./src/completion.mjs');
 const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
 
+function fileToImport(file, refPath) {
+  return relative(file.opts.filename, refPath)
+    .replace(/\\/g, '/') // Support building on Windows
+    .replace('../', './');
+}
+
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
-    const r = relative(file.opts.filename, COMPLETION_PATH).replace('../', './');
+    const r = fileToImport(file, COMPLETION_PATH);
     return template.ast(`
       import { Completion, AbruptCompletion } from "${r}";
     `);
   }
 
   function createImportAssert(file) {
-    const r = relative(file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
+    const r = fileToImport(file, ABSTRACT_OPS_PATH);
     return template.ast(`
       import { Assert } from "${r}";
     `);
   }
 
   function createImportCall(file) {
-    const r = relative(file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
+    const r = fileToImport(file, ABSTRACT_OPS_PATH);
     return template.ast(`
       import { Call } from "${r}";
     `);
