@@ -26,6 +26,7 @@ built-ins/NaN/**/*.js
 built-ins/NativeErrors/**/*.js
 built-ins/parseInt/**/*.js
 built-ins/String/fromCharCode/**/*.js
+built-ins/String/fromCodePoint/**/*.js
 built-ins/String/prototype/endsWith/**/*.js
 built-ins/String/prototype/includes/**/*.js
 built-ins/String/prototype/lastIndexOf/**/*.js

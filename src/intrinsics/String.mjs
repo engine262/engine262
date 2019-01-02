@@ -1,13 +1,18 @@
+import { surroundingAgent } from '../engine.mjs';
 import {
   Get,
   GetPrototypeFromConstructor,
+  SameValue,
   StringCreate,
   SymbolDescriptiveString,
+  ToInteger,
   ToLength,
+  ToNumber,
   ToObject,
   ToString,
   ToUint16,
 } from '../abstract-ops/all.mjs';
+import { UTF16Encoding } from '../static-semantics/UTF16Encoding';
 import {
   Type,
   Value,
@@ -49,6 +54,26 @@ function String_fromCharCode(codeUnits, { callLength: length }) {
   return new Value(result);
 }
 
+// 21.1.2.2 #sec-string.fromcodepoint
+function String_fromCodePoint(codePoints, { callLength: length }) {
+  const elements = [];
+  let nextIndex = 0;
+  while (nextIndex < length) {
+    const next = codePoints[nextIndex];
+    const nextCP = Q(ToNumber(next));
+    if (SameValue(nextCP, X(ToInteger(nextCP))) === Value.false) {
+      return surroundingAgent.Throw('RangeError');
+    }
+    if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
+      return surroundingAgent.Throw('RangeError');
+    }
+    elements.push(...UTF16Encoding(nextCP.numberValue()));
+    nextIndex += 1;
+  }
+  const result = elements.reduce((previous, current) => previous + String.fromCharCode(current), '');
+  return new Value(result);
+}
+
 // 21.1.2.4 #sec-string.raw
 function String_raw([template, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
@@ -82,7 +107,7 @@ function String_raw([template, ...substitutions]) {
 export function CreateString(realmRec) {
   const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%StringPrototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
-    // fromCodePoint
+    ['fromCodePoint', String_fromCodePoint, 1],
     ['raw', String_raw, 1],
   ]);
 
