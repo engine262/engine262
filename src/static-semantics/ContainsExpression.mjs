@@ -126,7 +126,7 @@ export function ContainsExpression_BindingProperty(BindingProperty) {
   }
 }
 
-// TODO(missing) from the spec:
+// https://github.com/tc39/ecma262/pull/1301
 //   BindingRestProperty : `...` BindingIdentifier
 export function ContainsExpression_BindingRestProperty(BindingRestProperty) {
   if (!isBindingIdentifier(BindingRestProperty.argument)) {
@@ -148,7 +148,7 @@ export function ContainsExpression_BindingRestProperty(BindingRestProperty) {
 //
 //   BindingPropertyList : BindingProperty
 //
-// TODO(missing) from spec:
+// https://github.com/tc39/ecma262/pull/1301
 //   ObjectBindingPattern : `{` BindingPropertyList `,` BindingRestProperty `}`
 export function ContainsExpression_ObjectBindingPattern(ObjectBindingPattern) {
   for (const prop of ObjectBindingPattern.properties) {
