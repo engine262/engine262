@@ -4,6 +4,7 @@ import {
   RequireObjectCoercible,
   ToInteger,
   ToLength,
+  ToNumber,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -14,7 +15,7 @@ import {
 } from '../value.mjs';
 import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -163,6 +164,41 @@ function StringProto_indexOf([searchString, position = Value.undefined], { thisV
       return new Value(k);
     }
     k += 1;
+  }
+  return new Value(-1);
+}
+
+// 21.1.3.9 #sec-string.prototype.lastindexof
+function StringProto_lastIndexOf([searchString, position = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const searchStr = Q(ToString(searchString)).stringValue();
+  const numPos = Q(ToNumber(position));
+  Assert(!(position === Value.undefined) || numPos.isNaN());
+  let pos;
+  if (numPos.isNaN()) {
+    pos = new Value(Infinity);
+  } else {
+    pos = X(ToInteger(numPos));
+  }
+  const len = S.length;
+  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const searchLen = searchStr.length;
+  let k = start;
+  while (k >= 0) {
+    if (k + searchLen <= len) {
+      let match = true;
+      for (let j = 0; j < searchLen; j += 1) {
+        if (searchStr[j] !== S[k + j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        return new Value(k);
+      }
+    }
+    k -= 1;
   }
   return new Value(-1);
 }
@@ -359,7 +395,7 @@ export function CreateStringPrototype(realmRec) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
-    // lastIndexOf
+    ['lastIndexOf', StringProto_lastIndexOf, 1],
     // localeCompare
     // match
     // normalize
