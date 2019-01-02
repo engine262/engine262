@@ -30,7 +30,6 @@ harness/assertRelativeDateMs.js
 built-ins/JSON/stringify/string-escape-ascii.js
 built-ins/String/prototype/match/*.js
 built-ins/String/prototype/matchAll/*.js
-built-ins/String/prototype/normalize/*.js
 built-ins/String/prototype/replace/*.js
 built-ins/String/prototype/search/*.js
 built-ins/String/prototype/split/*.js
