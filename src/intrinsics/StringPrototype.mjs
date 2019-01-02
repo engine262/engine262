@@ -207,6 +207,20 @@ function StringProto_lastIndexOf([searchString, position = Value.undefined], { t
   return new Value(-1);
 }
 
+// 21.1.3.10 #sec-string.prototype.localecompare
+function StringProto_localeCompare([that], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  const That = Q(ToString(that)).stringValue();
+  if (S === That) {
+    return new Value(0);
+  } else if (S < That) {
+    return new Value(-1);
+  } else {
+    return new Value(1);
+  }
+}
+
 // 21.1.3.13 #sec-string.prototype.padend
 function StringProto_padEnd([maxLength, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -400,7 +414,7 @@ export function CreateStringPrototype(realmRec) {
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
     ['lastIndexOf', StringProto_lastIndexOf, 1],
-    // localeCompare
+    ['localeCompare', StringProto_localeCompare, 1],
     // match
     // normalize
     ['padEnd', StringProto_padEnd, 1],
