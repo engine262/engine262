@@ -1,0 +1,29 @@
+// this test passes but takes hours
+built-ins/Array/length/S15.4.5.2_A3_T4.js
+
+// https://github.com/acornjs/acorn/issues/772
+language/statements/while/let-block-with-newline.js
+language/statements/while/let-identifier-with-newline.js
+language/statements/for-in/let-block-with-newline.js
+language/statements/for-in/let-identifier-with-newline.js
+language/statements/for-of/let-block-with-newline.js
+language/statements/for-of/let-identifier-with-newline.js
+
+// TODO(8): Uses regexes.
+built-ins/Array/prototype/find/predicate-is-not-callable-throws.js
+built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js
+built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js
+built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js
+built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js
+built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js
+
+// TODO(7): Missing Date.
+built-ins/Function/prototype/bind/15.3.4.5-2-9.js
+built-ins/Function/prototype/bind/S15.3.4.5_A5.js
+harness/assertRelativeDateMs.js
+
+// TODO(22): Missing String.prototype.split.
+built-ins/JSON/stringify/string-escape-ascii.js
+
+// TODO(22): Missing String.fromCharCode.
+built-ins/parseInt/S15.1.2.2_A8.js
