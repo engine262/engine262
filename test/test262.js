@@ -122,7 +122,7 @@ const FAIL = Symbol('FAIL');
 const SKIP = Symbol('SKIP');
 
 async function run({ file, contents, attrs }) {
-  if (!override) {
+  if (override !== file) {
     if (!whitelist.find((t) => minimatch(file, t))
         || (attrs.features && !attrs.features.every((feature) => features.includes(feature)))
         || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
@@ -213,7 +213,7 @@ const stream = new TestStream(path.resolve(__dirname, 'test262'), {
 
 (async () => {
   for await (const test of stream) {
-    if (!override && test.file.includes('annexB')) {
+    if (test.file.includes('annexB')) {
       continue;
     }
 
