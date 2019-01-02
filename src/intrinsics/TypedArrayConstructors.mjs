@@ -189,7 +189,6 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
   const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}Prototype%`], [
     ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],
   ]);
-  // TODO: this doesn't seem to be spec'd anywhere…
   X(taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']));
   realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
 }
