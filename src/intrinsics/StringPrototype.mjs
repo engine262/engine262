@@ -80,6 +80,36 @@ function StringProto_concat([...args], { thisValue }) {
   return new Value(R);
 }
 
+// 21.1.3.7 #sec-string.prototype.includes
+function StringProto_includes([searchString, position = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  // TODO:
+  // Let isRegExp be ? IsRegExp(searchString).
+  // If isRegExp is true, throw a TypeError exception.
+  const searchStr = Q(ToString(searchString)).stringValue();
+  const pos = Q(ToInteger(position));
+  Assert(!(position === Value.undefined) || pos.numberValue() === 0);
+  const len = S.length;
+  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const searchLen = searchStr.length;
+  let k = start;
+  while (k + searchLen <= len) {
+    let match = true;
+    for (let j = 0; j < searchLen; j += 1) {
+      if (searchStr[j] !== S[k + j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      return Value.true;
+    }
+    k += 1;
+  }
+  return Value.false;
+}
+
 function StringProto_indexOf([searchString, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -167,7 +197,7 @@ export function CreateStringPrototype(realmRec) {
     ['codePointAt', StringProto_codePointAt, 1],
     ['concat', StringProto_concat, 1],
     // endsWith
-    // includes
+    ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
     // lastIndexOf
     // localeCompare
