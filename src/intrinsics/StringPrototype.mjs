@@ -16,6 +16,7 @@ import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function thisStringValue(value) {
   if (Type(value) === 'String') {
@@ -214,6 +215,24 @@ function StringProto_padStart([maxLength, fillString = Value.undefined], { thisV
   return new Value(truncatedStringFiller + S.stringValue());
 }
 
+// 21.1.3.15 #sec-string.prototype.repeat
+function StringProto_repeat([count], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const n = Q(ToInteger(count));
+  if (n.numberValue() < 0) {
+    return surroundingAgent.Throw('RangeError', msg('StringRepeatCount', n));
+  }
+  if (n.isInfinity()) {
+    return surroundingAgent.Throw('RangeError', msg('StringRepeatCount', n));
+  }
+  let T = '';
+  for (let i = 0; i < n.numberValue(); i += 1) {
+    T += S.stringValue();
+  }
+  return new Value(T);
+}
+
 // 21.1.3.18 #sec-string.prototype.slice
 function StringProto_slice([start, end], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -327,7 +346,7 @@ export function CreateStringPrototype(realmRec) {
     // normalize
     ['padEnd', StringProto_padEnd, 1],
     ['padStart', StringProto_padStart, 1],
-    // repeat
+    ['repeat', StringProto_repeat, 1],
     // replace
     // search
     ['slice', StringProto_slice, 2],
