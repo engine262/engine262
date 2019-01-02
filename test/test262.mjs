@@ -158,6 +158,7 @@ const readyTests = [
   'built-ins/JSON/**/*.js',
   'built-ins/NaN/**/*.js',
   'built-ins/parseInt/**/*.js',
+  'built-ins/String/prototype/repeat/**/*.js',
   'built-ins/TypedArray/**/*.js',
   'built-ins/TypedArrayConstructors/**/*.js',
   'built-ins/undefined/**/*.js',
