@@ -18,6 +18,15 @@ built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js
 built-ins/global/S10.2.3_A1.1_T3.js
 built-ins/global/S10.2.3_A1.2_T3.js
 built-ins/global/S10.2.3_A1.3_T3.js
+built-ins/String/prototype/replace/15.5.4.11-1.js
+built-ins/String/prototype/replace/S15.5.4.11_A1_T8.js
+built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js
+built-ins/String/prototype/replace/S15.5.4.11_A1_T16.js
+built-ins/String/prototype/replace/S15.5.4.11_A1_T17.js
+built-ins/String/prototype/replace/S15.5.4.11_A2_T*.js
+built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
+built-ins/String/prototype/replace/S15.5.4.11_A4_T*.js
+built-ins/String/prototype/replace/S15.5.4.11_A12.js
 built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js
 built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js
 
@@ -30,7 +39,6 @@ harness/assertRelativeDateMs.js
 built-ins/JSON/stringify/string-escape-ascii.js
 built-ins/String/prototype/match/*.js
 built-ins/String/prototype/matchAll/*.js
-built-ins/String/prototype/replace/*.js
 built-ins/String/prototype/search/*.js
 built-ins/String/prototype/split/*.js
 built-ins/String/prototype/toLocaleLowerCase/*.js
