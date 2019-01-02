@@ -3,6 +3,7 @@ import {
   Assert,
   RequireObjectCoercible,
   ToInteger,
+  ToLength,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -136,6 +137,54 @@ function StringProto_indexOf([searchString, position = Value.undefined], { thisV
   return new Value(-1);
 }
 
+// 21.1.3.13 #sec-string.prototype.padend
+function StringProto_padEnd([maxLength, fillString = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const intMaxLength = Q(ToLength(maxLength)).numberValue();
+  const stringLength = S.stringValue().length;
+  if (intMaxLength <= stringLength) {
+    return S;
+  }
+  let filler;
+  if (fillString === Value.undefined) {
+    filler = ' ';
+  } else {
+    filler = Q(ToString(fillString)).stringValue();
+  }
+  if (filler === '') {
+    return S;
+  }
+  const fillLen = intMaxLength - stringLength;
+  const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
+  const truncatedStringFiller = stringFiller.slice(0, fillLen);
+  return new Value(S.stringValue() + truncatedStringFiller);
+}
+
+// 21.1.3.14 #sec-string.prototype.padstart
+function StringProto_padStart([maxLength, fillString = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const intMaxLength = Q(ToLength(maxLength)).numberValue();
+  const stringLength = S.stringValue().length;
+  if (intMaxLength <= stringLength) {
+    return S;
+  }
+  let filler;
+  if (fillString === Value.undefined) {
+    filler = ' ';
+  } else {
+    filler = Q(ToString(fillString)).stringValue();
+  }
+  if (filler === '') {
+    return S;
+  }
+  const fillLen = intMaxLength - stringLength;
+  const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
+  const truncatedStringFiller = stringFiller.slice(0, fillLen);
+  return new Value(truncatedStringFiller + S.stringValue());
+}
+
 // 21.1.3.18 #sec-string.prototype.slice
 function StringProto_slice([start, end], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -203,9 +252,8 @@ export function CreateStringPrototype(realmRec) {
     // localeCompare
     // match
     // normalize
-    // padEnd
-    // padStart
-    // padEnd
+    ['padEnd', StringProto_padEnd, 1],
+    ['padStart', StringProto_padStart, 1],
     // repeat
     // replace
     // search
