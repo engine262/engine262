@@ -360,8 +360,8 @@ export class StringExoticObjectValue extends ObjectValue {
   }
 
   OwnPropertyKeys() {
-    const keys = [];
     const O = this;
+    const keys = [];
     const str = O.StringData.stringValue();
     const len = str.length;
 
