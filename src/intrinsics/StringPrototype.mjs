@@ -1,6 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
+  Call,
+  GetMethod,
+  IsCallable,
   RequireObjectCoercible,
   ToInteger,
   ToLength,
@@ -13,6 +16,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
+import { GetSubstitution } from '../runtime-semantics/all.mjs';
 import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q, X } from '../completion.mjs';
@@ -302,6 +306,39 @@ function StringProto_repeat([count], { thisValue }) {
   return new Value(T);
 }
 
+// 21.1.3.16 #sec-string.prototype.replace
+function StringProto_replace([searchValue, replaceValue], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  if (searchValue !== Value.undefined && searchValue !== Value.null) {
+    const replacer = Q(GetMethod(searchValue, wellKnownSymbols.replace));
+    if (replacer !== Value.undefined) {
+      return Q(Call(replacer, searchValue, [O, replaceValue]));
+    }
+  }
+  const string = Q(ToString(O));
+  const searchString = Q(ToString(searchValue));
+  const functionalReplace = IsCallable(replaceValue);
+  if (functionalReplace === Value.false) {
+    replaceValue = Q(ToString(replaceValue));
+  }
+  const pos = new Value(string.stringValue().indexOf(searchString.stringValue()));
+  const matched = searchString;
+  if (pos.numberValue() === -1) {
+    return string;
+  }
+  let replStr;
+  if (functionalReplace === Value.true) {
+    const replValue = Q(Call(replaceValue, Value.undefined, [matched, pos, string]));
+    replStr = Q(ToString(replValue));
+  } else {
+    const captures = [];
+    replStr = GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue);
+  }
+  const tailPos = pos.numberValue() + matched.stringValue().length;
+  const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
+  return new Value(newString);
+}
+
 // 21.1.3.18 #sec-string.prototype.slice
 function StringProto_slice([start, end], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -435,7 +472,7 @@ export function CreateStringPrototype(realmRec) {
     ['padEnd', StringProto_padEnd, 1],
     ['padStart', StringProto_padStart, 1],
     ['repeat', StringProto_repeat, 1],
-    // replace
+    ['replace', StringProto_replace, 2],
     // search
     ['slice', StringProto_slice, 2],
     // split
