@@ -32,13 +32,15 @@ function JSON_parse([text, reviver]) {
       const isArray = Q(IsArray(val));
       if (isArray === Value.true) {
         let I = 0;
-        const len = Q(ToLength(Q(Get(val, new Value('length'))))).numberValue();
+        const lenProp = Q(Get(val, new Value('length')));
+        const len = Q(ToLength(lenProp)).numberValue();
         while (I < len) {
-          const newElement = Q(InternalizeJSONProperty(val, X(ToString(new Value(I)))));
+          const Istr = X(ToString(new Value(I)));
+          const newElement = Q(InternalizeJSONProperty(val, Istr));
           if (Type(newElement) === 'Undefined') {
-            Q(val.Delete(X(ToString(new Value(I)))));
+            Q(val.Delete(Istr));
           } else {
-            Q(CreateDataProperty(val, X(ToString(new Value(I))), newElement));
+            Q(CreateDataProperty(val, Istr, newElement));
           }
           I += 1;
         }
@@ -104,7 +106,7 @@ function JSON_stringify([value, replacer, space]) {
         value = Q(Call(toJSON, value, [key]));
       }
     }
-    if (Type(ReplacerFunction) !== 'Undefined') {
+    if (ReplacerFunction !== Value.undefined) {
       value = Q(Call(ReplacerFunction, holder, [key, value]));
     }
     if (Type(value) === 'Object') {
@@ -222,7 +224,8 @@ function JSON_stringify([value, replacer, space]) {
     const len = Q(Get(value, new Value('length'))).numberValue();
     let index = 0;
     while (index < len) {
-      const strP = Q(SerializeJSONProperty(X(ToString(new Value(index))), value));
+      const indexStr = X(ToString(new Value(index)));
+      const strP = Q(SerializeJSONProperty(indexStr, value));
       if (strP === Value.undefined) {
         partial.push('null');
       } else {
@@ -255,33 +258,32 @@ function JSON_stringify([value, replacer, space]) {
   if (Type(replacer) === 'Object') {
     if (IsCallable(replacer) === Value.true) {
       ReplacerFunction = replacer;
-    }
-  } else {
-    const isArray = Q(IsArray(replacer));
-    if (isArray === Value.true) {
-      PropertyList = [];
-      const len = Q(ToLength(Q(Get(replacer, new Value('length'))))).numberValue();
-      let k = 0;
-      while (k < len) {
-        const v = Q(Get(replacer, X(ToString(new Value(k)))));
-        let item = Value.undefined;
-        if (Type(v) === 'String') {
-          item = v;
-        } else if (Type(v) === 'Number') {
-          item = X(ToString(v));
-        } else if (Type(v) === 'Object') {
-          if ('StringData' in v || 'NumberData' in v) {
-            item = Q(ToString(v));
+    } else {
+      const isArray = Q(IsArray(replacer));
+      if (isArray === Value.true) {
+        PropertyList = [];
+        const len = Q(ToLength(Q(Get(replacer, new Value('length'))))).numberValue();
+        let k = 0;
+        while (k < len) {
+          const v = Q(Get(replacer, X(ToString(new Value(k)))));
+          let item = Value.undefined;
+          if (Type(v) === 'String') {
+            item = v;
+          } else if (Type(v) === 'Number') {
+            item = X(ToString(v));
+          } else if (Type(v) === 'Object') {
+            if ('StringData' in v || 'NumberData' in v) {
+              item = Q(ToString(v));
+            }
           }
+          if (Type(item) !== 'undefined' && !PropertyList.includes(item)) {
+            PropertyList.push(item);
+          }
+          k += 1;
         }
-        if (Type(item) !== 'undefined' && !PropertyList.includes(item)) {
-          PropertyList.push(item);
-        }
-        k += 1;
       }
     }
   }
-  let gap;
   if (Type(space) === 'Object') {
     if ('NumberData' in space) {
       space = Q(ToNumber(space));
@@ -289,6 +291,7 @@ function JSON_stringify([value, replacer, space]) {
       space = Q(ToString(space));
     }
   }
+  let gap;
   if (Type(space) === 'Number') {
     space = Math.min(10, X(ToInteger(space)).numberValue());
     gap = ' '.repeat(space >= 0 ? space : 0);
