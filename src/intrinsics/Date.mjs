@@ -84,9 +84,15 @@ function DateConstructor([year, month, date, hours, minutes, seconds, ms], { New
   }
 }
 
+// 20.3.3.1 #sec-date.now
+function Date_now() {
+  const now = Date.now();
+  return new Value(now);
+}
+
 export function CreateDate(realmRec) {
   const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 1, realmRec.Intrinsics['%DatePrototype%'], [
-    // now
+    ['now', Date_now, 0],
     // parse
     // UTC
   ]);

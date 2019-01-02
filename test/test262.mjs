@@ -123,7 +123,9 @@ const excludedTests = [
   'built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
 
   // TODO(7): Missing Date.
+  'built-ins/Function/prototype/bind/15.3.4.5-2-9.js',
   'built-ins/Function/prototype/bind/S15.3.4.5_A5.js',
+  'harness/assertRelativeDateMs.js',
 
   // TODO(22): Missing String.prototype.split.
   'built-ins/JSON/stringify/string-escape-ascii.js',
@@ -144,6 +146,7 @@ const readyTests = [
   'built-ins/AsyncIteratorPrototype/**/*.js',
   'built-ins/Boolean/**/*.js',
   'built-ins/DataView/**/*.js',
+  'built-ins/Date/now/**/*.js',
   'built-ins/Error/**/*.js',
   'built-ins/eval/**/*.js',
   'built-ins/Function/**/*.js',
@@ -368,7 +371,7 @@ files.reduce((promise, filename) => promise.then(async () => {
 
   if (filename.includes('annexB')
       || (meta.features && !meta.features.every((feature) => readyFeatures.has(feature)))
-      || /\b(date|reg ?exp?)\b/i.test(meta.description) || /\b(date|reg ?exp?)\b/.test(source)
+      || /\b(reg ?exp?)\b/i.test(meta.description) || /\b(reg ?exp?)\b/.test(source)
       || meta.includes.includes('nativeFunctionMatcher.js')
       || excludedTests.find((t) => minimatch(short, t))) {
     skipped += 1;
