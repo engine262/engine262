@@ -80,6 +80,30 @@ function StringProto_concat([...args], { thisValue }) {
   return new Value(R);
 }
 
+// 21.1.3.6 #sec-string.prototype.endswith
+function StringProto_endsWith([searchString, endPosition = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O)).stringValue();
+  // TODO:
+  // Let isRegExp be ? IsRegExp(searchString).
+  // If isRegExp is true, throw a TypeError exception.
+  const searchStr = Q(ToString(searchString)).stringValue();
+  const len = S.length;
+  const pos = endPosition === Value.undefined ? len : Q(ToInteger(endPosition)).numberValue();
+  const end = Math.min(Math.max(pos, 0), len);
+  const searchLength = searchStr.length;
+  const start = end - searchLength;
+  if (start < 0) {
+    return Value.false;
+  }
+  for (let i = 0; i < searchLength; i += 1) {
+    if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
+      return Value.false;
+    }
+  }
+  return Value.true;
+}
+
 function StringProto_indexOf([searchString, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -166,7 +190,7 @@ export function CreateStringPrototype(realmRec) {
     ['charCodeAt', StringProto_charCodeAt, 1],
     ['codePointAt', StringProto_codePointAt, 1],
     ['concat', StringProto_concat, 1],
-    // endsWith
+    ['endsWith', StringProto_endsWith, 1],
     // includes
     ['indexOf', StringProto_indexOf, 1],
     // lastIndexOf
