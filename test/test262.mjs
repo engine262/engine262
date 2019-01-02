@@ -163,6 +163,7 @@ const readyTests = [
   'built-ins/parseInt/**/*.js',
   'built-ins/String/prototype/endsWith/**/*.js',
   'built-ins/String/prototype/includes/**/*.js',
+  'built-ins/String/prototype/lastIndexOf/**/*.js',
   'built-ins/String/prototype/padEnd/**/*.js',
   'built-ins/String/prototype/padStart/**/*.js',
   'built-ins/String/prototype/repeat/**/*.js',
