@@ -156,6 +156,8 @@ const readyTests = [
   'built-ins/isNaN/**/*.js',
   'built-ins/IteratorPrototype/**/*.js',
   'built-ins/JSON/**/*.js',
+  'built-ins/Map/**/*.js',
+  'built-ins/MapIteratorPrototype/**/*.js',
   'built-ins/NaN/**/*.js',
   'built-ins/parseInt/**/*.js',
   'built-ins/TypedArray/**/*.js',
