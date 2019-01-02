@@ -103,6 +103,7 @@ const messages = {
   ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds for a safe integer',
   SubclassSameValue: (v) => `Subclass constructor returned the same object ${inlineInspect(v)}`,
   SubclassLengthTooSmall: (v) => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
+  StringRepeatCount: (v) => `Count ${inlineInspect(v)} is invalid`,
 };
 
 export function msg(key, ...args) {
