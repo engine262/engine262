@@ -196,9 +196,9 @@ export function CreateIntrinsics(realmRec) {
   CreateAsyncFunctionPrototype(realmRec);
   CreateAsyncFunction(realmRec);
 
+  CreateAsyncGeneratorPrototype(realmRec);
   CreateAsyncGenerator(realmRec);
   CreateAsyncGeneratorFunction(realmRec);
-  CreateAsyncGeneratorPrototype(realmRec);
 
   CreateAsyncFromSyncIteratorPrototype(realmRec);
 

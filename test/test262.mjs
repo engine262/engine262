@@ -141,7 +141,7 @@ const readyTests = [
   'built-ins/ArrayIteratorPrototype/**/*.js',
   'built-ins/AsyncFromSyncIteratorPrototype/**/*.js',
   'built-ins/AsyncFunction/**/*.js',
-  'built-ins/AsyncGeneratorFunction/**/*.js',
+  'built-ins/AsyncGenerator*/**/*.js',
   'built-ins/isFinite/**/*.js',
   'built-ins/isNaN/**/*.js',
   'built-ins/TypedArray/**/*.js',
