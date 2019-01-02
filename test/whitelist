@@ -25,7 +25,14 @@ built-ins/MapIteratorPrototype/**/*.js
 built-ins/NaN/**/*.js
 built-ins/NativeErrors/**/*.js
 built-ins/parseInt/**/*.js
+built-ins/Promise/**/*.js
+built-ins/Proxy/**/*.js
+built-ins/Reflect/**/*.js
+built-ins/Set/**/*.js
+built-ins/SetIteratorPrototype/**/*.js
 built-ins/String/**/*.js
+built-ins/StringIteratorPrototype/**/*.js
+built-ins/ThrowTypeError/**/*.js
 built-ins/TypedArray/**/*.js
 built-ins/TypedArrayConstructors/**/*.js
 built-ins/undefined/**/*.js
