@@ -5,6 +5,12 @@ const { relative, resolve } = require('path');
 const COMPLETION_PATH = resolve('./src/completion.mjs');
 const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
 
+function fileToImport(file, refPath) {
+  return relative(file.opts.filename, refPath)
+    .replace(/\\/g, '/') // Support building on Windows
+    .replace('../', './');
+}
+
 module.exports = ({ types: t, template }) => ({
   visitor: {
     Program: {
@@ -19,11 +25,11 @@ module.exports = ({ types: t, template }) => ({
       },
       exit(path, state) {
         if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
-          const r = relative(state.file.opts.filename, COMPLETION_PATH).replace('../', './');
+          const r = fileToImport(state.file, COMPLETION_PATH);
           path.node.body.unshift(template.ast(`import { Completion, AbruptCompletion } from '${r}';`));
         }
         if (!state.foundCall && state.needCall) {
-          const r = relative(state.file.opts.filename, ABSTRACT_OPS_PATH).replace('../', './');
+          const r = fileToImport(state.file, ABSTRACT_OPS_PATH);
           path.node.body.unshift(template.ast(`import { Call } from '${r}';`));
         }
       },

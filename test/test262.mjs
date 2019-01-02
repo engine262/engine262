@@ -23,7 +23,8 @@ util.inspect.defaultOptions.depth = 2;
 
 const onlyFailures = process.argv.includes('--only-failures');
 
-const testdir = path.resolve(path.dirname(url.fileURLToPath(new URL(import.meta.url))), 'test262');
+const testdir = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), 'test262');
+
 const readyFeatures = new Set([
   'ArrayBuffer',
   'Array.prototype.values',
