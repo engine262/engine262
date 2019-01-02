@@ -28,6 +28,7 @@ function thisStringValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
+// 21.1.3.1 #sec-string.prototype.charat
 function StringProto_charAt([pos], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -39,6 +40,7 @@ function StringProto_charAt([pos], { thisValue }) {
   return new Value(S.stringValue()[position]);
 }
 
+// 21.1.3.2 #sec-string.prototype.charcodeat
 function StringProto_charCodeAt([pos], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -50,6 +52,7 @@ function StringProto_charCodeAt([pos], { thisValue }) {
   return new Value(S.stringValue().charCodeAt(position));
 }
 
+// 21.1.3.3 #sec-string.prototype.codepointat
 function StringProto_codePointAt([pos], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -69,6 +72,7 @@ function StringProto_codePointAt([pos], { thisValue }) {
   return new Value(UTF16Decode(first, second));
 }
 
+// 21.1.3.4 #sec-string.prototype.concat
 function StringProto_concat([...args], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -111,6 +115,7 @@ function StringProto_includes([searchString, position = Value.undefined], { this
   return Value.false;
 }
 
+// 21.1.3.8 #sec-string.prototype.indexof
 function StringProto_indexOf([searchString, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -213,10 +218,28 @@ function StringProto_slice([start, end], { thisValue }) {
   return new Value(S.slice(from, from + span));
 }
 
+// 21.1.3.24 #sec-string.prototype.tolowercase
+function StringProto_toLowerCase(args, { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const L = S.stringValue().toLowerCase();
+  return new Value(L);
+}
+
+// 21.1.3.25 #sec-string.prototype.tostring
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
+// 21.1.3.26 #sec-string.prototype.touppercase
+function StringProto_toUpperCase(args, { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const L = S.stringValue().toUpperCase();
+  return new Value(L);
+}
+
+// 21.1.3.27 #sec-string.prototype.trim
 function StringProto_trim(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -224,10 +247,12 @@ function StringProto_trim(args, { thisValue }) {
   return new Value(T);
 }
 
+// 21.1.3.28 #sec-string.prototype.valueof
 function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
+// 21.1.3.29 #sec-string.prototype-@@iterator
 function StringProto_iterator(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -263,9 +288,9 @@ export function CreateStringPrototype(realmRec) {
     // substring
     // toLocaleLowerCase
     // toLocaleUpperCase
-    // toLowerCase
+    ['toLowerCase', StringProto_toLowerCase, 0],
     ['toString', StringProto_toString, 0],
-    // toUpperCase
+    ['toUpperCase', StringProto_toUpperCase, 0],
     ['trim', StringProto_trim, 0],
     ['valueOf', StringProto_valueOf, 0],
     [wellKnownSymbols.iterator, StringProto_iterator, 0],
