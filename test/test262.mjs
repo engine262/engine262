@@ -104,6 +104,8 @@ const readyFeatures = new Set([
 
 const excludedTests = [
   'built-ins/Array/length/S15.4.5.2_A3_T4.js', // this test passes, but takes hours
+
+  // https://github.com/acornjs/acorn/issues/772
   'language/statements/while/let-block-with-newline.js',
   'language/statements/while/let-identifier-with-newline.js',
   'language/statements/for-in/let-block-with-newline.js',
@@ -111,7 +113,7 @@ const excludedTests = [
   'language/statements/for-of/let-block-with-newline.js',
   'language/statements/for-of/let-identifier-with-newline.js',
 
-  // Uses regexes.
+  // TODO(8): Uses regexes.
   'built-ins/Array/prototype/find/predicate-is-not-callable-throws.js',
   'built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js',
   'built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js',
@@ -119,11 +121,14 @@ const excludedTests = [
   'built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js',
   'built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js',
 
-  // Missing Date.
+  // TODO(7): Missing Date.
   'built-ins/Function/prototype/bind/S15.3.4.5_A5.js',
 
-  // Missing String.prototype.split.
+  // TODO(22): Missing String.prototype.split.
   'built-ins/JSON/stringify/string-escape-ascii.js',
+
+  // TODO(22): Missing String.fromCharCode.
+  'built-ins/parseInt/S15.1.2.2_A8.js',
 ];
 
 const readyTests = [
@@ -148,6 +153,7 @@ const readyTests = [
   'built-ins/IteratorPrototype/**/*.js',
   'built-ins/JSON/**/*.js',
   'built-ins/NaN/**/*.js',
+  'built-ins/parseInt/**/*.js',
   'built-ins/TypedArray/**/*.js',
   'built-ins/TypedArrayConstructors/**/*.js',
   'built-ins/undefined/**/*.js',
