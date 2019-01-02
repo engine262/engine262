@@ -125,12 +125,6 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     return surroundingAgent.Throw('SyntaxError', err.message);
   }
 
-  // These steps *should* but are not included in bodyParser:
-  // 23. If body Contains SuperCall is true, throw a SyntaxError exception.
-  // 25. If body Contains SuperProperty is true, throw a SyntaxError exception.
-  //
-  // See https://github.com/acornjs/acorn/issues/740.
-
   // These steps are included in ParseAsFormalParameters:
   // 20. If strict is true, the Early Error rules for UniqueFormalParameters : FormalParameters are applied.
   // 21. If strict is true and IsSimpleParameterList of parameters is false, throw a SyntaxError exception.
