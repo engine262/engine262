@@ -14,6 +14,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// 21.1.1.1 #sec-string-constructor-string-value
 function StringConstructor(args, { callLength, NewTarget }) {
   let s;
   if (callLength === 0) {
@@ -33,6 +34,7 @@ function StringConstructor(args, { callLength, NewTarget }) {
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));
 }
 
+// 21.1.2.4 #sec-string.raw
 function String_raw([template, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
@@ -64,6 +66,8 @@ function String_raw([template, ...substitutions]) {
 
 export function CreateString(realmRec) {
   const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%StringPrototype%'], [
+    // fromCharCode
+    // fromCodePoint
     ['raw', String_raw, 1],
   ]);
 
