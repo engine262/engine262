@@ -360,8 +360,8 @@ export class StringExoticObjectValue extends ObjectValue {
   }
 
   OwnPropertyKeys() {
-    const O = this;
     const keys = [];
+    const O = this;
     const str = O.StringData.stringValue();
     const len = str.length;
 
@@ -373,8 +373,11 @@ export class StringExoticObjectValue extends ObjectValue {
     // ToInteger(P) ≥ len, in ascending numeric index order, do
     //   Add P as the last element of keys.
     for (const P of O.properties.keys()) {
-      if (isArrayIndex(P) && X(ToInteger(P)).numberValue() >= len) {
-        keys.push(P);
+      // This is written with two nested ifs to work around https://github.com/devsnek/engine262/issues/24
+      if (isArrayIndex(P)) {
+        if (X(ToInteger(P)).numberValue() >= len) {
+          keys.push(P);
+        }
       }
     }
 
