@@ -689,7 +689,7 @@ export function isForStatement(node) {
 
 // Used in #prod-IterationStatement
 export function isForStatementWithExpression(node) {
-  return isForStatement(node) && isExpression(node.init);
+  return isForStatement(node) && (node.init === null || isExpression(node.init));
 }
 
 // Used in #prod-IterationStatement
