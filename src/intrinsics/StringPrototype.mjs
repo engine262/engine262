@@ -1,7 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  ArrayCreate,
   Assert,
   Call,
+  CreateDataProperty,
   GetMethod,
   IsCallable,
   RequireObjectCoercible,
@@ -9,6 +11,7 @@ import {
   ToLength,
   ToNumber,
   ToString,
+  ToUint32,
 } from '../abstract-ops/all.mjs';
 import {
   StringExoticObjectValue,
@@ -367,6 +370,78 @@ function StringProto_slice([start, end], { thisValue }) {
   return new Value(S.slice(from, from + span));
 }
 
+// 21.1.3.19 #sec-string.prototype.split
+function StringProto_split([separator, limit], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  if (separator !== Value.undefined && separator !== Value.null) {
+    const splitter = Q(GetMethod(separator, wellKnownSymbols.split));
+    if (splitter !== Value.undefined) {
+      return Q(Call(splitter, separator, [O, limit]));
+    }
+  }
+  const S = Q(ToString(O));
+  const A = X(ArrayCreate(new Value(0)));
+  let lengthA = 0;
+  const lim = limit === Value.undefined ? new Value((2 ** 32) - 1) : Q(ToUint32(limit));
+  const s = S.stringValue().length;
+  let p = 0;
+  const R = Q(ToString(separator));
+  if (lim.numberValue() === 0) {
+    return A;
+  }
+  if (separator === Value.undefined) {
+    X(CreateDataProperty(A, new Value('0'), S));
+    return A;
+  }
+  if (s === 0) {
+    const z = SplitMatch(S, 0, R);
+    if (z !== false) {
+      return A;
+    }
+    X(CreateDataProperty(A, new Value('0'), S));
+    return A;
+  }
+  let q = p;
+  while (q !== s) {
+    const e = SplitMatch(S, q, R);
+    if (e === false) {
+      q += 1;
+    } else {
+      if (e === p) {
+        q += 1;
+      } else {
+        const T = new Value(S.stringValue().substring(p, q));
+        X(CreateDataProperty(A, X(ToString(new Value(lengthA))), T));
+        lengthA += 1;
+        if (lengthA === lim.numberValue()) {
+          return A;
+        }
+        p = e;
+        q = p;
+      }
+    }
+  }
+  const T = new Value(S.stringValue().substring(p, s));
+  X(CreateDataProperty(A, X(ToString(new Value(lengthA))), T));
+  return A;
+}
+
+// 21.1.3.19.1 #sec-splitmatch
+function SplitMatch(S, q, R) {
+  Assert(Type(R) === 'String');
+  const r = R.stringValue().length;
+  const s = S.stringValue().length;
+  if (q + r > s) {
+    return false;
+  }
+  for (let i = 0; i < r; i += 1) {
+    if (S.stringValue().charCodeAt(q + i) !== R.stringValue().charCodeAt(i)) {
+      return false;
+    }
+  }
+  return q + r;
+}
+
 // 21.1.3.20 #sec-string.prototype.startswith
 function StringProto_startsWith([searchString, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -475,7 +550,7 @@ export function CreateStringPrototype(realmRec) {
     ['replace', StringProto_replace, 2],
     // search
     ['slice', StringProto_slice, 2],
-    // split
+    ['split', StringProto_split, 2],
     ['startsWith', StringProto_startsWith, 1],
     ['substring', StringProto_substring, 2],
     // toLocaleLowerCase
