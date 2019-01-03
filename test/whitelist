@@ -37,10 +37,4 @@ built-ins/TypedArray/**/*.js
 built-ins/TypedArrayConstructors/**/*.js
 built-ins/undefined/**/*.js
 
-language/asi/**/*.js
-language/expressions/addition/**/*.js
-language/expressions/array/**/*.js
-language/expressions/arrow-function/**/*.js
-language/expressions/assignment/**/*.js
-language/expressions/bitwise-*/**/*.js
-language/expressions/logical-*/**/*.js
+language/**/*.js
