@@ -44,7 +44,6 @@ const readList = (name) => {
 };
 const skiplist = readList('skiplist').map((t) => `test/${t}`);
 const features = readList('features');
-const whitelist = readList('whitelist').map((t) => `test/${t}`);
 
 const start = Date.now();
 
@@ -70,7 +69,7 @@ function printProgress(test, log) {
   readline.cursorTo(process.stdout, 0);
 
   if (line.length >= process.stdout.columns) {
-    process.stdout.write(`${line.slice(0, -10)}...`);
+    process.stdout.write(`${line.slice(0, -15)}...`);
   } else {
     process.stdout.write(line);
   }
@@ -123,8 +122,7 @@ const SKIP = Symbol('SKIP');
 
 async function run({ file, contents, attrs }) {
   if (override !== file) {
-    if (!whitelist.find((t) => minimatch(file, t))
-        || (attrs.features && !attrs.features.every((feature) => features.includes(feature)))
+    if ((attrs.features && !attrs.features.every((feature) => features.includes(feature)))
         || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
         || attrs.includes.includes('nativeFunctionMatcher.js')
         || skiplist.find((t) => minimatch(file, t))) {
@@ -213,7 +211,7 @@ const stream = new TestStream(path.resolve(__dirname, 'test262'), {
 
 (async () => {
   for await (const test of stream) {
-    if (test.file.includes('annexB')) {
+    if (test.file.includes('annexB') || test.file.includes('intl402')) {
       continue;
     }
 
