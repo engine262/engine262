@@ -3,6 +3,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
+import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
@@ -128,8 +129,7 @@ export function ToNumber(argument) {
     case 'Number':
       return argument;
     case 'String':
-      // FIXME(devsnek): https://tc39.github.io/ecma262/#sec-runtime-semantics-mv-s
-      return new Value(+(argument.stringValue()));
+      return new Value(MV_StringNumericLiteral(argument.stringValue()));
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', 'Can not convert a Symbol value to a number');
     case 'Object': {

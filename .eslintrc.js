@@ -9,6 +9,9 @@ module.exports = {
       parserOptions: { sourceType: 'script' },
     },
   ],
+  globals: {
+    'BigInt': false
+  },
   rules: {
     'quote-props': ['error', 'consistent'],
     'strict': ['error', 'global'],

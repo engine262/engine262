@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const babel = require('rollup-plugin-babel');
+const acornBigInt = require('acorn-bigint');
 const { name, version } = require('./package.json');
 
 const { USE_DO_EXPRESSIONS } = process.env;
@@ -14,29 +15,33 @@ const banner = `/*
 `;
 
 module.exports = () => ({
-  external: ['acorn'],
+  external: ['acorn', 'nearley'],
   input: './src/api.mjs',
   plugins: [
     babel({
       exclude: 'node_modules/**',
       plugins: [
+        '@babel/plugin-syntax-bigint',
         USE_DO_EXPRESSIONS ? './transform_do.js' : './transform.js',
       ],
     }),
   ],
-  acornInjectPlugins: USE_DO_EXPRESSIONS ? [
-    (P) => class ParserWithDoExpressions extends P {
-      parseExprAtom(...args) {
-        if (this.value === 'do') {
-          this.next();
-          const node = this.startNode();
-          node.body = this.parseBlock();
-          return this.finishNode(node, 'DoExpression');
+  acornInjectPlugins: [
+    acornBigInt,
+    ...(USE_DO_EXPRESSIONS ? [
+      (P) => class ParserWithDoExpressions extends P {
+        parseExprAtom(...args) {
+          if (this.value === 'do') {
+            this.next();
+            const node = this.startNode();
+            node.body = this.parseBlock();
+            return this.finishNode(node, 'DoExpression');
+          }
+          return super.parseExprAtom(...args);
         }
-        return super.parseExprAtom(...args);
-      }
-    },
-  ] : [],
+      },
+    ] : [])
+  ],
   output: [
     {
       file: 'dist/engine262.js',

@@ -1,4 +1,3 @@
-import acorn from 'acorn';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -9,28 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
-
-const { isNewLine, nonASCIIwhitespace } = acorn;
-
-function isWhiteSpace(c) {
-  return c === '\x09' // CHARACTER TABULATION
-    || c === '\x0B' // LINE TABULATION
-    || c === '\x0C' // FORM FEED (FF)
-    || c === '\x20' // SPACE
-    || c === '\xA0' // NO-BREAK SPACE
-    || nonASCIIwhitespace.test(c);
-}
-
-const isLineTerminator = (c) => isNewLine(c.charCodeAt(0), false);
-
-const isStrWhiteSpaceChar = (c) => isWhiteSpace(c) || isLineTerminator(c);
-
-function searchNotStrWhiteSpaceChar(str) {
-  for (let i = 0; i < str.length; i += 1) {
-    if (!isStrWhiteSpaceChar(str[i])) return i;
-  }
-  return str.length;
-}
+import { searchNotStrWhiteSpaceChar } from '../grammar/numeric-string.mjs';
 
 function digitToNumber(digit) {
   digit = digit.charCodeAt(0);
