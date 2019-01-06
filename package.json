@@ -4,14 +4,17 @@
   "description": "Implementation of ECMA-262 in JavaScript",
   "main": "dist/engine262",
   "dependencies": {
-    "acorn": "^6.0.5"
+    "acorn": "^6.0.5",
+    "nearley": "^2.16.0"
   },
   "bin": {
     "engine262": "bin/engine262.js"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
+    "@babel/plugin-syntax-bigint": "^7.2.0",
     "@snek/source-map-support": "^1.0.3",
+    "acorn-bigint": "^0.3.1",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.6.1",
     "eslint-config-airbnb": "^17.0.0",
@@ -26,6 +29,7 @@
   "scripts": {
     "test": "node test/test262.js",
     "lint": "eslint transform.js transform_do.js test/test262.js bin/engine262.js src/ --ext=js,mjs --cache",
+    "build-grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
     "build": "rollup -c",
     "build-do": "rollup -c --environment USE_DO_EXPRESSIONS"
   },
