@@ -10,12 +10,13 @@ import {
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function NumberConstructor(args, { NewTarget, callLength }) {
+function NumberConstructor(args, { NewTarget }) {
+  const [value] = args;
   let n;
-  if (callLength === 0) {
+  if (args.length === 0) {
     n = new Value(0);
   } else {
-    n = Q(ToNumber(args[0]));
+    n = Q(ToNumber(value));
   }
   if (NewTarget === Value.undefined) {
     return n;
@@ -26,7 +27,7 @@ function NumberConstructor(args, { NewTarget, callLength }) {
   return O;
 }
 
-function Number_isFinite([number]) {
+function Number_isFinite([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
   }
@@ -37,7 +38,7 @@ function Number_isFinite([number]) {
   return Value.true;
 }
 
-function Number_isInteger([number]) {
+function Number_isInteger([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
   }
@@ -52,7 +53,7 @@ function Number_isInteger([number]) {
   return Value.true;
 }
 
-function Number_isNaN([number]) {
+function Number_isNaN([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
   }

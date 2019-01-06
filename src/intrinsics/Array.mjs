@@ -38,8 +38,8 @@ import { OutOfRange, msg } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 22.1.1 #sec-array-constructor
-function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
-  const numberOfArgs = callLength;
+function ArrayConstructor(argumentsList, { NewTarget }) {
+  const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
     // 22.1.1.1 #sec-array-constructor-array
     Assert(numberOfArgs === 0);
@@ -72,6 +72,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     return array;
   } else if (numberOfArgs >= 2) {
     // 22.1.1.3 #sec-array-items
+    const items = argumentsList;
     Assert(numberOfArgs >= 2);
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
@@ -79,7 +80,6 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
     const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
     const array = ArrayCreate(new Value(0), proto);
     let k = 0;
-    const items = argumentsList;
     while (k < numberOfArgs) {
       const Pk = ToString(new Value(k));
       const itemK = items[k];
@@ -95,7 +95,7 @@ function ArrayConstructor(argumentsList, { NewTarget, callLength }) {
 }
 
 // 22.1.2.1 #sec-array.from
-function Array_from([items, mapfn = Value.undefined, thisArg], { thisValue }) {
+function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg], { thisValue }) {
   const C = thisValue;
   let mapping;
   let T;
@@ -177,12 +177,12 @@ function Array_from([items, mapfn = Value.undefined, thisArg], { thisValue }) {
 }
 
 // 22.1.2.2 #sec-array.isarray
-function Array_isArray([arg]) {
+function Array_isArray([arg = Value.undefined]) {
   return Q(IsArray(arg));
 }
 
 // 22.1.2.3 #sec-array.of
-function Array_of([...items], { thisValue }) {
+function Array_of(items, { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
   const C = thisValue;

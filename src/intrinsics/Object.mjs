@@ -38,7 +38,7 @@ function ObjectConstructor([value], { NewTarget }) {
   return X(ToObject(value));
 }
 
-function Object_assign([target, ...sources]) {
+function Object_assign([target = Value.undefined, ...sources]) {
   const to = Q(ToObject(target));
   if (sources.length === 0) {
     return to;
@@ -60,7 +60,7 @@ function Object_assign([target, ...sources]) {
   return to;
 }
 
-function Object_create([O, Properties]) {
+function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   if (Type(O) !== 'Object' && Type(O) !== 'Null') {
     return surroundingAgent.Throw('TypeError', 'Object prototype may only be an Object or null');
   }
@@ -71,7 +71,7 @@ function Object_create([O, Properties]) {
   return obj;
 }
 
-function Object_defineProperties([O, Properties]) {
+function Object_defineProperties([O = Value.undefined, Properties = Value.undefined]) {
   return Q(ObjectDefineProperties(O, Properties));
 }
 
@@ -99,7 +99,7 @@ function ObjectDefineProperties(O, Properties) {
   return O;
 }
 
-function Object_defineProperty([O, P, Attributes]) {
+function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Value is not an object');
   }
@@ -110,13 +110,13 @@ function Object_defineProperty([O, P, Attributes]) {
   return O;
 }
 
-function Object_entries([O]) {
+function Object_entries([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const nameList = Q(EnumerableOwnPropertyNames(obj, 'key+value'));
   return CreateArrayFromList(nameList);
 }
 
-function Object_freeze([O]) {
+function Object_freeze([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return O;
   }
@@ -128,14 +128,14 @@ function Object_freeze([O]) {
   return O;
 }
 
-function Object_getOwnPropertyDescriptor([O, P]) {
+function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]) {
   const obj = Q(ToObject(O));
   const key = Q(ToPropertyKey(P));
   const desc = Q(obj.GetOwnProperty(key));
   return FromPropertyDescriptor(desc);
 }
 
-function Object_getOwnPropertyDescriptors([O]) {
+function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const ownKeys = Q(obj.OwnPropertyKeys());
   const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
@@ -161,24 +161,24 @@ function GetOwnPropertyKeys(O, type) {
   return CreateArrayFromList(nameList);
 }
 
-function Object_getOwnPropertyNames([O]) {
+function Object_getOwnPropertyNames([O = Value.undefined]) {
   return Q(GetOwnPropertyKeys(O, 'String'));
 }
 
-function Object_getOwnPropertySymbols([O]) {
+function Object_getOwnPropertySymbols([O = Value.undefined]) {
   return Q(GetOwnPropertyKeys(O, 'Symbol'));
 }
 
-function Object_getPrototypeOf([O]) {
+function Object_getPrototypeOf([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   return Q(obj.GetPrototypeOf());
 }
 
-function Object_is([value1, value2]) {
+function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
   return SameValue(value1, value2);
 }
 
-function Object_isExtensible([O]) {
+function Object_isExtensible([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return Value.false;
   }
@@ -186,7 +186,7 @@ function Object_isExtensible([O]) {
   return IsExtensible(O);
 }
 
-function Object_isFrozen([O]) {
+function Object_isFrozen([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return Value.true;
   }
@@ -194,7 +194,7 @@ function Object_isFrozen([O]) {
   return Q(TestIntegrityLevel(O, 'frozen'));
 }
 
-function Object_isSealed([O]) {
+function Object_isSealed([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return Value.true;
   }
@@ -202,13 +202,13 @@ function Object_isSealed([O]) {
   return Q(TestIntegrityLevel(O, 'sealed'));
 }
 
-function Object_keys([O]) {
+function Object_keys([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const nameList = Q(EnumerableOwnPropertyNames(obj, 'key'));
   return CreateArrayFromList(nameList);
 }
 
-function Object_preventExtensions([O]) {
+function Object_preventExtensions([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return O;
   }
@@ -220,7 +220,7 @@ function Object_preventExtensions([O]) {
   return O;
 }
 
-function Object_seal([O]) {
+function Object_seal([O = Value.undefined]) {
   if (Type(O) !== 'Object') {
     return O;
   }
@@ -232,7 +232,7 @@ function Object_seal([O]) {
   return O;
 }
 
-function Object_setPrototypeOf([O, proto]) {
+function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   O = Q(RequireObjectCoercible(O));
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
     return surroundingAgent.Throw('TypeError', 'Prototype must be an Object or null');
@@ -248,7 +248,7 @@ function Object_setPrototypeOf([O, proto]) {
   return O;
 }
 
-function Object_values([O]) {
+function Object_values([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const nameList = Q(EnumerableOwnPropertyNames(obj, 'value'));
   return CreateArrayFromList(nameList);

@@ -32,7 +32,7 @@ function CreateSetIterator(set, kind) {
   return iterator;
 }
 
-function SetProto_add([value], { thisValue }) {
+function SetProto_add([value = Value.undefined], { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -68,7 +68,7 @@ function SetProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-function SetProto_delete([value], { thisValue }) {
+function SetProto_delete([value = Value.undefined], { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -92,7 +92,7 @@ function SetProto_entries(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'key+value'));
 }
 
-function SetProto_forEach([callbackfn, thisArg], { thisValue }) {
+function SetProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
     return surroundingAgent.Throw('TypeError');
@@ -118,7 +118,7 @@ function SetProto_forEach([callbackfn, thisArg], { thisValue }) {
   return Value.undefined;
 }
 
-function SetProto_has([value], { thisValue }) {
+function SetProto_has([value = Value.undefined], { thisValue }) {
   const S = thisValue;
   if (Type(S) !== 'Object') {
     return surroundingAgent.Throw('TypeError');

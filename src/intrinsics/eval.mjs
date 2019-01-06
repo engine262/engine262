@@ -239,7 +239,7 @@ export function PerformEval(x, evalRealm, strictCaller, direct) {
   return Completion(result);
 }
 
-function TheEval([x]) {
+function TheEval([x = Value.undefined]) {
   Assert(surroundingAgent.executionContextStack.length >= 2);
   const callerContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
   const callerRealm = callerContext.Realm;

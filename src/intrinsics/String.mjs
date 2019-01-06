@@ -21,9 +21,9 @@ import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 21.1.1.1 #sec-string-constructor-string-value
-function StringConstructor(args, { callLength, NewTarget }) {
+function StringConstructor(args, { NewTarget }) {
   let s;
-  if (callLength === 0) {
+  if (args.length === 0) {
     // String ( )
     s = new Value('');
   } else {
@@ -41,7 +41,8 @@ function StringConstructor(args, { callLength, NewTarget }) {
 }
 
 // 21.1.2.1 #sec-string.fromcharcode
-function String_fromCharCode(codeUnits, { callLength: length }) {
+function String_fromCharCode(codeUnits) {
+  const length = codeUnits.length;
   const elements = [];
   let nextIndex = 0;
   while (nextIndex < length) {
@@ -55,7 +56,8 @@ function String_fromCharCode(codeUnits, { callLength: length }) {
 }
 
 // 21.1.2.2 #sec-string.fromcodepoint
-function String_fromCodePoint(codePoints, { callLength: length }) {
+function String_fromCodePoint(codePoints) {
+  const length = codeUnits.length;
   const elements = [];
   let nextIndex = 0;
   while (nextIndex < length) {
@@ -75,11 +77,12 @@ function String_fromCodePoint(codePoints, { callLength: length }) {
 }
 
 // 21.1.2.4 #sec-string.raw
-function String_raw([template, ...substitutions]) {
+function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
   const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
-  const literalSegments = Q(ToLength(Q(Get(raw, new Value('length'))))).numberValue();
+  const lenProp = Q(Get(raw, new Value('length')));
+  const literalSegments = Q(ToLength(lenProp)).numberValue();
   if (literalSegments <= 0) {
     return new Value('');
   }
@@ -87,7 +90,8 @@ function String_raw([template, ...substitutions]) {
   let nextIndex = 0;
   while (true) {
     const nextKey = X(ToString(new Value(nextIndex)));
-    const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
+    const nextSegProp = Q(Get(raw, nextKey));
+    const nextSeg = Q(ToString(nextSegProp));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {
       return new Value(stringElements.join(''));

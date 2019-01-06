@@ -85,14 +85,14 @@ function AsyncGeneratorReject(generator, exception) {
 }
 
 // 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
-function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value]) {
+function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   F.Generator.AsyncGeneratorState = 'completed';
   return X(AsyncGeneratorResolve(F.Generator, value, Value.true));
 }
 
 // 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
-function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason]) {
+function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   F.Generator.AsyncGeneratorState = 'completed';
   return X(AsyncGeneratorReject(F.Generator, reason));

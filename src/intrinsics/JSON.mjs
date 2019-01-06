@@ -25,7 +25,7 @@ import {
 import { EnsureCompletion, Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-function JSON_parse([text, reviver]) {
+function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   function InternalizeJSONProperty(holder, name) {
     const val = Q(Get(holder, name));
     if (Type(val) === 'Object') {
@@ -96,7 +96,7 @@ const codeUnitTable = new Map([
   ['\u005C', '\\\\'],
 ]);
 
-function JSON_stringify([value, replacer, space]) {
+function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
   // 24.5.2.1 #sec-serializejsonproperty
   function SerializeJSONProperty(key, holder) {
     let value = Q(Get(holder, key)); // eslint-disable-line no-shadow

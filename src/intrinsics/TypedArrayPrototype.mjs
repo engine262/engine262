@@ -71,7 +71,7 @@ function TypedArrayProto_byteOffsetGetter(args, { thisValue }) {
 }
 
 // 22.2.3.5 #sec-%typedarray%.prototype.copywithin
-function TypedArrayProto_copyWithin([target, start, end], { thisValue }) {
+function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength.numberValue();
@@ -146,7 +146,7 @@ function TypedArrayProto_entries(args, { thisValue }) {
 }
 
 // 22.2.3.8 #sec-%typedarray%.prototype.fill
-function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength.numberValue();
@@ -172,7 +172,7 @@ function TypedArrayProto_fill([value, start = Value.undefined, end = Value.undef
 }
 
 // 22.2.3.9 #sec-%typedarray%.prototype.filter
-function TypedArrayProto_filter([callbackfn, thisArg], { thisValue }) {
+function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength.numberValue();
@@ -231,7 +231,7 @@ function TypedArrayProto_lengthGetter(args, { thisValue }) {
 }
 
 // 22.2.3.19 #sec-%typedarray%.prototype.map
-function TypedArrayProto_map([callbackfn, thisArg], { thisValue }) {
+function TypedArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength;
@@ -436,7 +436,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
 }
 
 // 22.2.3.26 #sec-%typedarray%.prototype.sort
-function TypedArrayProto_sort([comparefn], { thisValue }) {
+function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
   }
@@ -489,7 +489,7 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
 }
 
 // 22.2.3.27 #sec-%typedarray%.prototype.subarray
-function TypedArrayProto_subarray([begin, end], { thisValue }) {
+function TypedArrayProto_subarray([begin = Value.undefined, end], { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));

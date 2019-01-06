@@ -2,11 +2,11 @@ import {
   OrdinaryCreateFromConstructor,
   ToBoolean,
 } from '../abstract-ops/all.mjs';
-import { Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function BooleanConstructor([value], { NewTarget }) {
+function BooleanConstructor([value = Value.undefined], { NewTarget }) {
   const b = ToBoolean(value);
   if (Type(NewTarget) === 'Undefined') {
     return b;

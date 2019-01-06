@@ -28,7 +28,7 @@ import { Q, X } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-function FunctionProto_apply([thisArg, argArray], { thisValue: func }) {
+function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -81,7 +81,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
-function FunctionProto_bind([thisArg, ...args], { thisValue }) {
+function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
   const Target = thisValue;
   if (IsCallable(Target) === Value.false) {
     return surroundingAgent.Throw('TypeError');
@@ -111,7 +111,7 @@ function FunctionProto_bind([thisArg, ...args], { thisValue }) {
   return F;
 }
 
-function FunctionProto_call([thisArg, ...args], { thisValue: func }) {
+function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -140,7 +140,7 @@ function FunctionProto_toString(args, { thisValue: func }) {
   return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
 }
 
-function FunctionProto_hasInstance([V], { thisValue }) {
+function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
   const F = thisValue;
   return Q(OrdinaryHasInstance(F, V));
 }

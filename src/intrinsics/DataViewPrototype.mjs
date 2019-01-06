@@ -52,7 +52,7 @@ function DataViewProto_byteOffsetGetter(args, { thisValue }) {
 }
 
 // 24.3.4.5 #sec-dataview.prototype.getfloat32
-function DataViewProto_getFloat32([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -61,7 +61,7 @@ function DataViewProto_getFloat32([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.6 #sec-dataview.prototype.getfloat64
-function DataViewProto_getFloat64([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getFloat64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -70,13 +70,13 @@ function DataViewProto_getFloat64([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.7 #sec-dataview.prototype.getint8
-function DataViewProto_getInt8([byteOffset], { thisValue }) {
+function DataViewProto_getInt8([byteOffset = Value.undefined], { thisValue }) {
   const v = thisValue;
   return Q(GetViewValue(v, byteOffset, Value.true, 'Int8'));
 }
 
 // 24.3.4.8 #sec-dataview.prototype.getint16
-function DataViewProto_getInt16([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getInt16([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -85,7 +85,7 @@ function DataViewProto_getInt16([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.9 #sec-dataview.prototype.getint32
-function DataViewProto_getInt32([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getInt32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -94,13 +94,13 @@ function DataViewProto_getInt32([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.10 #sec-dataview.prototype.getuint8
-function DataViewProto_getUint8([byteOffset], { thisValue }) {
+function DataViewProto_getUint8([byteOffset = Value.undefined], { thisValue }) {
   const v = thisValue;
   return Q(GetViewValue(v, byteOffset, Value.true, 'Uint8'));
 }
 
 // 24.3.4.11 #sec-dataview.prototype.getuint16
-function DataViewProto_getUint16([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getUint16([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -109,7 +109,7 @@ function DataViewProto_getUint16([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.12 #sec-dataview.prototype.getuint32
-function DataViewProto_getUint32([byteOffset, littleEndian], { thisValue }) {
+function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -118,7 +118,7 @@ function DataViewProto_getUint32([byteOffset, littleEndian], { thisValue }) {
 }
 
 // 24.3.4.13 #sec-dataview.prototype.setfloat32
-function DataViewProto_setFloat32([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -127,7 +127,7 @@ function DataViewProto_setFloat32([byteOffset, value, littleEndian], { thisValue
 }
 
 // 24.3.4.14 #sec-dataview.prototype.setfloat64
-function DataViewProto_setFloat64([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -136,13 +136,13 @@ function DataViewProto_setFloat64([byteOffset, value, littleEndian], { thisValue
 }
 
 // 24.3.4.15 #sec-dataview.prototype.setint8
-function DataViewProto_setInt8([byteOffset, value], { thisValue }) {
+function DataViewProto_setInt8([byteOffset = Value.undefined, value = Value.undefined], { thisValue }) {
   const v = thisValue;
   return Q(SetViewValue(v, byteOffset, Value.true, 'Int8', value));
 }
 
 // 24.3.4.16 #sec-dataview.prototype.setint16
-function DataViewProto_setInt16([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -151,7 +151,7 @@ function DataViewProto_setInt16([byteOffset, value, littleEndian], { thisValue }
 }
 
 // 24.3.4.17 #sec-dataview.prototype.setint32
-function DataViewProto_setInt32([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -160,13 +160,13 @@ function DataViewProto_setInt32([byteOffset, value, littleEndian], { thisValue }
 }
 
 // 24.3.4.18 #sec-dataview.prototype.setuint8
-function DataViewProto_setUint8([byteOffset, value], { thisValue }) {
+function DataViewProto_setUint8([byteOffset = Value.undefined, value = Value.undefined], { thisValue }) {
   const v = thisValue;
   return Q(SetViewValue(v, byteOffset, Value.true, 'Uint8', value));
 }
 
 // 24.3.4.19 #sec-dataview.prototype.setuint16
-function DataViewProto_setUint16([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -175,7 +175,7 @@ function DataViewProto_setUint16([byteOffset, value, littleEndian], { thisValue 
 }
 
 // 24.3.4.20 #sec-dataview.prototype.setuint32
-function DataViewProto_setUint32([byteOffset, value, littleEndian], { thisValue }) {
+function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;

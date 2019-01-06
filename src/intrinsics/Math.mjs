@@ -103,7 +103,7 @@ export function CreateMath(realmRec) {
   ].forEach(([name, nativeMethod]) => {
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
       // TODO(Math)
-      Value: CreateBuiltinFunction(nativeMethod || (([...args]) => {
+      Value: CreateBuiltinFunction(nativeMethod || ((args) => {
         for (let i = 0; i < args.length; i += 1) {
           args[i] = Q(ToNumber(args[i])).numberValue();
         }

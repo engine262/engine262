@@ -18,12 +18,12 @@ import { Type, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-function PromiseProto_catch([onRejected], { thisValue }) {
+function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
   return Q(Invoke(promise, new Value('then'), [Value.undefined, onRejected]));
 }
 
-function ThenFinallyFunctions([value]) {
+function ThenFinallyFunctions([value = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
@@ -36,7 +36,7 @@ function ThenFinallyFunctions([value]) {
   return Q(Invoke(promise, new Value('then'), [valueThunk]));
 }
 
-function CatchFinallyFunctions([reason]) {
+function CatchFinallyFunctions([reason = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const onFinally = F.OnFinally;
   Assert(IsCallable(onFinally) === Value.true);
@@ -49,7 +49,7 @@ function CatchFinallyFunctions([reason]) {
   return Q(Invoke(promise, new Value('then'), [thrower]));
 }
 
-function PromiseProto_finally([onFinally], { thisValue }) {
+function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.prototype.finally called on incompatable receiver');
@@ -76,7 +76,7 @@ function PromiseProto_finally([onFinally], { thisValue }) {
   return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
 }
 
-function PromiseProto_then([onFulfilled, onRejected], { thisValue }) {
+function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'Promise.prototype.then called on incompatable receiver');

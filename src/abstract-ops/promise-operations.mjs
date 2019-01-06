@@ -38,7 +38,7 @@ export function PromiseResolve(C, x) {
   return promiseCapability.Promise;
 }
 
-function GetCapabilitiesExecutorFunctions([resolve, reject]) {
+function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
   const F = this;
 
   const promiseCapability = F.Capability;
@@ -152,7 +152,7 @@ function RejectPromise(promise, reason) {
   return TriggerPromiseReactions(reactions, reason);
 }
 
-function PromiseResolveFunctions([resolution]) {
+function PromiseResolveFunctions([resolution = Value.undefined]) {
   const F = this;
 
   Assert('Promise' in F && Type(F.Promise) === 'Object');
@@ -182,7 +182,7 @@ function PromiseResolveFunctions([resolution]) {
   return Value.undefined;
 }
 
-function PromiseRejectFunctions([reason]) {
+function PromiseRejectFunctions([reason = Value.undefined]) {
   const F = this;
 
   Assert('Promise' in F && Type(F.Promise) === 'Object');

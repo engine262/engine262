@@ -15,10 +15,11 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 import { Q, X } from '../completion.mjs';
 
-function DateConstructor([year, month, date, hours, minutes, seconds, ms], { NewTarget, callLength }) {
-  const numberOfArgs = callLength;
+function DateConstructor(args, { NewTarget }) {
+  const numberOfArgs = args.length;
   if (numberOfArgs >= 2) {
     // 20.3.2.1 #sec-date-year-month-date-hours-minutes-seconds-ms
+    const [year, month, date, hours, minutes, seconds, ms] = args;
     Assert(numberOfArgs >= 2);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
@@ -48,7 +49,7 @@ function DateConstructor([year, month, date, hours, minutes, seconds, ms], { New
       return O;
     }
   } else if (numberOfArgs === 1) {
-    const value = year;
+    const [value] = args;
     // 20.3.2.2 #sec-date-value
     Assert(numberOfArgs === 1);
     if (NewTarget === Value.undefined) {

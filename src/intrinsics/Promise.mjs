@@ -37,7 +37,7 @@ import {
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
 
-function PromiseConstructor([executor], { NewTarget }) {
+function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
   }
@@ -66,7 +66,7 @@ function PromiseConstructor([executor], { NewTarget }) {
 }
 
 // 25.6.4.1.2 #sec-promise.all-resolve-element-functions
-function PromiseAllResolveElementFunctions([x]) {
+function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
@@ -131,7 +131,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   }
 }
 
-function Promise_all([iterable], { thisValue }) {
+function Promise_all([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.all called on non-object');
@@ -172,7 +172,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   }
 }
 
-function Promise_race([iterable], { thisValue }) {
+function Promise_race([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.race called on non-object');
@@ -190,7 +190,7 @@ function Promise_race([iterable], { thisValue }) {
   return Completion(result);
 }
 
-function Promise_reject([r], { thisValue }) {
+function Promise_reject([r = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.reject called on non-object');
@@ -200,7 +200,7 @@ function Promise_reject([r], { thisValue }) {
   return promiseCapability.Promise;
 }
 
-function Promise_resolve([x], { thisValue }) {
+function Promise_resolve([x = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Promise.resolve called on non-object');

@@ -12,7 +12,7 @@ import { IfAbruptRejectPromise, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 25.1.4.2.1 #sec-%asyncfromsynciteratorprototype%.next
-function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
+function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {
@@ -27,7 +27,7 @@ function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
 }
 
 // 25.1.4.2.2 #sec-%asyncfromsynciteratorprototype%.return
-function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
+function AsyncFromSyncIteratorPrototype_return([value = Value.undefined], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {
@@ -55,7 +55,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
 }
 
 // 25.1.4.2.3 #sec-%asyncfromsynciteratorprototype%.throw
-function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
+function AsyncFromSyncIteratorPrototype_throw([value = Value.undefined], { thisValue }) {
   const O = thisValue;
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {

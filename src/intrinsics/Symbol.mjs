@@ -17,18 +17,20 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 export const GlobalSymbolRegistry = [];
 
-function SymbolConstructor([description], { NewTarget }) {
+function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) !== 'Undefined') {
     return surroundingAgent.Throw('TypeError');
   }
-  const descString = description === undefined || Type(description) === 'Undefined'
-    ? Value.undefined
-    : Q(ToString(description));
-
+  let descString;
+  if (description === Value.undefined) {
+    descString = Value.undefined;
+  } else {
+    descString = Q(ToString(description));
+  }
   return new SymbolValue(descString);
 }
 
-function Symbol_for([key]) {
+function Symbol_for([key = Value.undefined]) {
   const stringKey = Q(ToString(key));
   for (const e of GlobalSymbolRegistry) {
     if (SameValue(e.Key, stringKey) === Value.true) {
@@ -41,7 +43,7 @@ function Symbol_for([key]) {
   return newSymbol;
 }
 
-function Symbol_keyFor([sym]) {
+function Symbol_keyFor([sym = Value.undefined]) {
   if (Type(sym) !== 'Symbol') {
     return surroundingAgent.Throw('TypeError');
   }

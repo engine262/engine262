@@ -140,7 +140,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       return O;
     } else {
       // 22.2.4.5 #sec-typedarray-buffer-byteoffset-length
-      const [buffer, byteOffset, length] = args;
+      const [buffer, byteOffset = Value.undefined, length = Value.undefined] = args;
       Assert(Type(buffer) === 'Object' && 'ArrayBufferData' in buffer);
       if (NewTarget === Value.undefined) {
         return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));

@@ -94,7 +94,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   let P = '';
   let bodyText;
   if (argCount === 0) {
-    bodyText = '';
+    bodyText = new Value('');
   } else if (argCount === 1) {
     bodyText = args[0];
   } else {

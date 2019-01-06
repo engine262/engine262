@@ -106,7 +106,7 @@ function createRealm() {
   Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
   Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
-  Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer]) => Abstract.DetachArrayBuffer(arrayBuffer)));
+  Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 

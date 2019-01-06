@@ -7,7 +7,7 @@ import {
 import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
-function IsNaN([number]) {
+function IsNaN([number = Value.undefined]) {
   const num = Q(ToNumber(number));
   if (num.isNaN()) {
     return Value.true;

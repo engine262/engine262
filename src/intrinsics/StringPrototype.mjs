@@ -38,7 +38,7 @@ function thisStringValue(value) {
 }
 
 // 21.1.3.1 #sec-string.prototype.charat
-function StringProto_charAt([pos], { thisValue }) {
+function StringProto_charAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const position = Q(ToInteger(pos)).numberValue();
@@ -50,7 +50,7 @@ function StringProto_charAt([pos], { thisValue }) {
 }
 
 // 21.1.3.2 #sec-string.prototype.charcodeat
-function StringProto_charCodeAt([pos], { thisValue }) {
+function StringProto_charCodeAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const position = Q(ToInteger(pos)).numberValue();
@@ -62,7 +62,7 @@ function StringProto_charCodeAt([pos], { thisValue }) {
 }
 
 // 21.1.3.3 #sec-string.prototype.codepointat
-function StringProto_codePointAt([pos], { thisValue }) {
+function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const position = Q(ToInteger(pos)).numberValue();
@@ -82,11 +82,7 @@ function StringProto_codePointAt([pos], { thisValue }) {
 }
 
 // 21.1.3.4 #sec-string.prototype.concat
-function StringProto_concat([...args], { callLength, thisValue }) {
-  if (callLength === 0) {
-    // TODO(27): Remove the undefined argument that was added based on the function's length.
-    args = [];
-  }
+function StringProto_concat(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   let R = S.stringValue();
@@ -99,7 +95,7 @@ function StringProto_concat([...args], { callLength, thisValue }) {
 }
 
 // 21.1.3.6 #sec-string.prototype.endswith
-function StringProto_endsWith([searchString, endPosition = Value.undefined], { thisValue }) {
+function StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   // TODO:
@@ -123,7 +119,7 @@ function StringProto_endsWith([searchString, endPosition = Value.undefined], { t
 }
 
 // 21.1.3.7 #sec-string.prototype.includes
-function StringProto_includes([searchString, position = Value.undefined], { thisValue }) {
+function StringProto_includes([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   // TODO:
@@ -153,7 +149,7 @@ function StringProto_includes([searchString, position = Value.undefined], { this
 }
 
 // 21.1.3.8 #sec-string.prototype.indexof
-function StringProto_indexOf([searchString, position = Value.undefined], { thisValue }) {
+function StringProto_indexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const searchStr = Q(ToString(searchString)).stringValue();
@@ -180,7 +176,7 @@ function StringProto_indexOf([searchString, position = Value.undefined], { thisV
 }
 
 // 21.1.3.9 #sec-string.prototype.lastindexof
-function StringProto_lastIndexOf([searchString, position = Value.undefined], { thisValue }) {
+function StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const searchStr = Q(ToString(searchString)).stringValue();
@@ -215,7 +211,7 @@ function StringProto_lastIndexOf([searchString, position = Value.undefined], { t
 }
 
 // 21.1.3.10 #sec-string.prototype.localecompare
-function StringProto_localeCompare([that], { thisValue }) {
+function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const That = Q(ToString(that)).stringValue();
@@ -232,7 +228,7 @@ function StringProto_localeCompare([that], { thisValue }) {
 function StringProto_normalize([form], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  if (!form || form === Value.undefined) {
+  if (form === undefined || form === Value.undefined) {
     form = new Value('NFC');
   }
   const f = Q(ToString(form)).stringValue();
@@ -244,7 +240,7 @@ function StringProto_normalize([form], { thisValue }) {
 }
 
 // 21.1.3.13 #sec-string.prototype.padend
-function StringProto_padEnd([maxLength, fillString = Value.undefined], { thisValue }) {
+function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const intMaxLength = Q(ToLength(maxLength)).numberValue();
@@ -268,7 +264,7 @@ function StringProto_padEnd([maxLength, fillString = Value.undefined], { thisVal
 }
 
 // 21.1.3.14 #sec-string.prototype.padstart
-function StringProto_padStart([maxLength, fillString = Value.undefined], { thisValue }) {
+function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const intMaxLength = Q(ToLength(maxLength)).numberValue();
@@ -292,7 +288,7 @@ function StringProto_padStart([maxLength, fillString = Value.undefined], { thisV
 }
 
 // 21.1.3.15 #sec-string.prototype.repeat
-function StringProto_repeat([count], { thisValue }) {
+function StringProto_repeat([count = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const n = Q(ToInteger(count));
@@ -310,7 +306,7 @@ function StringProto_repeat([count], { thisValue }) {
 }
 
 // 21.1.3.16 #sec-string.prototype.replace
-function StringProto_replace([searchValue, replaceValue], { thisValue }) {
+function StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (searchValue !== Value.undefined && searchValue !== Value.null) {
     const replacer = Q(GetMethod(searchValue, wellKnownSymbols.replace));
@@ -343,7 +339,7 @@ function StringProto_replace([searchValue, replaceValue], { thisValue }) {
 }
 
 // 21.1.3.18 #sec-string.prototype.slice
-function StringProto_slice([start, end], { thisValue }) {
+function StringProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const len = S.length;
@@ -371,7 +367,7 @@ function StringProto_slice([start, end], { thisValue }) {
 }
 
 // 21.1.3.19 #sec-string.prototype.split
-function StringProto_split([separator, limit], { thisValue }) {
+function StringProto_split([separator = Value.undefined, limit = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (separator !== Value.undefined && separator !== Value.null) {
     const splitter = Q(GetMethod(separator, wellKnownSymbols.split));
@@ -443,7 +439,7 @@ function SplitMatch(S, q, R) {
 }
 
 // 21.1.3.20 #sec-string.prototype.startswith
-function StringProto_startsWith([searchString, position = Value.undefined], { thisValue }) {
+function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   // TODO:
@@ -467,7 +463,7 @@ function StringProto_startsWith([searchString, position = Value.undefined], { th
 }
 
 // 21.1.3.21 #sec-string.prototype.substring
-function StringProto_substring([start, end], { thisValue }) {
+function StringProto_substring([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const len = S.length;

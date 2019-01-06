@@ -7,23 +7,24 @@ import {
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mjs';
+import { Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 25.4.1.2 #sec-generator.prototype.next
-function GeneratorProto_next([value], { thisValue }) {
+function GeneratorProto_next([value = Value.undefined], { thisValue }) {
   const g = thisValue;
   return Q(GeneratorResume(g, value));
 }
 
 // 25.4.1.3 #sec-generator.prototype.return
-function GeneratorProto_return([value], { thisValue }) {
+function GeneratorProto_return([value = Value.undefined], { thisValue }) {
   const g = thisValue;
   const C = new ReturnCompletion(value);
   return Q(GeneratorResumeAbrupt(g, C));
 }
 
 // 25.4.1.4 #sec-generator.prototype.throw
-function GeneratorProto_throw([exception], { thisValue }) {
+function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
   const g = thisValue;
   const C = new ThrowCompletion(exception);
   return Q(GeneratorResumeAbrupt(g, C));

@@ -12,7 +12,7 @@ import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 24.1.2 #sec-arraybuffer-constructor
-function ArrayBufferConstructor([length], { NewTarget }) {
+function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'ArrayBuffer constructor requires new');
   }
@@ -21,7 +21,7 @@ function ArrayBufferConstructor([length], { NewTarget }) {
 }
 
 // 24.1.3.1 #sec-arraybuffer.isview
-function ArrayBuffer_isView([arg]) {
+function ArrayBuffer_isView([arg = Value.undefined]) {
   if (Type(arg) !== 'Object') {
     return Value.false;
   }

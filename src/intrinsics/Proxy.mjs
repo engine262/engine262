@@ -87,7 +87,7 @@ function ProxyCreate(target, handler) {
   return P;
 }
 
-function ProxyConstructor([target, handler], { NewTarget }) {
+function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', 'Constructor Proxy requires \'new\'');
   }
@@ -108,7 +108,7 @@ function ProxyRevocationFunctions() {
   return Value.undefined;
 }
 
-function Proxy_revocable([target, handler]) {
+function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
   const p = Q(ProxyCreate(target, handler));
   const steps = ProxyRevocationFunctions;
   const revoker = CreateBuiltinFunction(steps, ['RevocableProxy']);

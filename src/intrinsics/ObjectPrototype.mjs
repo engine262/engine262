@@ -17,13 +17,13 @@ import {
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-function ObjectProto_hasOwnProperty([V], { thisValue }) {
+function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   return HasOwnProperty(O, P);
 }
 
-function ObjectProto_isPrototypeOf([V], { thisValue }) {
+function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
   if (Type(V) !== 'Object') {
     return Value.false;
   }
@@ -39,7 +39,7 @@ function ObjectProto_isPrototypeOf([V], { thisValue }) {
   }
 }
 
-function ObjectProto_propertyIsEnumerable([V], { thisValue }) {
+function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) {
   const P = Q(ToPropertyKey(V));
   const O = Q(ToObject(thisValue));
   const desc = Q(O.GetOwnProperty(P));

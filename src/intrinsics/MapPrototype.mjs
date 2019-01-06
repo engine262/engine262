@@ -48,7 +48,7 @@ function MapProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-function MapProto_delete([key], { thisValue }) {
+function MapProto_delete([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Map.prototype.delete called on incompatable receiver');
@@ -105,7 +105,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   return Value.undefined;
 }
 
-function MapProto_get([key], { thisValue }) {
+function MapProto_get([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Map.prototype.get called on incompatable receiver');
@@ -122,7 +122,7 @@ function MapProto_get([key], { thisValue }) {
   return Value.undefined;
 }
 
-function MapProto_has([key], { thisValue }) {
+function MapProto_has([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Map.prototype.has called on incompatable receiver');
@@ -144,7 +144,7 @@ function MapProto_keys(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'key'));
 }
 
-function MapProto_set([key, value], { thisValue }) {
+function MapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
   const M = thisValue;
   if (Type(M) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Map.prototype.set called on incompatable receiver');

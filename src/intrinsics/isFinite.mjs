@@ -7,7 +7,7 @@ import {
 import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
-function IsFinite([number]) {
+function IsFinite([number = Value.undefined]) {
   const num = Q(ToNumber(number));
   if (num.isNaN() || num.isInfinity()) {
     return Value.false;

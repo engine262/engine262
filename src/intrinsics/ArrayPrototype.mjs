@@ -33,12 +33,11 @@ import { assignProps } from './Bootstrap.mjs';
 import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat
-function ArrayProto_concat(args, { thisValue, callLength }) {
+function ArrayProto_concat(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, new Value(0)));
   let n = 0;
-  // TODO(27)
-  const items = [O, ...args.slice(0, callLength)];
+  const items = [O, ...args];
   while (items.length > 0) {
     const E = items.shift();
     const spreadable = Q(IsConcatSpreadable(E));
@@ -74,7 +73,7 @@ function ArrayProto_concat(args, { thisValue, callLength }) {
 }
 
 // 22.1.3.3 #sec-array.prototype.copywithin
-function ArrayProto_copyWithin([target, start, end = Value.undefined], { thisValue }) {
+function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp));
@@ -137,7 +136,7 @@ function ArrayProto_entries(args, { thisValue }) {
 }
 
 // 22.1.3.6 #sec-array.prototype.fill
-function ArrayProto_fill([value, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
@@ -169,7 +168,7 @@ function ArrayProto_fill([value, start = Value.undefined, end = Value.undefined]
 }
 
 // 22.1.3.7 #sec-array.prototype.filter
-function ArrayProto_filter([callbackfn, thisArg], { thisValue }) {
+function ArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
@@ -203,7 +202,7 @@ function ArrayProto_keys(args, { thisValue }) {
 }
 
 // 22.1.3.16 #sec-array.prototype.map
-function ArrayProto_map([callbackfn, thisArg], { thisValue }) {
+function ArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp));
@@ -244,16 +243,13 @@ function ArrayProto_pop(args, { thisValue }) {
 }
 
 // 22.1.3.18 #sec-array.prototype.push
-function ArrayProto_push([...items], { thisValue, callLength }) {
+function ArrayProto_push(items, { thisValue }) {
   const O = Q(ToObject(thisValue));
   let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
-  // TODO(27)
-  const argCount = callLength;
+  const argCount = items.length;
   if (len + argCount > (2 ** 53) - 1) {
     return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
   }
-  // TODO(27)
-  items = items.slice(0, callLength);
   while (items.length > 0) {
     const E = items.shift();
     Q(Set(O, X(ToString(new Value(len))), E, Value.true));
@@ -292,7 +288,7 @@ function ArrayProto_shift(args, { thisValue }) {
 }
 
 // 22.1.3.23 #sec-array.prototype.slice
-function ArrayProto_slice([start, end], { thisValue }) {
+function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
@@ -333,7 +329,7 @@ function ArrayProto_slice([start, end], { thisValue }) {
 }
 
 // 22.1.3.25 #sec-array.prototype.sort
-function ArrayProto_sort([comparefn], { thisValue }) {
+function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
   }
@@ -345,7 +341,8 @@ function ArrayProto_sort([comparefn], { thisValue }) {
 }
 
 // 22.1.3.26 #sec-array.prototype.splice
-function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLength }) {
+function ArrayProto_splice(args, { thisValue }) {
+  const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   const O = Q(ToObject(thisValue));
   const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
@@ -357,14 +354,14 @@ function ArrayProto_splice([start, deleteCount, ...items], { thisValue, callLeng
   }
   let insertCount;
   let actualDeleteCount;
-  if (callLength === 0) {
+  if (args.length === 0) {
     insertCount = 0;
     actualDeleteCount = 0;
-  } else if (callLength === 1) {
+  } else if (args.length === 1) {
     insertCount = 0;
     actualDeleteCount = len - actualStart;
   } else {
-    insertCount = callLength - 2;
+    insertCount = args.length - 2;
     const dc = Q(ToInteger(deleteCount)).numberValue();
     actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
   }
@@ -439,11 +436,11 @@ function ArrayProto_toString(a, { thisValue }) {
 }
 
 // 22.1.3.29 #sec-array.prototype.unshift
-function ArrayProto_unshift(args, { thisValue, callLength }) {
+function ArrayProto_unshift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const lenProp = Q(Get(O, new Value('length')));
   const len = Q(ToLength(lenProp)).numberValue();
-  const argCount = callLength;
+  const argCount = args.length;
   if (argCount > 0) {
     if (len + argCount > (2 ** 53) - 1) {
       return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
@@ -462,7 +459,7 @@ function ArrayProto_unshift(args, { thisValue, callLength }) {
       k -= 1;
     }
     let j = 0;
-    const items = [...args];
+    const items = args;
     while (items.length !== 0) {
       const E = items.shift();
       const jStr = X(ToString(new Value(j)));

@@ -13,7 +13,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { captureStack } from '../helpers.mjs';
 
-function ErrorConstructor([message], { NewTarget }) {
+function ErrorConstructor([message = Value.undefined], { NewTarget }) {
   let newTarget;
   if (Type(NewTarget) === 'Undefined') {
     newTarget = surroundingAgent.activeFunctionObject;

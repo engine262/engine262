@@ -16,7 +16,7 @@ import { Q } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-function Reflect_apply([target, thisArgument, argumentsList]) {
+function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
   if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'target is not callable');
   }
@@ -25,11 +25,11 @@ function Reflect_apply([target, thisArgument, argumentsList]) {
   return Q(Call(target, thisArgument, args));
 }
 
-function Reflect_construct([target, argumentsList, newTarget]) {
+function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
   if (IsConstructor(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', target));
   }
-  if (!newTarget) {
+  if (newTarget === undefined) {
     newTarget = target;
   } else if (IsConstructor(newTarget) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', newTarget));
@@ -38,7 +38,7 @@ function Reflect_construct([target, argumentsList, newTarget]) {
   return Q(Construct(target, args, newTarget));
 }
 
-function Reflect_defineProperty([target, propertyKey, attributes]) {
+function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -47,7 +47,7 @@ function Reflect_defineProperty([target, propertyKey, attributes]) {
   return Q(target.DefineOwnProperty(key, desc));
 }
 
-function Reflect_deleteProperty([target, propertyKey]) {
+function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -55,18 +55,18 @@ function Reflect_deleteProperty([target, propertyKey]) {
   return Q(target.Delete(key));
 }
 
-function Reflect_get([target, propertyKey, receiver]) {
+function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   const key = Q(ToPropertyKey(propertyKey));
-  if (!receiver) {
+  if (receiver === undefined) {
     receiver = target;
   }
   return Q(target.Get(key, receiver));
 }
 
-function Reflect_getOwnPropertyDescriptor([target, propertyKey]) {
+function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -75,14 +75,14 @@ function Reflect_getOwnPropertyDescriptor([target, propertyKey]) {
   return FromPropertyDescriptor(desc);
 }
 
-function Reflect_getPrototypeOf([target]) {
+function Reflect_getPrototypeOf([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.GetPrototypeOf());
 }
 
-function Reflect_has([target, propertyKey]) {
+function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -90,14 +90,14 @@ function Reflect_has([target, propertyKey]) {
   return Q(target.HasProperty(key));
 }
 
-function Reflect_isExtensible([target]) {
+function Reflect_isExtensible([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.IsExtensible());
 }
 
-function Reflect_ownKeys([target]) {
+function Reflect_ownKeys([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
@@ -105,25 +105,25 @@ function Reflect_ownKeys([target]) {
   return CreateArrayFromList(keys);
 }
 
-function Reflect_preventExtensions([target]) {
+function Reflect_preventExtensions([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   return Q(target.PreventExtensions());
 }
 
-function Reflect_set([target, propertyKey, V, receiver]) {
+function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }
   const key = Q(ToPropertyKey(propertyKey));
-  if (!receiver) {
+  if (receiver === undefined) {
     receiver = target;
   }
   return Q(target.Set(key, V, receiver));
 }
 
-function Reflect_setPrototypeOf([target, proto]) {
+function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'target is not an object');
   }

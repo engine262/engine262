@@ -68,6 +68,7 @@ function MakeArgGetter(name, env) {
 }
 
 function ArgSetterSteps([value]) {
+  Assert(value !== undefined);
   const f = this;
   const name = f.Name;
   const env = f.Env;

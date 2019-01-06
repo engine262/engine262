@@ -29,7 +29,7 @@ function ArrayBufferProto_byteLengthGetter(args, { thisValue }) {
 }
 
 // 24.1.4.3 #sec-arraybuffer.prototype.slice
-function ArrayBufferProto_slice([start, end], { thisValue }) {
+function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object'
       || !('ArrayBufferData' in O)

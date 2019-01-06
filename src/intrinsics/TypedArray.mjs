@@ -24,7 +24,7 @@ function TypedArrayConstructor() {
 }
 
 // 22.2.2.1 #sec-%typedarray%.from
-function TypedArray_from([source, mapfn, thisArg], { thisValue }) {
+function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue }) {
   const C = thisValue;
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));

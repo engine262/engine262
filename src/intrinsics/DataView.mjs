@@ -13,7 +13,7 @@ import { msg } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 24.3.2 #sec-dataview-constructor
-function DataViewConstructor([buffer, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {
+function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'DataView'));
   }

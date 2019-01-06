@@ -130,7 +130,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
 export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   // 22.1.3.5 #sec-array.prototype.every
   // 22.2.3.7 #sec-%typedarray%.prototype.every
-  function ArrayProto_every([callbackFn, thisArg], { thisValue }) {
+  function ArrayProto_every([callbackFn = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -162,7 +162,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.8 #sec-array.prototype.find
   // 22.2.3.10 #sec-%typedarray%.prototype.find
-  function ArrayProto_find([predicate, thisArg], { thisValue }) {
+  function ArrayProto_find([predicate = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -186,7 +186,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.9 #sec-array.prototype.findindex
   // 22.2.3.11 #sec-%typedarray%.prototype.findindex
-  function ArrayProto_findIndex([predicate, thisArg], { thisValue }) {
+  function ArrayProto_findIndex([predicate = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -210,7 +210,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.10 #sec-array.prototype.foreach
   // 22.2.3.12 #sec-%typedarray%.prototype.foreach
-  function ArrayProto_forEach([callbackfn, thisArg], { thisValue }) {
+  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -234,7 +234,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.11 #sec-array.prototype.includes
   // 22.2.3.13 #sec-%typedarray%.prototype.includes
-  function ArrayProto_includes([searchElement, fromIndex], { thisValue }) {
+  function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -242,11 +242,9 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (len === 0) {
       return Value.false;
     }
-    let n;
-    if (fromIndex !== undefined) {
-      n = Q(ToInteger(fromIndex)).numberValue();
-    } else {
-      n = 0;
+    const n = Q(ToInteger(fromIndex)).numberValue();
+    if (fromIndex === Value.undefined) {
+      Assert(n === 0);
     }
     let k;
     if (n >= 0) {
@@ -270,7 +268,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.12 #sec-array.prototype.indexof
   // 22.2.3.14 #sec-%typedarray%.prototype.indexof
-  function ArrayProto_indexOf([searchElement, fromIndex = Value.undefined], { thisValue }) {
+  function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -279,8 +277,9 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
       return new Value(-1);
     }
     const n = Q(ToInteger(fromIndex)).numberValue();
-    // Assert: If fromIndex is undefined, then n is 0.
-    Assert(!(fromIndex === Value.undefined) || n === 0);
+    if (fromIndex === Value.undefined) {
+      Assert(n === 0);
+    }
     if (n >= len) {
       return new Value(-1);
     }
@@ -298,9 +297,10 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
       }
     }
     while (k < len) {
-      const kPresent = Q(HasProperty(O, X(ToString(new Value(k)))));
+      const kStr = X(ToString(new Value(k)));
+      const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
-        const elementK = Q(Get(O, X(ToString(new Value(k)))));
+        const elementK = Q(Get(O, kStr));
         const same = StrictEqualityComparison(searchElement, elementK);
         if (same === Value.true) {
           return new Value(k);
@@ -346,7 +346,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.15 #sec-array.prototype.lastindexof
   // 22.2.3.17 #sec-%typedarray%.prototype.lastindexof
-  function ArrayProto_lastIndexOf([searchElement, fromIndex], { thisValue }) {
+  function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -387,7 +387,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.19 #sec-array.prototype.reduce
   // 22.2.3.20 #sec-%typedarray%.prototype.reduce
-  function ArrayProto_reduce([callbackfn, initialValue], { thisValue }) {
+  function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -430,7 +430,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.20 #sec-array.prototype.reduceright
   // 22.2.3.21 #sec-%typedarray%.prototype.reduceright
-  function ArrayProto_reduceRight([callbackfn, initialValue], { thisValue }) {
+  function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -513,7 +513,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.24 #sec-array.prototype.some
   // 22.2.3.25 #sec-%typedarray%.prototype.some
-  function ArrayProto_some([callbackfn, thisArg], { thisValue }) {
+  function ArrayProto_some([callbackfn = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -582,7 +582,6 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     ['reduceRight', ArrayProto_reduceRight, 1],
     ['reverse', ArrayProto_reverse, 0],
     ['some', ArrayProto_some, 1],
-    // sort
     ['toLocaleString', ArrayProto_toLocaleString, 0],
   ]);
 }
