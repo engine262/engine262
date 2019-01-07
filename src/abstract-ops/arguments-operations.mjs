@@ -1,5 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  Assert,
   CreateBuiltinFunction,
   CreateDataProperty,
   DefinePropertyOrThrow,

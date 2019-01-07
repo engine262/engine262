@@ -57,7 +57,7 @@ function String_fromCharCode(codeUnits) {
 
 // 21.1.2.2 #sec-string.fromcodepoint
 function String_fromCodePoint(codePoints) {
-  const length = codeUnits.length;
+  const length = codePoints.length;
   const elements = [];
   let nextIndex = 0;
   while (nextIndex < length) {
