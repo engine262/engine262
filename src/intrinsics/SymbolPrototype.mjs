@@ -37,16 +37,17 @@ function Symbol_toPrimitive(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
-function Symbol_toStringTag() {
-  return new Value('Symbol');
-}
-
 export function CreateSymbolPrototype(realmRec) {
+  const override = {
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  };
   const proto = BootstrapPrototype(realmRec, [
     ['toString', Symbol_toString, 0],
     ['valueOf', Symbol_valueOf, 0],
-    [wellKnownSymbols.toPrimitive, Symbol_toPrimitive, 0],
-    [wellKnownSymbols.toStringTag, Symbol_toStringTag, 0],
+    [wellKnownSymbols.toPrimitive, Symbol_toPrimitive, 1, override],
+    [wellKnownSymbols.toStringTag, new Value('Symbol'), undefined, override],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
   realmRec.Intrinsics['%SymbolPrototype%'] = proto;
