@@ -4,7 +4,7 @@
   "description": "Implementation of ECMA-262 in JavaScript",
   "main": "dist/engine262",
   "dependencies": {
-    "acorn": "^6.0.4"
+    "acorn": "^6.0.5"
   },
   "bin": {
     "engine262": "bin/engine262.js"

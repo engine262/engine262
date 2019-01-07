@@ -5,12 +5,12 @@ language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
 // https://github.com/acornjs/acorn/issues/772
-language/statements/while/let-block-with-newline.js
 language/statements/while/let-identifier-with-newline.js
-language/statements/for-in/let-block-with-newline.js
+language/statements/for/let-identifier-with-newline.js
 language/statements/for-in/let-identifier-with-newline.js
-language/statements/for-of/let-block-with-newline.js
 language/statements/for-of/let-identifier-with-newline.js
+language/statements/if/let-identifier-with-newline.js
+language/statements/labeled/let-identifier-with-newline.js
 
 // TODO(8): Uses regexes.
 built-ins/Array/prototype/find/predicate-is-not-callable-throws.js
@@ -91,10 +91,12 @@ built-ins/Object/getOwnPropertyDescriptor/*.js
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 
 // Failing tests in language
-language/arguments-object/unmapped/*.js
+language/arguments-object/unmapped/via-params-dflt.js
+language/arguments-object/unmapped/via-params-dstr.js
 language/arguments-object/*.js
-language/directive-prologue/**/*.js
-language/eval-code/direct/**/*.js
+language/directive-prologue/14.1-16-s.js
+language/eval-code/direct/new.target-fn.js
+language/eval-code/direct/super-prop-method.js
 language/expressions/async-arrow-function/**/*.js
 language/expressions/call/**/*.js
 language/expressions/class/params-dflt-gen-meth-ref-arguments.js
@@ -126,19 +128,10 @@ language/expressions/template-literal/tv-line-continuation.js
 language/expressions/typeof/*.js
 language/expressions/yield/rhs-regexp.js
 language/global-code/script-decl-lex-restricted-global.js
-language/literals/numeric/7.8.3-1-s.js
-language/literals/numeric/7.8.3-2-s.js
-language/literals/numeric/7.8.3-3-s.js
-language/literals/numeric/7.8.3-3gs.js
-language/literals/numeric/7.8.3-4-s.js
-language/literals/numeric/7.8.3-5-s.js
-language/literals/numeric/7.8.3-6-s.js
-language/literals/numeric/7.8.3-7-s.js
 language/literals/string/line-continuation-double.js
 language/literals/string/line-continuation-single.js
 language/module-code/**/*.js
 language/statements/async-function/evaluation-unmapped-arguments.js
-language/statements/evaluation-unmapped-arguments.js
 language/statements/class/definition/constructor-strict-by-default.js
 language/statements/class/params-dflt-gen-meth-ref-arguments.js
 language/statements/class/params-dflt-gen-meth-static-ref-arguments.js
@@ -149,14 +142,9 @@ language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 language/statements/class/subclass/builtin-objects/RegExp/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
-language/statements/for/let-block-with-newline.js
-language/statements/for/let-identifier-with-newline.js
 language/statements/for-await-of/*.js
 language/statements/for-in/head-lhs-cover.js
 language/statements/for-of/head-lhs-cover.js
-language/statements/function/13.0-8-s.js
-language/statements/function/13.1-2-s.js
-language/statements/function/13.1-4-s.js
 language/statements/function/S13.2.2_A18_T1.js
 language/statements/function/S13.2.2_A18_T2.js
 language/statements/function/params-dflt-ref-arguments.js
@@ -166,21 +154,7 @@ language/statements/if/if-gen-else-gen.js
 language/statements/if/if-gen-else-stmt.js
 language/statements/if/if-gen-no-else.js
 language/statements/if/if-stmt-else-gen.js
-language/statements/if/let-block-with-newline.js
-language/statements/if/let-identifier-with-newline.js
-language/statements/labeled/let-block-with-newline.js
-language/statements/labeled/let-identifier-with-newline.js
 language/statements/switch/*.js
 language/statements/try/S12.14_A15.js
 language/statements/try/S12.14_A5.js
-language/statements/try/catch-parameter-boundnames-restriction-arguments-eval-throws.js
-language/statements/try/catch-parameter-boundnames-restriction-eval-eval-throws.js
-language/statements/variable/12.2.1-18-s.js
-language/statements/variable/12.2.1-19-s.js
-language/statements/variable/12.2.1-2-s.js
-language/statements/variable/12.2.1-3-s.js
-language/statements/variable/12.2.1-4-s.js
-language/statements/variable/12.2.1-7-s.js
-language/statements/variable/12.2.1-8-s.js
 language/statements/with/*.js
-language/types/reference/8.7.2-1-s.js

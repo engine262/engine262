@@ -193,7 +193,7 @@ export function PerformEval(x, evalRealm, strictCaller, direct) {
     inDerivedConstructor = false;
   }
   */
-  const r = ParseScript(x.stringValue(), evalRealm, undefined);
+  const r = ParseScript(x.stringValue(), evalRealm, undefined, strictCaller);
   if (Array.isArray(r)) {
     return surroundingAgent.Throw('SyntaxError');
   }
