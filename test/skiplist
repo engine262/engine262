@@ -72,9 +72,6 @@ built-ins/decodeURIComponent/**/*.js
 built-ins/encodeURI/**/*.js
 built-ins/encodeURIComponent/**/*.js
 
-// TODO(18): Missing Math
-built-ins/Math/**/*.js
-
 // TODO: Missing Symbol
 built-ins/Symbol/**/*.js
 

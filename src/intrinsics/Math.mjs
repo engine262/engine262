@@ -4,9 +4,11 @@ import {
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
+  SetFunctionLength,
+  SetFunctionName,
   ToNumber,
 } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 20.2.2.1 #sec-math.abs
@@ -67,48 +69,51 @@ export function CreateMath(realmRec) {
   // 20.2.2 #sec-function-properties-of-the-math-object
 
   [
-    ['acosh'],
-    ['asin'],
-    ['asinh'],
-    ['atan'],
-    ['atanh'],
-    ['atan2'],
-    ['cbrt'],
-    ['ceil'],
-    ['clz32'],
-    ['cos'],
-    ['cosh'],
-    ['exp'],
-    ['expm1'],
-    ['floor'],
-    ['fround'],
-    ['hypot'],
-    ['imul'],
-    ['log'],
-    ['log1p'],
-    ['log10'],
-    ['log2'],
-    ['max'],
-    ['min'],
-    ['pow'],
-    ['random'],
-    ['round'],
-    ['sign'],
-    ['sin'],
-    ['sinh'],
-    ['sqrt'],
-    ['tan'],
-    ['tanh'],
-    ['trunc'],
-  ].forEach(([name, nativeMethod]) => {
+    ['acosh', 1],
+    ['asin', 1],
+    ['asinh', 1],
+    ['atan', 1],
+    ['atanh', 1],
+    ['atan2', 2],
+    ['cbrt', 1],
+    ['ceil', 1],
+    ['clz32', 1],
+    ['cos', 1],
+    ['cosh', 1],
+    ['exp', 1],
+    ['expm1', 1],
+    ['floor', 1],
+    ['fround', 1],
+    ['hypot', 2],
+    ['imul', 2],
+    ['log', 1],
+    ['log1p', 1],
+    ['log10', 1],
+    ['log2', 1],
+    ['max', 2],
+    ['min', 2],
+    ['pow', 2],
+    ['random', 0],
+    ['round', 1],
+    ['sign', 1],
+    ['sin', 1],
+    ['sinh', 1],
+    ['sqrt', 1],
+    ['tan', 1],
+    ['tanh', 1],
+    ['trunc', 1],
+  ].forEach(([name, length]) => {
+    // TODO(18): Math
+    const func = CreateBuiltinFunction(((args) => {
+      for (let i = 0; i < args.length; i += 1) {
+        args[i] = Q(ToNumber(args[i])).numberValue();
+      }
+      return new Value(Math[name](...args));
+    }), [], realmRec);
+    X(SetFunctionName(func, new Value(name)));
+    X(SetFunctionLength(func, new Value(length)));
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
-      // TODO(Math)
-      Value: CreateBuiltinFunction(nativeMethod || ((args) => {
-        for (let i = 0; i < args.length; i += 1) {
-          args[i] = Q(ToNumber(args[i])).numberValue();
-        }
-        return new Value(Math[name](...args));
-      }), [], realmRec),
+      Value: func,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
