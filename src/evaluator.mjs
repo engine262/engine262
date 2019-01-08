@@ -114,6 +114,7 @@ import {
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
   Evaluate_ObjectLiteral,
+  Evaluate_RegularExpressionLiteral,
   Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
@@ -355,8 +356,7 @@ function* Inner_Evaluate_Expression(Expression) {
       return Evaluate_AsyncGeneratorExpression(Expression);
 
     case isRegularExpressionLiteral(Expression):
-      return surroundingAgent.Throw('TypeError', 'RegExp is not implemented yet');
-      // yield* return Evaluate_RegularExpressionLiteral(Expression);
+      return Evaluate_RegularExpressionLiteral(Expression);
 
     case isTemplateLiteral(Expression):
       return yield* Evaluate_TemplateLiteral(Expression);

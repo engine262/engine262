@@ -29,6 +29,8 @@ import { CreateSymbol } from './intrinsics/Symbol.mjs';
 import { CreateMath } from './intrinsics/Math.mjs';
 import { CreateDatePrototype } from './intrinsics/DatePrototype.mjs';
 import { CreateDate } from './intrinsics/Date.mjs';
+import { CreateRegExpPrototype } from './intrinsics/RegExpPrototype.mjs';
+import { CreateRegExp } from './intrinsics/RegExp.mjs';
 import { CreatePromisePrototype } from './intrinsics/PromisePrototype.mjs';
 import { CreatePromise } from './intrinsics/Promise.mjs';
 import { CreateProxy } from './intrinsics/Proxy.mjs';
@@ -184,6 +186,9 @@ export function CreateIntrinsics(realmRec) {
   CreateDatePrototype(realmRec);
   CreateDate(realmRec);
 
+  CreateRegExpPrototype(realmRec);
+  CreateRegExp(realmRec);
+
   CreateSetPrototype(realmRec);
   CreateSet(realmRec);
 
@@ -290,7 +295,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Proxy',
     'RangeError',
     'ReferenceError',
-    // 'RegExp',
+    'RegExp',
     'Set',
     // 'SharedArrayBuffer',
     'String',

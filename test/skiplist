@@ -13,14 +13,6 @@ language/statements/if/let-identifier-with-newline.js
 language/statements/labeled/let-identifier-with-newline.js
 
 // TODO(8): Uses regexes.
-built-ins/Array/prototype/find/predicate-is-not-callable-throws.js
-built-ins/Array/prototype/findIndex/predicate-is-not-callable-throws.js
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js
-built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js
-built-ins/global/S10.2.3_A1.1_T3.js
-built-ins/global/S10.2.3_A1.2_T3.js
-built-ins/global/S10.2.3_A1.3_T3.js
-built-ins/Object/create/15.2.3.5-4-119.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
 built-ins/RegExp/**/*.js
 built-ins/RegExpStringIteratorPrototype/**/*.js
@@ -36,10 +28,6 @@ built-ins/String/prototype/replace/S15.5.4.11_A12.js
 built-ins/String/prototype/split/S15.5.4.14_A1_T18.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T3.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T5.js
-built-ins/Symbol/species/builtin-getter-name.js
-built-ins/Symbol/species/subclassing.js
-built-ins/TypedArray/prototype/findIndex/predicate-is-not-callable-throws.js
-built-ins/TypedArray/prototype/sort/comparefn-nonfunction-call-throws.js
 language/literals/regexp/**/*.js
 
 // TODO(7): Missing Date.
