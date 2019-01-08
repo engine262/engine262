@@ -6,6 +6,7 @@ import {
   CreateDataProperty,
   GetMethod,
   IsCallable,
+  IsRegExp,
   RequireObjectCoercible,
   ToInteger,
   ToLength,
@@ -98,9 +99,10 @@ function StringProto_concat(args, { thisValue }) {
 function StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
-  // TODO:
-  // Let isRegExp be ? IsRegExp(searchString).
-  // If isRegExp is true, throw a TypeError exception.
+  const isRegExp = Q(IsRegExp(searchString));
+  if (isRegExp === Value.true) {
+    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.endsWith'));
+  }
   const searchStr = Q(ToString(searchString)).stringValue();
   const len = S.length;
   const pos = endPosition === Value.undefined ? len : Q(ToInteger(endPosition)).numberValue();
@@ -122,9 +124,10 @@ function StringProto_endsWith([searchString = Value.undefined, endPosition = Val
 function StringProto_includes([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
-  // TODO:
-  // Let isRegExp be ? IsRegExp(searchString).
-  // If isRegExp is true, throw a TypeError exception.
+  const isRegExp = Q(IsRegExp(searchString));
+  if (isRegExp === Value.true) {
+    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.includes'));
+  }
   const searchStr = Q(ToString(searchString)).stringValue();
   const pos = Q(ToInteger(position));
   Assert(!(position === Value.undefined) || pos.numberValue() === 0);
@@ -442,9 +445,10 @@ function SplitMatch(S, q, R) {
 function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
-  // TODO:
-  // Let isRegExp be ? IsRegExp(searchString).
-  // If isRegExp is true, throw a TypeError exception.
+  const isRegExp = Q(IsRegExp(searchString));
+  if (isRegExp === Value.true) {
+    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.startsWith'));
+  }
   const searchStr = Q(ToString(searchString)).stringValue();
   const pos = Q(ToInteger(position)).numberValue();
   Assert(!(position === Value.undefined) || pos === 0);

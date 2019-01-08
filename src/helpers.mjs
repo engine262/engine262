@@ -106,6 +106,8 @@ const messages = {
   SubclassSameValue: (v) => `Subclass constructor returned the same object ${inlineInspect(v)}`,
   SubclassLengthTooSmall: (v) => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
   StringRepeatCount: (v) => `Count ${inlineInspect(v)} is invalid`,
+  RegExpArgumentNotAllowed: (m) => `First argument to ${m} must not be a regular expression`,
+  InvalidRegExpFlags: (f) => `Invalid RegExp flags: ${f}`,
 };
 
 export function msg(key, ...args) {

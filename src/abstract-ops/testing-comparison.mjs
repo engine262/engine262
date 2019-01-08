@@ -3,6 +3,7 @@ import {
   ProxyExoticObjectValue,
   Type,
   Value,
+  wellKnownSymbols,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -10,6 +11,8 @@ import {
 import {
   Assert,
   CanonicalNumericIndexString,
+  Get,
+  ToBoolean,
   ToNumber,
   ToPrimitive,
   ValidateAndApplyPropertyDescriptor,
@@ -121,6 +124,21 @@ export function IsPropertyKey(argument) {
     return true;
   }
   return false;
+}
+
+// 7.2.8 IsRegExp
+export function IsRegExp(argument) {
+  if (Type(argument) !== 'Object') {
+    return Value.false;
+  }
+  const matcher = Q(Get(argument, wellKnownSymbols.match));
+  if (matcher !== Value.undefined) {
+    return ToBoolean(matcher);
+  }
+  if ('RegExpMatcher' in argument) {
+    return Value.true;
+  }
+  return Value.false;
 }
 
 // 7.2.10 SameValue
