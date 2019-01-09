@@ -22,8 +22,183 @@ import {
   ToNumber,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { EnsureCompletion, Q, X } from '../completion.mjs';
+import {
+  NormalCompletion,
+  EnsureCompletion,
+  Q, X,
+} from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+
+const WHITESPACE = [' ', '\t', '\r', '\n'];
+const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const NUMERIC_EXTENDED = [...NUMERIC, '-', 'e', '.'];
+const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f'];
+const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
+
+class JSONValidator {
+  constructor(input) {
+    this.input = input;
+    this.pos = 0;
+    this.char = input.charAt(0);
+  }
+
+  validate() {
+    X(this.eatWhitespace());
+    Q(this.parseValue());
+    if (this.pos < this.input.length) {
+      return surroundingAgent.Throw('SyntaxError', 'JSON input doesn\'t end!');
+    }
+    return new NormalCompletion(undefined);
+  }
+
+  advance() {
+    this.pos += 1;
+    if (this.pos === this.input.length) {
+      this.char = null;
+    } else if (this.pos > this.input.length) {
+      return surroundingAgent.Throw('SyntaxError', 'JSON got unexpected EOF');
+    } else {
+      this.char = this.input.charAt(this.pos);
+    }
+    return this.char;
+  }
+
+  eatWhitespace() {
+    while (this.eat(WHITESPACE));
+  }
+
+  eat(c) {
+    if (Array.isArray(c) && c.includes(this.char)) {
+      X(this.advance());
+      return true;
+    } else if (this.char === c) {
+      X(this.advance());
+      return true;
+    }
+    return false;
+  }
+
+  expect(c) {
+    const { char } = this;
+    if (!this.eat(c)) {
+      return surroundingAgent.Throw('SyntaxError', `Expected ${c} but got ${this.char}`);
+    }
+    return char;
+  }
+
+  parseValue() {
+    switch (this.char) {
+      case '"':
+        return Q(this.parseString());
+      case '{':
+        return Q(this.parseObject());
+      case '[':
+        return Q(this.parseArray());
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '-':
+        return Q(this.parseNumber());
+      case 'f':
+        if (this.eat('f') && this.eat('a') && this.eat('l') && this.eat('s') && this.eat('e')) {
+          return X(this.eatWhitespace());
+        } else {
+          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing false`);
+        }
+      case 't':
+        if (this.eat('t') && this.eat('r') && this.eat('u') && this.eat('e')) {
+          return X(this.eatWhitespace());
+        } else {
+          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing true`);
+        }
+      case 'n':
+        if (this.eat('n') && this.eat('u') && this.eat('l') && this.eat('l')) {
+          return X(this.eatWhitespace());
+        } else {
+          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing null`);
+        }
+      default:
+        return surroundingAgent.Throw('SyntaxError', `Unexpected character ${this.char}`);
+    }
+  }
+
+  parseString() {
+    Q(this.expect('"'));
+    while (!this.eat('"')) {
+      if (this.eat('\\')) {
+        if (!this.eat(ESCAPABLE)) {
+          Q(this.expect('u'));
+          Q(this.expect(VALID_HEX));
+          Q(this.expect(VALID_HEX));
+          Q(this.expect(VALID_HEX));
+          Q(this.expect(VALID_HEX));
+        }
+      } else {
+        if (this.char < ' ') {
+          return surroundingAgent.Throw('SyntaxError', `Unexpected character ${this.char} in JSON`);
+        }
+        Q(this.advance());
+      }
+    }
+    X(this.eatWhitespace());
+  }
+
+  parseNumber() {
+    Q(this.expect(NUMERIC_EXTENDED));
+    while (this.eat(NUMERIC_EXTENDED));
+    X(this.eatWhitespace());
+  }
+
+  parseObject() {
+    Q(this.expect('{'));
+    X(this.eatWhitespace());
+    let first = true;
+    while (!this.eat('}')) {
+      if (first) {
+        first = false;
+      } else {
+        Q(this.expect(','));
+        X(this.eatWhitespace());
+      }
+      Q(this.parseString());
+      X(this.eatWhitespace());
+      Q(this.expect(':'));
+      X(this.eatWhitespace());
+      Q(this.parseValue());
+      X(this.eatWhitespace());
+    }
+    X(this.eatWhitespace());
+  }
+
+  parseArray() {
+    Q(this.expect('['));
+    X(this.eatWhitespace());
+    let first = true;
+    while (!this.eat(']')) {
+      if (first) {
+        first = false;
+      } else {
+        Q(this.expect(','));
+        X(this.eatWhitespace());
+      }
+      Q(this.parseValue());
+      X(this.eatWhitespace());
+    }
+    X(this.eatWhitespace());
+  }
+
+  static validate(input) {
+    const v = new JSONValidator(input);
+    return v.validate();
+  }
+}
 
 function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   function InternalizeJSONProperty(holder, name) {
@@ -62,11 +237,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   const jText = Q(ToString(text));
   // Parse JText interpreted as UTF-16 encoded Unicode points (6.1.4) as a JSON text as specified in ECMA-404.
   // Throw a SyntaxError exception if JText is not a valid JSON text as defined in that specification.
-  try {
-    JSON.parse(jText.stringValue());
-  } catch (e) {
-    return surroundingAgent.Throw('SyntaxError');
-  }
+  Q(JSONValidator.validate(jText.stringValue()));
   const scriptText = `(${jText.stringValue()});`;
   const completion = EnsureCompletion(ScriptEvaluationJob(scriptText));
   const unfiltered = completion.Value;
