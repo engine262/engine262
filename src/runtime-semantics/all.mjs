@@ -41,6 +41,7 @@ export * from './IteratorBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
 export * from './LabelledStatement.mjs';
 export * from './LexicalDeclaration.mjs';
+export * from './Literal.mjs';
 export * from './LogicalANDExpression.mjs';
 export * from './LogicalORExpression.mjs';
 export * from './MemberExpression.mjs';
