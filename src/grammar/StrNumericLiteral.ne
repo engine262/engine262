@@ -37,7 +37,31 @@ StrUnsignedDecimalLiteral ->
 #######################################
 # 11.8.3 #sec-literals-numeric-literals
 
-#prod-DecimalDigits
+# #prod-NumericLiteral
+NumericLiteral ->
+    DecimalLiteral       {% ([DecimalLiteral]) => DecimalLiteral %}
+  | BinaryIntegerLiteral {% ([BinaryIntegerLiteral]) => BinaryIntegerLiteral %}
+  | OctalIntegerLiteral  {% ([OctalIntegerLiteral]) => OctalIntegerLiteral %}
+  | HexIntegerLiteral    {% ([HexIntegerLiteral]) => HexIntegerLiteral %}
+
+# #prod-DecimalLiteral
+DecimalLiteral ->
+    DecimalIntegerLiteral "."                            {% ([DecimalIntegerLiteral]) => new Scientific(DecimalIntegerLiteral) %}
+  | DecimalIntegerLiteral "." DecimalDigits              {% ([DecimalIntegerLiteral, _, [DecimalDigits, n]]) => new Scientific(DecimalIntegerLiteral).addSci(new Scientific(DecimalDigits, -n)) %}
+  | DecimalIntegerLiteral "." ExponentPart               {% ([DecimalIntegerLiteral, _, e]) => new Scientific(DecimalIntegerLiteral, e) %}
+  | DecimalIntegerLiteral "." DecimalDigits ExponentPart {% ([DecimalIntegerLiteral, _, [DecimalDigits, n], e]) => new Scientific(DecimalIntegerLiteral).addSci(new Scientific(DecimalDigits, -n)).expAdd(e) %}
+  | "." DecimalDigits                                    {% ([_, [DecimalDigits, n]]) => new Scientific(DecimalDigits, -n) %}
+  | "." DecimalDigits ExponentPart                       {% ([_, [DecimalDigits, n], e]) => new Scientific(DecimalDigits, e - n) %}
+  | DecimalIntegerLiteral                                {% ([DecimalIntegerLiteral]) => new Scientific(DecimalIntegerLiteral) %}
+  | DecimalIntegerLiteral ExponentPart                   {% ([DecimalIntegerLiteral, e]) => new Scientific(DecimalIntegerLiteral, e) %}
+
+# #prod-DecimalIntegerLiteral
+DecimalIntegerLiteral ->
+    "0"                        {% c(0n) %}
+  | NonZeroDigit               {% ([NonZeroDigit]) => NonZeroDigit %}
+  | NonZeroDigit DecimalDigits {% ([NonZeroDigit, [DecimalDigits, n]]) => NonZeroDigit * (10n ** n) + DecimalDigits %}
+
+# #prod-DecimalDigits
 DecimalDigits ->
     DecimalDigit               {% ([DecimalDigit]) => [DecimalDigit, 1n] %}
   | DecimalDigits DecimalDigit {% ([[DecimalDigits, n], DecimalDigit]) => [DecimalDigits * 10n + DecimalDigit, n + 1n] %}
@@ -46,6 +70,18 @@ DecimalDigits ->
 DecimalDigit ->
     "0" {% c(0n) %}
   | "1" {% c(1n) %}
+  | "2" {% c(2n) %}
+  | "3" {% c(3n) %}
+  | "4" {% c(4n) %}
+  | "5" {% c(5n) %}
+  | "6" {% c(6n) %}
+  | "7" {% c(7n) %}
+  | "8" {% c(8n) %}
+  | "9" {% c(9n) %}
+
+# #prod-NonZeroDigit
+NonZeroDigit ->
+    "1" {% c(1n) %}
   | "2" {% c(2n) %}
   | "3" {% c(3n) %}
   | "4" {% c(4n) %}

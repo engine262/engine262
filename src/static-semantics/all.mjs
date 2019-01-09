@@ -22,6 +22,7 @@ export * from './IsStatic.mjs';
 export * from './IsStrict.mjs';
 export * from './LexicallyDeclaredNames.mjs';
 export * from './LexicallyScopedDeclarations.mjs';
+export * from './MV.mjs';
 export * from './ModuleRequests.mjs';
 export * from './NonConstructorMethodDefinitions.mjs';
 export * from './TemplateStrings.mjs';

@@ -107,6 +107,7 @@ import {
   Evaluate_IfStatement,
   Evaluate_LabelledStatement,
   Evaluate_LexicalDeclaration,
+  Evaluate_Literal,
   Evaluate_LogicalANDExpression,
   Evaluate_LogicalORExpression,
   Evaluate_MemberExpression,
@@ -265,24 +266,6 @@ export const Evaluate_Statement = Evaluate_StatementListItem;
 function* Evaluate_ExpressionStatement(ExpressionStatement) {
   const exprRef = yield* Evaluate(ExpressionStatement.expression);
   return GetValue(exprRef);
-}
-
-// 12.2.4.1 #sec-literals-runtime-semantics-evaluation
-//   Literal : NullLiteral
-//   Literal : BooleanLiteral
-//   Literal : NumbericLiteral
-//   Literal : StringLiteral
-function Evaluate_Literal(Literal) {
-  if (Literal.value === null) {
-    return Value.null;
-  }
-  if (Literal.value === true) {
-    return Value.true;
-  }
-  if (Literal.value === false) {
-    return Value.false;
-  }
-  return new Value(Literal.value);
 }
 
 export function EvaluateBinopValues(operator, lval, rval) {
