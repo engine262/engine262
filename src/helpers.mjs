@@ -44,17 +44,19 @@ export function resume(context, completion) {
 
 export function captureStack(O) {
   const stack = surroundingAgent.executionContextStack
-    .slice(0, -1) // remove current Error constructor frame
     .filter((e) => e.Function !== Value.null)
     .map((e) => {
-      const name = e.Function.properties.get(new Value('name'));
-      if (name) {
-        return `\n  at ${X(ToString(name.Value)).stringValue()}`;
+      let string = '\n  at ';
+      const functionName = e.Function.properties.get(new Value('name'));
+      if (functionName) {
+        string += X(ToString(functionName.Value)).stringValue();
+      } else {
+        string += '<anonymous>';
       }
       if (e.ScriptOrModule instanceof ModuleRecord) {
-        return `\n  at ${e.ScriptOrModule.HostDefined.specifier}`;
+        string += e.ScriptOrModule.HostDefined.specifier;
       }
-      return '\n  at <anonymous>';
+      return string;
     })
     .reverse();
 
