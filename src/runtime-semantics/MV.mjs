@@ -10,6 +10,11 @@ const StrNumericLiteralGrammar = nearley.Grammar.fromCompiled({
   ParserStart: 'StrNumericLiteral',
 });
 
+const StrDecimalLiteralGrammar = nearley.Grammar.fromCompiled({
+  ParserRules,
+  ParserStart: 'StrDecimalLiteral',
+});
+
 export function MV_StringNumericLiteral(StringNumericLiteral) {
   if (StringNumericLiteral === '') {
     // StringNumericLiteral ::: [empty]
@@ -34,6 +39,33 @@ function MV_StrNumericLiteral(StrNumericLiteral) {
     parser.feed(StrNumericLiteral);
   } catch (err) {
     return NaN;
+  }
+  Assert(parser.results.length === 1);
+  return parser.results[0].toNumber();
+}
+
+export function MV_StrDecimalLiteral(StrDecimalLiteral, prefixOk = false) {
+  const parser = new nearley.Parser(StrDecimalLiteralGrammar, { keepHistory: prefixOk });
+  try {
+    parser.feed(StrDecimalLiteral);
+  } catch (err) {
+    if (!prefixOk) {
+      return NaN;
+    }
+  }
+  if (prefixOk) {
+    // Backtrack until we find a prefix of StrDecimalLiteral that is indeed a
+    // StrDecimalLiteral.
+    while (parser.table[parser.current]) {
+      parser.restore(parser.table[parser.current]);
+      if (parser.results.length !== 0) {
+        break;
+      }
+      parser.current -= 1;
+    }
+    if (parser.results.length === 0) {
+      return NaN;
+    }
   }
   Assert(parser.results.length === 1);
   return parser.results[0].toNumber();
