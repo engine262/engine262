@@ -145,8 +145,6 @@ language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
 language/statements/for-await-of/*.js
 language/statements/for-in/head-lhs-cover.js
 language/statements/for-of/head-lhs-cover.js
-language/statements/function/S13.2.2_A18_T1.js
-language/statements/function/S13.2.2_A18_T2.js
 language/statements/function/params-dflt-ref-arguments.js
 language/statements/generators/params-dflt-ref-arguments.js
 language/statements/if/cptn-no-else-false.js

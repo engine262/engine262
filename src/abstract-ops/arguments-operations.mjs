@@ -136,10 +136,10 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
-    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
+    Value: func,
+    Writable: Value.true,
     Enumerable: Value.false,
-    Configurable: Value.false,
+    Configurable: Value.true,
   })));
   return obj;
 }
