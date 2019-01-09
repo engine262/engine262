@@ -93,17 +93,22 @@ built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 // Failing tests in language
 language/arguments-object/unmapped/via-params-dflt.js
 language/arguments-object/unmapped/via-params-dstr.js
-language/arguments-object/*.js
+language/arguments-object/*-comma-spread-operator.js
 language/directive-prologue/14.1-16-s.js
 language/eval-code/direct/new.target-fn.js
 language/eval-code/direct/super-prop-method.js
 language/expressions/async-arrow-function/**/*.js
-language/expressions/call/**/*.js
+language/expressions/call/eval-spread-empty-leading.js
+language/expressions/call/spread-mult-literal.js
+language/expressions/call/with-base-obj.js
 language/expressions/class/params-dflt-gen-meth-ref-arguments.js
 language/expressions/class/params-dflt-gen-meth-static-ref-arguments.js
 language/expressions/class/params-dflt-meth-ref-arguments.js
 language/expressions/class/params-dflt-meth-static-ref-arguments.js
-language/expressions/delete/**/*.js
+language/expressions/delete/11.4.1-3-1.js
+language/expressions/delete/S11.4.1_A2.2_T1.js
+language/expressions/delete/S11.4.1_A3.3_T6.js
+language/expressions/delete/S11.4.1_A5.js
 language/expressions/does-not-equals/S11.9.2_A7.8.js
 language/expressions/does-not-equals/S11.9.2_A7.9.js
 language/expressions/function/params-dflt-ref-arguments.js
