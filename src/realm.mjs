@@ -65,6 +65,7 @@ import { CreateJSON } from './intrinsics/JSON.mjs';
 import { CreateEval } from './intrinsics/eval.mjs';
 import { CreateIsFinite } from './intrinsics/isFinite.mjs';
 import { CreateIsNaN } from './intrinsics/isNaN.mjs';
+import { CreateParseFloat } from './intrinsics/parseFloat.mjs';
 import { CreateParseInt } from './intrinsics/parseInt.mjs';
 import { CreateTypedArray } from './intrinsics/TypedArray.mjs';
 import { CreateTypedArrayPrototype } from './intrinsics/TypedArrayPrototype.mjs';
@@ -224,6 +225,7 @@ export function CreateIntrinsics(realmRec) {
   CreateEval(realmRec);
   CreateIsFinite(realmRec);
   CreateIsNaN(realmRec);
+  CreateParseFloat(realmRec);
   CreateParseInt(realmRec);
 
   return intrinsics;
@@ -267,7 +269,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'eval',
     'isFinite',
     'isNaN',
-    // 'parseFloat',
+    'parseFloat',
     'parseInt',
     // 'decodeURI',
     // 'decodeURIComponent',

@@ -1,5 +1,6 @@
-// these tests pass but take hours
+// these tests pass but take a long time
 built-ins/Array/length/S15.4.5.2_A3_T4.js
+built-ins/parseFloat/S15.1.2.3_A6.js
 built-ins/parseInt/S15.1.2.2_A8.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
@@ -53,17 +54,14 @@ built-ins/String/prototype/trimStart/*.js
 // TODO(24): Broken String.raw
 built-ins/String/raw/*.js
 
-// TODO(31): Missing parseFloat
-built-ins/global/S10.2.3_A1.1_T2.js
-built-ins/global/S10.2.3_A1.2_T2.js
-built-ins/global/S10.2.3_A1.3_T2.js
-built-ins/parseFloat/**/*.js
-
 // TODO: Missing {decode|encode}URI{Component}
 built-ins/decodeURI/**/*.js
 built-ins/decodeURIComponent/**/*.js
 built-ins/encodeURI/**/*.js
 built-ins/encodeURIComponent/**/*.js
+built-ins/global/S10.2.3_A1.1_T2.js
+built-ins/global/S10.2.3_A1.2_T2.js
+built-ins/global/S10.2.3_A1.3_T2.js
 
 // TODO: Missing weak collections
 built-ins/WeakMap/**/*.js
