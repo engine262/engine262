@@ -89,7 +89,7 @@ if (process.argv[2]) {
   }
   if (result instanceof AbruptCompletion) {
     const inspected = inspect(result, realm);
-    process.stderr.write(inspected);
+    process.stdout.write(inspected);
     process.exit(1);
   } else {
     process.exit(0);
