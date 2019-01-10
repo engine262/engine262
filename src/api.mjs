@@ -393,5 +393,5 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
     }
     throw new OutOfRange('inspect', type);
   };
-  return innerInspect(v);
+  return innerInspect(v, false);
 }
