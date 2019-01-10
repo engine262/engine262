@@ -496,10 +496,10 @@ function DateProto_toUTCString(args, { thisValue }) {
   if (tv.isNaN()) {
     return new Value('Invalid Date');
   }
-  const weekday = daysOfTheWeek[WeekDay(tv)];
-  const month = monthsOfTheYear[MonthFromTime(tv)];
-  const day = String(DateFromTime(tv)).padStart(2, '0');
-  const year = String(YearFromTime(tv)).padStart(4, '0');
+  const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
+  const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
+  const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
+  const year = String(YearFromTime(tv).numberValue()).padStart(4, '0');
   return new Value(`${weekday}, ${day} ${month} ${year} ${TimeString(tv).stringValue()}`);
 }
 
