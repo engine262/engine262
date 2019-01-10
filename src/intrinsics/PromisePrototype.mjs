@@ -17,6 +17,7 @@ import {
 import { Type, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
@@ -52,7 +53,7 @@ function CatchFinallyFunctions([reason = Value.undefined]) {
 function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.prototype.finally called on incompatable receiver');
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Promise.prototype.finally'));
   }
   const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   Assert(IsConstructor(C) === Value.true);
@@ -79,7 +80,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
 function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Promise.prototype.then called on incompatable receiver');
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Promise.prototype.then'));
   }
   const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   const resultCapability = Q(NewPromiseCapability(C));

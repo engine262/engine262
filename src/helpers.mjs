@@ -108,6 +108,7 @@ const messages = {
   StringRepeatCount: (v) => `Count ${inlineInspect(v)} is invalid`,
   RegExpArgumentNotAllowed: (m) => `First argument to ${m} must not be a regular expression`,
   InvalidRegExpFlags: (f) => `Invalid RegExp flags: ${f}`,
+  IncompatibleReceiver: (m) => `${m} called on incompatible receiver`,
 };
 
 export function msg(key, ...args) {

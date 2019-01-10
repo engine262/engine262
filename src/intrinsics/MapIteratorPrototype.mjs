@@ -6,14 +6,15 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Map Iterator.prototype.next called on incompatible receiver');
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Map Iterator.prototype.next'));
   }
   if (!('Map' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', 'Map Iterator.prototype.next called on incompatible receiver');
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Map Iterator.prototype.next'));
   }
   const m = O.Map;
   let index = O.MapNextIndex;

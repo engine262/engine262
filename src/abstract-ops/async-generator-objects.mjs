@@ -18,7 +18,7 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 import { Value, Type } from '../value.mjs';
-import { resume, handleInResume } from '../helpers.mjs';
+import { resume, handleInResume, msg } from '../helpers.mjs';
 
 // This file covers abstract operations defined in
 // 25.5 #sec-asyncgenerator-objects
@@ -157,7 +157,7 @@ export function AsyncGeneratorEnqueue(generator, completion) {
   Assert(completion instanceof Completion);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
-    const badGeneratorError = surroundingAgent.Throw('TypeError', 'Async Generator method called on incompatable receiver').Value;
+    const badGeneratorError = surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Async Generator method')).Value;
     X(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]));
     return promiseCapability.Promise;
   }
