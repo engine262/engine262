@@ -4,6 +4,7 @@ import {
   ToPrimitive,
   ToNumber,
   ToInteger,
+  ToString,
   MakeDate,
   MakeDay,
   MakeTime,
@@ -13,7 +14,10 @@ import {
 import { Value, Type } from '../value.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
-import { Q, X } from '../completion.mjs';
+import {
+  AbruptCompletion,
+  Q, X,
+} from '../completion.mjs';
 
 function DateConstructor(args, { NewTarget }) {
   const numberOfArgs = args.length;
@@ -62,7 +66,7 @@ function DateConstructor(args, { NewTarget }) {
       } else {
         const v = Q(ToPrimitive(value));
         if (Type(v) === 'String') {
-          tv = undefined;
+          tv = parseDate(v);
         } else {
           tv = Q(ToNumber(v));
         }
@@ -91,10 +95,26 @@ function Date_now() {
   return new Value(now);
 }
 
+// 20.3.3.2 #sec-date.parse
+function Date_parse([string = Value.undefined]) {
+  const str = ToString(string);
+  if (str instanceof AbruptCompletion) {
+    return str;
+  }
+  return parseDate(str);
+}
+
+function parseDate(dateTimeString) {
+  // 20.3.1.15 #sec-date-time-string-format
+  // TODO: implement parsing without the host.
+  const parsed = Date.parse(dateTimeString.stringValue());
+  return new Value(parsed);
+}
+
 export function CreateDate(realmRec) {
   const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%DatePrototype%'], [
     ['now', Date_now, 0],
-    // parse
+    ['parse', Date_parse, 1],
     // UTC
   ]);
 

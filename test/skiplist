@@ -32,7 +32,8 @@ built-ins/String/prototype/split/S15.5.4.14_A2_T5.js
 language/literals/regexp/**/*.js
 
 // TODO(7): Missing Date.
-built-ins/Date/parse/**/*.js
+built-ins/Date/parse/time-value-maximum-range.js
+built-ins/Date/parse/zero.js
 built-ins/Date/prototype/**/*.js
 built-ins/Date/UTC/**/*.js
 built-ins/Date/*.js
