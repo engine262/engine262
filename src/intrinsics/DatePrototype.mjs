@@ -374,7 +374,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
 function DateProto_toDateString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toUTCString'));
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toDateString'));
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -476,7 +476,7 @@ export function ToDateString(tv) {
 function DateProto_toTimeString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toUTCString'));
+    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toTimeString'));
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
