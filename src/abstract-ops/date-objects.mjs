@@ -1,3 +1,6 @@
+// This file covers abstract operations defined in
+// 20.3 #sec-date-objects
+
 import {
   ToInteger,
 } from './all.mjs';
@@ -6,8 +9,10 @@ import {
 } from '../value.mjs';
 import { X } from '../completion.mjs';
 
-// This file covers abstract operations defined in
-// 20.3 #sec-date-objects
+const mod = (n, m) => {
+  const r = n % m;
+  return Math.floor(r >= 0 ? r : r + m);
+};
 
 // 20.3.1.2 #sec-day-number-and-time-within-day
 export function Day(t) {
@@ -17,22 +22,22 @@ export function Day(t) {
 export const msPerDay = 86400000;
 
 export function TimeWithinDay(t) {
-  return new Value(t.numberValue() % msPerDay);
+  return new Value(mod(t.numberValue(), msPerDay));
 }
 
 // 20.3.1.3 #sec-year-number
 export function DaysInYear(y) {
   y = y.numberValue();
-  if (y % 4 !== 0) {
+  if (mod(y, 4) !== 0) {
     return new Value(365);
   }
-  if (y % 4 === 0 && y % 100 !== 0) {
+  if (mod(y, 4) === 0 && mod(y, 100) !== 0) {
     return new Value(366);
   }
-  if (y % 100 === 0 && y % 400 !== 0) {
+  if (mod(y, 100) === 0 && mod(y, 400) !== 0) {
     return new Value(365);
   }
-  if (y % 400 === 0) {
+  if (mod(y, 400) === 0) {
     return new Value(366);
   }
 }
@@ -46,8 +51,19 @@ export function TimeFromYear(y) {
   return new Value(msPerDay * DayFromYear(y).numberValue());
 }
 
-export function YearFromTime() {
-  // TODO: implement this function.
+export function YearFromTime(t) {
+  t = t.numberValue();
+  let min = Number.MIN_SAFE_INTEGER;
+  let max = Number.MAX_SAFE_INTEGER;
+  while (min !== max - 1) {
+    const middle = Math.round((min + max) / 2);
+    if (TimeFromYear(new Value(middle)).numberValue() <= t) {
+      min = middle;
+    } else {
+      max = middle;
+    }
+  }
+  return new Value(min);
 }
 
 export function InLeapYear(t) {
@@ -129,7 +145,7 @@ export function DateFromTime(t) {
 
 // 20.3.1.6 #sec-week-day
 export function WeekDay(t) {
-  return new Value((Day(t).numberValue() + 4) % 7);
+  return new Value(mod(Day(t).numberValue() + 4, 7));
 }
 
 // 20.3.1.7 #sec-local-time-zone-adjustment
@@ -150,19 +166,19 @@ export function UTC(t) {
 
 // 20.3.1.10 #sec-hours-minutes-second-and-milliseconds
 export function HourFromTime(t) {
-  return new Value(Math.floor(t.numberValue() / msPerHour) % HoursPerDay);
+  return new Value(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
 }
 
 export function MinFromTime(t) {
-  return new Value(Math.floor(t.numberValue() / msPerMinute) % MinutesPerHour);
+  return new Value(mod(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
 }
 
 export function SecFromTime(t) {
-  return new Value(Math.floor(t.numberValue() / msPerSecond) % SecondsPerMinute);
+  return new Value(mod(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
 }
 
 export function msFromTime(t) {
-  return new Value(t.numberValue() % msPerSecond);
+  return new Value(mod(t.numberValue(), msPerSecond));
 }
 
 export const HoursPerDay = 24;
@@ -194,7 +210,7 @@ export function MakeDay(/* year, month, date */) {
   // const m = X(ToInteger(month)).numberValue();
   // const dt = X(ToInteger(date)).numberValue();
   // const ym = y + Math.floor(m / 12);
-  // const mn = m % 12;
+  // const mn = mod(m, 12);
   // TODO: 7. Find a value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1; but if this is not possible (because some argument is out of range), return NaN.
   // return new Value(Day(t) + dt - 1);
 }
