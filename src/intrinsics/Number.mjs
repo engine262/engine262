@@ -11,6 +11,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// 20.1.1.1 #sec-number-constructor-number-value
 function NumberConstructor(args, { NewTarget }) {
   const [value] = args;
   let n;
@@ -28,6 +29,7 @@ function NumberConstructor(args, { NewTarget }) {
   return O;
 }
 
+// 20.1.2.2 #sec-number.isfinite
 function Number_isFinite([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
@@ -39,6 +41,7 @@ function Number_isFinite([number = Value.undefined]) {
   return Value.true;
 }
 
+// 20.1.2.3 #sec-number.isinteger
 function Number_isInteger([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
@@ -54,6 +57,7 @@ function Number_isInteger([number = Value.undefined]) {
   return Value.true;
 }
 
+// 20.1.2.4 #sec-number.isnan
 function Number_isNaN([number = Value.undefined]) {
   if (Type(number) !== 'Number') {
     return Value.false;
@@ -62,6 +66,28 @@ function Number_isNaN([number = Value.undefined]) {
   if (number.isNaN()) {
     return Value.true;
   }
+  return Value.false;
+}
+
+// 20.1.2.5 #sec-number.issafeinteger
+function Number_isSafeInteger([number = Value.undefined]) {
+  if (Type(number) !== 'Number') {
+    return Value.false;
+  }
+
+  if (number.isNaN() || number.isInfinity()) {
+    return Value.false;
+  }
+
+  const integer = X(ToInteger(number));
+  if (integer.numberValue() !== number.numberValue()) {
+    return Value.false;
+  }
+
+  if (Math.abs(integer.numberValue()) <= (2 ** 53) - 1) {
+    return Value.true;
+  }
+
   return Value.false;
 }
 
@@ -84,7 +110,7 @@ export function CreateNumber(realmRec) {
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],
     ['isNaN', Number_isNaN, 1],
-    // ['isSafeInteger'],
+    ['isSafeInteger', Number_isSafeInteger, 1],
   ]);
 
   // 20.1.2.12 #sec-number.parsefloat
