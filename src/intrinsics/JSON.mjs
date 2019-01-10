@@ -147,7 +147,7 @@ class JSONValidator {
         Q(this.advance());
       }
     }
-    X(this.eatWhitespace());
+    return X(this.eatWhitespace());
   }
 
   parseNumber() {
