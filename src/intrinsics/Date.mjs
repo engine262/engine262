@@ -92,7 +92,7 @@ function Date_now() {
 }
 
 export function CreateDate(realmRec) {
-  const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 1, realmRec.Intrinsics['%DatePrototype%'], [
+  const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%DatePrototype%'], [
     ['now', Date_now, 0],
     // parse
     // UTC
