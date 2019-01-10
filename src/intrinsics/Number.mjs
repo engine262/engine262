@@ -4,10 +4,11 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   Type,
   Value,
 } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function NumberConstructor(args, { NewTarget }) {
@@ -84,9 +85,25 @@ export function CreateNumber(realmRec) {
     ['isInteger', Number_isInteger, 1],
     ['isNaN', Number_isNaN, 1],
     // ['isSafeInteger'],
-    // ['parseFloat'],
-    // ['parseInt'],
   ]);
+
+  // 20.1.2.12 #sec-number.parsefloat
+  // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
+  X(numberConstructor.DefineOwnProperty(new Value('parseFloat'), Descriptor({
+    Value: realmRec.Intrinsics['%parseFloat%'],
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
+
+  // 20.1.2.13 #sec-number.parseint
+  // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
+  X(numberConstructor.DefineOwnProperty(new Value('parseInt'), Descriptor({
+    Value: realmRec.Intrinsics['%parseInt%'],
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
 
   realmRec.Intrinsics['%Number%'] = numberConstructor;
 }

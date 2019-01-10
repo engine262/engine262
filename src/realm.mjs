@@ -143,6 +143,12 @@ export function CreateIntrinsics(realmRec) {
 
   AddRestrictedFunctionProperties(funcProto, realmRec);
 
+  CreateEval(realmRec);
+  CreateIsFinite(realmRec);
+  CreateIsNaN(realmRec);
+  CreateParseFloat(realmRec);
+  CreateParseInt(realmRec);
+
   CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
 
@@ -221,12 +227,6 @@ export function CreateIntrinsics(realmRec) {
   CreateDataView(realmRec);
 
   CreateJSON(realmRec);
-
-  CreateEval(realmRec);
-  CreateIsFinite(realmRec);
-  CreateIsNaN(realmRec);
-  CreateParseFloat(realmRec);
-  CreateParseInt(realmRec);
 
   return intrinsics;
 }
