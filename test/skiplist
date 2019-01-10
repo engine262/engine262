@@ -89,12 +89,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-624.js
 built-ins/Object/getOwnPropertyDescriptor/*.js
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 
-// TODO(60): Problems with mapped/unmapped arguments
-built-ins/ThrowTypeError/unique-per-realm-non-simple.js
-language/arguments-object/unmapped/via-params-dflt.js
-language/arguments-object/unmapped/via-params-dstr.js
-language/statements/class/strict-mode/arguments-callee.js
-
 // Failing tests in language
 language/arguments-object/*-comma-spread-operator.js
 language/directive-prologue/14.1-16-s.js

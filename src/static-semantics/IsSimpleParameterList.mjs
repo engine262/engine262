@@ -6,8 +6,7 @@ export function IsSimpleParameterList(list) {
       case isFunctionRestParameter(node):
         return false;
       case isBindingElement(node):
-        break;
-
+        return false;
       default:
         throw new TypeError('IsSimpleParameterList');
     }

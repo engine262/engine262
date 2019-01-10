@@ -6,14 +6,6 @@ const path = require('path');
 const readline = require('readline');
 const TestStream = require('test262-stream');
 const minimatch = require('minimatch');
-
-let engine262;
-try {
-  engine262 = require('..');
-} catch (e) {
-  require('v8').setFlagsFromString('--harmony-do-expressions');
-  engine262 = require('..');
-}
 const {
   Object: APIObject,
   AbruptCompletion,
@@ -22,7 +14,7 @@ const {
   Realm,
   Value,
   initializeAgent,
-} = engine262;
+} = require('..');
 
 const override = process.argv[2];
 
