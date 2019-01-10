@@ -109,6 +109,7 @@ const messages = {
   RegExpArgumentNotAllowed: (m) => `First argument to ${m} must not be a regular expression`,
   InvalidRegExpFlags: (f) => `Invalid RegExp flags: ${f}`,
   IncompatibleReceiver: (m) => `${m} called on incompatible receiver`,
+  InvalidHint: (v) => `Invalid hint: ${inlineInspect(v)}`,
 };
 
 export function msg(key, ...args) {
