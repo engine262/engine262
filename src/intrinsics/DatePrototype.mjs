@@ -44,7 +44,7 @@ export function thisTimeValue(value) {
 // 20.3.4.2 #sec-date.prototype.getdate
 function DateProto_getDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return DateFromTime(LocalTime(t));
@@ -53,7 +53,7 @@ function DateProto_getDate(args, { thisValue }) {
 // 20.3.4.3 #sec-date.prototype.getday
 function DateProto_getDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return WeekDay(LocalTime(t));
@@ -62,7 +62,7 @@ function DateProto_getDay(args, { thisValue }) {
 // 20.3.4.4 #sec-date.prototype.getfullyear
 function DateProto_getFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return YearFromTime(LocalTime(t));
@@ -71,7 +71,7 @@ function DateProto_getFullYear(args, { thisValue }) {
 // 20.3.4.5 #sec-date.prototype.gethours
 function DateProto_getHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return HourFromTime(LocalTime(t));
@@ -80,7 +80,7 @@ function DateProto_getHours(args, { thisValue }) {
 // 20.3.4.6 #sec-date.prototype.getmilliseconds
 function DateProto_getMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return msFromTime(LocalTime(t));
@@ -89,7 +89,7 @@ function DateProto_getMilliseconds(args, { thisValue }) {
 // 20.3.4.7 #sec-date.prototype.getminutes
 function DateProto_getMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return MinFromTime(LocalTime(t));
@@ -98,7 +98,7 @@ function DateProto_getMinutes(args, { thisValue }) {
 // 20.3.4.8 #sec-date.prototype.getmonth
 function DateProto_getMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return MonthFromTime(LocalTime(t));
@@ -107,7 +107,7 @@ function DateProto_getMonth(args, { thisValue }) {
 // 20.3.4.9 #sec-date.prototype.getseconds
 function DateProto_getSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return SecFromTime(LocalTime(t));
@@ -121,7 +121,7 @@ function DateProto_getTime(args, { thisValue }) {
 // 20.3.4.11 #sec-date.prototype.gettimezoneoffset
 function DateProto_getTimezoneOffset(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return new Value(t.numberValue() - LocalTime(t).numberValue() / msPerMinute);
@@ -130,7 +130,7 @@ function DateProto_getTimezoneOffset(args, { thisValue }) {
 // 20.3.4.12 #sec-date.prototype.getutcdate
 function DateProto_getUTCDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return DateFromTime(t);
@@ -139,7 +139,7 @@ function DateProto_getUTCDate(args, { thisValue }) {
 // 20.3.4.13 #sec-date.prototype.getutcday
 function DateProto_getUTCDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return WeekDay(t);
@@ -148,7 +148,7 @@ function DateProto_getUTCDay(args, { thisValue }) {
 // 20.3.4.14 #sec-date.prototype.getutcfullyear
 function DateProto_getUTCFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return YearFromTime(t);
@@ -157,7 +157,7 @@ function DateProto_getUTCFullYear(args, { thisValue }) {
 // 20.3.4.15 #sec-date.prototype.getutchours
 function DateProto_getUTCHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return HourFromTime(t);
@@ -166,7 +166,7 @@ function DateProto_getUTCHours(args, { thisValue }) {
 // 20.3.4.16 #sec-date.prototype.getutcmilliseconds
 function DateProto_getUTCMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return msFromTime(t);
@@ -175,7 +175,7 @@ function DateProto_getUTCMilliseconds(args, { thisValue }) {
 // 20.3.4.17 #sec-date.prototype.getutcminutes
 function DateProto_getUTCMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return MinFromTime(t);
@@ -184,7 +184,7 @@ function DateProto_getUTCMinutes(args, { thisValue }) {
 // 20.3.4.18 #sec-date.prototype.getutcmonth
 function DateProto_getUTCMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return MonthFromTime(t);
@@ -193,7 +193,7 @@ function DateProto_getUTCMonth(args, { thisValue }) {
 // 20.3.4.19 #sec-date.prototype.getutcseconds
 function DateProto_getUTCSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (t.isNan()) {
+  if (t.isNaN()) {
     return new Value(NaN);
   }
   return SecFromTime(t);
@@ -556,7 +556,7 @@ export function CreateDatePrototype(realmRec) {
     ['setUTCDate', DateProto_setUTCDate, 1],
     ['setUTCFullYear', DateProto_setUTCFullYear, 3],
     ['setUTCHours', DateProto_setUTCHours, 4],
-    ['setUCMilliseconds', DateProto_setUTCMilliseconds, 1],
+    ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1],
     ['setUTCMinutes', DateProto_setUTCMinutes, 3],
     ['setUTCMonth', DateProto_setUTCMonth, 2],
     ['setUTCSeconds', DateProto_setUTCSeconds, 2],

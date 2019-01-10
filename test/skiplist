@@ -14,6 +14,7 @@ language/statements/if/let-identifier-with-newline.js
 language/statements/labeled/let-identifier-with-newline.js
 
 // TODO(8): Uses regexes.
+built-ins/Date/prototype/to*String/format.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
 built-ins/RegExp/**/*.js
 built-ins/RegExpStringIteratorPrototype/**/*.js
@@ -34,7 +35,9 @@ language/literals/regexp/**/*.js
 // TODO(7): Missing Date.
 built-ins/Date/parse/time-value-maximum-range.js
 built-ins/Date/parse/zero.js
-built-ins/Date/prototype/**/*.js
+built-ins/Date/prototype/**/this-value-valid-date.js
+built-ins/Date/prototype/set*/*.js
+built-ins/Date/prototype/toISOString/*.js
 built-ins/Date/UTC/**/*.js
 built-ins/Date/*.js
 built-ins/Function/prototype/bind/15.3.4.5-2-9.js
