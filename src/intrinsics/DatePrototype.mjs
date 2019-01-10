@@ -385,9 +385,32 @@ function DateProto_toDateString(args, { thisValue }) {
 }
 
 // 20.3.4.36 #sec-date.prototype.toisostring
-function DateProto_toISOString() {
-  // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Date.prototype.toISOString is not implemented');
+function DateProto_toISOString(args, { thisValue }) {
+  const t = Q(thisTimeValue(thisValue));
+  if (!Number.isFinite(t.numberValue())) {
+    return surroundingAgent.Throw('RangeError', 'Invalid time value');
+  }
+  const year = YearFromTime(t).numberValue();
+  const month = MonthFromTime(t).numberValue() + 1;
+  const date = DateFromTime(t).numberValue();
+  const hour = HourFromTime(t).numberValue();
+  const min = MinFromTime(t).numberValue();
+  const sec = SecFromTime(t).numberValue();
+  const ms = msFromTime(t).numberValue();
+
+  // TODO: figure out if there can be invalid years.
+  let YYYY = String(year);
+  if (year < 0 || year > 9999) {
+    YYYY = year < 0 ? `-${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
+  }
+  const MM = String(month).padStart(2, '0');
+  const DD = String(date).padStart(2, '0');
+  const HH = String(hour).padStart(2, '0');
+  const mm = String(min).padStart(2, '0');
+  const ss = String(sec).padStart(2, '0');
+  const sss = String(ms).padStart(3, '0');
+  const format = `${YYYY}-${MM}-${DD}T${HH}:${mm}:${ss}.${sss}Z`;
+  return new Value(format);
 }
 
 // 20.3.4.37 #sec-date.prototype.tojson
