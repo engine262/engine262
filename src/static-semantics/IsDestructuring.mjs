@@ -3,6 +3,7 @@ import {
   isBindingIdentifier,
   isBindingPattern,
   isActualMemberExpression,
+  isPrimaryExpression,
 } from '../ast.mjs';
 
 // 13.7.5.6 #sec-for-in-and-for-of-statements-static-semantics-isdestructuring
@@ -22,6 +23,8 @@ export function IsDestructuring_ForBinding(ForBinding) {
     case isBindingPattern(ForBinding):
       return true;
     case isActualMemberExpression(ForBinding):
+      return false;
+    case isPrimaryExpression(ForBinding):
       return false;
     default:
       throw new OutOfRange('IsDestructuring_ForBinding', ForBinding);

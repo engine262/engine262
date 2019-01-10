@@ -518,6 +518,23 @@ export function isExpression(node) {
   );
 }
 
+// #prod-PrimaryExpression
+export function isPrimaryExpression(node) {
+  return isThis(node)
+    || isIdentifierReference(node)
+    || isLiteral(node)
+    || isArrayLiteral(node)
+    || isObjectLiteral(node)
+    || isFunctionExpression(node)
+    || isClassExpression(node)
+    || isGeneratorExpression(node)
+    || isAsyncFunctionExpression(node)
+    || isAsyncGeneratorExpression(node)
+    || isRegularExpressionLiteral(node)
+    || isTemplateLiteral(node)
+    || isParenthesizedExpression(node);
+}
+
 // Used in #prod-SingleNameBinding
 export function isBindingIdentifierAndInitializer(node) {
   return node.type === 'AssignmentPattern' && isBindingIdentifier(node.left);
