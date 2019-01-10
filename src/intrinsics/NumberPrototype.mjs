@@ -20,6 +20,27 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
+// 20.1.3.2 #sec-number.prototype.toexponential
+function NumberProto_toExponential(/* [fractionDigits] */) {
+  return surroundingAgent.Throw('Error', 'Number.prototype.toExponential is not implemented');
+}
+
+// 20.1.3.3 #sec-number.prototype.tofixed
+function NumberProto_toFixed(/* [fractionDigits] */) {
+  return surroundingAgent.Throw('Error', 'Number.prototype.toFixed is not implemented');
+}
+
+// 20.1.3.4 #sec-number.prototype.tolocalestring
+function NumberProto_toLocaleString() {
+  return surroundingAgent.Throw('Error', 'Number.prototype.toLocaleString is not implemented');
+}
+
+// 20.1.3.5 #sec-number.prototype.toprecision
+function NumberProto_toPrecision(/* [precision] */) {
+  return surroundingAgent.Throw('Error', 'Number.prototype.toPrecision is not implemented');
+}
+
+// 20.1.3.6 #sec-number.prototype.tostring
 function NumberProto_toString(args, { thisValue }) {
   const [radix] = args;
   const x = Q(thisNumberValue(thisValue));
@@ -43,12 +64,17 @@ function NumberProto_toString(args, { thisValue }) {
   return surroundingAgent.Throw('TypeError', 'NumberToString');
 }
 
+// 20.1.3.7 #sec-number.prototype.valueof
 function NumberProto_valueOf(args, { thisValue }) {
   return Q(thisNumberValue(thisValue));
 }
 
 export function CreateNumberPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
+    ['toExponential', NumberProto_toExponential, 1],
+    ['toFixed', NumberProto_toFixed, 1],
+    ['toLocaleString', NumberProto_toLocaleString, 0],
+    ['toPrecision', NumberProto_toPrecision, 1],
     ['toString', NumberProto_toString, 0],
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
