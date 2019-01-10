@@ -27,7 +27,7 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs >= 2);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(now);
+      return ToDateString(new Value(now));
     } else {
       const y = Q(ToNumber(year));
       const m = Q(ToNumber(month));
@@ -58,7 +58,7 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs === 1);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(now);
+      return ToDateString(new Value(now));
     } else {
       let tv;
       if (Type(value) === 'Object' && 'DateValue' in value) {
@@ -80,10 +80,10 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs === 0);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(now);
+      return ToDateString(new Value(now));
     } else {
       const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DatePrototype%', ['DateValue']));
-      O.DateValue = Date.now();
+      O.DateValue = new Value(Date.now());
       return O;
     }
   }

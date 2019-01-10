@@ -41,6 +41,7 @@ built-ins/Function/prototype/bind/15.3.4.5-2-9.js
 built-ins/Function/prototype/bind/S15.3.4.5_A5.js
 built-ins/Object/S15.2.2.1_A2_T5.js
 harness/assertRelativeDateMs.js
+language/expressions/addition/S11.6.1_A2.2_T2.js
 
 // TODO(22): Missing String methods.
 built-ins/JSON/stringify/string-escape-ascii.js
