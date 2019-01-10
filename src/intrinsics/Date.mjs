@@ -104,6 +104,31 @@ function Date_parse([string = Value.undefined]) {
   return parseDate(str);
 }
 
+// 20.3.3.4 #sec-date.utc
+function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]) {
+  const y = Q(ToNumber(year));
+  const m = month ? Q(ToNumber(month)) : new Value(0);
+  const dt = date ? Q(ToNumber(date)) : new Value(1);
+  const h = hours ? Q(ToNumber(hours)) : new Value(0);
+  const min = minutes ? Q(ToNumber(minutes)) : new Value(0);
+  const s = seconds ? Q(ToNumber(seconds)) : new Value(0);
+  const milli = ms ? Q(ToNumber(ms)) : new Value(0);
+
+  let yr;
+  if (y.isNaN()) {
+    yr = new Value(NaN);
+  } else {
+    const yi = X(ToInteger(y)).numberValue();
+    if (yi >= 0 && yi <= 99) {
+      yr = new Value(1900 + yi);
+    } else {
+      yr = y;
+    }
+  }
+
+  return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)));
+}
+
 function parseDate(dateTimeString) {
   // 20.3.1.15 #sec-date-time-string-format
   // TODO: implement parsing without the host.
@@ -115,7 +140,7 @@ export function CreateDate(realmRec) {
   const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%DatePrototype%'], [
     ['now', Date_now, 0],
     ['parse', Date_parse, 1],
-    // UTC
+    ['UTC', Date_UTC, 7],
   ]);
 
   realmRec.Intrinsics['%Date%'] = cons;
