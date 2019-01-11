@@ -129,7 +129,7 @@ export function ToNumber(argument) {
     case 'Number':
       return argument;
     case 'String':
-      return new Value(MV_StringNumericLiteral(argument.stringValue()));
+      return MV_StringNumericLiteral(argument.stringValue());
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', 'Can not convert a Symbol value to a number');
     case 'Object': {

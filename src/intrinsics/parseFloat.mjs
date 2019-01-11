@@ -14,7 +14,7 @@ function ParseFloat([string = Value.undefined]) {
   const trimmedString = inputString.slice(searchNotStrWhiteSpaceChar(inputString));
   const mathFloat = MV_StrDecimalLiteral(trimmedString, true);
   // MV_StrDecimalLiteral handles -0 automatically.
-  return new Value(mathFloat);
+  return mathFloat;
 }
 
 export function CreateParseFloat(realmRec) {
