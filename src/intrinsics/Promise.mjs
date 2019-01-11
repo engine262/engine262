@@ -54,7 +54,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   promise.PromiseState = 'pending';
   promise.PromiseFulfillReactions = [];
   promise.PromiseRejectReactions = [];
-  promise.PromiseIsHandled = false;
+  promise.PromiseIsHandled = Value.false;
   const resolvingFunctions = CreateResolvingFunctions(promise);
   const completion = Call(executor, Value.undefined, [
     resolvingFunctions.Resolve, resolvingFunctions.Reject,

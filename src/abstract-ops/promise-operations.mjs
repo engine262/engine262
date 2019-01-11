@@ -166,7 +166,7 @@ function RejectPromise(promise, reason) {
   promise.PromiseFulfillReactions = undefined;
   promise.PromiseRejectReactions = undefined;
   promise.PromiseState = 'rejected';
-  if (promise.PromiseIsHandled === false) {
+  if (promise.PromiseIsHandled === Value.false) {
     HostPromiseRejectionTracker(promise, 'reject');
   }
   return TriggerPromiseReactions(reactions, reason);
@@ -270,12 +270,12 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   } else {
     Assert(promise.PromiseState === 'rejected');
     const reason = promise.PromiseResult;
-    if (promise.PromiseIsHandled === false) {
+    if (promise.PromiseIsHandled === Value.false) {
       HostPromiseRejectionTracker(promise, 'handler');
     }
     EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
   }
-  promise.PromiseIsHandled = true;
+  promise.PromiseIsHandled = Value.true;
   if (resultCapability === Value.undefined) {
     return Value.undefined;
   } else {
