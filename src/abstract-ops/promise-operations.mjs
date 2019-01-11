@@ -37,6 +37,15 @@ export class PromiseCapabilityRecord {
   }
 }
 
+// 25.6.1.2 #sec-promisereaction-records
+export class PromiseReactionRecord {
+  constructor() {
+    this.Capability = Value.undefined;
+    this.Type = Value.undefined;
+    this.Handler = Value.undefined;
+  }
+}
+
 // 25.6.1.3 #sec-createresolvingfunctions
 export function CreateResolvingFunctions(promise) {
   const alreadyResolved = { Value: false };
@@ -173,7 +182,7 @@ function TriggerPromiseReactions(reactions, argument) {
 
 // 25.6.2.1 #sec-promisereactionjob
 export function PromiseReactionJob(reaction, argument) {
-  // Assert: reaction is a PromiseReaction Record.
+  Assert(reaction instanceof PromiseReactionRecord);
   const promiseCapability = reaction.Capability;
   const type = reaction.Type;
   const handler = reaction.Handler;
@@ -242,16 +251,16 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   if (IsCallable(onRejected) === Value.false) {
     onRejected = Value.undefined;
   }
-  const fulfillReaction = {
+  const fulfillReaction = Object.assign(new PromiseReactionRecord(), {
     Capability: resultCapability,
     Type: 'Fulfill',
     Handler: onFulfilled,
-  };
-  const rejectReaction = {
+  });
+  const rejectReaction = Object.assign(new PromiseReactionRecord(), {
     Capability: resultCapability,
     Type: 'Reject',
     Handler: onRejected,
-  };
+  });
   if (promise.PromiseState === 'pending') {
     promise.PromiseFulfillReactions.push(fulfillReaction);
     promise.PromiseRejectReactions.push(rejectReaction);
