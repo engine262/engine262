@@ -25,34 +25,10 @@ import {
 } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
-export function PromiseResolve(C, x) {
-  Assert(Type(C) === 'Object');
-  if (IsPromise(x) === Value.true) {
-    const xConstructor = Q(Get(x, new Value('constructor')));
-    if (SameValue(xConstructor, C) === Value.true) {
-      return x;
-    }
-  }
-  const promiseCapability = Q(NewPromiseCapability(C));
-  Q(Call(promiseCapability.Resolve, Value.undefined, [x]));
-  return promiseCapability.Promise;
-}
+// This file covers abstract operations defined in
+// 25.6 #sec-promise-objects
 
-function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
-  const F = this;
-
-  const promiseCapability = F.Capability;
-  if (Type(promiseCapability.Resolve) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
-  }
-  if (Type(promiseCapability.Reject) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
-  }
-  promiseCapability.Resolve = resolve;
-  promiseCapability.Reject = reject;
-  return Value.undefined;
-}
-
+// 25.6.1.1 #sec-promisecapability-records
 export class PromiseCapabilityRecord {
   constructor() {
     this.Promise = Value.undefined;
@@ -61,6 +37,82 @@ export class PromiseCapabilityRecord {
   }
 }
 
+// 25.6.1.3 #sec-createresolvingfunctions
+export function CreateResolvingFunctions(promise) {
+  const alreadyResolved = { Value: false };
+  const stepsResolve = PromiseResolveFunctions;
+  const resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
+  SetFunctionLength(resolve, new Value(1));
+  resolve.Promise = promise;
+  resolve.AlreadyResolved = alreadyResolved;
+  const stepsReject = PromiseRejectFunctions;
+  const reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
+  SetFunctionLength(reject, new Value(1));
+  reject.Promise = promise;
+  reject.AlreadyResolved = alreadyResolved;
+  return {
+    Resolve: resolve,
+    Reject: reject,
+  };
+}
+
+// 25.6.1.3.1 #sec-promise-reject-functions
+function PromiseRejectFunctions([reason = Value.undefined]) {
+  const F = this;
+
+  Assert('Promise' in F && Type(F.Promise) === 'Object');
+  const promise = F.Promise;
+  const alreadyResolved = F.AlreadyResolved;
+  if (alreadyResolved.Value === true) {
+    return Value.undefined;
+  }
+  alreadyResolved.Value = true;
+  return RejectPromise(promise, reason);
+}
+
+// 25.6.1.3.2 #sec-promise-resolve-functions
+function PromiseResolveFunctions([resolution = Value.undefined]) {
+  const F = this;
+
+  Assert('Promise' in F && Type(F.Promise) === 'Object');
+  const promise = F.Promise;
+  const alreadyResolved = F.AlreadyResolved;
+  if (alreadyResolved.Value === true) {
+    return Value.undefined;
+  }
+  alreadyResolved.Value = true;
+  if (SameValue(resolution, promise) === Value.true) {
+    const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
+    return RejectPromise(promise, selfResolutionError);
+  }
+  if (Type(resolution) !== 'Object') {
+    return FulfillPromise(promise, resolution);
+  }
+
+  const then = Get(resolution, new Value('then'));
+  if (then instanceof AbruptCompletion) {
+    return RejectPromise(promise, then.Value);
+  }
+  const thenAction = then.Value;
+  if (IsCallable(thenAction) === Value.false) {
+    return FulfillPromise(promise, resolution);
+  }
+  EnqueueJob('PromiseJobs', PromiseResolveThenableJob, [promise, resolution, thenAction]);
+  return Value.undefined;
+}
+
+// 25.6.1.4 #sec-fulfillpromise
+function FulfillPromise(promise, value) {
+  Assert(promise.PromiseState === 'pending');
+  const reactions = promise.PromiseFulfillReactions;
+  promise.PromiseResult = value;
+  promise.PromiseFulfillReactions = undefined;
+  promise.PromiseRejectReactions = undefined;
+  promise.PromiseState = 'fulfilled';
+  return TriggerPromiseReactions(reactions, value);
+}
+
+// 25.6.1.5 #sec-newpromisecapability
 export function NewPromiseCapability(C) {
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
@@ -81,6 +133,45 @@ export function NewPromiseCapability(C) {
   return promiseCapability;
 }
 
+// 25.6.1.5.1 #sec-getcapabilitiesexecutor-functions
+function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
+  const F = this;
+
+  const promiseCapability = F.Capability;
+  if (Type(promiseCapability.Resolve) !== 'Undefined') {
+    return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
+  }
+  if (Type(promiseCapability.Reject) !== 'Undefined') {
+    return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
+  }
+  promiseCapability.Resolve = resolve;
+  promiseCapability.Reject = reject;
+  return Value.undefined;
+}
+
+// 25.6.1.7 #sec-rejectpromise
+function RejectPromise(promise, reason) {
+  Assert(promise.PromiseState === 'pending');
+  const reactions = promise.PromiseRejectReactions;
+  promise.PromiseResult = reason;
+  promise.PromiseFulfillReactions = undefined;
+  promise.PromiseRejectReactions = undefined;
+  promise.PromiseState = 'rejected';
+  if (promise.PromiseIsHandled === false) {
+    HostPromiseRejectionTracker(promise, 'reject');
+  }
+  return TriggerPromiseReactions(reactions, reason);
+}
+
+// 25.6.1.8 #sec-triggerpromisereactions
+function TriggerPromiseReactions(reactions, argument) {
+  reactions.forEach((reaction) => {
+    EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
+  });
+  return Value.undefined;
+}
+
+// 25.6.2.1 #sec-promisereactionjob
 export function PromiseReactionJob(reaction, argument) {
   // Assert: reaction is a PromiseReaction Record.
   const promiseCapability = reaction.Capability;
@@ -110,7 +201,8 @@ export function PromiseReactionJob(reaction, argument) {
   return status;
 }
 
-function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
+// 25.6.2.2 #sec-promiseresolvethenablejob
+function PromiseResolveThenableJob(promiseToResolve, thenable, then) {
   const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
   const thenCallResult = Call(then, thenable, [
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
@@ -122,95 +214,18 @@ function PromiseResolveTheableJob(promiseToResolve, thenable, then) {
   return thenCallResult;
 }
 
-function TriggerPromiseReactions(reactions, argument) {
-  reactions.forEach((reaction) => {
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
-  });
-  return Value.undefined;
-}
-
-function FulfillPromise(promise, value) {
-  Assert(promise.PromiseState === 'pending');
-  const reactions = promise.PromiseFulfillReactions;
-  promise.PromiseResult = value;
-  promise.PromiseFulfillReactions = undefined;
-  promise.PromiseRejectReactions = undefined;
-  promise.PromiseState = 'fulfilled';
-  return TriggerPromiseReactions(reactions, value);
-}
-
-function RejectPromise(promise, reason) {
-  Assert(promise.PromiseState === 'pending');
-  const reactions = promise.PromiseRejectReactions;
-  promise.PromiseResult = reason;
-  promise.PromiseFulfillReactions = undefined;
-  promise.PromiseRejectReactions = undefined;
-  promise.PromiseState = 'rejected';
-  if (promise.PromiseIsHandled === false) {
-    HostPromiseRejectionTracker(promise, 'reject');
+// 25.6.4.5.1 #sec-promise-resolve
+export function PromiseResolve(C, x) {
+  Assert(Type(C) === 'Object');
+  if (IsPromise(x) === Value.true) {
+    const xConstructor = Q(Get(x, new Value('constructor')));
+    if (SameValue(xConstructor, C) === Value.true) {
+      return x;
+    }
   }
-  return TriggerPromiseReactions(reactions, reason);
-}
-
-function PromiseResolveFunctions([resolution = Value.undefined]) {
-  const F = this;
-
-  Assert('Promise' in F && Type(F.Promise) === 'Object');
-  const promise = F.Promise;
-  const alreadyResolved = F.AlreadyResolved;
-  if (alreadyResolved.Value === true) {
-    return Value.undefined;
-  }
-  alreadyResolved.Value = true;
-  if (SameValue(resolution, promise) === Value.true) {
-    const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
-    return RejectPromise(promise, selfResolutionError);
-  }
-  if (Type(resolution) !== 'Object') {
-    return FulfillPromise(promise, resolution);
-  }
-
-  const then = Get(resolution, new Value('then'));
-  if (then instanceof AbruptCompletion) {
-    return RejectPromise(promise, then.Value);
-  }
-  const thenAction = then.Value;
-  if (IsCallable(thenAction) === Value.false) {
-    return FulfillPromise(promise, resolution);
-  }
-  EnqueueJob('PromiseJobs', PromiseResolveTheableJob, [promise, resolution, thenAction]);
-  return Value.undefined;
-}
-
-function PromiseRejectFunctions([reason = Value.undefined]) {
-  const F = this;
-
-  Assert('Promise' in F && Type(F.Promise) === 'Object');
-  const promise = F.Promise;
-  const alreadyResolved = F.AlreadyResolved;
-  if (alreadyResolved.Value === true) {
-    return Value.undefined;
-  }
-  alreadyResolved.Value = true;
-  return RejectPromise(promise, reason);
-}
-
-export function CreateResolvingFunctions(promise) {
-  const alreadyResolved = { Value: false };
-  const stepsResolve = PromiseResolveFunctions;
-  const resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
-  SetFunctionLength(resolve, new Value(1));
-  resolve.Promise = promise;
-  resolve.AlreadyResolved = alreadyResolved;
-  const stepsReject = PromiseRejectFunctions;
-  const reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
-  SetFunctionLength(reject, new Value(1));
-  reject.Promise = promise;
-  reject.AlreadyResolved = alreadyResolved;
-  return {
-    Resolve: resolve,
-    Reject: reject,
-  };
+  const promiseCapability = Q(NewPromiseCapability(C));
+  Q(Call(promiseCapability.Resolve, Value.undefined, [x]));
+  return promiseCapability.Promise;
 }
 
 // 25.6.5.4.1 #sec-performpromisethen
