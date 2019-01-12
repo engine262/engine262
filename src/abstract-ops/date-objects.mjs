@@ -51,9 +51,11 @@ export function TimeFromYear(y) {
   return new Value(msPerDay * DayFromYear(y).numberValue());
 }
 
+export const msPerAverageYear = 12 * 30.436875 * msPerDay;
+
 export function YearFromTime(t) {
   t = t.numberValue();
-  let year = Math.floor((t + 30.436875 * 86400000 / 2) / (30.436875 * 86400000 * 12)) + 1970;
+  let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
   if (TimeFromYear(new Value(year)).numberValue() > t) {
     year -= 1;
   }
