@@ -17,6 +17,9 @@ language/statements/with/let-identifier-with-newline.js
 // https://github.com/acornjs/acorn/issues/773
 language/expressions/template-literal/tv-line-continuation.js
 
+// https://github.com/acornjs/acorn/issues/775
+language/directive-prologue/14.1-16-s.js
+
 // TODO(8): Uses regexes.
 built-ins/Date/prototype/to*String/format.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
@@ -35,7 +38,9 @@ built-ins/String/prototype/split/S15.5.4.14_A1_T18.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T3.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T5.js
 language/expressions/typeof/null.js
+language/expressions/yield/rhs-regexp.js
 language/literals/regexp/**/*.js
+language/statements/class/subclass/builtin-objects/RegExp/**/*.js
 
 // TODO(7): Missing Date.
 built-ins/Date/*.js
@@ -65,6 +70,7 @@ built-ins/String/prototype/trimStart/*.js
 built-ins/String/raw/*.js
 
 // TODO: Missing {decode|encode}URI{Component}
+built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 built-ins/decodeURI/**/*.js
 built-ins/decodeURIComponent/**/*.js
 built-ins/encodeURI/**/*.js
@@ -93,16 +99,19 @@ built-ins/Number/prototype/toPrecision/*.js
 built-ins/Number/prototype/toString/*.js
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
 built-ins/TypedArray/prototype/toLocaleString/return-result.js
+language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // TODO: Object failures
-built-ins/Object/defineProperty/15.2.3.6-4-623.js
-built-ins/Object/defineProperty/15.2.3.6-4-624.js
-built-ins/Object/getOwnPropertyDescriptor/*.js
-built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-79.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-80.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js
 
 // Failing tests in language
 language/arguments-object/*-comma-spread-operator.js
-language/directive-prologue/14.1-16-s.js
 language/eval-code/direct/new.target-fn.js
 language/eval-code/direct/super-prop-method.js
 language/expressions/async-arrow-function/**/*.js
@@ -136,7 +145,6 @@ language/expressions/property-accessors/S11.2.1_A4_T9.js
 language/expressions/super/call-spread-mult-literal.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/expressions/yield/rhs-regexp.js
 language/global-code/script-decl-lex-restricted-global.js
 language/literals/string/line-continuation-double.js
 language/literals/string/line-continuation-single.js
@@ -147,8 +155,6 @@ language/statements/class/params-dflt-gen-meth-ref-arguments.js
 language/statements/class/params-dflt-gen-meth-static-ref-arguments.js
 language/statements/class/params-dflt-meth-ref-arguments.js
 language/statements/class/params-dflt-meth-static-ref-arguments.js
-language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
-language/statements/class/subclass/builtin-objects/RegExp/**/*.js
 language/statements/for-await-of/*.js
 language/statements/function/params-dflt-ref-arguments.js
 language/statements/generators/params-dflt-ref-arguments.js
