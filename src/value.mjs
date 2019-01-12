@@ -258,7 +258,11 @@ export class ArrayExoticObjectValue extends ObjectValue {
   }
 }
 
-export class FunctionValue extends ObjectValue {}
+export class FunctionValue extends ObjectValue {
+  static [Symbol.hasInstance](V) {
+    return V instanceof ObjectValue && typeof V.Call === 'function';
+  }
+}
 
 function nativeCall(F, argumentsList, thisArgument, newTarget) {
   return F.nativeFunction(argumentsList, {

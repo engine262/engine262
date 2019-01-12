@@ -3,7 +3,7 @@ import {
   HostPromiseRejectionTracker,
   surroundingAgent,
 } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { FunctionValue, Type, Value } from '../value.mjs';
 import {
   Assert,
   Call,
@@ -39,10 +39,15 @@ export class PromiseCapabilityRecord {
 
 // 25.6.1.2 #sec-promisereaction-records
 export class PromiseReactionRecord {
-  constructor() {
-    this.Capability = Value.undefined;
-    this.Type = Value.undefined;
-    this.Handler = Value.undefined;
+  constructor(O) {
+    Assert(O.Capability instanceof PromiseCapabilityRecord
+        || O.Capability === Value.undefined);
+    Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
+    Assert(O.Handler instanceof FunctionValue
+        || O.Handler === Value.undefined);
+    this.Capability = O.Capability;
+    this.Type = O.Type;
+    this.Handler = O.Handler;
   }
 }
 
@@ -251,12 +256,12 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   if (IsCallable(onRejected) === Value.false) {
     onRejected = Value.undefined;
   }
-  const fulfillReaction = Object.assign(new PromiseReactionRecord(), {
+  const fulfillReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
     Handler: onFulfilled,
   });
-  const rejectReaction = Object.assign(new PromiseReactionRecord(), {
+  const rejectReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
     Handler: onRejected,
