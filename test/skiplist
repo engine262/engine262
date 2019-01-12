@@ -37,17 +37,18 @@ language/expressions/typeof/null.js
 language/literals/regexp/**/*.js
 
 // TODO(7): Missing Date.
+built-ins/Date/*.js
+built-ins/Date/UTC/**/*.js
 built-ins/Date/parse/time-value-maximum-range.js
 built-ins/Date/parse/zero.js
 built-ins/Date/prototype/**/this-value-valid-date.js
 built-ins/Date/prototype/set*/*.js
 built-ins/Date/prototype/toISOString/*.js
-built-ins/Date/UTC/**/*.js
-built-ins/Date/*.js
 built-ins/Function/prototype/bind/15.3.4.5-2-9.js
 built-ins/Function/prototype/bind/S15.3.4.5_A5.js
 built-ins/Object/S15.2.2.1_A2_T5.js
 harness/assertRelativeDateMs.js
+language/statements/class/subclass/builtin-objects/Date/**/*.js
 
 // TODO(22): Missing String methods.
 built-ins/JSON/stringify/string-escape-ascii.js
@@ -74,6 +75,8 @@ built-ins/global/S10.2.3_A1.3_T2.js
 // TODO: Missing weak collections
 built-ins/WeakMap/**/*.js
 built-ins/WeakSet/**/*.js
+language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
+language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
 
 // TODO(46): Missing Number
 built-ins/Number/S9.3.1_A5_T1.js
@@ -143,11 +146,8 @@ language/statements/class/params-dflt-gen-meth-ref-arguments.js
 language/statements/class/params-dflt-gen-meth-static-ref-arguments.js
 language/statements/class/params-dflt-meth-ref-arguments.js
 language/statements/class/params-dflt-meth-static-ref-arguments.js
-language/statements/class/subclass/builtin-objects/Date/**/*.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 language/statements/class/subclass/builtin-objects/RegExp/**/*.js
-language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
-language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
 language/statements/for-await-of/*.js
 language/statements/function/params-dflt-ref-arguments.js
 language/statements/generators/params-dflt-ref-arguments.js
