@@ -109,7 +109,7 @@ export function PutValue(V, W) {
     if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
       return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferencedName(V), base));
     }
-    return new NormalCompletion(undefined);
+    return new NormalCompletion(Value.undefined);
   } else {
     return Q(base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V)));
   }
