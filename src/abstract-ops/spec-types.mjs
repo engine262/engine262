@@ -14,7 +14,7 @@ import {
   ObjectCreate,
   ToBoolean,
 } from './all.mjs';
-import { NormalCompletion, Q } from '../completion.mjs';
+import { NormalCompletion, Q, X } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
 // 6.2.5.1 IsAccessorDescriptor

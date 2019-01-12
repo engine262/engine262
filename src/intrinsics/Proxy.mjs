@@ -20,7 +20,7 @@ import {
   Type,
   Value,
 } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
 function ProxyCallSlot(thisArgument, argumentsList) {
