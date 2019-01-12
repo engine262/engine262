@@ -23,8 +23,11 @@ import {
   ToString,
 } from './all.mjs';
 import {
-  NormalCompletion, Q,
-  X,
+  InstanceofOperator,
+} from '../runtime-semantics/all.mjs';
+import {
+  NormalCompletion,
+  Q, X,
 } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -35,6 +38,7 @@ import { msg } from '../helpers.mjs';
 export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
+  // TODO: This should just return Q(O.Get(P, O))
   return new NormalCompletion(Q(O.Get(P, O)));
 }
 
@@ -91,6 +95,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
   if (success === Value.false) {
+    // TODO: throw with an error message
     return surroundingAgent.Throw('TypeError');
   }
   return success;
@@ -102,6 +107,7 @@ export function DefinePropertyOrThrow(O, P, desc) {
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
+    // TODO: throw with an error message
     return surroundingAgent.Throw('TypeError');
   }
   return success;
@@ -113,6 +119,7 @@ export function DeletePropertyOrThrow(O, P) {
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
   if (success === Value.false) {
+    // TODO: throw with an error message
     return surroundingAgent.Throw('TypeError');
   }
   return success;
@@ -122,7 +129,7 @@ export function DeletePropertyOrThrow(O, P) {
 export function GetMethod(V, P) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
-  if (Type(func) === 'Null' || Type(func) === 'Undefined') {
+  if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
   }
   if (IsCallable(func) === Value.false) {
@@ -143,7 +150,7 @@ export function HasOwnProperty(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
-  if (Type(desc) === 'Undefined') {
+  if (desc === Value.undefined) {
     return Value.false;
   }
   return Value.true;
@@ -192,7 +199,7 @@ export function SetIntegrityLevel(O, level) {
   } else if (level === 'frozen') {
     for (const k of keys) {
       const currentDesc = Q(O.GetOwnProperty(k));
-      if (Type(currentDesc) !== 'Undefined') {
+      if (currentDesc !== Value.undefined) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
           desc = Descriptor({ Configurable: Value.false });
@@ -217,7 +224,7 @@ export function TestIntegrityLevel(O, level) {
   const keys = Q(O.OwnPropertyKeys());
   for (const k of keys) {
     const currentDesc = Q(O.GetOwnProperty(k));
-    if (Type(currentDesc) !== 'Undefined') {
+    if (currentDesc !== Value.undefined) {
       if (currentDesc.Configurable === Value.true) {
         return Value.false;
       }
@@ -246,20 +253,22 @@ export function CreateArrayFromList(elements) {
 
 // 7.3.17 #sec-createlistfromarraylike
 export function CreateListFromArrayLike(obj, elementTypes) {
-  if (elementTypes === undefined) {
+  if (!elementTypes) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
   }
   if (Type(obj) !== 'Object') {
+    // TODO: throw with an error message
     return surroundingAgent.Throw('TypeError');
   }
   const lenProp = Q(Get(obj, new Value('length')));
-  const len = Q(ToLength(lenProp));
+  const len = Q(ToLength(lenProp)).numberValue();
   const list = [];
   let index = 0;
-  while (index < len.numberValue()) {
+  while (index < len) {
     const indexName = X(ToString(new Value(index)));
     const next = Q(Get(obj, indexName));
     if (!elementTypes.includes(Type(next))) {
+      // TODO: throw with an error message
       return surroundingAgent.Throw('TypeError');
     }
     list.push(next);
@@ -278,6 +287,55 @@ export function Invoke(V, P, argumentsList) {
   return Q(Call(func, V, argumentsList));
 }
 
+// 7.3.19 #sec-ordinaryhasinstance
+export function OrdinaryHasInstance(C, O) {
+  if (IsCallable(C) === Value.false) {
+    return Value.false;
+  }
+  if ('BoundTargetFunction' in C) {
+    const BC = C.BoundTargetFunction;
+    return Q(InstanceofOperator(O, BC));
+  }
+  if (Type(O) !== 'Object') {
+    return Value.false;
+  }
+  const P = Q(Get(C, new Value('prototype')));
+  if (Type(P) !== 'Object') {
+    // TODO: throw with an error message
+    return surroundingAgent.Throw('TypeError');
+  }
+  while (true) {
+    O = Q(O.GetPrototypeOf());
+    if (O === Value.null) {
+      return Value.false;
+    }
+    if (SameValue(P, O) === Value.true) {
+      return Value.true;
+    }
+  }
+}
+
+// 7.3.20 #sec-speciesconstructor
+export function SpeciesConstructor(O, defaultConstructor) {
+  Assert(Type(O) === 'Object');
+  const C = Q(Get(O, new Value('constructor')));
+  if (C === Value.undefined) {
+    return defaultConstructor;
+  }
+  if (Type(C) !== 'Object') {
+    // TODO: throw with an error message
+    return surroundingAgent.Throw('TypeError');
+  }
+  const S = Q(Get(C, wellKnownSymbols.species));
+  if (S === Value.undefined || S === Value.null) {
+    return defaultConstructor;
+  }
+  if (IsConstructor(S) === Value.true) {
+    return S;
+  }
+  // TODO: throw with an error message
+  return surroundingAgent.Throw('TypeError');
+}
 
 // 7.3.21 #sec-enumerableownpropertynames
 export function EnumerableOwnPropertyNames(O, kind) {
@@ -287,7 +345,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
   for (const key of ownKeys) {
     if (Type(key) === 'String') {
       const desc = Q(O.GetOwnProperty(key));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable === Value.true) {
+      if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
@@ -309,26 +367,6 @@ export function EnumerableOwnPropertyNames(O, kind) {
   return properties;
 }
 
-// 7.3.20 #sec-speciesconstructor
-export function SpeciesConstructor(O, defaultConstructor) {
-  Assert(Type(O) === 'Object');
-  const C = Q(Get(O, new Value('constructor')));
-  if (Type(C) === 'Undefined') {
-    return defaultConstructor;
-  }
-  if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  const S = Q(Get(C, wellKnownSymbols.species));
-  if (Type(S) === 'Undefined' || Type(S) === 'Null') {
-    return defaultConstructor;
-  }
-  if (IsConstructor(S) === Value.true) {
-    return S;
-  }
-  return surroundingAgent.Throw('TypeError');
-}
-
 // 7.3.22 #sec-getfunctionrealm
 export function GetFunctionRealm(obj) {
   Assert(IsCallable(obj) === Value.true);
@@ -336,14 +374,14 @@ export function GetFunctionRealm(obj) {
     return obj.Realm;
   }
 
-  if ('BoundThisFunction' in obj) {
-    const target = obj.BoundThisFunction;
+  if ('BoundTargetFunction' in obj) {
+    const target = obj.BoundTargetFunction;
     return Q(GetFunctionRealm(target));
   }
 
   if (obj instanceof ProxyExoticObjectValue) {
     if (Type(obj.ProxyHandler) === 'Null') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'GetFunctionRealm'));
     }
     const proxyTarget = obj.ProxyTarget;
     return Q(GetFunctionRealm(proxyTarget));
@@ -356,7 +394,7 @@ export function GetFunctionRealm(obj) {
 export function CopyDataProperties(target, source, excludedItems) {
   Assert(Type(target) === 'Object');
   Assert(excludedItems.every((i) => IsPropertyKey(i)));
-  if (Type(source) === 'Undefined' || Type(source) === 'Null') {
+  if (source === Value.undefined || source === Value.null) {
     return target;
   }
   const from = X(ToObject(source));
@@ -370,7 +408,7 @@ export function CopyDataProperties(target, source, excludedItems) {
     }
     if (excluded === false) {
       const desc = Q(from.GetOwnProperty(nextKey));
-      if (Type(desc) !== 'Undefined' && desc.Enumerable === Value.true) {
+      if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         const propValue = Q(Get(from, nextKey));
         X(CreateDataProperty(target, nextKey, propValue));
       }

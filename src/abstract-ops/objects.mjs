@@ -29,9 +29,6 @@ import {
   isArrayIndex,
   typedArrayInfo,
 } from './all.mjs';
-import {
-  InstanceofOperator,
-} from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
@@ -414,33 +411,6 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
     proto = realm.Intrinsics[intrinsicDefaultProto];
   }
   return proto;
-}
-
-// 7.3.19 #sec-ordinaryhasinstance
-export function OrdinaryHasInstance(C, O) {
-  if (IsCallable(C) === Value.false) {
-    return Value.false;
-  }
-  if ('BoundTargetFunction' in C) {
-    const BC = C.BoundTargetFunction;
-    return Q(InstanceofOperator(O, BC));
-  }
-  if (Type(O) !== 'Object') {
-    return Value.false;
-  }
-  const P = Q(Get(C, new Value('prototype')));
-  if (Type(P) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  while (true) {
-    O = Q(O.GetPrototypeOf());
-    if (Type(O) === 'Null') {
-      return Value.false;
-    }
-    if (SameValue(P, O) === Value.true) {
-      return Value.true;
-    }
-  }
 }
 
 // 9.4.5.7 #sec-integerindexedobjectcreate
