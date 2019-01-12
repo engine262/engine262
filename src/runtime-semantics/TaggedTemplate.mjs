@@ -9,11 +9,11 @@ import {
 } from '../abstract-ops/all.mjs';
 import { EvaluateCall } from './all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { IsInTailPosition, TemplateStrings } from '../static-semantics/all.mjs';
+import { IsInTailPosition, TemplateStrings_TemplateLiteral } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
 export function GetTemplateObject(templateLiteral) {
-  const rawStrings = TemplateStrings(templateLiteral, true).map(Value);
+  const rawStrings = TemplateStrings_TemplateLiteral(templateLiteral, true).map(Value);
   const realm = surroundingAgent.currentRealmRecord;
   const templateRegistry = realm.TemplateMap;
   for (const e of templateRegistry) {
@@ -21,7 +21,7 @@ export function GetTemplateObject(templateLiteral) {
       return e.Array;
     }
   }
-  const cookedStrings = TemplateStrings(templateLiteral, false).map(Value);
+  const cookedStrings = TemplateStrings_TemplateLiteral(templateLiteral, false).map(Value);
   const count = cookedStrings.length;
   Assert(count < (2 ** 32) - 1);
   const template = X(ArrayCreate(new Value(count)));

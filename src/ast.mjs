@@ -192,6 +192,25 @@ export function isTemplateLiteral(node) {
   return node.type === 'TemplateLiteral';
 }
 
+// #prod-NoSubstitutionTemplate
+export function isNoSubstitutionTemplate(node) {
+  return isTemplateLiteral(node) && node.expressions.length === 0;
+}
+
+// #prod-SubstitutionTemplate
+export function isSubstitutionTemplate(node) {
+  return isTemplateLiteral(node) && node.expressions.length !== 0;
+}
+
+export function unrollTemplateLiteral(TemplateLiteral) {
+  const all = [TemplateLiteral.quasis[0]];
+  for (let i = 1; i < TemplateLiteral.quasis.length; i += 1) {
+    all.push(TemplateLiteral.expressions[i - 1]);
+    all.push(TemplateLiteral.quasis[i]);
+  }
+  return all;
+}
+
 export function isTaggedTemplate(node) {
   return node.type === 'TaggedTemplateExpression';
 }
