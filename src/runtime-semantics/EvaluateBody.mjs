@@ -34,7 +34,7 @@ import {
   BoundNames_FunctionDeclaration,
   ContainsExpression_FormalParameters,
   IsConstantDeclaration,
-  IsSimpleParameterList,
+  IsSimpleParameterList_FormalParameters,
   LexicallyDeclaredNames_AsyncFunctionBody,
   LexicallyDeclaredNames_ConciseBody,
   LexicallyDeclaredNames_FunctionBody,
@@ -80,7 +80,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   const formals = func.FormalParameters;
   const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const hasDuplicates = parameterNames.some((e) => parameterNames.indexOf(e) !== parameterNames.lastIndexOf(e));
-  const simpleParameterList = IsSimpleParameterList(formals);
+  const simpleParameterList = IsSimpleParameterList_FormalParameters(formals);
   const hasParameterExpressions = ContainsExpression_FormalParameters(formals);
 
   let varNames;
