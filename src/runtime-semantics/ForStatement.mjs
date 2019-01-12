@@ -164,7 +164,7 @@ function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
     return Q(EnumerateObjectProperties(obj));
   } else {
     Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate');
-    const iteratorHint = iterationKind === 'async-iterate' ? 'async' : 'hint';
+    const iteratorHint = iterationKind === 'async-iterate' ? 'async' : 'sync';
     return Q(GetIterator(exprValue, iteratorHint));
   }
 }
