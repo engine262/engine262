@@ -23,6 +23,7 @@ import { OutOfRange, msg } from '../helpers.mjs';
 
 // 7.1.1 #sec-toprimitive
 export function ToPrimitive(input, PreferredType) {
+  Assert(input instanceof Value);
   if (Type(input) === 'Object') {
     let hint;
     if (PreferredType === undefined) {
@@ -34,12 +35,12 @@ export function ToPrimitive(input, PreferredType) {
       hint = new Value('number');
     }
     const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
-    if (Type(exoticToPrim) !== 'Undefined') {
+    if (exoticToPrim !== Value.undefined) {
       const result = Q(Call(exoticToPrim, input, [hint]));
       if (Type(result) !== 'Object') {
         return result;
       }
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
     }
     if (hint.stringValue() === 'default') {
       hint = new Value('number');
@@ -50,12 +51,9 @@ export function ToPrimitive(input, PreferredType) {
 }
 
 // 7.1.1.1 #sec-ordinarytoprimitive
-export function OrdinaryToPrimitive(
-  O, hint,
-) {
+export function OrdinaryToPrimitive(O, hint) {
   Assert(Type(O) === 'Object');
-  Assert(Type(hint) === 'String'
-         && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
+  Assert(Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
   let methodNames;
   if (hint.stringValue() === 'string') {
     methodNames = [new Value('toString'), new Value('valueOf')];
@@ -71,46 +69,36 @@ export function OrdinaryToPrimitive(
       }
     }
   }
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
 }
 
 // 7.1.2 #sec-toboolean
 export function ToBoolean(argument) {
-  if (Type(argument) === 'Undefined') {
-    return Value.false;
-  }
-
-  if (Type(argument) === 'Null') {
-    return Value.false;
-  }
-
-  if (Type(argument) === 'Boolean') {
-    return argument;
-  }
-
-  if (Type(argument) === 'Number') {
-    if (argument.numberValue() === 0 || argument.isNaN()) {
+  const type = Type(argument);
+  switch (type) {
+    case 'Undefined':
       return Value.false;
-    }
-    return Value.true;
-  }
-
-  if (Type(argument) === 'String') {
-    if (argument.stringValue().length > 0) {
+    case 'Null':
+      return Value.false;
+    case 'Boolean':
+      return argument;
+    case 'Number':
+      if (argument.numberValue() === 0 || argument.isNaN()) {
+        return Value.false;
+      }
       return Value.true;
-    }
-    return Value.false;
+    case 'String':
+      if (argument.stringValue().length === 0) {
+        return Value.false;
+      }
+      return Value.true;
+    case 'Symbol':
+      return Value.true;
+    case 'Object':
+      return Value.true;
+    default:
+      throw new OutOfRange('ToBoolean', { type, argument });
   }
-
-  if (Type(argument) === 'Symbol') {
-    return Value.true;
-  }
-
-  if (Type(argument) === 'Object') {
-    return Value.true;
-  }
-
-  throw new OutOfRange('ToBoolean', argument);
 }
 
 // 7.1.3 #sec-tonumber
@@ -131,13 +119,13 @@ export function ToNumber(argument) {
     case 'String':
       return MV_StringNumericLiteral(argument.stringValue());
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError', 'Can not convert a Symbol value to a number');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
     case 'Object': {
       const primValue = Q(ToPrimitive(argument, 'Number'));
       return Q(ToNumber(primValue));
     }
     default:
-      throw new OutOfRange('ToNumber', argument);
+      throw new OutOfRange('ToNumber', { type, argument });
   }
 }
 
@@ -163,12 +151,12 @@ export function ToInteger(argument) {
 // 7.1.5 #sec-toint32
 export function ToInt32(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod(int, 2 ** 32);
-  if (int32bit > (2 ** 31)) {
+  if (int32bit >= (2 ** 31)) {
     return new Value(int32bit - (2 ** 32));
   }
   return new Value(int32bit);
@@ -177,7 +165,7 @@ export function ToInt32(argument) {
 // 7.1.6 #sec-touint32
 export function ToUint32(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
@@ -188,12 +176,12 @@ export function ToUint32(argument) {
 // 7.1.7 #sec-toint16
 export function ToInt16(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
   const int16bit = mod(int, 2 ** 16);
-  if (int16bit > (2 ** 15)) {
+  if (int16bit >= (2 ** 15)) {
     return new Value(int16bit - (2 ** 16));
   }
   return new Value(int16bit);
@@ -202,7 +190,7 @@ export function ToInt16(argument) {
 // 7.1.8 #sec-touint16
 export function ToUint16(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
@@ -213,7 +201,7 @@ export function ToUint16(argument) {
 // 7.1.9 #sec-toint8
 export function ToInt8(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
@@ -227,7 +215,7 @@ export function ToInt8(argument) {
 // 7.1.10 #sec-touint8
 export function ToUint8(argument) {
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number) || !Number.isFinite(number) || number === 0) {
+  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
   const int = sign(number) * Math.floor(Math.abs(number));
@@ -237,21 +225,21 @@ export function ToUint8(argument) {
 
 // 7.1.11 #sec-touint8clamp
 export function ToUint8Clamp(argument) {
-  const number = Q(ToNumber(argument));
-  if (number.isNaN()) {
+  const number = Q(ToNumber(argument)).numberValue();
+  if (Number.isNaN(number)) {
     return new Value(0);
   }
-  if (number.numberValue() <= 0) {
+  if (number <= 0) {
     return new Value(0);
   }
-  if (number.numberValue() >= 255) {
+  if (number >= 255) {
     return new Value(255);
   }
-  const f = Math.floor(number.numberValue());
-  if (f + 0.5 < number.numberValue()) {
+  const f = Math.floor(number);
+  if (f + 0.5 < number) {
     return new Value(f + 1);
   }
-  if (number.numberValue() < f + 0.5) {
+  if (number < f + 0.5) {
     return new Value(f);
   }
   if (f % 2 === 1) {
@@ -275,13 +263,13 @@ export function ToString(argument) {
     case 'String':
       return argument;
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
     case 'Object': {
       const primValue = Q(ToPrimitive(argument, 'String'));
       return Q(ToString(primValue));
     }
     default:
-      throw new OutOfRange('ToString', argument);
+      throw new OutOfRange('ToString', { type, argument });
   }
 }
 
@@ -291,11 +279,12 @@ export function NumberToString(m) {
     return new Value('NaN');
   }
   const mVal = m.numberValue();
-  if (m.numberValue() === 0) {
+  if (mVal === 0) {
     return new Value('0');
   }
   if (mVal < 0) {
-    return new Value(`-${NumberToString(new Value(-mVal)).stringValue()}`);
+    const str = X(NumberToString(new Value(-mVal))).stringValue();
+    return new Value(`-${str}`);
   }
   if (m.isInfinity()) {
     return new Value('Infinity');
@@ -309,9 +298,9 @@ export function ToObject(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return surroundingAgent.Throw('TypeError', 'cannot convert undefined to object');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
     case 'Null':
-      return surroundingAgent.Throw('TypeError', 'cannot convert null to object');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
     case 'Boolean': {
       const obj = ObjectCreate(surroundingAgent.intrinsic('%BooleanPrototype%'));
       obj.BooleanData = argument;
@@ -332,7 +321,7 @@ export function ToObject(argument) {
     case 'Object':
       return argument;
     default:
-      throw new OutOfRange('ToObject', argument);
+      throw new OutOfRange('ToObject', { type, argument });
   }
 }
 
@@ -342,7 +331,7 @@ export function ToPropertyKey(argument) {
   if (Type(key) === 'Symbol') {
     return key;
   }
-  return ToString(key);
+  return X(ToString(key));
 }
 
 // 7.1.15 #sec-tolength
@@ -379,7 +368,7 @@ export function ToIndex(value) {
     }
     index = X(ToLength(integerIndex));
     if (SameValueZero(integerIndex, index) === Value.false) {
-      return surroundingAgent.Throw('RangeError', 'Index out of range');
+      return surroundingAgent.Throw('RangeError', msg('OutOfRange', 'Index'));
     }
   }
   return index;
