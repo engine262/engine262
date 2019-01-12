@@ -5,6 +5,16 @@ import {
   unrollTemplateLiteral,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import {
+  TV_NoSubstitutionTemplate,
+  TV_TemplateHead,
+  TV_TemplateMiddle,
+  TV_TemplateTail,
+  TRV_NoSubstitutionTemplate,
+  TRV_TemplateHead,
+  TRV_TemplateMiddle,
+  TRV_TemplateTail,
+} from './all.mjs';
 
 // 12.2.9.2 #sec-static-semantics-templatestrings
 //   TemplateLiteral : NoSubstitutionTemplate
@@ -16,17 +26,15 @@ export function TemplateStrings_TemplateLiteral(TemplateLiteral, raw) {
     case isNoSubstitutionTemplate(TemplateLiteral): {
       let string;
       if (raw === false) {
-        // string = TV_NoSubstitutionTemplate(TemplateLiteral);
-        string = TemplateLiteral.quasis[0].value.cooked;
+        string = TV_NoSubstitutionTemplate(TemplateLiteral);
       } else {
-        // string = TRV_NoSubstitutionTemplate(TemplateLiteral);
-        string = TemplateLiteral.quasis[0].value.raw;
+        string = TRV_NoSubstitutionTemplate(TemplateLiteral);
       }
       return [string];
     }
 
     case isSubstitutionTemplate(TemplateLiteral):
-      return TemplateStrings_SubstitutionTemplate(TemplateLiteral);
+      return TemplateStrings_SubstitutionTemplate(TemplateLiteral, raw);
 
     default:
       throw new OutOfRange('TemplateStrings_TemplateLiteral', TemplateLiteral);
@@ -40,11 +48,9 @@ export function TemplateStrings_SubstitutionTemplate(SubstitutionTemplate, raw) 
 
   let head;
   if (raw === false) {
-    // head = TV_TemplateHead(TemplateHead);
-    head = TemplateHead.value.cooked;
+    head = TV_TemplateHead(TemplateHead);
   } else {
-    // head = TRV_TemplateHead(TemplateHead);
-    head = TemplateHead.value.raw;
+    head = TRV_TemplateHead(TemplateHead);
   }
   const tail = TemplateStrings_TemplateSpans(TemplateSpans, raw);
   return [head, ...tail];
@@ -64,11 +70,9 @@ export function TemplateStrings_TemplateSpans(TemplateSpans, raw) {
   const TemplateTail = TemplateSpans[TemplateSpans.length - 1];
   let tail;
   if (raw === false) {
-    // tail = TV_TemplateTail(TemplateTail);
-    tail = TemplateTail.value.cooked;
+    tail = TV_TemplateTail(TemplateTail);
   } else {
-    // tail = TRV_TemplateTail(TemplateTail);
-    tail = TemplateTail.value.raw;
+    tail = TRV_TemplateTail(TemplateTail);
   }
 
   return [...middle, tail];
@@ -85,11 +89,9 @@ export function TemplateStrings_TemplateMiddleList(TemplateMiddleList, raw) {
     const TemplateMiddle = TemplateMiddleList[i];
     let last;
     if (raw === false) {
-      // last = TV_TemplateMiddle(TemplateMiddle);
-      last = TemplateMiddle.value.cooked;
+      last = TV_TemplateMiddle(TemplateMiddle);
     } else {
-      // last = TRV_TemplateMiddle(TemplateMiddle);
-      last = TemplateMiddle.value.raw;
+      last = TRV_TemplateMiddle(TemplateMiddle);
     }
     front.push(last);
   }

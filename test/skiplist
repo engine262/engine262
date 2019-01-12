@@ -13,6 +13,9 @@ language/statements/for-of/let-identifier-with-newline.js
 language/statements/if/let-identifier-with-newline.js
 language/statements/labeled/let-identifier-with-newline.js
 
+// https://github.com/acornjs/acorn/issues/773
+language/expressions/template-literal/tv-line-continuation.js
+
 // TODO(8): Uses regexes.
 built-ins/Date/prototype/to*String/format.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
@@ -128,8 +131,6 @@ language/expressions/property-accessors/S11.2.1_A4_T9.js
 language/expressions/super/call-spread-mult-literal.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/expressions/tagged-template/invalid-escape-sequences.js
-language/expressions/template-literal/tv-line-continuation.js
 language/expressions/typeof/*.js
 language/expressions/yield/rhs-regexp.js
 language/global-code/script-decl-lex-restricted-global.js

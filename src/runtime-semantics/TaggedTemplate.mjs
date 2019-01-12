@@ -12,6 +12,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { IsInTailPosition, TemplateStrings_TemplateLiteral } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
+// 12.2.9.4 #sec-gettemplateobject
 export function GetTemplateObject(templateLiteral) {
   const rawStrings = TemplateStrings_TemplateLiteral(templateLiteral, true).map(Value);
   const realm = surroundingAgent.currentRealmRecord;
@@ -21,7 +22,7 @@ export function GetTemplateObject(templateLiteral) {
       return e.Array;
     }
   }
-  const cookedStrings = TemplateStrings_TemplateLiteral(templateLiteral, false).map(Value);
+  const cookedStrings = TemplateStrings_TemplateLiteral(templateLiteral, false).map((v) => (v === undefined ? Value.undefined : new Value(v)));
   const count = cookedStrings.length;
   Assert(count < (2 ** 32) - 1);
   const template = X(ArrayCreate(new Value(count)));
@@ -30,33 +31,34 @@ export function GetTemplateObject(templateLiteral) {
   while (index < count) {
     const prop = X(ToString(new Value(index)));
     const cookedValue = cookedStrings[index];
-    template.DefineOwnProperty(prop, Descriptor({
+    X(template.DefineOwnProperty(prop, Descriptor({
       Value: cookedValue,
       Writable: Value.false,
       Enumerable: Value.true,
       Configurable: Value.false,
-    }));
+    })));
     const rawValue = rawStrings[index];
-    rawObj.DefineOwnProperty(prop, Descriptor({
+    X(rawObj.DefineOwnProperty(prop, Descriptor({
       Value: rawValue,
       Writable: Value.false,
       Enumerable: Value.true,
       Configurable: Value.false,
-    }));
+    })));
     index += 1;
   }
-  SetIntegrityLevel(rawObj, 'frozen');
-  template.DefineOwnProperty(new Value('raw'), Descriptor({
+  X(SetIntegrityLevel(rawObj, 'frozen'));
+  X(template.DefineOwnProperty(new Value('raw'), Descriptor({
     Value: rawObj,
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
-  }));
-  SetIntegrityLevel(template, 'frozen');
+  })));
+  X(SetIntegrityLevel(template, 'frozen'));
   templateRegistry.push({ Site: templateLiteral, Array: template });
   return template;
 }
 
+// 12.3.7.1 #sec-tagged-templates-runtime-semantics-evaluation
 export function* Evaluate_TaggedTemplate({
   tag: Expression,
   quasi: TemplateLiteral,

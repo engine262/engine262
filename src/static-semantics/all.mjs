@@ -25,6 +25,8 @@ export * from './LexicallyScopedDeclarations.mjs';
 export * from './MV.mjs';
 export * from './ModuleRequests.mjs';
 export * from './NonConstructorMethodDefinitions.mjs';
+export * from './TRV.mjs';
+export * from './TV.mjs';
 export * from './TemplateStrings.mjs';
 export * from './TopLevelLexicallyDeclaredNames.mjs';
 export * from './TopLevelLexicallyScopedDeclarations.mjs';
