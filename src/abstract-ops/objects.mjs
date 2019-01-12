@@ -471,7 +471,7 @@ export function IntegerIndexedElementGet(O, index) {
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
   }
-  if (!IsInteger(index)) {
+  if (IsInteger(index) === Value.false) {
     return Value.undefined;
   }
   index = index.numberValue();
@@ -505,7 +505,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
   }
-  if (!IsInteger(index)) {
+  if (IsInteger(index) === Value.false) {
     return Value.false;
   }
   if (Object.is(index.numberValue(), -0)) {

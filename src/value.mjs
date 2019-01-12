@@ -531,7 +531,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
         if (IsDetachedBuffer(buffer)) {
           return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
         }
-        if (!IsInteger(numericIndex)) {
+        if (IsInteger(numericIndex) === Value.false) {
           return Value.false;
         }
         numericIndex = numericIndex.numberValue();
@@ -558,7 +558,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
     if (Type(P) === 'String') {
       const numericIndex = X(CanonicalNumericIndexString(P));
       if (numericIndex !== Value.undefined) {
-        if (!IsInteger(numericIndex)) {
+        if (IsInteger(numericIndex) === Value.false) {
           return Value.false;
         }
         if (Object.is(numericIndex.numberValue(), -0)) {

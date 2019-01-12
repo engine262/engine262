@@ -55,9 +55,9 @@ export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return surroundingAgent.Throw('TypeError', 'undefined cannot be convered to an object');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
     case 'Null':
-      return surroundingAgent.Throw('TypeError', 'null cannot be converted to an object');
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
     case 'Boolean':
     case 'Number':
     case 'String':
@@ -65,7 +65,7 @@ export function RequireObjectCoercible(argument) {
     case 'Object':
       return argument;
     default:
-      throw new OutOfRange('RequireObjectCoercible', argument);
+      throw new OutOfRange('RequireObjectCoercible', { type, argument });
   }
 }
 
@@ -115,6 +115,20 @@ export function IsExtensible(O) {
   return O.IsExtensible();
 }
 
+// 7.2.6 #sec-isinteger
+export function IsInteger(argument) {
+  if (Type(argument) !== 'Number') {
+    return Value.false;
+  }
+  if (argument.isNaN() || argument.isInfinity()) {
+    return Value.false;
+  }
+  if (Math.floor(Math.abs(argument.numberValue())) !== Math.abs(argument.numberValue())) {
+    return Value.false;
+  }
+  return Value.true;
+}
+
 // 7.2.7 IsPropertyKey
 export function IsPropertyKey(argument) {
   if (Type(argument) === 'String') {
@@ -139,6 +153,13 @@ export function IsRegExp(argument) {
     return Value.true;
   }
   return Value.false;
+}
+
+// 7.2.9 #sec-isstringprefix
+export function IsStringPrefix(p, q) {
+  Assert(Type(p) === 'String');
+  Assert(Type(q) === 'String');
+  return q.stringValue().startsWith(p.stringValue());
 }
 
 // 7.2.10 SameValue
@@ -177,10 +198,15 @@ export function SameValueZero(x, y) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
-    // If x is +0 and y is -0, return true.
-    // If x is -0 and y is +0, return true.
-    // If x is the same Number value as y, return true.
-    if (x.numberValue() === y.numberValue()) {
+    const xVal = x.numberValue();
+    const yVal = y.numberValue();
+    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+      return Value.true;
+    }
+    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+      return Value.true;
+    }
+    if (xVal === yVal) {
       return Value.true;
     }
     return Value.false;
@@ -220,45 +246,6 @@ export function SameValueNonNumber(x, y) {
   }
 
   return x === y ? Value.true : Value.false;
-}
-
-// 25.6.1.6 #sec-ispromise
-export function IsPromise(x) {
-  if (Type(x) !== 'Object') {
-    return Value.false;
-  }
-  if (!('PromiseState' in x)) {
-    return Value.false;
-  }
-  return Value.true;
-}
-
-// 7.2.6 #sec-isinteger
-export function IsInteger(argument) {
-  if (Type(argument) !== 'Number') {
-    return false;
-  }
-  if (argument.isNaN() || argument.isInfinity()) {
-    return false;
-  }
-  if (Math.floor(Math.abs(argument.numberValue())) !== argument.numberValue()) {
-    return false;
-  }
-  return true;
-}
-
-// 7.2.9 #sec-isstringprefix
-export function IsStringPrefix(p, q) {
-  Assert(Type(p) === 'String');
-  Assert(Type(q) === 'String');
-  return q.stringValue().startsWith(p.stringValue());
-}
-
-// 9.1.6.2 #sec-iscompatiblepropertydescriptor
-export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
-  return ValidateAndApplyPropertyDescriptor(
-    Value.undefined, Value.undefined, Extensible, Desc, Current,
-  );
 }
 
 // 7.2.13 #sec-abstract-relational-comparison
@@ -329,10 +316,10 @@ export function AbstractEqualityComparison(x, y) {
   if (Type(x) === Type(y)) {
     return StrictEqualityComparison(x, y);
   }
-  if (Type(x) === 'Null' && Type(y) === 'Undefined') {
+  if (x === Value.null && y === Value.undefined) {
     return Value.true;
   }
-  if (Type(x) === 'Undefined' && Type(y) === 'Null') {
+  if (x === Value.undefined && y === Value.null) {
     return Value.true;
   }
   if (Type(x) === 'Number' && Type(y) === 'String') {
@@ -368,13 +355,36 @@ export function StrictEqualityComparison(x, y) {
     if (y.isNaN()) {
       return Value.false;
     }
-    // If x is the same Number value as y, return true.
-    // If x is +0 and y is -0, return true.
-    // If x is -0 and y is +0, return true.
-    if (x.numberValue() === y.numberValue()) {
+    const xVal = x.numberValue();
+    const yVal = y.numberValue();
+    if (xVal === yVal) {
+      return Value.true;
+    }
+    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+      return Value.true;
+    }
+    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
       return Value.true;
     }
     return Value.false;
   }
   return SameValueNonNumber(x, y);
+}
+
+// 9.1.6.2 #sec-iscompatiblepropertydescriptor
+export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
+  return ValidateAndApplyPropertyDescriptor(
+    Value.undefined, Value.undefined, Extensible, Desc, Current,
+  );
+}
+
+// 25.6.1.6 #sec-ispromise
+export function IsPromise(x) {
+  if (Type(x) !== 'Object') {
+    return Value.false;
+  }
+  if (!('PromiseState' in x)) {
+    return Value.false;
+  }
+  return Value.true;
 }

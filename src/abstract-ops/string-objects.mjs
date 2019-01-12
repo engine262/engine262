@@ -40,7 +40,7 @@ export function StringGetOwnProperty(S, P) {
   if (Type(index) === 'Undefined') {
     return Value.undefined;
   }
-  if (IsInteger(index) === false) {
+  if (IsInteger(index) === Value.false) {
     return Value.undefined;
   }
   if (Object.is(index.numberValue(), -0)) {
