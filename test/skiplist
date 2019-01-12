@@ -5,7 +5,7 @@ built-ins/parseInt/S15.1.2.2_A8.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
-// https://github.com/acornjs/acorn/issues/772
+// https://github.com/acornjs/acorn/issues/774
 language/statements/while/let-identifier-with-newline.js
 language/statements/for/let-identifier-with-newline.js
 language/statements/for-in/let-identifier-with-newline.js
