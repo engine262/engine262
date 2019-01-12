@@ -366,7 +366,7 @@ function ArrayProto_splice(args, { thisValue }) {
     actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
   }
   if (len + insertCount - actualDeleteCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
   }
   const A = Q(ArraySpeciesCreate(O, new Value(actualDeleteCount)));
   let k = 0;

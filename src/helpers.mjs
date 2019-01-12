@@ -77,7 +77,7 @@ function inlineInspect(V) {
 
 const messages = {
   AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
-  ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds for a safe integer',
+  ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds of an integer index',
   BufferDetachKeyMismatch: (k, b) => `${inlineInspect(k)} is not the [[ArrayBufferDetachKey]] of ${inlineInspect(b)}`,
   BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
   CannotConvertSymbol: (t) => `Cannot convert a Symbol value to a ${t}`,
