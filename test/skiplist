@@ -59,6 +59,10 @@ language/statements/class/subclass/builtin-objects/Date/**/*.js
 
 // TODO(22): Missing String methods.
 built-ins/JSON/stringify/string-escape-ascii.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-79.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-80.js
 built-ins/String/prototype/match/*.js
 built-ins/String/prototype/matchAll/*.js
 built-ins/String/prototype/search/*.js
@@ -68,6 +72,9 @@ built-ins/String/prototype/trimEnd/*.js
 built-ins/String/prototype/trimStart/*.js
 
 // TODO: Missing {decode|encode}URI{Component}
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 built-ins/decodeURI/**/*.js
 built-ins/decodeURIComponent/**/*.js
@@ -98,15 +105,6 @@ built-ins/Number/prototype/toString/*.js
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
 built-ins/TypedArray/prototype/toLocaleString/return-result.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
-
-// TODO: Object failures
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-79.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-80.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js
 
 // Failing tests in language
 language/arguments-object/*-comma-spread-operator.js
