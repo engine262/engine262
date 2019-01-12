@@ -6,12 +6,13 @@ language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
 // https://github.com/acornjs/acorn/issues/774
-language/statements/while/let-identifier-with-newline.js
-language/statements/for/let-identifier-with-newline.js
 language/statements/for-in/let-identifier-with-newline.js
 language/statements/for-of/let-identifier-with-newline.js
+language/statements/for/let-identifier-with-newline.js
 language/statements/if/let-identifier-with-newline.js
 language/statements/labeled/let-identifier-with-newline.js
+language/statements/while/let-identifier-with-newline.js
+language/statements/with/let-identifier-with-newline.js
 
 // https://github.com/acornjs/acorn/issues/773
 language/expressions/template-literal/tv-line-continuation.js
@@ -159,4 +160,3 @@ language/statements/if/if-stmt-else-gen.js
 language/statements/switch/*.js
 language/statements/try/S12.14_A15.js
 language/statements/try/S12.14_A5.js
-language/statements/with/*.js

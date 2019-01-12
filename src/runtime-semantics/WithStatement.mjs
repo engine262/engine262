@@ -21,7 +21,7 @@ export function* Evaluate_WithStatement({
   const obj = Q(ToObject(actualVal));
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const newEnv = NewObjectEnvironment(obj, oldEnv);
-  newEnv.withEnvironment = true;
+  newEnv.EnvironmentRecord.withEnvironment = true;
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   const C = EnsureCompletion(yield* Evaluate(Statement));
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;

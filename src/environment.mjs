@@ -160,7 +160,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
       return Value.false;
     }
 
-    if (this.withEnvironment === false) {
+    if (envRec.withEnvironment === false) {
       return Value.true;
     }
 
