@@ -214,8 +214,18 @@ function DateProto_setFullYear([year = Value.undefined, month, date], { thisValu
   let t = Q(thisTimeValue(thisValue));
   t = t.isNaN() ? new Value(0) : LocalTime(t);
   const y = Q(ToNumber(year));
-  const m = month ? Q(ToNumber(month)) : MonthFromTime(t);
-  const dt = date ? Q(ToNumber(date)) : DateFromTime(t);
+  let m;
+  if (month !== undefined) {
+    m = Q(ToNumber(month));
+  } else {
+    m = MonthFromTime(t);
+  }
+  let dt;
+  if (date !== undefined) {
+    dt = Q(ToNumber(date));
+  } else {
+    dt = DateFromTime(t);
+  }
   const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
   const u = TimeClip(UTC(newDate));
   thisValue.DateValue = u;
@@ -226,9 +236,24 @@ function DateProto_setFullYear([year = Value.undefined, month, date], { thisValu
 function DateProto_setHours([hour = Value.undefined, min, sec, ms], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const h = Q(ToNumber(hour));
-  const m = min ? Q(ToNumber(min)) : MinFromTime(t);
-  const s = sec ? Q(ToNumber(sec)) : SecFromTime(t);
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let m;
+  if (min !== undefined) {
+    m = Q(ToNumber(min));
+  } else {
+    m = MinFromTime(t);
+  }
+  let s;
+  if (sec !== undefined) {
+    s = Q(ToNumber(sec));
+  } else {
+    s = SecFromTime(t);
+  }
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const date = MakeDate(Day(t), MakeTime(h, m, s, milli));
   const u = TimeClip(UTC(date));
   thisValue.DateValue = u;
@@ -249,8 +274,18 @@ function DateProto_setMilliseconds([ms = Value.undefined], { thisValue }) {
 function DateProto_setMinutes([min = Value.undefined, sec, ms], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const m = Q(ToNumber(min));
-  const s = sec ? Q(ToNumber(sec)) : SecFromTime(t);
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let s;
+  if (sec !== undefined) {
+    s = Q(ToNumber(sec));
+  } else {
+    s = SecFromTime(t);
+  }
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
   const u = TimeClip(UTC(date));
   thisValue.DateValue = u;
@@ -261,7 +296,12 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], { thisValue }) {
 function DateProto_setMonth([month = Value.undefined, date], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const m = Q(ToNumber(month));
-  const dt = date ? Q(ToNumber(date)) : DateFromTime(t);
+  let dt;
+  if (date !== undefined) {
+    dt = Q(ToNumber(date));
+  } else {
+    dt = DateFromTime(t);
+  }
   const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
   const u = TimeClip(UTC(newDate));
   thisValue.DateValue = u;
@@ -272,7 +312,12 @@ function DateProto_setMonth([month = Value.undefined, date], { thisValue }) {
 function DateProto_setSeconds([sec = Value.undefined, ms], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const s = Q(ToNumber(sec));
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
   const u = TimeClip(UTC(date));
   thisValue.DateValue = u;
@@ -305,8 +350,18 @@ function DateProto_setUTCFullYear([year = Value.undefined, month, date], { thisV
     t = new Value(0);
   }
   const y = Q(ToNumber(year));
-  const m = month ? Q(ToNumber(month)) : MonthFromTime(t);
-  const dt = date ? Q(ToNumber(date)) : DateFromTime(t);
+  let m;
+  if (month !== undefined) {
+    m = Q(ToNumber(month));
+  } else {
+    m = MonthFromTime(t);
+  }
+  let dt;
+  if (date !== undefined) {
+    dt = Q(ToNumber(date));
+  } else {
+    dt = DateFromTime(t);
+  }
   const newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
   const v = TimeClip(newDate);
   thisValue.DateValue = v;
@@ -317,9 +372,24 @@ function DateProto_setUTCFullYear([year = Value.undefined, month, date], { thisV
 function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const h = Q(ToNumber(hour));
-  const m = min ? Q(ToNumber(min)) : MinFromTime(t);
-  const s = sec ? Q(ToNumber(sec)) : SecFromTime(t);
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let m;
+  if (min !== undefined) {
+    m = Q(ToNumber(min));
+  } else {
+    m = MinFromTime(t);
+  }
+  let s;
+  if (sec !== undefined) {
+    s = Q(ToNumber(sec));
+  } else {
+    s = SecFromTime(t);
+  }
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const newDate = MakeDate(Day(t), MakeTime(h, m, s, milli));
   const v = TimeClip(newDate);
   thisValue.DateValue = v;
@@ -340,8 +410,18 @@ function DateProto_setUTCMilliseconds([ms = Value.undefined], { thisValue }) {
 function DateProto_setUTCMinutes([min = Value.undefined, sec, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(ToNumber(min));
-  const s = sec ? Q(ToNumber(sec)) : SecFromTime(t);
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let s;
+  if (sec !== undefined) {
+    s = Q(ToNumber(sec));
+  } else {
+    s = SecFromTime(t);
+  }
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
   const v = TimeClip(date);
   thisValue.DateValue = v;
@@ -352,7 +432,12 @@ function DateProto_setUTCMinutes([min = Value.undefined, sec, ms], { thisValue }
 function DateProto_setUTCMonth([month = Value.undefined, date], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(ToNumber(month));
-  const dt = date ? Q(ToNumber(date)) : DateFromTime(t);
+  let dt;
+  if (date !== undefined) {
+    dt = Q(ToNumber(date));
+  } else {
+    dt = DateFromTime(t);
+  }
   const newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
   const v = TimeClip(newDate);
   thisValue.DateValue = v;
@@ -363,7 +448,12 @@ function DateProto_setUTCMonth([month = Value.undefined, date], { thisValue }) {
 function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const s = Q(ToNumber(sec));
-  const milli = ms ? Q(ToNumber(ms)) : msFromTime(t);
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = msFromTime(t);
+  }
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
   const v = TimeClip(date);
   thisValue.DateValue = v;

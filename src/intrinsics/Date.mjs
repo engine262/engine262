@@ -31,11 +31,36 @@ function DateConstructor(args, { NewTarget }) {
     } else {
       const y = Q(ToNumber(year));
       const m = Q(ToNumber(month));
-      const dt = date ? Q(ToNumber(date)) : new Value(1);
-      const h = hours ? Q(ToNumber(hours)) : new Value(0);
-      const min = minutes ? Q(ToNumber(minutes)) : new Value(0);
-      const s = seconds ? Q(ToNumber(seconds)) : new Value(0);
-      const milli = ms ? Q(ToNumber(ms)) : new Value(0);
+      let dt;
+      if (date !== undefined) {
+        dt = Q(ToNumber(date));
+      } else {
+        dt = new Value(1);
+      }
+      let h;
+      if (hours !== undefined) {
+        h = Q(ToNumber(hours));
+      } else {
+        h = new Value(0);
+      }
+      let min;
+      if (minutes !== undefined) {
+        min = Q(ToNumber(minutes));
+      } else {
+        min = new Value(0);
+      }
+      let s;
+      if (seconds !== undefined) {
+        s = Q(ToNumber(seconds));
+      } else {
+        s = new Value(0);
+      }
+      let milli;
+      if (ms !== undefined) {
+        milli = Q(ToNumber(ms));
+      } else {
+        milli = new Value(0);
+      }
       let yr;
       if (y.isNaN()) {
         yr = new Value(NaN);
@@ -107,12 +132,42 @@ function Date_parse([string = Value.undefined]) {
 // 20.3.3.4 #sec-date.utc
 function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]) {
   const y = Q(ToNumber(year));
-  const m = month ? Q(ToNumber(month)) : new Value(0);
-  const dt = date ? Q(ToNumber(date)) : new Value(1);
-  const h = hours ? Q(ToNumber(hours)) : new Value(0);
-  const min = minutes ? Q(ToNumber(minutes)) : new Value(0);
-  const s = seconds ? Q(ToNumber(seconds)) : new Value(0);
-  const milli = ms ? Q(ToNumber(ms)) : new Value(0);
+  let m;
+  if (month !== undefined) {
+    m = Q(ToNumber(month));
+  } else {
+    m = new Value(0);
+  }
+  let dt;
+  if (date !== undefined) {
+    dt = Q(ToNumber(date));
+  } else {
+    dt = new Value(1);
+  }
+  let h;
+  if (hours !== undefined) {
+    h = Q(ToNumber(hours));
+  } else {
+    h = new Value(0);
+  }
+  let min;
+  if (minutes !== undefined) {
+    min = Q(ToNumber(minutes));
+  } else {
+    min = new Value(0);
+  }
+  let s;
+  if (seconds !== undefined) {
+    s = Q(ToNumber(seconds));
+  } else {
+    s = new Value(0);
+  }
+  let milli;
+  if (ms !== undefined) {
+    milli = Q(ToNumber(ms));
+  } else {
+    milli = new Value(0);
+  }
 
   let yr;
   if (y.isNaN()) {
