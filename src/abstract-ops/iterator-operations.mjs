@@ -132,9 +132,9 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   if (ret === Value.undefined) {
     return Completion(completion);
   }
-  let innerResult = Q(Call(ret, iterator, []));
+  let innerResult = EnsureCompletion(Call(ret, iterator, []));
   if (innerResult.Type === 'normal') {
-    innerResult = yield* Await(innerResult.Value);
+    innerResult = EnsureCompletion(yield* Await(innerResult.Value));
   }
   if (completion.Type === 'throw') {
     return Completion(completion);

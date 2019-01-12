@@ -6,6 +6,7 @@ language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
 // https://github.com/acornjs/acorn/issues/774
+language/statements/for-await-of/let-identifier-with-newline.js
 language/statements/for-in/let-identifier-with-newline.js
 language/statements/for-of/let-identifier-with-newline.js
 language/statements/for/let-identifier-with-newline.js
@@ -152,7 +153,6 @@ language/statements/class/params-dflt-gen-meth-ref-arguments.js
 language/statements/class/params-dflt-gen-meth-static-ref-arguments.js
 language/statements/class/params-dflt-meth-ref-arguments.js
 language/statements/class/params-dflt-meth-static-ref-arguments.js
-language/statements/for-await-of/*.js
 language/statements/function/params-dflt-ref-arguments.js
 language/statements/generators/params-dflt-ref-arguments.js
 language/statements/if/cptn-no-else-false.js

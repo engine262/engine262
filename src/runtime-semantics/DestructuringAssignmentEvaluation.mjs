@@ -119,6 +119,10 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
   }
 
   const iteratorRecord = Q(GetIterator(value));
+  // ArrayAssignmentPattern : `[` `]`
+  if (AssignmentElementList.length === 0 && Elision === undefined && AssignmentRestProperty === undefined) {
+    return Q(IteratorClose(iteratorRecord, new NormalCompletion(undefined)));
+  }
   let status;
   if (AssignmentElementList.length > 0) {
     status = yield* IteratorDestructuringAssignmentEvaluation_AssignmentElementList(AssignmentElementList, iteratorRecord);
@@ -145,10 +149,6 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(ArrayAssignme
   }
   if (AssignmentRestProperty !== undefined) {
     status = yield* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(AssignmentRestProperty, iteratorRecord);
-  }
-  // ArrayAssignmentPattern : `[` `]`
-  if (status === undefined) {
-    return Q(IteratorClose(iteratorRecord, new NormalCompletion(undefined)));
   }
   if (iteratorRecord.Done === Value.false) {
     return Q(IteratorClose(iteratorRecord, status));
