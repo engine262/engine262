@@ -33,6 +33,7 @@ built-ins/String/prototype/replace/S15.5.4.11_A12.js
 built-ins/String/prototype/split/S15.5.4.14_A1_T18.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T3.js
 built-ins/String/prototype/split/S15.5.4.14_A2_T5.js
+language/expressions/typeof/null.js
 language/literals/regexp/**/*.js
 
 // TODO(7): Missing Date.
@@ -131,7 +132,6 @@ language/expressions/property-accessors/S11.2.1_A4_T9.js
 language/expressions/super/call-spread-mult-literal.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/expressions/typeof/*.js
 language/expressions/yield/rhs-regexp.js
 language/global-code/script-decl-lex-restricted-global.js
 language/literals/string/line-continuation-double.js
