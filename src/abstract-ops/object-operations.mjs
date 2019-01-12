@@ -244,7 +244,8 @@ export function CreateArrayFromList(elements) {
   const array = X(ArrayCreate(new Value(0)));
   let n = 0;
   for (const e of elements) {
-    const status = CreateDataProperty(array, X(ToString(new Value(n))), e);
+    const nStr = X(ToString(new Value(n)));
+    const status = X(CreateDataProperty(array, nStr, e));
     Assert(status === Value.true);
     n += 1;
   }

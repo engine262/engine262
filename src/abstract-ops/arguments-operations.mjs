@@ -34,7 +34,8 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    CreateDataProperty(obj, X(ToString(new Value(index))), val);
+    const idxStr = X(ToString(new Value(index)));
+    X(CreateDataProperty(obj, idxStr, val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
@@ -101,7 +102,8 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    CreateDataProperty(obj, X(ToString(new Value(index))), val);
+    const idxStr = X(ToString(new Value(index)));
+    X(CreateDataProperty(obj, idxStr, val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({

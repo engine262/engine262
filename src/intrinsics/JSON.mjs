@@ -249,7 +249,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   if (IsCallable(reviver) === Value.true) {
     const root = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
     const rootName = new Value('');
-    const status = CreateDataProperty(root, rootName, unfiltered);
+    const status = X(CreateDataProperty(root, rootName, unfiltered));
     Assert(status === Value.true);
     return Q(InternalizeJSONProperty(root, rootName));
   } else {
@@ -476,7 +476,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     gap = '';
   }
   const wrapper = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  const status = CreateDataProperty(wrapper, new Value(''), value);
+  const status = X(CreateDataProperty(wrapper, new Value(''), value));
   Assert(status === Value.true);
   return Q(SerializeJSONProperty(new Value(''), wrapper));
 }

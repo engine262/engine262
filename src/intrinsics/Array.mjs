@@ -59,7 +59,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const array = ArrayCreate(new Value(0), proto);
     let intLen;
     if (Type(len) !== 'Number') {
-      const defineStatus = CreateDataProperty(array, new Value('0'), len);
+      const defineStatus = X(CreateDataProperty(array, new Value('0'), len));
       Assert(defineStatus === Value.true);
       intLen = new Value(1);
     } else {
@@ -83,7 +83,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     while (k < numberOfArgs) {
       const Pk = ToString(new Value(k));
       const itemK = items[k];
-      const defineStatus = CreateDataProperty(array, Pk, itemK);
+      const defineStatus = X(CreateDataProperty(array, Pk, itemK));
       Assert(defineStatus === Value.true);
       k += 1;
     }

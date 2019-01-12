@@ -115,8 +115,8 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   SetFunctionLength(revoker, new Value(0));
   revoker.RevocableProxy = p;
   const result = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
-  CreateDataProperty(result, new Value('proxy'), p);
-  CreateDataProperty(result, new Value('revoke'), revoker);
+  X(CreateDataProperty(result, new Value('proxy'), p));
+  X(CreateDataProperty(result, new Value('revoke'), revoker));
   return result;
 }
 

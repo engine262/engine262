@@ -29,9 +29,9 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
       return nextIndex;
     }
     const nextValue = Q(IteratorValue(next));
-    const status = CreateDataProperty(
-      array, ToString(ToUint32(new Value(nextIndex))), nextValue,
-    );
+    const idxNum = X(ToUint32(new Value(nextIndex)));
+    const idxStr = X(ToString(idxNum));
+    const status = X(CreateDataProperty(array, idxStr, nextValue));
     Assert(status === Value.true);
     nextIndex += 1;
   }
@@ -40,7 +40,9 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
 function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
   const initResult = yield* Evaluate(AssignmentExpression);
   const initValue = Q(GetValue(initResult));
-  const created = CreateDataProperty(array, ToString(ToUint32(new Value(nextIndex))), initValue);
+  const idxNum = X(ToUint32(new Value(nextIndex)));
+  const idxStr = X(ToString(idxNum));
+  const created = X(CreateDataProperty(array, idxStr, initValue));
   Assert(created === Value.true);
   return nextIndex + 1;
 }

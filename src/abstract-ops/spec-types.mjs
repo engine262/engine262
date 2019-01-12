@@ -63,22 +63,22 @@ export function FromPropertyDescriptor(Desc) {
   }
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   if (Desc.Value !== undefined) {
-    CreateDataProperty(obj, new Value('value'), Desc.Value);
+    X(CreateDataProperty(obj, new Value('value'), Desc.Value));
   }
   if (Desc.Writable !== undefined) {
-    CreateDataProperty(obj, new Value('writable'), Desc.Writable);
+    X(CreateDataProperty(obj, new Value('writable'), Desc.Writable));
   }
   if (Desc.Get !== undefined) {
-    CreateDataProperty(obj, new Value('get'), Desc.Get);
+    X(CreateDataProperty(obj, new Value('get'), Desc.Get));
   }
   if (Desc.Set !== undefined) {
-    CreateDataProperty(obj, new Value('set'), Desc.Set);
+    X(CreateDataProperty(obj, new Value('set'), Desc.Set));
   }
   if (Desc.Enumerable !== undefined) {
-    CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable);
+    X(CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable));
   }
   if (Desc.Configurable !== undefined) {
-    CreateDataProperty(obj, new Value('configurable'), Desc.Configurable);
+    X(CreateDataProperty(obj, new Value('configurable'), Desc.Configurable));
   }
   // Assert: All of the above CreateDataProperty operations return true.
   return obj;
