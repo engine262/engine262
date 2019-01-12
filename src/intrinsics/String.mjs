@@ -80,12 +80,14 @@ function String_fromCodePoint(codePoints) {
 function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
-  const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
+  const rawProp = Q(Get(cooked, new Value('raw')))
+  const raw = Q(ToObject(rawProp));
   const lenProp = Q(Get(raw, new Value('length')));
   const literalSegments = Q(ToLength(lenProp)).numberValue();
   if (literalSegments <= 0) {
     return new Value('');
   }
+  // Not sure why the spec uses a List, but this is really just a String.
   const stringElements = [];
   let nextIndex = 0;
   while (true) {

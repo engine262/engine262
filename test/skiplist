@@ -66,9 +66,6 @@ built-ins/String/prototype/toLocaleUpperCase/*.js
 built-ins/String/prototype/trimEnd/*.js
 built-ins/String/prototype/trimStart/*.js
 
-// TODO(24): Broken String.raw
-built-ins/String/raw/*.js
-
 // TODO: Missing {decode|encode}URI{Component}
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
 built-ins/decodeURI/**/*.js
