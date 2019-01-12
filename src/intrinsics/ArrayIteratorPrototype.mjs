@@ -21,12 +21,12 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 function ArrayIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', '%ArrayIteratorPrototype%.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'Array Iterator', O));
   }
   if (!('IteratedObject' in O)
       || !('ArrayIteratorNextIndex' in O)
       || !('ArrayIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', '%ArrayIteratorPrototype%.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'Array Iterator', O));
   }
   const a = O.IteratedObject;
   if (Type(a) === 'Undefined') {

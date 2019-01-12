@@ -20,10 +20,10 @@ import { msg } from '../helpers.mjs';
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.exec'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('RegExpMatcher' in R)) {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.exec'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const S = Q(ToString(string));
   return Q(RegExpBuiltinExec(R, S));
@@ -53,13 +53,13 @@ function RegExpBuiltinExec(/* R, S */) {
 function RegExpProto_dotAllGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.dotAll'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.dotAll'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('s')) {
@@ -72,7 +72,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
 function RegExpProto_flagsGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.flags'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   let result = '';
   const global = ToBoolean(Q(Get(R, new Value('global'))));
@@ -106,13 +106,13 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
 function RegExpProto_globalGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.global'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.global'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('g')) {
@@ -125,13 +125,13 @@ function RegExpProto_globalGetter(args, { thisValue }) {
 function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.ignoreCase'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.ignoreCase'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('i')) {
@@ -149,13 +149,13 @@ function RegExpProto_match(/* [string], { thisValue } */) {
 function RegExpProto_multilineGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.multiline'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.multiline'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('m')) {
@@ -178,13 +178,13 @@ function RegExpProto_search(/* [string], { thisValue } */) {
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.source'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalSource' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return new Value('(?:)');
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.source'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   Assert('OriginalFlags' in R);
   // const src = R.OriginalSource;
@@ -202,13 +202,13 @@ function RegExpProto_split(/* [string, limit], { thisValue } */) {
 function RegExpProto_stickyGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.sticky'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.sticky'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('y')) {
@@ -226,7 +226,7 @@ function RegExpProto_test(/* [S], { thisValue } */) {
 function RegExpProto_toString(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.toString'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const pattern = Q(ToString(Q(Get(R, new Value('source')))));
   const flags = Q(ToString(Q(Get(R, new Value('flags')))));
@@ -238,13 +238,13 @@ function RegExpProto_toString(args, { thisValue }) {
 function RegExpProto_unicodeGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.unicode'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'RegExp.prototype.unicode'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('u')) {

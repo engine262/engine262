@@ -19,10 +19,10 @@ export function CreateStringIterator(string) {
 function StringIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'String Iterator.prototype.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'String Iterator', O));
   }
   if (!('IteratedString' in O && 'StringIteratorNextIndex' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'String Iterator.prototype.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'String Iterator', O));
   }
   const s = O.IteratedString;
   if (s === Value.undefined) {

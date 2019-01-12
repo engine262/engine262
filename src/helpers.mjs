@@ -86,7 +86,6 @@ const messages = {
   ConstructorRequiresNew: (n) => `${n} constructor requires new`,
   CouldNotResolveModule: (s) => `Could not resolve module ${inlineInspect(s)}`,
   DataViewOOB: () => 'Offset is outside the bounds of the DataView',
-  IncompatibleReceiver: (m) => `${m} called on incompatible receiver`,
   InvalidHint: (v) => `Invalid hint: ${inlineInspect(v)}`,
   InvalidRegExpFlags: (f) => `Invalid RegExp flags: ${f}`,
   NegativeIndex: (n = 'Index') => `${n} cannot be negative`,

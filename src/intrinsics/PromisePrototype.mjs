@@ -53,7 +53,7 @@ function CatchFinallyFunctions([reason = Value.undefined]) {
 function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (Type(promise) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Promise.prototype.finally'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Promise', promise));
   }
   const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   Assert(IsConstructor(C) === Value.true);
@@ -80,7 +80,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
 function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
   if (IsPromise(promise) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Promise.prototype.then'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Promise', promise));
   }
   const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   const resultCapability = Q(NewPromiseCapability(C));

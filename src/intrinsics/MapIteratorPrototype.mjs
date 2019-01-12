@@ -11,10 +11,10 @@ import { msg } from '../helpers.mjs';
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Map Iterator.prototype.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map Iterator', O));
   }
   if (!('Map' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Map Iterator.prototype.next'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map Iterator', O));
   }
   const m = O.Map;
   let index = O.MapNextIndex;

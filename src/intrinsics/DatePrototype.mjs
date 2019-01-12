@@ -38,7 +38,7 @@ export function thisTimeValue(value) {
   if (Type(value) === 'Object' && 'DateValue' in value) {
     return value.DateValue;
   }
-  return surroundingAgent.Throw('TypeError', 'this is not a Date object');
+  return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', value));
 }
 
 // 20.3.4.2 #sec-date.prototype.getdate
@@ -464,7 +464,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
 function DateProto_toDateString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toDateString'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -589,7 +589,7 @@ export function ToDateString(tv) {
 function DateProto_toTimeString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toTimeString'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -603,7 +603,7 @@ function DateProto_toTimeString(args, { thisValue }) {
 function DateProto_toUTCString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype.toUTCString'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -625,7 +625,7 @@ function DateProto_valueOf(args, { thisValue }) {
 function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Date.prototype[@@toPrimitive]'));
+    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
   }
   let tryFirst;
   if (Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {

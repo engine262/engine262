@@ -157,7 +157,7 @@ export function AsyncGeneratorEnqueue(generator, completion) {
   Assert(completion instanceof Completion);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
-    const badGeneratorError = surroundingAgent.Throw('TypeError', msg('IncompatibleReceiver', 'Async Generator method')).Value;
+    const badGeneratorError = surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'AsyncGenerator', generator)).Value;
     X(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]));
     return promiseCapability.Promise;
   }
