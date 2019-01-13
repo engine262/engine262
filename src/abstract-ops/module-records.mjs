@@ -16,11 +16,11 @@ import {
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
 import { Evaluate_Module } from '../evaluator.mjs';
 import {
-  VarScopedDeclarations_ModuleBody,
-  LexicallyScopedDeclarations_ModuleItemList,
+  BoundNames_ModuleItem,
   BoundNames_VariableDeclaration,
-  BoundNames_Declaration,
   IsConstantDeclaration,
+  LexicallyScopedDeclarations_Module,
+  VarScopedDeclarations_ModuleBody,
 } from '../static-semantics/all.mjs';
 import {
   isFunctionDeclaration,
@@ -114,9 +114,9 @@ export function ModuleDeclarationEnvironmentSetup(module) {
       }
     }
   }
-  const lexDeclarations = LexicallyScopedDeclarations_ModuleItemList(code);
+  const lexDeclarations = LexicallyScopedDeclarations_Module(code);
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_Declaration(d).map(Value)) {
+    for (const dn of BoundNames_ModuleItem(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
         Q(envRec.CreateImmutableBinding(dn, Value.true));
       } else {

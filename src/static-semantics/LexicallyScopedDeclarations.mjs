@@ -19,9 +19,10 @@ import {
   isStatementListItem,
 } from '../ast.mjs';
 import {
+  DeclarationPart_Declaration,
+  DeclarationPart_HoistableDeclaration,
   TopLevelLexicallyScopedDeclarations_StatementList,
 } from './all.mjs';
-import { DeclarationPart_Declaration } from './DeclarationPart.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // 13.2.6 #sec-block-static-semantics-lexicallyscopeddeclarations
@@ -123,10 +124,16 @@ export const LexicallyScopedDeclarations_AsyncConciseBody = LexicallyScopedDecla
 //   ScriptBody : StatementList
 export const LexicallyScopedDeclarations_ScriptBody = TopLevelLexicallyScopedDeclarations_StatementList;
 
-// ExportDeclaration :
-//   `export` `*` FromClause `;`
-//   `export` ExportClause FromClause `;`
-//   `export` ExportClause `;`
+// 15.2.3.8 #sec-exports-static-semantics-lexicallyscopeddeclarations
+//   ExportDeclaration :
+//     `export` `*` FromClause `;`
+//     `export` ExportClause FromClause `;`
+//     `export` ExportClause `;`
+//     `export` VariableStatement
+//     `export` Declaration
+//     `export` `default` HoistableDeclaration
+//     `export` `default` ClassDeclaration
+//     `export` `default` AssignmentExpression `;`
 export function LexicallyScopedDeclarations_ExportDeclaration(ExportDeclaration) {
   switch (true) {
     case isExportDeclarationWithStar(ExportDeclaration):
@@ -135,9 +142,9 @@ export function LexicallyScopedDeclarations_ExportDeclaration(ExportDeclaration)
     case isExportDeclarationWithVariable(ExportDeclaration):
       return [];
     case isExportDeclarationWithDeclaration(ExportDeclaration):
-      return [ExportDeclaration.declaration];
+      return [DeclarationPart_Declaration(ExportDeclaration.declaration)];
     case isExportDeclarationWithDefaultAndHoistable(ExportDeclaration):
-      return [ExportDeclaration.declaration];
+      return [DeclarationPart_HoistableDeclaration(ExportDeclaration.declaration)];
     case isExportDeclarationWithDefaultAndClass(ExportDeclaration):
       return [ExportDeclaration.declaration];
     case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
@@ -147,21 +154,46 @@ export function LexicallyScopedDeclarations_ExportDeclaration(ExportDeclaration)
   }
 }
 
+// 15.2.1.12 #sec-module-semantics-static-semantics-lexicallyscopeddeclarations
+//   ModuleItem : ImportDeclaration
+//
+// (implicit)
+//   ModuleItem :
+//     ExportDeclaration
+//     StatementListItem
+export function LexicallyScopedDeclarations_ModuleItem(ModuleItem) {
+  switch (true) {
+    case isImportDeclaration(ModuleItem):
+      return [];
+    case isExportDeclaration(ModuleItem):
+      return LexicallyScopedDeclarations_ExportDeclaration(ModuleItem);
+    case isStatementListItem(ModuleItem):
+      return LexicallyScopedDeclarations_StatementListItem(ModuleItem);
+    default:
+      throw new OutOfRange('LexicallyScopedDeclarations_ModuleItem', ModuleItem);
+  }
+}
+
+// 15.2.1.12 #sec-module-semantics-static-semantics-lexicallyscopeddeclarations
+//   ModuleItemList : ModuleItemList ModuleItem
+//
+// (implicit)
+//   ModuleItemList : ModuleItem
 export function LexicallyScopedDeclarations_ModuleItemList(ModuleItemList) {
   const declarations = [];
   for (const ModuleItem of ModuleItemList) {
-    switch (true) {
-      case isImportDeclaration(ModuleItem):
-        break;
-      case isExportDeclaration(ModuleItem):
-        declarations.push(...LexicallyScopedDeclarations_ExportDeclaration(ModuleItem));
-        break;
-      case isStatementListItem(ModuleItem):
-        declarations.push(...LexicallyScopedDeclarations_StatementListItem(ModuleItem));
-        break;
-      default:
-        throw new OutOfRange('LexicallyScopedDeclarations_ModuleItemList');
-    }
+    declarations.push(...LexicallyScopedDeclarations_ModuleItem(ModuleItem));
   }
   return declarations;
 }
+
+// (implicit)
+//   ModuleBody : ModuleItemList
+export const LexicallyScopedDeclarations_ModuleBody = LexicallyScopedDeclarations_ModuleItemList;
+
+// 15.2.1.12 #sec-module-semantics-static-semantics-lexicallyscopeddeclarations
+//   Module : [empty]
+//
+// (implicit)
+//   Module : ModuleBody
+export const LexicallyScopedDeclarations_Module = LexicallyScopedDeclarations_ModuleBody;

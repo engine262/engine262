@@ -11,23 +11,25 @@ import {
   isBindingRestElement,
   isBindingRestProperty,
   isClassDeclaration,
+  isDeclaration,
+  isExportDeclaration,
+  isExportDeclarationWithDeclaration,
+  isExportDeclarationWithDefaultAndClass,
+  isExportDeclarationWithDefaultAndExpression,
+  isExportDeclarationWithDefaultAndHoistable,
+  isExportDeclarationWithExport,
+  isExportDeclarationWithExportAndFrom,
+  isExportDeclarationWithStar,
+  isExportDeclarationWithVariable,
   isFormalParameter,
   isFunctionRestParameter,
   isHoistableDeclaration,
+  isImportDeclaration,
+  isImportDeclarationWithClause,
+  isImportDeclarationWithSpecifierOnly,
   isLexicalDeclaration,
   isObjectBindingPattern,
   isSingleNameBinding,
-  isImportDeclaration,
-  isImportDeclarationWithClause,
-  isExportDeclaration,
-  isExportDeclarationWithStar,
-  isExportDeclarationWithVariable,
-  isExportDeclarationWithDeclaration,
-  isExportDeclarationWithExport,
-  isExportDeclarationWithExportAndFrom,
-  isExportDeclarationWithDefaultAndHoistable,
-  isExportDeclarationWithDefaultAndClass,
-  isExportDeclarationWithDefaultAndExpression,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -391,8 +393,6 @@ export function BoundNames_ClassDeclaration(ClassDeclaration) {
 //     HoistableDeclaration
 //     ClassDeclaration
 //     LexicalDeclaration
-//
-//  ExportDeclaration
 export function BoundNames_Declaration(Declaration) {
   switch (true) {
     case isHoistableDeclaration(Declaration):
@@ -401,8 +401,6 @@ export function BoundNames_Declaration(Declaration) {
       return BoundNames_ClassDeclaration(Declaration);
     case isLexicalDeclaration(Declaration):
       return BoundNames_LexicalDeclaration(Declaration);
-    case isExportDeclaration(Declaration):
-      return BoundNames_ExportDeclaration(Declaration);
     default:
       throw new OutOfRange('BoundNames_Declaration', Declaration);
   }
@@ -412,24 +410,34 @@ export function BoundNames_Declaration(Declaration) {
 //   ImportedBinding : BindingIdentifier
 export const BoundNames_ImportedBinding = BoundNames_BindingIdentifier;
 
-//  ImportDeclaration :
-//   `import` ImportClause FromClause `;`
-//   `import` ModuleSpecifier `;`
+// 15.2.2.2 #sec-imports-static-semantics-boundnames
+//   ImportDeclaration :
+//     `import` ImportClause FromClause `;`
+//     `import` ModuleSpecifier `;`
 export function BoundNames_ImportDeclaration(ImportDeclaration) {
   switch (true) {
     case isImportDeclarationWithClause(ImportDeclaration):
+      // return BoundNames_ImportClause(ImportDeclaration.specifiers);
       return ImportDeclaration.specfiers.map((s) => s.local);
-    case isImportDeclaration(ImportDeclaration):
+
+    case isImportDeclarationWithSpecifierOnly(ImportDeclaration):
       return [];
+
     default:
       throw new OutOfRange('BoundNames_ImportDeclaration', ImportDeclaration);
   }
 }
 
-// ExportDeclaration :
-//   `export` `*` FromClause `;`
-//   `export` ExportClause FromClause `;`
-//   `export` ExportClause `;`
+// 15.2.3.2 #sec-exports-static-semantics-boundnames
+//   ExportDeclaration :
+//     `export` `*` FromClause `;`
+//     `export` ExportClause FromClause `;`
+//     `export` ExportClause `;`
+//     `export` VariableStatement
+//     `export` Declaration
+//     `export` `default` HoistableDeclaration
+//     `export` `default` ClassDeclaration
+//     `export` `default` AssignmentExpression `;`
 export function BoundNames_ExportDeclaration(ExportDeclaration) {
   switch (true) {
     case isExportDeclarationWithStar(ExportDeclaration):
@@ -458,5 +466,28 @@ export function BoundNames_ExportDeclaration(ExportDeclaration) {
       return ['*default*'];
     default:
       throw new OutOfRange('BoundNames_ExportDeclaration', ExportDeclaration);
+  }
+}
+
+// (implicit)
+//   ModuleItem :
+//     ImportDeclaration
+//     ExportDeclaration
+//     StatementListItem
+//
+//   StatementListItem : Declaration
+export function BoundNames_ModuleItem(ModuleItem) {
+  switch (true) {
+    case isImportDeclaration(ModuleItem):
+      return BoundNames_ImportDeclaration(ModuleItem);
+
+    case isExportDeclaration(ModuleItem):
+      return BoundNames_ExportDeclaration(ModuleItem);
+
+    case isDeclaration(ModuleItem):
+      return BoundNames_Declaration(ModuleItem);
+
+    default:
+      throw new OutOfRange('BoundNames_ModuleItem', ModuleItem);
   }
 }
