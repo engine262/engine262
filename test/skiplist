@@ -141,7 +141,6 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/object/method-definition/params-dflt-gen-meth-ref-arguments.js
 language/expressions/object/method-definition/params-dflt-meth-ref-arguments.js
-language/expressions/super/call-spread-mult-literal.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
 language/global-code/script-decl-lex-restricted-global.js
