@@ -110,6 +110,7 @@ built-ins/Number/prototype/toPrecision/*.js
 built-ins/Number/prototype/toString/*.js
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
 built-ins/TypedArray/prototype/toLocaleString/return-result.js
+language/expressions/property-accessors/S11.2.1_A3_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // Failing tests in language
@@ -140,10 +141,6 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/object/method-definition/params-dflt-gen-meth-ref-arguments.js
 language/expressions/object/method-definition/params-dflt-meth-ref-arguments.js
-language/expressions/property-accessors/S11.2.1_A3_T2.js
-language/expressions/property-accessors/S11.2.1_A4_T1.js
-language/expressions/property-accessors/S11.2.1_A4_T5.js
-language/expressions/property-accessors/S11.2.1_A4_T9.js
 language/expressions/super/call-spread-mult-literal.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js

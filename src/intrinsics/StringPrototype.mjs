@@ -15,6 +15,7 @@ import {
   ToUint32,
 } from '../abstract-ops/all.mjs';
 import {
+  Descriptor,
   StringExoticObjectValue,
   Type,
   Value,
@@ -531,6 +532,12 @@ export function CreateStringPrototype(realmRec) {
   proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
   proto.Extensible = Value.true;
   proto.StringData = new Value('');
+  proto.properties.set(new Value('length'), Descriptor({
+    Value: new Value(0),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  }));
 
   assignProps(realmRec, proto, [
     ['charAt', StringProto_charAt, 1],
