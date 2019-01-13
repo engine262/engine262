@@ -114,12 +114,8 @@ language/expressions/property-accessors/S11.2.1_A3_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // Failing tests in language
-language/arguments-object/*-comma-spread-operator.js
 language/eval-code/direct/new.target-fn.js
 language/eval-code/direct/super-prop-method.js
-language/expressions/call/eval-spread-empty-leading.js
-language/expressions/call/spread-mult-literal.js
-language/expressions/call/with-base-obj.js
 language/expressions/class/params-dflt-gen-meth-ref-arguments.js
 language/expressions/class/params-dflt-gen-meth-static-ref-arguments.js
 language/expressions/class/params-dflt-meth-ref-arguments.js
