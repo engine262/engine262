@@ -21,6 +21,12 @@ language/expressions/template-literal/tv-line-continuation.js
 // https://github.com/acornjs/acorn/issues/775
 language/directive-prologue/14.1-16-s.js
 
+// https://github.com/acornjs/acorn/issues/776
+language/statements/if/if-gen-else-gen.js
+language/statements/if/if-gen-else-stmt.js
+language/statements/if/if-gen-no-else.js
+language/statements/if/if-stmt-else-gen.js
+
 // TODO(8): Uses regexes.
 built-ins/Date/prototype/to*String/format.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
@@ -152,11 +158,6 @@ language/statements/class/params-dflt-meth-ref-arguments.js
 language/statements/class/params-dflt-meth-static-ref-arguments.js
 language/statements/function/params-dflt-ref-arguments.js
 language/statements/generators/params-dflt-ref-arguments.js
-language/statements/if/cptn-no-else-false.js
-language/statements/if/if-gen-else-gen.js
-language/statements/if/if-gen-else-stmt.js
-language/statements/if/if-gen-no-else.js
-language/statements/if/if-stmt-else-gen.js
 language/statements/switch/*.js
 language/statements/try/S12.14_A15.js
 language/statements/try/S12.14_A5.js

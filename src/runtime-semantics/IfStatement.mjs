@@ -34,7 +34,7 @@ export function* Evaluate_IfStatement({
     return Completion(UpdateEmpty(stmtCompletion, Value.undefined));
   } else {
     if (exprValue === Value.false) {
-      return new NormalCompletion(undefined);
+      return new NormalCompletion(Value.undefined);
     } else {
       const stmtCompletion = EnsureCompletion(yield* Evaluate(Statement));
       return Completion(UpdateEmpty(stmtCompletion, Value.undefined));
