@@ -40,6 +40,7 @@ const features = readList('features');
 const start = Date.now();
 
 const pad = (n, l, c = '0') => n.toString().padStart(l, c);
+const testOutputPrefixLength = '[00:00|:    0|+    0|-    0|»    0]: '.length;
 function printProgress(test, log) {
   const elapsed = Math.floor((Date.now() - start) / 1000);
   const min = Math.floor(elapsed / 60);
@@ -60,8 +61,10 @@ function printProgress(test, log) {
   readline.clearLine(process.stdout, 0);
   readline.cursorTo(process.stdout, 0);
 
-  if (line.length >= process.stdout.columns) {
-    process.stdout.write(`${line.slice(0, -15)}...`);
+  const length = testOutputPrefixLength + test.length;
+  if (length >= process.stdout.columns) {
+    const diff = process.stdout.columns - length - 3;
+    process.stdout.write(`${line.slice(0, diff)}...`);
   } else {
     process.stdout.write(line);
   }
