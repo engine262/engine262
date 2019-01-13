@@ -30,6 +30,7 @@ import {
   Await,
 } from '../completion.mjs';
 import {
+  isAssignmentPattern,
   isDoWhileStatement,
   isForBinding,
   isForDeclaration,
@@ -49,8 +50,8 @@ import {
   BoundNames_ForDeclaration,
   BoundNames_LexicalDeclaration,
   IsConstantDeclaration,
-  IsDestructuring_ForBinding,
   IsDestructuring_ForDeclaration,
+  IsDestructuring_LeftHandSideExpression,
 } from '../static-semantics/all.mjs';
 import {
   BindingInitialization_ForBinding,
@@ -174,10 +175,11 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let V = Value.undefined;
   const destructuring = lhs.type === 'VariableDeclaration'
-    ? IsDestructuring_ForDeclaration(lhs) : IsDestructuring_ForBinding(lhs);
+    ? IsDestructuring_ForDeclaration(lhs) : IsDestructuring_LeftHandSideExpression(lhs);
   let assignmentPattern;
   if (destructuring && lhsKind === 'assignment') {
     assignmentPattern = lhs;
+    Assert(isAssignmentPattern(assignmentPattern));
   }
   while (true) {
     let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));

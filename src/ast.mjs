@@ -458,7 +458,7 @@ export function isParenthesizedExpression(node) {
 // #prod-Expression
 export function isExpression(node) {
   return (
-    // PrimaryExpression except CoverParenthesizedExpressionAndArrowParameterList
+    // PrimaryExpression
     isThis(node)
       || isIdentifierReference(node)
       || isLiteral(node)
@@ -471,6 +471,7 @@ export function isExpression(node) {
       || isAsyncGeneratorExpression(node)
       || isRegularExpressionLiteral(node)
       || isTemplateLiteral(node)
+      || isParenthesizedExpression(node)
 
     // LeftHandSideExpression (including MemberExpression, NewExpression, and
     // CallExpression)
@@ -533,25 +534,7 @@ export function isExpression(node) {
 
     // Expression
       || isExpressionWithComma(node)
-      || isParenthesizedExpression(node)
   );
-}
-
-// #prod-PrimaryExpression
-export function isPrimaryExpression(node) {
-  return isThis(node)
-    || isIdentifierReference(node)
-    || isLiteral(node)
-    || isArrayLiteral(node)
-    || isObjectLiteral(node)
-    || isFunctionExpression(node)
-    || isClassExpression(node)
-    || isGeneratorExpression(node)
-    || isAsyncFunctionExpression(node)
-    || isAsyncGeneratorExpression(node)
-    || isRegularExpressionLiteral(node)
-    || isTemplateLiteral(node)
-    || isParenthesizedExpression(node);
 }
 
 // Used in #prod-SingleNameBinding

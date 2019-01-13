@@ -39,11 +39,19 @@ import {
 //     `async` [no LineTerminator here] `function` BindingIdentifier `(` FormalParameters `)`
 //       `{` AsyncFunctionBody `}`
 //
+// The following sections contain other special cases for
+// ParenthesizedExpressions:
+//
+// 12.2.1.3 #sec-semantics-static-semantics-isfunctiondefinition
+//   PrimaryExpression : CoverParenthesizedExpressionAndArrowParameterList
+//
+// 12.2.10.2 #sec-grouping-operator-static-semantics-isfunctiondefinition
+//   ParenthesizedExpression : `(` Expression `)`
+//
 // All other explicit and implicit productions return false, including those
 // specified at the following anchors:
 //
 // 12.2.1.3 #sec-semantics-static-semantics-isfunctiondefinition
-// 12.2.10.2 #sec-grouping-operator-static-semantics-isfunctiondefinition
 // 12.3.1.3 #sec-static-semantics-static-semantics-isfunctiondefinition
 // 12.4.2 #sec-update-expressions-static-semantics-isfunctiondefinition
 // 12.5.1 #sec-unary-operators-static-semantics-isfunctiondefinition
@@ -60,7 +68,8 @@ import {
 // 12.16.1 #sec-comma-operator-static-semantics-isfunctiondefinition
 export function IsFunctionDefinition_Expression(Expression) {
   if (isParenthesizedExpression(Expression)) {
-    return IsFunctionDefinition_Expression(Expression.expression);
+    const expr = Expression.expression;
+    return IsFunctionDefinition_Expression(expr);
   }
   return isArrowFunction(Expression)
          || isAsyncArrowFunction(Expression)

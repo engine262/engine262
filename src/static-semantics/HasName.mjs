@@ -49,11 +49,29 @@ import { OutOfRange } from '../helpers.mjs';
 //     `async` [no LineTerminator here] AsyncArrowBindingIdentifier [no LineTerminator here]
 //       `=>` AsyncConciseBody
 //     CoverCallExpressionAndAsyncArrowHead [no LineTerminator here] `=>` AsyncConciseBody
+//
+// (implicit)
+//   ParenthesizedExpression : `(` Expression `)`
+//
+//   PrimaryExpression :
+//     FunctionExpression
+//     ClassExpression
+//     GeneratorExpression
+//     AsyncFunctionExpression
+//     AsyncGeneratorExpression
+//     ArrowFunction
+//
+//   MemberExpression : PrimaryExpression
+//
+//   (From MemberExpression to ConditionalExpression omitted.)
+//
+//   AssignmentExpression :
+//     ConditionalExpression
+//     ArrowFunction
+//     AsyncArrowFunction
+//
+//   Expression : AssignmentExpression
 export function HasName_Expression(Expression) {
-  if (!IsFunctionDefinition_Expression(Expression)) {
-    return false;
-  }
-
   switch (true) {
     case isFunctionExpression(Expression):
     case isGeneratorExpression(Expression):
@@ -66,8 +84,13 @@ export function HasName_Expression(Expression) {
     case isAsyncArrowFunction(Expression):
       return false;
 
-    case isParenthesizedExpression(Expression):
-      return HasName_Expression(Expression.expression);
+    case isParenthesizedExpression(Expression): {
+      const expr = Expression.expression;
+      if (!IsFunctionDefinition_Expression(expr)) {
+        return false;
+      }
+      return HasName_Expression(expr);
+    }
 
     default:
       throw new OutOfRange('HasName_Expression', Expression);
