@@ -336,7 +336,8 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
-    X(AsyncFunctionStart(promiseCapability, FunctionBody));
+    // false = is not expression
+    X(AsyncFunctionStart(promiseCapability, FunctionBody, false));
   } else {
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
@@ -349,7 +350,8 @@ export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentEx
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
-    X(AsyncFunctionStart(promiseCapability, AssignmentExpression));
+    // true = is expression
+    X(AsyncFunctionStart(promiseCapability, AssignmentExpression, true));
   } else {
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
