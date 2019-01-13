@@ -1,4 +1,5 @@
 import {
+  Completion,
   EnsureCompletion,
   NormalCompletion,
   ReturnIfAbrupt,
@@ -146,11 +147,7 @@ import { unwind, OutOfRange } from './helpers.mjs';
 //
 // (implicit)
 //   StatementList : StatementListItem
-//
-// ModuleItemList :
-//   ModuleItem
-//   ModuleItemList ModuleItem
-export function* Evaluate_List(StatementList) {
+export function* Evaluate_StatementList(StatementList) {
   if (StatementList.length === 0) {
     return new NormalCompletion(undefined);
   }
@@ -172,8 +169,31 @@ export function* Evaluate_List(StatementList) {
   return sl;
 }
 
-export const Evaluate_StatementList = Evaluate_List;
-export const Evaluate_ModuleItemList = Evaluate_List;
+// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
+//   ModuleItemList :
+//     ModuleItem
+//     ModuleItemList ModuleItem
+export function* Evaluate_ModuleItemList(ModuleItemList) {
+  if (ModuleItemList.length === 0) {
+    return new NormalCompletion(undefined);
+  }
+
+  let sl = yield* Evaluate(ModuleItemList[0]);
+  if (ModuleItemList.length === 1) {
+    return sl;
+  }
+
+  for (const ModuleItemListItem of ModuleItemList.slice(1)) {
+    ReturnIfAbrupt(sl);
+    let s = yield* Evaluate(ModuleItemListItem);
+    // We don't always return a Completion value, but here we actually need it
+    // to be a Completion.
+    s = EnsureCompletion(s);
+    sl = UpdateEmpty(s, sl);
+  }
+
+  return sl;
+}
 
 // (implicit)
 //   StatementListItem :
@@ -438,19 +458,32 @@ function* Inner_Evaluate_Expression(Expression) {
 //   ScriptBody : StatementList
 export function Evaluate_Script(Script) {
   if (Script.length === 0) {
-    return new NormalCompletion(undefined);
+    return new NormalCompletion(Value.undefined);
   }
   return unwind(Evaluate_StatementList(Script));
 }
 
 // 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
-//   Module : [empty]
 //   ModuleBody : ModuleItemList
-export function Evaluate_Module(ModuleBody) {
-  if (ModuleBody.length === 0) {
+export function* Evaluate_ModuleBody(ModuleBody) {
+  const ModuleItemList = ModuleBody;
+  const result = EnsureCompletion(yield* Evaluate_ModuleItemList(ModuleItemList));
+  if (result.Type === 'normal' && result.Value === undefined) {
     return new NormalCompletion(Value.undefined);
   }
-  return unwind(Evaluate_ModuleItemList(ModuleBody));
+  return Completion(result);
+}
+
+// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
+//   Module : [empty]
+//
+// (implicit)
+//   Module : ModuleBody
+export function Evaluate_Module(Module) {
+  if (Module.length === 0) {
+    return new NormalCompletion(Value.undefined);
+  }
+  return unwind(Evaluate_ModuleBody(Module));
 }
 
 export function* Evaluate(Production) {

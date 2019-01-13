@@ -284,8 +284,10 @@ export const VarDeclaredNames_FunctionBody = VarDeclaredNames_FunctionStatementL
 
 // (implicit)
 //   GeneratorBody : FunctionBody
-//   AsyncFunctionBody : FunctionBody
 export const VarDeclaredNames_GeneratorBody = VarDeclaredNames_FunctionBody;
+
+// (implicit)
+//   AsyncFunctionBody : FunctionBody
 export const VarDeclaredNames_AsyncFunctionBody = VarDeclaredNames_FunctionBody;
 
 // 14.2.12 #sec-arrow-function-definitions-static-semantics-vardeclarednames

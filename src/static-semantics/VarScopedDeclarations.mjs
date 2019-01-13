@@ -289,8 +289,10 @@ export const VarScopedDeclarations_FunctionBody = VarScopedDeclarations_Function
 
 // (implicit)
 //   GeneratorBody : FunctionBody
-//   AsyncFunctionBody : FunctionBody
 export const VarScopedDeclarations_GeneratorBody = VarScopedDeclarations_FunctionBody;
+
+// (implicit)
+//   AsyncFunctionBody : FunctionBody
 export const VarScopedDeclarations_AsyncFunctionBody = VarScopedDeclarations_FunctionBody;
 
 // 14.2.13 #sec-arrow-function-definitions-static-semantics-varscopeddeclarations
