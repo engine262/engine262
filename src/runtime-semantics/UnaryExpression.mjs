@@ -38,7 +38,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   }
   if (IsUnresolvableReference(ref) === Value.true) {
     Assert(IsStrictReference(ref) === Value.false);
-    return Value.false;
+    return Value.true;
   }
   if (IsPropertyReference(ref) === Value.true) {
     if (IsSuperReference(ref) === Value.true) {
