@@ -125,8 +125,6 @@ language/expressions/class/params-dflt-gen-meth-ref-arguments.js
 language/expressions/class/params-dflt-gen-meth-static-ref-arguments.js
 language/expressions/class/params-dflt-meth-ref-arguments.js
 language/expressions/class/params-dflt-meth-static-ref-arguments.js
-language/expressions/does-not-equals/S11.9.2_A7.8.js
-language/expressions/does-not-equals/S11.9.2_A7.9.js
 language/expressions/function/params-dflt-ref-arguments.js
 language/expressions/generators/params-dflt-ref-arguments.js
 language/expressions/new/spread-mult-literal.js

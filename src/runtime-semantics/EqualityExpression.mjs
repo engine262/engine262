@@ -3,7 +3,7 @@ import {
   GetValue,
   StrictEqualityComparison,
 } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -28,7 +28,7 @@ export function* Evaluate_EqualityExpression({
     case '==':
       return AbstractEqualityComparison(rval, lval);
     case '!=': {
-      const r = AbstractEqualityComparison(rval, lval);
+      const r = Q(AbstractEqualityComparison(rval, lval));
       if (r === Value.true) {
         return Value.false;
       } else {
@@ -38,7 +38,7 @@ export function* Evaluate_EqualityExpression({
     case '===':
       return StrictEqualityComparison(rval, lval);
     case '!==': {
-      const r = StrictEqualityComparison(rval, lval);
+      const r = X(StrictEqualityComparison(rval, lval));
       if (r === Value.true) {
         return Value.false;
       } else {
