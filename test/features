@@ -47,7 +47,7 @@ Reflect.setPrototypeOf
 // regexp-unicode-property-escapes
 Set
 // SharedArrayBuffer
-// String.fromCodePoint
+String.fromCodePoint
 String.prototype.endsWith
 String.prototype.includes
 super
