@@ -39,6 +39,8 @@ const features = readList('features');
 
 const start = Date.now();
 
+const harnessSource = fs.readFileSync(path.resolve(__dirname, './test262/harness/assert.js'), 'utf8');
+
 const pad = (n, l, c = '0') => n.toString().padStart(l, c);
 const testOutputPrefixLength = '[00:00|:    0|+    0|-    0|»    0]: '.length;
 function printProgress(test, log) {
@@ -83,7 +85,8 @@ function createRealm() {
         return $262.moduleEntry;
       }
       const source = fs.readFileSync(resolved, 'utf8');
-      return realm.createSourceTextModule(resolved, source);
+      const full = `${harnessSource}\n\n${source}`;
+      return realm.createSourceTextModule(resolved, full);
     },
   });
 
@@ -162,7 +165,7 @@ async function run({ file, contents, attrs }) {
 
   let completion;
   if (attrs.flags.module) {
-    completion = $262.realm.createSourceTextModule(file, contents);
+    completion = $262.realm.createSourceTextModule(path.resolve(__dirname, 'test262', file), contents);
     if (!(completion instanceof AbruptCompletion)) {
       const module = completion;
       $262.moduleEntry = module;

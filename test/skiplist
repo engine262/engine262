@@ -144,7 +144,6 @@ language/expressions/super/prop-expr-*.js
 language/global-code/script-decl-lex-restricted-global.js
 language/literals/string/line-continuation-double.js
 language/literals/string/line-continuation-single.js
-language/module-code/**/*.js
 language/statements/async-function/evaluation-unmapped-arguments.js
 language/statements/class/definition/constructor-strict-by-default.js
 language/statements/class/params-dflt-gen-meth-ref-arguments.js
