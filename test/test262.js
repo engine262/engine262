@@ -195,7 +195,11 @@ async function run({ file, contents, attrs }) {
 
   clearTimeout(timeout);
 
-  return { status: PASS };
+  if (attrs.negative) {
+    return { status: FAIL, error: `Expected ${attrs.negative.type} during ${attrs.negative.phase}` };
+  } else {
+    return { status: PASS };
+  }
 }
 
 const agentOpt = {
