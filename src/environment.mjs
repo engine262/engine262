@@ -451,10 +451,10 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     const ObjRec = envRec.ObjectRecord;
     const globalObject = ObjRec.bindingObject;
     const existingProp = Q(globalObject.GetOwnProperty(N));
-    if (Type(existingProp) === 'Undefined') {
+    if (existingProp === Value.undefined) {
       return Value.false;
     }
-    if (existingProp.Configurable) {
+    if (existingProp.Configurable === Value.true) {
       return Value.false;
     }
     return Value.true;

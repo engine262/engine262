@@ -17,6 +17,8 @@ language/statements/with/let-identifier-with-newline.js
 
 // https://github.com/acornjs/acorn/issues/773
 language/expressions/template-literal/tv-line-continuation.js
+language/literals/string/line-continuation-double.js
+language/literals/string/line-continuation-single.js
 
 // https://github.com/acornjs/acorn/issues/775
 language/directive-prologue/14.1-16-s.js
@@ -116,31 +118,11 @@ language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 // Failing tests in language
 language/eval-code/direct/new.target-fn.js
 language/eval-code/direct/super-prop-method.js
-language/expressions/class/params-dflt-gen-meth-ref-arguments.js
-language/expressions/class/params-dflt-gen-meth-static-ref-arguments.js
-language/expressions/class/params-dflt-meth-ref-arguments.js
-language/expressions/class/params-dflt-meth-static-ref-arguments.js
-language/expressions/function/params-dflt-ref-arguments.js
-language/expressions/generators/params-dflt-ref-arguments.js
-language/expressions/new/spread-mult-literal.js
-language/expressions/object/prop-def-id-eval-error.js
 language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
-language/expressions/object/method-definition/params-dflt-gen-meth-ref-arguments.js
-language/expressions/object/method-definition/params-dflt-meth-ref-arguments.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/global-code/script-decl-lex-restricted-global.js
-language/literals/string/line-continuation-double.js
-language/literals/string/line-continuation-single.js
-language/statements/async-function/evaluation-unmapped-arguments.js
 language/statements/class/definition/constructor-strict-by-default.js
-language/statements/class/params-dflt-gen-meth-ref-arguments.js
-language/statements/class/params-dflt-gen-meth-static-ref-arguments.js
-language/statements/class/params-dflt-meth-ref-arguments.js
-language/statements/class/params-dflt-meth-static-ref-arguments.js
-language/statements/function/params-dflt-ref-arguments.js
-language/statements/generators/params-dflt-ref-arguments.js
 language/statements/switch/*.js
 language/statements/try/S12.14_A15.js
 language/statements/try/S12.14_A5.js

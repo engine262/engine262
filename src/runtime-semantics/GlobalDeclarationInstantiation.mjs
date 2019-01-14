@@ -51,7 +51,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     if (envRec.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
-    const hasRestrictedGlobal = envRec.HasRestrictedGlobalProperty(name);
+    const hasRestrictedGlobal = Q(envRec.HasRestrictedGlobalProperty(name));
     if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
     }
