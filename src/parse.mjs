@@ -141,16 +141,23 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
 export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.expression.body.body[0];
 export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.expression.body.body[0];
 
-export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
-  let body;
+function forwardError(fn) {
   try {
-    body = Parser.parse(sourceText, {
-      sourceType: 'script',
-      strict,
-    });
+    return fn();
   } catch (e) {
-    body = [surroundingAgent.Throw('SyntaxError', e.message).Value];
+    let type = 'SyntaxError';
+    if (e.message.startsWith('Assigning to rvalue')) {
+      type = 'ReferenceError';
+    }
+    return [surroundingAgent.Throw(type, e.message).Value];
   }
+}
+
+export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
+  const body = forwardError(() => Parser.parse(sourceText, {
+    sourceType: 'script',
+    strict,
+  }));
   if (Array.isArray(body)) {
     return body;
   }
@@ -165,14 +172,9 @@ export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
 
 export function ParseModule(sourceText, realm, hostDefined = {}) {
   // Assert: sourceText is an ECMAScript source text (see clause 10).
-  let body;
-  try {
-    body = Parser.parse(sourceText, {
-      sourceType: 'module',
-    });
-  } catch (e) {
-    body = [surroundingAgent.Throw('SyntaxError', e.message).Value];
-  }
+  const body = forwardError(() => Parser.parse(sourceText, {
+    sourceType: 'module',
+  }));
   if (Array.isArray(body)) {
     return body;
   }

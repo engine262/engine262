@@ -118,6 +118,30 @@ const PASS = Symbol('PASS');
 const FAIL = Symbol('FAIL');
 const SKIP = Symbol('SKIP');
 
+function isError(realm, type, value) {
+  if (Abstract.Type(value) !== 'Object') {
+    return false;
+  }
+  const proto = value.Prototype;
+  if (!proto || Abstract.Type(proto) !== 'Object') {
+    return false;
+  }
+  const ctorDesc = proto.properties.get(new Value(realm, 'constructor'));
+  if (!ctorDesc || !Abstract.IsDataDescriptor(ctorDesc)) {
+    return false;
+  }
+  const ctor = ctorDesc.Value;
+  if (Abstract.Type(ctor) !== 'Object' || Abstract.IsCallable(ctor) !== Value.true) {
+    return false;
+  }
+  const namePropDesc = ctor.properties.get(new Value(realm, 'name'));
+  if (!namePropDesc || !Abstract.IsDataDescriptor(namePropDesc)) {
+    return false;
+  }
+  const nameProp = namePropDesc.Value;
+  return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
+}
+
 async function run({ file, contents, attrs }) {
   if (override !== file) {
     if ((attrs.features && !attrs.features.every((feature) => features.includes(feature)))
@@ -182,7 +206,7 @@ async function run({ file, contents, attrs }) {
 
   if (completion instanceof AbruptCompletion) {
     clearTimeout(timeout);
-    if (attrs.negative) {
+    if (attrs.negative && isError($262.realm, attrs.negative.type, completion.Value)) {
       return { status: PASS };
     } else {
       return { status: FAIL, error: inspect(completion, $262.realm) };
