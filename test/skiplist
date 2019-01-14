@@ -29,6 +29,10 @@ language/statements/if/if-gen-else-stmt.js
 language/statements/if/if-gen-no-else.js
 language/statements/if/if-stmt-else-gen.js
 
+// https://github.com/acornjs/acorn/issues/777
+language/statements/class/definition/constructor-strict-by-default.js
+language/statements/class/strict-mode/*
+
 // TODO(8): Uses regexes.
 built-ins/Date/prototype/to*String/format.js
 built-ins/Object/prototype/toString/symbol-tag-override-instances.js
@@ -122,7 +126,6 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/statements/class/definition/constructor-strict-by-default.js
 language/statements/switch/*.js
 language/statements/try/S12.14_A15.js
 language/statements/try/S12.14_A5.js
