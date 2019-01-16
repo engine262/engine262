@@ -45,33 +45,43 @@ const readList = (name) => {
 const skiplist = readList('skiplist').map((t) => `test/${t}`);
 const features = readList('features');
 
-const start = Date.now();
-
 const harnessSource = fs.readFileSync(path.resolve(__dirname, './test262/harness/assert.js'), 'utf8');
 
+const start = Date.now();
+let lastFail = 0;
 const pad = (n, l, c = '0') => n.toString().padStart(l, c);
-const testOutputPrefixLength = '[00:00|:    0|+    0|-    0|»    0]: '.length;
-function printProgress(test, log) {
+const getStatusLine = () => {
   const elapsed = Math.floor((Date.now() - start) / 1000);
   const min = Math.floor(elapsed / 60);
   const sec = elapsed % 60;
 
   const time = `${pad(min, 2)}:${pad(sec, 2)}`;
-
   const completed = `${ansi.blue}:${pad(total, 5, ' ')}${ansi.reset}`;
-
   const p = `${ansi.green}+${pad(passed, 5, ' ')}${ansi.reset}`;
-
   const f = `${ansi.red}-${pad(failed, 5, ' ')}${ansi.reset}`;
-
   const s = `${ansi.yellow}»${pad(skipped, 5, ' ')}${ansi.reset}`;
 
-  const line = `[${time}|${completed}|${p}|${f}|${s}]: ${test}`;
+  const line = `[${time}|${completed}|${p}|${f}|${s}]`;
 
+  return line;
+};
+
+if (CI) {
+  setInterval(() => {
+    console.log(getStatusLine()); // eslint-disable-line no-console
+  }, 5000).unref();
+}
+
+const testOutputPrefixLength = '[00:00|:    0|+    0|-    0|»    0]: '.length;
+function printProgress(test, log) {
+  const line = `${getStatusLine()}: ${test}`;
   if (CI) {
-    console.log(line); // eslint-disable-line no-console
-    if (log) {
-      console.log(...log); // eslint-disable-line no-console
+    if (lastFail < failed || log || test === 'Done') {
+      lastFail = failed;
+      console.log(line); // eslint-disable-line no-console
+      if (log) {
+        console.log(...log); // eslint-disable-line no-console
+      }
     }
   } else {
     readline.clearLine(process.stdout, 0);
