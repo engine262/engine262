@@ -17,17 +17,25 @@ const {
 } = require('..');
 
 const override = process.argv[2];
+const CI = !!process.env.CONTINUOUS_INTEGRATION;
 
 let passed = 0;
 let failed = 0;
 let skipped = 0;
 let total = 0;
 
-const ansi = {
+const ansi = CI ? {
+  reset: '',
+  red: '',
+  green: '',
+  yellow: '',
+  blue: '',
+} : {
+  reset: '\u001b[0m',
+  red: '\u001b[31m',
   green: '\u001b[32m',
   yellow: '\u001b[33m',
-  red: '\u001b[31m',
-  reset: '\u001b[0m',
+  blue: '\u001b[34m',
 };
 
 const readList = (name) => {
@@ -50,7 +58,7 @@ function printProgress(test, log) {
 
   const time = `${pad(min, 2)}:${pad(sec, 2)}`;
 
-  const completed = `\u001b[34m:${pad(total, 5, ' ')}${ansi.reset}`;
+  const completed = `${ansi.blue}:${pad(total, 5, ' ')}${ansi.reset}`;
 
   const p = `${ansi.green}+${pad(passed, 5, ' ')}${ansi.reset}`;
 
@@ -60,20 +68,26 @@ function printProgress(test, log) {
 
   const line = `[${time}|${completed}|${p}|${f}|${s}]: ${test}`;
 
-  readline.clearLine(process.stdout, 0);
-  readline.cursorTo(process.stdout, 0);
-
-  const length = testOutputPrefixLength + test.length;
-  if (length >= process.stdout.columns) {
-    const diff = process.stdout.columns - length - 3;
-    process.stdout.write(`${line.slice(0, diff)}...`);
+  if (CI) {
+    console.log(line); // eslint-disable-line no-console
+    if (log) {
+      console.log(...log); // eslint-disable-line no-console
+    }
   } else {
-    process.stdout.write(line);
-  }
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
 
-  if (log) {
-    console.log(''); // eslint-disable-line no-console
-    console.log(...log); // eslint-disable-line no-console
+    const length = testOutputPrefixLength + test.length;
+    if (length >= process.stdout.columns) {
+      const diff = process.stdout.columns - length - 3;
+      process.stdout.write(`${line.slice(0, diff)}...`);
+    } else {
+      process.stdout.write(line);
+    }
+    if (log) {
+      console.log(''); // eslint-disable-line no-console
+      console.log(...log); // eslint-disable-line no-console
+    }
   }
 }
 
