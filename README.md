@@ -1,4 +1,4 @@
-# engine262
+# engine262 [![Build Status](https://travis-ci.com/devsnek/engine262.svg?branch=master)](https://travis-ci.com/devsnek/engine262)
 
 An implementation of ECMA-262 in JavaScript
 
