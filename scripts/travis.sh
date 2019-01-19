@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
+  node $(dirname $0)/ecma262_update.js
+  exit
+fi
+
 # For PRs
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
   echo -e "\e[36m\e[1mTest triggered for PR #${TRAVIS_PULL_REQUEST}."

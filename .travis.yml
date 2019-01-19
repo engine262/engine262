@@ -2,4 +2,4 @@ language: node_js
 node_js:
   11
 install: npm install
-script: bash ./test/travis.sh
+script: bash ./scripts/travis.sh

@@ -22,6 +22,7 @@
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.10.0",
     "minimatch": "^3.0.4",
+    "node-fetch": "^2.3.0",
     "rollup": "^1.0.2",
     "rollup-plugin-babel": "^4.2.0",
     "test262-stream": "^1.2.0"
