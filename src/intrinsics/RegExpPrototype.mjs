@@ -406,8 +406,8 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       replacement = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
     }
 
-    if (position.numberValue() > nextSourcePosition) {
-      accumulatedResult = accumulatedResult + S.stringValue().substring(nextSourcePosition, position.numberValue()) + replacement;
+    if (position.numberValue() >= nextSourcePosition) {
+      accumulatedResult = accumulatedResult + S.stringValue().substring(nextSourcePosition, position.numberValue()) + replacement.stringValue();
       nextSourcePosition = position.numberValue() + matchLength;
     }
   }

@@ -115,7 +115,9 @@ language/statements/try/early-catch-var.js
 built-ins/Date/prototype/to*String/format.js
 built-ins/RegExp/*.js
 built-ins/RegExp/prototype/Symbol.match/*.js
-built-ins/RegExp/prototype/Symbol.replace/*.js
+built-ins/RegExp/prototype/Symbol.replace/fn-invoke-args.js
+built-ins/RegExp/prototype/Symbol.replace/subst-capture-idx-1.js
+built-ins/RegExp/prototype/Symbol.replace/subst-capture-idx-2.js
 built-ins/RegExp/prototype/Symbol.search/set-lastindex-restore.js
 built-ins/RegExp/prototype/Symbol.split/str-limit-capturing.js
 built-ins/String/prototype/replace/15.5.4.11-1.js
