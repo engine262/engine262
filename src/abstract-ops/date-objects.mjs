@@ -197,18 +197,21 @@ export function MakeTime(hour, min, sec, ms) {
   return new Value(t);
 }
 
+const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
+
 // 20.3.1.12 #sec-makeday
-export function MakeDay(/* year, month, date */) {
-  // if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
-  //   return new Value(NaN);
-  // }
-  // const y = X(ToInteger(year)).numberValue();
-  // const m = X(ToInteger(month)).numberValue();
-  // const dt = X(ToInteger(date)).numberValue();
-  // const ym = y + Math.floor(m / 12);
-  // const mn = mod(m, 12);
-  // TODO: 7. Find a value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1; but if this is not possible (because some argument is out of range), return NaN.
-  // return new Value(Day(t) + dt - 1);
+export function MakeDay(year, month, date) {
+  if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
+    return new Value(NaN);
+  }
+  const y = X(ToInteger(year)).numberValue();
+  const m = X(ToInteger(month)).numberValue();
+  const dt = X(ToInteger(date)).numberValue();
+  const ym = y + Math.floor(m / 12);
+  const mn = mod(m, 12);
+  const ymday = DayFromYear(new Value(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
+  const t = new Value(ymday * msPerDay);
+  return new Value(Day(t).numberValue() + dt - 1);
 }
 
 // 20.3.1.13 #sec-makedate
