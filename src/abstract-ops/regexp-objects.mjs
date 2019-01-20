@@ -53,13 +53,50 @@ export function RegExpInitialize(obj, pattern, flags) {
     // TODO: parse P
   }
 
+  // TODO: remove this once internal parsing is implemented
+  try {
+    new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      return surroundingAgent.Throw('SyntaxError', e.message);
+    }
+    throw e;
+  }
+
   obj.OriginalSource = P;
   obj.OriginalFlags = F;
-  // TODO: implement a matcher
-  obj.RegExpMatcher = {};
+  obj.RegExpMatcher = getMatcher(P, F);
 
   Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
   return obj;
+}
+
+// TODO: implement an independant matcher
+function getMatcher(P, F) {
+  const regex = new RegExp(P.stringValue(), F.stringValue());
+  const unicode = F.stringValue().includes('u');
+  return function RegExpMatcher(S, lastIndex) {
+    regex.lastIndex = lastIndex.numberValue();
+    const result = regex.exec(S.stringValue());
+    if (result === null) {
+      return null;
+    }
+    const captures = [];
+    for (const capture of result.slice(1)) {
+      if (capture === undefined) {
+        captures.push(Value.undefined);
+      } else if (unicode) {
+        captures.push(Array.from(capture).map((char) => char.codePointAt(0)));
+      } else {
+        captures.push(capture.split('').map((char) => char.charCodeAt(0)));
+      }
+    }
+    return {
+      lastIndex: new Value(result.index),
+      endIndex: new Value(result.index + result[0].length),
+      captures,
+    };
+  };
 }
 
 // 21.2.3.2.3 #sec-regexpcreate

@@ -18,7 +18,7 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
   const stringLength = str.stringValue().length;
   Assert(Type(position) === 'Number' && Number.isInteger(position.numberValue()) && position.numberValue() >= 0);
   Assert(position.numberValue() <= stringLength);
-  Assert(Array.isArray(captures) && captures.every((value) => Type(value) === 'String'));
+  Assert(Array.isArray(captures) && captures.every((value) => Type(value) === 'String' || Type(value) === 'Undefined'));
   Assert(Type(replacement) === 'String');
   const tailPos = position.numberValue() + matchLength;
   const m = captures.length;
