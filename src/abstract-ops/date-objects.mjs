@@ -51,19 +51,15 @@ export function TimeFromYear(y) {
   return new Value(msPerDay * DayFromYear(y).numberValue());
 }
 
+export const msPerAverageYear = 12 * 30.436875 * msPerDay;
+
 export function YearFromTime(t) {
   t = t.numberValue();
-  let min = Number.MIN_SAFE_INTEGER;
-  let max = Number.MAX_SAFE_INTEGER;
-  while (min !== max - 1) {
-    const middle = Math.round((min + max) / 2);
-    if (TimeFromYear(new Value(middle)).numberValue() <= t) {
-      min = middle;
-    } else {
-      max = middle;
-    }
+  let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
+  if (TimeFromYear(new Value(year)).numberValue() > t) {
+    year -= 1;
   }
-  return new Value(min);
+  return new Value(year);
 }
 
 export function InLeapYear(t) {
