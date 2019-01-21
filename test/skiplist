@@ -180,6 +180,9 @@ language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
+// TODO(8): RegExp named groups
+built-ins/RegExp/named-groups/*.js
+
 // Failing tests in language
 language/eval-code/direct/new.target-fn.js
 language/eval-code/direct/super-prop-method.js
