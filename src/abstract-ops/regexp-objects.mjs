@@ -106,3 +106,10 @@ export function RegExpCreate(P, F) {
   const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
   return Q(RegExpInitialize(obj, P, F));
 }
+
+// 21.2.3.2.4 #sec-escaperegexppattern
+export function EscapeRegExpPattern(P, F) {
+  // TODO: implement this without host
+  const re = new RegExp(P.stringValue(), F.stringValue());
+  return new Value(re.source);
+}

@@ -113,23 +113,14 @@ language/statements/if/labelled-fn-stmt-second.js
 language/statements/try/early-catch-var.js
 
 // TODO(8): RegExp
-built-ins/Date/prototype/to*String/format.js
-built-ins/RegExp/S15.10.4.1_A8_T*.js
 built-ins/RegExp/prototype/Symbol.match/g-match-empty-advance-lastindex.js
 built-ins/RegExp/prototype/Symbol.match/g-success-return-val.js
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js
 built-ins/RegExp/prototype/Symbol.match/y-fail-global-return.js
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
-built-ins/String/prototype/replace/S15.5.4.11_A4_T*.js
-language/literals/regexp/S7.8.5_A1.1_T1.js
 language/literals/regexp/S7.8.5_A1.1_T2.js
-language/literals/regexp/S7.8.5_A1.4_T1.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
-language/literals/regexp/S7.8.5_A2.1_T1.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
-language/literals/regexp/S7.8.5_A2.3_T1.js
-language/literals/regexp/S7.8.5_A2.3_T2.js
-language/literals/regexp/S7.8.5_A2.4_T1.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 
 // TODO(7): Missing Date.

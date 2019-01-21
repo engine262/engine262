@@ -5,6 +5,7 @@ import {
   Call,
   Construct,
   CreateDataProperty,
+  EscapeRegExpPattern,
   Get,
   IsCallable,
   SameValue,
@@ -457,10 +458,9 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   Assert('OriginalFlags' in R);
-  // const src = R.OriginalSource;
-  // const flags = R.OriginalFlags;
-  // TODO: return EscapeRegExpPattern(src, flags);
-  return surroundingAgent.Throw('Error', 'EscapeRegExpPattern is not implemented');
+  const src = R.OriginalSource;
+  const flags = R.OriginalFlags;
+  return EscapeRegExpPattern(src, flags);
 }
 
 // 21.2.5.12 #sec-get-regexp.prototype-@@split
