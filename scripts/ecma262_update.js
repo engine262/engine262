@@ -28,10 +28,10 @@ fetch(`${API}/repos/tc39/ecma262/commits?since=${SINCE}`)
       headers: {
         'Content-Type': 'application/json',
       },
-    });
-  })
-  .then((r) => r.json())
-  .then((body) => {
-    console.log('Issue created!', body.html_url);
-  })
-  .catch(console.error);
+    })
+      .then((r) => r.json())
+      .then((b) => {
+        console.log('Issue created!', b.html_url);
+      });
+  }).catch(console.error);
+
