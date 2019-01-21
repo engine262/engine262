@@ -115,12 +115,6 @@ language/statements/try/early-catch-var.js
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
-// TODO(8): RegExp
-language/literals/regexp/S7.8.5_A1.1_T2.js
-language/literals/regexp/S7.8.5_A1.4_T2.js
-language/literals/regexp/S7.8.5_A2.1_T2.js
-language/literals/regexp/S7.8.5_A2.4_T2.js
-
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
 built-ins/Date/parse/time-value-maximum-range.js
@@ -180,6 +174,10 @@ built-ins/Number/prototype/toString/*.js
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
 built-ins/TypedArray/prototype/toLocaleString/return-result.js
 language/expressions/property-accessors/S11.2.1_A3_T2.js
+language/literals/regexp/S7.8.5_A1.1_T2.js
+language/literals/regexp/S7.8.5_A1.4_T2.js
+language/literals/regexp/S7.8.5_A2.1_T2.js
+language/literals/regexp/S7.8.5_A2.4_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // Failing tests in language
