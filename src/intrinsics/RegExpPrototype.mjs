@@ -61,7 +61,7 @@ function RegExpExec(R, S) {
 
 // 21.2.5.2.2 #sec-regexpbuiltinexec
 function RegExpBuiltinExec(R, S) {
-  Assert(R.RegExpMatcher);
+  Assert('RegExpMatcher' in R);
   Assert(Type(S) === 'String');
   const length = S.stringValue().length;
   const lastIndexStr = new Value('lastIndex');
@@ -92,7 +92,6 @@ function RegExpBuiltinExec(R, S) {
       }
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
     } else {
-      lastIndex = r.lastIndex;
       // Assert: r is a state
       matchSucceeded = true;
     }
@@ -124,8 +123,8 @@ function RegExpBuiltinExec(R, S) {
     groups = Value.undefined;
   }
   X(CreateDataProperty(A, new Value('groups'), groups));
-  for (let i = 0; i < n; i += 1) {
-    const captureI = r.captures[i];
+  for (let i = 1; i <= n; i += 1) {
+    const captureI = r.captures[i - 1];
     let captureValue;
     if (captureI === Value.undefined) {
       captureValue = Value.undefined;
@@ -435,7 +434,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const result = Q(RegExpExec(rx, S));
   const currentLastIndex = Q(Get(rx, new Value('lastIndex')));
   if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
-    Q(Set(rx, new Value('lastIndex'), new Value(0), Value.true));
+    Q(Set(rx, new Value('lastIndex'), previousLastIndex, Value.true));
   }
 
   if (result === Value.null) {

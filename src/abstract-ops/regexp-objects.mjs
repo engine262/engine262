@@ -81,6 +81,9 @@ function getMatcher(P, F) {
     if (result === null) {
       return null;
     }
+    if (result.index > lastIndex.numberValue()) {
+      return null;
+    }
     const captures = [];
     for (const capture of result.slice(1)) {
       if (capture === undefined) {
@@ -92,7 +95,6 @@ function getMatcher(P, F) {
       }
     }
     return {
-      lastIndex: new Value(result.index),
       endIndex: new Value(result.index + result[0].length),
       captures,
     };

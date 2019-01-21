@@ -2,6 +2,7 @@
 built-ins/Array/length/S15.4.5.2_A3_T4.js
 built-ins/parseFloat/S15.1.2.3_A6.js
 built-ins/parseInt/S15.1.2.2_A8.js
+built-ins/RegExp/character-class-escape-non-whitespace.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
@@ -113,23 +114,23 @@ language/statements/try/early-catch-var.js
 
 // TODO(8): RegExp
 built-ins/Date/prototype/to*String/format.js
-built-ins/RegExp/*.js
-built-ins/RegExp/prototype/Symbol.match/*.js
-built-ins/RegExp/prototype/Symbol.replace/fn-invoke-args.js
-built-ins/RegExp/prototype/Symbol.replace/subst-capture-idx-1.js
-built-ins/RegExp/prototype/Symbol.replace/subst-capture-idx-2.js
-built-ins/RegExp/prototype/Symbol.search/set-lastindex-restore.js
-built-ins/RegExp/prototype/Symbol.split/str-limit-capturing.js
-built-ins/String/prototype/replace/15.5.4.11-1.js
-built-ins/String/prototype/replace/S15.5.4.11_A1_T8.js
-built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js
-built-ins/String/prototype/replace/S15.5.4.11_A1_T16.js
-built-ins/String/prototype/replace/S15.5.4.11_A1_T17.js
-built-ins/String/prototype/replace/S15.5.4.11_A2_T*.js
+built-ins/RegExp/S15.10.4.1_A8_T*.js
+built-ins/RegExp/prototype/Symbol.match/g-match-empty-advance-lastindex.js
+built-ins/RegExp/prototype/Symbol.match/g-success-return-val.js
+built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js
+built-ins/RegExp/prototype/Symbol.match/y-fail-global-return.js
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 built-ins/String/prototype/replace/S15.5.4.11_A4_T*.js
-built-ins/String/prototype/replace/S15.5.4.11_A12.js
-language/literals/regexp/**/*.js
+language/literals/regexp/S7.8.5_A1.1_T1.js
+language/literals/regexp/S7.8.5_A1.1_T2.js
+language/literals/regexp/S7.8.5_A1.4_T1.js
+language/literals/regexp/S7.8.5_A1.4_T2.js
+language/literals/regexp/S7.8.5_A2.1_T1.js
+language/literals/regexp/S7.8.5_A2.1_T2.js
+language/literals/regexp/S7.8.5_A2.3_T1.js
+language/literals/regexp/S7.8.5_A2.3_T2.js
+language/literals/regexp/S7.8.5_A2.4_T1.js
+language/literals/regexp/S7.8.5_A2.4_T2.js
 
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
