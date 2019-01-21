@@ -41,7 +41,7 @@ Reflect
 Reflect.construct
 Reflect.set
 Reflect.setPrototypeOf
-// regexp-dotall
+regexp-dotall
 // regexp-lookbehind
 // regexp-named-groups
 // regexp-unicode-property-escapes
