@@ -112,12 +112,10 @@ language/statements/if/labelled-fn-stmt-lone.js
 language/statements/if/labelled-fn-stmt-second.js
 language/statements/try/early-catch-var.js
 
-// TODO(8): RegExp
-built-ins/RegExp/prototype/Symbol.match/g-match-empty-advance-lastindex.js
-built-ins/RegExp/prototype/Symbol.match/g-success-return-val.js
-built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js
-built-ins/RegExp/prototype/Symbol.match/y-fail-global-return.js
+// https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
+
+// TODO(8): RegExp
 language/literals/regexp/S7.8.5_A1.1_T2.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js

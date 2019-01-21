@@ -289,7 +289,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
       } else {
         const firstResult = Q(Get(result, new Value('0')));
         const matchStr = Q(ToString(firstResult));
-        const status = CreateDataProperty(A, X(ToString(new Value(n)), matchStr));
+        const status = CreateDataProperty(A, X(ToString(new Value(n))), matchStr);
         Assert(status === Value.true);
         if (matchStr.stringValue() === '') {
           const lastIndex = Q(Get(rx, new Value('lastIndex')));
