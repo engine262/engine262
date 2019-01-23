@@ -126,17 +126,18 @@ built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
 harness/assertRelativeDateMs.js
 
-// TODO(22): Missing String methods.
-built-ins/JSON/stringify/string-escape-ascii.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js
+// TODO(22): String.prototype.toLocaleLowerCase
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-79.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-80.js
-built-ins/String/prototype/match/*.js
-built-ins/String/prototype/matchAll/*.js
-built-ins/String/prototype/search/*.js
 built-ins/String/prototype/toLocaleLowerCase/*.js
+
+// TODO(22): String.prototype.toLocaleUpperCase
+built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-80.js
 built-ins/String/prototype/toLocaleUpperCase/*.js
+
+// Proposal https://github.com/tc39/String.prototype.matchAll
+built-ins/String/prototype/matchAll/*.js
+
+// Proposal https://github.com/tc39/proposal-string-left-right-trim
 built-ins/String/prototype/trimEnd/*.js
 built-ins/String/prototype/trimStart/*.js
 
@@ -171,6 +172,7 @@ built-ins/Number/prototype/toFixed/*.js
 built-ins/Number/prototype/toLocaleString/*.js
 built-ins/Number/prototype/toPrecision/*.js
 built-ins/Number/prototype/toString/*.js
+built-ins/JSON/stringify/string-escape-ascii.js
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
 built-ins/TypedArray/prototype/toLocaleString/return-result.js
 language/expressions/property-accessors/S11.2.1_A3_T2.js

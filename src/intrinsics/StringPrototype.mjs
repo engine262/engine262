@@ -5,8 +5,10 @@ import {
   Call,
   CreateDataProperty,
   GetMethod,
+  Invoke,
   IsCallable,
   IsRegExp,
+  RegExpCreate,
   RequireObjectCoercible,
   ToInteger,
   ToLength,
@@ -228,6 +230,22 @@ function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   }
 }
 
+// 21.1.3.11 #sec-string.prototype.match
+function StringProto_match([regexp = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+
+  if (regexp !== Value.undefined && regexp !== Value.null) {
+    const matcher = Q(GetMethod(regexp, wellKnownSymbols.match));
+    if (matcher !== Value.undefined) {
+      return Q(Call(matcher, regexp, [O]));
+    }
+  }
+
+  const S = Q(ToString(O));
+  const rx = Q(RegExpCreate(regexp, Value.undefined));
+  return Q(Invoke(rx, wellKnownSymbols.match, [S]));
+}
+
 // 21.1.3.12 #sec-string.prototype.normalize
 function StringProto_normalize([form], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -340,6 +358,22 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   const tailPos = pos.numberValue() + matched.stringValue().length;
   const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
   return new Value(newString);
+}
+
+// 21.1.3.17 #sec-string.prototype.slice
+function StringProto_search([regexp = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+
+  if (regexp !== Value.undefined && regexp !== Value.null) {
+    const searcher = Q(GetMethod(regexp, wellKnownSymbols.search));
+    if (searcher !== Value.undefined) {
+      return Q(Call(searcher, regexp, [O]));
+    }
+  }
+
+  const string = Q(ToString(O));
+  const rx = Q(RegExpCreate(regexp, Value.undefined));
+  return Q(Invoke(rx, wellKnownSymbols.search, [string]));
 }
 
 // 21.1.3.18 #sec-string.prototype.slice
@@ -549,13 +583,13 @@ export function CreateStringPrototype(realmRec) {
     ['indexOf', StringProto_indexOf, 1],
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
-    // match
+    ['match', StringProto_match, 1],
     ['normalize', StringProto_normalize, 0],
     ['padEnd', StringProto_padEnd, 1],
     ['padStart', StringProto_padStart, 1],
     ['repeat', StringProto_repeat, 1],
     ['replace', StringProto_replace, 2],
-    // search
+    ['search', StringProto_search, 1],
     ['slice', StringProto_slice, 2],
     ['split', StringProto_split, 2],
     ['startsWith', StringProto_startsWith, 1],
