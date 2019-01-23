@@ -70,7 +70,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     if (found === false) {
       for (const C of B) {
         if (foundInB === false) {
-          foundInB = Q(CaseClauseIsSelected(C, input)) === Value.true;
+          foundInB = Q(yield* CaseClauseIsSelected(C, input)) === Value.true;
         }
         if (foundInB === true) {
           const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));
@@ -111,7 +111,7 @@ function* CaseBlockEvaluation(CaseBlock, input) {
     let found = false;
     for (const C of A) {
       if (found === false) {
-        found = Q(CaseClauseIsSelected(C, input)) === Value.true;
+        found = Q(yield* CaseClauseIsSelected(C, input)) === Value.true;
       }
       if (found === true) {
         const R = EnsureCompletion(yield* Evaluate_StatementList(C.consequent));

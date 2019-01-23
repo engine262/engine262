@@ -184,6 +184,3 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
-language/statements/switch/*.js
-language/statements/try/S12.14_A15.js
-language/statements/try/S12.14_A5.js
