@@ -153,8 +153,6 @@ language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
 
 // TODO(46): Missing Number
-built-ins/Number/S9.3.1_A5_T1.js
-built-ins/Number/S9.3.1_A5_T3.js
 built-ins/Number/string-binary-literal-invalid.js
 built-ins/Number/string-hex-literal-invalid.js
 built-ins/Number/string-octal-literal-invald.js
