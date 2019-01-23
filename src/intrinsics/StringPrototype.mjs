@@ -520,6 +520,22 @@ function StringProto_substring([start = Value.undefined, end = Value.undefined],
   return new Value(S.slice(from, to));
 }
 
+// 21.1.3.22 #sec-string.prototype.tolocalelowercase
+function StringProto_toLocaleLowerCase(args, { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const L = S.stringValue().toLocaleLowerCase();
+  return new Value(L);
+}
+
+// 21.1.3.23 #sec-string.prototype.tolocaleuppercase
+function StringProto_toLocaleUpperCase(args, { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  const S = Q(ToString(O));
+  const L = S.stringValue().toLocaleUpperCase();
+  return new Value(L);
+}
+
 // 21.1.3.24 #sec-string.prototype.tolowercase
 function StringProto_toLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -594,8 +610,8 @@ export function CreateStringPrototype(realmRec) {
     ['split', StringProto_split, 2],
     ['startsWith', StringProto_startsWith, 1],
     ['substring', StringProto_substring, 2],
-    // toLocaleLowerCase
-    // toLocaleUpperCase
+    ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0],
+    ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0],
     ['toLowerCase', StringProto_toLowerCase, 0],
     ['toString', StringProto_toString, 0],
     ['toUpperCase', StringProto_toUpperCase, 0],
