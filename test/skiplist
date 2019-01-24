@@ -74,10 +74,6 @@ language/statements/for-in/head-let-bound-names-let.js
 language/statements/for-of/head-const-bound-names-let.js
 language/statements/for-of/head-let-bound-names-let.js
 
-// test262 bugs? They look valid under JSON superset proposal.
-language/line-terminators/invalid-string-ls.js
-language/line-terminators/invalid-string-ps.js
-
 // more parsing issues
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js
 language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js
@@ -85,6 +81,7 @@ language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-param
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js
 language/expressions/class/method-param-dflt-yield.js
 language/expressions/class/static-method-param-dflt-yield.js
+language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js
 language/expressions/object/prop-def-invalid-async-prefix.js
 language/expressions/postfix-decrement/arguments-nostrict.js
@@ -100,6 +97,7 @@ language/expressions/yield/star-in-iteration-stmt.js
 language/module-code/early-export-global.js
 language/module-code/early-export-unresolvable.js
 language/module-code/early-lex-and-var.js
+language/statements/class/definition/early-errors-class-async-method-duplicate-parameters.js
 language/statements/class/definition/early-errors-class-method-arguments-in-formal-parameters.js
 language/statements/class/definition/early-errors-class-method-duplicate-parameters.js
 language/statements/class/definition/early-errors-class-method-eval-in-formal-parameters.js
