@@ -352,8 +352,9 @@ export class StringExoticObjectValue extends ObjectValue {
   OwnPropertyKeys() {
     const O = this;
     const keys = [];
-    const str = O.StringData.stringValue();
-    const len = str.length;
+    const str = O.StringData;
+    Assert(Type(str) === 'String');
+    const len = str.stringValue().length;
 
     for (let i = 0; i < len; i += 1) {
       keys.push(new Value(`${i}`));
@@ -931,7 +932,6 @@ export class ProxyExoticObjectValue extends ObjectValue {
         return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned undefined for property which is non-configurable in the proxy target');
       }
       const extensibleTarget = Q(IsExtensible(target));
-      Assert(Type(extensibleTarget) === 'Boolean');
       if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError', '\'getOwnPropertyDescriptor\' on proxy: trap returned undefined for property which exists in the non-extensible proxy target');
       }

@@ -49,9 +49,9 @@ function ProxyConstructSlot(argumentsList, newTarget) {
   }
   Assert(Type(handler) === 'Object');
   const target = O.ProxyTarget;
+  Assert(IsConstructor(target) === Value.true);
   const trap = Q(GetMethod(handler, new Value('construct')));
   if (trap === Value.undefined) {
-    Assert(IsConstructor(target) === Value.true);
     return Q(Construct(target, argumentsList, newTarget));
   }
   const argArray = CreateArrayFromList(argumentsList);

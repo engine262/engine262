@@ -35,8 +35,9 @@ function thisStringValue(value) {
     return value;
   }
   if (Type(value) === 'Object' && 'StringData' in value) {
-    Assert(Type(value.StringData) === 'String');
-    return value.StringData;
+    const s = value.StringData;
+    Assert(Type(s) === 'String');
+    return s;
   }
   return surroundingAgent.Throw('TypeError');
 }
@@ -319,6 +320,9 @@ function StringProto_repeat([count = Value.undefined], { thisValue }) {
   }
   if (n.isInfinity()) {
     return surroundingAgent.Throw('RangeError', msg('StringRepeatCount', n));
+  }
+  if (n.numberValue() === 0) {
+    return new Value('');
   }
   let T = '';
   for (let i = 0; i < n.numberValue(); i += 1) {

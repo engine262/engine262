@@ -91,6 +91,7 @@ function DateConstructor(args, { NewTarget }) {
       } else {
         const v = Q(ToPrimitive(value));
         if (Type(v) === 'String') {
+          // Assert: The next step never returns an abrupt completion because Type(v) is String.
           tv = parseDate(v);
         } else {
           tv = Q(ToNumber(v));

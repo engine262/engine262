@@ -47,6 +47,7 @@ export function StringGetOwnProperty(S, P) {
     return Value.undefined;
   }
   const str = S.StringData;
+  Assert(Type(str) === 'String');
   const len = str.stringValue().length;
   if (index.numberValue() < 0 || len <= index.numberValue()) {
     return Value.undefined;

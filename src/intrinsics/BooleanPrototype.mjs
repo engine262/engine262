@@ -15,8 +15,9 @@ function thisBooleanValue(value) {
   }
 
   if (Type(value) === 'Object' && 'BooleanData' in value) {
-    Assert(Type(value.BooleanData) === 'Boolean');
-    return value.BooleanData;
+    const b = value.BooleanData;
+    Assert(Type(b) === 'Boolean');
+    return b;
   }
 
   return surroundingAgent.Throw('TypeError');

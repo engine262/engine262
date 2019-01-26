@@ -18,8 +18,9 @@ function thisSymbolValue(value) {
     return value;
   }
   if (Type(value) === 'Object' && 'SymbolData' in value) {
-    Assert(Type(value.SymbolData) === 'Symbol');
-    return value.SymbolData;
+    const s = value.SymbolData;
+    Assert(Type(s) === 'Symbol');
+    return s;
   }
   return surroundingAgent.Throw('TypeError');
 }

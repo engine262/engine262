@@ -16,7 +16,9 @@ function thisNumberValue(value) {
     return value;
   }
   if (Type(value) === 'Object' && 'NumberData' in value) {
-    return value.NumberData;
+    const n = value.NumberData;
+    Assert(Type(n) === 'Number');
+    return n;
   }
   return surroundingAgent.Throw('TypeError');
 }
