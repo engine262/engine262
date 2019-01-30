@@ -6,40 +6,6 @@ built-ins/RegExp/character-class-escape-non-whitespace.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
-// https://github.com/acornjs/acorn/issues/773
-language/expressions/template-literal/tv-line-continuation.js
-language/literals/string/line-continuation-double.js
-language/literals/string/line-continuation-single.js
-
-// https://github.com/acornjs/acorn/issues/774
-language/statements/for-await-of/let-identifier-with-newline.js
-language/statements/for-in/let-identifier-with-newline.js
-language/statements/for-of/let-identifier-with-newline.js
-language/statements/for/let-identifier-with-newline.js
-language/statements/if/let-identifier-with-newline.js
-language/statements/labeled/let-identifier-with-newline.js
-language/statements/while/let-identifier-with-newline.js
-language/statements/with/let-identifier-with-newline.js
-
-// https://github.com/acornjs/acorn/issues/775
-language/directive-prologue/14.1-16-s.js
-
-// https://github.com/acornjs/acorn/issues/776
-language/statements/if/if-gen-else-gen.js
-language/statements/if/if-gen-else-stmt.js
-language/statements/if/if-gen-no-else.js
-language/statements/if/if-stmt-else-gen.js
-
-// https://github.com/acornjs/acorn/issues/777
-language/{expressions,statements}/class/class-name-ident-let-escaped.js
-language/{expressions,statements}/class/class-name-ident-let.js
-language/{expressions,statements}/class/class-name-ident-static-escaped.js
-language/{expressions,statements}/class/class-name-ident-static.js
-language/{expressions,statements}/class/class-name-ident-yield-escaped.js
-language/{expressions,statements}/class/class-name-ident-yield.js
-language/statements/class/definition/constructor-strict-by-default.js
-language/statements/class/strict-mode/*
-
 // https://github.com/acornjs/acorn/issues/778
 // For now we are throwing ReferenceErrors for all invalid LHS's. Some of them
 // should really be SyntaxErrors, but Acorn doesn't give us a way to tell yet.
@@ -52,27 +18,6 @@ language/statements/for-in/head-lhs-non-asnmt-trgt.js
 language/statements/for-of/head-lhs-cover-non-asnmt-trgt.js
 language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js
 language/statements/for-of/head-lhs-non-asnmt-trgt.js
-
-// https://github.com/acornjs/acorn/issues/779
-language/block-scope/syntax/redeclaration/*.js
-language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js
-language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js
-language/statements/for/head-let-bound-names-in-stmt.js
-language/statements/for-in/head-const-bound-names-in-stmt.js
-language/statements/for-in/head-let-bound-names-in-stmt.js
-language/statements/for-of/head-const-bound-names-in-stmt.js
-language/statements/for-of/head-let-bound-names-in-stmt.js
-language/statements/switch/syntax/redeclaration/*.js
-
-// https://github.com/acornjs/acorn/issues/780
-language/statements/const/syntax/const-declaring-let-split-across-two-lines.js
-language/statements/let/syntax/identifier-let-disallowed-as-boundname.js
-language/statements/let/syntax/let-let-declaration-split-across-two-lines.js
-language/statements/let/syntax/let-let-declaration-with-initializer-split-across-two-lines.js
-language/statements/for-in/head-const-bound-names-let.js
-language/statements/for-in/head-let-bound-names-let.js
-language/statements/for-of/head-const-bound-names-let.js
-language/statements/for-of/head-let-bound-names-let.js
 
 // more parsing issues
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js
@@ -105,9 +50,6 @@ language/statements/class/definition/methods-gen-yield-as-function-expression-bi
 language/statements/class/definition/methods-gen-yield-as-identifier-in-nested-function.js
 language/statements/class/method-param-yield.js
 language/statements/class/static-method-param-yield.js
-language/statements/if/labelled-fn-stmt-first.js
-language/statements/if/labelled-fn-stmt-lone.js
-language/statements/if/labelled-fn-stmt-second.js
 language/statements/try/early-catch-var.js
 
 // https://github.com/tc39/ecma262/issues/1426
