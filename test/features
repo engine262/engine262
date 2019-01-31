@@ -1,4 +1,6 @@
 ArrayBuffer
+Array.prototype.flat
+Array.prototype.flatMap
 Array.prototype.values
 arrow-function
 async-iteration

@@ -16,6 +16,7 @@ import {
   DeletePropertyOrThrow,
   Get,
   HasProperty,
+  IsArray,
   IsCallable,
   IsConcatSpreadable,
   ObjectCreate,
@@ -192,6 +193,73 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue 
     }
     k += 1;
   }
+  return A;
+}
+
+// #sec-flattenintoarray
+function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
+  let targetIndex = start;
+  let sourceIndex = 0;
+  while (sourceIndex < sourceLen) {
+    const P = X(ToString(new Value(sourceIndex)));
+    const exists = Q(HasProperty(source, P));
+    if (exists === Value.true) {
+      let element = Q(Get(source, P));
+      if (mapperFunction) {
+        Assert(thisArg);
+        element = Q(Call(mapperFunction, thisArg, [element, new Value(sourceIndex), source]));
+      }
+      let shouldFlatten = Value.false;
+      if (depth > 0) {
+        shouldFlatten = Q(IsArray(element));
+      }
+      if (shouldFlatten === Value.true) {
+        const lenProp = Q(Get(element, new Value('length')));
+        const elementLen = Q(ToLength(lenProp)).numberValue();
+        targetIndex = Q(FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1));
+      } else {
+        if (targetIndex >= (2 ** 53) - 1) {
+          return surroundingAgent.Throw('TypeError');
+        }
+        Q(CreateDataPropertyOrThrow(target, X(ToString(new Value(targetIndex))), element));
+        targetIndex += 1;
+      }
+    }
+    sourceIndex += 1;
+  }
+  return targetIndex;
+}
+
+// #sec-array.prototype.flat
+function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const lenProp = Q(Get(O, new Value('length')));
+  const sourceLen = Q(ToLength(lenProp)).numberValue();
+  let depthNum = 1;
+  if (depth !== Value.undefined) {
+    depthNum = Q(ToInteger(depth)).numberValue();
+  }
+  const A = Q(ArraySpeciesCreate(O, new Value(0)));
+  Q(FlattenIntoArray(A, O, sourceLen, 0, depthNum));
+  return A;
+}
+
+// #sec-array.prototype.flatmap
+function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg], { thisValue }) {
+  const O = Q(ToObject(thisValue));
+  const lenProp = Q(Get(O, new Value('length')));
+  const sourceLen = Q(ToLength(lenProp)).numberValue();
+  if (IsCallable(mapperFunction) === Value.false) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  let T;
+  if (thisArg) {
+    T = thisArg;
+  } else {
+    T = Value.undefined;
+  }
+  const A = Q(ArraySpeciesCreate(O, new Value(0)));
+  Q(FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, T));
   return A;
 }
 
@@ -494,6 +562,8 @@ export function CreateArrayPrototype(realmRec) {
     ['entries', ArrayProto_entries, 0],
     ['fill', ArrayProto_fill, 1],
     ['filter', ArrayProto_filter, 1],
+    ['flat', ArrayProto_flat, 0],
+    ['flatMap', ArrayProto_flatMap, 1],
     ['keys', ArrayProto_keys, 0],
     ['map', ArrayProto_map, 1],
     ['pop', ArrayProto_pop, 0],
@@ -523,6 +593,8 @@ export function CreateArrayPrototype(realmRec) {
     Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true);
