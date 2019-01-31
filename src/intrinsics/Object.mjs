@@ -6,9 +6,11 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  Assert,
   CreateArrayFromList,
   CreateDataProperty,
   DefinePropertyOrThrow,
+  CreateDataPropertyOrThrow,
   EnumerableOwnPropertyNames,
   FromPropertyDescriptor,
   Get,
@@ -23,7 +25,9 @@ import {
   ToObject,
   ToPropertyDescriptor,
   ToPropertyKey,
+  CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
+import { AddEntriesFromIterable } from './Map.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
@@ -126,6 +130,23 @@ function Object_freeze([O = Value.undefined]) {
     return surroundingAgent.Throw('TypeError', 'Could not freeze object');
   }
   return O;
+}
+
+function CreateDataPropertyOnObjectFunctions([key, value], { thisValue }) {
+  const O = thisValue;
+  Assert(Type(O) === 'Object');
+  Assert(O.Extensible === Value.true);
+  const propertyKey = Q(ToPropertyKey(key));
+  X(CreateDataPropertyOrThrow(O, propertyKey, value));
+}
+
+function Object_fromEntries([iterable = Value.undefined]) {
+  Q(RequireObjectCoercible(iterable));
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  Assert(obj.Extensible === Value.true && obj.properties.size === 0);
+  const stepsDefine = CreateDataPropertyOnObjectFunctions;
+  const adder = CreateBuiltinFunction(stepsDefine, []);
+  return Q(AddEntriesFromIterable(obj, iterable, adder));
 }
 
 function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]) {
@@ -262,6 +283,7 @@ export function CreateObject(realmRec) {
     ['defineProperty', Object_defineProperty, 3],
     ['entries', Object_entries, 1],
     ['freeze', Object_freeze, 1],
+    ['fromEntries', Object_fromEntries, 1],
     ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2],
     ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1],
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
