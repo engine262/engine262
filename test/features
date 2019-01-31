@@ -53,6 +53,9 @@ Set
 String.fromCodePoint
 String.prototype.endsWith
 String.prototype.includes
+string-trimming
+String.prototype.trimEnd
+String.prototype.trimStart
 super
 Symbol
 Symbol.asyncIterator

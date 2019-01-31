@@ -65,6 +65,7 @@ export * from './TaggedTemplate.mjs';
 export * from './TemplateLiteral.mjs';
 export * from './ThisExpression.mjs';
 export * from './ThrowStatement.mjs';
+export * from './TrimString.mjs';
 export * from './TryStatement.mjs';
 export * from './UnaryExpression.mjs';
 export * from './UpdateExpression.mjs';

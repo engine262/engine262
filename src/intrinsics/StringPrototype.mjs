@@ -23,7 +23,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { GetSubstitution } from '../runtime-semantics/all.mjs';
+import { GetSubstitution, TrimString } from '../runtime-semantics/all.mjs';
 import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q, X } from '../completion.mjs';
@@ -563,10 +563,20 @@ function StringProto_toUpperCase(args, { thisValue }) {
 
 // 21.1.3.27 #sec-string.prototype.trim
 function StringProto_trim(args, { thisValue }) {
-  const O = Q(RequireObjectCoercible(thisValue));
-  const S = Q(ToString(O));
-  const T = S.stringValue().trim();
-  return new Value(T);
+  const S = thisValue;
+  return Q(TrimString(S, 'start+end'));
+}
+
+// #sec-string.prototype.trimend
+function StringProto_trimEnd(args, { thisValue }) {
+  const S = thisValue;
+  return Q(TrimString(S, 'end'));
+}
+
+// #sec-string.prototype.trimstart
+function StringProto_trimStart(args, { thisValue }) {
+  const S = thisValue;
+  return Q(TrimString(S, 'start'));
 }
 
 // 21.1.3.28 #sec-string.prototype.valueof
@@ -620,6 +630,8 @@ export function CreateStringPrototype(realmRec) {
     ['toString', StringProto_toString, 0],
     ['toUpperCase', StringProto_toUpperCase, 0],
     ['trim', StringProto_trim, 0],
+    ['trimEnd', StringProto_trimEnd, 0],
+    ['trimStart', StringProto_trimStart, 0],
     ['valueOf', StringProto_valueOf, 0],
     [wellKnownSymbols.iterator, StringProto_iterator, 0],
   ]);
