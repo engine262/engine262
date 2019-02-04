@@ -4,7 +4,7 @@
   "description": "Implementation of ECMA-262 in JavaScript",
   "main": "dist/engine262",
   "dependencies": {
-    "acorn": "^6.0.6",
+    "acorn": "^6.0.7",
     "nearley": "^2.16.0"
   },
   "bin": {
@@ -16,14 +16,14 @@
     "@snek/source-map-support": "^1.0.3",
     "acorn-bigint": "^0.3.1",
     "babel-eslint": "^10.0.1",
-    "eslint": "^5.12.1",
+    "eslint": "^5.13.0",
     "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.12.4",
     "minimatch": "^3.0.4",
     "node-fetch": "^2.3.0",
-    "rollup": "^1.1.1",
+    "rollup": "^1.1.2",
     "rollup-plugin-babel": "^4.3.2",
     "test262-stream": "^1.2.0"
   },

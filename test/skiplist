@@ -11,6 +11,10 @@ language/comments/S7.4_A6.js
 // should really be SyntaxErrors, but Acorn doesn't give us a way to tell yet.
 language/expressions/conditional/in-branch-2.js
 language/expressions/conditional/in-condition.js
+language/expressions/yield/in-iteration-stmt.js
+language/expressions/yield/in-iteration-stmt.js
+language/expressions/yield/star-in-iteration-stmt.js
+language/expressions/yield/star-in-iteration-stmt.js
 language/statements/for/S12.6.3_A4_T2.js
 language/statements/for-in/head-lhs-cover-non-asnmt-trgt.js
 language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js
@@ -19,16 +23,10 @@ language/statements/for-of/head-lhs-cover-non-asnmt-trgt.js
 language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js
 language/statements/for-of/head-lhs-non-asnmt-trgt.js
 
+// https://github.com/acornjs/acorn/issues/803
+language/module-code/early-lex-and-var.js
+
 // more parsing issues
-language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js
-language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js
-language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js
-language/expressions/class/method-param-dflt-yield.js
-language/expressions/class/static-method-param-dflt-yield.js
-language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js
-language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js
-language/expressions/object/prop-def-invalid-async-prefix.js
 language/expressions/postfix-decrement/arguments-nostrict.js
 language/expressions/postfix-decrement/eval-nostrict.js
 language/expressions/postfix-increment/arguments-nostrict.js
@@ -37,20 +35,11 @@ language/expressions/prefix-decrement/arguments-nostrict.js
 language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
-language/expressions/yield/in-iteration-stmt.js
-language/expressions/yield/star-in-iteration-stmt.js
-language/module-code/early-export-global.js
-language/module-code/early-export-unresolvable.js
-language/module-code/early-lex-and-var.js
-language/statements/class/definition/early-errors-class-async-method-duplicate-parameters.js
-language/statements/class/definition/early-errors-class-method-arguments-in-formal-parameters.js
-language/statements/class/definition/early-errors-class-method-duplicate-parameters.js
-language/statements/class/definition/early-errors-class-method-eval-in-formal-parameters.js
-language/statements/class/definition/methods-gen-yield-as-function-expression-binding-identifier.js
-language/statements/class/definition/methods-gen-yield-as-identifier-in-nested-function.js
-language/statements/class/method-param-yield.js
-language/statements/class/static-method-param-yield.js
-language/statements/try/early-catch-var.js
+
+// more untriaged issues
+language/computed-property-names/class/static/method-number.js
+language/computed-property-names/class/static/method-string.js
+language/computed-property-names/class/static/method-symbol.js
 
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
