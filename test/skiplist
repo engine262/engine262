@@ -36,7 +36,7 @@ language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
 
-// more untriaged issues
+// TODO(72): https://github.com/tc39/ecma262/pull/1330
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
 language/computed-property-names/class/static/method-symbol.js
