@@ -229,7 +229,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     case 'FunctionBody':
       lexDeclarations = LexicallyScopedDeclarations_FunctionBody(code.body.body);
       break;
-    case 'ConciseBody_Expression':
+    case 'ConciseBody_ExpressionBody':
     case 'ConciseBody_FunctionBody':
     case 'AsyncConciseBody_ExpressionBody':
     case 'AsyncConciseBody_AsyncFunctionBody':
