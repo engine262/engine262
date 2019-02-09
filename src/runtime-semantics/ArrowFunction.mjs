@@ -16,9 +16,9 @@ export function Evaluate_ArrowFunction(ArrowFunction) {
 }
 
 // https://github.com/tc39/ecma262/pull/1406
-export function Evaluate_ExpressionBody(ExpressionBody) {
+export function* Evaluate_ExpressionBody(ExpressionBody) {
   const AssignmentExpression = ExpressionBody;
-  const exprRef = Evaluate(AssignmentExpression);
+  const exprRef = yield* Evaluate(AssignmentExpression);
   const exprValue = Q(GetValue(exprRef));
   return new ReturnCompletion(exprValue);
 }
