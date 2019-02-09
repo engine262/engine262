@@ -40,6 +40,15 @@ import { surroundingAgent } from '../engine.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
+function hasNonConfigurableProperties(obj) {
+  for (const desc of obj.properties.values()) {
+    if (desc.Configurable === Value.false) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition
 //
@@ -80,7 +89,10 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   const exprValue = yield* Evaluate(IdentifierReference);
   const propValue = Q(GetValue(exprValue));
   Assert(enumerable);
-  return CreateDataPropertyOrThrow(object, propName, propValue);
+  Assert(object.isOrdinary);
+  Assert(object.Extensible === Value.true);
+  Assert(!hasNonConfigurableProperties(object));
+  return X(CreateDataPropertyOrThrow(object, propName, propValue));
 }
 
 // 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
@@ -100,7 +112,10 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
     }
   }
   Assert(enumerable);
-  return CreateDataPropertyOrThrow(object, propKey, propValue);
+  Assert(object.isOrdinary);
+  Assert(object.Extensible === Value.true);
+  Assert(!hasNonConfigurableProperties(object));
+  return X(CreateDataPropertyOrThrow(object, propKey, propValue));
 }
 
 // 14.3.8 #sec-method-definitions-runtime-semantics-propertydefinitionevaluation

@@ -227,6 +227,7 @@ export class ObjectValue extends Value {
     return OrdinaryOwnPropertyKeys(this);
   }
 }
+ObjectValue.prototype.isOrdinary = true;
 
 export class ArrayExoticObjectValue extends ObjectValue {
   DefineOwnProperty(P, Desc) {
@@ -257,6 +258,7 @@ export class ArrayExoticObjectValue extends ObjectValue {
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }
 }
+ArrayExoticObjectValue.prototype.isOrdinary = false;
 
 export class FunctionValue extends ObjectValue {
   static [Symbol.hasInstance](V) {
@@ -319,6 +321,7 @@ export class BuiltinFunctionValue extends FunctionValue {
     return result;
   }
 }
+BuiltinFunctionValue.prototype.isOrdinary = false;
 
 // 9.4.3 #sec-string-exotic-objects
 export class StringExoticObjectValue extends ObjectValue {
@@ -393,6 +396,7 @@ export class StringExoticObjectValue extends ObjectValue {
     return keys;
   }
 }
+StringExoticObjectValue.prototype.isOrdinary = false;
 
 // 9.4.4 #sec-arguments-exotic-objects
 export class ArgumentsExoticObjectValue extends ObjectValue {
@@ -486,6 +490,7 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     return result;
   }
 }
+ArgumentsExoticObjectValue.prototype.isOrdinary = false;
 
 // 9.4.5 #sec-integer-indexed-exotic-objects
 export class IntegerIndexedExoticObjectValue extends ObjectValue {
@@ -648,6 +653,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
     return keys;
   }
 }
+IntegerIndexedExoticObjectValue.prototype.isOrdinary = false;
 
 // 9.4.7.2 #sec-set-immutable-prototype
 function SetImmutablePrototype(O, V) {
@@ -794,6 +800,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     return exports;
   }
 }
+ModuleNamespaceExoticObjectValue.prototype.isOrdinary = false;
 
 // 9.5 #sec-proxy-object-internal-methods-and-internal-slots
 export class ProxyExoticObjectValue extends ObjectValue {
@@ -1177,6 +1184,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     return trapResult;
   }
 }
+ProxyExoticObjectValue.prototype.isOrdinary = false;
 
 export class Reference {
   constructor({ BaseValue, ReferencedName, StrictReference }) {
