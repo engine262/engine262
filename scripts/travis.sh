@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
@@ -17,6 +17,8 @@ if [ -n "$TRAVIS_TAG" ]; then
 else
   echo -e "\e[36m\e[1mTest triggered for branch \"${TRAVIS_BRANCH}\"."
 fi
+
+set -x
 
 npm run lint
 npm run build
