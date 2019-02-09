@@ -14,6 +14,19 @@ This project is bound by a [Code of Conduct][COC].
 
 Join us on [#engine262 on freenode][irc] ([web][irc-webchat]).
 
+## Status
+
+engine262 is current with latest published ECMA-262 draft, with the following
+changes:
+
+- https://github.com/tc39/ecma262/pull/1274
+- https://github.com/tc39/ecma262/pull/1275
+- https://github.com/tc39/ecma262/pull/1284
+- https://github.com/tc39/ecma262/pull/1301
+- https://github.com/tc39/ecma262/pull/1309
+- https://github.com/tc39/ecma262/pull/1402
+- https://github.com/tc39/ecma262/pull/1406
+
 ## Why this exists
 
 While helping develop new features for JavaScript, I've found that one of the

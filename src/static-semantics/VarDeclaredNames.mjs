@@ -186,6 +186,7 @@ export function VarDeclaredNames_IterationStatement(IterationStatement) {
       break;
     case 'ForInStatement':
     case 'ForOfStatement':
+      // https://github.com/tc39/ecma262/pull/1284
       if (isVariableStatement(IterationStatement.left)) {
         const ForBinding = IterationStatement.left.declarations[0].id;
         namesFromBinding = BoundNames_ForBinding(ForBinding);
