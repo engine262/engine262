@@ -7,7 +7,7 @@ import {
   isEmptyStatement,
   isExportDeclaration,
   isExportDeclarationWithVariable,
-  isExpression,
+  isExpressionBody,
   isExpressionStatement,
   isFunctionDeclaration,
   isIfStatement,
@@ -296,13 +296,13 @@ export const VarScopedDeclarations_GeneratorBody = VarScopedDeclarations_Functio
 export const VarScopedDeclarations_AsyncFunctionBody = VarScopedDeclarations_FunctionBody;
 
 // 14.2.13 #sec-arrow-function-definitions-static-semantics-varscopeddeclarations
-//   ConciseBody : AssignmentExpression
+//   ConciseBody : ExpressionBody
 //
 // (implicit)
 //   ConciseBody : `{` FunctionBody `}`
 export function VarScopedDeclarations_ConciseBody(ConciseBody) {
   switch (true) {
-    case isExpression(ConciseBody):
+    case isExpressionBody(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return VarScopedDeclarations_FunctionBody(ConciseBody.body);
@@ -312,7 +312,7 @@ export function VarScopedDeclarations_ConciseBody(ConciseBody) {
 }
 
 // 14.8.12 #sec-async-arrow-function-definitions-static-semantics-VarScopedDeclarations
-//   AsyncConciseBody : [lookahead ≠ `{`] AssignmentExpression
+//   AsyncConciseBody : [lookahead ≠ `{`] ExpressionBody
 //
 // (implicit)
 //   AsyncConciseBody : `{` AsyncFunctionBody `}`

@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate } from '../evaluator.mjs';
 import {
   Assert,
   AsyncFunctionStart,
@@ -8,7 +7,6 @@ import {
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
   GeneratorStart,
-  GetValue,
   NewPromiseCapability,
   OrdinaryCreateFromConstructor,
   AsyncGeneratorStart,
@@ -64,6 +62,7 @@ import {
 } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
+  Evaluate_ExpressionBody,
   Evaluate_FunctionStatementList,
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
@@ -93,10 +92,10 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       varDeclarations = VarScopedDeclarations_FunctionBody(code.body.body);
       lexicalNames = LexicallyDeclaredNames_FunctionBody(code.body.body).map(Value);
       break;
-    case 'ConciseBody_Expression':
+    case 'ConciseBody_ExpressionBody':
     case 'ConciseBody_FunctionBody':
     case 'AsyncConciseBody_AsyncFunctionBody':
-    case 'AsyncConciseBody_AssignmentExpression':
+    case 'AsyncConciseBody_ExpressionBody':
     case 'AsyncGeneratorBody':
       varNames = VarDeclaredNames_ConciseBody(code.body).map(Value);
       varDeclarations = VarScopedDeclarations_ConciseBody(code.body);
@@ -232,7 +231,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       break;
     case 'ConciseBody_Expression':
     case 'ConciseBody_FunctionBody':
-    case 'AsyncConciseBody_AssignmentExpression':
+    case 'AsyncConciseBody_ExpressionBody':
     case 'AsyncConciseBody_AsyncFunctionBody':
       lexDeclarations = LexicallyScopedDeclarations_ConciseBody(code.body);
       break;
@@ -276,15 +275,17 @@ export function getFunctionBodyType(ECMAScriptCode) {
     case isArrowFunction(ECMAScriptCode) && !ECMAScriptCode.expression:
       return 'ConciseBody_FunctionBody';
 
-    // ConciseBody : AssignmentExpression
+    // ConciseBody : ExpressionBody
     case isArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
-      return 'ConciseBody_Expression';
+      return 'ConciseBody_ExpressionBody';
 
+    // AsyncConciseBody : `{` AsyncFunctionBody `}`
     case isAsyncArrowFunction(ECMAScriptCode) && !ECMAScriptCode.expression:
       return 'AsyncConciseBody_AsyncFunctionBody';
 
+    // AsyncConciseBody : ExpressionBody
     case isAsyncArrowFunction(ECMAScriptCode) && ECMAScriptCode.expression:
-      return 'AsyncConciseBody_AssignmentExpression';
+      return 'AsyncConciseBody_ExpressionBody';
 
     // GeneratorBody : FunctionBody
     case isGeneratorDeclaration(ECMAScriptCode)
@@ -306,12 +307,10 @@ export function getFunctionBodyType(ECMAScriptCode) {
 }
 
 // 14.2.15 #sec-arrow-function-definitions-runtime-semantics-evaluatebody
-// ConciseBody : AssignmentExpression
-export function* EvaluateBody_ConciseBody_Expression(AssignmentExpression, functionObject, argumentsList) {
+// ConciseBody : ExpressionBody
+export function* EvaluateBody_ConciseBody_ExpressionBody(ExpressionBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const exprRef = yield* Evaluate(AssignmentExpression);
-  const exprValue = Q(GetValue(exprRef));
-  return new ReturnCompletion(exprValue);
+  return yield* Evaluate_ExpressionBody(ExpressionBody);
 }
 
 // 14.1.18 #sec-function-definitions-runtime-semantics-evaluatebody
@@ -336,8 +335,7 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
-    // false = is not expression
-    X(AsyncFunctionStart(promiseCapability, FunctionBody, false));
+    X(AsyncFunctionStart(promiseCapability, FunctionBody));
   } else {
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
@@ -345,13 +343,12 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
 }
 
 // 14.8.14 #sec-async-arrow-function-definitions-EvaluateBody
-// AsyncConciseBody : AssignmentExpression
-export function* EvaluateBody_AsyncConciseBody_AssignmentExpression(AssignmentExpression, functionObject, argumentsList) {
+// AsyncConciseBody : ExpressionBody
+export function* EvaluateBody_AsyncConciseBody_ExpressionBody(ExpressionBody, functionObject, argumentsList) {
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   if (!(declResult instanceof AbruptCompletion)) {
-    // true = is expression
-    X(AsyncFunctionStart(promiseCapability, AssignmentExpression, true));
+    X(AsyncFunctionStart(promiseCapability, ExpressionBody));
   } else {
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }

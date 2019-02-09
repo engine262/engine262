@@ -1,7 +1,7 @@
 import {
   directivePrologueContainsUseStrictDirective,
   isBlockStatement,
-  isExpression,
+  isExpressionBody,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -12,13 +12,13 @@ export function ContainsUseStrict_FunctionBody(FunctionBody) {
 }
 
 // 14.2.5 #sec-arrow-function-definitions-static-semantics-containsusestrict
-//   ConciseBody : AssignmentExpression
+//   ConciseBody : ExpressionBody
 //
 // (implicit)
 //   ConciseBody : `{` FunctionBody `}`
 export function ContainsUseStrict_ConciseBody(ConciseBody) {
   switch (true) {
-    case isExpression(ConciseBody):
+    case isExpressionBody(ConciseBody):
       return false;
     case isBlockStatement(ConciseBody):
       return ContainsUseStrict_FunctionBody(ConciseBody.body);

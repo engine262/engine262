@@ -1,7 +1,7 @@
 import {
   isBlockStatement,
   isDeclaration,
-  isExpression,
+  isExpressionBody,
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
@@ -93,13 +93,13 @@ export const LexicallyDeclaredNames_AsyncFunctionBody = LexicallyDeclaredNames_F
 export const LexicallyDeclaredNames_AsyncGeneratorBody = LexicallyDeclaredNames_FunctionBody;
 
 // 14.2.10 #sec-arrow-function-definitions-static-semantics-lexicallydeclarednames
-//   ConciseBody : AssignmentExpression
+//   ConciseBody : ExpressionBody
 //
 // (implicit)
 //   ConciseBody : `{` FunctionBody `}`
 export function LexicallyDeclaredNames_ConciseBody(ConciseBody) {
   switch (true) {
-    case isExpression(ConciseBody):
+    case isExpressionBody(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return LexicallyDeclaredNames_FunctionBody(ConciseBody.body);
@@ -109,7 +109,7 @@ export function LexicallyDeclaredNames_ConciseBody(ConciseBody) {
 }
 
 // 14.8.9 #sec-async-arrow-function-definitions-static-semantics-LexicallyDeclaredNames
-//   AsyncConciseBody : [lookahead ≠ `{`] AssignmentExpression
+//   AsyncConciseBody : [lookahead ≠ `{`] ExpressionBody
 //
 // (implicit)
 //   AsyncConciseBody : `{` AsyncFunctionBody `}`

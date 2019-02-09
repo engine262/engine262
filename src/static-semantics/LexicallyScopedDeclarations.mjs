@@ -1,7 +1,7 @@
 import {
   isBlockStatement,
   isDeclaration,
-  isExpression,
+  isExpressionBody,
   isFunctionDeclaration,
   isLabelledStatement,
   isStatement,
@@ -97,13 +97,13 @@ export const LexicallyScopedDeclarations_GeneratorBody = LexicallyScopedDeclarat
 export const LexicallyScopedDeclarations_AsyncFunctionBody = LexicallyScopedDeclarations_FunctionBody;
 
 // 14.2.11 #sec-arrow-function-definitions-static-semantics-lexicallyscopeddeclarations
-//   ConciseBody : AssignmentExpression
+//   ConciseBody : ExpressionBody
 //
 // (implicit)
 //   ConciseBody : `{` FunctionBody `}`
 export function LexicallyScopedDeclarations_ConciseBody(ConciseBody) {
   switch (true) {
-    case isExpression(ConciseBody):
+    case isExpressionBody(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return LexicallyScopedDeclarations_FunctionBody(ConciseBody.body);
@@ -113,7 +113,7 @@ export function LexicallyScopedDeclarations_ConciseBody(ConciseBody) {
 }
 
 // 14.8.10 #sec-async-arrow-function-definitions-static-semantics-LexicallyScopedDeclarations
-//   AsyncConciseBody : [lookahead ≠ `{`] AssignmentExpression
+//   AsyncConciseBody : [lookahead ≠ `{`] ExpressionBody
 //
 // (implicit)
 //   AsyncConciseBody : `{` AsyncFunctionBody `}`

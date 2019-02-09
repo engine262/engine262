@@ -33,9 +33,9 @@ import {
   ExpectedArgumentCount_FormalParameters,
 } from '../static-semantics/all.mjs';
 import {
-  EvaluateBody_AsyncConciseBody_AssignmentExpression,
+  EvaluateBody_AsyncConciseBody_ExpressionBody,
   EvaluateBody_AsyncFunctionBody,
-  EvaluateBody_ConciseBody_Expression,
+  EvaluateBody_ConciseBody_ExpressionBody,
   EvaluateBody_FunctionBody,
   EvaluateBody_GeneratorBody,
   EvaluateBody_AsyncGeneratorBody,
@@ -108,9 +108,9 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
     case 'ConciseBody_FunctionBody':
       return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
-    // ConciseBody : AssignmentExpression
-    case 'ConciseBody_Expression':
-      return yield* EvaluateBody_ConciseBody_Expression(F.ECMAScriptCode.body, F, argumentsList);
+    // ConciseBody : ExpressionBody
+    case 'ConciseBody_ExpressionBody':
+      return yield* EvaluateBody_ConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
 
     case 'GeneratorBody':
       return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
@@ -119,8 +119,8 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
     case 'AsyncConciseBody_AsyncFunctionBody':
       return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
-    case 'AsyncConciseBody_AssignmentExpression':
-      return yield* EvaluateBody_AsyncConciseBody_AssignmentExpression(F.ECMAScriptCode.body, F, argumentsList);
+    case 'AsyncConciseBody_ExpressionBody':
+      return yield* EvaluateBody_AsyncConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
 
     case 'AsyncGeneratorBody':
       return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);

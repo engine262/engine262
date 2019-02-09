@@ -537,6 +537,9 @@ export function isExpression(node) {
   );
 }
 
+// #prod-ExpressionBody
+export const isExpressionBody = isExpression;
+
 // Used in #prod-SingleNameBinding
 export function isBindingIdentifierAndInitializer(node) {
   return node.type === 'AssignmentPattern' && isBindingIdentifier(node.left);

@@ -7,7 +7,7 @@ import {
   isEmptyStatement,
   isExportDeclaration,
   isExportDeclarationWithVariable,
-  isExpression,
+  isExpressionBody,
   isExpressionStatement,
   isFunctionDeclaration,
   isIfStatement,
@@ -291,13 +291,13 @@ export const VarDeclaredNames_GeneratorBody = VarDeclaredNames_FunctionBody;
 export const VarDeclaredNames_AsyncFunctionBody = VarDeclaredNames_FunctionBody;
 
 // 14.2.12 #sec-arrow-function-definitions-static-semantics-vardeclarednames
-//   ConciseBody : AssignmentExpression
+//   ConciseBody : ExpressionBody
 //
 // (implicit)
 //   ConciseBody : `{` FunctionBody `}`
 export function VarDeclaredNames_ConciseBody(ConciseBody) {
   switch (true) {
-    case isExpression(ConciseBody):
+    case isExpressionBody(ConciseBody):
       return [];
     case isBlockStatement(ConciseBody):
       return VarDeclaredNames_FunctionBody(ConciseBody.body);
@@ -307,7 +307,7 @@ export function VarDeclaredNames_ConciseBody(ConciseBody) {
 }
 
 // 14.8.11 #sec-async-arrow-function-definitions-static-semantics-VarDeclaredNames
-//   AsyncConciseBody : [lookahead ≠ `{`] AssignmentExpression
+//   AsyncConciseBody : [lookahead ≠ `{`] ExpressionBody
 //
 // (implicit)
 //   AsyncConciseBody : `{` AsyncFunctionBody `}`
