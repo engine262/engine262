@@ -25,16 +25,22 @@ function thisSymbolValue(value) {
   return surroundingAgent.Throw('TypeError');
 }
 
-function Symbol_toString(argList, { thisValue }) {
+function SymbolProto_toString(argList, { thisValue }) {
   const sym = Q(thisSymbolValue(thisValue));
   return SymbolDescriptiveString(sym);
 }
 
-function Symbol_valueOf(argList, { thisValue }) {
+function SymbolProto_descriptionGetter(argList, { thisValue }) {
+  const s = thisValue;
+  const sym = Q(thisSymbolValue(s));
+  return sym.Description;
+}
+
+function SymbolProto_valueOf(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
-function Symbol_toPrimitive(argList, { thisValue }) {
+function SymbolProto_toPrimitive(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
@@ -45,9 +51,10 @@ export function CreateSymbolPrototype(realmRec) {
     Configurable: Value.true,
   };
   const proto = BootstrapPrototype(realmRec, [
-    ['toString', Symbol_toString, 0],
-    ['valueOf', Symbol_valueOf, 0],
-    [wellKnownSymbols.toPrimitive, Symbol_toPrimitive, 1, override],
+    ['toString', SymbolProto_toString, 0],
+    ['description', [SymbolProto_descriptionGetter]],
+    ['valueOf', SymbolProto_valueOf, 0],
+    [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override],
     [wellKnownSymbols.toStringTag, new Value('Symbol'), undefined, override],
   ], realmRec.Intrinsics['%ObjectPrototype%']);
 
