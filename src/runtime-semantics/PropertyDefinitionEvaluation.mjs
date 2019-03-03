@@ -254,6 +254,7 @@ function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerab
   const closure = X(AsyncFunctionCreate('Method', UniqueFormalParameters, AsyncExpression, scope, strict));
   X(MakeMethod(closure, object));
   X(SetFunctionName(closure, propKey));
+  closure.SourceText = sourceTextMatchedBy(AsyncMethod);
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,
@@ -285,6 +286,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
     Configurable: Value.false,
   })));
   X(SetFunctionName(closure, propKey));
+  closure.SourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,

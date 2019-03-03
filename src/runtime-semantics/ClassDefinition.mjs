@@ -138,13 +138,13 @@ export function* Evaluate_ClassExpression(ClassExpression) {
   }
   const value = yield* ClassDefinitionEvaluation(ClassTail, className);
   ReturnIfAbrupt(value);
+  value.SourceText = sourceTextMatchedBy(ClassExpression);
   if (Type(className) !== 'Undefined') {
     const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
     if (hasNameProperty === Value.false) {
       SetFunctionName(value, className);
     }
   }
-  value.SourceText = sourceTextMatchedBy(ClassExpression);
   return new NormalCompletion(value);
 }
 
@@ -171,6 +171,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
   }
   const value = yield* ClassDefinitionEvaluation(ClassTail, className);
   ReturnIfAbrupt(value);
+  value.SourceText = sourceTextMatchedBy(ClassDeclaration);
   if (BindingIdentifier) {
     const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
     if (hasNameProperty === Value.false) {
@@ -179,7 +180,6 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     Q(InitializeBoundName(className, value, env));
   }
-  value.SourceText = sourceTextMatchedBy(ClassDeclaration);
   return new NormalCompletion(value);
 }
 

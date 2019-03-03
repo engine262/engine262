@@ -49,6 +49,9 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     node.strict = this.strict;
     const ret = super.finishNode(node, type);
     node.sourceText = () => this.input.slice(node.start, node.end);
+    if (ret.type === 'MethodDefinition' && ret.static) {
+      ret.start += 7; // don't include `static` in the source text
+    }
     return ret;
   }
 
