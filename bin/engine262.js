@@ -66,6 +66,7 @@ function createRealm() {
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
 
   Abstract.CreateDataProperty(realm.global, new Value(realm, '$'), $);
+  Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $);
 
   return realm;
 }
