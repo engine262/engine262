@@ -72,6 +72,21 @@ function createRealm() {
 }
 
 const argv = process.argv.slice(2);
+const help = `
+engine262 v${require('../package.json').version}
+
+Usage:
+
+    engine262 [options]
+    engine262 [options] [input-file]
+    engine262 [input-file]
+
+Options:
+
+    -h, --help    Show help (this screen)
+    -m, --module  Evaluate contents of input-file as a module. Must be followed by input-file
+
+`;
 
 if (argv.length) {
   const realm = createRealm();
@@ -80,6 +95,11 @@ if (argv.length) {
   let isModule = false;
   let source;
   let result;
+
+  if (/^(-h|--help)$/.test(lastArg)) {
+    process.stdout.write(help);
+    process.exit(0);
+  }
 
   if (/(\.mjs|\.js)$/.test(lastArg)) {
     source = fs.readFileSync(lastArg, 'utf8');
