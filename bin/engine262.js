@@ -71,12 +71,26 @@ function createRealm() {
   return realm;
 }
 
-if (process.argv[2]) {
+const argv = process.argv.slice(2);
+
+if (argv.length) {
   const realm = createRealm();
-  const source = fs.readFileSync(process.argv[2], 'utf8');
+  const lastArg = argv[argv.length - 1];
+
+  let isModule = false;
+  let source;
   let result;
-  if (process.argv[2].endsWith('.mjs')) {
-    result = realm.createSourceTextModule(path.resolve(process.argv[2]), source);
+
+  if (/(\.mjs|\.js)$/.test(lastArg)) {
+    source = fs.readFileSync(lastArg, 'utf8');
+  }
+
+  if (lastArg.endsWith('.mjs') || (argv.includes('-m') || argv.includes('--module'))) {
+    isModule = true;
+  }
+
+  if (isModule) {
+    result = realm.createSourceTextModule(path.resolve(lastArg), source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
       realm.moduleEntry = module;
