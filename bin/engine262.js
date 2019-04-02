@@ -89,8 +89,14 @@ if (process.argv[2]) {
     result = realm.evaluateScript(source);
   }
   if (result instanceof AbruptCompletion) {
-    const inspected = inspect(result, realm);
-    process.stdout.write(inspected);
+    let inspected;
+    if (Abstract.Type(result.Value) === 'Object') {
+      const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+      inspected = Abstract.Call(errorToString, result.Value).stringValue();
+    } else {
+      inspected = inspect(result, realm);
+    }
+    process.stdout.write(`${inspected}\n`);
     process.exit(1);
   } else {
     process.exit(0);
