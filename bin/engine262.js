@@ -130,7 +130,7 @@ if (argv.length) {
     } else {
       inspected = inspect(result, realm);
     }
-    process.stdout.write(`${inspected}\n`);
+    process.stderr.write(`${inspected}\n`);
     process.exit(1);
   } else {
     process.exit(0);
