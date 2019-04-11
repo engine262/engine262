@@ -2,7 +2,6 @@ import {
   Type,
   Value,
   wellKnownSymbols,
-  StringExoticObjectValue,
 } from '../value.mjs';
 import {
   Get,
@@ -66,8 +65,6 @@ function ObjectProto_toString(argList, { thisValue }) {
   let builtinTag;
   if (isArray === Value.true) {
     builtinTag = 'Array';
-  } else if (O instanceof StringExoticObjectValue) {
-    builtinTag = 'String';
   } else if ('ParameterMap' in O) {
     builtinTag = 'Arguments';
   } else if ('Call' in O) {
@@ -78,6 +75,8 @@ function ObjectProto_toString(argList, { thisValue }) {
     builtinTag = 'Boolean';
   } else if ('NumberData' in O) {
     builtinTag = 'Number';
+  } else if ('StringData' in O) {
+    builtinTag = 'String';
   } else if ('DateValue' in O) {
     builtinTag = 'Date';
   } else if ('RegExpMatcher' in O) {
