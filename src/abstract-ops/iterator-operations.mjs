@@ -6,7 +6,7 @@ import {
   Get,
   GetMethod,
   GetV,
-  NewPromiseCapability,
+  PromiseResolve,
   ObjectCreate,
   PerformPromiseThen,
   ToBoolean,
@@ -213,11 +213,11 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   IfAbruptRejectPromise(done, promiseCapability);
   const value = IteratorValue(result);
   IfAbruptRejectPromise(value, promiseCapability);
-  const valueWrapperCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  X(Call(valueWrapperCapability.Resolve, Value.undefined, [value]));
+  const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), [value]);
+  IfAbruptRejectPromise(value, promiseCapability);
   const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
   const onFulfilled = CreateBuiltinFunction(steps, ['Done']);
   onFulfilled.Done = done;
-  X(PerformPromiseThen(valueWrapperCapability.Promise, onFulfilled, Value.undefined, promiseCapability));
+  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
   return promiseCapability.Promise;
 }
