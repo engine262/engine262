@@ -3,19 +3,18 @@ import {
   GetViewValue,
   SetViewValue,
   IsDetachedBuffer,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { Type, Value } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // 24.3.4.1 #sec-get-dataview.prototype.buffer
 function DataViewProto_bufferGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('DataView' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'DataView', O));
-  }
+  Q(RequireInternalSlot(O, 'DataView'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   return buffer;
@@ -24,9 +23,7 @@ function DataViewProto_bufferGetter(args, { thisValue }) {
 // 24.3.4.2 #sec-get-dataview.prototype.bytelength
 function DataViewProto_byteLengthGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('DataView' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'DataView', O));
-  }
+  Q(RequireInternalSlot(O, 'DataView'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
@@ -39,9 +36,7 @@ function DataViewProto_byteLengthGetter(args, { thisValue }) {
 // 24.3.4.3 #sec-get-dataview.prototype.byteoffset
 function DataViewProto_byteOffsetGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('DataView' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'DataView', O));
-  }
+  Q(RequireInternalSlot(O, 'DataView'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {

@@ -16,6 +16,7 @@ import {
   ToLength,
   ToString,
   ToUint32,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import { GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
@@ -30,12 +31,7 @@ import { msg } from '../helpers.mjs';
 // 21.2.5.2 #sec-regexp.prototype.exec
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
-  }
-  if (!('RegExpMatcher' in R)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
-  }
+  Q(RequireInternalSlot(R, 'RegExpMatcher'));
   const S = Q(ToString(string));
   return Q(RegExpBuiltinExec(R, S));
 }
@@ -54,9 +50,7 @@ function RegExpExec(R, S) {
     }
     return result;
   }
-  if (!('RegExpMatcher' in R)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
-  }
+  Q(RequireInternalSlot(R, 'RegExpMatcher'));
   return Q(RegExpBuiltinExec(R, S));
 }
 

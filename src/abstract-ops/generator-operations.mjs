@@ -1,6 +1,7 @@
 import {
   Assert,
   CreateIterResultObject,
+  RequireInternalSlot,
 } from './all.mjs';
 import {
   AbruptCompletion, Completion,
@@ -45,12 +46,7 @@ export function GeneratorStart(generator, generatorBody) {
 
 // 25.4.3.2 #sec-generatorvalidate
 export function GeneratorValidate(generator) {
-  if (Type(generator) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Provided generator should be an object');
-  }
-  if (!('GeneratorState' in generator)) {
-    return surroundingAgent.Throw('TypeError', 'Provided generator is not a generator object');
-  }
+  Q(RequireInternalSlot(generator, 'GeneratorState'));
   Assert('GeneratorContext' in generator);
   const state = generator.GeneratorState;
   if (state === 'executing') {

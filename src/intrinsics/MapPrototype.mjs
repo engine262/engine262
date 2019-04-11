@@ -4,6 +4,7 @@ import {
   IsCallable,
   ObjectCreate,
   SameValueZero,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -15,12 +16,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
 
 function CreateMapIterator(map, kind) {
-  if (Type(map) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', map));
-  }
-  if (!('MapData' in map)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', map));
-  }
+  Q(RequireInternalSlot(map, 'MapData'));
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
     'Map',
     'MapNextIndex',
@@ -34,12 +30,7 @@ function CreateMapIterator(map, kind) {
 
 function MapProto_clear(args, { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   for (const p of entries) {
     p.Key = undefined;
@@ -50,12 +41,7 @@ function MapProto_clear(args, { thisValue }) {
 
 function MapProto_delete([key = Value.undefined], { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
@@ -81,12 +67,7 @@ function MapProto_entries(args, { thisValue }) {
 
 function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
   }
@@ -107,12 +88,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
 
 function MapProto_get([key = Value.undefined], { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   for (const p of entries) {
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
@@ -124,12 +100,7 @@ function MapProto_get([key = Value.undefined], { thisValue }) {
 
 function MapProto_has([key = Value.undefined], { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   for (const p of entries) {
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
@@ -146,12 +117,7 @@ function MapProto_keys(args, { thisValue }) {
 
 function MapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   for (const p of entries) {
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
@@ -169,12 +135,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
 
 function MapProto_sizeGetter(args, { thisValue }) {
   const M = thisValue;
-  if (Type(M) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
-  if (!('MapData' in M)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map', M));
-  }
+  Q(RequireInternalSlot(M, 'MapData'));
   const entries = M.MapData;
   let count = 0;
   for (const p of entries) {

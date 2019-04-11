@@ -1,9 +1,21 @@
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Value, Type } from '../value.mjs';
 import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
+import { msg } from '../helpers.mjs';
 
 export function Assert(invariant, source) {
   if (!invariant) {
     throw new TypeError(`Assert failed${source ? `: ${source}` : ''}`.trim());
+  }
+}
+
+// #sec-requireinternalslot
+export function RequireInternalSlot(O, internalSlot) {
+  if (Type(O) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', msg('NotAnObject', O));
+  }
+  if (!(internalSlot in O)) {
+    return surroundingAgent.Throw('TypeError', msg('InternalSlotMissing', O, internalSlot));
   }
 }
 

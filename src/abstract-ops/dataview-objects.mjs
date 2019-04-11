@@ -7,20 +7,19 @@ import {
   ToIndex,
   ToNumber,
   numericTypeInfo,
+  RequireInternalSlot,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { msg } from '../helpers.mjs';
-import { Type, Value } from '../value.mjs';
+import { Value } from '../value.mjs';
 
 // This file covers abstract operations defined in
 // 24.3 #sec-dataview-objects
 
 // 24.3.1.1 #sec-getviewvalue
 export function GetViewValue(view, requestIndex, isLittleEndian, type) {
-  if (Type(view) !== 'Object' || !('DataView' in view)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'DataView', view));
-  }
+  Q(RequireInternalSlot(view, 'DataView'));
   Assert('ViewedArrayBuffer' in view);
   const getIndex = Q(ToIndex(requestIndex)).numberValue();
   isLittleEndian = X(ToBoolean(isLittleEndian));
@@ -40,9 +39,7 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
 
 // 24.3.1.2 #sec-setviewvalue
 export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
-  if (Type(view) !== 'Object' || !('DataView' in view)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'DataView', view));
-  }
+  RequireInternalSlot(view, 'DataView');
   Assert('ViewedArrayBuffer' in view);
   const getIndex = Q(ToIndex(requestIndex)).numberValue();
   const numberValue = Q(ToNumber(value));

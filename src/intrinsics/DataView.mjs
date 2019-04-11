@@ -3,6 +3,7 @@ import {
   IsDetachedBuffer,
   OrdinaryCreateFromConstructor,
   ToIndex,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -17,9 +18,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'DataView'));
   }
-  if (Type(buffer) !== 'Object' || !('ArrayBufferData' in buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', buffer));
-  }
+  Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
   const offset = Q(ToIndex(byteOffset)).numberValue();
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', msg('BufferDetached'));

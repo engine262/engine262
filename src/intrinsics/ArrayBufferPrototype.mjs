@@ -7,6 +7,7 @@ import {
   SameValue,
   SpeciesConstructor,
   ToInteger,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -16,9 +17,8 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 // 24.1.4.1 #sec-get-arraybuffer.prototype.bytelength
 function ArrayBufferProto_byteLengthGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object'
-      || !('ArrayBufferData' in O)
-      || IsSharedArrayBuffer(O) === Value.true) {
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', O));
   }
   if (IsDetachedBuffer(O)) {
@@ -31,9 +31,8 @@ function ArrayBufferProto_byteLengthGetter(args, { thisValue }) {
 // 24.1.4.3 #sec-arraybuffer.prototype.slice
 function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object'
-      || !('ArrayBufferData' in O)
-      || IsSharedArrayBuffer(O) === Value.true) {
+  Q(RequireInternalSlot(O, 'ArrayBufferData'));
+  if (IsSharedArrayBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', O));
   }
   if (IsDetachedBuffer(O)) {

@@ -20,6 +20,7 @@ import {
   ToUint32,
   ToUint8,
   ToUint8Clamp,
+  RequireInternalSlot,
 } from './all.mjs';
 
 // 22.2 #sec-typedarray-objects
@@ -68,9 +69,7 @@ export function IterableToList(items, method) {
 
 // 22.2.3.5.1 #sec-validatetypedarray
 export function ValidateTypedArray(O) {
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {

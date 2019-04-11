@@ -19,6 +19,7 @@ import {
   TypedArraySpeciesCreate,
   ValidateTypedArray,
   typedArrayInfo,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -32,9 +33,7 @@ import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototyp
 // 22.2.3.1 #sec-get-%typedarray%.prototype.buffer
 function TypedArrayProto_bufferGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   return buffer;
@@ -43,9 +42,7 @@ function TypedArrayProto_bufferGetter(args, { thisValue }) {
 // 22.2.3.2 #sec-get-%typedarray%.prototype.bytelength
 function TypedArrayProto_byteLengthGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
@@ -58,9 +55,7 @@ function TypedArrayProto_byteLengthGetter(args, { thisValue }) {
 // 22.2.3.3 #sec-get-%typedarray%.prototype.byteoffset
 function TypedArrayProto_byteOffsetGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
@@ -218,9 +213,7 @@ function TypedArrayProto_keys(args, { thisValue }) {
 // 22.2.3.18 #sec-get-%typedarray%.prototype.length
 function TypedArrayProto_lengthGetter(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O && 'ArrayLength' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
@@ -262,9 +255,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     // 22.2.3.23.1 #sec-%typedarray%.prototype.set-array-offset
     const array = overloaded;
     const target = thisValue;
-    if (Type(target) !== 'Object' || !('TypedArrayName' in target)) {
-      return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', target));
-    }
+    Q(RequireInternalSlot(target, 'TypedArrayName'));
     Assert('ViewedArrayBuffer' in target);
     const targetOffset = Q(ToInteger(offset)).numberValue();
     if (targetOffset < 0) {
@@ -306,9 +297,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     const typedArray = overloaded;
     Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray);
     const target = thisValue;
-    if (Type(target) !== 'Object' || !('TypedArrayName' in target)) {
-      return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', target));
-    }
+    Q(RequireInternalSlot(target, 'TypedArrayName'));
     Assert('ViewedArrayBuffer' in target);
     const targetOffset = Q(ToInteger(offset)).numberValue();
     if (targetOffset < 0) {
@@ -491,9 +480,7 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
 // 22.2.3.27 #sec-%typedarray%.prototype.subarray
 function TypedArrayProto_subarray([begin = Value.undefined, end], { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'TypedArray', O));
-  }
+  Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   const srcLength = O.ArrayLength.numberValue();

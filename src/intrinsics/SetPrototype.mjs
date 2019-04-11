@@ -4,6 +4,7 @@ import {
   IsCallable,
   ObjectCreate,
   SameValueZero,
+  RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -15,12 +16,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 23.2.5.1 #sec-createsetiterator
 function CreateSetIterator(set, kind) {
-  if (Type(set) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in set)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(set, 'SetData'));
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
     'IteratedSet',
     'SetNextIndex',
@@ -34,12 +30,7 @@ function CreateSetIterator(set, kind) {
 
 function SetProto_add([value = Value.undefined], { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   const entries = S.SetData;
   for (const e of entries) {
     if (e !== undefined && SameValueZero(e, value) === Value.true) {
@@ -55,12 +46,7 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
 
 function SetProto_clear(args, { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   const entries = S.SetData;
   for (let i = 0; i < entries.length; i += 1) {
     entries[i] = undefined;
@@ -70,12 +56,7 @@ function SetProto_clear(args, { thisValue }) {
 
 function SetProto_delete([value = Value.undefined], { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   const entries = S.SetData;
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
@@ -94,12 +75,7 @@ function SetProto_entries(args, { thisValue }) {
 
 function SetProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -120,12 +96,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }
 
 function SetProto_has([value = Value.undefined], { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   const entries = S.SetData;
   for (const e of entries) {
     if (e !== undefined && SameValueZero(e, value) === Value.true) {
@@ -142,12 +113,7 @@ function SetProto_values(args, { thisValue }) {
 
 function SetProto_sizeGetter(args, { thisValue }) {
   const S = thisValue;
-  if (Type(S) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
-  }
-  if (!('SetData' in S)) {
-    return surroundingAgent.Throw('TypeError');
-  }
+  Q(RequireInternalSlot(S, 'SetData'));
   const entries = S.SetData;
   let count = 0;
   for (const e of entries) {
