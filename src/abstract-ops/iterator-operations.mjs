@@ -213,7 +213,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   IfAbruptRejectPromise(done, promiseCapability);
   const value = IteratorValue(result);
   IfAbruptRejectPromise(value, promiseCapability);
-  const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), [value]);
+  const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   IfAbruptRejectPromise(value, promiseCapability);
   const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
   const onFulfilled = CreateBuiltinFunction(steps, ['Done']);

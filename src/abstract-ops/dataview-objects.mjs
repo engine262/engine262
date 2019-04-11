@@ -39,7 +39,7 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
 
 // 24.3.1.2 #sec-setviewvalue
 export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
-  RequireInternalSlot(view, 'DataView');
+  Q(RequireInternalSlot(view, 'DataView'));
   Assert('ViewedArrayBuffer' in view);
   const getIndex = Q(ToIndex(requestIndex)).numberValue();
   const numberValue = Q(ToNumber(value));

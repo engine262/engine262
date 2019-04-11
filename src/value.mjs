@@ -1351,7 +1351,7 @@ export class SourceTextModuleRecord extends ModuleRecord {
     if (!resolveSet) {
       resolveSet = [];
     }
-    Assert(Array.isArray(resolveSet) && resolveSet.every((e) => e.Module && e.BindingName));
+    Assert(Array.isArray(resolveSet) && resolveSet.every((e) => 'Module' in e && 'ExportName' in e));
     for (const r of resolveSet) {
       if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
         // Assert: This is a circular import request.
