@@ -76,7 +76,7 @@ export function InnerModuleInstantiation(module, stack, index) {
 // 15.2.1.16.4.2 #sec-moduledeclarationenvironmentsetup
 export function ModuleDeclarationEnvironmentSetup(module) {
   for (const e of module.IndirectExportEntries) {
-    const resolution = Q(module.ResolveExport(e.ExportName, []));
+    const resolution = Q(module.ResolveExport(e.ExportName));
     if (resolution === null || resolution === 'ambiguous') {
       return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, e.ExportName, module));
     }
@@ -95,7 +95,7 @@ export function ModuleDeclarationEnvironmentSetup(module) {
       X(envRec.CreateImmutableBinding(ie.LocalName, Value.true));
       envRec.InitializeBinding(ie.LocalName, namespace);
     } else {
-      const resolution = Q(importedModule.ResolveExport(ie.ImportName, []));
+      const resolution = Q(importedModule.ResolveExport(ie.ImportName));
       if (resolution === null || resolution === 'ambiguous') {
         return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule));
       }
@@ -138,10 +138,10 @@ export function GetModuleNamespace(module) {
   Assert(module.Status !== 'uninstantiated');
   let namespace = module.Namespace;
   if (namespace === Value.undefined) {
-    const exportedNames = Q(module.GetExportedNames([]));
+    const exportedNames = Q(module.GetExportedNames());
     const unambiguousNames = [];
     for (const name of exportedNames) {
-      const resolution = Q(module.ResolveExport(name, []));
+      const resolution = Q(module.ResolveExport(name));
       if (resolution instanceof ResolvedBindingRecord) {
         unambiguousNames.push(name);
       }

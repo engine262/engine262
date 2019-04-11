@@ -761,7 +761,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return Value.undefined;
     }
     const m = O.Module;
-    const binding = m.ResolveExport(P, []);
+    const binding = m.ResolveExport(P);
     Assert(binding instanceof ResolvedBindingRecord);
     const targetModule = binding.Module;
     Assert(targetModule !== Value.undefined);
@@ -1313,6 +1313,10 @@ export class SourceTextModuleRecord extends ModuleRecord {
   // 15.2.1.16.2 #sec-getexportednames
   GetExportedNames(exportStarSet) {
     const module = this;
+    if (!exportStarSet) {
+      exportStarSet = [];
+    }
+    Assert(Array.isArray(exportStarSet) && exportStarSet.every((e) => e instanceof SourceTextModuleRecord));
     if (exportStarSet.includes(module)) {
       // Assert: We've reached the starting point of an import * circularity.
       return [];
@@ -1344,6 +1348,10 @@ export class SourceTextModuleRecord extends ModuleRecord {
   // 15.2.1.16.3 #sec-resolveexport
   ResolveExport(exportName, resolveSet) {
     const module = this;
+    if (!resolveSet) {
+      resolveSet = [];
+    }
+    Assert(Array.isArray(resolveSet) && resolveSet.every((e) => e.Module && e.BindingName));
     for (const r of resolveSet) {
       if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
         // Assert: This is a circular import request.
