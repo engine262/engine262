@@ -1,5 +1,5 @@
 import { surroundingAgent } from './engine.mjs';
-import { Value, Descriptor, ModuleRecord } from './value.mjs';
+import { Value, Descriptor, AbstractModuleRecord } from './value.mjs';
 import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 import { inspect } from './api.mjs';
@@ -53,7 +53,7 @@ export function captureStack(O) {
       } else {
         string += '<anonymous>';
       }
-      if (e.ScriptOrModule instanceof ModuleRecord) {
+      if (e.ScriptOrModule instanceof AbstractModuleRecord) {
         string += e.ScriptOrModule.HostDefined.specifier;
       }
       return string;

@@ -2,7 +2,7 @@ import { X } from '../completion.mjs';
 import {
   wellKnownSymbols,
   Value,
-  ModuleRecord,
+  AbstractModuleRecord,
   ModuleNamespaceExoticObjectValue,
   Descriptor,
 } from '../value.mjs';
@@ -13,7 +13,7 @@ import {
 
 // 9.4.6.11 #sec-modulenamespacecreate
 export function ModuleNamespaceCreate(module, exports) {
-  Assert(module instanceof ModuleRecord);
+  Assert(module instanceof AbstractModuleRecord);
   Assert(module.Namespace === Value.undefined);
   Assert(Array.isArray(exports));
   const M = new ModuleNamespaceExoticObjectValue();

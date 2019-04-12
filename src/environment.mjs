@@ -5,7 +5,7 @@ import {
   Type,
   Value,
   wellKnownSymbols,
-  ModuleRecord,
+  AbstractModuleRecord,
 } from './value.mjs';
 import { surroundingAgent } from './engine.mjs';
 import {
@@ -576,7 +576,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   CreateImportBinding(N, M, N2) {
     const envRec = this;
     Assert(envRec.HasBinding(N) === Value.false);
-    Assert(M instanceof ModuleRecord);
+    Assert(M instanceof AbstractModuleRecord);
     // Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
     envRec.bindings.set(N, {
       indirect: true,

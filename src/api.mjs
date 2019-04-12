@@ -16,7 +16,7 @@ import {
   Descriptor,
   Type,
   Value,
-  SourceTextModuleRecord,
+  CyclicModuleRecord,
   wellKnownSymbols,
 } from './value.mjs';
 import { ParseScript, ParseModule } from './parse.mjs';
@@ -36,7 +36,6 @@ const {
   ObjectCreate,
   CreateBuiltinFunction,
   Assert,
-  ModuleExecution,
   InnerModuleEvaluation,
   GetModuleNamespace,
 } = Abstract;
@@ -143,6 +142,7 @@ class APIRealm {
           let index = 0;
 
           // InnerModuleEvaluation
+
           module.Status = 'evaluating';
           module.DFSIndex = index;
           module.DFSAncestorIndex = index;
@@ -150,22 +150,24 @@ class APIRealm {
           for (const required of module.RequestedModules) {
             const requiredModule = X(HostResolveImportedModule(module, required));
             index = Q(InnerModuleEvaluation(requiredModule, stack, index));
-            Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
-            if (stack.includes(requiredModule)) {
-              Assert(requiredModule.Status === 'evaluating');
-            }
-            if (requiredModule.Status === 'evaluating') {
-              Assert(requiredModule instanceof SourceTextModuleRecord);
-              module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+            if (requiredModule instanceof CyclicModuleRecord) {
+              Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
+              if (stack.includes(requiredModule)) {
+                Assert(requiredModule.Status === 'evaluating');
+              }
+              if (requiredModule.Status === 'evaluating') {
+                module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+              }
             }
           }
-          const result = Q(ModuleExecution(module));
+          const result = Q(module.ExecuteModule());
           Assert(stack.indexOf(module) === stack.lastIndexOf(module));
           Assert(module.DFSAncestorIndex <= module.DFSIndex);
           if (module.DFSAncestorIndex === module.DFSIndex) {
             let done = false;
             while (done === false) {
               const requiredModule = stack.pop();
+              Assert(requiredModule instanceof CyclicModuleRecord);
               requiredModule.Status = 'evaluated';
               if (requiredModule === module) {
                 done = true;

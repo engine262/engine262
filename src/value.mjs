@@ -42,14 +42,31 @@ import {
   InnerModuleEvaluation,
   isArrayIndex,
   isIntegerIndex,
+  GetModuleNamespace,
 } from './abstract-ops/all.mjs';
-import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
+import { EnvironmentRecord, LexicalEnvironment, NewModuleEnvironment } from './environment.mjs';
 import {
   Completion,
+  NormalCompletion,
   AbruptCompletion,
   Q,
   X,
 } from './completion.mjs';
+import { InstantiateFunctionObject } from './runtime-semantics/all.mjs';
+import {
+  BoundNames_ModuleItem,
+  BoundNames_VariableDeclaration,
+  IsConstantDeclaration,
+  LexicallyScopedDeclarations_Module,
+  VarScopedDeclarations_ModuleBody,
+} from './static-semantics/all.mjs';
+import {
+  isFunctionDeclaration,
+  isGeneratorDeclaration,
+  isAsyncFunctionDeclaration,
+  isAsyncGeneratorDeclaration,
+} from './ast.mjs';
+import { Evaluate_Module } from './evaluator.mjs';
 import { OutOfRange, msg } from './helpers.mjs';
 
 export function Value(value) {
@@ -1279,7 +1296,7 @@ export class ResolvedBindingRecord {
   }
 }
 
-export class ModuleRecord {
+export class AbstractModuleRecord {
   constructor({
     Realm,
     Environment,
@@ -1293,21 +1310,70 @@ export class ModuleRecord {
   }
 }
 
-export class SourceTextModuleRecord extends ModuleRecord {
+export class CyclicModuleRecord extends AbstractModuleRecord {
+  constructor(init) {
+    super(init);
+    this.Status = init.Status;
+    this.EvaluationError = init.EvaluationError;
+    this.DFSIndex = init.DFSIndex;
+    this.DFSAncestorIndex = init.DFSAncestorIndex;
+    this.RequestedModules = init.RequestedModules;
+  }
+
+  // 15.2.1.16.1 #sec-moduledeclarationinstantiation
+  Instantiate() {
+    const module = this;
+    Assert(module.Status !== 'instantiating' && module.Status !== 'evaluating');
+    const stack = [];
+    const result = InnerModuleInstantiation(module, stack, 0);
+    if (result instanceof AbruptCompletion) {
+      for (const m of stack) {
+        Assert(m.Status === 'instantiating');
+        m.Status = 'uninstantiated';
+        m.Environment = Value.undefined;
+        m.DFSIndex = Value.undefined;
+        m.DFSAncestorIndex = Value.undefined;
+      }
+      Assert(module.Status === 'uninstantiated');
+      return result;
+    }
+    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    Assert(stack.length === 0);
+    return Value.undefined;
+  }
+
+  // 15.2.1.16.1 #sec-moduleevaluation
+  Evaluate() {
+    const module = this;
+    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    const stack = [];
+    const result = InnerModuleEvaluation(module, stack, 0);
+    if (result instanceof AbruptCompletion) {
+      for (const m of stack) {
+        Assert(m instanceof CyclicModuleRecord);
+        Assert(m.Status === 'evaluating');
+        m.Status = 'evaluated';
+        m.EvaluationError = result;
+      }
+      Assert(module.Status === 'evaluated' && module.EvaluationError === result);
+      return result;
+    }
+    Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
+    Assert(stack.length === 0);
+    return Value.undefined;
+  }
+}
+
+export class SourceTextModuleRecord extends CyclicModuleRecord {
   constructor(init) {
     super(init);
 
     ({
       ECMAScriptCode: this.ECMAScriptCode,
-      RequestedModules: this.RequestedModules,
       ImportEntries: this.ImportEntries,
       LocalExportEntries: this.LocalExportEntries,
       IndirectExportEntries: this.IndirectExportEntries,
       StarExportEntries: this.StarExportEntries,
-      Status: this.Status,
-      EvaluationError: this.EvaluationError,
-      DFSIndex: this.DFSIndex,
-      DFSAncestorIndex: this.DFSAncestorIndex,
     } = init);
   }
 
@@ -1403,46 +1469,83 @@ export class SourceTextModuleRecord extends ModuleRecord {
     return starResolution;
   }
 
-  // 15.2.1.16.4 #sec-moduledeclarationinstantiation
-  Instantiate() {
+  // #sec-source-text-module-record-initialize-environment
+  InitializeEnvironment() {
     const module = this;
-    Assert(module.Status !== 'instantiating' && module.Status !== 'evaluating');
-    const stack = [];
-    const result = InnerModuleInstantiation(module, stack, 0);
-    if (result instanceof AbruptCompletion) {
-      for (const m of stack) {
-        Assert(m.Status === 'instantiating');
-        m.Status = 'uninstantiated';
-        m.Environment = Value.undefined;
-        m.DFSIndex = Value.undefined;
-        m.DFSAncestorIndex = Value.undefined;
+    for (const e of module.IndirectExportEntries) {
+      const resolution = Q(module.ResolveExport(e.ExportName));
+      if (resolution === null || resolution === 'ambiguous') {
+        return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, e.ExportName, module));
       }
-      Assert(module.Status === 'uninstantiated');
-      return result;
+      // Assert: resolution is a ResolvedBinding Record.
     }
-    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
-    Assert(stack.length === 0);
-    return Value.undefined;
+    // Assert: All named exports from module are resolvable.
+    const realm = module.Realm;
+    Assert(realm !== Value.undefined);
+    const env = NewModuleEnvironment(realm.GlobalEnv);
+    module.Environment = env;
+    const envRec = env.EnvironmentRecord;
+    for (const ie of module.ImportEntries) {
+      const importedModule = X(HostResolveImportedModule(module, ie.ModuleRequest));
+      if (ie.ImportName === new Value('*')) {
+        const namespace = Q(GetModuleNamespace(importedModule));
+        X(envRec.CreateImmutableBinding(ie.LocalName, Value.true));
+        envRec.InitializeBinding(ie.LocalName, namespace);
+      } else {
+        const resolution = Q(importedModule.ResolveExport(ie.ImportName));
+        if (resolution === null || resolution === 'ambiguous') {
+          return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule));
+        }
+        envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
+      }
+    }
+    const code = module.ECMAScriptCode.body;
+    const varDeclarations = VarScopedDeclarations_ModuleBody(code);
+    const declaredVarNames = [];
+    for (const d of varDeclarations) {
+      for (const dn of BoundNames_VariableDeclaration(d).map(Value)) {
+        if (!declaredVarNames.includes(dn)) {
+          X(envRec.CreateMutableBinding(dn, Value.false));
+          envRec.InitializeBinding(dn, Value.undefined);
+          declaredVarNames.push(dn);
+        }
+      }
+    }
+    const lexDeclarations = LexicallyScopedDeclarations_Module(code);
+    for (const d of lexDeclarations) {
+      for (const dn of BoundNames_ModuleItem(d).map(Value)) {
+        if (IsConstantDeclaration(d)) {
+          Q(envRec.CreateImmutableBinding(dn, Value.true));
+        } else {
+          Q(envRec.CreateMutableBinding(dn, Value.false));
+        }
+        if (isFunctionDeclaration(d) || isGeneratorDeclaration(d)
+            || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
+          const fo = InstantiateFunctionObject(d, env);
+          envRec.InitializeBinding(dn, fo);
+        }
+      }
+    }
+    return new NormalCompletion(undefined);
   }
 
-  // 15.2.1.16.5 #sec-moduleevaluation
-  Evaluate() {
+  // #sec-source-text-module-record-execute-module
+  ExecuteModule() {
     const module = this;
-    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
-    const stack = [];
-    const result = InnerModuleEvaluation(module, stack, 0);
-    if (result instanceof AbruptCompletion) {
-      for (const m of stack) {
-        Assert(m.Status === 'evaluating');
-        m.Status = 'evaluated';
-        m.EvaluationError = result;
-      }
-      Assert(module.Status === 'evaluated' && module.EvaluationError === result);
-      return result;
-    }
-    Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
-    Assert(stack.length === 0);
-    return Value.undefined;
+    const moduleCtx = new ExecutionContext();
+    moduleCtx.Function = Value.null;
+    Assert(module.Realm !== Value.undefined);
+    moduleCtx.Realm = module.Realm;
+    moduleCtx.ScriptOrModule = module;
+    // Assert: module has been linked and declarations in its module environment have been instantiated.
+    moduleCtx.VariableEnvironment = module.Environment;
+    moduleCtx.LexicalEnvironment = module.Environment;
+    // Suspend the currently running execution context.
+    surroundingAgent.executionContextStack.push(moduleCtx);
+    const result = Evaluate_Module(module.ECMAScriptCode.body);
+    surroundingAgent.executionContextStack.pop(moduleCtx);
+    // Resume the context that is now on the top of the execution context stack as the running execution context.
+    return Completion(result);
   }
 }
 
