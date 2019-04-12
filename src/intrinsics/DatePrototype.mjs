@@ -554,7 +554,10 @@ function DateString(tv) {
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const year = String(YearFromTime(tv).numberValue()).padStart(4, '0');
+  const yearNum = YearFromTime(tv).numberValue();
+  const year = yearNum < 0
+    ? `-${String(Math.abs(yearNum)).padStart(4, '0')}`
+    : String(yearNum).padStart(4, '0');
   return new Value(`${weekday} ${month} ${day} ${year}`);
 }
 
@@ -612,7 +615,10 @@ function DateProto_toUTCString(args, { thisValue }) {
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const year = String(YearFromTime(tv).numberValue()).padStart(4, '0');
+  const yearNum = YearFromTime(tv).numberValue();
+  const year = yearNum < 0
+    ? `-${String(Math.abs(yearNum)).padStart(4, '0')}`
+    : String(yearNum).padStart(4, '0');
   return new Value(`${weekday}, ${day} ${month} ${year} ${TimeString(tv).stringValue()}`);
 }
 
