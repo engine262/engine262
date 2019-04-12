@@ -168,7 +168,7 @@ function isError(realm, type, value) {
 
 async function run({ file, contents, attrs }) {
   if (override !== file) {
-    if ((attrs.features && !attrs.features.every((feature) => features.includes(feature)))
+    if ((attrs.features && attrs.features.some((feature) => features.includes(feature)))
         || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
         || attrs.includes.includes('nativeFunctionMatcher.js')
         || skiplist.find((t) => minimatch(file, t))) {

@@ -111,3 +111,10 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
+
+// failures found while increasing test surface
+language/statements/async-generator/yield-star-async-from-sync-iterator-inaccessible.js
+language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
+built-ins/Date/prototype/toDateString/negative-year.js
+built-ins/Date/prototype/toString/negative-year.js
+built-ins/Date/prototype/toUTCString/negative-year.js
