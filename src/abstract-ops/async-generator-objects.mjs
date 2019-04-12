@@ -7,6 +7,7 @@ import {
   GetGeneratorKind,
   NewPromiseCapability,
   PerformPromiseThen,
+  PromiseResolve,
 } from './all.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import {
@@ -121,15 +122,14 @@ function AsyncGeneratorResumeNext(generator) {
     if (state === 'completed') {
       if (completion.Type === 'return') {
         generator.AsyncGeneratorState = 'awaiting-return';
-        const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-        X(Call(promiseCapability.Resolve, Value.undefined, [completion.Value]));
+        const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
         const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
         const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
         onFulfilled.Generator = generator;
         const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
         const onRejected = CreateBuiltinFunction(stepsRejected, ['Generator']);
         onRejected.Generator = generator;
-        X(PerformPromiseThen(promiseCapability.Promise, onFulfilled, onRejected));
+        X(PerformPromiseThen(promise, onFulfilled, onRejected));
         return Value.undefined;
       } else {
         Assert(completion.Type === 'throw');
