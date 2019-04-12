@@ -14,19 +14,6 @@ This project is bound by a [Code of Conduct][COC].
 
 Join us on [#engine262 on freenode][irc] ([web][irc-webchat]).
 
-## Status
-
-engine262 is current with latest published ECMA-262 draft, with the following
-changes:
-
-- https://github.com/tc39/ecma262/pull/1274
-- https://github.com/tc39/ecma262/pull/1275
-- https://github.com/tc39/ecma262/pull/1284
-- https://github.com/tc39/ecma262/pull/1301
-- https://github.com/tc39/ecma262/pull/1309
-- https://github.com/tc39/ecma262/pull/1402
-- https://github.com/tc39/ecma262/pull/1406
-
 ## Why this exists
 
 While helping develop new features for JavaScript, I've found that one of the
@@ -88,24 +75,7 @@ is needed. Some of the newer features we use are:
 - Object spread properties (ES2018)
 
 Additionally, the CLI (`bin/engine262.js`) and test262 runner
-(`test/test262.mjs`) require a recent version of Node.js.
-
-V8 versions between 6.7 and 7.0 (inclusive) had a bug that resulted in the
-following:
-
-```js
-// Generate a new array with the spread syntax, but then discard the resulting
-// array. This allows the following bug to occur.
-[...[]];
-
-// This should return false, as Object.is() treats positive and negative zeros
-// as different, but returns true on these buggy hosts.
-Object.is(-0, 0);
-```
-
-This bug is reproducible for all versions of Node.js newer than 10.3.0 (not
-including 10.3.0). Many test262 tests that deal with negative zeros fail on
-affected Node.js versions because of that. (See [nodejs/node#25221][].)
+(`test/test262.js`) require a recent version of Node.js.
 
 ## Using engine262
 
