@@ -27,6 +27,7 @@ import {
   EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
+import { UTF16Encoding } from '../static-semantics/all.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -258,13 +259,13 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
 }
 
 const codeUnitTable = new Map([
-  ['\u0008', '\\b'],
-  ['\u0009', '\\t'],
-  ['\u000A', '\\n'],
-  ['\u000C', '\\f'],
-  ['\u000D', '\\r'],
-  ['\u0022', '\\"'],
-  ['\u005C', '\\\\'],
+  [0x0008, '\\b'],
+  [0x0009, '\\t'],
+  [0x000A, '\\n'],
+  [0x000C, '\\f'],
+  [0x000D, '\\r'],
+  [0x0022, '\\"'],
+  [0x005C, '\\\\'],
 ]);
 
 function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
@@ -319,13 +320,15 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
 
   function QuoteJSONString(value) { // eslint-disable-line no-shadow
     let product = '\u0022';
-    for (const C of value.stringValue()) {
+    const cpList = [...value.stringValue()].map((c) => c.codePointAt(0));
+    for (const C of cpList) {
       if (codeUnitTable.has(C)) {
         product = `${product}${codeUnitTable.get(C)}`;
-      } else if (C.charCodeAt(0) < 0x0020) {
-        product = `${product}${UnicodeEscape(C)}`;
+      } else if (C < 0x0020 || (C >= 0xD800 && C <= 0xDBFF) || (C >= 0xDC00 && C <= 0xDFFF)) {
+        const unit = String.fromCodePoint(C);
+        product = `${product}${UnicodeEscape(unit)}`;
       } else {
-        product = `${product}${C}`;
+        product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
       }
     }
     product = `${product}\u0022`;

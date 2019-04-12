@@ -29,8 +29,6 @@ globalThis
 
 export-star-as-namespace-from-module
 
-well-formed-json-stringify
-
 hashbang
 
 dynamic-import
