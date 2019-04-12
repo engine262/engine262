@@ -46,6 +46,7 @@ import { CreateArrayIteratorPrototype } from './intrinsics/ArrayIteratorPrototyp
 import { CreateMapIteratorPrototype } from './intrinsics/MapIteratorPrototype.mjs';
 import { CreateSetIteratorPrototype } from './intrinsics/SetIteratorPrototype.mjs';
 import { CreateStringIteratorPrototype } from './intrinsics/StringIteratorPrototype.mjs';
+import { CreateRegExpStringIteratorPrototype } from './intrinsics/RegExpStringIteratorPrototype.mjs';
 import { CreateMapPrototype } from './intrinsics/MapPrototype.mjs';
 import { CreateMap } from './intrinsics/Map.mjs';
 import { CreateSetPrototype } from './intrinsics/SetPrototype.mjs';
@@ -165,6 +166,7 @@ export function CreateIntrinsics(realmRec) {
   CreateMapIteratorPrototype(realmRec);
   CreateSetIteratorPrototype(realmRec);
   CreateStringIteratorPrototype(realmRec);
+  CreateRegExpStringIteratorPrototype(realmRec);
 
   CreateStringPrototype(realmRec);
   CreateString(realmRec);

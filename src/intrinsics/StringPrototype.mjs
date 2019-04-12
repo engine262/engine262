@@ -247,6 +247,20 @@ function StringProto_match([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.match, [S]));
 }
 
+// 21.1.3.12 #sec-string-prototype-matchall
+function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
+  const O = Q(RequireObjectCoercible(thisValue));
+  if (regexp !== Value.undefined && regexp !== Value.null) {
+    const matcher = Q(GetMethod(regexp, wellKnownSymbols.matchAll));
+    if (matcher !== Value.undefined) {
+      return Q(Call(matcher, regexp, [O]));
+    }
+  }
+  const S = Q(ToString(O));
+  const rx = Q(RegExpCreate(regexp, new Value('g')));
+  return Q(Invoke(rx, wellKnownSymbols.matchAll, [S]));
+}
+
 // 21.1.3.12 #sec-string.prototype.normalize
 function StringProto_normalize([form], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
@@ -614,6 +628,7 @@ export function CreateStringPrototype(realmRec) {
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
     ['match', StringProto_match, 1],
+    ['matchAll', StringProto_matchAll, 1],
     ['normalize', StringProto_normalize, 0],
     ['padEnd', StringProto_padEnd, 1],
     ['padStart', StringProto_padStart, 1],

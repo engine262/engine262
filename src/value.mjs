@@ -159,6 +159,7 @@ for (const name of [
   'isConcatSpreadable',
   'iterator',
   'match',
+  'matchAll',
   'replace',
   'search',
   'species',

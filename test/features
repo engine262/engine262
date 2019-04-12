@@ -27,8 +27,6 @@ class-static-methods-private
 
 globalThis
 
-Symbol.matchAll
-
 export-star-as-namespace-from-module
 
 well-formed-json-stringify
