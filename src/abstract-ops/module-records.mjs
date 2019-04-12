@@ -56,7 +56,9 @@ export function InnerModuleInstantiation(module, stack, index) {
 // 15.2.1.18 #sec-getmodulenamespace
 export function GetModuleNamespace(module) {
   Assert(module instanceof AbstractModuleRecord);
-  Assert(module.Status !== 'uninstantiated');
+  if (!(module instanceof CyclicModuleRecord)) {
+    Assert(module.Status !== 'uninstantiated');
+  }
   let namespace = module.Namespace;
   if (namespace === Value.undefined) {
     const exportedNames = Q(module.GetExportedNames());
