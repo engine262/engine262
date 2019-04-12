@@ -11,7 +11,6 @@ import {
   RegExpCreate,
   RequireObjectCoercible,
   ToInteger,
-  ToLength,
   ToNumber,
   ToString,
   ToUint32,
@@ -23,7 +22,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { GetSubstitution, TrimString } from '../runtime-semantics/all.mjs';
+import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
 import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q, X } from '../completion.mjs';
@@ -279,49 +278,13 @@ function StringProto_normalize([form], { thisValue }) {
 // 21.1.3.13 #sec-string.prototype.padend
 function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
-  const S = Q(ToString(O));
-  const intMaxLength = Q(ToLength(maxLength)).numberValue();
-  const stringLength = S.stringValue().length;
-  if (intMaxLength <= stringLength) {
-    return S;
-  }
-  let filler;
-  if (fillString === Value.undefined) {
-    filler = ' ';
-  } else {
-    filler = Q(ToString(fillString)).stringValue();
-  }
-  if (filler === '') {
-    return S;
-  }
-  const fillLen = intMaxLength - stringLength;
-  const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
-  const truncatedStringFiller = stringFiller.slice(0, fillLen);
-  return new Value(S.stringValue() + truncatedStringFiller);
+  return Q(StringPad(O, maxLength, fillString, 'end'));
 }
 
 // 21.1.3.14 #sec-string.prototype.padstart
 function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
-  const S = Q(ToString(O));
-  const intMaxLength = Q(ToLength(maxLength)).numberValue();
-  const stringLength = S.stringValue().length;
-  if (intMaxLength <= stringLength) {
-    return S;
-  }
-  let filler;
-  if (fillString === Value.undefined) {
-    filler = ' ';
-  } else {
-    filler = Q(ToString(fillString)).stringValue();
-  }
-  if (filler === '') {
-    return S;
-  }
-  const fillLen = intMaxLength - stringLength;
-  const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
-  const truncatedStringFiller = stringFiller.slice(0, fillLen);
-  return new Value(truncatedStringFiller + S.stringValue());
+  return Q(StringPad(O, maxLength, fillString, 'start'));
 }
 
 // 21.1.3.15 #sec-string.prototype.repeat
