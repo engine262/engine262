@@ -1350,7 +1350,6 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     const result = InnerModuleEvaluation(module, stack, 0);
     if (result instanceof AbruptCompletion) {
       for (const m of stack) {
-        Assert(m instanceof CyclicModuleRecord);
         Assert(m.Status === 'evaluating');
         m.Status = 'evaluated';
         m.EvaluationError = result;
