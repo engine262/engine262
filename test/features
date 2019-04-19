@@ -36,3 +36,5 @@ dynamic-import
 import.meta
 
 numeric-separator-literal
+
+Promise.allSettled
