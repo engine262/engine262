@@ -23,9 +23,6 @@ language/statements/for-of/head-lhs-cover-non-asnmt-trgt.js
 language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js
 language/statements/for-of/head-lhs-non-asnmt-trgt.js
 
-// https://github.com/acornjs/acorn/issues/803
-language/module-code/early-lex-and-var.js
-
 // more parsing issues
 language/expressions/postfix-decrement/arguments-nostrict.js
 language/expressions/postfix-decrement/eval-nostrict.js
