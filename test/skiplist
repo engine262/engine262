@@ -38,6 +38,21 @@ language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
 language/computed-property-names/class/static/method-symbol.js
 
+// https://github.com/tc39/ecma262/pull/666
+built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-writable.js
+built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js
+built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js
+
+// https://github.com/tc39/ecma262/pull/1506
+built-ins/Promise/race/invoke-resolve-get-once-no-calls.js
+built-ins/Promise/race/invoke-resolve-get-once-multiple-calls.js
+built-ins/Promise/all/invoke-resolve-get-once-no-calls.js
+built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js
+built-ins/Promise/all/invoke-resolve-get-error-close.js
+built-ins/Promise/all/invoke-resolve-get-error-close.js
+built-ins/Promise/race/invoke-resolve-get-error-close.js
+built-ins/Promise/race/invoke-resolve-get-error-close.js
+
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
