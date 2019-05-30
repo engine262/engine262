@@ -36,12 +36,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devsnek/engine262.git"
+    "url": "git+https://github.com/engine262/engine262.git"
   },
-  "author": "devsnek",
+  "author": "engine262 Contributors",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/devsnek/engine262/issues"
+    "url": "https://github.com/engine262/engine262/issues"
   },
-  "homepage": "https://github.com/devsnek/engine262#readme"
+  "homepage": "https://github.com/engine262/engine262#readme"
 }

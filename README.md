@@ -1,4 +1,4 @@
-# engine262 [![Build Status](https://travis-ci.com/devsnek/engine262.svg?branch=master)](https://travis-ci.com/devsnek/engine262)
+# engine262 [![Build Status](https://travis-ci.com/engine262/engine262.svg?branch=master)](https://travis-ci.com/engine262/engine262)
 
 An implementation of ECMA-262 in JavaScript
 
@@ -150,7 +150,7 @@ included here for reference, though engine262 is not based on any of them.
 - https://github.com/Siubaak/sval
 
 [Babel]: https://babeljs.io/
-[COC]: https://github.com/devsnek/engine262/blob/master/CODE_OF_CONDUCT.md
+[COC]: https://github.com/engine262/engine262/blob/master/CODE_OF_CONDUCT.md
 [do expressions]: https://github.com/tc39/proposal-do-expressions
 [irc]: ircs://chat.freenode.net:6697/engine262
 [irc-webchat]: https://webchat.freenode.net/?channels=engine262
