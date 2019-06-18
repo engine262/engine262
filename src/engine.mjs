@@ -209,7 +209,7 @@ export function ScriptEvaluationJob(sourceText, hostDefined) {
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
-  m.Instantiate();
+  m.Link();
   m.Evaluate();
 }
 

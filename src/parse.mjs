@@ -217,7 +217,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     Realm: realm,
     Environment: Value.undefined,
     Namespace: Value.undefined,
-    Status: 'uninstantiated',
+    Status: 'unlinked',
     EvaluationError: Value.undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,

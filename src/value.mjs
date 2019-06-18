@@ -38,7 +38,7 @@ import {
   ToUint32,
   ToInteger,
   ToString,
-  InnerModuleInstantiation,
+  InnerModuleLinking,
   InnerModuleEvaluation,
   isArrayIndex,
   isIntegerIndex,
@@ -1320,24 +1320,24 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.RequestedModules = init.RequestedModules;
   }
 
-  // 15.2.1.16.1 #sec-moduledeclarationinstantiation
-  Instantiate() {
+  // 15.2.1.16.1 #sec-moduledeclarationlinking
+  Link() {
     const module = this;
-    Assert(module.Status !== 'instantiating' && module.Status !== 'evaluating');
+    Assert(module.Status !== 'linking' && module.Status !== 'evaluating');
     const stack = [];
-    const result = InnerModuleInstantiation(module, stack, 0);
+    const result = InnerModuleLinking(module, stack, 0);
     if (result instanceof AbruptCompletion) {
       for (const m of stack) {
-        Assert(m.Status === 'instantiating');
-        m.Status = 'uninstantiated';
+        Assert(m.Status === 'linking');
+        m.Status = 'unlinked';
         m.Environment = Value.undefined;
         m.DFSIndex = Value.undefined;
         m.DFSAncestorIndex = Value.undefined;
       }
-      Assert(module.Status === 'uninstantiated');
+      Assert(module.Status === 'unlinked');
       return result;
     }
-    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    Assert(module.Status === 'linked' || module.Status === 'evaluated');
     Assert(stack.length === 0);
     return Value.undefined;
   }
@@ -1345,7 +1345,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
   // 15.2.1.16.1 #sec-moduleevaluation
   Evaluate() {
     const module = this;
-    Assert(module.Status === 'instantiated' || module.Status === 'evaluated');
+    Assert(module.Status === 'linked' || module.Status === 'evaluated');
     const stack = [];
     const result = InnerModuleEvaluation(module, stack, 0);
     if (result instanceof AbruptCompletion) {

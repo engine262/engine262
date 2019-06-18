@@ -217,7 +217,7 @@ async function run({ file, contents, attrs }) {
     if (!(completion instanceof AbruptCompletion)) {
       const module = completion;
       $262.moduleEntry = module;
-      completion = module.Instantiate();
+      completion = module.Link();
       if (!(completion instanceof AbruptCompletion)) {
         completion = module.Evaluate();
       }

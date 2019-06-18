@@ -114,7 +114,7 @@ if (argv.length) {
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
       realm.moduleEntry = module;
-      result = module.Instantiate();
+      result = module.Link();
       if (!(result instanceof AbruptCompletion)) {
         result = module.Evaluate();
       }

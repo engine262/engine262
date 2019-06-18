@@ -8,30 +8,30 @@ import {
 import { Assert, ModuleNamespaceCreate } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 
-// 15.2.1.16.4.1 #sec-innermoduleinstantiation
-export function InnerModuleInstantiation(module, stack, index) {
+// 15.2.1.16.4.1 #sec-innermodulelinking
+export function InnerModuleLinking(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
-    Q(module.Instantiate());
+    Q(module.Link());
     return index;
   }
-  if (module.Status === 'instantiating' || module.Status === 'instantiated' || module.Status === 'evaluated') {
+  if (module.Status === 'linking' || module.Status === 'linked' || module.Status === 'evaluated') {
     return index;
   }
-  Assert(module.Status === 'uninstantiated');
-  module.Status = 'instantiating';
+  Assert(module.Status === 'unlinked');
+  module.Status = 'linking';
   module.DFSIndex = index;
   module.DFSAncestorIndex = index;
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
     const requiredModule = Q(HostResolveImportedModule(module, required));
-    index = Q(InnerModuleInstantiation(requiredModule, stack, index));
+    index = Q(InnerModuleLinking(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
-      Assert(requiredModule.Status === 'instantiating' || requiredModule.Status === 'instantiated' || requiredModule.Status === 'evaluated');
+      Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated');
       if (stack.includes(requiredModule)) {
-        Assert(requiredModule.Status === 'instantiating');
+        Assert(requiredModule.Status === 'linking');
       }
-      if (requiredModule.Status === 'instantiating') {
+      if (requiredModule.Status === 'linking') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
       }
     }
@@ -44,7 +44,7 @@ export function InnerModuleInstantiation(module, stack, index) {
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      requiredModule.Status = 'instantiated';
+      requiredModule.Status = 'linked';
       if (requiredModule === module) {
         done = true;
       }
@@ -57,7 +57,7 @@ export function InnerModuleInstantiation(module, stack, index) {
 export function GetModuleNamespace(module) {
   Assert(module instanceof AbstractModuleRecord);
   if (!(module instanceof CyclicModuleRecord)) {
-    Assert(module.Status !== 'uninstantiated');
+    Assert(module.Status !== 'unlinked');
   }
   let namespace = module.Namespace;
   if (namespace === Value.undefined) {
@@ -90,7 +90,7 @@ export function InnerModuleEvaluation(module, stack, index) {
   if (module.Status === 'evaluating') {
     return index;
   }
-  Assert(module.Status === 'instantiated');
+  Assert(module.Status === 'linked');
   module.Status = 'evaluating';
   module.DFSIndex = index;
   module.DFSAncestorIndex = index;

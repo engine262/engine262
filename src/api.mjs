@@ -134,10 +134,10 @@ class APIRealm {
       specifier,
       public: {
         specifier,
-        Instantiate: () => this.scope(() => module.Instantiate()),
+        Link: () => this.scope(() => module.Link()),
         GetNamespace: () => this.scope(() => GetModuleNamespace(module)),
         Evaluate: () => this.scope(() => {
-          Assert(module.Status === 'instantiated');
+          Assert(module.Status === 'linked');
           const stack = [];
           let index = 0;
 
