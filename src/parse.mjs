@@ -148,11 +148,11 @@ function forwardError(fn) {
   try {
     return fn();
   } catch (e) {
-    let type = 'SyntaxError';
-    if (e.message.startsWith('Assigning to rvalue')) {
-      type = 'ReferenceError';
+    if (e.name === 'SyntaxError') {
+      return [surroundingAgent.Throw('SyntaxError', e.message).Value];
+    } else {
+      throw e;
     }
-    return [surroundingAgent.Throw(type, e.message).Value];
   }
 }
 

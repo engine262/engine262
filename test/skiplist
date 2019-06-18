@@ -6,22 +6,8 @@ built-ins/RegExp/character-class-escape-non-whitespace.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
-// https://github.com/acornjs/acorn/issues/778
-// For now we are throwing ReferenceErrors for all invalid LHS's. Some of them
-// should really be SyntaxErrors, but Acorn doesn't give us a way to tell yet.
-language/expressions/conditional/in-branch-2.js
-language/expressions/conditional/in-condition.js
-language/expressions/yield/in-iteration-stmt.js
-language/expressions/yield/in-iteration-stmt.js
-language/expressions/yield/star-in-iteration-stmt.js
-language/expressions/yield/star-in-iteration-stmt.js
-language/statements/for/S12.6.3_A4_T2.js
-language/statements/for-in/head-lhs-cover-non-asnmt-trgt.js
-language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js
-language/statements/for-in/head-lhs-non-asnmt-trgt.js
-language/statements/for-of/head-lhs-cover-non-asnmt-trgt.js
-language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js
-language/statements/for-of/head-lhs-non-asnmt-trgt.js
+// https://github.com/tc39/test262/pull/2200
+built-ins/Object/subclass-object-arg.js
 
 // more parsing issues
 language/expressions/postfix-decrement/arguments-nostrict.js
@@ -32,6 +18,14 @@ language/expressions/prefix-decrement/arguments-nostrict.js
 language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
+
+// https://github.com/tc39/test262/pull/2182
+language/statements/for-of/head-var-init.js
+language/statements/for-of/dstr/var-ary-ptrn-init-err.js
+language/statements/for-of/dstr/var-obj-ptrn-init-err.js
+language/statements/for-await-of/head-var-init.js
+language/statements/for-await-of/async-gen-dstr-var-obj-ptrn-init-err.js
+language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-init-err.js
 
 // TODO(72): https://github.com/tc39/ecma262/pull/1330
 language/computed-property-names/class/static/method-number.js
