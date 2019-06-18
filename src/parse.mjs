@@ -142,7 +142,7 @@ export function ParseAsFormalParameters(sourceText, strict, enableAwait, enableY
 }
 
 export const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.expression.body.body[0];
-export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(... args){ super (...args);} })').body[0].expression.expression.body.body[0];
+export const forwardingConstructorNode = Parser.parse('(class extends X { constructor(...args) { super(...args); } })').body[0].expression.expression.body.body[0];
 
 function forwardError(fn) {
   try {
