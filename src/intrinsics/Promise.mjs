@@ -92,6 +92,10 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   const values = [];
   const remainingElementsCount = { Value: 1 };
+  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+  if (IsCallable(promiseResolve) === Value.alse) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', promiseResolve));
+  }
   let index = 0;
   while (true) {
     const next = IteratorStep(iteratorRecord);
@@ -114,7 +118,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     }
     ReturnIfAbrupt(nextValue);
     values.push(Value.undefined);
-    const nextPromise = Q(Invoke(constructor, new Value('resolve'), [nextValue]));
+    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     const steps = PromiseAllResolveElementFunctions;
     const resolveElement = CreateBuiltinFunction(steps, [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
@@ -152,6 +156,10 @@ function Promise_all([iterable = Value.undefined], { thisValue }) {
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
+  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+  if (IsCallable(promiseResolve) === Value.alse) {
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', promiseResolve));
+  }
   while (true) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
@@ -167,7 +175,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
       iteratorRecord.Done = Value.true;
     }
     ReturnIfAbrupt(nextValue);
-    const nextPromise = Q(Invoke(constructor, new Value('resolve'), [nextValue]));
+    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
   }
 }

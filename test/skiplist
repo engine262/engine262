@@ -37,16 +37,6 @@ built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-wri
 built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js
 built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js
 
-// https://github.com/tc39/ecma262/pull/1506
-built-ins/Promise/race/invoke-resolve-get-once-no-calls.js
-built-ins/Promise/race/invoke-resolve-get-once-multiple-calls.js
-built-ins/Promise/all/invoke-resolve-get-once-no-calls.js
-built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js
-built-ins/Promise/all/invoke-resolve-get-error-close.js
-built-ins/Promise/all/invoke-resolve-get-error-close.js
-built-ins/Promise/race/invoke-resolve-get-error-close.js
-built-ins/Promise/race/invoke-resolve-get-error-close.js
-
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
@@ -121,3 +111,7 @@ language/expressions/super/prop-expr-*.js
 // https://github.com/tc39/ecma262/pull/1474
 language/statements/async-generator/yield-star-async-from-sync-iterator-inaccessible.js
 language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
+
+// pending investigation
+built-ins/Promise/all/invoke-resolve-get-error-close.js
+built-ins/Promise/race/invoke-resolve-get-error-close.js
