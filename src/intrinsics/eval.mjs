@@ -167,12 +167,14 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
 }
 
 // 18.2.1.1 #sec-performeval
-export function PerformEval(x, evalRealm, strictCaller, direct) {
+export function PerformEval(x, callerRealm, strictCaller, direct) {
   // Assert: If direct is false, then strictCaller is also false.
   Assert(!(direct === false) || strictCaller === false);
   if (Type(x) !== 'String') {
     return x;
   }
+  const evalRealm = surroundingAgent.currentRealmRecord;
+  Q(HostEnsureCanCompileStrings(callerRealm, evalRealm));
   /*
   const thisEnvRec = X(GetThisEnvironment());
   let inFunction;
@@ -243,9 +245,7 @@ function TheEval([x = Value.undefined]) {
   Assert(surroundingAgent.executionContextStack.length >= 2);
   const callerContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
   const callerRealm = callerContext.Realm;
-  const calleeRealm = surroundingAgent.currentRealmRecord;
-  Q(HostEnsureCanCompileStrings(callerRealm, calleeRealm));
-  return Q(PerformEval(x, calleeRealm, false, false));
+  return Q(PerformEval(x, callerRealm, false, false));
 }
 
 export function CreateEval(realmRec) {

@@ -1,4 +1,4 @@
-import { HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import {
   Assert,
@@ -78,7 +78,6 @@ export function* Evaluate_CallExpression(CallExpression) {
       const evalText = argList[0];
       const strictCaller = CallExpression.strict;
       const evalRealm = surroundingAgent.currentRealmRecord;
-      Q(HostEnsureCanCompileStrings(evalRealm, evalRealm));
       return Q(PerformEval(evalText, evalRealm, strictCaller, true));
     }
   }
