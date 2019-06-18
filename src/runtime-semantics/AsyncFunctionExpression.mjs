@@ -6,7 +6,6 @@ import {
   AsyncFunctionCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
@@ -17,16 +16,12 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncFunctionExpression;
-
-  // If the function code for FunctionExpression is strict mode
-  // code, let strict be true. Otherwise let strict be false.
-  const strict = isStrictModeCode(AsyncFunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const funcEnv = NewDeclarativeEnvironment(scope);
   const envRec = funcEnv.EnvironmentRecord;
   const name = new Value(BindingIdentifier.name);
   X(envRec.CreateImmutableBinding(name, Value.false));
-  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, funcEnv, strict));
+  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, funcEnv));
   X(SetFunctionName(closure, name));
   X(envRec.InitializeBinding(name, closure));
   closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
@@ -40,12 +35,8 @@ export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
   const {
     params: FormalParameters,
   } = AsyncFunctionExpression;
-
-  // If the function code for FunctionExpression is strict mode
-  // code, let strict be true. Otherwise let strict be false.
-  const strict = isStrictModeCode(AsyncFunctionExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope, strict));
+  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope));
   closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }

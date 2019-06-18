@@ -27,7 +27,6 @@ import {
   MakeMethod,
   ObjectCreate,
   SetFunctionName,
-  isStrictModeCode,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
@@ -155,11 +154,9 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
 
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
-      // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = isStrictModeCode(MethodDefinition);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const formalParameterList = [];
-      const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope, strict);
+      const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('get')));
       closure.SourceText = sourceTextMatchedBy(MethodDefinition);
@@ -177,10 +174,8 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
 
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
-      // If the function code for this MethodDefinition is strict mode code, let strict be true. Otherwise let strict be false.
-      const strict = isStrictModeCode(MethodDefinition);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope, strict);
+      const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope);
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('set')));
       closure.SourceText = sourceTextMatchedBy(MethodDefinition);
@@ -211,11 +206,10 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   } = GeneratorMethod;
   const UniqueFormalParameters = GeneratorExpression.params;
 
-  const strict = isStrictModeCode(GeneratorExpression);
   const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope, strict));
+  const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope));
   MakeMethod(closure, object);
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
   X(DefinePropertyOrThrow(
@@ -249,9 +243,8 @@ function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerab
 
   const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncMethod.computed);
   ReturnIfAbrupt(propKey);
-  const strict = isStrictModeCode(AsyncExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncFunctionCreate('Method', UniqueFormalParameters, AsyncExpression, scope, strict));
+  const closure = X(AsyncFunctionCreate('Method', UniqueFormalParameters, AsyncExpression, scope));
   X(MakeMethod(closure, object));
   X(SetFunctionName(closure, propKey));
   closure.SourceText = sourceTextMatchedBy(AsyncMethod);
@@ -274,9 +267,8 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
 
   const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncGeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
-  const strict = isStrictModeCode(AsyncGeneratorExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncGeneratorFunctionCreate('Method', UniqueFormalParameters, AsyncGeneratorExpression, scope, strict));
+  const closure = X(AsyncGeneratorFunctionCreate('Method', UniqueFormalParameters, AsyncGeneratorExpression, scope));
   X(MakeMethod(closure, object));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
   X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({

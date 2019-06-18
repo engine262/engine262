@@ -150,14 +150,16 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     expression: false,
     async: enableAwait,
     params: parameters,
+    strict,
     body: {
       type: 'BlockStatement',
       body,
+      strict,
     },
   };
 
   const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
-  const F = FunctionAllocate(proto, strict, kind);
+  const F = FunctionAllocate(proto, kind);
   const realmF = F.Realm;
   const scope = realmF.GlobalEnv;
   FunctionInitialize(F, 'Normal', parameters, fabricatedFunctionNode, scope);

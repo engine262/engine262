@@ -7,10 +7,10 @@ import { Q, ReturnCompletion } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
 export function Evaluate_ArrowFunction(ArrowFunction) {
-  const { params: ArrowParameters, strict } = ArrowFunction;
+  const { params: ArrowParameters } = ArrowFunction;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const parameters = ArrowParameters;
-  const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope, strict);
+  const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope);
   closure.SourceText = sourceTextMatchedBy(ArrowFunction);
   return closure;
 }

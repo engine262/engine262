@@ -36,7 +36,7 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options = {}, source) {
     super({
       ...options,
-      ecmaVersion: 2019,
+      ecmaVersion: 2020,
       // adds needed ParenthesizedExpression production
       preserveParens: true,
     }, source);

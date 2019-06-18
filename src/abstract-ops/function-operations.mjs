@@ -14,6 +14,7 @@ import {
   OrdinaryCreateFromConstructor,
   ToInteger,
   ToObject,
+  isStrictModeCode,
 } from './all.mjs';
 import { Realm } from '../realm.mjs';
 import {
@@ -207,7 +208,7 @@ const esFunctionInternalSlots = Object.freeze([
 ]);
 
 // 9.2.3 #sec-functionallocate
-export function FunctionAllocate(functionPrototype, strict, functionKind) {
+export function FunctionAllocate(functionPrototype, functionKind) {
   Assert(Type(functionPrototype) === 'Object');
   Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
     .includes(functionKind));
@@ -224,7 +225,6 @@ export function FunctionAllocate(functionPrototype, strict, functionKind) {
     F.Construct = FunctionConstructSlot;
     F.ConstructorKind = 'base';
   }
-  F.Strict = strict;
   F.FunctionKind = functionKind;
   F.Prototype = functionPrototype;
   F.Extensible = Value.true;
@@ -249,7 +249,8 @@ export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
       throw new OutOfRange('FunctionInitialize kind', kind);
   }
   X(SetFunctionLength(F, new Value(len)));
-  const Strict = F.Strict;
+  const Strict = isStrictModeCode(Body);
+  F.Strict = Strict;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;
@@ -268,33 +269,33 @@ export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
 // Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
 // instead take in the entire function node as Body and save it in
 // ECMAScriptCode as such.
-export function FunctionCreate(kind, ParameterList, Body, Scope, Strict, prototype) {
+export function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
   if (prototype === undefined) {
     prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
   }
   const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
-  const F = FunctionAllocate(prototype, Strict, allocKind);
+  const F = FunctionAllocate(prototype, allocKind);
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
 // 9.2.6 #sec-generatorfunctioncreate
-export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict) {
+export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%Generator%');
-  const F = FunctionAllocate(functionPrototype, Strict, 'generator');
+  const F = FunctionAllocate(functionPrototype, 'generator');
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
 // 9.2.7 #sec-asyncgeneratorfunctioncreate
-export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope, Strict) {
+export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncGenerator%');
-  const F = X(FunctionAllocate(functionPrototype, Strict, 'generator'));
+  const F = X(FunctionAllocate(functionPrototype, 'generator'));
   return X(FunctionInitialize(F, kind, ParameterList, Body, Scope));
 }
 
 // 9.2.8 #sec-async-functions-abstract-operations-async-function-create
-export function AsyncFunctionCreate(kind, parameters, body, Scope, Strict) {
+export function AsyncFunctionCreate(kind, parameters, body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncFunctionPrototype%');
-  const F = X(FunctionAllocate(functionPrototype, Strict, 'async'));
+  const F = X(FunctionAllocate(functionPrototype, 'async'));
   return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
 

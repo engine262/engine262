@@ -4,7 +4,6 @@ import {
   ObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -20,7 +19,6 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     id: BindingIdentifier,
     params: FormalParameters,
   } = GeneratorExpression;
-  const strict = isStrictModeCode(GeneratorExpression);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   let funcEnv = scope;
   let envRec;
@@ -31,7 +29,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     name = new Value(BindingIdentifier.name);
     envRec.CreateImmutableBinding(name, Value.false);
   }
-  const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv, strict));
+  const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv));
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
   X(DefinePropertyOrThrow(
     closure,

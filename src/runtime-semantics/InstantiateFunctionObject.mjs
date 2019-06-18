@@ -8,7 +8,6 @@ import {
   ObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-  isStrictModeCode,
 } from '../abstract-ops/all.mjs';
 import {
   isAsyncFunctionDeclaration,
@@ -30,9 +29,8 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
     id: BindingIdentifier,
     params: FormalParameters,
   } = FunctionDeclaration;
-  const strict = isStrictModeCode(FunctionDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope, strict));
+  const F = X(FunctionCreate('Normal', FormalParameters, FunctionDeclaration, scope));
   MakeConstructor(F);
   SetFunctionName(F, name);
   F.SourceText = sourceTextMatchedBy(FunctionDeclaration);
@@ -48,9 +46,8 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     id: BindingIdentifier,
     params: FormalParameters,
   } = GeneratorDeclaration;
-  const strict = isStrictModeCode(GeneratorDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorDeclaration, scope, strict));
+  const F = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorDeclaration, scope));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -68,9 +65,8 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncFunctionDeclaration;
-  const strict = isStrictModeCode(AsyncFunctionDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope, strict));
+  const F = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionDeclaration, scope));
   SetFunctionName(F, name);
   F.SourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   return F;
@@ -81,9 +77,8 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorDeclaration;
-  const strict = isStrictModeCode(AsyncGeneratorDeclaration);
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope, strict));
+  const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
