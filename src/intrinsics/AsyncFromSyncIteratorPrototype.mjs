@@ -6,6 +6,7 @@ import {
   GetMethod,
   IteratorNext,
   NewPromiseCapability,
+  Assert,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, X } from '../completion.mjs';
@@ -14,12 +15,8 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 // 25.1.4.2.1 #sec-%asyncfromsynciteratorprototype%.next
 function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], { thisValue }) {
   const O = thisValue;
+  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {
-    const invalidIteratorError = surroundingAgent.Throw('TypeError').Value;
-    X(Call(promiseCapability.Reject, Value.undefined, [invalidIteratorError]));
-    return promiseCapability.Promise;
-  }
   const syncIteratorRecord = O.SyncIteratorRecord;
   const result = IteratorNext(syncIteratorRecord, value);
   IfAbruptRejectPromise(result, promiseCapability);
@@ -29,12 +26,8 @@ function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], { thisVa
 // 25.1.4.2.2 #sec-%asyncfromsynciteratorprototype%.return
 function AsyncFromSyncIteratorPrototype_return([value = Value.undefined], { thisValue }) {
   const O = thisValue;
+  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {
-    const invalidIteratorError = surroundingAgent.Throw('TypeError').Value;
-    X(Call(promiseCapability.Reject, Value.undefined, [invalidIteratorError]));
-    return promiseCapability.Promise;
-  }
   const syncIterator = O.SyncIteratorRecord.Iterator;
   const ret = GetMethod(syncIterator, new Value('return'));
   IfAbruptRejectPromise(ret, promiseCapability);
@@ -57,12 +50,8 @@ function AsyncFromSyncIteratorPrototype_return([value = Value.undefined], { this
 // 25.1.4.2.3 #sec-%asyncfromsynciteratorprototype%.throw
 function AsyncFromSyncIteratorPrototype_throw([value = Value.undefined], { thisValue }) {
   const O = thisValue;
+  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  if (Type(O) !== 'Object' || !('SyncIteratorRecord' in O)) {
-    const invalidIteratorError = surroundingAgent.Throw('TypeError').Value;
-    X(Call(promiseCapability.Reject, Value.undefined, [invalidIteratorError]));
-    return promiseCapability.Promise;
-  }
   const syncIterator = O.SyncIteratorRecord.Iterator;
   const thr = GetMethod(syncIterator, new Value('throw'));
   IfAbruptRejectPromise(thr, promiseCapability);
@@ -86,7 +75,7 @@ export function CreateAsyncFromSyncIteratorPrototype(realmRec) {
     ['next', AsyncFromSyncIteratorPrototype_next, 1],
     ['return', AsyncFromSyncIteratorPrototype_return, 1],
     ['throw', AsyncFromSyncIteratorPrototype_throw, 1],
-  ], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'Async-from-Sync Iterator');
+  ], realmRec.Intrinsics['%AsyncIteratorPrototype%']);
 
   realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
 }

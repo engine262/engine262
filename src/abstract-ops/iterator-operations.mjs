@@ -197,7 +197,12 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
     'SyncIteratorRecord',
   ]));
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  return Q(GetIterator(asyncIterator, 'async'));
+  const nextMethod = X(Get(asyncIterator, new Value('next')));
+  return {
+    Iterator: asyncIterator,
+    NextMethod: nextMethod,
+    Done: Value.false,
+  };
 }
 
 // 25.1.4.2.5 #sec-async-from-sync-iterator-value-unwrap-functions
