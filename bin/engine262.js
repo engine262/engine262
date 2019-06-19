@@ -6,6 +6,7 @@ require('@snek/source-map-support/register');
 const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
+const util = require('util');
 
 let engine262;
 try {
@@ -19,6 +20,7 @@ const {
   initializeAgent,
   inspect,
   Realm,
+  Completion,
   AbruptCompletion,
   Value,
   Object: APIObject,
@@ -144,6 +146,11 @@ if (argv.length) {
       callback(null, result);
     },
     completer: () => [],
-    writer: (o) => inspect(o, realm),
+    writer: (o) => {
+      if (o instanceof Value || o instanceof Completion) {
+        return inspect(o, realm);
+      }
+      return util.inspect(o);
+    },
   });
 }
