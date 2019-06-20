@@ -6,9 +6,6 @@ built-ins/RegExp/character-class-escape-non-whitespace.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
-// https://github.com/tc39/test262/pull/2200
-built-ins/Object/subclass-object-arg.js
-
 // more parsing issues
 language/expressions/postfix-decrement/arguments-nostrict.js
 language/expressions/postfix-decrement/eval-nostrict.js
