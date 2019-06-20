@@ -8,15 +8,6 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const snekparse = require('./snekparse');
-
-let engine262;
-try {
-  engine262 = require('..');
-} catch (e) {
-  require('v8').setFlagsFromString('--harmony-do-expressions');
-  engine262 = require('..');
-}
-
 const {
   initializeAgent,
   inspect,
@@ -28,7 +19,7 @@ const {
   Abstract,
   Throw,
   FEATURES,
-} = engine262;
+} = require('..');
 
 function createRealm() {
   const realm = new Realm({
