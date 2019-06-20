@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  extends: 'airbnb',
+  extends: 'airbnb-base',
   parser: 'babel-eslint',
   overrides: [
     {
@@ -10,7 +10,7 @@ module.exports = {
     },
   ],
   globals: {
-    'BigInt': false
+    'BigInt': false,
   },
   rules: {
     'quote-props': ['error', 'consistent'],
@@ -30,11 +30,9 @@ module.exports = {
     'no-use-before-define': 'off',
     'no-continue': 'off',
     'import/no-cycle': 'off',
+    'import/extensions': 'off',
     'import/prefer-default-export': 'off',
-    'import/no-unresolved': 'off',
-    'import/no-extraneous-dependencies': 'off',
     'import/no-mutable-exports': 'off',
-    'react/destructuring-assignment': 'off',
     'global-require': 'off',
   },
 };
