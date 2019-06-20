@@ -73,6 +73,7 @@ is needed. Some of the newer features we use are:
 - Exponentiation operator `**` (ES2016)
 - Trailing commas in function declarations and calls (ES2017)
 - Object spread properties (ES2018)
+- BigInt (Stage 3)
 
 Additionally, the CLI (`bin/engine262.js`) and test262 runner
 (`test/test262.js`) require a recent version of Node.js.
