@@ -20,6 +20,6 @@ fi
 
 set -x
 
-npm run lint
 npm run build
+npm run lint
 npm run test
