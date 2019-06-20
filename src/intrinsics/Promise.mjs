@@ -12,6 +12,7 @@ import {
   Call,
   CreateArrayFromList,
   CreateBuiltinFunction,
+  CreateDataProperty,
   CreateResolvingFunctions,
   Get,
   GetIterator,
@@ -22,6 +23,7 @@ import {
   IteratorStep,
   IteratorValue,
   NewPromiseCapability,
+  ObjectCreate,
   OrdinaryCreateFromConstructor,
   PromiseCapabilityRecord,
   PromiseResolve,
@@ -153,6 +155,134 @@ function Promise_all([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
+function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
+  const F = surroundingAgent.activeFunctionObject;
+  const alreadyCalled = F.AlreadyCalled;
+  if (alreadyCalled.Value === true) {
+    return Value.undefined;
+  }
+  alreadyCalled.Value = true;
+  const index = F.Index;
+  const values = F.Values;
+  const promiseCapability = F.Capability;
+  const remainingElementsCount = F.RemainingElements;
+  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
+  X(CreateDataProperty(obj, new Value('status'), new Value('fulfilled')));
+  X(CreateDataProperty(obj, new Value('value'), x));
+  values[index] = obj;
+  remainingElementsCount.Value -= 1;
+  if (remainingElementsCount.Value === 0) {
+    const valuesArray = X(CreateArrayFromList(values));
+    return Q(Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
+  }
+  return Value.undefined;
+}
+
+function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
+  const F = surroundingAgent.activeFunctionObject;
+  const alreadyCalled = F.AlreadyCalled;
+  if (alreadyCalled.Value === true) {
+    return Value.undefined;
+  }
+  alreadyCalled.Value = true;
+  const index = F.Index;
+  const values = F.Values;
+  const promiseCapability = F.Capability;
+  const remainingElementsCount = F.RemainingElements;
+  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
+  X(CreateDataProperty(obj, new Value('status'), new Value('rejected')));
+  X(CreateDataProperty(obj, new Value('reason'), x));
+  values[index] = obj;
+  remainingElementsCount.Value -= 1;
+  if (remainingElementsCount.Value === 0) {
+    const valuesArray = X(CreateArrayFromList(values));
+    return Q(Call(promiseCapability.Resolve, Value.undefined, [valuesArray]));
+  }
+  return Value.undefined;
+}
+
+function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability) {
+  Assert(X(IsConstructor(constructor) === Value.true));
+  Assert(resultCapability instanceof PromiseCapabilityRecord);
+  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+  const values = [];
+  const remainingElementsCount = { Value: 1 };
+  let index = 0;
+  while (true) {
+    const next = IteratorStep(iteratorRecord);
+    if (next instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    ReturnIfAbrupt(next);
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
+      remainingElementsCount.Value -= 1;
+      if (remainingElementsCount.Value === 0) {
+        const valuesArray = CreateArrayFromList(values);
+        Q(Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
+      }
+      return resultCapability.Promise;
+    }
+    const nextValue = IteratorValue(next);
+    if (nextValue instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    ReturnIfAbrupt(nextValue);
+    values.push(Value.undefined);
+    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    const steps = PromiseAllSettledResolveElementFunctions;
+    const resolveElement = X(CreateBuiltinFunction(steps, [
+      'AlreadyCalled',
+      'Index',
+      'Values',
+      'Capability',
+      'RemainingElements',
+    ]));
+    X(SetFunctionLength(resolveElement, new Value(1)));
+    const alreadyCalled = { Value: false };
+    resolveElement.AlreadyCalled = alreadyCalled;
+    resolveElement.Index = index;
+    resolveElement.Values = values;
+    resolveElement.Capability = resultCapability;
+    resolveElement.RemainingElements = remainingElementsCount;
+    const rejectSteps = PromiseAllSettledRejectElementFunctions;
+    const rejectElement = X(CreateBuiltinFunction(rejectSteps, [
+      'AlreadyCalled',
+      'Index',
+      'Values',
+      'Capability',
+      'RemainingElements',
+    ]));
+    X(SetFunctionLength(rejectElement, new Value(1)));
+    rejectElement.AlreadyCalled = alreadyCalled;
+    rejectElement.Index = index;
+    rejectElement.Values = values;
+    rejectElement.Capability = resultCapability;
+    rejectElement.RemainingElements = remainingElementsCount;
+    remainingElementsCount.Value += 1;
+    Q(Invoke(nextPromise, new Value('then'), [resolveElement, rejectElement]));
+    index += 1;
+  }
+}
+
+function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
+  const C = thisValue;
+  if (Type(C) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'Promise.allSettled called on non-object');
+  }
+  const promiseCapability = Q(NewPromiseCapability(C));
+  const iteratorRecord = GetIterator(iterable);
+  IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  let result = PerformPromiseAllSettled(iteratorRecord, C, promiseCapability);
+  if (result instanceof AbruptCompletion) {
+    if (iteratorRecord.Done === Value.false) {
+      result = IteratorClose(iteratorRecord, result);
+    }
+    IfAbruptRejectPromise(result, promiseCapability);
+  }
+  return Completion(result);
+}
+
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
@@ -223,6 +353,9 @@ function Promise_symbolSpecies(args, { thisValue }) {
 export function CreatePromise(realmRec) {
   const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%PromisePrototype%'], [
     ['all', Promise_all, 1],
+    surroundingAgent.feature('Promise.allSettled')
+      ? ['allSettled', Promise_allSettled, 1]
+      : undefined,
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],

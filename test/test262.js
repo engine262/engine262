@@ -252,7 +252,7 @@ async function run({ file, contents, attrs }) {
 
 let promiseRejectionTracker;
 initializeAgent({
-  features: ['globalThis'],
+  features: ['globalThis', 'Promise.allSettled'],
   promiseRejectionTracker(...args) {
     if (promiseRejectionTracker) {
       return promiseRejectionTracker(...args);

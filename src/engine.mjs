@@ -22,6 +22,10 @@ export const FEATURES = Object.freeze([
     name: 'globalThis',
     url: 'https://github.com/tc39/proposal-global',
   },
+  {
+    name: 'Promise.allSettled',
+    url: 'https://github.com/tc39/proposal-promise-allSettled',
+  },
 ].map(Object.freeze));
 
 export class Agent {
