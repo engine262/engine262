@@ -11,6 +11,7 @@ import {
   Agent,
   HostReportErrors,
   HostResolveImportedModule,
+  FEATURES,
 } from './engine.mjs';
 import {
   Descriptor,
@@ -44,6 +45,7 @@ export {
   NormalCompletion,
   Completion,
   Descriptor,
+  FEATURES,
 };
 
 export function initializeAgent(options = {}) {

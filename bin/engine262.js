@@ -7,6 +7,7 @@ const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const snekparse = require('./snekparse');
 
 let engine262;
 try {
@@ -26,9 +27,8 @@ const {
   Object: APIObject,
   Abstract,
   Throw,
+  FEATURES,
 } = engine262;
-
-initializeAgent();
 
 function createRealm() {
   const realm = new Realm({
@@ -73,45 +73,63 @@ function createRealm() {
   return realm;
 }
 
-const argv = process.argv.slice(2);
 const help = `
 engine262 v${require('../package.json').version}
 
 Usage:
 
     engine262 [options]
-    engine262 [options] [input-file]
-    engine262 [input-file]
+    engine262 [options] [input file]
+    engine262 [input file]
 
 Options:
 
-    -h, --help    Show help (this screen)
-    -m, --module  Evaluate contents of input-file as a module. Must be followed by input-file
+    -h, --help      Show help (this screen)
+    -m, --module    Evaluate contents of input-file as a module.
+                    Must be followed by input-file
+    --features=...  A comma separated list of features. If no features
+                    are provided, the available features are listed.
 
 `;
 
-if (argv.length) {
-  const realm = createRealm();
+const argv = snekparse(process.argv.slice(2));
+
+if (argv.h || argv.help) {
+  process.stdout.write(help);
+  process.exit(0);
+} else if (argv.features === true) {
+  FEATURES.forEach(({ name, url }) => {
+    process.stdout.write(`${name} - ${url}\n`);
+  });
+  process.exit(0);
+}
+
+initializeAgent({
+  features: argv.features ? argv.features.split(',') : [],
+});
+
+const realm = createRealm();
+
+if (argv.length === 0) {
+  repl.start({
+    prompt: '> ',
+    eval: (cmd, context, filename, callback) => {
+      const result = realm.evaluateScript(cmd);
+      callback(null, result);
+    },
+    completer: () => [],
+    writer: (o) => {
+      if (o instanceof Value || o instanceof Completion) {
+        return inspect(o, realm);
+      }
+      return util.inspect(o);
+    },
+  });
+} else {
   const lastArg = argv[argv.length - 1];
-
-  let isModule = false;
-  let source;
+  const source = fs.readFileSync(lastArg, 'utf8');
   let result;
-
-  if (/^(-h|--help)$/.test(lastArg)) {
-    process.stdout.write(help);
-    process.exit(0);
-  }
-
-  if (/(\.mjs|\.js)$/.test(lastArg)) {
-    source = fs.readFileSync(lastArg, 'utf8');
-  }
-
-  if (lastArg.endsWith('.mjs') || (argv.includes('-m') || argv.includes('--module'))) {
-    isModule = true;
-  }
-
-  if (isModule) {
+  if (argv.m || argv.module || lastArg.endsWith('.mjs')) {
     result = realm.createSourceTextModule(path.resolve(lastArg), source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
@@ -137,20 +155,4 @@ if (argv.length) {
   } else {
     process.exit(0);
   }
-} else {
-  const realm = createRealm();
-  repl.start({
-    prompt: '> ',
-    eval: (cmd, context, filename, callback) => {
-      const result = realm.evaluateScript(cmd);
-      callback(null, result);
-    },
-    completer: () => [],
-    writer: (o) => {
-      if (o instanceof Value || o instanceof Completion) {
-        return inspect(o, realm);
-      }
-      return util.inspect(o);
-    },
-  });
 }

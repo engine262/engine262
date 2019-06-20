@@ -235,12 +235,15 @@ export function CreateIntrinsics(realmRec) {
 
 // 8.2.3 #sec-setrealmglobalobject
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
+  const intrinsics = realmRec.Intrinsics;
   if (globalObj === Value.undefined) {
-    const intrinsics = realmRec.Intrinsics;
     globalObj = ObjectCreate(intrinsics['%ObjectPrototype%']);
   }
   if (thisValue === Value.undefined) {
     thisValue = globalObj;
+  }
+  if (surroundingAgent.feature('globalThis')) {
+    intrinsics['%GlobalThisValue%'] = thisValue;
   }
   realmRec.GlobalObject = globalObj;
   const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
@@ -327,6 +330,15 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
+
+  if (surroundingAgent.feature('globalThis')) {
+    Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
+      Value: realmRec.Intrinsics['%GlobalThisValue%'],
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    })));
+  }
 
   return global;
 }

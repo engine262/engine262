@@ -17,6 +17,13 @@ import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 import { msg } from './helpers.mjs';
 
+export const FEATURES = Object.freeze([
+  {
+    name: 'globalThis',
+    url: 'https://github.com/tc39/proposal-global',
+  },
+].map(Object.freeze));
+
 export class Agent {
   constructor(options = {}) {
     this.LittleEndian = Value.true;
@@ -38,10 +45,17 @@ export class Agent {
 
     this.jobQueue = [];
 
-    this.hostDefinedOptions = options;
-    if (!options.flags) {
-      options.flags = [];
-    }
+    this.hostDefinedOptions = {
+      ...options,
+      features: FEATURES.reduce((acc, { name }) => {
+        if (options.features) {
+          acc[name] = options.features.includes(name);
+        } else {
+          acc[name] = false;
+        }
+        return acc;
+      }, {}),
+    };
   }
 
   get runningExecutionContext() {
@@ -65,6 +79,10 @@ export class Agent {
     const error = Construct(cons, message ? [new Value(message)] : []);
     error.hostTrace = new Error().stack;
     return new ThrowCompletion(error);
+  }
+
+  feature(name) {
+    return this.hostDefinedOptions.features[name];
   }
 }
 Agent.Increment = 0;

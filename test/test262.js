@@ -190,7 +190,7 @@ async function run({ file, contents, attrs }) {
           reject(new Error('timeout'));
         }
       }, 2500);
-      agentOpt.promiseRejectionTracker = (promise, operation) => {
+      promiseRejectionTracker = (promise, operation) => {
         if (operation === 'reject') {
           tracked.add(promise);
         } else if (operation === 'handle') {
@@ -207,7 +207,7 @@ async function run({ file, contents, attrs }) {
       };
     });
     asyncPromise.finally(() => {
-      agentOpt.promiseRejectionTracker = undefined;
+      promiseRejectionTracker = undefined;
     });
   }
 
@@ -250,10 +250,16 @@ async function run({ file, contents, attrs }) {
   }
 }
 
-const agentOpt = {
-  promiseRejectionTracker: undefined,
-};
-initializeAgent(agentOpt);
+let promiseRejectionTracker;
+initializeAgent({
+  features: ['globalThis'],
+  promiseRejectionTracker(...args) {
+    if (promiseRejectionTracker) {
+      return promiseRejectionTracker(...args);
+    }
+    return undefined;
+  },
+});
 
 const stream = new TestStream(path.resolve(__dirname, 'test262'), {
   paths: [override || 'test'],
