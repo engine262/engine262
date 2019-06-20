@@ -104,8 +104,17 @@ if (argv.h || argv.help) {
   process.exit(0);
 }
 
+let features;
+if (argv.features === 'all') {
+  features = FEATURES.map((f) => f.name);
+} else if (argv.features) {
+  features = argv.features.split(',');
+} else {
+  features = [];
+}
+
 initializeAgent({
-  features: argv.features ? argv.features.split(',') : [],
+  features,
 });
 
 const realm = createRealm();
