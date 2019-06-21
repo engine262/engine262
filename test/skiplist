@@ -109,7 +109,10 @@ language/expressions/super/prop-expr-*.js
 language/statements/async-generator/yield-star-async-from-sync-iterator-inaccessible.js
 language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js
 
-// pending investigation
+// https://github.com/tc39/test262/issues/2206
 built-ins/Promise/all/invoke-resolve-get-error-close.js
 built-ins/Promise/race/invoke-resolve-get-error-close.js
 built-ins/Promise/allSettled/invoke-resolve-get-error-close.js
+
+// https://github.com/tc39/test262/pull/2209
+built-ins/WeakRef/constructor.js
