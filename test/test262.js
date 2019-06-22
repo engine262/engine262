@@ -2,20 +2,21 @@
 
 /* eslint-disable no-inner-declarations */
 
-const {
-  Worker,
-  isMainThread,
-  parentPort,
-  // workerData,
-} = require('worker_threads');
+require('@snek/source-map-support');
 const path = require('path');
 
 const CI = !!process.env.CONTINUOUS_INTEGRATION;
 const override = process.argv[2];
 
-if (isMainThread) {
+process.on('unhandledRejection', (reason) => {
+  require('fs').writeSync(0, `\n${require('util').inspect(reason)}\n`);
+  process.exit(1);
+});
+
+if (!process.send) {
   const start = Date.now();
 
+  const childProcess = require('child_process');
   const readline = require('readline');
   const os = require('os');
   const TestStream = require('test262-stream');
@@ -67,7 +68,7 @@ if (isMainThread) {
   function printProgress(test, log) {
     const line = `${getStatusLine()}: ${test}`;
     if (CI) {
-      if (lastFail < failed || log || test === 'uDone') {
+      if (lastFail < failed || log || test === 'Done') {
         lastFail = failed;
         console.log(line); // eslint-disable-line no-console
         if (log) {
@@ -93,16 +94,10 @@ if (isMainThread) {
   }
 
   let finished = 0;
-  const workers = Array.from({ length: os.cpus().length - 1 }, (_, i) => {
-    const w = new Worker(__filename, {
-      workerData: i,
-    });
-    w.on('message', ({ file, status, error }) => {
+  const workers = Array.from({ length: Math.round(os.cpus().length / 2) }, () => {
+    const c = childProcess.fork(__filename);
+    c.on('message', ({ file, status, error }) => {
       switch (status) {
-        case 'START':
-          // total += 1;
-          // printProgress(file);
-          break;
         case 'PASS':
           passed += 1;
           printProgress(file);
@@ -118,13 +113,13 @@ if (isMainThread) {
           break;
       }
     });
-    w.on('exit', () => {
+    c.on('exit', () => {
       finished += 1;
       if (finished === workers.length) {
         printProgress('Done');
       }
     });
-    return w;
+    return c;
   });
 
   const stream = new TestStream(path.resolve(__dirname, 'test262'), {
@@ -139,11 +134,11 @@ if (isMainThread) {
 
       const worker = workers[total % workers.length];
       total += 1;
-      worker.postMessage(test);
+      worker.send(test);
     }
 
     workers.forEach((w) => {
-      w.postMessage('END');
+      w.send('END');
     });
   })();
 
@@ -277,7 +272,7 @@ if (isMainThread) {
           }
         };
         $262.handlePrint = (m) => {
-          if (m === new Value($262.realm, 'Test262:AsyncTestComplete')) {
+          if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
             resolve({ status: 'PASS' });
           } else {
             resolve({ status: 'FAIL', error: inspect(m, $262.realm) });
@@ -330,16 +325,15 @@ if (isMainThread) {
   }
 
   let p = Promise.resolve();
-  parentPort.on('message', (test) => {
+  process.on('message', (test) => {
     if (test === 'END') {
       p = p.then(() => {
         process.exit(0); // stops thread
       });
     } else {
       p = p.then(async () => {
-        parentPort.postMessage({ file: test.file, status: 'START' });
         const { status, error } = await run(test);
-        parentPort.postMessage({ file: test.file, status, error });
+        process.send({ file: test.file, status, error });
       });
     }
   });
