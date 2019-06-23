@@ -14,7 +14,11 @@ import { X } from '../completion.mjs';
 
 // 17 #sec-ecmascript-standard-built-in-objects
 export function assignProps(realmRec, obj, props) {
-  for (const [n, v, len, descriptor] of props) {
+  for (const item of props) {
+    if (item === undefined) {
+      continue;
+    }
+    const [n, v, len, descriptor] = item;
     const name = n instanceof Value ? n : new Value(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
