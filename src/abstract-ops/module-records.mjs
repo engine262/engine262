@@ -54,7 +54,7 @@ export function InnerModuleLinking(module, stack, index) {
 // 15.2.1.18 #sec-getmodulenamespace
 export function GetModuleNamespace(module) {
   Assert(module instanceof AbstractModuleRecord);
-  if (!(module instanceof CyclicModuleRecord)) {
+  if (module instanceof CyclicModuleRecord) {
     Assert(module.Status !== 'unlinked');
   }
   let namespace = module.Namespace;
