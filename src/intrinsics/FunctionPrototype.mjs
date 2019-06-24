@@ -131,7 +131,7 @@ function FunctionProto_toString(args, { thisValue: func }) {
     }
     return new Value('function() { [native code] }');
   }
-  if ('SourceText' in func && Type(func.SourceText) === 'String' && X(HostHasSourceTextAvailable(func)) === Value.true) {
+  if (Type(func) === 'Object' && 'SourceText' in func && Type(func.SourceText) === 'String' && X(HostHasSourceTextAvailable(func)) === Value.true) {
     return func.SourceText;
   }
   if (Type(func) === 'Object' && IsCallable(func) === Value.true) {
