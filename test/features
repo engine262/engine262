@@ -7,6 +7,7 @@ BigInt
 caller
 
 regexp-lookbehind
+regexp-named-groups
 regexp-unicode-property-escapes
 
 SharedArrayBuffer
@@ -37,3 +38,5 @@ dynamic-import
 import.meta
 
 numeric-separator-literal
+
+proxy-missing-checks

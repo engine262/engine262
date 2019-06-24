@@ -29,11 +29,6 @@ language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
 language/computed-property-names/class/static/method-symbol.js
 
-// https://github.com/tc39/ecma262/pull/666
-built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-writable.js
-built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js
-
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
@@ -47,13 +42,6 @@ built-ins/Date/prototype/toISOString/15.9.5.43-0-12.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
 harness/assertRelativeDateMs.js
-
-// Proposal https://github.com/tc39/String.prototype.matchAll
-built-ins/String/prototype/matchAll/*.js
-
-// Proposal https://github.com/tc39/proposal-string-left-right-trim
-built-ins/String/prototype/trimEnd/*.js
-built-ins/String/prototype/trimStart/*.js
 
 // TODO: Missing {decode|encode}URI{Component}
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
@@ -93,9 +81,6 @@ language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
-
-// TODO(8): RegExp named groups
-built-ins/RegExp/named-groups/*.js
 
 // Failing tests in language
 language/eval-code/direct/new.target-fn.js
