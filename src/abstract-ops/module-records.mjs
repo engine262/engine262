@@ -28,9 +28,7 @@ export function InnerModuleLinking(module, stack, index) {
     index = Q(InnerModuleLinking(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated');
-      if (stack.includes(requiredModule)) {
-        Assert(requiredModule.Status === 'linking');
-      }
+      Assert((requiredModule.Status === 'linking') === stack.includes(requiredModule));
       if (requiredModule.Status === 'linking') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
       }
