@@ -139,9 +139,6 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
 
 function Promise_all([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
-  if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.all called on non-object');
-  }
   const promiseCapability = Q(NewPromiseCapability(C));
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
@@ -267,9 +264,6 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability)
 
 function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
-  if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.allSettled called on non-object');
-  }
   const promiseCapability = Q(NewPromiseCapability(C));
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
@@ -312,9 +306,6 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
 
 function Promise_race([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
-  if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.race called on non-object');
-  }
   const promiseCapability = Q(NewPromiseCapability(C));
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
@@ -330,9 +321,6 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
 
 function Promise_reject([r = Value.undefined], { thisValue }) {
   const C = thisValue;
-  if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.reject called on non-object');
-  }
   const promiseCapability = Q(NewPromiseCapability(C));
   Q(Call(promiseCapability.Reject, Value.undefined, [r]));
   return promiseCapability.Promise;
