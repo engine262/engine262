@@ -51,27 +51,6 @@ export function InnerModuleLinking(module, stack, index) {
   return index;
 }
 
-// 15.2.1.21 #sec-getmodulenamespace
-export function GetModuleNamespace(module) {
-  Assert(module instanceof AbstractModuleRecord);
-  if (module instanceof CyclicModuleRecord) {
-    Assert(module.Status !== 'unlinked');
-  }
-  let namespace = module.Namespace;
-  if (namespace === Value.undefined) {
-    const exportedNames = Q(module.GetExportedNames());
-    const unambiguousNames = [];
-    for (const name of exportedNames) {
-      const resolution = Q(module.ResolveExport(name));
-      if (resolution instanceof ResolvedBindingRecord) {
-        unambiguousNames.push(name);
-      }
-    }
-    namespace = ModuleNamespaceCreate(module, unambiguousNames);
-  }
-  return namespace;
-}
-
 // 15.2.1.16.2.1 #sec-innermoduleevaluation
 export function InnerModuleEvaluation(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
@@ -122,4 +101,25 @@ export function InnerModuleEvaluation(module, stack, index) {
     }
   }
   return index;
+}
+
+// 15.2.1.21 #sec-getmodulenamespace
+export function GetModuleNamespace(module) {
+  Assert(module instanceof AbstractModuleRecord);
+  if (module instanceof CyclicModuleRecord) {
+    Assert(module.Status !== 'unlinked');
+  }
+  let namespace = module.Namespace;
+  if (namespace === Value.undefined) {
+    const exportedNames = Q(module.GetExportedNames());
+    const unambiguousNames = [];
+    for (const name of exportedNames) {
+      const resolution = Q(module.ResolveExport(name));
+      if (resolution instanceof ResolvedBindingRecord) {
+        unambiguousNames.push(name);
+      }
+    }
+    namespace = ModuleNamespaceCreate(module, unambiguousNames);
+  }
+  return namespace;
 }
