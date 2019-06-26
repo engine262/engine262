@@ -8,7 +8,7 @@ import {
 import { Assert, ModuleNamespaceCreate } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 
-// 15.2.1.16.4.1 #sec-innermodulelinking
+// 15.2.1.16.1.1 #sec-InnerModuleLinking
 export function InnerModuleLinking(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
     Q(module.Link());

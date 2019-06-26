@@ -34,7 +34,7 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   return iterator;
 }
 
-// #%RegExpStringIteratorPrototype%.next
+// 21.2.7.1.1 #sec-%regexpstringiteratorprototype%.next
 function RegExpStringIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {

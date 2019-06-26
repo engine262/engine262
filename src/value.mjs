@@ -1296,6 +1296,7 @@ export class ResolvedBindingRecord {
   }
 }
 
+// 15.2.1.15 #sec-abstract-module-records
 export class AbstractModuleRecord {
   constructor({
     Realm,
@@ -1310,6 +1311,7 @@ export class AbstractModuleRecord {
   }
 }
 
+// 15.2.1.16 #sec-cyclic-module-records
 export class CyclicModuleRecord extends AbstractModuleRecord {
   constructor(init) {
     super(init);
@@ -1363,6 +1365,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
   }
 }
 
+// 15.2.1.17 #sec-source-text-module-records
 export class SourceTextModuleRecord extends CyclicModuleRecord {
   constructor(init) {
     super(init);

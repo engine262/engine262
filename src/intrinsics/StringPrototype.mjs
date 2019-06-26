@@ -246,7 +246,7 @@ function StringProto_match([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.match, [S]));
 }
 
-// 21.1.3.12 #sec-string-prototype-matchall
+// 21.1.3.12 #sec-string.prototype.matchall
 function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (regexp !== Value.undefined && regexp !== Value.null) {

@@ -212,7 +212,7 @@ function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
   return X(CreateIterResultObject(value, F.Done));
 }
 
-// 25.1.4.4 #sec-async-from-sync-iterator-continuation
+// 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
 export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   const done = IteratorComplete(result);
   IfAbruptRejectPromise(done, promiseCapability);
