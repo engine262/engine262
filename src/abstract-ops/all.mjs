@@ -3,6 +3,7 @@ export * from './array-objects.mjs';
 export * from './arraybuffer-objects.mjs';
 export * from './async-function-operations.mjs';
 export * from './async-generator-objects.mjs';
+export * from './data-types-and-values.mjs';
 export * from './dataview-objects.mjs';
 export * from './date-objects.mjs';
 export * from './execution-contexts.mjs';

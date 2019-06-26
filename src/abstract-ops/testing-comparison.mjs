@@ -5,50 +5,19 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
-  CanonicalNumericIndexString,
   Get,
   ToBoolean,
   ToNumber,
   ToPrimitive,
-  ValidateAndApplyPropertyDescriptor,
 } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 import { OutOfRange, msg } from '../helpers.mjs';
 
-// 6.1.7 #integer-index
-export function isIntegerIndex(V) {
-  if (Type(V) !== 'String') {
-    return false;
-  }
-  const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric === Value.undefined) {
-    return false;
-  }
-  if (Object.is(numeric.numberValue(), +0)) {
-    return true;
-  }
-  return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
-}
-
-// 6.1.7 #array-index
-export function isArrayIndex(V) {
-  if (Type(V) !== 'String') {
-    return false;
-  }
-  const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric === Value.undefined) {
-    return false;
-  }
-  if (Object.is(numeric.numberValue(), +0)) {
-    return true;
-  }
-  return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
-}
+// This file covers abstract operations defined in
+// 7.2 #sec-testing-and-comparison-operations
 
 // 7.2.1 #sec-requireobjectcoercible
 export function RequireObjectCoercible(argument) {
@@ -69,7 +38,7 @@ export function RequireObjectCoercible(argument) {
   }
 }
 
-// 7.2.2 IsArray
+// 7.2.2 #sec-isarray
 export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -87,7 +56,7 @@ export function IsArray(argument) {
   return Value.false;
 }
 
-// 7.2.3 IsCallable
+// 7.2.3 #sec-iscallable
 export function IsCallable(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -98,7 +67,7 @@ export function IsCallable(argument) {
   return Value.false;
 }
 
-// 7.2.4 IsConstructor
+// 7.2.4 #sec-isconstructor
 export function IsConstructor(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -109,7 +78,7 @@ export function IsConstructor(argument) {
   return Value.false;
 }
 
-// 7.2.5 IsExtensible
+// 7.2.5 #sec-isextensible-o
 export function IsExtensible(O) {
   Assert(Type(O) === 'Object');
   return O.IsExtensible();
@@ -129,7 +98,7 @@ export function IsInteger(argument) {
   return Value.true;
 }
 
-// 7.2.7 IsPropertyKey
+// 7.2.7 #sec-ispropertykey
 export function IsPropertyKey(argument) {
   if (Type(argument) === 'String') {
     return true;
@@ -140,7 +109,7 @@ export function IsPropertyKey(argument) {
   return false;
 }
 
-// 7.2.8 IsRegExp
+// 7.2.8 #sec-isregexp
 export function IsRegExp(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -162,7 +131,7 @@ export function IsStringPrefix(p, q) {
   return q.stringValue().startsWith(p.stringValue());
 }
 
-// 7.2.10 SameValue
+// 7.2.10 #sec-samevalue
 export function SameValue(x, y) {
   if (Type(x) !== Type(y)) {
     return Value.false;
@@ -214,7 +183,7 @@ export function SameValueZero(x, y) {
   return SameValueNonNumber(x, y);
 }
 
-// 7.2.12 SameValueNonNumber
+// 7.2.12 #sec-samevaluenonnumber
 export function SameValueNonNumber(x, y) {
   Assert(Type(x) !== 'Number');
   Assert(Type(x) === Type(y));
@@ -369,22 +338,4 @@ export function StrictEqualityComparison(x, y) {
     return Value.false;
   }
   return SameValueNonNumber(x, y);
-}
-
-// 9.1.6.2 #sec-iscompatiblepropertydescriptor
-export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
-  return ValidateAndApplyPropertyDescriptor(
-    Value.undefined, Value.undefined, Extensible, Desc, Current,
-  );
-}
-
-// 25.6.1.6 #sec-ispromise
-export function IsPromise(x) {
-  if (Type(x) !== 'Object') {
-    return Value.false;
-  }
-  if (!('PromiseState' in x)) {
-    return Value.false;
-  }
-  return Value.true;
 }

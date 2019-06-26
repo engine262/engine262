@@ -12,7 +12,6 @@ import {
   Get,
   IsCallable,
   IsConstructor,
-  IsPromise,
   SameValue,
   SetFunctionLength,
 } from './all.mjs';
@@ -161,6 +160,17 @@ function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = V
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;
   return Value.undefined;
+}
+
+// 25.6.1.6 #sec-ispromise
+export function IsPromise(x) {
+  if (Type(x) !== 'Object') {
+    return Value.false;
+  }
+  if (!('PromiseState' in x)) {
+    return Value.false;
+  }
+  return Value.true;
 }
 
 // 25.6.1.7 #sec-rejectpromise

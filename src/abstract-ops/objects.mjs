@@ -108,6 +108,13 @@ export function OrdinaryDefineOwnProperty(O, P, Desc) {
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
 }
 
+// 9.1.6.2 #sec-iscompatiblepropertydescriptor
+export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
+  return ValidateAndApplyPropertyDescriptor(
+    Value.undefined, Value.undefined, Extensible, Desc, Current,
+  );
+}
+
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
   Assert(O === Value.undefined || IsPropertyKey(P));
