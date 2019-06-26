@@ -10,7 +10,7 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-// 21.1.3.16.1 #sec-getsubstitution
+// 21.1.3.17.1 #sec-getsubstitution
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
   Assert(Type(matched) === 'String');
   const matchLength = matched.stringValue().length;

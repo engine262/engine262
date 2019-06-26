@@ -117,7 +117,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   return F;
 }
 
-// 14.6.15 #sec-class-definitions-runtime-semantics-evaluation
+// 14.6.16 #sec-class-definitions-runtime-semantics-evaluation
 //   ClassExpression : `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassExpression(ClassExpression) {
   const {
@@ -183,7 +183,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
   return new NormalCompletion(value);
 }
 
-// 14.6.15 #sec-class-definitions-runtime-semantics-evaluation
+// 14.6.16 #sec-class-definitions-runtime-semantics-evaluation
 //   ClassDeclaration : `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassDeclaration(ClassDeclaration) {
   Q(yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration));

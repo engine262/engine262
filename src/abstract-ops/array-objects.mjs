@@ -161,7 +161,7 @@ export function IsConcatSpreadable(O) {
   return Q(IsArray(O));
 }
 
-// 22.1.3.25.1 #sec-sortcompare
+// 22.1.3.27.1 #sec-sortcompare
 export function SortCompare(x, y, comparefn) {
   if (x === Value.undefined && y === Value.undefined) {
     return new Value(+0);

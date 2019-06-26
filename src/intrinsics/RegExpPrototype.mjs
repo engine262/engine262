@@ -327,7 +327,7 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   return X(CreateRegExpStringIterator(matcher, S, global, fullUnicode));
 }
 
-// 21.2.5.8 #sec-get-regexp.prototype.multiline
+// 21.2.5.9 #sec-get-regexp.prototype.multiline
 function RegExpProto_multilineGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
@@ -469,7 +469,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   return Q(Get(result, new Value('index')));
 }
 
-// 21.2.5.11 #sec-get-regexp.prototype.source
+// 21.2.5.12 #sec-get-regexp.prototype.source
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
@@ -571,7 +571,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   return A;
 }
 
-// 21.2.5.13 #sec-get-regexp.prototype.sticky
+// 21.2.5.14 #sec-get-regexp.prototype.sticky
 function RegExpProto_stickyGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
@@ -616,7 +616,7 @@ function RegExpProto_toString(args, { thisValue }) {
   return new Value(result);
 }
 
-// 21.2.5.16 #sec-get-regexp.prototype.unicode
+// 21.2.5.17 #sec-get-regexp.prototype.unicode
 function RegExpProto_unicodeGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {

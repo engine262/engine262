@@ -260,7 +260,7 @@ function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.matchAll, [S]));
 }
 
-// 21.1.3.12 #sec-string.prototype.normalize
+// 21.1.3.13 #sec-string.prototype.normalize
 function StringProto_normalize([form], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -275,19 +275,19 @@ function StringProto_normalize([form], { thisValue }) {
   return new Value(ns);
 }
 
-// 21.1.3.13 #sec-string.prototype.padend
+// 21.1.3.14 #sec-string.prototype.padend
 function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   return Q(StringPad(O, maxLength, fillString, 'end'));
 }
 
-// 21.1.3.14 #sec-string.prototype.padstart
+// 21.1.3.15 #sec-string.prototype.padstart
 function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   return Q(StringPad(O, maxLength, fillString, 'start'));
 }
 
-// 21.1.3.15 #sec-string.prototype.repeat
+// 21.1.3.16 #sec-string.prototype.repeat
 function StringProto_repeat([count = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -308,7 +308,7 @@ function StringProto_repeat([count = Value.undefined], { thisValue }) {
   return new Value(T);
 }
 
-// 21.1.3.16 #sec-string.prototype.replace
+// 21.1.3.17 #sec-string.prototype.replace
 function StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (searchValue !== Value.undefined && searchValue !== Value.null) {
@@ -341,7 +341,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   return new Value(newString);
 }
 
-// 21.1.3.17 #sec-string.prototype.slice
+// 21.1.3.19 #sec-string.prototype.slice
 function StringProto_search([regexp = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
 
@@ -357,7 +357,7 @@ function StringProto_search([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.search, [string]));
 }
 
-// 21.1.3.18 #sec-string.prototype.slice
+// 21.1.3.19 #sec-string.prototype.slice
 function StringProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -385,7 +385,7 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], { t
   return new Value(S.slice(from, from + span));
 }
 
-// 21.1.3.19 #sec-string.prototype.split
+// 21.1.3.20 #sec-string.prototype.split
 function StringProto_split([separator = Value.undefined, limit = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (separator !== Value.undefined && separator !== Value.null) {
@@ -441,7 +441,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   return A;
 }
 
-// 21.1.3.19.1 #sec-splitmatch
+// 21.1.3.20.1 #sec-splitmatch
 function SplitMatch(S, q, R) {
   Assert(Type(R) === 'String');
   const r = R.stringValue().length;
@@ -457,7 +457,7 @@ function SplitMatch(S, q, R) {
   return q + r;
 }
 
-// 21.1.3.20 #sec-string.prototype.startswith
+// 21.1.3.21 #sec-string.prototype.startswith
 function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -482,7 +482,7 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
   return Value.true;
 }
 
-// 21.1.3.21 #sec-string.prototype.substring
+// 21.1.3.22 #sec-string.prototype.substring
 function StringProto_substring([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -501,7 +501,7 @@ function StringProto_substring([start = Value.undefined, end = Value.undefined],
   return new Value(S.slice(from, to));
 }
 
-// 21.1.3.22 #sec-string.prototype.tolocalelowercase
+// 21.1.3.23 #sec-string.prototype.tolocalelowercase
 function StringProto_toLocaleLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -509,7 +509,7 @@ function StringProto_toLocaleLowerCase(args, { thisValue }) {
   return new Value(L);
 }
 
-// 21.1.3.23 #sec-string.prototype.tolocaleuppercase
+// 21.1.3.24 #sec-string.prototype.tolocaleuppercase
 function StringProto_toLocaleUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -517,7 +517,7 @@ function StringProto_toLocaleUpperCase(args, { thisValue }) {
   return new Value(L);
 }
 
-// 21.1.3.24 #sec-string.prototype.tolowercase
+// 21.1.3.25 #sec-string.prototype.tolowercase
 function StringProto_toLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -525,12 +525,12 @@ function StringProto_toLowerCase(args, { thisValue }) {
   return new Value(L);
 }
 
-// 21.1.3.25 #sec-string.prototype.tostring
+// 21.1.3.26 #sec-string.prototype.tostring
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
-// 21.1.3.26 #sec-string.prototype.touppercase
+// 21.1.3.27 #sec-string.prototype.touppercase
 function StringProto_toUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -538,30 +538,30 @@ function StringProto_toUpperCase(args, { thisValue }) {
   return new Value(L);
 }
 
-// 21.1.3.27 #sec-string.prototype.trim
+// 21.1.3.28 #sec-string.prototype.trim
 function StringProto_trim(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'start+end'));
 }
 
-// #sec-string.prototype.trimend
+// 21.1.3.29 #sec-string.prototype.trimend
 function StringProto_trimEnd(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'end'));
 }
 
-// #sec-string.prototype.trimstart
+// 21.1.3.30 #sec-string.prototype.trimstart
 function StringProto_trimStart(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'start'));
 }
 
-// 21.1.3.28 #sec-string.prototype.valueof
+// 21.1.3.31 #sec-string.prototype.valueof
 function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
-// 21.1.3.29 #sec-string.prototype-@@iterator
+// 21.1.3.32 #sec-string.prototype-@@iterator
 function StringProto_iterator(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));

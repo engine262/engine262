@@ -1,6 +1,6 @@
 import { Evaluate_StatementList } from '../evaluator.mjs';
 
-// 14.1.21 #sec-function-definitions-runtime-semantics-evaluation
+// 14.1.22 #sec-function-definitions-runtime-semantics-evaluation
 //   FunctionStatementList : [empty]
 //
 // (implicit)

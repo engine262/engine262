@@ -58,7 +58,7 @@ export function GetTemplateObject(templateLiteral) {
   return template;
 }
 
-// 12.3.7.1 #sec-tagged-templates-runtime-semantics-evaluation
+// 12.3.8.1 #sec-tagged-templates-runtime-semantics-evaluation
 export function* Evaluate_TaggedTemplate({
   tag: Expression,
   quasi: TemplateLiteral,

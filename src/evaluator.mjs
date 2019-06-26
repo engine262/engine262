@@ -169,7 +169,7 @@ export function* Evaluate_StatementList(StatementList) {
   return sl;
 }
 
-// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
+// 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
 //   ModuleItemList :
 //     ModuleItem
 //     ModuleItemList ModuleItem
@@ -441,7 +441,7 @@ function* Inner_Evaluate_Expression(Expression) {
     case isExpressionWithComma(Expression):
       return yield* Evaluate_ExpressionWithComma(Expression);
 
-    // 12.2.10.4 #sec-grouping-operator-runtime-semantics-evaluation
+    // 12.2.10.5 #sec-grouping-operator-runtime-semantics-evaluation
     case isParenthesizedExpression(Expression):
       return yield* Evaluate(Expression.expression);
 
@@ -463,7 +463,7 @@ export function Evaluate_Script(Script) {
   return unwind(Evaluate_StatementList(Script));
 }
 
-// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
+// 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
 //   ModuleBody : ModuleItemList
 export function* Evaluate_ModuleBody(ModuleBody) {
   const ModuleItemList = ModuleBody;
@@ -474,7 +474,7 @@ export function* Evaluate_ModuleBody(ModuleBody) {
   return Completion(result);
 }
 
-// 15.2.1.20 #sec-module-semantics-runtime-semantics-evaluation
+// 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
 //   Module : [empty]
 //
 // (implicit)

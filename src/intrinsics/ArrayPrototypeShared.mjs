@@ -24,7 +24,7 @@ import { assignProps } from './Bootstrap.mjs';
 // Algorithms and methods shared between %ArrayPrototype% and
 // %TypedArrayPrototype%.
 
-// 22.1.3.25 #sec-array.prototype.sort
+// 22.1.3.27 #sec-array.prototype.sort
 // 22.2.3.26 #sec-%typedarray%.prototype.sort
 //
 // If internalMethodsRestricted is true, then Asserts are used to ensure that
@@ -208,7 +208,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return new Value(-1);
   }
 
-  // 22.1.3.10 #sec-array.prototype.foreach
+  // 22.1.3.12 #sec-array.prototype.foreach
   // 22.2.3.12 #sec-%typedarray%.prototype.foreach
   function ArrayProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -232,7 +232,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return Value.undefined;
   }
 
-  // 22.1.3.11 #sec-array.prototype.includes
+  // 22.1.3.13 #sec-array.prototype.includes
   // 22.2.3.13 #sec-%typedarray%.prototype.includes
   function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -266,7 +266,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return Value.false;
   }
 
-  // 22.1.3.12 #sec-array.prototype.indexof
+  // 22.1.3.14 #sec-array.prototype.indexof
   // 22.2.3.14 #sec-%typedarray%.prototype.indexof
   function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -311,7 +311,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return new Value(-1);
   }
 
-  // 22.1.3.13 #sec-array.prototype.join
+  // 22.1.3.15 #sec-array.prototype.join
   // 22.2.3.15 #sec-%typedarray%.prototype.join
   function ArrayProto_join([separator = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -344,7 +344,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return new Value(R);
   }
 
-  // 22.1.3.15 #sec-array.prototype.lastindexof
+  // 22.1.3.17 #sec-array.prototype.lastindexof
   // 22.2.3.17 #sec-%typedarray%.prototype.lastindexof
   function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -385,7 +385,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return new Value(-1);
   }
 
-  // 22.1.3.19 #sec-array.prototype.reduce
+  // 22.1.3.21 #sec-array.prototype.reduce
   // 22.2.3.20 #sec-%typedarray%.prototype.reduce
   function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -428,7 +428,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return accumulator;
   }
 
-  // 22.1.3.20 #sec-array.prototype.reduceright
+  // 22.1.3.22 #sec-array.prototype.reduceright
   // 22.2.3.21 #sec-%typedarray%.prototype.reduceright
   function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -471,7 +471,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return accumulator;
   }
 
-  // 22.1.3.21 #sec-array.prototype.reverse
+  // 22.1.3.23 #sec-array.prototype.reverse
   // 22.2.3.22 #sec-%typedarray%.prototype.reverse
   function ArrayProto_reverse(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -511,7 +511,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return O;
   }
 
-  // 22.1.3.24 #sec-array.prototype.some
+  // 22.1.3.26 #sec-array.prototype.some
   // 22.2.3.25 #sec-%typedarray%.prototype.some
   function ArrayProto_some([callbackfn = Value.undefined, thisArg], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
@@ -543,7 +543,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     return Value.false;
   }
 
-  // 22.1.3.27 #sec-array.prototype.tolocalestring
+  // 22.1.3.29 #sec-array.prototype.tolocalestring
   // 22.2.3.28 #sec-%typedarray%.prototype.tolocalestring
   function ArrayProto_toLocaleString(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));

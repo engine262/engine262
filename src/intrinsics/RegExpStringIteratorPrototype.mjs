@@ -14,7 +14,7 @@ import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
 import { Q, X } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
-// #sec-createregexpstringiterator
+// 21.2.5.8.1 #sec-createregexpstringiterator
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   Assert(Type(S) === 'String');
   Assert(Type(global) === 'Boolean');

@@ -51,7 +51,7 @@ export function InnerModuleLinking(module, stack, index) {
   return index;
 }
 
-// 15.2.1.18 #sec-getmodulenamespace
+// 15.2.1.21 #sec-getmodulenamespace
 export function GetModuleNamespace(module) {
   Assert(module instanceof AbstractModuleRecord);
   if (module instanceof CyclicModuleRecord) {
@@ -72,7 +72,7 @@ export function GetModuleNamespace(module) {
   return namespace;
 }
 
-// 15.2.1.16.5.1 #sec-innermoduleevaluation
+// 15.2.1.16.2.1 #sec-innermoduleevaluation
 export function InnerModuleEvaluation(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
     Q(module.Evaluate());

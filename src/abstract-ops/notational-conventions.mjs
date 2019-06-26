@@ -9,7 +9,7 @@ export function Assert(invariant, source) {
   }
 }
 
-// #sec-requireinternalslot
+// 9.1.15 #sec-requireinternalslot
 export function RequireInternalSlot(O, internalSlot) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', msg('NotAnObject', O));

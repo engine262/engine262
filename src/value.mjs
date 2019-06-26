@@ -1342,7 +1342,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     return Value.undefined;
   }
 
-  // 15.2.1.16.1 #sec-moduleevaluation
+  // 15.2.1.16.2 #sec-moduleevaluation
   Evaluate() {
     const module = this;
     Assert(module.Status === 'linked' || module.Status === 'evaluated');
@@ -1376,7 +1376,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     } = init);
   }
 
-  // 15.2.1.16.2 #sec-getexportednames
+  // 15.2.1.17.2 #sec-getexportednames
   GetExportedNames(exportStarSet) {
     const module = this;
     if (!exportStarSet) {
@@ -1411,7 +1411,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return exportedNames;
   }
 
-  // 15.2.1.16.3 #sec-resolveexport
+  // 15.2.1.17.3 #sec-resolveexport
   ResolveExport(exportName, resolveSet) {
     const module = this;
     if (!resolveSet) {
@@ -1468,7 +1468,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return starResolution;
   }
 
-  // #sec-source-text-module-record-initialize-environment
+  // 15.2.1.17.4 #sec-source-text-module-record-initialize-environment
   InitializeEnvironment() {
     const module = this;
     for (const e of module.IndirectExportEntries) {
@@ -1528,7 +1528,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return new NormalCompletion(undefined);
   }
 
-  // #sec-source-text-module-record-execute-module
+  // 15.2.1.17.5 #sec-source-text-module-record-execute-module
   ExecuteModule() {
     const module = this;
     const moduleCtx = new ExecutionContext();

@@ -205,7 +205,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   };
 }
 
-// 25.1.4.2.5 #sec-async-from-sync-iterator-value-unwrap-functions
+// 25.1.4.2.4 #sec-async-from-sync-iterator-value-unwrap-functions
 function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
   const F = this;
 

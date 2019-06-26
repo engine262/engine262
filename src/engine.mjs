@@ -227,7 +227,7 @@ export function ScriptEvaluationJob(sourceText, hostDefined) {
   return ScriptEvaluation(s);
 }
 
-// 15.2.1.19 #sec-toplevelmoduleevaluationjob
+// 15.2.1.22 #sec-toplevelmoduleevaluationjob
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);

@@ -55,7 +55,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
   return Q(RegExpInitialize(O, P, F));
 }
 
-// 22.2.4.2 #sec-get-regexp-@@species
+// 21.2.4.2 #sec-get-regexp-@@species
 function RegExp_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
