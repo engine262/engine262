@@ -13,11 +13,11 @@ import {
   HostResolveImportedModule,
   FEATURES,
 } from './engine.mjs';
+import { CyclicModuleRecord } from './modules.mjs';
 import {
   Descriptor,
   Type,
   Value,
-  CyclicModuleRecord,
   wellKnownSymbols,
 } from './value.mjs';
 import { ParseScript, ParseModule } from './parse.mjs';

@@ -21,7 +21,8 @@ import {
 } from './BoundNames.mjs';
 import { ExportEntriesForModule_ExportClause } from './ExportEntriesForModule.mjs';
 import { ModuleRequests_FromClause } from './ModuleRequests.mjs';
-import { ExportEntryRecord, Value } from '../value.mjs';
+import { ExportEntryRecord } from '../modules.mjs';
+import { Value } from '../value.mjs';
 
 // 15.2.1.7 #sec-module-semantics-static-semantics-exportentries
 //   ModuleItemList : ModuleItemList ModuleItem

@@ -1,10 +1,10 @@
 import { HostResolveImportedModule } from '../engine.mjs';
 import {
-  Value,
-  CyclicModuleRecord,
   AbstractModuleRecord,
+  CyclicModuleRecord,
   ResolvedBindingRecord,
-} from '../value.mjs';
+} from '../modules.mjs';
+import { Value } from '../value.mjs';
 import { Assert, ModuleNamespaceCreate } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 

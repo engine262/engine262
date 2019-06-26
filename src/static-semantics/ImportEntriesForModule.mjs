@@ -5,7 +5,8 @@ import {
   isImportSpecifier,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { ImportEntryRecord, Value } from '../value.mjs';
+import { ImportEntryRecord } from '../modules.mjs';
+import { Value } from '../value.mjs';
 import { BoundNames_ImportedBinding } from './BoundNames.mjs';
 
 // 15.2.2.4 #sec-static-semantics-importentriesformodule

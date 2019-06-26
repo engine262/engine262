@@ -1,4 +1,5 @@
-import { ExportEntryRecord, Value } from '../value.mjs';
+import { ExportEntryRecord } from '../modules.mjs';
+import { Value } from '../value.mjs';
 
 // 15.2.3.6 #sec-static-semantics-exportentriesformodule
 //   ExportList : ExportList `,` ExportSpecifier

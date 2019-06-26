@@ -1,3 +1,4 @@
+import { AbstractModuleRecord } from './modules.mjs';
 import {
   Descriptor,
   FunctionValue,
@@ -5,7 +6,6 @@ import {
   Type,
   Value,
   wellKnownSymbols,
-  AbstractModuleRecord,
 } from './value.mjs';
 import { surroundingAgent } from './engine.mjs';
 import {

@@ -1,5 +1,6 @@
 import { surroundingAgent } from './engine.mjs';
-import { Value, Descriptor, AbstractModuleRecord } from './value.mjs';
+import { AbstractModuleRecord } from './modules.mjs';
+import { Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 import { inspect } from './api.mjs';

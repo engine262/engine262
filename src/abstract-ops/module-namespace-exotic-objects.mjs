@@ -1,8 +1,8 @@
 import { X } from '../completion.mjs';
+import { AbstractModuleRecord } from '../modules.mjs';
 import {
   wellKnownSymbols,
   Value,
-  AbstractModuleRecord,
   ModuleNamespaceExoticObjectValue,
   Descriptor,
 } from '../value.mjs';

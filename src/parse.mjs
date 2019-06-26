@@ -1,6 +1,7 @@
 import acorn from 'acorn';
 import { surroundingAgent } from './engine.mjs';
-import { Value, SourceTextModuleRecord, ExportEntryRecord } from './value.mjs';
+import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
+import { Value } from './value.mjs';
 import {
   ModuleRequests_ModuleItemList,
   ImportEntries_ModuleItemList,
