@@ -3,6 +3,9 @@
 module.exports = {
   extends: 'airbnb-base',
   parser: 'babel-eslint',
+  parserOptions: {
+    ecmaVersion: 2019,
+  },
   overrides: [
     {
       files: ['*.js'],
@@ -10,7 +13,9 @@ module.exports = {
     },
   ],
   globals: {
-    'BigInt': false,
+    BigInt: false,
+    Atomics: false,
+    SharedArrayBuffer: false,
   },
   rules: {
     'quote-props': ['error', 'consistent'],
