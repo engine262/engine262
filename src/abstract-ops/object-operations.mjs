@@ -370,7 +370,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
 
 // 7.3.22 #sec-getfunctionrealm
 export function GetFunctionRealm(obj) {
-  Assert(IsCallable(obj) === Value.true);
+  Assert(X(IsCallable(obj)) === Value.true);
   if ('Realm' in obj) {
     return obj.Realm;
   }
