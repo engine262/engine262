@@ -46,10 +46,6 @@ export function ArrayCreate(length, proto) {
     proto = surroundingAgent.intrinsic('%ArrayPrototype%');
   }
   const A = new ArrayExoticObjectValue();
-
-  // Set A's essential internal methods except for [[DefineOwnProperty]]
-  // to the default ordinary object definitions specified in 9.1.
-
   A.Prototype = proto;
   A.Extensible = Value.true;
 
