@@ -217,8 +217,8 @@ export function SetIntegrityLevel(O, level) {
 export function TestIntegrityLevel(O, level) {
   Assert(Type(O) === 'Object');
   Assert(level === 'sealed' || level === 'frozen');
-  const status = Q(IsExtensible(O));
-  if (status === Value.true) {
+  const extensible = Q(IsExtensible(O));
+  if (extensible === Value.true) {
     return Value.false;
   }
   const keys = Q(O.OwnPropertyKeys());

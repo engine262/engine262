@@ -40,11 +40,11 @@ export function OrdinaryGetPrototypeOf(O) {
 export function OrdinarySetPrototypeOf(O, V) {
   Assert(Type(V) === 'Object' || Type(V) === 'Null');
 
-  const extensible = O.Extensible;
   const current = O.Prototype;
   if (SameValue(V, current) === Value.true) {
     return Value.true;
   }
+  const extensible = O.Extensible;
   if (extensible === Value.false) {
     return Value.false;
   }

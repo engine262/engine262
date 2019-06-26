@@ -897,10 +897,10 @@ export class ProxyExoticObjectValue extends ObjectValue {
     const target = O.ProxyTarget;
     const trap = Q(GetMethod(handler, new Value('isExtensible')));
     if (trap === Value.undefined) {
-      return Q(target.IsExtensible());
+      return Q(IsExtensible(target));
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
-    const targetResult = Q(target.IsExtensible());
+    const targetResult = Q(IsExtensible(target));
     if (SameValue(booleanTrapResult, targetResult) === Value.false) {
       return surroundingAgent.Throw('TypeError', '\'isExtensible\' on proxy: trap result does not reflect extensibility of proxy target');
     }
@@ -922,8 +922,8 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
     if (booleanTrapResult === Value.true) {
-      const targetIsExtensible = Q(target.IsExtensible());
-      if (targetIsExtensible === Value.true) {
+      const extensibleTarget = Q(IsExtensible(target));
+      if (extensibleTarget === Value.true) {
         return surroundingAgent.Throw('TypeError', '\'preventExtensions\' on proxy: trap returned truthy but the proxy target is extensible');
       }
     }
