@@ -283,7 +283,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
       try {
         const objectToString = realm.Intrinsics['%ObjProto_toString%'];
         if (toString.nativeFunction === objectToString.nativeFunction) {
-          return X(AbstractOps.Call(toString, value, [])).stringValue();
+          return X(AbstractOps.Call(toString, value)).stringValue();
         } else {
           const tag = getObjectTag(value, false) || 'Unknown';
           const ctor = X(AbstractOps.Get(value, new Value('constructor')));

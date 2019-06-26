@@ -182,7 +182,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     Assert(isAssignmentPattern(assignmentPattern));
   }
   while (true) {
-    let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
+    let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
     if (iteratorKind === 'async') {
       nextResult = Q(yield* Await(nextResult));
     }

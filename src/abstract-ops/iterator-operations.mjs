@@ -66,7 +66,7 @@ export function GetIterator(obj, hint, method) {
 export function IteratorNext(iteratorRecord, value) {
   let result;
   if (!value) {
-    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, []));
+    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
   } else {
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
@@ -110,7 +110,7 @@ export function IteratorClose(iteratorRecord, completion) {
   if (ret === Value.undefined) {
     return Completion(completion);
   }
-  const innerResult = EnsureCompletion(Call(ret, iterator, []));
+  const innerResult = EnsureCompletion(Call(ret, iterator));
   if (completion.Type === 'throw') {
     return Completion(completion);
   }
@@ -133,7 +133,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   if (ret === Value.undefined) {
     return Completion(completion);
   }
-  let innerResult = EnsureCompletion(Call(ret, iterator, []));
+  let innerResult = EnsureCompletion(Call(ret, iterator));
   if (innerResult.Type === 'normal') {
     innerResult = EnsureCompletion(yield* Await(innerResult.Value));
   }
