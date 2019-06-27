@@ -14,6 +14,8 @@ import {
   ToNumber,
   ToString,
   ToUint32,
+  isLeadingSurrogate,
+  isTrailingSurrogate,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -75,14 +77,15 @@ function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
     return Value.undefined;
   }
   const first = S.stringValue().charCodeAt(position);
-  if (first < 0xD800 || first > 0xDBFF || position + 1 === size) {
+  if (!isLeadingSurrogate(first) || position + 1 === size) {
     return new Value(first);
   }
   const second = S.stringValue().charCodeAt(position + 1);
-  if (second < 0xDC00 || second > 0xDFFF) {
+  if (!isTrailingSurrogate(second)) {
     return new Value(first);
   }
-  return new Value(UTF16Decode(first, second));
+  const cp = UTF16Decode(first, second);
+  return new Value(cp);
 }
 
 // 21.1.3.4 #sec-string.prototype.concat

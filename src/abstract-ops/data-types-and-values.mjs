@@ -5,6 +5,16 @@ import { X } from '../completion.mjs';
 // This file covers predicates defined in
 // 6 #sec-ecmascript-data-types-and-values
 
+// 6.1.4 #leading-surrogate
+export function isLeadingSurrogate(cp) {
+  return cp >= 0xD800 && cp <= 0xDBFF;
+}
+
+// 6.1.4 #trailing-surrogate
+export function isTrailingSurrogate(cp) {
+  return cp >= 0xDC00 && cp <= 0xDFFF;
+}
+
 // 6.1.7 #integer-index
 export function isIntegerIndex(V) {
   if (Type(V) !== 'String') {

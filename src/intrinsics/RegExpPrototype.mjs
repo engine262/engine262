@@ -17,6 +17,8 @@ import {
   ToString,
   ToUint32,
   RequireInternalSlot,
+  isLeadingSurrogate,
+  isTrailingSurrogate,
 } from '../abstract-ops/all.mjs';
 import { GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
@@ -155,12 +157,12 @@ export function AdvanceStringIndex(S, index, unicode) {
   }
 
   const first = S.stringValue().charCodeAt(index);
-  if (first < 0xD800 || first > 0xDBFF) {
+  if (!isLeadingSurrogate(first)) {
     return new Value(index + 1);
   }
 
   const second = S.stringValue().charCodeAt(index + 1);
-  if (second < 0xDC00 || second > 0xDFFF) {
+  if (!isTrailingSurrogate(second)) {
     return new Value(index + 1);
   }
 

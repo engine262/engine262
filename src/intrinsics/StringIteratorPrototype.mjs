@@ -1,5 +1,11 @@
 import { Type, Value } from '../value.mjs';
-import { Assert, CreateIterResultObject, ObjectCreate } from '../abstract-ops/all.mjs';
+import {
+  Assert,
+  CreateIterResultObject,
+  ObjectCreate,
+  isLeadingSurrogate,
+  isTrailingSurrogate,
+} from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
@@ -36,11 +42,11 @@ function StringIteratorPrototype_next(args, { thisValue }) {
   }
   const first = s.stringValue().charCodeAt(position);
   let resultString;
-  if (first < 0xD800 || first > 0xDBFF || position + 1 === len) {
+  if (!isLeadingSurrogate(first) || position + 1 === len) {
     resultString = new Value(String.fromCharCode(first));
   } else {
     const second = s.stringValue().charCodeAt(position + 1);
-    if (second < 0xDC00 || second > 0xDFFF) {
+    if (!isTrailingSurrogate(second)) {
       resultString = new Value(String.fromCharCode(first));
     } else {
       resultString = new Value(`${String.fromCharCode(first)}${String.fromCharCode(second)}`);
