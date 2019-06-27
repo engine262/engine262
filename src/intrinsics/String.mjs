@@ -2,10 +2,9 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Get,
   GetPrototypeFromConstructor,
-  SameValue,
+  IsInteger,
   StringCreate,
   SymbolDescriptiveString,
-  ToInteger,
   ToLength,
   ToNumber,
   ToObject,
@@ -63,7 +62,7 @@ function String_fromCodePoint(codePoints) {
   while (nextIndex < length) {
     const next = codePoints[nextIndex];
     const nextCP = Q(ToNumber(next));
-    if (SameValue(nextCP, X(ToInteger(nextCP))) === Value.false) {
+    if (X(IsInteger(nextCP)) === Value.false) {
       return surroundingAgent.Throw('RangeError');
     }
     if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {

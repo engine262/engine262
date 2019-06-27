@@ -168,8 +168,9 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
 
 // 18.2.1.1 #sec-performeval
 export function PerformEval(x, callerRealm, strictCaller, direct) {
-  // Assert: If direct is false, then strictCaller is also false.
-  Assert(!(direct === false) || strictCaller === false);
+  if (direct === false) {
+    Assert(strictCaller === false);
+  }
   if (Type(x) !== 'String') {
     return x;
   }

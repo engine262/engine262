@@ -1,6 +1,6 @@
 import {
+  IsInteger,
   OrdinaryCreateFromConstructor,
-  ToInteger,
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import {
@@ -43,18 +43,7 @@ function Number_isFinite([number = Value.undefined]) {
 
 // 20.1.2.3 #sec-number.isinteger
 function Number_isInteger([number = Value.undefined]) {
-  if (Type(number) !== 'Number') {
-    return Value.false;
-  }
-
-  if (number.isNaN() || number.isInfinity()) {
-    return Value.false;
-  }
-  const integer = ToInteger(number);
-  if (integer.numberValue() !== number.numberValue()) {
-    return Value.false;
-  }
-  return Value.true;
+  return X(IsInteger(number));
 }
 
 // 20.1.2.4 #sec-number.isnan
@@ -75,17 +64,10 @@ function Number_isSafeInteger([number = Value.undefined]) {
     return Value.false;
   }
 
-  if (number.isNaN() || number.isInfinity()) {
-    return Value.false;
-  }
-
-  const integer = X(ToInteger(number));
-  if (integer.numberValue() !== number.numberValue()) {
-    return Value.false;
-  }
-
-  if (Math.abs(integer.numberValue()) <= (2 ** 53) - 1) {
-    return Value.true;
+  if (X(IsInteger(number)) === Value.true) {
+    if (Math.abs(number.numberValue()) <= (2 ** 53) - 1) {
+      return Value.true;
+    }
   }
 
   return Value.false;
