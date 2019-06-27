@@ -18,6 +18,7 @@ export * from './objects.mjs';
 export * from './promise-operations.mjs';
 export * from './reference-operations.mjs';
 export * from './regexp-objects.mjs';
+export * from './source-code.mjs';
 export * from './spec-types.mjs';
 export * from './string-objects.mjs';
 export * from './symbol-objects.mjs';

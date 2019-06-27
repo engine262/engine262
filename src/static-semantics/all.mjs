@@ -32,7 +32,5 @@ export * from './TopLevelLexicallyDeclaredNames.mjs';
 export * from './TopLevelLexicallyScopedDeclarations.mjs';
 export * from './TopLevelVarDeclaredNames.mjs';
 export * from './TopLevelVarScopedDeclarations.mjs';
-export * from './UTF16Decode.mjs';
-export * from './UTF16Encoding.mjs';
 export * from './VarDeclaredNames.mjs';
 export * from './VarScopedDeclarations.mjs';

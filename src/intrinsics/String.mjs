@@ -10,8 +10,8 @@ import {
   ToObject,
   ToString,
   ToUint16,
+  UTF16Encoding,
 } from '../abstract-ops/all.mjs';
-import { UTF16Encoding } from '../static-semantics/UTF16Encoding';
 import {
   Type,
   Value,

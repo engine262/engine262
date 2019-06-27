@@ -21,13 +21,13 @@ import {
   ToLength,
   ToNumber,
   ToString,
+  UTF16Encoding,
 } from '../abstract-ops/all.mjs';
 import {
   NormalCompletion,
   EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
-import { UTF16Encoding } from '../static-semantics/all.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];

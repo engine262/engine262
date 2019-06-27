@@ -3,6 +3,7 @@ import {
   ArrayCreate,
   Assert,
   Call,
+  CodePointAt,
   CreateDataProperty,
   GetMethod,
   Invoke,
@@ -14,8 +15,6 @@ import {
   ToNumber,
   ToString,
   ToUint32,
-  isLeadingSurrogate,
-  isTrailingSurrogate,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -25,7 +24,6 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
-import { UTF16Decode } from '../static-semantics/all.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
@@ -76,16 +74,8 @@ function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   if (position < 0 || position >= size) {
     return Value.undefined;
   }
-  const first = S.stringValue().charCodeAt(position);
-  if (!isLeadingSurrogate(first) || position + 1 === size) {
-    return new Value(first);
-  }
-  const second = S.stringValue().charCodeAt(position + 1);
-  if (!isTrailingSurrogate(second)) {
-    return new Value(first);
-  }
-  const cp = UTF16Decode(first, second);
-  return new Value(cp);
+  const cp = X(CodePointAt(S, position));
+  return cp.CodePoint;
 }
 
 // 21.1.3.4 #sec-string.prototype.concat

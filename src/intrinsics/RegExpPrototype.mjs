@@ -3,6 +3,7 @@ import {
   ArrayCreate,
   Assert,
   Call,
+  CodePointAt,
   Construct,
   CreateDataProperty,
   EscapeRegExpPattern,
@@ -17,8 +18,6 @@ import {
   ToString,
   ToUint32,
   RequireInternalSlot,
-  isLeadingSurrogate,
-  isTrailingSurrogate,
 } from '../abstract-ops/all.mjs';
 import { GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
@@ -156,17 +155,8 @@ export function AdvanceStringIndex(S, index, unicode) {
     return new Value(index + 1);
   }
 
-  const first = S.stringValue().charCodeAt(index);
-  if (!isLeadingSurrogate(first)) {
-    return new Value(index + 1);
-  }
-
-  const second = S.stringValue().charCodeAt(index + 1);
-  if (!isTrailingSurrogate(second)) {
-    return new Value(index + 1);
-  }
-
-  return new Value(index + 2);
+  const cp = X(CodePointAt(S, index));
+  return new Value(index + cp.CodeUnitCount.numberValue());
 }
 
 // 21.2.5.3 #sec-get-regexp.prototype.dotAll

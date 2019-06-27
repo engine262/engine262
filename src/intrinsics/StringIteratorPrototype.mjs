@@ -1,11 +1,11 @@
 import { Type, Value } from '../value.mjs';
 import {
   Assert,
+  CodePointAt,
   CreateIterResultObject,
   ObjectCreate,
-  isLeadingSurrogate,
-  isTrailingSurrogate,
 } from '../abstract-ops/all.mjs';
+import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
@@ -40,20 +40,9 @@ function StringIteratorPrototype_next(args, { thisValue }) {
     O.IteratedString = Value.undefined;
     return CreateIterResultObject(Value.undefined, Value.true);
   }
-  const first = s.stringValue().charCodeAt(position);
-  let resultString;
-  if (!isLeadingSurrogate(first) || position + 1 === len) {
-    resultString = new Value(String.fromCharCode(first));
-  } else {
-    const second = s.stringValue().charCodeAt(position + 1);
-    if (!isTrailingSurrogate(second)) {
-      resultString = new Value(String.fromCharCode(first));
-    } else {
-      resultString = new Value(`${String.fromCharCode(first)}${String.fromCharCode(second)}`);
-    }
-  }
-  const resultSize = resultString.stringValue().length;
-  O.StringIteratorNextIndex = position + resultSize;
+  const cp = X(CodePointAt(s, position));
+  const resultString = new Value(s.stringValue().substr(position, cp.CodeUnitCount.numberValue()));
+  O.StringIteratorNextIndex = position + cp.CodeUnitCount.numberValue();
   return CreateIterResultObject(resultString, Value.false);
 }
 
