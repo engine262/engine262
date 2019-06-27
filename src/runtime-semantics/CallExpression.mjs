@@ -9,6 +9,7 @@ import {
   GetValue,
   IsCallable,
   IsPropertyReference,
+  PerformEval,
   PrepareForTailCall,
   SameValue,
 } from '../abstract-ops/all.mjs';
@@ -21,7 +22,6 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { PerformEval } from '../intrinsics/eval.mjs';
 import { msg } from '../helpers.mjs';
 
 export function* EvaluateCall(func, ref, args, tailPosition) {

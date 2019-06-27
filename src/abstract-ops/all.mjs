@@ -9,6 +9,7 @@ export * from './date-objects.mjs';
 export * from './execution-contexts.mjs';
 export * from './function-operations.mjs';
 export * from './generator-operations.mjs';
+export * from './global-object.mjs';
 export * from './iterator-operations.mjs';
 export * from './module-namespace-exotic-objects.mjs';
 export * from './module-records.mjs';
