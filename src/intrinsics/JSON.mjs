@@ -468,7 +468,11 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   let gap;
   if (Type(space) === 'Number') {
     space = Math.min(10, X(ToInteger(space)).numberValue());
-    gap = ' '.repeat(space >= 0 ? space : 0);
+    if (space < 1) {
+      gap = '';
+    } else {
+      gap = ' '.repeat(space);
+    }
   } else if (Type(space) === 'String') {
     if (space.stringValue().length <= 10) {
       gap = space.stringValue();
