@@ -10,9 +10,9 @@ import {
   HasOwnProperty,
   IsConstructor,
   IsExtensible,
+  IsInteger,
   ObjectCreate,
   OrdinaryCreateFromConstructor,
-  ToInteger,
   ToObject,
   isStrictModeCode,
 } from './all.mjs';
@@ -369,7 +369,7 @@ export function SetFunctionName(F, name, prefix) {
 export function SetFunctionLength(F, length) {
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
   Assert(Type(length) === 'Number');
-  Assert(length.numberValue() >= 0 && X(ToInteger(length)).numberValue() === length.numberValue());
+  Assert(length.numberValue() >= 0 && X(IsInteger(length)) === Value.true);
   return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
     Value: length,
     Writable: Value.false,
