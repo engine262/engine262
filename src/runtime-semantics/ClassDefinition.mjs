@@ -75,7 +75,7 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   }
   if (constructor === undefined) {
     if (ClassHeritage) {
-      // Set constructor to the result of parsing the source text `constructor(... args){ super (...args);}`
+      // Set constructor to the result of parsing the source text `constructor(...args) { super(...args); }`
       constructor = forwardingConstructorNode;
     } else {
       // Set constructor to the result of parsing the source text `constructor() {}`
