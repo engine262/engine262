@@ -7,7 +7,6 @@ import {
   GetReferencedName,
   GetV,
   GetValue,
-  HasOwnProperty,
   IteratorClose,
   IteratorStep,
   IteratorValue,
@@ -15,7 +14,6 @@ import {
   PutValue,
   RequireObjectCoercible,
   ResolveBinding,
-  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -38,7 +36,7 @@ import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
-import { Evaluate_PropertyName } from './all.mjs';
+import { Evaluate_PropertyName, NamedEvaluation_Expression } from './all.mjs';
 import { Type, Value } from '../value.mjs';
 
 // (implicit)
@@ -187,13 +185,11 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
     const lref = Q(ResolveBinding(P, undefined, IdentifierReference.strict));
     let v = Q(GetV(value, P));
     if (Initializer !== undefined && Type(v) === 'Undefined') {
-      const defaultValue = yield* Evaluate(Initializer);
-      v = Q(GetValue(defaultValue));
       if (IsAnonymousFunctionDefinition(Initializer)) {
-        const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-        if (hasNameProperty === Value.false) {
-          X(SetFunctionName(v, P));
-        }
+        v = yield* NamedEvaluation_Expression(Initializer, P);
+      } else {
+        const defaultValue = yield* Evaluate(Initializer);
+        v = Q(GetValue(defaultValue));
       }
     }
     Q(PutValue(lref, v));
@@ -284,22 +280,19 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentElement(Assignment
   }
   let v;
   if (Initializer !== undefined && value === Value.undefined) {
-    const defaultValue = yield* Evaluate(Initializer);
-    v = Q(GetValue(defaultValue));
+    if (IsAnonymousFunctionDefinition(Initializer)
+        && IsIdentifierRef(DestructuringAssignmentTarget)) {
+      v = yield* NamedEvaluation_Expression(Initializer, GetReferencedName(lref));
+    } else {
+      const defaultValue = yield* Evaluate(Initializer);
+      v = Q(GetValue(defaultValue));
+    }
   } else {
     v = value;
   }
   if (isAssignmentPattern(DestructuringAssignmentTarget)) {
     const nestedAssignmentPattern = DestructuringAssignmentTarget;
     return yield* DestructuringAssignmentEvaluation_AssignmentPattern(nestedAssignmentPattern, v);
-  }
-  if (Initializer !== undefined
-      && IsAnonymousFunctionDefinition(Initializer)
-      && IsIdentifierRef(DestructuringAssignmentTarget)) {
-    const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-    if (hasNameProperty === Value.false) {
-      X(SetFunctionName(v, GetReferencedName(lref)));
-    }
   }
   return Q(PutValue(lref, v));
 }
@@ -378,23 +371,20 @@ function* KeyedDestructuringAssignmentEvaluation_AssignmentElement(AssignmentEle
   }
   const v = Q(GetV(value, propertyName));
   let rhsValue;
-  if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate(Initializer);
-    rhsValue = Q(GetValue(defaultValue));
+  if (Initializer !== undefined && v === Value.undefined) {
+    if (IsAnonymousFunctionDefinition(Initializer)
+        && IsIdentifierRef(DestructuringAssignmentTarget)) {
+      rhsValue = yield* NamedEvaluation_Expression(Initializer, GetReferencedName(lref));
+    } else {
+      const defaultValue = yield* Evaluate(Initializer);
+      rhsValue = Q(GetValue(defaultValue));
+    }
   } else {
     rhsValue = v;
   }
   if (isAssignmentPattern(DestructuringAssignmentTarget)) {
     const assignmentPattern = DestructuringAssignmentTarget;
     return yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rhsValue);
-  }
-  if (Initializer !== undefined
-      && IsAnonymousFunctionDefinition(Initializer)
-      && IsIdentifierRef(DestructuringAssignmentTarget)) {
-    const hasNameProperty = Q(HasOwnProperty(rhsValue, new Value('name')));
-    if (hasNameProperty === Value.false) {
-      X(SetFunctionName(rhsValue, GetReferencedName(lref)));
-    }
   }
   return Q(PutValue(lref, rhsValue));
 }

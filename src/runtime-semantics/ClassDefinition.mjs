@@ -5,7 +5,6 @@ import {
   CreateMethodProperty,
   Get,
   GetValue,
-  HasOwnProperty,
   IsConstructor,
   MakeClassConstructor,
   MakeConstructor,
@@ -30,18 +29,18 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q,
+  Q, X,
   ReturnIfAbrupt,
 } from '../completion.mjs';
 
 // 14.6.13 #sec-runtime-semantics-classdefinitionevaluation
 //   ClassTail : ClassHeritage `{` ClassBody `}`
-function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
+export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody }, classBinding, className) {
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const classScope = NewDeclarativeEnvironment(lex);
   const classScopeEnvRec = classScope.EnvironmentRecord;
-  if (Type(className) !== 'Undefined') {
-    classScopeEnvRec.CreateImmutableBinding(className, Value.true);
+  if (classBinding !== Value.undefined) {
+    classScopeEnvRec.CreateImmutableBinding(classBinding, Value.true);
   }
   let protoParent;
   let constructorParent;
@@ -91,6 +90,9 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
   }
   MakeConstructor(F, false, proto);
   MakeClassConstructor(F);
+  if (className !== Value.undefined) {
+    X(SetFunctionName(F, className));
+  }
   CreateMethodProperty(proto, new Value('constructor'), F);
   let methods;
   if (!ClassBody) {
@@ -111,8 +113,8 @@ function* ClassDefinitionEvaluation({ ClassHeritage, ClassBody }, className) {
     }
   }
   surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
-  if (Type(className) !== 'Undefined') {
-    classScopeEnvRec.InitializeBinding(className, F);
+  if (classBinding !== Value.undefined) {
+    classScopeEnvRec.InitializeBinding(classBinding, F);
   }
   return F;
 }
@@ -136,16 +138,10 @@ export function* Evaluate_ClassExpression(ClassExpression) {
   } else {
     className = new Value(BindingIdentifier.name);
   }
-  const value = yield* ClassDefinitionEvaluation(ClassTail, className);
+  const value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, className, className);
   ReturnIfAbrupt(value);
   value.SourceText = sourceTextMatchedBy(ClassExpression);
-  if (Type(className) !== 'Undefined') {
-    const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-    if (hasNameProperty === Value.false) {
-      SetFunctionName(value, className);
-    }
-  }
-  return new NormalCompletion(value);
+  return value;
 }
 
 // 14.6.14 #sec-runtime-semantics-bindingclassdeclarationevaluation
@@ -163,24 +159,23 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
     ClassBody: body.body,
   };
 
+  let classBinding;
   let className;
   if (!BindingIdentifier) {
-    className = Value.undefined;
+    classBinding = Value.undefined;
+    className = new Value('default');
   } else {
-    className = new Value(BindingIdentifier.name);
+    classBinding = new Value(BindingIdentifier.name);
+    className = classBinding;
   }
-  const value = yield* ClassDefinitionEvaluation(ClassTail, className);
+  const value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, classBinding, className);
   ReturnIfAbrupt(value);
   value.SourceText = sourceTextMatchedBy(ClassDeclaration);
   if (BindingIdentifier) {
-    const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-    if (hasNameProperty === Value.false) {
-      SetFunctionName(value, className);
-    }
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     Q(InitializeBoundName(className, value, env));
   }
-  return new NormalCompletion(value);
+  return value;
 }
 
 // 14.6.16 #sec-class-definitions-runtime-semantics-evaluation

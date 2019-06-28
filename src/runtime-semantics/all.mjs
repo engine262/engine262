@@ -48,6 +48,7 @@ export * from './MemberExpression.mjs';
 export * from './MetaProperty.mjs';
 export * from './MV.mjs';
 export * from './MultiplicativeExpression.mjs';
+export * from './NamedEvaluation.mjs';
 export * from './NewExpression.mjs';
 export * from './ObjectLiteral.mjs';
 export * from './PropertyBindingInitialization.mjs';

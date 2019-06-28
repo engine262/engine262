@@ -2,18 +2,18 @@ import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import {
   GetReferencedName,
   GetValue,
-  HasOwnProperty,
   PutValue,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
-import { DestructuringAssignmentEvaluation_AssignmentPattern } from './all.mjs';
+import {
+  DestructuringAssignmentEvaluation_AssignmentPattern,
+  NamedEvaluation_Expression,
+} from './all.mjs';
 import { isAssignmentPattern } from '../ast.mjs';
 import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
 
 // 12.15.4 #sec-assignment-operators-runtime-semantics-evaluation
 //   AssignmentExpression :
@@ -26,14 +26,12 @@ export function* Evaluate_AssignmentExpression(node) {
     if (!isAssignmentPattern(LeftHandSideExpression)) {
       const lref = yield* Evaluate(LeftHandSideExpression);
       ReturnIfAbrupt(lref);
-      const rref = yield* Evaluate(AssignmentExpression);
-      const rval = Q(GetValue(rref));
-      if (IsAnonymousFunctionDefinition(AssignmentExpression)
-          && IsIdentifierRef(LeftHandSideExpression)) {
-        const hasNameProperty = Q(HasOwnProperty(rval, new Value('name')));
-        if (hasNameProperty === Value.false) {
-          SetFunctionName(rval, GetReferencedName(lref));
-        }
+      let rval;
+      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+        rval = yield* NamedEvaluation_Expression(AssignmentExpression, GetReferencedName(lref));
+      } else {
+        const rref = yield* Evaluate(AssignmentExpression);
+        rval = Q(GetValue(rref));
       }
       Q(PutValue(lref, rval));
       return rval;

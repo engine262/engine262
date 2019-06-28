@@ -23,7 +23,6 @@ import {
   AsyncGeneratorFunctionCreate,
   AsyncFunctionCreate,
   GetValue,
-  HasOwnProperty,
   MakeMethod,
   ObjectCreate,
   SetFunctionName,
@@ -34,6 +33,7 @@ import { Evaluate } from '../evaluator.mjs';
 import {
   DefineMethod,
   Evaluate_PropertyName,
+  NamedEvaluation_Expression,
 } from './all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
@@ -102,13 +102,13 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
   const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
   const propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
   ReturnIfAbrupt(propKey);
-  const exprValueRef = yield* Evaluate(AssignmentExpression);
-  const propValue = Q(GetValue(exprValueRef));
+  let propValue;
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
-    const hasNameProperty = Q(HasOwnProperty(propValue, new Value('name')));
-    if (hasNameProperty === Value.false) {
-      X(SetFunctionName(propValue, propKey));
-    }
+    propValue = yield* NamedEvaluation_Expression(AssignmentExpression, propKey);
+    ReturnIfAbrupt(propValue); // https://github.com/tc39/ecma262/issues/1605
+  } else {
+    const exprValueRef = yield* Evaluate(AssignmentExpression);
+    propValue = Q(GetValue(exprValueRef));
   }
   Assert(enumerable);
   Assert(object.isOrdinary);

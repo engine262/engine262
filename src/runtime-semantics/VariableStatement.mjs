@@ -1,18 +1,17 @@
 import {
   GetValue,
-  HasOwnProperty,
   PutValue,
   ResolveBinding,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
-import { BindingInitialization_BindingPattern } from './all.mjs';
+import {
+  BindingInitialization_BindingPattern,
+  NamedEvaluation_Expression,
+} from './all.mjs';
 import {
   isBindingIdentifier,
   isBindingPattern,
 } from '../ast.mjs';
-import {
-  NormalCompletion, Q, ReturnIfAbrupt, X,
-} from '../completion.mjs';
+import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
@@ -35,13 +34,12 @@ export function* Evaluate_VariableDeclaration(VariableDeclaration) {
       } = VariableDeclaration;
       const bindingId = new Value(BindingIdentifier.name);
       const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
-      const rhs = yield* Evaluate(Initializer);
-      const value = Q(GetValue(rhs));
+      let value;
       if (IsAnonymousFunctionDefinition(Initializer)) {
-        const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-        if (hasNameProperty === Value.false) {
-          X(SetFunctionName(value, bindingId));
-        }
+        value = yield* NamedEvaluation_Expression(Initializer, bindingId);
+      } else {
+        const rhs = yield* Evaluate(Initializer);
+        value = Q(GetValue(rhs));
       }
       return Q(PutValue(lhs, value));
     }

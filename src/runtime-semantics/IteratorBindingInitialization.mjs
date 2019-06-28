@@ -13,13 +13,11 @@ import {
   Assert,
   CreateDataProperty,
   GetValue,
-  HasOwnProperty,
   InitializeReferencedBinding,
   IteratorStep,
   IteratorValue,
   PutValue,
   ResolveBinding,
-  SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -47,6 +45,7 @@ import {
 import {
   BindingInitialization_BindingPattern,
   IteratorDestructuringAssignmentEvaluation_Elision,
+  NamedEvaluation_Expression,
 } from './all.mjs';
 
 // 13.3.3.8 #sec-destructuring-binding-patterns-runtime-semantics-iteratorbindinginitialization
@@ -179,14 +178,12 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
   if (iteratorRecord.Done === Value.true) {
     v = Value.undefined;
   }
-  if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate(Initializer);
-    v = Q(GetValue(defaultValue));
+  if (Initializer !== undefined && v === Value.undefined) {
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-      if (hasNameProperty === Value.false) {
-        X(SetFunctionName(v, bindingId));
-      }
+      v = yield* NamedEvaluation_Expression(Initializer, bindingId);
+    } else {
+      const defaultValue = yield* Evaluate(Initializer);
+      v = Q(GetValue(defaultValue));
     }
   }
   if (Type(environment) === 'Undefined') {

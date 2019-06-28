@@ -9,23 +9,18 @@ import {
   isBindingIdentifier,
   isBindingPattern,
 } from '../ast.mjs';
-import {
-  Value,
-} from '../value.mjs';
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   GetValue,
-  HasOwnProperty,
   InitializeReferencedBinding,
   ResolveBinding,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
+import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import {
-  IsAnonymousFunctionDefinition,
-} from '../static-semantics/all.mjs';
-import { BindingInitialization_BindingPattern } from './all.mjs';
+  BindingInitialization_BindingPattern,
+  NamedEvaluation_Expression,
+} from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
@@ -38,13 +33,12 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   const lhs = X(ResolveBinding(bindingId, undefined, strict));
 
   if (Initializer) {
-    const rhs = yield* Evaluate(Initializer);
-    const value = Q(GetValue(rhs));
+    let value;
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(value, new Value('name')));
-      if (hasNameProperty === Value.false) {
-        SetFunctionName(value, bindingId);
-      }
+      value = yield* NamedEvaluation_Expression(Initializer, bindingId);
+    } else {
+      const rhs = yield* Evaluate(Initializer);
+      value = Q(GetValue(rhs));
     }
     return InitializeReferencedBinding(lhs, value);
   } else {

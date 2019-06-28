@@ -1,11 +1,9 @@
 import {
   GetV,
   GetValue,
-  HasOwnProperty,
   InitializeReferencedBinding,
   PutValue,
   ResolveBinding,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   isBindingIdentifier,
@@ -14,10 +12,7 @@ import {
   isBindingPatternAndInitializer,
   isSingleNameBinding,
 } from '../ast.mjs';
-import {
-  Q,
-  X,
-} from '../completion.mjs';
+import { Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
@@ -29,6 +24,7 @@ import {
 } from '../value.mjs';
 import {
   BindingInitialization_BindingPattern,
+  NamedEvaluation_Expression,
 } from './all.mjs';
 
 // 13.3.3.9 #sec-runtime-semantics-keyedbindinginitialization
@@ -84,13 +80,11 @@ export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding,
   const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
   let v = Q(GetV(value, propertyName));
   if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate(Initializer);
-    v = Q(GetValue(defaultValue));
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      const hasNameProperty = Q(HasOwnProperty(v, new Value('name')));
-      if (hasNameProperty === Value.false) {
-        X(SetFunctionName(v, bindingId));
-      }
+      v = yield* NamedEvaluation_Expression(Initializer, bindingId);
+    } else {
+      const defaultValue = yield* Evaluate(Initializer);
+      v = Q(GetValue(defaultValue));
     }
   }
   if (Type(environment) === 'Undefined') {
