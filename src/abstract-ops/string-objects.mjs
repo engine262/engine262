@@ -30,6 +30,7 @@ export function StringCreate(value, prototype) {
   return S;
 }
 
+// 9.4.3.5 #sec-stringgetownproperty
 export function StringGetOwnProperty(S, P) {
   Assert(Type(S) === 'Object' && 'StringData' in S);
   Assert(IsPropertyKey(P));

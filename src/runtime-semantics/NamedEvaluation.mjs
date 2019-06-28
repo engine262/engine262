@@ -26,7 +26,7 @@ import {
   Evaluate_GeneratorExpression,
 } from './all.mjs';
 
-// #sec-grouping-operator-runtime-semantics-namedevaluation
+// 12.2.10.4 #sec-grouping-operator-runtime-semantics-namedevaluation
 //   ParenthesizedExpression : `(` Expression `)`
 function* NamedEvaluation_ParenthesizedExpression(ParenthesizedExpression, name) {
   const { expression: Expression } = ParenthesizedExpression;
@@ -34,7 +34,7 @@ function* NamedEvaluation_ParenthesizedExpression(ParenthesizedExpression, name)
   return yield* NamedEvaluation_Expression(Expression, name);
 }
 
-// #sec-function-definitions-runtime-semantics-namedevaluation
+// 14.1.21 #sec-function-definitions-runtime-semantics-namedevaluation
 //   FunctionExpression : `function` `(` FormalParameters `)` `{` FunctionBody `}`
 function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
   const closure = Evaluate_FunctionExpression(FunctionExpression);
@@ -42,7 +42,7 @@ function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
   return closure;
 }
 
-// #sec-arrow-function-definitions-runtime-semantics-namedevaluation
+// 14.2.16 #sec-arrow-function-definitions-runtime-semantics-namedevaluation
 //   ArrowFunction : ArrowParameters `=>` ConciseBody
 function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
   const closure = Evaluate_ArrowFunction(ArrowFunction);
@@ -50,7 +50,7 @@ function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
   return closure;
 }
 
-// #sec-generator-function-definitions-runtime-semantics-namedevaluation
+// 14.4.13 #sec-generator-function-definitions-runtime-semantics-namedevaluation
 //   GeneratorExpression : `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
   const closure = Evaluate_GeneratorExpression(GeneratorExpression);
@@ -58,7 +58,7 @@ function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
   return closure;
 }
 
-// #sec-asyncgenerator-definitions-namedevaluation
+// 14.5.13 #sec-asyncgenerator-definitions-namedevaluation
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
@@ -67,7 +67,7 @@ function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name
   return closure;
 }
 
-// #sec-class-definitions-runtime-semantics-namedevaluation
+// 14.6.15 #sec-class-definitions-runtime-semantics-namedevaluation
 //   ClassExpression : `class` ClassTail
 function* NamedEvaluation_ClassExpression(ClassExpression, name) {
   const { body, superClass } = ClassExpression;
@@ -78,7 +78,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
   return yield* ClassDefinitionEvaluation_ClassTail(ClassTail, Value.undefined, name);
 }
 
-// #sec-async-function-definitions-runtime-semantics-namedevaluation
+// 14.7.13 #sec-async-function-definitions-runtime-semantics-namedevaluation
 //   AsyncFunctionExpression :
 //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
 function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
@@ -87,7 +87,7 @@ function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) 
   return closure;
 }
 
-// #sec-async-arrow-function-definitions-runtime-semantics-namedevaluation
+// 14.8.15 #sec-async-arrow-function-definitions-runtime-semantics-namedevaluation
 //   AsyncArrowFunction :
 //     `async` AsyncArrowBindingIdentifier `=>` AsyncConciseBody
 //     CoverCallExpressionAndAsyncArrowHead `=>` AsyncConciseBody
