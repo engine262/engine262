@@ -56,7 +56,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
 
 function MapConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
+    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Map'));
   }
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%MapPrototype%', ['MapData']));
   map.MapData = [];

@@ -40,8 +40,8 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
 
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
-  if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Promise'));
   }
   if (IsCallable(executor) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', executor));

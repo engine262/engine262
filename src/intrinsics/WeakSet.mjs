@@ -70,7 +70,7 @@ class WeakSetData {
 // 23.4.1.1 #sec-weakset-iterable
 function WeakSetConstructor([iterable], { NewTarget }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', NewTarget));
+    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'WeakSet'));
   }
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakSetPrototype%', ['WeakSetData']));
   set.WeakSetData = new WeakSetData();
