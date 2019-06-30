@@ -75,6 +75,7 @@ language/literals/regexp/S7.8.5_A1.1_T2.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
+language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // Failing tests in language
 language/eval-code/direct/new.target-fn.js
