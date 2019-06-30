@@ -70,6 +70,9 @@ function MV_StrNumericLiteral(StrNumericLiteral) {
   } catch (err) {
     return new Value(NaN);
   }
+  if (parser.results.length === 0) {
+    return new Value(NaN);
+  }
   Assert(parser.results.length === 1);
   return convertScientificMVToNumber(parser.results[0], StrNumericLiteral);
 }

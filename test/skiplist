@@ -61,9 +61,6 @@ built-ins/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 
 // TODO(46): Missing Number
-built-ins/Number/string-binary-literal-invalid.js
-built-ins/Number/string-hex-literal-invalid.js
-built-ins/Number/string-octal-literal-invald.js
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
 built-ins/Number/prototype/toFixed/*.js
@@ -78,7 +75,6 @@ language/literals/regexp/S7.8.5_A1.1_T2.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
-language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
 // Failing tests in language
 language/eval-code/direct/new.target-fn.js
