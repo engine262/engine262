@@ -73,7 +73,10 @@ export function captureStack(O) {
 }
 
 function inlineInspect(V) {
-  return inspect(V, surroundingAgent.currentRealmRecord, true);
+  if (V instanceof Value) {
+    return inspect(V, surroundingAgent.currentRealmRecord, true);
+  }
+  return `${V}`;
 }
 
 const messages = {

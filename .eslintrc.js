@@ -16,6 +16,7 @@ module.exports = {
     BigInt: false,
     Atomics: false,
     SharedArrayBuffer: false,
+    WeakRef: false,
   },
   rules: {
     'quote-props': ['error', 'consistent'],

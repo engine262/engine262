@@ -29,7 +29,7 @@ function SetConstructor([iterable], { NewTarget }) {
   }
   const adder = Q(Get(set, new Value('add')));
   if (IsCallable(adder) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('NotAFunction', adder));
   }
   const iteratorRecord = Q(GetIterator(iterable));
 

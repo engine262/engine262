@@ -58,9 +58,7 @@ built-ins/global/S10.2.3_A1.3_T2.js
 
 // TODO: Missing weak collections
 built-ins/WeakMap/**/*.js
-built-ins/WeakSet/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
-language/statements/class/subclass/builtin-objects/WeakSet/**/*.js
 
 // TODO(46): Missing Number
 built-ins/Number/string-binary-literal-invalid.js
