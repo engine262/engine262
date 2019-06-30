@@ -61,7 +61,7 @@ built-ins/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 
 // https://github.com/tc39/test262/pull/2219
-test/built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js
+built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js
 
 // TODO(46): Missing Number
 built-ins/Number/prototype/*.js
