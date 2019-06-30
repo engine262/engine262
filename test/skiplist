@@ -60,6 +60,9 @@ built-ins/global/S10.2.3_A1.3_T2.js
 built-ins/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 
+// https://github.com/tc39/test262/pull/2219
+test/built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js
+
 // TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
