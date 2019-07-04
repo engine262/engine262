@@ -46,6 +46,7 @@ export function resume(context, completion) {
 export function captureStack(O) {
   const stack = surroundingAgent.executionContextStack
     .filter((e) => e.Function !== Value.null)
+    .slice(0, -1) // remove error constructor
     .map((e) => {
       let string = '\n  at ';
       const functionName = e.Function.properties.get(new Value('name'));

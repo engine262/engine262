@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "node test/test262.js",
-    "lint": "eslint transform.js transform_do.js test/test262.js bin/engine262.js src/ --ext=js,mjs --cache",
+    "lint": "eslint transform.js transform_do.js test/test262.js test/stepped.js bin/engine262.js src/ --ext=js,mjs --cache",
     "build-grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
     "build": "rollup -c",
     "build-do": "rollup -c --environment USE_DO_EXPRESSIONS"

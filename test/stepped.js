@@ -34,13 +34,17 @@ if (isMainThread) {
       highlightCode: true,
       message: node.type,
     });
-    process.stdout.write(frame);
-    process.stdout.write('\n\n\n');
+    process.stdout.write(`${frame}\n\n\n`);
+  });
+  worker.on('exit', () => {
+    process.exit(0);
   });
 } else {
   const {
-    initializeAgent,
     Realm,
+    AbruptCompletion,
+    initializeAgent,
+    inspect,
   } = require('..');
 
   const shared32 = new Int32Array(workerData.shared);
@@ -57,7 +61,10 @@ if (isMainThread) {
 
   const realm = new Realm();
 
-  realm.evaluateScript(workerData.source);
+  const completion = realm.evaluateScript(workerData.source);
+  if (completion instanceof AbruptCompletion) {
+    process.stdout.write(`${inspect(completion, realm)}\n`);
+  }
 
   process.exit(0);
 }
