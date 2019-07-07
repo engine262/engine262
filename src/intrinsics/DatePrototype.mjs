@@ -33,6 +33,7 @@ import {
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
+import { StringPad } from '../runtime-semantics/all.mjs';
 
 export function thisTimeValue(value) {
   if (Type(value) === 'Object' && 'DateValue' in value) {
@@ -554,11 +555,11 @@ function DateString(tv) {
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yearNum = YearFromTime(tv).numberValue();
-  const year = yearNum < 0
-    ? `-${String(Math.abs(yearNum)).padStart(4, '0')}`
-    : String(yearNum).padStart(4, '0');
-  return new Value(`${weekday} ${month} ${day} ${year}`);
+  const yv = YearFromTime(tv).numberValue();
+  const yearSign = yv >= 0 ? '' : '-';
+  const year = new Value(String(Math.abs(yv)));
+  const paddedYear = X(StringPad(year, new Value(4), new Value('0'), 'start')).stringValue();
+  return new Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
 // Table 46 #sec-todatestring-day-names
@@ -615,11 +616,11 @@ function DateProto_toUTCString(args, { thisValue }) {
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yearNum = YearFromTime(tv).numberValue();
-  const year = yearNum < 0
-    ? `-${String(Math.abs(yearNum)).padStart(4, '0')}`
-    : String(yearNum).padStart(4, '0');
-  return new Value(`${weekday}, ${day} ${month} ${year} ${TimeString(tv).stringValue()}`);
+  const yv = YearFromTime(tv).numberValue();
+  const yearSign = yv >= 0 ? '' : '-';
+  const year = new Value(String(Math.abs(yv)));
+  const paddedYear = X(StringPad(year, new Value(4), new Value('0'), 'start')).stringValue();
+  return new Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 
 // 20.3.4.44 #sec-date.prototype.valueof
