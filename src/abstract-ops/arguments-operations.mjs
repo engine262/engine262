@@ -63,7 +63,7 @@ function ArgGetterSteps() {
 // 9.4.4.7.1 #sec-makearggetter
 function MakeArgGetter(name, env) {
   const steps = ArgGetterSteps;
-  const getter = CreateBuiltinFunction(steps, ['Name', 'Env']);
+  const getter = X(CreateBuiltinFunction(steps, ['Name', 'Env']));
   getter.Name = name;
   getter.Env = env;
   return getter;
@@ -80,7 +80,7 @@ function ArgSetterSteps([value]) {
 // 9.4.4.7.2 #sec-makeargsetter
 function MakeArgSetter(name, env) {
   const steps = ArgSetterSteps;
-  const setter = CreateBuiltinFunction(steps, ['Name', 'Env']);
+  const setter = X(CreateBuiltinFunction(steps, ['Name', 'Env']));
   SetFunctionLength(setter, new Value(1));
   setter.Name = name;
   setter.Env = env;

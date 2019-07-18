@@ -168,7 +168,7 @@ export function CreateListIteratorRecord(list) {
   iterator.IteratedList = list;
   iterator.ListIteratorNextIndex = 0;
   const steps = ListIteratorNextSteps;
-  const next = CreateBuiltinFunction(steps, []);
+  const next = X(CreateBuiltinFunction(steps, []));
   return {
     Iterator: iterator,
     NextMethod: next,
@@ -221,7 +221,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
   const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  const onFulfilled = CreateBuiltinFunction(steps, ['Done']);
+  const onFulfilled = X(CreateBuiltinFunction(steps, ['Done']));
   onFulfilled.Done = done;
   X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
   return promiseCapability.Promise;

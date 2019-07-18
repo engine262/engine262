@@ -87,3 +87,7 @@ language/expressions/object/setter-super-prop.js
 language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
+
+// spec bug, fixing...
+built-ins/ThrowTypeError/extensible.js
+built-ins/ThrowTypeError/frozen.js

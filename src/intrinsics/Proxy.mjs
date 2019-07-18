@@ -36,7 +36,7 @@ function ProxyCallSlot(thisArgument, argumentsList) {
   if (trap === Value.undefined) {
     return Q(Call(target, thisArgument, argumentsList));
   }
-  const argArray = CreateArrayFromList(argumentsList);
+  const argArray = X(CreateArrayFromList(argumentsList));
   return Q(Call(trap, handler, [target, thisArgument, argArray]));
 }
 
@@ -54,7 +54,7 @@ function ProxyConstructSlot(argumentsList, newTarget) {
   if (trap === Value.undefined) {
     return Q(Construct(target, argumentsList, newTarget));
   }
-  const argArray = CreateArrayFromList(argumentsList);
+  const argArray = X(CreateArrayFromList(argumentsList));
   const newObj = Q(Call(trap, handler, [target, argArray, newTarget]));
   if (Type(newObj) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'Proxy trap returned non-object');
@@ -111,7 +111,7 @@ function ProxyRevocationFunctions() {
 function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
   const p = Q(ProxyCreate(target, handler));
   const steps = ProxyRevocationFunctions;
-  const revoker = CreateBuiltinFunction(steps, ['RevocableProxy']);
+  const revoker = X(CreateBuiltinFunction(steps, ['RevocableProxy']));
   SetFunctionLength(revoker, new Value(0));
   revoker.RevocableProxy = p;
   const result = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));

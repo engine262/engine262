@@ -151,11 +151,11 @@ export function* Await(value) {
   const asyncContext = surroundingAgent.runningExecutionContext;
   const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   const stepsFulfilled = AwaitFulfilledFunctions;
-  const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
+  const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']));
   X(SetFunctionLength(onFulfilled, new Value(1)));
   onFulfilled.AsyncContext = asyncContext;
   const stepsRejected = AwaitRejectedFunctions;
-  const onRejected = CreateBuiltinFunction(stepsRejected, ['AsyncContext']);
+  const onRejected = X(CreateBuiltinFunction(stepsRejected, ['AsyncContext']));
   X(SetFunctionLength(onRejected, new Value(1)));
   onRejected.AsyncContext = asyncContext;
   X(PerformPromiseThen(promise, onFulfilled, onRejected));

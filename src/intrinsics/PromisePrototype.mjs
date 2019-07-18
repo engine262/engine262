@@ -64,12 +64,12 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     catchFinally = onFinally;
   } else {
     const stepsThenFinally = ThenFinallyFunctions;
-    thenFinally = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
+    thenFinally = X(CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']));
     SetFunctionLength(thenFinally, new Value(1));
     thenFinally.Constructor = C;
     thenFinally.OnFinally = onFinally;
     const stepsCatchFinally = CatchFinallyFunctions;
-    catchFinally = CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']);
+    catchFinally = X(CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']));
     SetFunctionLength(catchFinally, new Value(1));
     catchFinally.Constructor = C;
     catchFinally.OnFinally = onFinally;

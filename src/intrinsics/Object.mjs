@@ -145,7 +145,7 @@ function Object_fromEntries([iterable = Value.undefined]) {
   const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
   Assert(obj.Extensible === Value.true && obj.properties.size === 0);
   const stepsDefine = CreateDataPropertyOnObjectFunctions;
-  const adder = CreateBuiltinFunction(stepsDefine, []);
+  const adder = X(CreateBuiltinFunction(stepsDefine, []));
   return Q(AddEntriesFromIterable(obj, iterable, adder));
 }
 

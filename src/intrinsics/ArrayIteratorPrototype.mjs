@@ -59,7 +59,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     result = elementValue;
   } else {
     Assert(itemKind === 'key+value');
-    result = CreateArrayFromList([new Value(index), elementValue]);
+    result = X(CreateArrayFromList([new Value(index), elementValue]));
   }
   return CreateIterResultObject(result, Value.false);
 }

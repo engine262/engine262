@@ -122,9 +122,9 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     values.push(Value.undefined);
     const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     const steps = PromiseAllResolveElementFunctions;
-    const resolveElement = CreateBuiltinFunction(steps, [
+    const resolveElement = X(CreateBuiltinFunction(steps, [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
-    ]);
+    ]));
     X(SetFunctionLength(resolveElement, new Value(1)));
     resolveElement.AlreadyCalled = { Value: false };
     resolveElement.Index = index;
@@ -215,7 +215,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability)
       iteratorRecord.Done = Value.true;
       remainingElementsCount.Value -= 1;
       if (remainingElementsCount.Value === 0) {
-        const valuesArray = CreateArrayFromList(values);
+        const valuesArray = X(CreateArrayFromList(values));
         Q(Call(resultCapability.Resolve, Value.undefined, [valuesArray]));
       }
       return resultCapability.Promise;

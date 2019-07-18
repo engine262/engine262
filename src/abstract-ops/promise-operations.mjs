@@ -19,6 +19,7 @@ import {
   AbruptCompletion,
   NormalCompletion,
   Q,
+  X,
   ThrowCompletion,
   EnsureCompletion,
 } from '../completion.mjs';
@@ -54,12 +55,12 @@ export class PromiseReactionRecord {
 export function CreateResolvingFunctions(promise) {
   const alreadyResolved = { Value: false };
   const stepsResolve = PromiseResolveFunctions;
-  const resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
+  const resolve = X(CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']));
   SetFunctionLength(resolve, new Value(1));
   resolve.Promise = promise;
   resolve.AlreadyResolved = alreadyResolved;
   const stepsReject = PromiseRejectFunctions;
-  const reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
+  const reject = X(CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']));
   SetFunctionLength(reject, new Value(1));
   reject.Promise = promise;
   reject.AlreadyResolved = alreadyResolved;
@@ -132,7 +133,7 @@ export function NewPromiseCapability(C) {
   }
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
-  const executor = CreateBuiltinFunction(steps, ['Capability']);
+  const executor = X(CreateBuiltinFunction(steps, ['Capability']));
   SetFunctionLength(executor, new Value(2));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));

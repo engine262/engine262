@@ -355,7 +355,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
             properties.push(value);
           } else {
             Assert(kind === 'key+value');
-            const entry = CreateArrayFromList([key, value]);
+            const entry = X(CreateArrayFromList([key, value]));
             properties.push(entry);
           }
         }

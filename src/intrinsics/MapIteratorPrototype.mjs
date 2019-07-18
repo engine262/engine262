@@ -7,6 +7,7 @@ import {
 import { Type, Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 import { msg } from '../helpers.mjs';
+import { X } from '../completion.mjs';
 
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
@@ -37,7 +38,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
         result = e.Value;
       } else {
         Assert(itemKind === 'key+value');
-        result = CreateArrayFromList([e.Key, e.Value]);
+        result = X(CreateArrayFromList([e.Key, e.Value]));
       }
       return CreateIterResultObject(result, Value.false);
     }

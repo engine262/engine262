@@ -124,10 +124,10 @@ function AsyncGeneratorResumeNext(generator) {
         generator.AsyncGeneratorState = 'awaiting-return';
         const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
         const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
-        const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
+        const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, ['Generator']));
         onFulfilled.Generator = generator;
         const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
-        const onRejected = CreateBuiltinFunction(stepsRejected, ['Generator']);
+        const onRejected = X(CreateBuiltinFunction(stepsRejected, ['Generator']));
         onRejected.Generator = generator;
         X(PerformPromiseThen(promise, onFulfilled, onRejected));
         return Value.undefined;
