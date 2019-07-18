@@ -30,7 +30,6 @@ import {
   Completion,
   NormalCompletion,
   Q, X,
-  ReturnIfAbrupt,
 } from '../completion.mjs';
 
 // 14.6.13 #sec-runtime-semantics-classdefinitionevaluation
@@ -138,8 +137,7 @@ export function* Evaluate_ClassExpression(ClassExpression) {
   } else {
     className = new Value(BindingIdentifier.name);
   }
-  const value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, className, className);
-  ReturnIfAbrupt(value);
+  const value = Q(yield* ClassDefinitionEvaluation_ClassTail(ClassTail, className, className));
   value.SourceText = sourceTextMatchedBy(ClassExpression);
   return value;
 }
@@ -168,8 +166,7 @@ export function* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclara
     classBinding = new Value(BindingIdentifier.name);
     className = classBinding;
   }
-  const value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, classBinding, className);
-  ReturnIfAbrupt(value);
+  const value = Q(yield* ClassDefinitionEvaluation_ClassTail(ClassTail, classBinding, className));
   value.SourceText = sourceTextMatchedBy(ClassDeclaration);
   if (BindingIdentifier) {
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;

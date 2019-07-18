@@ -19,7 +19,6 @@ import {
   AbruptCompletion,
   Completion,
   Q,
-  ReturnIfAbrupt,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { msg } from '../helpers.mjs';
@@ -36,8 +35,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   } else {
     thisValue = Value.undefined;
   }
-  const argList = yield* ArgumentListEvaluation(args);
-  ReturnIfAbrupt(argList);
+  const argList = Q(yield* ArgumentListEvaluation(args));
   if (Type(func) !== 'Object') {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
   }

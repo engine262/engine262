@@ -9,7 +9,7 @@ import {
 import { Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 import { msg } from '../helpers.mjs';
 
 // 12.3.3.1.1 #sec-evaluatenew
@@ -19,8 +19,7 @@ function* EvaluateNew(constructExpr, args = []) {
   const ref = yield* Evaluate(constructExpr.callee);
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
-  const argList = yield* ArgumentListEvaluation(args);
-  ReturnIfAbrupt(argList);
+  const argList = Q(yield* ArgumentListEvaluation(args));
   if (IsConstructor(constructor) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAConstructor', constructor));
   }

@@ -1,5 +1,5 @@
 import { Evaluate } from '../evaluator.mjs';
-import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 import {
   isExpression,
   isNoSubstitutionTemplate,
@@ -56,8 +56,7 @@ export function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
       const [/* TemplateHead */, first/* Expression */, ...rest/* TemplateSpans */] = unrollTemplateLiteral(templateLiteral);
       const firstSubRef = yield* Evaluate(first);
       const firstSub = Q(GetValue(firstSubRef));
-      const restSub = yield* SubstitutionEvaluation_TemplateSpans(rest);
-      ReturnIfAbrupt(restSub);
+      const restSub = Q(yield* SubstitutionEvaluation_TemplateSpans(rest));
       Assert(Array.isArray(restSub));
       return [siteObj, firstSub, ...restSub];
     }

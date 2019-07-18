@@ -34,8 +34,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     case isExportDeclarationWithDefaultAndClass(ExportDeclaration): {
       const ClassDeclaration = ExportDeclaration.declaration;
 
-      const value = yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration);
-      ReturnIfAbrupt(value);
+      const value = Q(yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration));
       const className = BoundNames_ClassDeclaration(ClassDeclaration)[0];
       if (className === '*default*') {
         const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;

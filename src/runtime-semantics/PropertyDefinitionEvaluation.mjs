@@ -128,8 +128,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
 export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (true) {
     case isMethodDefinitionRegularFunction(MethodDefinition): {
-      const methodDef = yield* DefineMethod(MethodDefinition, object);
-      ReturnIfAbrupt(methodDef);
+      const methodDef = Q(yield* DefineMethod(MethodDefinition, object));
       X(SetFunctionName(methodDef.Closure, methodDef.Key));
       const desc = Descriptor({
         Value: methodDef.Closure,

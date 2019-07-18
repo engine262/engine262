@@ -15,7 +15,7 @@ import {
   isSpreadElement,
 } from '../ast.mjs';
 import { Value } from '../value.mjs';
-import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -57,13 +57,11 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         break;
 
       case isExpression(element):
-        postIndex = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
-        ReturnIfAbrupt(postIndex);
+        postIndex = Q(yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex));
         break;
 
       case isSpreadElement(element):
-        postIndex = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
-        ReturnIfAbrupt(postIndex);
+        postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));
         break;
 
       default:
@@ -80,8 +78,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
 //   `[` ElementList `,` Elision `]`
 export function* Evaluate_ArrayLiteral(ArrayLiteral) {
   const array = X(ArrayCreate(new Value(0)));
-  const len = yield* ArrayAccumulation(ArrayLiteral.elements, array, 0);
-  ReturnIfAbrupt(len);
+  const len = Q(yield* ArrayAccumulation(ArrayLiteral.elements, array, 0));
   X(Set(array, new Value('length'), ToUint32(new Value(len)), Value.false));
   // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.
   return array;

@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { FunctionValue, Type, Value } from '../value.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
-import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
 import { msg } from '../helpers.mjs';
 
@@ -31,8 +31,7 @@ export function* Evaluate_SuperCall({ arguments: Arguments }) {
   const newTarget = GetNewTarget();
   Assert(Type(newTarget) === 'Object');
   const func = Q(GetSuperConstructor());
-  const argList = yield* ArgumentListEvaluation(Arguments);
-  ReturnIfAbrupt(argList);
+  const argList = Q(yield* ArgumentListEvaluation(Arguments));
   const result = Q(Construct(func, argList, newTarget));
   const thisER = GetThisEnvironment();
   return Q(thisER.BindThisValue(result));
