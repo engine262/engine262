@@ -1,6 +1,7 @@
 import {
   Assert,
   SetFunctionName,
+  sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import {
   isArrowFunction,
@@ -12,7 +13,7 @@ import {
   isGeneratorExpression,
   isParenthesizedExpression,
 } from '../ast.mjs';
-import { X } from '../completion.mjs';
+import { X, ReturnIfAbrupt } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
@@ -75,7 +76,10 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
     ClassHeritage: superClass,
     ClassBody: body.body,
   };
-  return yield* ClassDefinitionEvaluation_ClassTail(ClassTail, Value.undefined, name);
+  const value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, Value.undefined, name);
+  ReturnIfAbrupt(value);
+  value.SourceText = sourceTextMatchedBy(ClassExpression);
+  return value;
 }
 
 // 14.7.13 #sec-async-function-definitions-runtime-semantics-namedevaluation
