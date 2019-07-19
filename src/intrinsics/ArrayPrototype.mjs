@@ -194,6 +194,12 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue 
 
 // 22.1.3.10.1 #sec-flattenintoarray
 function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
+  Assert(Type(target) === 'Object');
+  Assert(Type(source) === 'Object');
+  Assert(sourceLen >= 0);
+  Assert(start >= 0);
+  // Assert: _depth_ is an integer Number, *+&infin;*, or *-&infin;*.
+  // Assert(mapperFunction === undefined || (X(IsCallable(mapperFunction)) === Value.true && thisArg !== undefined && depth === 1));
   let targetIndex = start;
   let sourceIndex = 0;
   while (sourceIndex < sourceLen) {
@@ -242,7 +248,7 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
 function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O)).numberValue();
-  if (IsCallable(mapperFunction) === Value.false) {
+  if (X(IsCallable(mapperFunction)) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
   let T;
