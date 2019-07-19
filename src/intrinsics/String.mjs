@@ -5,7 +5,7 @@ import {
   IsInteger,
   StringCreate,
   SymbolDescriptiveString,
-  ToLength,
+  LengthOfArrayLike,
   ToNumber,
   ToObject,
   ToString,
@@ -81,8 +81,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   const cooked = Q(ToObject(template));
   const rawProp = Q(Get(cooked, new Value('raw')));
   const raw = Q(ToObject(rawProp));
-  const lenProp = Q(Get(raw, new Value('length')));
-  const literalSegments = Q(ToLength(lenProp)).numberValue();
+  const literalSegments = Q(LengthOfArrayLike(raw)).numberValue();
   if (literalSegments <= 0) {
     return new Value('');
   }

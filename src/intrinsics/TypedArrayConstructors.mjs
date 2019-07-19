@@ -13,8 +13,8 @@ import {
   Set,
   SetValueInBuffer,
   SpeciesConstructor,
+  LengthOfArrayLike,
   ToIndex,
-  ToLength,
   ToString,
   typedArrayInfo,
 } from '../abstract-ops/all.mjs';
@@ -127,8 +127,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return O;
       }
       const arrayLike = object;
-      const arrayLikeLength = Q(Get(arrayLike, new Value('length')));
-      const len = Q(ToLength(arrayLikeLength));
+      const len = Q(LengthOfArrayLike(arrayLike));
       Q(AllocateTypedArrayBuffer(O, len));
       let k = 0;
       while (k < len.numberValue()) {

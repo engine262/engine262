@@ -10,9 +10,9 @@ import {
   SameValue,
   Set,
   SetValueInBuffer,
+  LengthOfArrayLike,
   ToBoolean,
   ToInteger,
-  ToLength,
   ToNumber,
   ToObject,
   ToString,
@@ -272,8 +272,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     const targetType = targetInfo.ElementType;
     const targetByteOffset = target.ByteOffset.numberValue();
     const src = Q(ToObject(array));
-    const srcLengthProp = Q(Get(src, new Value('length')));
-    const srcLength = Q(ToLength(srcLengthProp)).numberValue();
+    const srcLength = Q(LengthOfArrayLike(src)).numberValue();
     if (srcLength + targetOffset > targetLength) {
       return surroundingAgent.Throw('RangeError', msg('TypedArrayOOB'));
     }

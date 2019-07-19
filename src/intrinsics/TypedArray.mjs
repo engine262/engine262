@@ -11,7 +11,7 @@ import {
   IsConstructor,
   IterableToList,
   Set,
-  ToLength,
+  LengthOfArrayLike,
   ToObject,
   ToString,
   TypedArrayCreate,
@@ -64,8 +64,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue
   // NOTE: source is not an Iterable so assume it is already an array-like
   // object.
   const arrayLike = X(ToObject(source));
-  const arrayLikeLength = Q(Get(arrayLike, new Value('length')));
-  const len = Q(ToLength(arrayLikeLength)).numberValue();
+  const len = Q(LengthOfArrayLike(arrayLike)).numberValue();
   const targetObj = Q(TypedArrayCreate(C, [new Value(len)]));
   let k = 0;
   while (k < len) {

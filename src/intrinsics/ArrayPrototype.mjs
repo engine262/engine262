@@ -22,9 +22,9 @@ import {
   ObjectCreate,
   Set,
   SortCompare,
+  LengthOfArrayLike,
   ToBoolean,
   ToInteger,
-  ToLength,
   ToObject,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -44,8 +44,7 @@ function ArrayProto_concat(args, { thisValue }) {
     const spreadable = Q(IsConcatSpreadable(E));
     if (spreadable === Value.true) {
       let k = 0;
-      const lenProp = Q(Get(E, new Value('length')));
-      const len = Q(ToLength(lenProp)).numberValue();
+      const len = Q(LengthOfArrayLike(E)).numberValue();
       if (n + len > (2 ** 53) - 1) {
         return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
       }
@@ -76,8 +75,7 @@ function ArrayProto_concat(args, { thisValue }) {
 // 22.1.3.3 #sec-array.prototype.copywithin
 function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp));
+  const len = Q(LengthOfArrayLike(O));
   const relativeTarget = Q(ToInteger(target));
   let to;
   if (relativeTarget.numberValue() < 0) {
@@ -139,8 +137,7 @@ function ArrayProto_entries(args, { thisValue }) {
 // 22.1.3.6 #sec-array.prototype.fill
 function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
   let k;
   if (relativeStart < 0) {
@@ -171,8 +168,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
 // 22.1.3.7 #sec-array.prototype.filter
 function ArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
   }
@@ -214,8 +210,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         shouldFlatten = Q(IsArray(element));
       }
       if (shouldFlatten === Value.true) {
-        const lenProp = Q(Get(element, new Value('length')));
-        const elementLen = Q(ToLength(lenProp)).numberValue();
+        const elementLen = Q(LengthOfArrayLike(element)).numberValue();
         targetIndex = Q(FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1));
       } else {
         if (targetIndex >= (2 ** 53) - 1) {
@@ -233,8 +228,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
 // 22.1.3.10 #sec-array.prototype.flat
 function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const sourceLen = Q(ToLength(lenProp)).numberValue();
+  const sourceLen = Q(LengthOfArrayLike(O)).numberValue();
   let depthNum = 1;
   if (depth !== Value.undefined) {
     depthNum = Q(ToInteger(depth)).numberValue();
@@ -247,8 +241,7 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
 // 22.1.3.11 #sec-array.prototype.flatmap
 function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const sourceLen = Q(ToLength(lenProp)).numberValue();
+  const sourceLen = Q(LengthOfArrayLike(O)).numberValue();
   if (IsCallable(mapperFunction) === Value.false) {
     return surroundingAgent.Throw('TypeError');
   }
@@ -272,8 +265,7 @@ function ArrayProto_keys(args, { thisValue }) {
 // 22.1.3.18 #sec-array.prototype.map
 function ArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp));
+  const len = Q(LengthOfArrayLike(O));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
   }
@@ -296,7 +288,7 @@ function ArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) 
 // 22.1.3.19 #sec-array.prototype.pop
 function ArrayProto_pop(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   if (len === 0) {
     Q(Set(O, new Value('length'), new Value(0), Value.true));
     return Value.undefined;
@@ -313,7 +305,7 @@ function ArrayProto_pop(args, { thisValue }) {
 // 22.1.3.20 #sec-array.prototype.push
 function ArrayProto_push(items, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  let len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  let len = Q(LengthOfArrayLike(O)).numberValue();
   const argCount = items.length;
   if (len + argCount > (2 ** 53) - 1) {
     return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
@@ -330,8 +322,7 @@ function ArrayProto_push(items, { thisValue }) {
 // 22.1.3.24 #sec-array.prototype.shift
 function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   if (len === 0) {
     Q(Set(O, new Value('length'), new Value(0), Value.true));
     return Value.undefined;
@@ -358,7 +349,7 @@ function ArrayProto_shift(args, { thisValue }) {
 // 22.1.3.25 #sec-array.prototype.slice
 function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
   let k;
   if (relativeStart < 0) {
@@ -402,8 +393,7 @@ function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
   }
   const obj = Q(ToObject(thisValue));
-  const lenProp = Q(Get(obj, new Value('length')));
-  const len = Q(ToLength(lenProp));
+  const len = Q(LengthOfArrayLike(obj));
 
   return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
 }
@@ -412,7 +402,7 @@ function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
 function ArrayProto_splice(args, { thisValue }) {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   const O = Q(ToObject(thisValue));
-  const len = Q(ToLength(Q(Get(O, new Value('length'))))).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
   let actualStart;
   if (relativeStart < 0) {
@@ -506,8 +496,7 @@ function ArrayProto_toString(a, { thisValue }) {
 // 22.1.3.31 #sec-array.prototype.unshift
 function ArrayProto_unshift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const lenProp = Q(Get(O, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(LengthOfArrayLike(O)).numberValue();
   const argCount = args.length;
   if (argCount > 0) {
     if (len + argCount > (2 ** 53) - 1) {

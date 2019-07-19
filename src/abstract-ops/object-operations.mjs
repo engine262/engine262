@@ -252,6 +252,12 @@ export function CreateArrayFromList(elements) {
   return array;
 }
 
+// 7.3.17 #sec-lengthofarraylike
+export function LengthOfArrayLike(obj) {
+  Assert(Type(obj) === 'Object');
+  return Q(ToLength(Q(Get(obj, new Value('length')))));
+}
+
 // 7.3.17 #sec-createlistfromarraylike
 export function CreateListFromArrayLike(obj, elementTypes) {
   if (!elementTypes) {
@@ -261,8 +267,7 @@ export function CreateListFromArrayLike(obj, elementTypes) {
     // TODO: throw with an error message
     return surroundingAgent.Throw('TypeError');
   }
-  const lenProp = Q(Get(obj, new Value('length')));
-  const len = Q(ToLength(lenProp)).numberValue();
+  const len = Q(LengthOfArrayLike(obj)).numberValue();
   const list = [];
   let index = 0;
   while (index < len) {

@@ -11,7 +11,7 @@ import {
   CreateIterResultObject,
   Get,
   IsDetachedBuffer,
-  ToLength,
+  LengthOfArrayLike,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -41,8 +41,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     }
     len = a.ArrayLength;
   } else {
-    const lenProp = Q(Get(a, new Value('length')));
-    len = Q(ToLength(lenProp));
+    len = Q(LengthOfArrayLike(a));
   }
   if (index >= len.numberValue()) {
     O.IteratedObject = Value.undefined;

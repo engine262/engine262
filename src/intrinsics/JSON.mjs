@@ -17,8 +17,8 @@ import {
   IsArray,
   IsCallable,
   ObjectCreate,
+  LengthOfArrayLike,
   ToInteger,
-  ToLength,
   ToNumber,
   ToString,
   UTF16Encoding,
@@ -208,8 +208,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
       const isArray = Q(IsArray(val));
       if (isArray === Value.true) {
         let I = 0;
-        const lenProp = Q(Get(val, new Value('length')));
-        const len = Q(ToLength(lenProp)).numberValue();
+        const len = Q(LengthOfArrayLike(val)).numberValue();
         while (I < len) {
           const Istr = X(ToString(new Value(I)));
           const newElement = Q(InternalizeJSONProperty(val, Istr));
@@ -436,7 +435,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       const isArray = Q(IsArray(replacer));
       if (isArray === Value.true) {
         PropertyList = [];
-        const len = Q(ToLength(Q(Get(replacer, new Value('length'))))).numberValue();
+        const len = Q(LengthOfArrayLike(replacer)).numberValue();
         let k = 0;
         while (k < len) {
           const v = Q(Get(replacer, X(ToString(new Value(k)))));

@@ -12,6 +12,7 @@ import {
   SameValue,
   Set,
   SpeciesConstructor,
+  LengthOfArrayLike,
   ToBoolean,
   ToInteger,
   ToLength,
@@ -383,8 +384,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let accumulatedResult = '';
   let nextSourcePosition = 0;
   for (const result of results) {
-    const resultLength = Q(Get(result, new Value('length')));
-    let nCaptures = Q(ToLength(resultLength)).numberValue();
+    let nCaptures = Q(LengthOfArrayLike(result)).numberValue();
     nCaptures = Math.max(nCaptures - 1, 0);
 
     const firstResult = Q(Get(result, new Value('0')));
@@ -540,8 +540,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
           return A;
         }
         p = e.numberValue();
-        const zLength = Q(Get(z, new Value('length')));
-        let numberOfCaptures = Q(ToLength(zLength)).numberValue();
+        let numberOfCaptures = Q(LengthOfArrayLike(z)).numberValue();
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
         while (i <= numberOfCaptures) {

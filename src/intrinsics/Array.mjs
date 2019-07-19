@@ -24,7 +24,7 @@ import {
   IteratorStep,
   IteratorValue,
   Set,
-  ToLength,
+  LengthOfArrayLike,
   ToObject,
   ToString,
   ToUint32,
@@ -152,8 +152,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg],
     }
   }
   const arrayLike = X(ToObject(items));
-  const lenProp = Q(Get(arrayLike, new Value('length')));
-  const len = Q(ToLength(lenProp));
+  const len = Q(LengthOfArrayLike(arrayLike));
   if (IsConstructor(C) === Value.true) {
     A = Q(Construct(C, [len]));
   } else {
