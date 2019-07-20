@@ -94,7 +94,7 @@ if (!process.send) {
   }
 
   let finished = 0;
-  const workers = Array.from({ length: Math.round(os.cpus().length / 2) }, () => {
+  const workers = Array.from({ length: Math.round(os.cpus().length * 0.75) }, () => {
     const c = childProcess.fork(__filename);
     c.on('message', ({ file, status, error }) => {
       switch (status) {
@@ -134,11 +134,11 @@ if (!process.send) {
 
       const worker = workers[total % workers.length];
       total += 1;
-      worker.send(test);
+      worker.send(test, () => {});
     }
 
     workers.forEach((w) => {
-      w.send('END');
+      w.send('END', () => {});
     });
   })();
 
@@ -158,6 +158,7 @@ if (!process.send) {
     inspect,
     Realm,
     Value,
+    Throw,
     initializeAgent,
   } = require('..');
 
@@ -205,16 +206,29 @@ if (!process.send) {
     return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
   }
 
-  function createRealm() {
+  function createRealm(file) {
+    const resolverCache = new Map();
     const realm = new Realm({
-      resolveImportedModule(referencingModule, specifier) {
-        const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
-        if (resolved === $262.moduleEntry.specifier) {
-          return $262.moduleEntry;
+      resolveImportedModule(referencingScriptOrModule, specifier) {
+        try {
+          let base;
+          if (referencingScriptOrModule === null) {
+            base = path.dirname(file);
+          } else {
+            base = path.dirname(referencingScriptOrModule.specifier);
+          }
+          const resolved = path.resolve(base, specifier);
+          if (resolverCache.has(resolved)) {
+            return resolverCache.get(resolved);
+          }
+          const source = fs.readFileSync(resolved, 'utf8');
+          const full = `${harnessSource}\n\n${source}`;
+          const m = realm.createSourceTextModule(resolved, full);
+          resolverCache.set(resolved, m);
+          return m;
+        } catch (e) {
+          return Throw(realm, e.name, e.message);
         }
-        const source = fs.readFileSync(resolved, 'utf8');
-        const full = `${harnessSource}\n\n${source}`;
-        return realm.createSourceTextModule(resolved, full);
       },
     });
 
@@ -237,7 +251,8 @@ if (!process.send) {
     Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
     $262.realm = realm;
-    $262.evalScript = (sourceText) => realm.evaluateScript(sourceText);
+    $262.evalScript = (...args) => realm.evaluateScript(...args);
+    $262.resolverCache = resolverCache;
 
     return $262;
   }
@@ -250,7 +265,8 @@ if (!process.send) {
       return { status: 'SKIP' };
     }
 
-    const $262 = createRealm();
+    const specifier = path.resolve(__dirname, 'test262', file);
+    const $262 = createRealm(specifier);
     let asyncPromise;
     let timeout;
     if (attrs.flags.async) {
@@ -287,20 +303,18 @@ if (!process.send) {
 
     let completion;
     if (attrs.flags.module) {
-      completion = $262.realm.createSourceTextModule(path.resolve(__dirname, 'test262', file), contents);
+      completion = $262.realm.createSourceTextModule(specifier, contents);
       if (!(completion instanceof AbruptCompletion)) {
         const module = completion;
-        $262.moduleEntry = module;
+        $262.resolverCache.set(specifier, module);
         completion = module.Link();
         if (!(completion instanceof AbruptCompletion)) {
           completion = module.Evaluate();
         }
       }
     } else {
-      completion = $262.evalScript(contents);
+      completion = $262.evalScript(contents, { specifier });
     }
-
-    $262.moduleEntry = undefined;
 
     if (completion instanceof AbruptCompletion) {
       clearTimeout(timeout);
@@ -333,7 +347,11 @@ if (!process.send) {
     } else {
       p = p.then(async () => {
         const { status, error } = await run(test);
-        process.send({ file: test.file, status, error });
+        process.send({ file: test.file, status, error }, (err) => {
+          if (err) {
+            process.exit(1);
+          }
+        });
       });
     }
   });

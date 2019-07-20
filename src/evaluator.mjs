@@ -44,6 +44,7 @@ import {
   isExpressionStatement,
   isExpressionWithComma,
   isFunctionExpression,
+  isImportCall,
   isGeneratorExpression,
   isHoistableDeclaration,
   isIdentifierReference,
@@ -106,6 +107,7 @@ import {
   Evaluate_HoistableDeclaration,
   Evaluate_Identifier,
   Evaluate_IfStatement,
+  Evaluate_ImportCall,
   Evaluate_LabelledStatement,
   Evaluate_LexicalDeclaration,
   Evaluate_Literal,
@@ -372,6 +374,9 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isSuperCall(Expression):
       return yield* Evaluate_SuperCall(Expression);
+
+    case isImportCall(Expression):
+      return yield* Evaluate_ImportCall(Expression);
 
     case isTaggedTemplate(Expression):
       return yield* Evaluate_TaggedTemplate(Expression);

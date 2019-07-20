@@ -4,6 +4,7 @@ const { relative, resolve } = require('path');
 
 const COMPLETION_PATH = resolve('./src/completion.mjs');
 const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
+const VALUE_PATH = resolve('./src/value.mjs');
 
 function fileToImport(file, refPath) {
   return relative(file.opts.filename, refPath)
@@ -30,6 +31,13 @@ module.exports = ({ types: t, template }) => {
     const r = fileToImport(file, ABSTRACT_OPS_PATH);
     return template.ast(`
       import { Call } from "${r}";
+    `);
+  }
+
+  function createImportValue(file) {
+    const r = fileToImport(file, VALUE_PATH);
+    return template.ast(`
+      import { Value } from "${r}";
     `);
   }
 
@@ -123,6 +131,8 @@ module.exports = ({ types: t, template }) => {
           state.needAssert = false;
           state.foundCall = false;
           state.needCall = false;
+          state.foundValue = false;
+          state.needValue = false;
         },
         exit(path, state) {
           if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
@@ -133,6 +143,9 @@ module.exports = ({ types: t, template }) => {
           }
           if (!state.foundCall && state.needCall) {
             path.node.body.unshift(createImportCall(state.file));
+          }
+          if (!state.foundValue && state.needValue && !state.file.opts.filename.endsWith('value.mjs')) {
+            path.node.body.unshift(createImportValue(state.file));
           }
         },
       },
@@ -199,8 +212,12 @@ module.exports = ({ types: t, template }) => {
         } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
           state.needCompletion = true;
           state.needCall = true;
+          state.needValue = true;
           if (path.scope.getBinding('Call') !== undefined) {
             state.foundCall = true;
+          }
+          if (path.scope.getBinding('Value') !== undefined) {
+            state.foundValue = true;
           }
           const [ID, CAPABILITY] = path.node.arguments;
           if (!t.isIdentifier(ID)) {

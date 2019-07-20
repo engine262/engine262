@@ -104,14 +104,19 @@ class APIRealm {
     this.active = false;
   }
 
-  evaluateScript(sourceText) {
+  evaluateScript(sourceText, { specifier } = {}) {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
     return this.scope(() => {
       // BEGIN ScriptEvaluationJob
       const realm = surroundingAgent.currentRealmRecord;
-      const s = ParseScript(sourceText, realm, undefined);
+      const s = ParseScript(sourceText, realm, {
+        specifier,
+        public: {
+          specifier,
+        },
+      });
       if (Array.isArray(s)) {
         return new ThrowCompletion(s[0]);
       }

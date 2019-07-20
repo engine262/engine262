@@ -114,7 +114,7 @@ if (argv.length === 0) {
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
-      const result = realm.evaluateScript(cmd);
+      const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
       callback(null, result);
     },
     completer: () => [],
@@ -140,7 +140,7 @@ if (argv.length === 0) {
       }
     }
   } else {
-    result = realm.evaluateScript(source);
+    result = realm.evaluateScript(source, { specifier: path.resolve(lastArg) });
   }
   if (result instanceof AbruptCompletion) {
     let inspected;

@@ -32,8 +32,6 @@ export-star-as-namespace-from-module
 
 hashbang
 
-dynamic-import
-
 import.meta
 
 numeric-separator-literal

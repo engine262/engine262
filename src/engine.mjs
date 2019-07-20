@@ -12,9 +12,12 @@ import {
   SetDefaultGlobalBindings,
   SetRealmGlobalObject,
 } from './realm.mjs';
-import { Construct, Assert } from './abstract-ops/all.mjs';
+import {
+  Call, Construct, Assert, GetModuleNamespace,
+} from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
+import { CyclicModuleRecord } from './modules.mjs';
 import { msg } from './helpers.mjs';
 
 export const FEATURES = Object.freeze([
@@ -264,20 +267,65 @@ export function HostHasSourceTextAvailable(func) {
   return Value.true;
 }
 
-export function HostResolveImportedModule(referencingModule, specifier) {
-  const { Realm } = referencingModule;
+export function HostResolveImportedModule(referencingScriptOrModule, specifier) {
+  const Realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
   if (Realm.HostDefined.resolveImportedModule) {
     if (!Realm.HostDefined.moduleMap) {
       Realm.HostDefined.moduleMap = new Map();
     }
     specifier = specifier.stringValue();
-    const key = `${referencingModule.HostDefined.specifier}\u0000${specifier}`;
+    const key = `${referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.specifier : ''}\u0000${specifier}`;
     if (Realm.HostDefined.moduleMap.has(key)) {
       return Realm.HostDefined.moduleMap.get(key);
     }
-    const apiModule = Q(Realm.HostDefined.resolveImportedModule(referencingModule.HostDefined.public, specifier));
+    const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
+    const apiModule = Q(Realm.HostDefined.resolveImportedModule(publicModule, specifier));
     Realm.HostDefined.moduleMap.set(key, apiModule.module);
     return apiModule.module;
   }
   return surroundingAgent.Throw('Error', msg('CouldNotResolveModule', specifier));
+}
+
+function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
+  if (completion instanceof AbruptCompletion) {
+    X(Call(promiseCapability.Reject, Value.undefined, [completion.Value]));
+  } else {
+    Assert(completion instanceof NormalCompletion && completion.Value === Value.undefined);
+    const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
+    // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+    const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
+    if (namespace instanceof AbruptCompletion) {
+      X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
+    } else {
+      X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
+    }
+  }
+}
+
+export function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
+  let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
+  if (!(completion instanceof AbruptCompletion)) {
+    const module = completion.Value;
+    if (module instanceof CyclicModuleRecord) {
+      if (module.Status !== 'linking' && module.Status !== 'evaluating') {
+        completion = EnsureCompletion(module.Link());
+      }
+      // !!! WILLFUL VIOLATION !!!
+      // The spec requires that we call module.Evaluate() here,
+      // but if module.Status is 'evaluating', an assertion will fail.
+      if (!(completion instanceof AbruptCompletion) && (module.Status === 'linked' || module.Status === 'evaluated')) {
+        completion = EnsureCompletion(module.Evaluate());
+      }
+    } else {
+      completion = EnsureCompletion(module.Link());
+      if (!(completion instanceof AbruptCompletion)) {
+        completion = EnsureCompletion(module.Evaluate());
+      }
+    }
+  }
+  if (!(completion instanceof AbruptCompletion)) {
+    completion = new NormalCompletion(Value.undefined);
+  }
+  FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
+  return new NormalCompletion(Value.undefined);
 }

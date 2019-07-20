@@ -262,6 +262,11 @@ export function isSuperCall(node) {
   return node.type === 'CallExpression' && node.callee.type === 'Super';
 }
 
+// #prod-ImportCall
+export function isImportCall(node) {
+  return node.type === 'CallExpression' && node.callee.type === 'Import';
+}
+
 // Used in #prod-UpdateExpression
 export function isActualUpdateExpression(node) {
   return node.type === 'UpdateExpression';
@@ -478,6 +483,7 @@ export function isExpression(node) {
       || isActualMemberExpression(node)
       || isSuperProperty(node)
       || isSuperCall(node)
+      || isImportCall(node)
       || isMetaProperty(node)
       || isActualNewExpression(node)
       || isActualCallExpression(node)

@@ -36,6 +36,7 @@ export * from './GlobalDeclarationInstantiation.mjs';
 export * from './HoistableDeclaration.mjs';
 export * from './Identifier.mjs';
 export * from './IfStatement.mjs';
+export * from './ImportCall.mjs';
 export * from './InstantiateFunctionObject.mjs';
 export * from './IteratorBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
