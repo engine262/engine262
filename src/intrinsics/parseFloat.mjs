@@ -6,12 +6,11 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
-import { searchNotStrWhiteSpaceChar } from '../grammar/numeric-string.mjs';
-import { MV_StrDecimalLiteral } from '../runtime-semantics/all.mjs';
+import { MV_StrDecimalLiteral, TrimString } from '../runtime-semantics/all.mjs';
 
 function ParseFloat([string = Value.undefined]) {
-  const inputString = Q(ToString(string)).stringValue();
-  const trimmedString = inputString.slice(searchNotStrWhiteSpaceChar(inputString));
+  const inputString = Q(ToString(string));
+  const trimmedString = X(TrimString(inputString, 'start')).stringValue();
   const mathFloat = MV_StrDecimalLiteral(trimmedString, true);
   // MV_StrDecimalLiteral handles -0 automatically.
   return mathFloat;

@@ -6,9 +6,9 @@ import {
   ToInt32,
   ToString,
 } from '../abstract-ops/all.mjs';
+import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
-import { searchNotStrWhiteSpaceChar } from '../grammar/numeric-string.mjs';
 
 function digitToNumber(digit) {
   digit = digit.charCodeAt(0);
@@ -52,8 +52,8 @@ function searchNotRadixDigit(str, R) {
 }
 
 function ParseInt([string = Value.undefined, radix = Value.undefined]) {
-  const inputString = Q(ToString(string)).stringValue();
-  let S = inputString.slice(searchNotStrWhiteSpaceChar(inputString));
+  const inputString = Q(ToString(string));
+  let S = X(TrimString(inputString, 'start')).stringValue();
   let sign = 1;
   if (S !== '' && S[0] === '\x2D') {
     sign = -1;
