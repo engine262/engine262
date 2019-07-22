@@ -16,14 +16,6 @@ language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
 
-// https://github.com/tc39/test262/pull/2182
-language/statements/for-of/head-var-init.js
-language/statements/for-of/dstr/var-ary-ptrn-init-err.js
-language/statements/for-of/dstr/var-obj-ptrn-init-err.js
-language/statements/for-await-of/head-var-init.js
-language/statements/for-await-of/async-gen-dstr-var-obj-ptrn-init-err.js
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-init-err.js
-
 // TODO(72): https://github.com/tc39/ecma262/pull/1330
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
@@ -60,9 +52,6 @@ built-ins/global/S10.2.3_A1.3_T2.js
 built-ins/WeakMap/**/*.js
 language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
 
-// https://github.com/tc39/test262/pull/2219
-built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js
-
 // TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
@@ -88,6 +77,9 @@ language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
 
-// spec bug, fixing...
+// https://github.com/tc39/test262/pull/2250
+built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
+
+// https://github.com/tc39/ecma262/pull/1635
 built-ins/ThrowTypeError/extensible.js
 built-ins/ThrowTypeError/frozen.js
