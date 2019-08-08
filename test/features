@@ -37,3 +37,7 @@ import.meta
 numeric-separator-literal
 
 proxy-missing-checks
+
+top-level-await
+
+optional-chaining
