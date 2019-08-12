@@ -55,6 +55,7 @@ import {
   isLiteral,
   isMetaProperty,
   isObjectLiteral,
+  isOptionalExpression,
   isParenthesizedExpression,
   isRegularExpressionLiteral,
   isReturnStatement,
@@ -118,6 +119,7 @@ import {
   Evaluate_MultiplicativeExpression,
   Evaluate_NewExpression,
   Evaluate_ObjectLiteral,
+  Evaluate_OptionalExpression,
   Evaluate_RegularExpressionLiteral,
   Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
@@ -135,12 +137,8 @@ import {
   Evaluate_WithStatement,
   Evaluate_YieldExpression,
 } from './runtime-semantics/all.mjs';
-import {
-  Value,
-} from './value.mjs';
-import {
-  GetValue,
-} from './abstract-ops/all.mjs';
+import { Value } from './value.mjs';
+import { GetValue } from './abstract-ops/all.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { unwind, OutOfRange } from './helpers.mjs';
 
@@ -368,6 +366,9 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isActualMemberExpression(Expression):
       return yield* Evaluate_MemberExpression(Expression);
+
+    case isOptionalExpression(Expression):
+      return yield* Evaluate_OptionalExpression(Expression);
 
     case isSuperProperty(Expression):
       return yield* Evaluate_SuperProperty(Expression);

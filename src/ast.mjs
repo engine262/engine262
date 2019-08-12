@@ -460,6 +460,32 @@ export function isParenthesizedExpression(node) {
   return node.type === 'ParenthesizedExpression';
 }
 
+// https://tc39.es/proposal-optional-chaining
+export function isOptionalExpression(node) {
+  return node.type === 'OptionalExpression';
+}
+
+// https://tc39.es/proposal-optional-chaining
+export function isOptionalChain(node) {
+  return node.type === 'OptionalChain';
+}
+
+export function isOptionalChainWithOptionalChain(node) {
+  return isOptionalChain(node) && node.base !== null;
+}
+
+export function isOptionalChainWithExpression(node) {
+  return isOptionalChain(node) && node.property && isExpression(node.property) && !isIdentifierReference(node.property);
+}
+
+export function isOptionalChainWithIdentifierName(node) {
+  return isOptionalChain(node) && node.property && isIdentifier(node.property);
+}
+
+export function isOptionalChainWithArguments(node) {
+  return isOptionalChain(node) && Array.isArray(node.arguments);
+}
+
 // #prod-Expression
 export function isExpression(node) {
   return (
@@ -481,6 +507,7 @@ export function isExpression(node) {
     // LeftHandSideExpression (including MemberExpression, NewExpression, and
     // CallExpression)
       || isActualMemberExpression(node)
+      || isOptionalExpression(node)
       || isSuperProperty(node)
       || isSuperCall(node)
       || isImportCall(node)

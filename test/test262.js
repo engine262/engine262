@@ -173,7 +173,7 @@ if (!process.send) {
 
   let promiseRejectionTracker;
   initializeAgent({
-    features: ['globalThis', 'Promise.allSettled'],
+    features: ['globalThis', 'Promise.allSettled', 'OptionalChaining'],
     promiseRejectionTracker(...args) {
       if (promiseRejectionTracker) {
         return promiseRejectionTracker(...args);

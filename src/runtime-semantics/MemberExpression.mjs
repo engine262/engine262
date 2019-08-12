@@ -2,17 +2,10 @@ import {
   isActualMemberExpressionWithBrackets,
   isActualMemberExpressionWithDot,
 } from '../ast.mjs';
-import {
-  GetValue,
-  RequireObjectCoercible,
-  ToPropertyKey,
-} from '../abstract-ops/all.mjs';
+import { EvaluateDynamicPropertyAccess, EvaluateStaticPropertyAccess } from './all.mjs';
+import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import {
-  Reference,
-  Value,
-} from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
@@ -21,16 +14,8 @@ import { OutOfRange } from '../helpers.mjs';
 function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const baseReference = yield* Evaluate(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
-  const propertyNameReference = yield* Evaluate(Expression);
-  const propertyNameValue = Q(GetValue(propertyNameReference));
-  const bv = Q(RequireObjectCoercible(baseValue));
-  const propertyKey = Q(ToPropertyKey(propertyNameValue));
   const strict = MemberExpression.strict;
-  return new Reference({
-    BaseValue: bv,
-    ReferencedName: propertyKey,
-    StrictReference: strict ? Value.true : Value.false,
-  });
+  return Q(yield* EvaluateDynamicPropertyAccess(baseValue, Expression, strict));
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
@@ -39,20 +24,14 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
 function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
   const baseReference = yield* Evaluate(MemberExpression);
   const baseValue = Q(GetValue(baseReference));
-  const bv = Q(RequireObjectCoercible(baseValue));
-  const propertyNameString = new Value(IdentifierName.name);
   const strict = MemberExpression.strict;
-  return new Reference({
-    BaseValue: bv,
-    ReferencedName: propertyNameString,
-    StrictReference: strict ? Value.true : Value.false,
-  });
+  return Q(EvaluateStaticPropertyAccess(baseValue, IdentifierName, strict));
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression :
 //     MemberExpression `[` Expression `]`
-//     MemberEXpression `.` IdentifierName
+//     MemberExpression `.` IdentifierName
 //   CallExpression :
 //     CallExpression `[` Expression `]`
 //     CallExpression `.` IdentifierName

@@ -33,6 +33,8 @@ function functionFlags(async, generator) {
   return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
 }
 
+const optionalChainToken = {};
+
 const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options = {}, source) {
     super({
@@ -47,6 +49,12 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     }
   }
 
+  parse() {
+    const body = super.parse();
+    deepFreeze(body);
+    return body;
+  }
+
   finishNode(node, type) {
     node.strict = this.strict;
     const ret = super.finishNode(node, type);
@@ -57,10 +65,130 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     return ret;
   }
 
-  parse() {
-    const body = super.parse();
-    deepFreeze(body);
-    return body;
+  getTokenFromCode(code) {
+    if (code === 63 && surroundingAgent.feature('OptionalChaining')) {
+      this.pos += 1;
+      const next = this.input.charCodeAt(this.pos);
+      if (next === 46) {
+        const nextNext = this.input.charCodeAt(this.pos + 1);
+        if (nextNext < 48 || nextNext > 57) {
+          this.pos += 1;
+          return this.finishToken(optionalChainToken);
+        }
+      }
+      return this.finishToken(acorn.tokTypes.question);
+    }
+    return super.getTokenFromCode(code);
+  }
+
+  parseSubscripts(base, startPos, startLoc, noCalls) {
+    if (noCalls) {
+      return super.parseSubscripts(base, startPos, startLoc, noCalls);
+    }
+
+    const maybeAsyncArrow = base.type === 'Identifier'
+      && base.name === 'async'
+      && this.lastTokEnd === base.end
+      && !this.canInsertSemicolon()
+      && this.input.slice(base.start, base.end) === 'async';
+
+    /**
+     * Optional chains are hard okay?
+     *
+     *  a.b?.c
+     *  @=>
+     *  OptionalExpression a.b?.c
+     *      MemberExpression a.b
+     *      OptionalChain ?.c
+     *
+     *  a.b?.c.d.e
+     *  @=>
+     *  OptionalExpressoin a.b?.c.d.e
+     *      MemberExpression a.b
+     *      OptionalChain ?.c.d.e
+     *          OptionalChain ?.c.d
+     *              OptionalChain ?.c
+     *              Identifier .d
+     *          Identifier .e
+     *
+     *  a.b?.c.d
+     *  @=>
+     *  OptionalExpression a.b?.c.d
+     *      MemberExpression a.b
+     *      OptionalChain ?.c.d
+     *          OptionalChain ?.c
+     *          Identifier .d
+     *
+     *  a.b?.c.d?.e.f
+     *  @=>
+     *  OptionalExpression a.b?.c.d?.e.f
+     *      OptionalExpression a.b?.c.d
+     *          MemberExpression a.b
+     *          OptionalChain ?.c.d
+     *              OptionalChain ?.c
+     *              Identifier .d
+     *      OptionalChain ?.e.f
+     *          OptionalChain ?.e
+     *          Identifier .f
+     */
+
+    while (true) {
+      if (this.eat(optionalChainToken)) {
+        const node = this.startNodeAt(startPos, startLoc);
+        node.object = base;
+        node.chain = this.parseOptionalChain(startPos, startLoc);
+        base = this.finishNode(node, 'OptionalExpression');
+      } else {
+        const element = this.parseSubscript(base, startPos, startLoc, noCalls, maybeAsyncArrow);
+        if (element === base) {
+          break;
+        }
+        base = element;
+      }
+    }
+    return base;
+  }
+
+  parseOptionalChain(startPos, startLoc) {
+    let base = this.startNodeAt(startPos, startLoc);
+    if (this.eat(acorn.tokTypes.bracketL)) {
+      base.property = this.parseExpression();
+      this.expect(acorn.tokTypes.bracketR);
+      base.computed = true;
+      base = this.finishNode(base, 'OptionalChain');
+    } else if (this.eat(acorn.tokTypes.parenL)) {
+      base.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
+    } else {
+      base.property = this.parseIdent(true);
+      base.computed = false;
+    }
+    base.base = null;
+    base = this.finishNode(base, 'OptionalChain');
+
+    while (true) {
+      const computed = this.eat(acorn.tokTypes.bracketL);
+      if (computed || this.eat(acorn.tokTypes.dot)) {
+        const node = this.startNodeAt(startPos, startLoc);
+        node.base = base;
+        node.property = computed ? this.parseExpression() : this.parseIdent(true);
+        if (computed) {
+          this.expect(acorn.tokTypes.bracketR);
+        }
+        node.computed = computed;
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.eat(acorn.tokTypes.parenL)) {
+        const node = this.startNodeAt(startPos, startLoc);
+        node.base = base;
+        node.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.eat(acorn.tokTypes.backQuote)) {
+        this.raise(this.start, 'Cannot tag an optional chain');
+      } else {
+        break;
+      }
+    }
+
+    return base;
   }
 
   // Adapted from several different places in Acorn.
