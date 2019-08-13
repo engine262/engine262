@@ -22,7 +22,7 @@ set -x
 
 npm run build
 npm run lint
-# npm run test
+npm run test
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   git remote set-branches --add origin gh-pages # wtf
