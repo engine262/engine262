@@ -2,8 +2,96 @@
 <html>
   <head>
     <h1>engine262</h1>
+    <style>
+      textarea {
+        font-family: monospace;
+        display: block;
+      }
+    </style>
   </head>
   <body>
-    <p>Coming soon...</p>
+    <p>Features</p>
+    <ul id="features"></ul>
+
+    <textarea id="input" cols=80>print('Hello, World!');</textarea>
+
+    <button id="run">Evaluate</button>
+
+    <textarea disabled id="output" cols=80></textarea>
+
+    <script src="https://unpkg.com/acorn@6.3.0/dist/acorn.js"></script>
+    <script src="https://www.unpkg.com/nearley@2.18.0/lib/nearley.js"></script>
+    <script src="./engine262.js"></script>
+    <script>
+      const {
+        initializeAgent,
+        Realm,
+        Abstract,
+        AbruptCompletion,
+        Value,
+        FEATURES,
+      } = engine262;
+
+      const featureList = document.querySelector('#features');
+      const features = new Set();
+      FEATURES
+        .forEach(({ name }) => {
+          const li = document.createElement('li');
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.addEventListener('click', () => {
+            if (input.checked) {
+              features.add(name);
+            } else {
+              features.delete(name);
+            }
+          });
+          li.appendChild(input);
+          const span = document.createElement('span');
+          span.textContent = name;
+          li.appendChild(span);
+          featureList.appendChild(li);
+        });
+
+      const input = document.querySelector('#input');
+      const output = document.querySelector('#output');
+      document.querySelector('#run').addEventListener('click', () => {
+        output.value = '';
+
+        reloadAgent();
+
+        const realm = new Realm();
+        const print = new Value(realm, (args) => {
+          args.map((a) => engine262.inspect(a))
+            .forEach((inspected) => {
+              output.value += inspected;
+              output.value += ' ';
+            });
+          output.value += '\n';
+          return Value.undefined;
+        }, [], realm);
+        Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
+
+        const result = realm.evaluateScript(input.value);
+        if (result instanceof AbruptCompletion) {
+          let inspected;
+          if (Abstract.Type(result.Value) === 'Object') {
+            const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+            inspected = Abstract.Call(errorToString, result.Value).stringValue();
+          } else {
+            inspected = inspect(result, realm);
+          }
+          console.log(inspected);
+        }
+      });
+
+      function reloadAgent() {
+        console.log('Reloading agent...');
+        console.log('Selected features:', features);
+        engine262.initializeAgent({
+          features: [...features],
+        });
+      }
+    </script>
   </body>
 </html>
