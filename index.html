@@ -73,10 +73,12 @@
                     respawn();
                     worker.postMessage({ features: [...features] });
                   });
-                  li.appendChild(input);
+                  const label = document.createElement('label');
+                  label.appendChild(input);
                   const span = document.createElement('span');
                   span.textContent = name;
-                  li.appendChild(span);
+                  label.appendChild(span);
+                  li.appendChild(label);
                   featureList.appendChild(li);
                 });
               worker.postMessage({ features: [...features] });
