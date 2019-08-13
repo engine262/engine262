@@ -19,79 +19,67 @@
 
     <textarea disabled id="output" cols=80></textarea>
 
-    <script src="https://unpkg.com/acorn@6.3.0/dist/acorn.js"></script>
-    <script src="https://www.unpkg.com/nearley@2.18.0/lib/nearley.js"></script>
-    <script src="./engine262.js"></script>
     <script>
-      const {
-        initializeAgent,
-        Realm,
-        Abstract,
-        AbruptCompletion,
-        Value,
-        FEATURES,
-      } = engine262;
-
       const featureList = document.querySelector('#features');
-      const features = new Set();
-      FEATURES
-        .forEach(({ name }) => {
-          const li = document.createElement('li');
-          const input = document.createElement('input');
-          input.type = 'checkbox';
-          input.addEventListener('click', () => {
-            if (input.checked) {
-              features.add(name);
-            } else {
-              features.delete(name);
-            }
-          });
-          li.appendChild(input);
-          const span = document.createElement('span');
-          span.textContent = name;
-          li.appendChild(span);
-          featureList.appendChild(li);
-        });
-
       const input = document.querySelector('#input');
       const output = document.querySelector('#output');
-      document.querySelector('#run').addEventListener('click', () => {
-        output.value = '';
 
-        reloadAgent();
+      let featuresPopulated = false;
+      const features = new Set();
+      let worker;
 
-        const realm = new Realm();
-        const print = new Value(realm, (args) => {
-          args.map((a) => engine262.inspect(a))
-            .forEach((inspected) => {
-              output.value += inspected;
+      function respawn() {
+        if (worker) {
+          worker.terminate();
+        }
+        worker = new Worker('./worker.js');
+        worker.addEventListener('message', ({ data }) => {
+          if (data.log) {
+            console.log(...data.log);
+            data.log.forEach((l) => {
+              output.value += l;
               output.value += ' ';
             });
-          output.value += '\n';
-          return Value.undefined;
-        }, [], realm);
-        Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
-
-        const result = realm.evaluateScript(input.value);
-        if (result instanceof AbruptCompletion) {
-          let inspected;
-          if (Abstract.Type(result.Value) === 'Object') {
-            const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
-            inspected = Abstract.Call(errorToString, result.Value).stringValue();
-          } else {
-            inspected = inspect(result, realm);
+            output.value += '\n';
+          } else if (data.error) {
+            console.error(data.error);
+            output.value += data.error;
+            output.value += '\n';
+          } else if (data.FEATURES) {
+            if (!featuresPopulated) {
+              featuresPopulated = true;
+              data.FEATURES
+                .forEach(({ name }) => {
+                  const li = document.createElement('li');
+                  const input = document.createElement('input');
+                  input.type = 'checkbox';
+                  input.addEventListener('click', () => {
+                    if (input.checked) {
+                      features.add(name);
+                    } else {
+                      features.delete(name);
+                    }
+                    respawn();
+                    worker.postMessage({ features: [...features] });
+                  });
+                  li.appendChild(input);
+                  const span = document.createElement('span');
+                  span.textContent = name;
+                  li.appendChild(span);
+                  featureList.appendChild(li);
+                });
+              worker.postMessage({ features: [...features] });
+            }
           }
-          console.log(inspected);
-        }
-      });
-
-      function reloadAgent() {
-        console.log('Reloading agent...');
-        console.log('Selected features:', features);
-        engine262.initializeAgent({
-          features: [...features],
         });
       }
+
+      respawn();
+
+      document.querySelector('#run').addEventListener('click', () => {
+        output.value = '';
+        worker.postMessage({ input: input.value });
+      });
     </script>
   </body>
 </html>
