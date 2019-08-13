@@ -153,7 +153,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
 // 7.4.8 #sec-createiterresultobject
 export function CreateIterResultObject(value, done) {
   Assert(Type(done) === 'Boolean');
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataProperty(obj, new Value('value'), value));
   X(CreateDataProperty(obj, new Value('done'), done));
   return obj;

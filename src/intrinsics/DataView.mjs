@@ -36,7 +36,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
       return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
     }
   }
-  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataViewPrototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']));
+  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']));
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
   }
@@ -47,7 +47,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
 }
 
 export function CreateDataView(realmRec) {
-  const dvConstructor = BootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataViewPrototype%'], []);
+  const dvConstructor = BootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
 
   realmRec.Intrinsics['%DataView%'] = dvConstructor;
 }

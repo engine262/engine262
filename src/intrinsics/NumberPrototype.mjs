@@ -223,9 +223,9 @@ export function CreateNumberPrototype(realmRec) {
     ['toPrecision', NumberProto_toPrecision, 1],
     ['toString', NumberProto_toString, 0],
     ['valueOf', NumberProto_valueOf, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
   proto.NumberData = new Value(0);
 
-  realmRec.Intrinsics['%NumberPrototype%'] = proto;
+  realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

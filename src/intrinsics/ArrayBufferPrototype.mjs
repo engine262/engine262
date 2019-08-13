@@ -86,7 +86,7 @@ export function CreateArrayBufferPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLengthGetter]],
     ['slice', ArrayBufferProto_slice, 2],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'ArrayBuffer');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
 
-  realmRec.Intrinsics['%ArrayBufferPrototype%'] = proto;
+  realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
 }

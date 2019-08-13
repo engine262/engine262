@@ -63,7 +63,7 @@ export function CreateWeakSetPrototype(realmRec) {
     ['add', WeakSetProto_add, 1],
     ['delete', WeakSetProto_delete, 1],
     ['has', WeakSetProto_has, 1],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'WeakSet');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'WeakSet');
 
-  realmRec.Intrinsics['%WeakSetPrototype%'] = proto;
+  realmRec.Intrinsics['%WeakSet.prototype%'] = proto;
 }

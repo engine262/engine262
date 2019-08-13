@@ -58,7 +58,7 @@ function MapConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Map'));
   }
-  const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%MapPrototype%', ['MapData']));
+  const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']));
   map.MapData = [];
   if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
     return map;
@@ -72,7 +72,7 @@ function Map_speciesGetter(args, { thisValue }) {
 }
 
 export function CreateMap(realmRec) {
-  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%MapPrototype%'], [
+  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     [wellKnownSymbols.species, [Map_speciesGetter]],
   ]);
 

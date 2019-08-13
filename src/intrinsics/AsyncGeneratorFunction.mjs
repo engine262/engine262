@@ -10,7 +10,7 @@ function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
 }
 
 export function CreateAsyncGeneratorFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGenerator%'], []);
+  const cons = BootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
   X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
     Writable: Value.false,
@@ -18,7 +18,7 @@ export function CreateAsyncGeneratorFunction(realmRec) {
     Configurable: Value.false,
   })));
 
-  X(realmRec.Intrinsics['%AsyncGenerator%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,

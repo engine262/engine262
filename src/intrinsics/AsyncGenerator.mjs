@@ -4,15 +4,15 @@ import { Descriptor, Value } from '../value.mjs';
 
 export function CreateAsyncGenerator(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
-    ['prototype', realmRec.Intrinsics['%AsyncGeneratorPrototype%'], undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%FunctionPrototype%'], 'AsyncGeneratorFunction');
+    ['prototype', realmRec.Intrinsics['%AsyncGenerator.prototype%'], undefined, { Writable: Value.false }],
+  ], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
 
-  X(realmRec.Intrinsics['%AsyncGeneratorPrototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(realmRec.Intrinsics['%AsyncGenerator.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
     Value: proto,
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
 
-  realmRec.Intrinsics['%AsyncGenerator%'] = proto;
+  realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'] = proto;
 }

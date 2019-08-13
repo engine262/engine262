@@ -46,7 +46,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   if (IsCallable(executor) === Value.false) {
     return surroundingAgent.Throw('TypeError', msg('NotAFunction', executor));
   }
-  const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%PromisePrototype%', [
+  const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', [
     'PromiseState',
     'PromiseResult',
     'PromiseFulfillReactions',
@@ -163,7 +163,7 @@ function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   const values = F.Values;
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
-  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
+  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   X(CreateDataProperty(obj, new Value('status'), new Value('fulfilled')));
   X(CreateDataProperty(obj, new Value('value'), x));
   values[index] = obj;
@@ -186,7 +186,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   const values = F.Values;
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
-  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
+  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   X(CreateDataProperty(obj, new Value('status'), new Value('rejected')));
   X(CreateDataProperty(obj, new Value('reason'), x));
   values[index] = obj;
@@ -339,7 +339,7 @@ function Promise_symbolSpecies(args, { thisValue }) {
 }
 
 export function CreatePromise(realmRec) {
-  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%PromisePrototype%'], [
+  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
     surroundingAgent.feature('Promise.allSettled')
       ? ['allSettled', Promise_allSettled, 1]
@@ -356,9 +356,9 @@ export function CreatePromise(realmRec) {
     Configurable: Value.false,
   }));
 
-  realmRec.Intrinsics['%Promise_all%'] = X(Get(promiseConstructor, new Value('all')));
-  realmRec.Intrinsics['%Promise_reject%'] = X(Get(promiseConstructor, new Value('reject')));
-  realmRec.Intrinsics['%Promise_resolve%'] = X(Get(promiseConstructor, new Value('resolve')));
+  realmRec.Intrinsics['%Promise.all%'] = X(Get(promiseConstructor, new Value('all')));
+  realmRec.Intrinsics['%Promise.reject%'] = X(Get(promiseConstructor, new Value('reject')));
+  realmRec.Intrinsics['%Promise.resolve%'] = X(Get(promiseConstructor, new Value('resolve')));
 
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }

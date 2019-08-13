@@ -48,7 +48,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   } = GeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorDeclaration, scope));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%')));
+  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
@@ -79,7 +79,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   } = AsyncGeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorDeclaration, scope));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
+  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,

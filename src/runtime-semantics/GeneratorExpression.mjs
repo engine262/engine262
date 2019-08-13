@@ -30,7 +30,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     envRec.CreateImmutableBinding(name, Value.false);
   }
   const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv));
-  const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
+  const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),

@@ -11,7 +11,7 @@ function BooleanConstructor([value = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
     return b;
   }
-  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%BooleanPrototype%', ['BooleanData']));
+  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']));
   O.BooleanData = b;
   return O;
 }
@@ -19,7 +19,7 @@ function BooleanConstructor([value = Value.undefined], { NewTarget }) {
 export function CreateBoolean(realmRec) {
   const cons = BootstrapConstructor(
     realmRec, BooleanConstructor, 'Boolean', 1,
-    realmRec.Intrinsics['%BooleanPrototype%'], [],
+    realmRec.Intrinsics['%Boolean.prototype%'], [],
   );
 
   realmRec.Intrinsics['%Boolean%'] = cons;

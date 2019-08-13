@@ -8,7 +8,7 @@ function AsyncIteratorPrototype_asyncIterator(args, { thisValue }) {
 export function CreateAsyncIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     [wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
 }

@@ -68,5 +68,5 @@ export function CreateArrayIteratorPrototype(realmRec) {
     ['next', ArrayIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
 
-  realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
+  realmRec.Intrinsics['%ArrayIterator.prototype%'] = proto;
 }

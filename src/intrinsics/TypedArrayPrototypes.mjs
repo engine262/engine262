@@ -13,8 +13,8 @@ function CreateTypedArrayPrototype(realmRec, TypedArray) {
 
   const proto = BootstrapPrototype(realmRec, [
     ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],
-  ], realmRec.Intrinsics['%TypedArrayPrototype%']);
-  realmRec.Intrinsics[`%${TypedArray}Prototype%`] = proto;
+  ], realmRec.Intrinsics['%TypedArray.prototype%']);
+  realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
 }
 
 export function CreateTypedArrayPrototypes(realmRec) {

@@ -23,7 +23,7 @@ export function* DefineMethod(MethodDefinition, object, functionPrototype) {
     prototype = functionPrototype;
   } else {
     kind = 'Method';
-    prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
+    prototype = surroundingAgent.intrinsic('%Function.prototype%');
   }
   const closure = FunctionCreate(kind, UniqueFormalParameters, MethodDefinition.value, scope, prototype);
   X(MakeMethod(closure, object));

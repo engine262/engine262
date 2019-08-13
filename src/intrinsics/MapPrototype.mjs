@@ -163,10 +163,10 @@ export function CreateMapPrototype(realmRec) {
     ['set', MapProto_set, 2],
     ['size', [MapProto_sizeGetter]],
     ['values', MapProto_values, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Map');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
   const entriesFunc = X(proto.GetOwnProperty(new Value('entries')));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));
 
-  realmRec.Intrinsics['%MapPrototype%'] = proto;
+  realmRec.Intrinsics['%Map.prototype%'] = proto;
 }

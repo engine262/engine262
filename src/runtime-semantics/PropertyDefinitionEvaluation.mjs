@@ -210,7 +210,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope));
   MakeMethod(closure, object);
-  const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
+  const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
@@ -269,7 +269,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(AsyncGeneratorFunctionCreate('Method', UniqueFormalParameters, AsyncGeneratorExpression, scope));
   X(MakeMethod(closure, object));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%')));
+  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,

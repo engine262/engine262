@@ -30,7 +30,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     envRec.CreateImmutableBinding(name, Value.false);
   }
   const closure = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorExpression, funcEnv));
-  const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%'));
+  const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),

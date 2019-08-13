@@ -34,10 +34,10 @@ import { msg } from '../helpers.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
   if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
-    return OrdinaryCreateFromConstructor(NewTarget, '%ObjectPrototype%');
+    return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
   }
   if (value === Value.null || value === Value.undefined || value === undefined) {
-    return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%ObjectPrototype%']);
+    return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%Object.prototype%']);
   }
   return X(ToObject(value));
 }
@@ -142,7 +142,7 @@ function CreateDataPropertyOnObjectFunctions([key, value], { thisValue }) {
 
 function Object_fromEntries([iterable = Value.undefined]) {
   Q(RequireObjectCoercible(iterable));
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Assert(obj.Extensible === Value.true && obj.properties.size === 0);
   const stepsDefine = CreateDataPropertyOnObjectFunctions;
   const adder = X(CreateBuiltinFunction(stepsDefine, []));
@@ -159,7 +159,7 @@ function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefin
 function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const ownKeys = Q(obj.OwnPropertyKeys());
-  const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%')));
+  const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   for (const key of ownKeys) {
     const desc = Q(obj.GetOwnProperty(key));
     const descriptor = X(FromPropertyDescriptor(desc));
@@ -276,7 +276,7 @@ function Object_values([O = Value.undefined]) {
 }
 
 export function CreateObject(realmRec) {
-  const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%ObjectPrototype%'], [
+  const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],
     ['defineProperties', Object_defineProperties, 2],

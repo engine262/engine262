@@ -16,7 +16,7 @@ import { msg } from '../helpers.mjs';
 
 // 21.2.3.2.1 #sec-regexpalloc
 export function RegExpAlloc(newTarget) {
-  const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExpPrototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
+  const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
   X(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
     Writable: Value.true,
     Enumerable: Value.false,

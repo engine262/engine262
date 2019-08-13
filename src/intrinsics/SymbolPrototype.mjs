@@ -56,7 +56,7 @@ export function CreateSymbolPrototype(realmRec) {
     ['valueOf', SymbolProto_valueOf, 0],
     [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override],
     [wellKnownSymbols.toStringTag, new Value('Symbol'), undefined, override],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
-  realmRec.Intrinsics['%SymbolPrototype%'] = proto;
+  realmRec.Intrinsics['%Symbol.prototype%'] = proto;
 }

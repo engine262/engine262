@@ -39,7 +39,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
       }
       const constructorName = new Value(TypedArray);
-      return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}Prototype%`, new Value(0)));
+      return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, new Value(0)));
     } else if (Type(args[0]) !== 'Object') {
       // 22.2.4.2 #sec-typedarray-length
       const [length] = args;
@@ -49,7 +49,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       }
       const elementLength = Q(ToIndex(length));
       const constructorName = new Value(TypedArray);
-      return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}Prototype%`, elementLength));
+      return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength));
     } else if ('TypedArrayName' in args[0]) {
       // 22.2.4.3 #sec-typedarray-typedarray
       const [typedArray] = args;
@@ -58,7 +58,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
       }
       const constructorName = new Value(TypedArray);
-      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}Prototype%`));
+      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
       const srcArray = typedArray;
       const srcData = srcArray.ViewedArrayBuffer;
       if (IsDetachedBuffer(srcData)) {
@@ -110,7 +110,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
       }
       const constructorName = new Value(TypedArray);
-      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}Prototype%`));
+      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
       const usingIterator = Q(GetMethod(object, wellKnownSymbols.iterator));
       if (usingIterator !== Value.undefined) {
         const values = Q(IterableToList(object, usingIterator));
@@ -145,7 +145,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
       }
       const constructorName = new Value(TypedArray);
-      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}Prototype%`));
+      const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
       const elementSize = info.ElementSize;
       const offset = Q(ToIndex(byteOffset));
       if (offset.numberValue() % elementSize !== 0) {
@@ -185,7 +185,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
 
   const readonly = { Writable: Value.false, Configurable: Value.false };
 
-  const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}Prototype%`], [
+  const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [
     ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly],
   ]);
   X(taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']));

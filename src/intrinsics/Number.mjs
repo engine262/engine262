@@ -24,7 +24,7 @@ function NumberConstructor(args, { NewTarget }) {
     return n;
   }
 
-  const O = OrdinaryCreateFromConstructor(NewTarget, '%NumberPrototype%', ['NumberData']);
+  const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']);
   O.NumberData = n;
   return O;
 }
@@ -79,7 +79,7 @@ export function CreateNumber(realmRec) {
     Enumerable: Value.false,
     Configurable: Value.false,
   };
-  const numberConstructor = BootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%NumberPrototype%'], [
+  const numberConstructor = BootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
     ['EPSILON', new Value(Number.EPSILON), undefined, override],
     ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER), undefined, override],
     ['MAX_VALUE', new Value(Number.MAX_VALUE), undefined, override],

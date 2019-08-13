@@ -146,9 +146,9 @@ function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
 }
 
 export function CreateFunctionPrototype(realmRec) {
-  Assert(realmRec.Intrinsics['%FunctionPrototype%']);
-  const proto = realmRec.Intrinsics['%FunctionPrototype%'];
-  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  Assert(realmRec.Intrinsics['%Function.prototype%']);
+  const proto = realmRec.Intrinsics['%Function.prototype%'];
+  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
 
   const readonly = { Writable: Value.false, Configurable: Value.false };
   assignProps(realmRec, proto, [

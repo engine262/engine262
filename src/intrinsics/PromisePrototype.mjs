@@ -92,9 +92,9 @@ export function CreatePromisePrototype(realmRec) {
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],
     ['then', PromiseProto_then, 2],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Promise');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
-  realmRec.Intrinsics['%PromiseProto_then%'] = X(Get(proto, new Value('then')));
+  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, new Value('then')));
 
-  realmRec.Intrinsics['%PromisePrototype%'] = proto;
+  realmRec.Intrinsics['%Promise.prototype%'] = proto;
 }

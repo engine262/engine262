@@ -44,8 +44,8 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
   let protoParent;
   let constructorParent;
   if (!ClassHeritage) {
-    protoParent = surroundingAgent.intrinsic('%ObjectPrototype%');
-    constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
+    protoParent = surroundingAgent.intrinsic('%Object.prototype%');
+    constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
   } else {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
     const superclassRef = yield* Evaluate(ClassHeritage);
@@ -53,7 +53,7 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
     const superclass = Q(GetValue(superclassRef));
     if (Type(superclass) === 'Null') {
       protoParent = Value.null;
-      constructorParent = surroundingAgent.intrinsic('%FunctionPrototype%');
+      constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
     } else if (IsConstructor(superclass) === Value.false) {
       return surroundingAgent.Throw('TypeError');
     } else {

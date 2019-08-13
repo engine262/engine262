@@ -22,7 +22,7 @@ function SetConstructor([iterable], { NewTarget }) {
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Set'));
   }
-  const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%SetPrototype%', ['SetData']));
+  const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']));
   set.SetData = [];
   if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
     return set;
@@ -51,7 +51,7 @@ function Set_speciesGetter(args, { thisValue }) {
 }
 
 export function CreateSet(realmRec) {
-  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%SetPrototype%'], [
+  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
     [wellKnownSymbols.species, [Set_speciesGetter]],
   ]);
 

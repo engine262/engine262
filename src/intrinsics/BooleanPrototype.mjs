@@ -39,9 +39,9 @@ export function CreateBooleanPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['toString', BooleanProto_toString, 0],
     ['valueOf', BooleanProto_valueOf, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
   proto.BooleanData = Value.false;
 
-  realmRec.Intrinsics['%BooleanPrototype%'] = proto;
+  realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }

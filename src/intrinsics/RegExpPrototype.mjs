@@ -167,7 +167,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -220,7 +220,7 @@ function RegExpProto_globalGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -239,7 +239,7 @@ function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -327,7 +327,7 @@ function RegExpProto_multilineGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -468,7 +468,7 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalSource' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return new Value('(?:)');
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -569,7 +569,7 @@ function RegExpProto_stickyGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -614,7 +614,7 @@ function RegExpProto_unicodeGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExpPrototype%')) === Value.true) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
@@ -647,8 +647,8 @@ export function CreateRegExpPrototype(realmRec) {
       ['toString', RegExpProto_toString, 0],
       ['unicode', [RegExpProto_unicodeGetter]],
     ],
-    realmRec.Intrinsics['%ObjectPrototype%'],
+    realmRec.Intrinsics['%Object.prototype%'],
   );
 
-  realmRec.Intrinsics['%RegExpPrototype%'] = proto;
+  realmRec.Intrinsics['%RegExp.prototype%'] = proto;
 }

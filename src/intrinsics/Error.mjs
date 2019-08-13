@@ -20,7 +20,7 @@ function ErrorConstructor([message = Value.undefined], { NewTarget }) {
   } else {
     newTarget = NewTarget;
   }
-  const O = Q(OrdinaryCreateFromConstructor(newTarget, '%ErrorPrototype%', ['ErrorData']));
+  const O = Q(OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']));
   if (Type(message) !== 'Undefined') {
     const msg = Q(ToString(message));
     const msgDesc = Descriptor({
@@ -38,7 +38,7 @@ function ErrorConstructor([message = Value.undefined], { NewTarget }) {
 }
 
 export function CreateError(realmRec) {
-  const error = BootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%ErrorPrototype%'], []);
+  const error = BootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;
 }

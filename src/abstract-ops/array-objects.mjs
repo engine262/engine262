@@ -43,7 +43,7 @@ export function ArrayCreate(length, proto) {
     return surroundingAgent.Throw('RangeError');
   }
   if (proto === undefined) {
-    proto = surroundingAgent.intrinsic('%ArrayPrototype%');
+    proto = surroundingAgent.intrinsic('%Array.prototype%');
   }
   const A = new ArrayExoticObjectValue();
   A.Prototype = proto;
@@ -192,7 +192,7 @@ export function SortCompare(x, y, comparefn) {
 // 22.1.5.1 #sec-createarrayiterator
 export function CreateArrayIterator(array, kind) {
   Assert(Type(array) === 'Object');
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIteratorPrototype%'), [
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
     'IteratedObject',
     'ArrayIteratorNextIndex',
     'ArrayIterationKind',

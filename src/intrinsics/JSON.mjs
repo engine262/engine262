@@ -247,7 +247,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
          || unfiltered instanceof NullValue
          || unfiltered instanceof ObjectValue);
   if (IsCallable(reviver) === Value.true) {
-    const root = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+    const root = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     const rootName = new Value('');
     const status = X(CreateDataProperty(root, rootName, unfiltered));
     Assert(status === Value.true);
@@ -481,7 +481,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   } else {
     gap = '';
   }
-  const wrapper = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  const wrapper = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   const status = X(CreateDataProperty(wrapper, new Value(''), value));
   Assert(status === Value.true);
   return Q(SerializeJSONProperty(new Value(''), wrapper));
@@ -491,8 +491,8 @@ export function CreateJSON(realmRec) {
   const json = BootstrapPrototype(realmRec, [
     ['parse', JSON_parse, 2],
     ['stringify', JSON_stringify, 3],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'JSON');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSONParse%'] = X(json.Get(new Value('parse')));
+  realmRec.Intrinsics['%JSON.parse%'] = X(json.Get(new Value('parse')));
 }

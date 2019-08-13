@@ -23,7 +23,7 @@ import { X } from '../completion.mjs';
 // 9.4.4.6 #sec-createunmappedargumentsobject
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'), ['ParameterMap']);
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
@@ -39,7 +39,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
-    Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
+    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -93,7 +93,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   // patterns, or any initializers. It may contain duplicate identifiers.
   const len = argumentsList.length;
   const obj = new ArgumentsExoticObjectValue();
-  obj.Prototype = surroundingAgent.intrinsic('%ObjectPrototype%');
+  obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
   obj.Extensible = Value.true;
   const map = ObjectCreate(Value.null);
   obj.ParameterMap = map;
@@ -132,7 +132,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     index -= 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
-    Value: surroundingAgent.intrinsic('%ArrayProto_values%'),
+    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,

@@ -4,11 +4,11 @@ import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 export function CreateGenerator(realmRec) {
-  const generatorPrototype = realmRec.Intrinsics['%GeneratorPrototype%'];
+  const generatorPrototype = realmRec.Intrinsics['%Generator.prototype%'];
 
   const generator = BootstrapPrototype(realmRec, [
     ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
-  ], realmRec.Intrinsics['%FunctionPrototype%'], 'GeneratorFunction');
+  ], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
 
   X(DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
     Value: generator,

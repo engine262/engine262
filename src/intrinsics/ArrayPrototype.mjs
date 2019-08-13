@@ -494,7 +494,7 @@ function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, new Value('join')));
   if (IsCallable(func) === Value.false) {
-    func = surroundingAgent.intrinsic('%ObjProto_toString%');
+    func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
   return Q(Call(func, array));
 }
@@ -542,7 +542,7 @@ function ArrayProto_values(args, { thisValue }) {
 
 export function CreateArrayPrototype(realmRec) {
   const proto = new ArrayExoticObjectValue();
-  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
   proto.Extensible = Value.true;
   proto.properties.set(new Value('length'), Descriptor({
     Value: new Value(0),
@@ -601,9 +601,9 @@ export function CreateArrayPrototype(realmRec) {
     })));
   }
 
-  realmRec.Intrinsics['%ArrayPrototype%'] = proto;
+  realmRec.Intrinsics['%Array.prototype%'] = proto;
 
-  realmRec.Intrinsics['%ArrayProto_keys%'] = proto.Get(new Value('keys'), proto);
-  realmRec.Intrinsics['%ArrayProto_entries%'] = proto.Get(new Value('entries'), proto);
-  realmRec.Intrinsics['%ArrayProto_values%'] = proto.Get(new Value('values'), proto);
+  realmRec.Intrinsics['%Array.prototype.keys%'] = proto.Get(new Value('keys'), proto);
+  realmRec.Intrinsics['%Array.prototype.entries%'] = proto.Get(new Value('entries'), proto);
+  realmRec.Intrinsics['%Array.prototype.values%'] = proto.Get(new Value('values'), proto);
 }

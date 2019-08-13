@@ -46,7 +46,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
+    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     return ArrayCreate(new Value(0), proto);
   } else if (numberOfArgs === 1) {
     // 22.1.1.2 #sec-array-len
@@ -55,7 +55,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
+    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     const array = ArrayCreate(new Value(0), proto);
     let intLen;
     if (Type(len) !== 'Number') {
@@ -77,7 +77,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     if (Type(NewTarget) === 'Undefined') {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%ArrayPrototype%');
+    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     const array = ArrayCreate(new Value(0), proto);
     let k = 0;
     while (k < numberOfArgs) {
@@ -208,7 +208,7 @@ function Array_speciesGetter(args, { thisValue }) {
 }
 
 export function CreateArray(realmRec) {
-  const proto = realmRec.Intrinsics['%ArrayPrototype%'];
+  const proto = realmRec.Intrinsics['%Array.prototype%'];
 
   const cons = BootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
     ['from', Array_from, 1],

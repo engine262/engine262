@@ -531,7 +531,7 @@ function TypedArrayProto_toStringTagGetter(args, { thisValue }) {
 }
 
 export function CreateTypedArrayPrototype(realmRec) {
-  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%ArrayPrototype%'], new Value('toString')));
+  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
   Assert(Type(ArrayProto_toString) === 'Object');
 
   const proto = BootstrapPrototype(realmRec, [
@@ -552,7 +552,7 @@ export function CreateTypedArrayPrototype(realmRec) {
     ['values', TypedArrayProto_values, 0],
     ['toString', ArrayProto_toString],
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTagGetter]],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
   CreateArrayPrototypeShared(
     realmRec,
@@ -574,5 +574,5 @@ export function CreateTypedArrayPrototype(realmRec) {
     })));
   }
 
-  realmRec.Intrinsics['%TypedArrayPrototype%'] = proto;
+  realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
 }

@@ -36,7 +36,7 @@ function StringConstructor(args, { NewTarget }) {
   if (NewTarget === Value.undefined) {
     return s;
   }
-  return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%StringPrototype%'))));
+  return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
 
 // 21.1.2.1 #sec-string.fromcharcode
@@ -109,7 +109,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
 }
 
 export function CreateString(realmRec) {
-  const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%StringPrototype%'], [
+  const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
     ['fromCodePoint', String_fromCodePoint, 1],
     ['raw', String_raw, 1],

@@ -222,7 +222,7 @@ class APIRealm {
   }
 }
 
-function APIObject(realm, intrinsic = '%ObjectPrototype%') {
+function APIObject(realm, intrinsic = '%Object.prototype%') {
   return ObjectCreate(realm.realm.Intrinsics[intrinsic]);
 }
 
@@ -286,7 +286,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
   const innerInspect = (value, quote = true) => {
     const compactObject = (toString) => {
       try {
-        const objectToString = realm.Intrinsics['%ObjProto_toString%'];
+        const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
         if (toString.nativeFunction === objectToString.nativeFunction) {
           return X(AbstractOps.Call(toString, value)).stringValue();
         } else {
@@ -346,7 +346,7 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
   [[PromiseResult]]: ${result},
 }`;
       }
-      const errorToString = realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value('toString')).Value;
+      const errorToString = realm.Intrinsics['%Error.prototype%'].properties.get(new Value('toString')).Value;
       const toString = Q(AbstractOps.Get(value, new Value('toString')));
       if (toString.nativeFunction === errorToString.nativeFunction) {
         let e = Q(AbstractOps.Get(value, new Value('stack')));

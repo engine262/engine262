@@ -37,5 +37,5 @@ export function CreateGeneratorPrototype(realmRec) {
     ['throw', GeneratorProto_throw, 1],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
 
-  realmRec.Intrinsics['%GeneratorPrototype%'] = generatorPrototype;
+  realmRec.Intrinsics['%Generator.prototype%'] = generatorPrototype;
 }

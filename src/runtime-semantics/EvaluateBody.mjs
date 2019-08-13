@@ -324,7 +324,7 @@ export function* EvaluateBody_FunctionBody(FunctionStatementList, functionObject
 // GeneratorBody : FunctionBody
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorPrototype%', ['GeneratorState', 'GeneratorContext']));
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%Generator.prototype%', ['GeneratorState', 'GeneratorContext']));
   GeneratorStart(G, GeneratorBody);
   return new ReturnCompletion(G);
 }
@@ -357,7 +357,7 @@ export function* EvaluateBody_AsyncConciseBody_ExpressionBody(ExpressionBody, fu
 
 export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorPrototype%', [
+  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGenerator.prototype%', [
     'AsyncGeneratorState',
     'AsyncGeneratorContext',
     'AsyncGeneratorQueue',

@@ -145,7 +145,7 @@ if (argv.length === 0) {
   if (result instanceof AbruptCompletion) {
     let inspected;
     if (Abstract.Type(result.Value) === 'Object') {
-      const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+      const errorToString = realm.realm.Intrinsics['%Error.prototype%'].properties.get(new Value(realm, 'toString')).Value;
       inspected = Abstract.Call(errorToString, result.Value).stringValue();
     } else {
       inspected = inspect(result, realm);

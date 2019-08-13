@@ -9,6 +9,6 @@ function FunctionConstructor(args, { NewTarget }) {
 }
 
 export function CreateFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%FunctionPrototype%'], []);
+  const cons = BootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
   realmRec.Intrinsics['%Function%'] = cons;
 }

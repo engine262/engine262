@@ -14,12 +14,12 @@ import { Q } from '../completion.mjs';
 //     `{` PropertyDefintionList `,` `}`
 export function* Evaluate_ObjectLiteral(ObjectLiteral) {
   if (ObjectLiteral.properties.length === 0) {
-    return ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+    return ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   }
 
   const PropertyDefintionList = ObjectLiteral.properties;
 
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Q(yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true));
   return obj;
 }

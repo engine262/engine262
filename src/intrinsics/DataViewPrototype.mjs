@@ -199,7 +199,7 @@ export function CreateDataViewPrototype(realmRec) {
     ['setUint8', DataViewProto_setUint8, 2],
     ['setUint16', DataViewProto_setUint16, 2],
     ['setUint32', DataViewProto_setUint32, 2],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'DataView');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
 
-  realmRec.Intrinsics['%DataViewPrototype%'] = proto;
+  realmRec.Intrinsics['%DataView.prototype%'] = proto;
 }

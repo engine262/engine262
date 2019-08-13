@@ -302,19 +302,19 @@ export function ToObject(argument) {
     case 'Null':
       return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
     case 'Boolean': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%BooleanPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%NumberPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'));
       obj.NumberData = argument;
       return obj;
     }
     case 'String':
-      return StringCreate(argument, surroundingAgent.intrinsic('%StringPrototype%'));
+      return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
     case 'Symbol': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%SymbolPrototype%'));
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
       obj.SymbolData = argument;
       return obj;
     }

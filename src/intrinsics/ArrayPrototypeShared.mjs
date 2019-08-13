@@ -21,8 +21,8 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-// Algorithms and methods shared between %ArrayPrototype% and
-// %TypedArrayPrototype%.
+// Algorithms and methods shared between %Array.prototype% and
+// %TypedArray.prototype%.
 
 // 22.1.3.27 #sec-array.prototype.sort
 // 22.2.3.26 #sec-%typedarray%.prototype.sort

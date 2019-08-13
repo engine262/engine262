@@ -563,7 +563,7 @@ function StringProto_iterator(args, { thisValue }) {
 
 export function CreateStringPrototype(realmRec) {
   const proto = new StringExoticObjectValue();
-  proto.Prototype = realmRec.Intrinsics['%ObjectPrototype%'];
+  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
   proto.Extensible = Value.true;
   proto.StringData = new Value('');
   proto.properties.set(new Value('length'), Descriptor({
@@ -607,5 +607,5 @@ export function CreateStringPrototype(realmRec) {
     [wellKnownSymbols.iterator, StringProto_iterator, 0],
   ]);
 
-  realmRec.Intrinsics['%StringPrototype%'] = proto;
+  realmRec.Intrinsics['%String.prototype%'] = proto;
 }

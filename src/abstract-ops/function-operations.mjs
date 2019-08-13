@@ -164,7 +164,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   const kind = F.ConstructorKind;
   let thisArgument;
   if (kind === 'base') {
-    thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%ObjectPrototype%'));
+    thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
   }
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
@@ -271,7 +271,7 @@ export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
 // ECMAScriptCode as such.
 export function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
   if (prototype === undefined) {
-    prototype = surroundingAgent.intrinsic('%FunctionPrototype%');
+    prototype = surroundingAgent.intrinsic('%Function.prototype%');
   }
   const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
   const F = FunctionAllocate(prototype, allocKind);
@@ -287,14 +287,14 @@ export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
 
 // 9.2.7 #sec-asyncgeneratorfunctioncreate
 export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
-  const functionPrototype = surroundingAgent.intrinsic('%AsyncGenerator%');
+  const functionPrototype = surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%');
   const F = X(FunctionAllocate(functionPrototype, 'generator'));
   return X(FunctionInitialize(F, kind, ParameterList, Body, Scope));
 }
 
 // 9.2.8 #sec-async-functions-abstract-operations-async-function-create
 export function AsyncFunctionCreate(kind, parameters, body, Scope) {
-  const functionPrototype = surroundingAgent.intrinsic('%AsyncFunctionPrototype%');
+  const functionPrototype = surroundingAgent.intrinsic('%AsyncFunction.prototype%');
   const F = X(FunctionAllocate(functionPrototype, 'async'));
   return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
@@ -308,7 +308,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     writablePrototype = true;
   }
   if (prototype === undefined) {
-    prototype = ObjectCreate(surroundingAgent.intrinsic('%ObjectPrototype%'));
+    prototype = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     X(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
       Value: F,
       Writable: writablePrototype ? Value.true : Value.false,
@@ -386,7 +386,7 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
   }
   Assert(realm instanceof Realm);
   if (prototype === undefined) {
-    prototype = realm.Intrinsics['%FunctionPrototype%'];
+    prototype = realm.Intrinsics['%Function.prototype%'];
   }
 
   const func = new BuiltinFunctionValue(steps, isConstructor);

@@ -96,7 +96,7 @@ function ObjectProto_valueOf(argList, { thisValue }) {
 }
 
 export function CreateObjectPrototype(realmRec) {
-  const proto = realmRec.Intrinsics['%ObjectPrototype%'];
+  const proto = realmRec.Intrinsics['%Object.prototype%'];
   Assert(proto);
 
   assignProps(realmRec, proto, [
@@ -108,8 +108,8 @@ export function CreateObjectPrototype(realmRec) {
     ['valueOf', ObjectProto_valueOf, 0],
   ]);
 
-  realmRec.Intrinsics['%ObjProto_toString%'] = X(Get(proto, new Value('toString')));
-  realmRec.Intrinsics['%ObjProto_valueOf%'] = X(Get(proto, new Value('valueOf')));
+  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, new Value('toString')));
+  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, new Value('valueOf')));
 
-  realmRec.Intrinsics['%ObjectPrototype%'] = proto;
+  realmRec.Intrinsics['%Object.prototype%'] = proto;
 }

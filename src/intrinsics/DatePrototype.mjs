@@ -691,7 +691,7 @@ export function CreateDatePrototype(realmRec) {
     ['toUTCString', DateProto_toUTCString, 0],
     ['valueOf', DateProto_valueOf, 0],
     [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, { Writable: Value.false, Enumerable: Value.false, Configurable: Value.true }],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
-  realmRec.Intrinsics['%DatePrototype%'] = proto;
+  realmRec.Intrinsics['%Date.prototype%'] = proto;
 }

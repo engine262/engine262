@@ -72,7 +72,7 @@ function WeakSetConstructor([iterable], { NewTarget }) {
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'WeakSet'));
   }
-  const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakSetPrototype%', ['WeakSetData']));
+  const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']));
   set.WeakSetData = new WeakSetData();
   if (iterable === undefined || iterable === Value.undefined || iterable === Value.null) {
     return set;
@@ -97,7 +97,7 @@ function WeakSetConstructor([iterable], { NewTarget }) {
 }
 
 export function CreateWeakSet(realmRec) {
-  const weakSetConstructor = BootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSetPrototype%']);
+  const weakSetConstructor = BootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%']);
 
   realmRec.Intrinsics['%WeakSet%'] = weakSetConstructor;
 }

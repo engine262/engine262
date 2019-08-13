@@ -27,7 +27,7 @@ export function CreateNativeError(realmRec) {
     const proto = BootstrapPrototype(realmRec, [
       ['name', new Value(name)],
       ['message', new Value('')],
-    ], realmRec.Intrinsics['%ErrorPrototype%']);
+    ], realmRec.Intrinsics['%Error.prototype%']);
 
     const Constructor = ([message = Value.undefined], { NewTarget }) => {
       let newTarget;
@@ -36,7 +36,7 @@ export function CreateNativeError(realmRec) {
       } else {
         newTarget = NewTarget;
       }
-      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}Prototype%`, ['ErrorData']));
+      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']));
       if (Type(message) !== 'Undefined') {
         const msg = Q(ToString(message));
         const msgDesc = Descriptor({
@@ -60,7 +60,7 @@ export function CreateNativeError(realmRec) {
     const cons = BootstrapConstructor(realmRec, Constructor, name, 1, proto, []);
     cons.Prototype = realmRec.Intrinsics['%Error%'];
 
-    realmRec.Intrinsics[`%${name}Prototype%`] = proto;
+    realmRec.Intrinsics[`%${name}.prototype%`] = proto;
     realmRec.Intrinsics[`%${name}%`] = cons;
   }
 }

@@ -9,7 +9,7 @@ function IteratorPrototype_iterator(args, { thisValue }) {
 export function CreateIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%IteratorPrototype%'] = proto;
 }

@@ -73,7 +73,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     bodyParser = ParseAsFunctionBody;
     enableYield = false;
     enableAwait = false;
-    fallbackProto = '%FunctionPrototype%';
+    fallbackProto = '%Function.prototype%';
   } else if (kind === 'generator') {
     bodyParser = ParseAsGeneratorBody;
     enableYield = true;
@@ -83,12 +83,12 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     bodyParser = ParseAsAsyncFunctionBody;
     enableYield = false;
     enableAwait = true;
-    fallbackProto = '%AsyncFunctionPrototype%';
+    fallbackProto = '%AsyncFunction.prototype%';
   } else if (kind === 'async generator') {
     bodyParser = ParseAsAsyncGeneratorBody;
     enableYield = true;
     enableAwait = true;
-    fallbackProto = '%AsyncGenerator%';
+    fallbackProto = '%AsyncGeneratorFunction.prototype%';
   }
   const argCount = args.length;
   let P = '';
@@ -164,7 +164,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   const scope = realmF.GlobalEnv;
   FunctionInitialize(F, 'Normal', parameters, fabricatedFunctionNode, scope);
   if (kind === 'generator') {
-    const prototype = ObjectCreate(surroundingAgent.intrinsic('%GeneratorPrototype%'));
+    const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
@@ -172,7 +172,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       Configurable: Value.false,
     })));
   } else if (kind === 'async generator') {
-    const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorPrototype%'));
+    const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,

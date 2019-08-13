@@ -121,7 +121,7 @@ export function CreateIntrinsics(realmRec) {
   realmRec.Intrinsics = intrinsics;
 
   const objProto = ObjectCreate(Value.null);
-  intrinsics['%ObjectPrototype%'] = objProto;
+  intrinsics['%Object.prototype%'] = objProto;
 
   const thrower = X(CreateBuiltinFunction(
     () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
@@ -139,7 +139,7 @@ export function CreateIntrinsics(realmRec) {
   const funcProto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, objProto);
   SetFunctionLength(funcProto, new Value(0));
   SetFunctionName(funcProto, new Value(''));
-  intrinsics['%FunctionPrototype%'] = funcProto;
+  intrinsics['%Function.prototype%'] = funcProto;
 
   thrower.SetPrototypeOf(funcProto);
 
@@ -241,7 +241,7 @@ export function CreateIntrinsics(realmRec) {
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   const intrinsics = realmRec.Intrinsics;
   if (globalObj === Value.undefined) {
-    globalObj = ObjectCreate(intrinsics['%ObjectPrototype%']);
+    globalObj = ObjectCreate(intrinsics['%Object.prototype%']);
   }
   if (thisValue === Value.undefined) {
     thisValue = globalObj;

@@ -43,7 +43,7 @@ export function CreateErrorPrototype(realmRec) {
     ['toString', ErrorProto_toString, 0],
     ['message', new Value('')],
     ['name', new Value('Error')],
-  ], realmRec.Intrinsics['%ObjectPrototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%']);
 
-  realmRec.Intrinsics['%ErrorPrototype%'] = proto;
+  realmRec.Intrinsics['%Error.prototype%'] = proto;
 }

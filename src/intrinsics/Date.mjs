@@ -73,7 +73,7 @@ function DateConstructor(args, { NewTarget }) {
         }
       }
       const finalDate = MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli));
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DatePrototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
       O.DateValue = TimeClip(UTC(finalDate));
       return O;
     }
@@ -97,7 +97,7 @@ function DateConstructor(args, { NewTarget }) {
           tv = Q(ToNumber(v));
         }
       }
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DatePrototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
       O.DateValue = TimeClip(tv);
       return O;
     }
@@ -108,7 +108,7 @@ function DateConstructor(args, { NewTarget }) {
       const now = Date.now();
       return ToDateString(new Value(now));
     } else {
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DatePrototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
       O.DateValue = new Value(Date.now());
       return O;
     }
@@ -193,7 +193,7 @@ function parseDate(dateTimeString) {
 }
 
 export function CreateDate(realmRec) {
-  const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%DatePrototype%'], [
+  const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [
     ['now', Date_now, 0],
     ['parse', Date_parse, 1],
     ['UTC', Date_UTC, 7],

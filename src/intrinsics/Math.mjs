@@ -64,7 +64,7 @@ export function CreateMath(realmRec) {
     ...valueProps,
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Math');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
   // 20.2.2 #sec-function-properties-of-the-math-object
 

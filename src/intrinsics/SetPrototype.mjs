@@ -134,11 +134,11 @@ export function CreateSetPrototype(realmRec) {
     ['has', SetProto_has, 1],
     ['size', [SetProto_sizeGetter]],
     ['values', SetProto_values, 0],
-  ], realmRec.Intrinsics['%ObjectPrototype%'], 'Set');
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
   const valuesFunc = X(proto.GetOwnProperty(new Value('values')));
   X(proto.DefineOwnProperty(new Value('keys'), valuesFunc));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 
-  realmRec.Intrinsics['%SetPrototype%'] = proto;
+  realmRec.Intrinsics['%Set.prototype%'] = proto;
 }

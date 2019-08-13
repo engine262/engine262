@@ -19,7 +19,7 @@ import { Value, Type } from '../value.mjs';
 
 // 24.1.1.1 #sec-allocatearraybuffer
 export function AllocateArrayBuffer(constructor, byteLength) {
-  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBufferPrototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']));
+  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']));
   Assert(byteLength.numberValue() >= 0);
   Assert(Number.isInteger(byteLength.numberValue()));
   const block = Q(CreateByteDataBlock(byteLength));
