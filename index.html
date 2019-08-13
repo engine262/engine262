@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <h1>engine262</h1>
     <style>
       textarea {
         font-family: monospace;
@@ -16,16 +15,20 @@
   <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/mode/javascript/javascript.min.js"></script>
+    <h1>engine262</h1>
+    <h2>A self-hosted JavaScript engine for development and exploration.</h2>
+    <a href="https://github.com/engine262/engine262">engine262 on GitHub</a>
+
     <p>Features</p>
     <ul id="features"></ul>
 
-    <textarea id="input">print('Hello, World!');</textarea>
+    <textarea id="input" autocomplete="off">print('Hello, World!');</textarea>
 
     <button id="run">Evaluate</button>
 
     <p>Output:</p>
 
-    <textarea disabled id="output" cols=80></textarea>
+    <textarea id="output" cols="80" autocomplete="off" disabled></textarea>
 
     <script>
       const featureList = document.querySelector('#features');
