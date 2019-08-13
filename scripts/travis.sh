@@ -25,7 +25,8 @@ npm run lint
 # npm run test
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-  git fetch --all
+  git remote set-branches --add origin gh-pages # wtf
+  git fetch origin
   git checkout gh-pages
   cp dist/engine262.js engine262.js
   cp dist/engine262.js.map engine262.js.map
