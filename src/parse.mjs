@@ -33,7 +33,8 @@ function functionFlags(async, generator) {
   return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
 }
 
-const optionalChainToken = {};
+const optionalChainToken = { label: '?.' };
+const nullishCoalescingToken = { label: '??', binop: 0 };
 
 const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options = {}, source) {
@@ -66,14 +67,23 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   }
 
   getTokenFromCode(code) {
-    if (code === 63 && surroundingAgent.feature('OptionalChaining')) {
+    if (code === 63) {
       this.pos += 1;
-      const next = this.input.charCodeAt(this.pos);
-      if (next === 46) {
-        const nextNext = this.input.charCodeAt(this.pos + 1);
-        if (nextNext < 48 || nextNext > 57) {
+      if (surroundingAgent.feature('OptionalChaining')) {
+        const next = this.input.charCodeAt(this.pos);
+        if (next === 46) {
+          const nextNext = this.input.charCodeAt(this.pos + 1);
+          if (nextNext < 48 || nextNext > 57) {
+            this.pos += 1;
+            return this.finishToken(optionalChainToken);
+          }
+        }
+      }
+      if (surroundingAgent.feature('NullishCoalescing')) {
+        const next = this.input.charCodeAt(this.pos);
+        if (next === 63) {
           this.pos += 1;
-          return this.finishToken(optionalChainToken);
+          return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
         }
       }
       return this.finishToken(acorn.tokTypes.question);
@@ -189,6 +199,25 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     }
 
     return base;
+  }
+
+  buildBinary(startPos, startLoc, left, right, op, logical) {
+    if (op === '??') {
+      if (left.type === 'LogicalExpression') {
+        this.raise(left.start, 'Cannot mix &&, ||, and ??');
+      }
+      if (right.type === 'LogicalExpression') {
+        this.raise(right.start, 'Cannot mix &&, ||, and ??');
+      }
+    } else if (logical) {
+      if (left.operator === '??') {
+        this.raise(left.start, 'Cannot mix &&, ||, and ??');
+      }
+      if (right.operator === '??') {
+        this.raise(right.start, 'Cannot mix &&, ||, and ??');
+      }
+    }
+    return super.buildBinary(startPos, startLoc, left, right, op, logical);
   }
 
   // Adapted from several different places in Acorn.

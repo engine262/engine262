@@ -19,7 +19,7 @@ import { OutOfRange } from '../helpers.mjs';
 //   CallExpression OptionalChain
 //   OptionalExpression OptionalChain
 export function* Evaluate_OptionalExpression(OptionalExpression) {
-  const baseReference = Q(yield* Evaluate(OptionalExpression.object));
+  const baseReference = yield* Evaluate(OptionalExpression.object);
   const baseValue = Q(GetValue(baseReference));
   if (baseValue === Value.undefined || baseValue === Value.null) {
     return Value.undefined;
@@ -41,7 +41,7 @@ function* ChainEvaluation(OptionalChain, baseValue, baseReference) {
 
   if (isOptionalChainWithOptionalChain(OptionalChain)) {
     Assert(isOptionalChain(OptionalChain.base));
-    const newReference = Q(yield* ChainEvaluation(OptionalChain.base, baseValue, baseReference));
+    const newReference = yield* ChainEvaluation(OptionalChain.base, baseValue, baseReference);
     const newValue = Q(GetValue(newReference));
     switch (true) {
       // OptionalChain : OptionalChain `?.` `[` Expression `]`

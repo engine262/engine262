@@ -460,6 +460,11 @@ export function isParenthesizedExpression(node) {
   return node.type === 'ParenthesizedExpression';
 }
 
+// https://tc39.es/proposal-nullish-coalescing
+export function isActualCoalesceExpression(node) {
+  return node.type === 'BinaryExpression' && node.operator === '??';
+}
+
 // https://tc39.es/proposal-optional-chaining
 export function isOptionalExpression(node) {
   return node.type === 'OptionalExpression';
@@ -555,6 +560,9 @@ export function isExpression(node) {
 
     // LogicalORExpression
       || isActualLogicalORExpression(node)
+
+    // CoalesceExpression
+      || isActualCoalesceExpression(node)
 
     // ConditionalExpression
       || isActualConditionalExpression(node)

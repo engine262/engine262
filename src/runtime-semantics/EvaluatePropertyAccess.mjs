@@ -5,7 +5,7 @@ import { Q } from '../completion.mjs';
 
 // https://tc39.es/proposal-optional-chaining
 export function* EvaluateDynamicPropertyAccess(baseValue, expression, strict) {
-  const propertyNameReference = Q(yield* Evaluate(expression));
+  const propertyNameReference = yield* Evaluate(expression);
   const propertyNameValue = Q(GetValue(propertyNameReference));
   const bv = Q(RequireObjectCoercible(baseValue));
   const propertyKey = Q(ToPropertyKey(propertyNameValue));

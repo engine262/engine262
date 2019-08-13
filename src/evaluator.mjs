@@ -12,6 +12,7 @@ import {
   isActualBitwiseORExpression,
   isActualBitwiseXORExpression,
   isActualCallExpression,
+  isActualCoalesceExpression,
   isActualConditionalExpression,
   isActualEqualityExpression,
   isActualExponentiationExpression,
@@ -95,6 +96,7 @@ import {
   Evaluate_CallExpression,
   Evaluate_ClassDeclaration,
   Evaluate_ClassExpression,
+  Evaluate_CoalesceExpression,
   Evaluate_ConditionalExpression,
   Evaluate_ContinueStatement,
   Evaluate_DebuggerStatement,
@@ -428,6 +430,9 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isActualLogicalORExpression(Expression):
       return yield* Evaluate_LogicalORExpression(Expression);
+
+    case isActualCoalesceExpression(Expression):
+      return yield* Evaluate_CoalesceExpression(Expression);
 
     case isActualConditionalExpression(Expression):
       return yield* Evaluate_ConditionalExpression(Expression);

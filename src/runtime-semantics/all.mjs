@@ -14,6 +14,7 @@ export * from './BreakStatement.mjs';
 export * from './BreakableStatement.mjs';
 export * from './CallExpression.mjs';
 export * from './ClassDefinition.mjs';
+export * from './CoalesceExpression.mjs';
 export * from './ConditionalExpression.mjs';
 export * from './ContinueStatement.mjs';
 export * from './CreateDynamicFunction.mjs';

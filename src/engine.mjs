@@ -33,6 +33,10 @@ export const FEATURES = Object.freeze([
     name: 'OptionalChaining',
     url: 'https://github.com/tc39/proposal-optional-chaining',
   },
+  {
+    name: 'NullishCoalescing',
+    url: 'https://github.com/tc39/proposal-nullish-coalescing',
+  },
 ].map(Object.freeze));
 
 export class Agent {
