@@ -22,4 +22,14 @@ set -x
 
 npm run build
 npm run lint
-npm run test
+# npm run test
+
+if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  git checkout gh-pages
+  cp dist/engine262.js engine262.js
+  cp dist/engine262.js.map engine262.js.map
+  git add engine262.js engine262.js.map
+  git commit -m "autobuild"
+  git remote add ugh https://devsnek:$GH_TOKEN@github.com/engine262/engine262.git
+  git push -u ugh gh-pages
+fi
