@@ -31,7 +31,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   cp dist/engine262.js engine262.js
   cp dist/engine262.js.map engine262.js.map
   git add engine262.js engine262.js.map
-  git commit -m "autobuild"
+  git commit -m "autobuild" || exit 0
   git remote add ugh https://devsnek:$GH_TOKEN@github.com/engine262/engine262.git
   git push -u ugh gh-pages
 fi
