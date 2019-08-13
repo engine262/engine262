@@ -7,15 +7,23 @@
         font-family: monospace;
         display: block;
       }
+      textarea:disabled {
+        color: black;
+      }
     </style>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.css">
   </head>
   <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/mode/javascript/javascript.min.js"></script>
     <p>Features</p>
     <ul id="features"></ul>
 
-    <textarea id="input" cols=80>print('Hello, World!');</textarea>
+    <textarea id="input">print('Hello, World!');</textarea>
 
     <button id="run">Evaluate</button>
+
+    <p>Output:</p>
 
     <textarea disabled id="output" cols=80></textarea>
 
@@ -76,9 +84,14 @@
 
       respawn();
 
+      const editor = CodeMirror.fromTextArea(input, {
+        lineNumbers: true,
+        mode: 'javascript',
+      });
+
       document.querySelector('#run').addEventListener('click', () => {
         output.value = '';
-        worker.postMessage({ input: input.value });
+        worker.postMessage({ input: editor.getValue() });
       });
     </script>
   </body>
