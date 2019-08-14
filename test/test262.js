@@ -358,12 +358,20 @@ if (!process.send) {
       });
     } else {
       p = p.then(async () => {
-        const { status, error } = await run(test);
-        process.send({ file: test.file, status, error }, (err) => {
-          if (err) {
-            process.exit(1);
-          }
-        });
+        try {
+          const { status, error } = await run(test);
+          process.send({ file: test.file, status, error }, (err) => {
+            if (err) {
+              process.exit(1);
+            }
+          });
+        } catch (e) {
+          process.send({ file: test.file, status: 'FAIL', error: e.stack }, (err) => {
+            if (err) {
+              process.exit(1);
+            }
+          });
+        }
       });
     }
   });

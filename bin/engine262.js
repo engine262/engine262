@@ -22,17 +22,23 @@ const {
 } = require('..');
 
 function createRealm() {
+  const moduleCache = new Map();
   const realm = new Realm({
     resolveImportedModule(referencingModule, specifier) {
       const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
       if (resolved === realm.moduleEntry.specifier) {
         return realm.moduleEntry;
       }
+      if (moduleCache.has(resolved)) {
+        return moduleCache.get(resolved);
+      }
       if (!fs.existsSync(resolved)) {
         return Throw(realm, 'Error', `Cannot resolve module ${specifier}`);
       }
       const source = fs.readFileSync(resolved, 'utf8');
-      return realm.createSourceTextModule(resolved, source);
+      const m = realm.createSourceTextModule(resolved, source);
+      moduleCache.set(resolved, m);
+      return m;
     },
   });
 
