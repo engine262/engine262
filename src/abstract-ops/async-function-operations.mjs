@@ -12,13 +12,12 @@ import { resume } from '../helpers.mjs';
 // This file covers abstract operations defined in
 // 25.7 #sec-async-function-objects
 
-// 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
-export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
+// https://tc39.es/proposal-top-level-await/#sec-asyncblockstart
+export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
   const runningContext = surroundingAgent.runningExecutionContext;
-  const asyncContext = runningContext.copy();
   asyncContext.codeEvaluationState = (function* resumer() {
-    const evaluator = isExpressionBody(asyncFunctionBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
-    const result = EnsureCompletion(yield* evaluator(asyncFunctionBody));
+    const evaluator = isExpressionBody(asyncBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
+    const result = EnsureCompletion(yield* evaluator(asyncBody));
     // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
     surroundingAgent.executionContextStack.pop(asyncContext);
     if (result.Type === 'normal') {
@@ -36,4 +35,11 @@ export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
   Assert(surroundingAgent.runningExecutionContext === runningContext);
   Assert(result.Type === 'normal' && result.Value === Value.undefined);
   return Value.undefined;
+}
+
+// 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
+export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
+  const runningContext = surroundingAgent.runningExecutionContext;
+  const asyncContext = runningContext.copy();
+  X(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
 }

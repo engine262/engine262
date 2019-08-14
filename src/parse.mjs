@@ -48,10 +48,12 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     if (options.strict === true) {
       this.strict = true;
     }
+    this.containsTopLevelAwait = false;
   }
 
   parse() {
     const body = super.parse();
+    body.containsTopLevelAwait = this.containsTopLevelAwait;
     deepFreeze(body);
     return body;
   }
@@ -220,6 +222,14 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     return super.buildBinary(startPos, startLoc, left, right, op, logical);
   }
 
+  parseAwait(...args) {
+    const node = super.parseAwait(...args);
+    if (!this.inFunction) {
+      this.containsTopLevelAwait = true;
+    }
+    return node;
+  }
+
   // Adapted from several different places in Acorn.
   static parseFunctionBody(sourceText, async, generator) {
     const parser = new Parser({
@@ -336,6 +346,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   // Assert: sourceText is an ECMAScript source text (see clause 10).
   const body = forwardError(() => Parser.parse(sourceText, {
     sourceType: 'module',
+    allowAwaitOutsideFunction: surroundingAgent.feature('TopLevelAwait'),
   }));
   if (Array.isArray(body)) {
     return body;
@@ -372,10 +383,16 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
       indirectExportEntries.push(ee);
     }
   }
+
   return new SourceTextModuleRecord({
     Realm: realm,
     Environment: Value.undefined,
     Namespace: Value.undefined,
+    Async: body.containsTopLevelAwait ? Value.true : Value.false,
+    AsyncEvaluating: Value.false,
+    TopLevelCapability: Value.undefined,
+    AsyncParentModules: Value.undefined,
+    PendingAsyncDependencies: Value.undefined,
     Status: 'unlinked',
     EvaluationError: Value.undefined,
     HostDefined: hostDefined,

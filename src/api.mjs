@@ -10,10 +10,8 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
-  HostResolveImportedModule,
   FEATURES,
 } from './engine.mjs';
-import { CyclicModuleRecord } from './modules.mjs';
 import {
   Descriptor,
   Type,
@@ -36,8 +34,6 @@ export const Abstract = { ...AbstractOps, Type };
 const {
   ObjectCreate,
   CreateBuiltinFunction,
-  Assert,
-  InnerModuleEvaluation,
   GetModuleNamespace,
 } = Abstract;
 export {
@@ -144,60 +140,8 @@ class APIRealm {
         Link: () => this.scope(() => module.Link()),
         GetNamespace: () => this.scope(() => GetModuleNamespace(module)),
         Evaluate: () => this.scope(() => {
-          Assert(module.Status === 'linked');
-          const stack = [];
-          let index = 0;
-
-          // InnerModuleEvaluation
-
-          module.Status = 'evaluating';
-          module.DFSIndex = index;
-          module.DFSAncestorIndex = index;
-          stack.push(module);
-          for (const required of module.RequestedModules) {
-            const requiredModule = X(HostResolveImportedModule(module, required));
-            index = Q(InnerModuleEvaluation(requiredModule, stack, index));
-            if (requiredModule instanceof CyclicModuleRecord) {
-              Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
-              if (stack.includes(requiredModule)) {
-                Assert(requiredModule.Status === 'evaluating');
-              }
-              if (requiredModule.Status === 'evaluating') {
-                module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
-              }
-            }
-          }
-          const result = Q(module.ExecuteModule());
-          Assert(stack.indexOf(module) === stack.lastIndexOf(module));
-          Assert(module.DFSAncestorIndex <= module.DFSIndex);
-          if (module.DFSAncestorIndex === module.DFSIndex) {
-            let done = false;
-            while (done === false) {
-              const requiredModule = stack.pop();
-              Assert(requiredModule instanceof CyclicModuleRecord);
-              requiredModule.Status = 'evaluated';
-              if (requiredModule === module) {
-                done = true;
-              }
-            }
-          }
-          // END InnerModuleEvaluation
-
-          // Source Text Module Record Evaluate()
-          if (result instanceof AbruptCompletion) {
-            for (const m of stack) {
-              Assert(m.Status === 'evaluating');
-              m.Status = 'evaluated';
-              m.EvaluationError = result;
-            }
-            Assert(module.Status === 'evaluated' && module.EvaluationError === result);
-            return result;
-          }
-          Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
-          Assert(stack.length === 0);
-
+          const result = module.Evaluate();
           runJobQueue();
-
           return result;
         }),
       },

@@ -21,6 +21,10 @@ if (!process.send) {
   const os = require('os');
   const TestStream = require('test262-stream');
 
+  const NUM_WORKERS = process.env.NUM_WORKERS
+    ? Number.parseInt(process.env.NUM_WORKERS, 10)
+    : Math.round(os.cpus().length * 0.75);
+
   let passed = 0;
   let failed = 0;
   let skipped = 0;
@@ -94,7 +98,7 @@ if (!process.send) {
   }
 
   let finished = 0;
-  const workers = Array.from({ length: Math.round(os.cpus().length * 0.75) }, () => {
+  const workers = Array.from({ length: NUM_WORKERS }, () => {
     const c = childProcess.fork(__filename);
     c.on('message', ({ file, status, error }) => {
       switch (status) {
@@ -173,7 +177,10 @@ if (!process.send) {
 
   let promiseRejectionTracker;
   initializeAgent({
-    features: ['globalThis', 'Promise.allSettled', 'OptionalChaining'],
+    features: [
+      'globalThis', 'Promise.allSettled',
+      'OptionalChaining', 'TopLevelAwait',
+    ],
     promiseRejectionTracker(...args) {
       if (promiseRejectionTracker) {
         return promiseRejectionTracker(...args);
@@ -310,6 +317,11 @@ if (!process.send) {
         completion = module.Link();
         if (!(completion instanceof AbruptCompletion)) {
           completion = module.Evaluate();
+          if (!(completion instanceof AbruptCompletion)) {
+            if (completion.PromiseState === 'rejected') {
+              completion = Throw($262.realm, completion.PromiseResult);
+            }
+          }
         }
       }
     } else {

@@ -3,10 +3,15 @@ import { Value, Type } from './value.mjs';
 import { ExecutionContext, HostResolveImportedModule, surroundingAgent } from './engine.mjs';
 import {
   Assert,
+  Call,
+  NewPromiseCapability,
   GetModuleNamespace,
   InnerModuleEvaluation,
   InnerModuleLinking,
   SameValue,
+  GetAsyncCycleRoot,
+  AsyncBlockStart,
+  PromiseCapabilityRecord,
 } from './abstract-ops/all.mjs';
 import {
   Completion,
@@ -101,6 +106,11 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSIndex = init.DFSIndex;
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
+    this.Async = init.Async;
+    this.AsyncEvaluating = init.AsyncEvaluating;
+    this.TopLevelCapability = init.TopLevelCapability;
+    this.AsyncParentModules = init.AsyncParentModules;
+    this.PendingAsyncDependencies = init.PendingAsyncDependencies;
   }
 
   // 15.2.1.16.1 #sec-moduledeclarationlinking
@@ -127,9 +137,17 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
 
   // 15.2.1.16.2 #sec-moduleevaluation
   Evaluate() {
-    const module = this;
+    let module = this;
     Assert(module.Status === 'linked' || module.Status === 'evaluated');
+    if (module.Status === 'evaluated') {
+      module = GetAsyncCycleRoot(module);
+    }
+    if (module.TopLevelCapability !== Value.undefined) {
+      return module.TopLevelCapability.Promise;
+    }
     const stack = [];
+    const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    module.TopLevelCapability = capability;
     const result = InnerModuleEvaluation(module, stack, 0);
     if (result instanceof AbruptCompletion) {
       for (const m of stack) {
@@ -138,11 +156,15 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
         m.EvaluationError = result;
       }
       Assert(module.Status === 'evaluated' && module.EvaluationError === result);
-      return result;
+      X(Call(capability.Reject, Value.undefined, [result.Value]));
+    } else {
+      Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
+      if (module.AsyncEvaluating === Value.false) {
+        X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
+      }
+      Assert(stack.length === 0);
     }
-    Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
-    Assert(stack.length === 0);
-    return Value.undefined;
+    return capability.Promise;
   }
 }
 
@@ -313,7 +335,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   // 15.2.1.17.5 #sec-source-text-module-record-execute-module
-  ExecuteModule() {
+  ExecuteModule(capability) {
     const module = this;
     const moduleCtx = new ExecutionContext();
     moduleCtx.Function = Value.null;
@@ -324,10 +346,17 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     moduleCtx.VariableEnvironment = module.Environment;
     moduleCtx.LexicalEnvironment = module.Environment;
     // Suspend the currently running execution context.
-    surroundingAgent.executionContextStack.push(moduleCtx);
-    const result = Evaluate_Module(module.ECMAScriptCode.body);
-    surroundingAgent.executionContextStack.pop(moduleCtx);
-    // Resume the context that is now on the top of the execution context stack as the running execution context.
-    return Completion(result);
+    if (module.Async === Value.false) {
+      Assert(capability === undefined);
+      surroundingAgent.executionContextStack.push(moduleCtx);
+      const result = Evaluate_Module(module.ECMAScriptCode.body);
+      surroundingAgent.executionContextStack.pop(moduleCtx);
+      // Resume the context that is now on the top of the execution context stack as the running execution context.
+      return Completion(result);
+    } else {
+      Assert(capability instanceof PromiseCapabilityRecord);
+      X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleCtx));
+      return Value.undefined;
+    }
   }
 }

@@ -80,3 +80,6 @@ language/expressions/super/prop-expr-*.js
 // https://github.com/tc39/ecma262/pull/1635
 built-ins/ThrowTypeError/extensible.js
 built-ins/ThrowTypeError/frozen.js
+
+// "Identifier 'fn' has already been declared"
+language/module-code/top-level-await/await-expr-func-expression.js

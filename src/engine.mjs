@@ -14,6 +14,7 @@ import {
 } from './realm.mjs';
 import {
   Call, Construct, Assert, GetModuleNamespace,
+  PerformPromiseThen, CreateBuiltinFunction,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
@@ -36,6 +37,10 @@ export const FEATURES = Object.freeze([
   {
     name: 'NullishCoalescing',
     url: 'https://github.com/tc39/proposal-nullish-coalescing',
+  },
+  {
+    name: 'TopLevelAwait',
+    url: 'https://github.com/tc39/proposal-top-level-await',
   },
 ].map(Object.freeze));
 
@@ -242,8 +247,21 @@ export function ScriptEvaluationJob(sourceText, hostDefined) {
 export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
   const realm = surroundingAgent.currentRealmRecord;
   const m = ParseModule(sourceText, realm, hostDefined);
+  if (Array.isArray(m)) {
+    HostReportErrors(m);
+    return new NormalCompletion(Value.undefined);
+  }
   m.Link();
-  m.Evaluate();
+  const promise = m.Evaluate();
+  const stepsRejected = ReportRejectedError;
+  const onRejected = CreateBuiltinFunction(stepsRejected);
+  X(PerformPromiseThen(promise, Value.undefined, onRejected));
+  return Value.undefined;
+}
+
+function ReportRejectedError([reason]) {
+  HostReportErrors([reason]);
+  return Value.undefined;
 }
 
 // 16.1 #sec-host-report-errors
@@ -298,15 +316,24 @@ function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapabi
   if (completion instanceof AbruptCompletion) {
     X(Call(promiseCapability.Reject, Value.undefined, [completion.Value]));
   } else {
-    Assert(completion instanceof NormalCompletion && completion.Value === Value.undefined);
-    const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
-    // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-    const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-    if (namespace instanceof AbruptCompletion) {
-      X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
-    } else {
-      X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
-    }
+    Assert(completion instanceof NormalCompletion);
+    const onFulfilled = X(CreateBuiltinFunction(([v = Value.undefined]) => {
+      Assert(v === Value.undefined);
+      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
+      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
+      if (namespace instanceof AbruptCompletion) {
+        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
+      } else {
+        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
+      }
+      return Value.undefined;
+    }, []));
+    const onRejected = X(CreateBuiltinFunction(([r = Value.undefined]) => {
+      X(Call(promiseCapability.Reject, Value.undefined, [r]));
+      return Value.undefined;
+    }, []));
+    X(PerformPromiseThen(completion.Value, onFulfilled, onRejected));
   }
 }
 
@@ -318,11 +345,15 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
       if (module.Status !== 'linking' && module.Status !== 'evaluating') {
         completion = EnsureCompletion(module.Link());
       }
-      // !!! WILLFUL VIOLATION !!!
-      // The spec requires that we call module.Evaluate() here,
-      // but if module.Status is 'evaluating', an assertion will fail.
-      if (!(completion instanceof AbruptCompletion) && (module.Status === 'linked' || module.Status === 'evaluated')) {
-        completion = EnsureCompletion(module.Evaluate());
+      if (!(completion instanceof AbruptCompletion)) {
+        // !!! WILLFUL VIOLATION !!!
+        // The spec requires that we call module.Evaluate() here,
+        // but if module.Status is 'evaluating', an assertion will fail.
+        if (module.Status === 'linked' || module.Status === 'evaluated') {
+          completion = EnsureCompletion(module.Evaluate());
+        } else {
+          completion = new NormalCompletion(module.TopLevelCapability.Promise);
+        }
       }
     } else {
       completion = EnsureCompletion(module.Link());
@@ -330,9 +361,6 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
         completion = EnsureCompletion(module.Evaluate());
       }
     }
-  }
-  if (!(completion instanceof AbruptCompletion)) {
-    completion = new NormalCompletion(Value.undefined);
   }
   FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
   return new NormalCompletion(Value.undefined);
