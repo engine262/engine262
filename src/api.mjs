@@ -320,23 +320,31 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         if (keys.length === 0) {
           return `${tag}{}`;
         }
+        const cache = [];
+        for (const key of keys) {
+          const C = X(value.GetOwnProperty(key));
+          if (C.Enumerable === Value.true) {
+            cache.push([
+              innerInspect(key, false),
+              innerInspect(C.Value),
+            ]);
+          }
+        }
         const isArray = AbstractOps.IsArray(value) === Value.true;
         let out = isArray ? '[' : `${tag}{`;
-        if (keys.length > 5) {
+        if (cache.length > 5) {
           indent += 1;
-          for (const key of keys) {
-            const C = X(value.GetOwnProperty(key));
-            out = `${out}\n${'  '.repeat(indent)}${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
-          }
+          cache.forEach((c) => {
+            out = `${out}\n${'  '.repeat(indent)}${c[0]}: ${c[1]},`;
+          });
           indent -= 1;
           return `${out}\n${'  '.repeat(indent)}${isArray ? ']' : '}'}`;
         } else {
           const oc = compact;
           compact = true;
-          for (const key of keys) {
-            const C = X(value.GetOwnProperty(key));
-            out = `${out} ${innerInspect(key, false)}: ${innerInspect(C.Value)},`;
-          }
+          cache.forEach((c) => {
+            out = `${out} ${c[0]}: ${c[1]},`;
+          });
           compact = oc;
           return `${out.slice(0, -1)} ${isArray ? ']' : '}'}`;
         }
