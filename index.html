@@ -1,45 +1,51 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-      textarea {
-        font-family: monospace;
-        display: block;
-      }
-      textarea:disabled {
-        color: black;
-      }
-    </style>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.css">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.css">
   </head>
   <body>
+    <dialog id="loading">
+      Loading...
+    </dialog>
+    <script>
+      loading.showModal();
+      window.addEventListener('error', () => {
+        loading.close();
+      });
+    </script>
+    <!-- github ribbon -->
+    <a id="github" href="https://github.com/engine262/engine262" aria-label="Fork me on GitHub"></a>
+    <h1>engine262</h1>
+    <p>A self-hosted JavaScript engine for development and exploration.</p>
+
+    <main>
+      <section id="input-section">
+        <fieldset><legend>Features</legend>
+          <ul id="featureList"></ul>
+        </fieldset>
+        <fieldset><legend>Editor</legend>
+          <label><input id="autoevaluate" checked type="checkbox">Auto Evaluate</label>
+          <select id="mode">
+            <option value="script" selected="selected" autocomplete="off">Script</option>
+            <option value="module">Module</option>
+          </select>
+        </fieldset>
+
+        <textarea id="input" autocomplete="off">print('Hello, World!');</textarea>
+        <button type="button" id="run">Evaluate</button>
+      </section>
+
+      <section id="output-section">
+        <h2>Output:</h2>
+
+        <textarea id="output" cols="80" autocomplete="off" disabled></textarea>
+      </section>
+    </main>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.2/mode/javascript/javascript.min.js"></script>
-    <h1>engine262</h1>
-    <h2>A self-hosted JavaScript engine for development and exploration.</h2>
-    <a href="https://github.com/engine262/engine262">engine262 on GitHub</a>
-
-    <p>Features</p>
-    <ul id="features"></ul>
-
-    <textarea id="input" autocomplete="off">print('Hello, World!');</textarea>
-
-    <select id="mode">
-      <option value="script" selected="selected" autocomplete="off">Script</option>
-      <option value="module">Module</option>
-    </select>
-    <button id="run">Evaluate</button>
-
-    <p>Output:</p>
-
-    <textarea id="output" cols="80" autocomplete="off" disabled></textarea>
-
     <script>
-      const featureList = document.querySelector('#features');
-      const input = document.querySelector('#input');
-      const output = document.querySelector('#output');
-      const mode = document.querySelector('#mode');
-
       let featuresPopulated = false;
       const features = new Set();
       let worker;
@@ -79,9 +85,8 @@
                   });
                   const label = document.createElement('label');
                   label.appendChild(input);
-                  const span = document.createElement('span');
-                  span.textContent = name;
-                  label.appendChild(span);
+                  const txt = document.createTextNode(name);
+                  label.appendChild(txt);
                   li.appendChild(label);
                   featureList.appendChild(li);
                 });
@@ -97,15 +102,35 @@
 
       respawn();
 
+      function runEvaluation(src) {
+        output.value = '';
+        worker.postMessage({ input: src });
+      }
+
+      let onChangeTimer = null;
       const editor = CodeMirror.fromTextArea(input, {
         lineNumbers: true,
         mode: 'javascript',
       });
-
-      document.querySelector('#run').addEventListener('click', () => {
-        output.value = '';
-        worker.postMessage({ input: editor.getValue() });
+      editor.on('change', () => {
+        if (!autoevaluate.checked) return;
+        if (onChangeTimer !== null) {
+          clearTimeout(onChangeTimer);
+        }
+        onChangeTimer = setTimeout(
+          () => {
+            onChangeTimer = null;
+            runEvaluation(editor.getValue());
+          },
+          500
+        );
       });
+
+      run.addEventListener('click', () => {
+        runEvaluation(editor.getValue());
+      });
+
+      loading.close();
     </script>
   </body>
 </html>
