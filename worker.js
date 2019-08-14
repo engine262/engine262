@@ -12,17 +12,21 @@ const {
   Abstract,
   AbruptCompletion,
   Value,
+  Throw,
   inspect,
   FEATURES,
 } = self.engine262;
 
 postMessage({ FEATURES });
 
+let mode;
+
 addEventListener('message', ({ data }) => {
   if (data.features) {
     initializeAgent({
       features: data.features,
     });
+    mode = data.mode;
   }
   if (data.input) {
     const realm = new Realm();
@@ -32,11 +36,27 @@ addEventListener('message', ({ data }) => {
     }, [], realm);
     Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
 
-    const result = realm.evaluateScript(data.input);
+    let result;
+    if (mode === 'script') {
+      result = realm.evaluateScript(data.input);
+    } else {
+      result = realm.createSourceTextModule('engine262.mjs', data.input);
+      if (!(result instanceof AbruptCompletion)) {
+        const module = result;
+        realm.moduleEntry = module;
+        result = module.Link();
+        if (!(result instanceof AbruptCompletion)) {
+          result = module.Evaluate();
+          if (result.PromiseState === 'rejected') {
+            result = Throw(realm, result.PromiseResult);
+          }
+        }
+      }
+    }
     if (result instanceof AbruptCompletion) {
       let inspected;
       if (Abstract.Type(result.Value) === 'Object') {
-        const errorToString = realm.realm.Intrinsics['%ErrorPrototype%'].properties.get(new Value(realm, 'toString')).Value;
+        const errorToString = realm.realm.Intrinsics['%Error.prototype%'].properties.get(new Value(realm, 'toString')).Value;
         inspected = Abstract.Call(errorToString, result.Value).stringValue();
       } else {
         inspected = inspect(result, realm);

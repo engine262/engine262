@@ -24,6 +24,10 @@
 
     <textarea id="input" autocomplete="off">print('Hello, World!');</textarea>
 
+    <select id="mode">
+      <option value="script" selected="selected" autocomplete="off">Script</option>
+      <option value="module">Module</option>
+    </select>
     <button id="run">Evaluate</button>
 
     <p>Output:</p>
@@ -34,6 +38,7 @@
       const featureList = document.querySelector('#features');
       const input = document.querySelector('#input');
       const output = document.querySelector('#output');
+      const mode = document.querySelector('#mode');
 
       let featuresPopulated = false;
       const features = new Set();
@@ -71,7 +76,6 @@
                       features.delete(name);
                     }
                     respawn();
-                    worker.postMessage({ features: [...features] });
                   });
                   const label = document.createElement('label');
                   label.appendChild(input);
@@ -81,11 +85,15 @@
                   li.appendChild(label);
                   featureList.appendChild(li);
                 });
-              worker.postMessage({ features: [...features] });
             }
           }
         });
+        worker.postMessage({ features: [...features], mode: mode.value });
       }
+
+      mode.addEventListener('change', () => {
+        respawn();
+      });
 
       respawn();
 
