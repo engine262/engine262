@@ -23,13 +23,162 @@
  */
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('acorn'), require('nearley')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'acorn', 'nearley'], factory) :
-  (global = global || self, factory(global.engine262 = {}, global.acorn, global.nearley));
-}(this, function (exports, acorn, nearley) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('nearley'), require('acorn')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'nearley', 'acorn'], factory) :
+  (global = global || self, factory(global.engine262 = {}, global.nearley, global.acorn));
+}(this, function (exports, nearley, acorn) { 'use strict';
 
-  acorn = acorn && acorn.hasOwnProperty('default') ? acorn['default'] : acorn;
   nearley = nearley && nearley.hasOwnProperty('default') ? nearley['default'] : nearley;
+  acorn = acorn && acorn.hasOwnProperty('default') ? acorn['default'] : acorn;
+
+  class OutOfRange extends RangeError {
+    constructor(fn, detail) {
+      super(`${fn}() argument out of range`);
+      this.detail = detail;
+    }
+
+  }
+  function unwind(iterator, maxSteps = 1) {
+    let steps = 0;
+
+    while (true) {
+      const {
+        done,
+        value
+      } = iterator.next('Unwind');
+
+      if (done) {
+        return value;
+      }
+
+      steps += 1;
+
+      if (steps > maxSteps) {
+        throw new RangeError('Max steps exceeded');
+      }
+    }
+  }
+  const kSafeToResume = Symbol('kSameToResume');
+  function handleInResume(fn, ...args) {
+    const bound = () => fn(...args);
+
+    bound[kSafeToResume] = true;
+    return bound;
+  }
+  function resume(context, completion) {
+    const {
+      value
+    } = context.codeEvaluationState.next(completion);
+
+    if (typeof value === 'function' && value[kSafeToResume] === true) {
+      let _val = value();
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      return _val;
+    }
+
+    return value;
+  }
+  function captureStack(O) {
+    const stack = surroundingAgent.executionContextStack.filter(e => e.Function !== Value.null).slice(0, -1) // remove error constructor
+    .map(e => {
+      let string = '\n  at ';
+      const functionName = e.Function.properties.get(new Value('name'));
+
+      if (functionName) {
+        let _val2 = ToString(functionName.Value);
+
+        Assert(!(_val2 instanceof AbruptCompletion), "");
+
+        if (_val2 instanceof Completion) {
+          _val2 = _val2.Value;
+        }
+
+        string += _val2.stringValue();
+      } else {
+        string += '<anonymous>';
+      }
+
+      if (e.ScriptOrModule instanceof AbstractModuleRecord) {
+        string += e.ScriptOrModule.HostDefined.specifier;
+      }
+
+      return string;
+    }).reverse();
+
+    let _val3 = ToString(O);
+
+    Assert(!(_val3 instanceof AbruptCompletion), "");
+
+    if (_val3 instanceof Completion) {
+      _val3 = _val3.Value;
+    }
+
+    const errorString = _val3.stringValue();
+
+    const trace = `${errorString}${stack.join('')}`;
+    Assert(!(DefinePropertyOrThrow(O, new Value('stack'), Descriptor({
+      Value: new Value(trace),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+  }
+
+  function inlineInspect(V) {
+    if (V instanceof Value) {
+      return inspect(V, surroundingAgent.currentRealmRecord, true);
+    }
+
+    return `${V}`;
+  }
+
+  const messages = {
+    AlreadyDeclared: n => `${inlineInspect(n)} is already declared`,
+    ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds of an integer index',
+    BufferDetachKeyMismatch: (k, b) => `${inlineInspect(k)} is not the [[ArrayBufferDetachKey]] of ${inlineInspect(b)}`,
+    BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
+    CannotConvertSymbol: t => `Cannot convert a Symbol value to a ${t}`,
+    CannotConvertToObject: t => `Cannot convert ${t} to object`,
+    CannotSetProperty: (p, o) => `Cannot set property ${inlineInspect(p)} on ${inlineInspect(o)}`,
+    ConstructorRequiresNew: n => `${n} constructor requires new`,
+    CouldNotResolveModule: s => `Could not resolve module ${inlineInspect(s)}`,
+    DataViewOOB: () => 'Offset is outside the bounds of the DataView',
+    InternalSlotMissing: (o, s) => `Internal slot ${s} is missing for ${inlineInspect(o)}`,
+    InvalidHint: v => `Invalid hint: ${inlineInspect(v)}`,
+    InvalidRegExpFlags: f => `Invalid RegExp flags: ${f}`,
+    NegativeIndex: (n = 'Index') => `${n} cannot be negative`,
+    NotAConstructor: v => `${inlineInspect(v)} is not a constructor`,
+    NotAFunction: v => `${inlineInspect(v)} is not a function`,
+    NotATypeObject: (t, v) => `${inlineInspect(v)} is not a ${t} object`,
+    NotAnObject: v => `${inlineInspect(v)} is not an object`,
+    NotAnTypeObject: (t, v) => `${inlineInspect(v)} is not an ${t} object`,
+    NotDefined: n => `${inlineInspect(n)} is not defined`,
+    ObjectToPrimitive: () => 'Cannot convert object to primitive value',
+    OutOfRange: n => `${n} is out of range`,
+    PromiseRejectFunction: v => `Promise reject function ${inlineInspect(v)} is not callable`,
+    PromiseResolveFunction: v => `Promise resolve function ${inlineInspect(v)} is not callable`,
+    ProxyRevoked: n => `Cannot perform '${n}' on a proxy that has been revoked`,
+    RegExpArgumentNotAllowed: m => `First argument to ${m} must not be a regular expression`,
+    ResolutionNullOrAmbiguous: (r, n, m) => r === null ? `Could not resolve import ${inlineInspect(n)} from ${m.HostDefined.specifier}` : `Star export ${inlineInspect(n)} from ${m.HostDefined.specifier} is ambiguous`,
+    StrictModeDelete: n => `Cannot not delete property ${inlineInspect(n)}`,
+    StringRepeatCount: v => `Count ${inlineInspect(v)} is invalid`,
+    SubclassLengthTooSmall: v => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
+    SubclassSameValue: v => `Subclass constructor returned the same object ${inlineInspect(v)}`,
+    TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
+    TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
+    TypedArrayOOB: () => 'Sum of start offset and byte length should be less than the size of the TypedArray',
+    TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
+    TypedArrayTooSmall: () => 'Derived TypedArray constructor created an array which was too small'
+  };
+  function msg(key, ...args) {
+    return messages[key](...args);
+  }
 
   function Completion(type, value, target) {
     if (new.target === Completion) {
@@ -187,155 +336,6 @@
     surroundingAgent.executionContextStack.pop(asyncContext);
     const completion = yield Value.undefined;
     return completion;
-  }
-
-  class OutOfRange extends RangeError {
-    constructor(fn, detail) {
-      super(`${fn}() argument out of range`);
-      this.detail = detail;
-    }
-
-  }
-  function unwind(iterator, maxSteps = 1) {
-    let steps = 0;
-
-    while (true) {
-      const {
-        done,
-        value
-      } = iterator.next('Unwind');
-
-      if (done) {
-        return value;
-      }
-
-      steps += 1;
-
-      if (steps > maxSteps) {
-        throw new RangeError('Max steps exceeded');
-      }
-    }
-  }
-  const kSafeToResume = Symbol('kSameToResume');
-  function handleInResume(fn, ...args) {
-    const bound = () => fn(...args);
-
-    bound[kSafeToResume] = true;
-    return bound;
-  }
-  function resume(context, completion) {
-    const {
-      value
-    } = context.codeEvaluationState.next(completion);
-
-    if (typeof value === 'function' && value[kSafeToResume] === true) {
-      let _val = value();
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      return _val;
-    }
-
-    return value;
-  }
-  function captureStack(O) {
-    const stack = surroundingAgent.executionContextStack.filter(e => e.Function !== Value.null).slice(0, -1) // remove error constructor
-    .map(e => {
-      let string = '\n  at ';
-      const functionName = e.Function.properties.get(new Value('name'));
-
-      if (functionName) {
-        let _val2 = ToString(functionName.Value);
-
-        Assert(!(_val2 instanceof AbruptCompletion), "");
-
-        if (_val2 instanceof Completion) {
-          _val2 = _val2.Value;
-        }
-
-        string += _val2.stringValue();
-      } else {
-        string += '<anonymous>';
-      }
-
-      if (e.ScriptOrModule instanceof AbstractModuleRecord) {
-        string += e.ScriptOrModule.HostDefined.specifier;
-      }
-
-      return string;
-    }).reverse();
-
-    let _val3 = ToString(O);
-
-    Assert(!(_val3 instanceof AbruptCompletion), "");
-
-    if (_val3 instanceof Completion) {
-      _val3 = _val3.Value;
-    }
-
-    const errorString = _val3.stringValue();
-
-    const trace = `${errorString}${stack.join('')}`;
-    Assert(!(DefinePropertyOrThrow(O, new Value('stack'), Descriptor({
-      Value: new Value(trace),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-  }
-
-  function inlineInspect(V) {
-    if (V instanceof Value) {
-      return inspect(V, surroundingAgent.currentRealmRecord, true);
-    }
-
-    return `${V}`;
-  }
-
-  const messages = {
-    AlreadyDeclared: n => `${inlineInspect(n)} is already declared`,
-    ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds of an integer index',
-    BufferDetachKeyMismatch: (k, b) => `${inlineInspect(k)} is not the [[ArrayBufferDetachKey]] of ${inlineInspect(b)}`,
-    BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
-    CannotConvertSymbol: t => `Cannot convert a Symbol value to a ${t}`,
-    CannotConvertToObject: t => `Cannot convert ${t} to object`,
-    CannotSetProperty: (p, o) => `Cannot set property ${inlineInspect(p)} on ${inlineInspect(o)}`,
-    ConstructorRequiresNew: n => `${n} constructor requires new`,
-    CouldNotResolveModule: s => `Could not resolve module ${inlineInspect(s)}`,
-    DataViewOOB: () => 'Offset is outside the bounds of the DataView',
-    InternalSlotMissing: (o, s) => `Internal slot ${s} is missing for ${inlineInspect(o)}`,
-    InvalidHint: v => `Invalid hint: ${inlineInspect(v)}`,
-    InvalidRegExpFlags: f => `Invalid RegExp flags: ${f}`,
-    NegativeIndex: (n = 'Index') => `${n} cannot be negative`,
-    NotAConstructor: v => `${inlineInspect(v)} is not a constructor`,
-    NotAFunction: v => `${inlineInspect(v)} is not a function`,
-    NotATypeObject: (t, v) => `${inlineInspect(v)} is not a ${t} object`,
-    NotAnObject: v => `${inlineInspect(v)} is not an object`,
-    NotAnTypeObject: (t, v) => `${inlineInspect(v)} is not an ${t} object`,
-    NotDefined: n => `${inlineInspect(n)} is not defined`,
-    ObjectToPrimitive: () => 'Cannot convert object to primitive value',
-    OutOfRange: n => `${n} is out of range`,
-    PromiseRejectFunction: v => `Promise reject function ${inlineInspect(v)} is not callable`,
-    PromiseResolveFunction: v => `Promise resolve function ${inlineInspect(v)} is not callable`,
-    ProxyRevoked: n => `Cannot perform '${n}' on a proxy that has been revoked`,
-    RegExpArgumentNotAllowed: m => `First argument to ${m} must not be a regular expression`,
-    ResolutionNullOrAmbiguous: (r, n, m) => r === null ? `Could not resolve import ${inlineInspect(n)} from ${m.HostDefined.specifier}` : `Star export ${inlineInspect(n)} from ${m.HostDefined.specifier} is ambiguous`,
-    StrictModeDelete: n => `Cannot not delete property ${inlineInspect(n)}`,
-    StringRepeatCount: v => `Count ${inlineInspect(v)} is invalid`,
-    SubclassLengthTooSmall: v => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
-    SubclassSameValue: v => `Subclass constructor returned the same object ${inlineInspect(v)}`,
-    TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
-    TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
-    TypedArrayOOB: () => 'Sum of start offset and byte length should be less than the size of the TypedArray',
-    TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
-    TypedArrayTooSmall: () => 'Derived TypedArray constructor created an array which was too small'
-  };
-  function msg(key, ...args) {
-    return messages[key](...args);
   }
 
   function Assert(invariant, source) {
@@ -1086,6 +1086,559 @@
     }
 
     return false;
+  }
+
+  function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
+    let lprim = ToPrimitive(lval);
+
+    if (lprim instanceof AbruptCompletion) {
+      return lprim;
+    }
+
+    if (lprim instanceof Completion) {
+      lprim = lprim.Value;
+    }
+
+    let rprim = ToPrimitive(rval);
+
+    if (rprim instanceof AbruptCompletion) {
+      return rprim;
+    }
+
+    if (rprim instanceof Completion) {
+      rprim = rprim.Value;
+    }
+
+    if (Type(lprim) === 'String' || Type(rprim) === 'String') {
+      let lstr = ToString(lprim);
+
+      if (lstr instanceof AbruptCompletion) {
+        return lstr;
+      }
+
+      if (lstr instanceof Completion) {
+        lstr = lstr.Value;
+      }
+
+      let rstr = ToString(rprim);
+
+      if (rstr instanceof AbruptCompletion) {
+        return rstr;
+      }
+
+      if (rstr instanceof Completion) {
+        rstr = rstr.Value;
+      }
+
+      return new Value(lstr.stringValue() + rstr.stringValue());
+    }
+
+    let lnum = ToNumber(lprim);
+
+    if (lnum instanceof AbruptCompletion) {
+      return lnum;
+    }
+
+    if (lnum instanceof Completion) {
+      lnum = lnum.Value;
+    }
+
+    let rnum = ToNumber(rprim);
+
+    if (rnum instanceof AbruptCompletion) {
+      return rnum;
+    }
+
+    if (rnum instanceof Completion) {
+      rnum = rnum.Value;
+    }
+
+    return new Value(lnum.numberValue() + rnum.numberValue());
+  } // 12.8.3.1 #sec-addition-operator-plus-runtime-semantics-evaluation
+  //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
+
+  function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
+    const lref = yield* Evaluate(AdditiveExpression);
+    let lval = GetValue(lref);
+
+    if (lval instanceof AbruptCompletion) {
+      return lval;
+    }
+
+    if (lval instanceof Completion) {
+      lval = lval.Value;
+    }
+
+    const rref = yield* Evaluate(MultiplicativeExpression);
+    let rval = GetValue(rref);
+
+    if (rval instanceof AbruptCompletion) {
+      return rval;
+    }
+
+    if (rval instanceof Completion) {
+      rval = rval.Value;
+    }
+
+    return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
+  }
+
+  function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
+    let lnum = ToNumber(lval);
+
+    if (lnum instanceof AbruptCompletion) {
+      return lnum;
+    }
+
+    if (lnum instanceof Completion) {
+      lnum = lnum.Value;
+    }
+
+    let rnum = ToNumber(rval);
+
+    if (rnum instanceof AbruptCompletion) {
+      return rnum;
+    }
+
+    if (rnum instanceof Completion) {
+      rnum = rnum.Value;
+    }
+
+    return new Value(lnum.numberValue() - rnum.numberValue());
+  } // 12.8.4.1 #sec-subtraction-operator-minus-runtime-semantics-evaluation
+
+  function* Evaluate_AdditiveExpression_Minus(AdditiveExpression, MultiplicativeExpression) {
+    const lref = yield* Evaluate(AdditiveExpression);
+    let lval = GetValue(lref);
+
+    if (lval instanceof AbruptCompletion) {
+      return lval;
+    }
+
+    if (lval instanceof Completion) {
+      lval = lval.Value;
+    }
+
+    const rref = yield* Evaluate(MultiplicativeExpression);
+    let rval = GetValue(rref);
+
+    if (rval instanceof AbruptCompletion) {
+      return rval;
+    }
+
+    if (rval instanceof Completion) {
+      rval = rval.Value;
+    }
+
+    return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
+  }
+
+  function* Evaluate_AdditiveExpression(AdditiveExpression) {
+    switch (true) {
+      case isAdditiveExpressionWithPlus(AdditiveExpression):
+        return yield* Evaluate_AdditiveExpression_Plus(AdditiveExpression.left, AdditiveExpression.right);
+
+      case isAdditiveExpressionWithMinus(AdditiveExpression):
+        return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression.left, AdditiveExpression.right);
+
+      default:
+        throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
+    }
+  }
+
+  //   TemplateSpans :
+  //     TemplateTail
+  //     TemplateMiddleList TemplateTail
+  //
+  //   TemplateMiddleList :
+  //     TemplateMiddle Expression
+  //     TemplateMiddleList TemplateMiddle Expression
+
+  function* SubstitutionEvaluation_TemplateSpans(TemplateSpans) {
+    const preceding = [];
+
+    for (let i = 1; i < TemplateSpans.length; i += 2) {
+      const Expression = TemplateSpans[i];
+      const nextRef = yield* Evaluate(Expression);
+      let next = GetValue(nextRef);
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      preceding.push(next);
+    }
+
+    return preceding;
+  } // 12.2.9.3 #sec-template-literals-runtime-semantics-argumentlistevaluation
+  //   TemplateLiteral : NoSubstitutionTemplate
+  //
+  // https://github.com/tc39/ecma262/pull/1402
+  //   TemplateLiteral : SubstitutionTemplate
+
+
+  function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
+    switch (true) {
+      case isNoSubstitutionTemplate(TemplateLiteral):
+        {
+          const templateLiteral = TemplateLiteral;
+          const siteObj = GetTemplateObject(templateLiteral);
+          return [siteObj];
+        }
+
+      case isSubstitutionTemplate(TemplateLiteral):
+        {
+          const templateLiteral = TemplateLiteral;
+          const siteObj = GetTemplateObject(templateLiteral);
+          const [,
+          /* TemplateHead */
+          first
+          /* Expression */
+          , ...rest
+          /* TemplateSpans */
+          ] = unrollTemplateLiteral(templateLiteral);
+          const firstSubRef = yield* Evaluate(first);
+          let firstSub = GetValue(firstSubRef);
+
+          if (firstSub instanceof AbruptCompletion) {
+            return firstSub;
+          }
+
+          if (firstSub instanceof Completion) {
+            firstSub = firstSub.Value;
+          }
+
+          let restSub = yield* SubstitutionEvaluation_TemplateSpans(rest);
+
+          if (restSub instanceof AbruptCompletion) {
+            return restSub;
+          }
+
+          if (restSub instanceof Completion) {
+            restSub = restSub.Value;
+          }
+
+          Assert(Array.isArray(restSub), "Array.isArray(restSub)");
+          return [siteObj, firstSub, ...restSub];
+        }
+
+      default:
+        throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
+    }
+  } // 12.3.6.1 #sec-argument-lists-runtime-semantics-argumentlistevaluation
+  //   Arguments : `(` `)`
+  //   ArgumentList :
+  //     AssignmentExpression
+  //     `...` AssignmentExpression
+  //     ArgumentList `,` AssignmentExpression
+  //     ArgumentList `,` `...` AssignmentExpression
+  //
+  // (implicit)
+  //   Arguments :
+  //     `(` ArgumentList `)`
+  //     `(` ArgumentList `,` `)`
+
+  function* ArgumentListEvaluation_Arguments(Arguments) {
+    const precedingArgs = [];
+
+    for (const AssignmentExpressionOrSpreadElement of Arguments) {
+      if (AssignmentExpressionOrSpreadElement.type === 'SpreadElement') {
+        const AssignmentExpression = AssignmentExpressionOrSpreadElement.argument;
+        const spreadRef = yield* Evaluate(AssignmentExpression);
+        let spreadObj = GetValue(spreadRef);
+
+        if (spreadObj instanceof AbruptCompletion) {
+          return spreadObj;
+        }
+
+        if (spreadObj instanceof Completion) {
+          spreadObj = spreadObj.Value;
+        }
+
+        let iteratorRecord = GetIterator(spreadObj);
+
+        if (iteratorRecord instanceof AbruptCompletion) {
+          return iteratorRecord;
+        }
+
+        if (iteratorRecord instanceof Completion) {
+          iteratorRecord = iteratorRecord.Value;
+        }
+
+        while (true) {
+          let next = IteratorStep(iteratorRecord);
+
+          if (next instanceof AbruptCompletion) {
+            return next;
+          }
+
+          if (next instanceof Completion) {
+            next = next.Value;
+          }
+
+          if (next === Value.false) {
+            break;
+          }
+
+          let nextArg = IteratorValue(next);
+
+          if (nextArg instanceof AbruptCompletion) {
+            return nextArg;
+          }
+
+          if (nextArg instanceof Completion) {
+            nextArg = nextArg.Value;
+          }
+
+          precedingArgs.push(nextArg);
+        }
+      } else {
+        const AssignmentExpression = AssignmentExpressionOrSpreadElement;
+        Assert(isExpression(AssignmentExpression), "isExpression(AssignmentExpression)");
+        const ref = yield* Evaluate(AssignmentExpression);
+        let arg = GetValue(ref);
+
+        if (arg instanceof AbruptCompletion) {
+          return arg;
+        }
+
+        if (arg instanceof Completion) {
+          arg = arg.Value;
+        }
+
+        precedingArgs.push(arg);
+      }
+    }
+
+    return precedingArgs;
+  }
+  function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
+    switch (true) {
+      case isTemplateLiteral(ArgumentsOrTemplateLiteral):
+        return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
+
+      case Array.isArray(ArgumentsOrTemplateLiteral):
+        return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
+
+      default:
+        throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
+    }
+  }
+
+  function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
+    const spreadRef = yield* Evaluate(SpreadElement.argument);
+    let spreadObj = GetValue(spreadRef);
+
+    if (spreadObj instanceof AbruptCompletion) {
+      return spreadObj;
+    }
+
+    if (spreadObj instanceof Completion) {
+      spreadObj = spreadObj.Value;
+    }
+
+    let iteratorRecord = GetIterator(spreadObj);
+
+    if (iteratorRecord instanceof AbruptCompletion) {
+      return iteratorRecord;
+    }
+
+    if (iteratorRecord instanceof Completion) {
+      iteratorRecord = iteratorRecord.Value;
+    }
+
+    while (true) {
+      let next = IteratorStep(iteratorRecord);
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (next === Value.false) {
+        return nextIndex;
+      }
+
+      let nextValue = IteratorValue(next);
+
+      if (nextValue instanceof AbruptCompletion) {
+        return nextValue;
+      }
+
+      if (nextValue instanceof Completion) {
+        nextValue = nextValue.Value;
+      }
+
+      let idxNum = ToUint32(new Value(nextIndex));
+      Assert(!(idxNum instanceof AbruptCompletion), "");
+
+      if (idxNum instanceof Completion) {
+        idxNum = idxNum.Value;
+      }
+
+      let idxStr = ToString(idxNum);
+      Assert(!(idxStr instanceof AbruptCompletion), "");
+
+      if (idxStr instanceof Completion) {
+        idxStr = idxStr.Value;
+      }
+
+      let status = CreateDataProperty(array, idxStr, nextValue);
+      Assert(!(status instanceof AbruptCompletion), "");
+
+      if (status instanceof Completion) {
+        status = status.Value;
+      }
+
+      Assert(status === Value.true, "status === Value.true");
+      nextIndex += 1;
+    }
+  }
+
+  function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
+    const initResult = yield* Evaluate(AssignmentExpression);
+    let initValue = GetValue(initResult);
+
+    if (initValue instanceof AbruptCompletion) {
+      return initValue;
+    }
+
+    if (initValue instanceof Completion) {
+      initValue = initValue.Value;
+    }
+
+    let idxNum = ToUint32(new Value(nextIndex));
+    Assert(!(idxNum instanceof AbruptCompletion), "");
+
+    if (idxNum instanceof Completion) {
+      idxNum = idxNum.Value;
+    }
+
+    let idxStr = ToString(idxNum);
+    Assert(!(idxStr instanceof AbruptCompletion), "");
+
+    if (idxStr instanceof Completion) {
+      idxStr = idxStr.Value;
+    }
+
+    let created = CreateDataProperty(array, idxStr, initValue);
+    Assert(!(created instanceof AbruptCompletion), "");
+
+    if (created instanceof Completion) {
+      created = created.Value;
+    }
+
+    Assert(created === Value.true, "created === Value.true");
+    return nextIndex + 1;
+  }
+
+  function* ArrayAccumulation(ElementList, array, nextIndex) {
+    let postIndex = nextIndex;
+
+    for (const element of ElementList) {
+      switch (true) {
+        case !element:
+          // Elision
+          postIndex += 1;
+          break;
+
+        case isExpression(element):
+          postIndex = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
+
+          if (postIndex instanceof AbruptCompletion) {
+            return postIndex;
+          }
+
+          if (postIndex instanceof Completion) {
+            postIndex = postIndex.Value;
+          }
+
+          break;
+
+        case isSpreadElement(element):
+          postIndex = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
+
+          if (postIndex instanceof AbruptCompletion) {
+            return postIndex;
+          }
+
+          if (postIndex instanceof Completion) {
+            postIndex = postIndex.Value;
+          }
+
+          break;
+
+        default:
+          throw new OutOfRange('ArrayAccumulation', element);
+      }
+    }
+
+    return postIndex;
+  } // 12.2.5.3 #sec-array-initializer-runtime-semantics-evaluation
+  // ArrayLiteral :
+  //   `[` Elision `]`
+  //   `[` ElementList `]`
+  //   `[` ElementList `,` Elision `]`
+
+
+  function* Evaluate_ArrayLiteral(ArrayLiteral) {
+    let array = ArrayCreate(new Value(0));
+    Assert(!(array instanceof AbruptCompletion), "");
+
+    if (array instanceof Completion) {
+      array = array.Value;
+    }
+
+    let len = yield* ArrayAccumulation(ArrayLiteral.elements, array, 0);
+
+    if (len instanceof AbruptCompletion) {
+      return len;
+    }
+
+    if (len instanceof Completion) {
+      len = len.Value;
+    }
+
+    Assert(!(Set$1(array, new Value('length'), ToUint32(new Value(len)), Value.false) instanceof AbruptCompletion), ""); // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.
+
+    return array;
+  }
+
+  //   ArrowFunction : ArrowParameters `=>` ConciseBody
+
+  function Evaluate_ArrowFunction(ArrowFunction) {
+    const {
+      params: ArrowParameters
+    } = ArrowFunction;
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    const parameters = ArrowParameters;
+    const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope);
+    closure.SourceText = sourceTextMatchedBy(ArrowFunction);
+    return closure;
+  } // https://github.com/tc39/ecma262/pull/1406
+  //   ExpressionBody : AssignmentExpression
+
+  function* Evaluate_ExpressionBody(ExpressionBody) {
+    const AssignmentExpression = ExpressionBody;
+    const exprRef = yield* Evaluate(AssignmentExpression);
+    let exprValue = GetValue(exprRef);
+
+    if (exprValue instanceof AbruptCompletion) {
+      return exprValue;
+    }
+
+    if (exprValue instanceof Completion) {
+      exprValue = exprValue.Value;
+    }
+
+    return new ReturnCompletion(exprValue);
   }
 
   //   BindingIdentifier :
@@ -4728,1649 +5281,6 @@
     }
   }
 
-  // 9.4.4 #sec-arguments-exotic-objects
-  // 9.4.4.6 #sec-createunmappedargumentsobject
-
-  function CreateUnmappedArgumentsObject(argumentsList) {
-    const len = argumentsList.length;
-    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
-    obj.ParameterMap = Value.undefined;
-    DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-      Value: new Value(len),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-    let index = 0;
-
-    while (index < len) {
-      const val = argumentsList[index];
-      let idxStr = ToString(new Value(index));
-      Assert(!(idxStr instanceof AbruptCompletion), "");
-
-      if (idxStr instanceof Completion) {
-        idxStr = idxStr.Value;
-      }
-
-      Assert(!(CreateDataProperty(obj, idxStr, val) instanceof AbruptCompletion), "");
-      index += 1;
-    }
-
-    Assert(!(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
-      Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    })) instanceof AbruptCompletion), "");
-    Assert(!(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
-      Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
-      Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-    return obj;
-  }
-
-  function ArgGetterSteps() {
-    const f = this;
-    const name = f.Name;
-    const env = f.Env;
-    return env.GetBindingValue(name, Value.false);
-  } // 9.4.4.7.1 #sec-makearggetter
-
-
-  function MakeArgGetter(name, env) {
-    const steps = ArgGetterSteps;
-    let getter = CreateBuiltinFunction(steps, ['Name', 'Env']);
-    Assert(!(getter instanceof AbruptCompletion), "");
-
-    if (getter instanceof Completion) {
-      getter = getter.Value;
-    }
-
-    getter.Name = name;
-    getter.Env = env;
-    return getter;
-  }
-
-  function ArgSetterSteps([value]) {
-    Assert(value !== undefined, "value !== undefined");
-    const f = this;
-    const name = f.Name;
-    const env = f.Env;
-    return env.SetMutableBinding(name, value, Value.false);
-  } // 9.4.4.7.2 #sec-makeargsetter
-
-
-  function MakeArgSetter(name, env) {
-    const steps = ArgSetterSteps;
-    let setter = CreateBuiltinFunction(steps, ['Name', 'Env']);
-    Assert(!(setter instanceof AbruptCompletion), "");
-
-    if (setter instanceof Completion) {
-      setter = setter.Value;
-    }
-
-    SetFunctionLength(setter, new Value(1));
-    setter.Name = name;
-    setter.Env = env;
-    return setter;
-  } // 9.4.4.7 #sec-createmappedargumentsobject
-
-
-  function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
-    // Assert: formals does not contain a rest parameter, any binding
-    // patterns, or any initializers. It may contain duplicate identifiers.
-    const len = argumentsList.length;
-    const obj = new ArgumentsExoticObjectValue();
-    obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
-    obj.Extensible = Value.true;
-    const map = ObjectCreate(Value.null);
-    obj.ParameterMap = map;
-    const parameterNames = BoundNames_FormalParameters(formals).map(Value);
-    const numberOfParameters = parameterNames.length;
-    let index = 0;
-
-    while (index < len) {
-      const val = argumentsList[index];
-      let idxStr = ToString(new Value(index));
-      Assert(!(idxStr instanceof AbruptCompletion), "");
-
-      if (idxStr instanceof Completion) {
-        idxStr = idxStr.Value;
-      }
-
-      Assert(!(CreateDataProperty(obj, idxStr, val) instanceof AbruptCompletion), "");
-      index += 1;
-    }
-
-    Assert(!(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-      Value: new Value(len),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    })) instanceof AbruptCompletion), "");
-    const mappedNames = [];
-    index = numberOfParameters - 1;
-
-    while (index >= 0) {
-      const name = parameterNames[index];
-
-      if (!mappedNames.includes(name)) {
-        mappedNames.push(name);
-
-        if (index < len) {
-          const g = MakeArgGetter(name, env);
-          const p = MakeArgSetter(name, env);
-
-          let _val = ToString(new Value(index));
-
-          Assert(!(_val instanceof AbruptCompletion), "");
-
-          if (_val instanceof Completion) {
-            _val = _val.Value;
-          }
-
-          Assert(!(map.DefineOwnProperty(_val, Descriptor({
-            Set: p,
-            Get: g,
-            Enumerable: Value.false,
-            Configurable: Value.true
-          })) instanceof AbruptCompletion), "");
-        }
-      }
-
-      index -= 1;
-    }
-
-    Assert(!(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
-      Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    })) instanceof AbruptCompletion), "");
-    Assert(!(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
-      Value: func,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    })) instanceof AbruptCompletion), "");
-    return obj;
-  }
-
-  // 9.4.2 #sec-array-exotic-objects
-  // and
-  // 22.1 #sec-array-objects
-  // 9.4.2.2 #sec-arraycreate
-
-  function ArrayCreate(length, proto) {
-    Assert(length.numberValue() >= 0, "length.numberValue() >= 0");
-
-    if (Object.is(length.numberValue(), -0)) {
-      length = new Value(0);
-    }
-
-    if (length.numberValue() > 2 ** 32 - 1) {
-      return surroundingAgent.Throw('RangeError');
-    }
-
-    if (proto === undefined) {
-      proto = surroundingAgent.intrinsic('%Array.prototype%');
-    }
-
-    const A = new ArrayExoticObjectValue();
-    A.Prototype = proto;
-    A.Extensible = Value.true;
-    Assert(!(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
-      Value: length,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-    return A;
-  } // 9.4.2.3 #sec-arrayspeciescreate
-
-  function ArraySpeciesCreate(originalArray, length) {
-    Assert(Type(length) === 'Number' && Number.isInteger(length.numberValue()) && length.numberValue() >= 0, "Type(length) === 'Number' && Number.isInteger(length.numberValue()) && length.numberValue() >= 0");
-
-    if (Object.is(length.numberValue(), -0)) {
-      length = new Value(+0);
-    }
-
-    let isArray = IsArray(originalArray);
-
-    if (isArray instanceof AbruptCompletion) {
-      return isArray;
-    }
-
-    if (isArray instanceof Completion) {
-      isArray = isArray.Value;
-    }
-
-    if (isArray === Value.false) {
-      return ArrayCreate(length);
-    }
-
-    let C = Get(originalArray, new Value('constructor'));
-
-    if (C instanceof AbruptCompletion) {
-      return C;
-    }
-
-    if (C instanceof Completion) {
-      C = C.Value;
-    }
-
-    if (IsConstructor(C) === Value.true) {
-      const thisRealm = surroundingAgent.currentRealmRecord;
-      let realmC = GetFunctionRealm(C);
-
-      if (realmC instanceof AbruptCompletion) {
-        return realmC;
-      }
-
-      if (realmC instanceof Completion) {
-        realmC = realmC.Value;
-      }
-
-      if (thisRealm !== realmC) {
-        if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
-          C = Value.undefined;
-        }
-      }
-    }
-
-    if (Type(C) === 'Object') {
-      C = Get(C, wellKnownSymbols.species);
-
-      if (C instanceof AbruptCompletion) {
-        return C;
-      }
-
-      if (C instanceof Completion) {
-        C = C.Value;
-      }
-
-      if (C === Value.null) {
-        C = Value.undefined;
-      }
-    }
-
-    if (C === Value.undefined) {
-      return ArrayCreate(length);
-    }
-
-    if (IsConstructor(C) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
-    }
-
-    return Construct(C, [length]);
-  } // 9.4.2.4 #sec-arraysetlength
-
-  function ArraySetLength(A, Desc) {
-    if (Desc.Value === undefined) {
-      return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
-    }
-
-    const newLenDesc = Descriptor({ ...Desc
-    });
-
-    let _hygienicTemp = ToUint32(Desc.Value);
-
-    if (_hygienicTemp instanceof AbruptCompletion) {
-      return _hygienicTemp;
-    }
-
-    if (_hygienicTemp instanceof Completion) {
-      _hygienicTemp = _hygienicTemp.Value;
-    }
-
-    const newLen = _hygienicTemp.numberValue();
-
-    let _hygienicTemp2 = ToNumber(Desc.Value);
-
-    if (_hygienicTemp2 instanceof AbruptCompletion) {
-      return _hygienicTemp2;
-    }
-
-    if (_hygienicTemp2 instanceof Completion) {
-      _hygienicTemp2 = _hygienicTemp2.Value;
-    }
-
-    const numberLen = _hygienicTemp2.numberValue();
-
-    if (newLen !== numberLen) {
-      return surroundingAgent.Throw('RangeError', 'Invalid array length');
-    }
-
-    newLenDesc.Value = new Value(newLen);
-    const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
-    Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc), "Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc)");
-    let oldLen = oldLenDesc.Value.numberValue();
-
-    if (newLen >= oldLen) {
-      return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
-    }
-
-    if (oldLenDesc.Writable === Value.false) {
-      return Value.false;
-    }
-
-    let newWritable;
-
-    if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
-      newWritable = true;
-    } else {
-      newWritable = false;
-      newLenDesc.Writable = Value.true;
-    }
-
-    let succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
-    Assert(!(succeeded instanceof AbruptCompletion), "");
-
-    if (succeeded instanceof Completion) {
-      succeeded = succeeded.Value;
-    }
-
-    if (succeeded === Value.false) {
-      return Value.false;
-    }
-
-    while (newLen < oldLen) {
-      oldLen -= 1;
-      let idxToDelete = ToString(new Value(oldLen));
-      Assert(!(idxToDelete instanceof AbruptCompletion), "");
-
-      if (idxToDelete instanceof Completion) {
-        idxToDelete = idxToDelete.Value;
-      }
-
-      let deleteSucceeded = A.Delete(idxToDelete);
-      Assert(!(deleteSucceeded instanceof AbruptCompletion), "");
-
-      if (deleteSucceeded instanceof Completion) {
-        deleteSucceeded = deleteSucceeded.Value;
-      }
-
-      if (deleteSucceeded === Value.false) {
-        newLenDesc.Value = new Value(oldLen + 1);
-
-        if (newWritable === false) {
-          newLenDesc.Writable = Value.false;
-        }
-
-        Assert(!(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc) instanceof AbruptCompletion), "");
-        return Value.false;
-      }
-    }
-
-    if (newWritable === false) {
-      OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
-        Writable: Value.false
-      }));
-    }
-
-    return Value.true;
-  } // 22.1.3.1.1 #sec-isconcatspreadable
-
-  function IsConcatSpreadable(O) {
-    if (Type(O) !== 'Object') {
-      return Value.false;
-    }
-
-    let spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
-
-    if (spreadable instanceof AbruptCompletion) {
-      return spreadable;
-    }
-
-    if (spreadable instanceof Completion) {
-      spreadable = spreadable.Value;
-    }
-
-    if (spreadable !== Value.undefined) {
-      return ToBoolean(spreadable);
-    }
-
-    return IsArray(O);
-  } // 22.1.3.27.1 #sec-sortcompare
-
-  function SortCompare(x, y, comparefn) {
-    if (x === Value.undefined && y === Value.undefined) {
-      return new Value(+0);
-    }
-
-    if (x === Value.undefined) {
-      return new Value(1);
-    }
-
-    if (y === Value.undefined) {
-      return new Value(-1);
-    }
-
-    if (comparefn !== Value.undefined) {
-      let callRes = Call(comparefn, Value.undefined, [x, y]);
-
-      if (callRes instanceof AbruptCompletion) {
-        return callRes;
-      }
-
-      if (callRes instanceof Completion) {
-        callRes = callRes.Value;
-      }
-
-      let v = ToNumber(callRes);
-
-      if (v instanceof AbruptCompletion) {
-        return v;
-      }
-
-      if (v instanceof Completion) {
-        v = v.Value;
-      }
-
-      if (v.isNaN()) {
-        return new Value(+0);
-      }
-
-      return v;
-    }
-
-    let xString = ToString(x);
-
-    if (xString instanceof AbruptCompletion) {
-      return xString;
-    }
-
-    if (xString instanceof Completion) {
-      xString = xString.Value;
-    }
-
-    let yString = ToString(y);
-
-    if (yString instanceof AbruptCompletion) {
-      return yString;
-    }
-
-    if (yString instanceof Completion) {
-      yString = yString.Value;
-    }
-
-    const xSmaller = AbstractRelationalComparison(xString, yString);
-
-    if (xSmaller === Value.true) {
-      return new Value(-1);
-    }
-
-    const ySmaller = AbstractRelationalComparison(yString, xString);
-
-    if (ySmaller === Value.true) {
-      return new Value(1);
-    }
-
-    return new Value(+0);
-  } // 22.1.5.1 #sec-createarrayiterator
-
-  function CreateArrayIterator(array, kind) {
-    Assert(Type(array) === 'Object', "Type(array) === 'Object'");
-    const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), ['IteratedObject', 'ArrayIteratorNextIndex', 'ArrayIterationKind']);
-    iterator.IteratedObject = array;
-    iterator.ArrayIteratorNextIndex = 0;
-    iterator.ArrayIterationKind = kind;
-    return iterator;
-  }
-
-  // 24.1 #sec-arraybuffer-objects
-  // and, for now
-  // 24.2 #sec-sharedarraybuffer-objects
-  // 24.1.1.1 #sec-allocatearraybuffer
-
-  function AllocateArrayBuffer(constructor, byteLength) {
-    let obj = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
-
-    if (obj instanceof AbruptCompletion) {
-      return obj;
-    }
-
-    if (obj instanceof Completion) {
-      obj = obj.Value;
-    }
-
-    Assert(byteLength.numberValue() >= 0, "byteLength.numberValue() >= 0");
-    Assert(Number.isInteger(byteLength.numberValue()), "Number.isInteger(byteLength.numberValue())");
-    let block = CreateByteDataBlock(byteLength);
-
-    if (block instanceof AbruptCompletion) {
-      return block;
-    }
-
-    if (block instanceof Completion) {
-      block = block.Value;
-    }
-
-    obj.ArrayBufferData = block;
-    obj.ArrayBufferByteLength = byteLength;
-    return obj;
-  } // 24.1.1.2 #sec-isdetachedbuffer
-
-  function IsDetachedBuffer(arrayBuffer) {
-    Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer");
-
-    if (Type(arrayBuffer.ArrayBufferData) === 'Null') {
-      return true;
-    }
-
-    return false;
-  } // 24.1.1.3 #sec-detacharraybuffer
-
-  function DetachArrayBuffer(arrayBuffer, key) {
-    Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer");
-    Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
-
-    if (key === undefined) {
-      key = Value.undefined;
-    }
-
-    if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetachKeyMismatch', key, arrayBuffer));
-    }
-
-    arrayBuffer.ArrayBufferData = Value.null;
-    arrayBuffer.ArrayBufferByteLength = new Value(0);
-    return new NormalCompletion(Value.null);
-  } // 24.1.1.4 #sec-clonearraybuffer
-
-  function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
-    Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer, "Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer");
-    Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true");
-    let targetBuffer = AllocateArrayBuffer(cloneConstructor, srcLength);
-
-    if (targetBuffer instanceof AbruptCompletion) {
-      return targetBuffer;
-    }
-
-    if (targetBuffer instanceof Completion) {
-      targetBuffer = targetBuffer.Value;
-    }
-
-    if (IsDetachedBuffer(srcBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
-    }
-
-    const srcBlock = srcBuffer.ArrayBufferData;
-    const targetBlock = targetBuffer.ArrayBufferData;
-    CopyDataBlockBytes(targetBlock, new Value(0), srcBlock, srcByteOffset, srcLength);
-    return targetBuffer;
-  }
-  const throwawayBuffer = new ArrayBuffer(8);
-  const throwawayDataView = new DataView(throwawayBuffer);
-  const throwawayArray$1 = new Uint8Array(throwawayBuffer); // 24.1.1.5 #sec-rawbytestonumber
-  // Sigh…
-
-  function RawBytesToNumber(type, rawBytes, isLittleEndian) {
-    isLittleEndian = isLittleEndian === Value.true;
-    const elementSize = numericTypeInfo.get(type).ElementSize;
-    Assert(elementSize === rawBytes.length, "elementSize === rawBytes.length");
-    const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-    Object.assign(throwawayArray$1, rawBytes);
-    return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian));
-  } // 24.1.1.6 #sec-getvaluefrombuffer
-
-  function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
-    byteIndex = byteIndex.numberValue();
-    Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
-    const info = numericTypeInfo.get(type);
-    Assert(info !== undefined, "info !== undefined");
-    Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
-    Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
-    const block = arrayBuffer.ArrayBufferData;
-    const elementSize = info.ElementSize; // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-    //
-    // } else {
-
-    const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)]; // }
-
-    if (isLittleEndian === undefined) {
-      isLittleEndian = surroundingAgent.LittleEndian;
-    }
-
-    return RawBytesToNumber(type, rawValue, isLittleEndian);
-  } // An implementation must always choose the same encoding for each
-  // implementation distinguishable NaN value.
-
-  const float32NaNLE = Object.freeze([0, 0, 192, 127]);
-  const float32NaNBE = Object.freeze([127, 192, 0, 0]);
-  const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
-  const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]); // 24.1.1.7 #sec-numbertorawbytes
-
-  function NumberToRawBytes(type, value, isLittleEndian) {
-    Assert(Type(isLittleEndian) === 'Boolean', "Type(isLittleEndian) === 'Boolean'");
-    isLittleEndian = isLittleEndian === Value.true;
-    let rawBytes; // One day, we will write our own IEEE 754 and two's complement encoder…
-
-    if (type === 'Float32') {
-      if (Number.isNaN(value.numberValue())) {
-        rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
-      } else {
-        throwawayDataView.setFloat32(0, value.numberValue(), isLittleEndian);
-        rawBytes = [...throwawayArray$1.subarray(0, 4)];
-      }
-    } else if (type === 'Float64') {
-      if (Number.isNaN(value.numberValue())) {
-        rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
-      } else {
-        throwawayDataView.setFloat64(0, value.numberValue(), isLittleEndian);
-        rawBytes = [...throwawayArray$1.subarray(0, 8)];
-      }
-    } else {
-      const info = numericTypeInfo.get(type);
-      const n = info.ElementSize;
-      const convOp = info.ConversionOperation;
-
-      let _val = convOp(value);
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      const intValue = _val.numberValue();
-
-      const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-      throwawayDataView[`set${dataViewType}`](0, intValue, isLittleEndian);
-      rawBytes = [...throwawayArray$1.subarray(0, n)];
-    }
-
-    return rawBytes;
-  } // 24.1.1.8 #sec-setvalueinbuffer
-
-  function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
-    byteIndex = byteIndex.numberValue();
-    Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
-    const info = numericTypeInfo.get(type);
-    Assert(info !== undefined, "info !== undefined");
-    Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
-    Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
-    Assert(Type(value) === 'Number', "Type(value) === 'Number'");
-    const block = arrayBuffer.ArrayBufferData; // const elementSize = info.ElementSize;
-
-    if (isLittleEndian === undefined) {
-      isLittleEndian = surroundingAgent.LittleEndian;
-    }
-
-    const rawBytes = NumberToRawBytes(type, value, isLittleEndian); // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-    //
-    // } else {
-
-    for (let i = 0; i < rawBytes.length; i += 1) {
-      block[byteIndex + i] = rawBytes[i];
-    } // }
-
-
-    return new NormalCompletion(Value.undefined);
-  } // 24.2.1.2 #sec-issharedarraybuffer
-
-  function IsSharedArrayBuffer(obj) {
-    Assert(Type(obj) === 'Object' && 'ArrayBufferData' in obj, "Type(obj) === 'Object' && 'ArrayBufferData' in obj");
-    const bufferData = obj.ArrayBufferData;
-
-    if (Type(bufferData) === 'Null') {
-      return Value.false;
-    }
-
-    if (Type(bufferData) === 'Data Block') {
-      return Value.false;
-    }
-
-    Assert(Type(bufferData) === 'Shared Data Block', "Type(bufferData) === 'Shared Data Block'");
-    return Value.true;
-  }
-
-  //   StatementList : StatementList StatementListItem
-  //
-  // (implicit)
-  //   StatementList : StatementListItem
-
-  function* Evaluate_StatementList(StatementList) {
-    if (StatementList.length === 0) {
-      return new NormalCompletion(undefined);
-    }
-
-    let sl = yield* Evaluate(StatementList[0]);
-
-    if (StatementList.length === 1) {
-      return sl;
-    }
-
-    for (const StatementListItem of StatementList.slice(1)) {
-      if (sl instanceof AbruptCompletion) {
-        return sl;
-      }
-
-      if (sl instanceof Completion) {
-        sl = sl.Value;
-      }
-
-      let s = yield* Evaluate(StatementListItem); // We don't always return a Completion value, but here we actually need it
-      // to be a Completion.
-
-      s = EnsureCompletion(s);
-      sl = UpdateEmpty(s, sl);
-    }
-
-    return sl;
-  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
-  //   ModuleItemList :
-  //     ModuleItem
-  //     ModuleItemList ModuleItem
-
-  function* Evaluate_ModuleItemList(ModuleItemList) {
-    if (ModuleItemList.length === 0) {
-      return new NormalCompletion(undefined);
-    }
-
-    let sl = yield* Evaluate(ModuleItemList[0]);
-
-    if (ModuleItemList.length === 1) {
-      return sl;
-    }
-
-    for (const ModuleItemListItem of ModuleItemList.slice(1)) {
-      if (sl instanceof AbruptCompletion) {
-        return sl;
-      }
-
-      if (sl instanceof Completion) {
-        sl = sl.Value;
-      }
-
-      let s = yield* Evaluate(ModuleItemListItem); // We don't always return a Completion value, but here we actually need it
-      // to be a Completion.
-
-      s = EnsureCompletion(s);
-      sl = UpdateEmpty(s, sl);
-    }
-
-    return sl;
-  } // (implicit)
-  //   StatementListItem :
-  //     Statement
-  //     Declaration
-  //
-  //   Statement :
-  //     BlockStatement
-  //     ExpressionStatement
-  //     VariableStatement
-  //     EmptyStatement
-  //     ExpressionStatement
-  //     IfStatement
-  //     BreakableStatement
-  //     ContinueStatement
-  //     BreakStatement
-  //     ReturnStatement
-  //     WithStatement
-  //     LabelledStatement
-  //     ThrowStatement
-  //     TryStatement
-  //     DebuggerStatement
-  //
-  //   Declaration :
-  //     HoistableDeclaration
-  //     ClassDeclaration
-  //     LexicalDeclaration
-
-  function* Evaluate_StatementListItem(StatementListItem) {
-    switch (true) {
-      case isBlockStatement(StatementListItem):
-        return yield* Evaluate_BlockStatement(StatementListItem);
-
-      case isVariableStatement(StatementListItem):
-        return yield* Evaluate_VariableStatement(StatementListItem);
-
-      case isEmptyStatement(StatementListItem):
-        return Evaluate_EmptyStatement();
-
-      case isExpressionStatement(StatementListItem):
-        return yield* Evaluate_ExpressionStatement(StatementListItem);
-
-      case isIfStatement(StatementListItem):
-        return yield* Evaluate_IfStatement(StatementListItem);
-
-      case isBreakableStatement(StatementListItem):
-        return yield* Evaluate_BreakableStatement(StatementListItem);
-
-      case isContinueStatement(StatementListItem):
-        return Evaluate_ContinueStatement(StatementListItem);
-
-      case isBreakStatement(StatementListItem):
-        return Evaluate_BreakStatement(StatementListItem);
-
-      case isReturnStatement(StatementListItem):
-        return yield* Evaluate_ReturnStatement(StatementListItem);
-
-      case isWithStatement(StatementListItem):
-        return yield* Evaluate_WithStatement(StatementListItem);
-
-      case isLabelledStatement(StatementListItem):
-        return yield* Evaluate_LabelledStatement(StatementListItem);
-
-      case isThrowStatement(StatementListItem):
-        return yield* Evaluate_ThrowStatement(StatementListItem.argument);
-
-      case isTryStatement(StatementListItem):
-        return yield* Evaluate_TryStatement(StatementListItem);
-
-      case isDebuggerStatement(StatementListItem):
-        return Evaluate_DebuggerStatement();
-
-      case isHoistableDeclaration(StatementListItem):
-        return Evaluate_HoistableDeclaration(StatementListItem);
-
-      case isClassDeclaration(StatementListItem):
-        return yield* Evaluate_ClassDeclaration(StatementListItem);
-
-      case isLexicalDeclaration(StatementListItem):
-        return yield* Evaluate_LexicalDeclaration(StatementListItem);
-
-      default:
-        throw new OutOfRange('Evaluate_StatementListItem', StatementListItem);
-    }
-  }
-
-  const Evaluate_Statement = Evaluate_StatementListItem; // 13.5.1 #sec-expression-statement-runtime-semantics-evaluation
-  //   ExpressionStatement : Expression `;`
-
-  function* Evaluate_ExpressionStatement(ExpressionStatement) {
-    const exprRef = yield* Evaluate(ExpressionStatement.expression);
-    return GetValue(exprRef);
-  }
-
-  function EvaluateBinopValues(operator, lval, rval) {
-    switch (operator) {
-      case '*':
-      case '/':
-      case '%':
-        return EvaluateBinopValues_MultiplicativeExpression(operator, lval, rval);
-
-      case '+':
-        return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
-
-      case '-':
-        return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
-
-      case '<<':
-      case '>>':
-      case '>>>':
-        return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
-
-      case '&':
-        return EvaluateBinopValues_BitwiseANDExpression(lval, rval);
-
-      case '^':
-        return EvaluateBinopValues_BitwiseXORExpression(lval, rval);
-
-      case '|':
-        return EvaluateBinopValues_BitwiseORExpression(lval, rval);
-
-      case '**':
-        return EvaluateBinopValues_ExponentiationExpression(lval, rval);
-
-      default:
-        throw new OutOfRange('EvaluateBinopValues', operator);
-    }
-  }
-  function* Evaluate_Expression(Expression) {
-    return EnsureCompletion((yield* Inner_Evaluate_Expression(Expression)));
-  } // (implicit)
-
-  function* Inner_Evaluate_Expression(Expression) {
-    switch (true) {
-      case isThis(Expression):
-        return Evaluate_ThisExpression();
-
-      case isIdentifierReference(Expression):
-        return Evaluate_Identifier(Expression);
-
-      case isLiteral(Expression):
-        return Evaluate_Literal(Expression);
-
-      case isArrayLiteral(Expression):
-        return yield* Evaluate_ArrayLiteral(Expression);
-
-      case isObjectLiteral(Expression):
-        return yield* Evaluate_ObjectLiteral(Expression);
-
-      case isFunctionExpression(Expression):
-        return Evaluate_FunctionExpression(Expression);
-
-      case isClassExpression(Expression):
-        return yield* Evaluate_ClassExpression(Expression);
-
-      case isGeneratorExpression(Expression):
-        return Evaluate_GeneratorExpression(Expression);
-
-      case isAsyncFunctionExpression(Expression):
-        return Evaluate_AsyncFunctionExpression(Expression);
-
-      case isAsyncGeneratorExpression(Expression):
-        return Evaluate_AsyncGeneratorExpression(Expression);
-
-      case isRegularExpressionLiteral(Expression):
-        return Evaluate_RegularExpressionLiteral(Expression);
-
-      case isTemplateLiteral(Expression):
-        return yield* Evaluate_TemplateLiteral(Expression);
-
-      case isActualMemberExpression(Expression):
-        return yield* Evaluate_MemberExpression(Expression);
-
-      case isOptionalExpression(Expression):
-        return yield* Evaluate_OptionalExpression(Expression);
-
-      case isSuperProperty(Expression):
-        return yield* Evaluate_SuperProperty(Expression);
-
-      case isSuperCall(Expression):
-        return yield* Evaluate_SuperCall(Expression);
-
-      case isImportCall(Expression):
-        return yield* Evaluate_ImportCall(Expression);
-
-      case isTaggedTemplate(Expression):
-        return yield* Evaluate_TaggedTemplate(Expression);
-
-      case isMetaProperty(Expression):
-        return yield* Evaluate_MetaProperty();
-
-      case isActualNewExpression(Expression):
-        return yield* Evaluate_NewExpression(Expression);
-
-      case isActualCallExpression(Expression):
-        return yield* Evaluate_CallExpression(Expression);
-
-      case isActualUpdateExpression(Expression):
-        return yield* Evaluate_UpdateExpression(Expression);
-
-      case isActualUnaryExpression(Expression):
-        return yield* Evaluate_UnaryExpression(Expression);
-
-      case isAwaitExpression(Expression):
-        return yield* Evaluate_AwaitExpression(Expression);
-
-      case isActualExponentiationExpression(Expression):
-        return yield* Evaluate_ExponentiationExpression(Expression);
-
-      case isActualMultiplicativeExpression(Expression):
-        return yield* Evaluate_MultiplicativeExpression(Expression);
-
-      case isActualAdditiveExpression(Expression):
-        return yield* Evaluate_AdditiveExpression(Expression);
-
-      case isActualShiftExpression(Expression):
-        return yield* Evaluate_ShiftExpression(Expression);
-
-      case isActualRelationalExpression(Expression):
-        return yield* Evaluate_RelationalExpression(Expression);
-
-      case isActualEqualityExpression(Expression):
-        return yield* Evaluate_EqualityExpression(Expression);
-
-      case isActualBitwiseANDExpression(Expression):
-      case isActualBitwiseXORExpression(Expression):
-      case isActualBitwiseORExpression(Expression):
-        return yield* Evaluate_BinaryBitwiseExpression(Expression);
-
-      case isActualLogicalANDExpression(Expression):
-        return yield* Evaluate_LogicalANDExpression(Expression);
-
-      case isActualLogicalORExpression(Expression):
-        return yield* Evaluate_LogicalORExpression(Expression);
-
-      case isActualCoalesceExpression(Expression):
-        return yield* Evaluate_CoalesceExpression(Expression);
-
-      case isActualConditionalExpression(Expression):
-        return yield* Evaluate_ConditionalExpression(Expression);
-
-      case isYieldExpression(Expression):
-        return yield* Evaluate_YieldExpression(Expression);
-
-      case isArrowFunction(Expression):
-        return Evaluate_ArrowFunction(Expression);
-
-      case isAsyncArrowFunction(Expression):
-        return Evaluate_AsyncArrowFunction(Expression);
-
-      case isActualAssignmentExpression(Expression):
-        return yield* Evaluate_AssignmentExpression(Expression);
-
-      case isExpressionWithComma(Expression):
-        return yield* Evaluate_ExpressionWithComma(Expression);
-      // 12.2.10.5 #sec-grouping-operator-runtime-semantics-evaluation
-
-      case isParenthesizedExpression(Expression):
-        return yield* Evaluate(Expression.expression);
-
-      default:
-        throw new OutOfRange('Evaluate_Expression', Expression);
-    }
-  } // 15.1.7 #sec-script-semantics-runtime-semantics-evaluation
-  //   Script : [empty]
-  //
-  // (implicit)
-  //   Script : ScriptBody
-  //   ScriptBody : StatementList
-
-
-  function Evaluate_Script(Script) {
-    if (Script.length === 0) {
-      return new NormalCompletion(Value.undefined);
-    }
-
-    return unwind(Evaluate_StatementList(Script));
-  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
-  //   ModuleBody : ModuleItemList
-
-  function* Evaluate_ModuleBody(ModuleBody) {
-    const ModuleItemList = ModuleBody;
-    const result = EnsureCompletion((yield* Evaluate_ModuleItemList(ModuleItemList)));
-
-    if (result.Type === 'normal' && result.Value === undefined) {
-      return new NormalCompletion(Value.undefined);
-    }
-
-    return Completion(result);
-  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
-  //   Module : [empty]
-  //
-  // (implicit)
-  //   Module : ModuleBody
-
-  function Evaluate_Module(Module) {
-    if (Module.length === 0) {
-      return new NormalCompletion(Value.undefined);
-    }
-
-    return unwind(Evaluate_ModuleBody(Module));
-  }
-  function* Evaluate(Production) {
-    if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
-      surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production, surroundingAgent.currentRealmRecord);
-    }
-
-    switch (true) {
-      case isImportDeclaration(Production):
-        return new NormalCompletion(undefined);
-
-      case isExportDeclaration(Production):
-        return yield* Evaluate_ExportDeclaration(Production);
-
-      case isStatement(Production):
-      case isDeclaration(Production):
-        return yield* Evaluate_Statement(Production);
-
-      case isExpression(Production):
-        return yield* Evaluate_Expression(Production);
-
-      default:
-        throw new OutOfRange('Evaluate', Production);
-    }
-  }
-
-  function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
-    let lprim = ToPrimitive(lval);
-
-    if (lprim instanceof AbruptCompletion) {
-      return lprim;
-    }
-
-    if (lprim instanceof Completion) {
-      lprim = lprim.Value;
-    }
-
-    let rprim = ToPrimitive(rval);
-
-    if (rprim instanceof AbruptCompletion) {
-      return rprim;
-    }
-
-    if (rprim instanceof Completion) {
-      rprim = rprim.Value;
-    }
-
-    if (Type(lprim) === 'String' || Type(rprim) === 'String') {
-      let lstr = ToString(lprim);
-
-      if (lstr instanceof AbruptCompletion) {
-        return lstr;
-      }
-
-      if (lstr instanceof Completion) {
-        lstr = lstr.Value;
-      }
-
-      let rstr = ToString(rprim);
-
-      if (rstr instanceof AbruptCompletion) {
-        return rstr;
-      }
-
-      if (rstr instanceof Completion) {
-        rstr = rstr.Value;
-      }
-
-      return new Value(lstr.stringValue() + rstr.stringValue());
-    }
-
-    let lnum = ToNumber(lprim);
-
-    if (lnum instanceof AbruptCompletion) {
-      return lnum;
-    }
-
-    if (lnum instanceof Completion) {
-      lnum = lnum.Value;
-    }
-
-    let rnum = ToNumber(rprim);
-
-    if (rnum instanceof AbruptCompletion) {
-      return rnum;
-    }
-
-    if (rnum instanceof Completion) {
-      rnum = rnum.Value;
-    }
-
-    return new Value(lnum.numberValue() + rnum.numberValue());
-  } // 12.8.3.1 #sec-addition-operator-plus-runtime-semantics-evaluation
-  //  AdditiveExpression : AdditiveExpression + MultiplicativeExpression
-
-  function* Evaluate_AdditiveExpression_Plus(AdditiveExpression, MultiplicativeExpression) {
-    const lref = yield* Evaluate(AdditiveExpression);
-    let lval = GetValue(lref);
-
-    if (lval instanceof AbruptCompletion) {
-      return lval;
-    }
-
-    if (lval instanceof Completion) {
-      lval = lval.Value;
-    }
-
-    const rref = yield* Evaluate(MultiplicativeExpression);
-    let rval = GetValue(rref);
-
-    if (rval instanceof AbruptCompletion) {
-      return rval;
-    }
-
-    if (rval instanceof Completion) {
-      rval = rval.Value;
-    }
-
-    return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
-  }
-
-  function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
-    let lnum = ToNumber(lval);
-
-    if (lnum instanceof AbruptCompletion) {
-      return lnum;
-    }
-
-    if (lnum instanceof Completion) {
-      lnum = lnum.Value;
-    }
-
-    let rnum = ToNumber(rval);
-
-    if (rnum instanceof AbruptCompletion) {
-      return rnum;
-    }
-
-    if (rnum instanceof Completion) {
-      rnum = rnum.Value;
-    }
-
-    return new Value(lnum.numberValue() - rnum.numberValue());
-  } // 12.8.4.1 #sec-subtraction-operator-minus-runtime-semantics-evaluation
-
-  function* Evaluate_AdditiveExpression_Minus(AdditiveExpression, MultiplicativeExpression) {
-    const lref = yield* Evaluate(AdditiveExpression);
-    let lval = GetValue(lref);
-
-    if (lval instanceof AbruptCompletion) {
-      return lval;
-    }
-
-    if (lval instanceof Completion) {
-      lval = lval.Value;
-    }
-
-    const rref = yield* Evaluate(MultiplicativeExpression);
-    let rval = GetValue(rref);
-
-    if (rval instanceof AbruptCompletion) {
-      return rval;
-    }
-
-    if (rval instanceof Completion) {
-      rval = rval.Value;
-    }
-
-    return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
-  }
-
-  function* Evaluate_AdditiveExpression(AdditiveExpression) {
-    switch (true) {
-      case isAdditiveExpressionWithPlus(AdditiveExpression):
-        return yield* Evaluate_AdditiveExpression_Plus(AdditiveExpression.left, AdditiveExpression.right);
-
-      case isAdditiveExpressionWithMinus(AdditiveExpression):
-        return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression.left, AdditiveExpression.right);
-
-      default:
-        throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
-    }
-  }
-
-  //   TemplateSpans :
-  //     TemplateTail
-  //     TemplateMiddleList TemplateTail
-  //
-  //   TemplateMiddleList :
-  //     TemplateMiddle Expression
-  //     TemplateMiddleList TemplateMiddle Expression
-
-  function* SubstitutionEvaluation_TemplateSpans(TemplateSpans) {
-    const preceding = [];
-
-    for (let i = 1; i < TemplateSpans.length; i += 2) {
-      const Expression = TemplateSpans[i];
-      const nextRef = yield* Evaluate(Expression);
-      let next = GetValue(nextRef);
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      preceding.push(next);
-    }
-
-    return preceding;
-  } // 12.2.9.3 #sec-template-literals-runtime-semantics-argumentlistevaluation
-  //   TemplateLiteral : NoSubstitutionTemplate
-  //
-  // https://github.com/tc39/ecma262/pull/1402
-  //   TemplateLiteral : SubstitutionTemplate
-
-
-  function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
-    switch (true) {
-      case isNoSubstitutionTemplate(TemplateLiteral):
-        {
-          const templateLiteral = TemplateLiteral;
-          const siteObj = GetTemplateObject(templateLiteral);
-          return [siteObj];
-        }
-
-      case isSubstitutionTemplate(TemplateLiteral):
-        {
-          const templateLiteral = TemplateLiteral;
-          const siteObj = GetTemplateObject(templateLiteral);
-          const [,
-          /* TemplateHead */
-          first
-          /* Expression */
-          , ...rest
-          /* TemplateSpans */
-          ] = unrollTemplateLiteral(templateLiteral);
-          const firstSubRef = yield* Evaluate(first);
-          let firstSub = GetValue(firstSubRef);
-
-          if (firstSub instanceof AbruptCompletion) {
-            return firstSub;
-          }
-
-          if (firstSub instanceof Completion) {
-            firstSub = firstSub.Value;
-          }
-
-          let restSub = yield* SubstitutionEvaluation_TemplateSpans(rest);
-
-          if (restSub instanceof AbruptCompletion) {
-            return restSub;
-          }
-
-          if (restSub instanceof Completion) {
-            restSub = restSub.Value;
-          }
-
-          Assert(Array.isArray(restSub), "Array.isArray(restSub)");
-          return [siteObj, firstSub, ...restSub];
-        }
-
-      default:
-        throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
-    }
-  } // 12.3.6.1 #sec-argument-lists-runtime-semantics-argumentlistevaluation
-  //   Arguments : `(` `)`
-  //   ArgumentList :
-  //     AssignmentExpression
-  //     `...` AssignmentExpression
-  //     ArgumentList `,` AssignmentExpression
-  //     ArgumentList `,` `...` AssignmentExpression
-  //
-  // (implicit)
-  //   Arguments :
-  //     `(` ArgumentList `)`
-  //     `(` ArgumentList `,` `)`
-
-  function* ArgumentListEvaluation_Arguments(Arguments) {
-    const precedingArgs = [];
-
-    for (const AssignmentExpressionOrSpreadElement of Arguments) {
-      if (AssignmentExpressionOrSpreadElement.type === 'SpreadElement') {
-        const AssignmentExpression = AssignmentExpressionOrSpreadElement.argument;
-        const spreadRef = yield* Evaluate(AssignmentExpression);
-        let spreadObj = GetValue(spreadRef);
-
-        if (spreadObj instanceof AbruptCompletion) {
-          return spreadObj;
-        }
-
-        if (spreadObj instanceof Completion) {
-          spreadObj = spreadObj.Value;
-        }
-
-        let iteratorRecord = GetIterator(spreadObj);
-
-        if (iteratorRecord instanceof AbruptCompletion) {
-          return iteratorRecord;
-        }
-
-        if (iteratorRecord instanceof Completion) {
-          iteratorRecord = iteratorRecord.Value;
-        }
-
-        while (true) {
-          let next = IteratorStep(iteratorRecord);
-
-          if (next instanceof AbruptCompletion) {
-            return next;
-          }
-
-          if (next instanceof Completion) {
-            next = next.Value;
-          }
-
-          if (next === Value.false) {
-            break;
-          }
-
-          let nextArg = IteratorValue(next);
-
-          if (nextArg instanceof AbruptCompletion) {
-            return nextArg;
-          }
-
-          if (nextArg instanceof Completion) {
-            nextArg = nextArg.Value;
-          }
-
-          precedingArgs.push(nextArg);
-        }
-      } else {
-        const AssignmentExpression = AssignmentExpressionOrSpreadElement;
-        Assert(isExpression(AssignmentExpression), "isExpression(AssignmentExpression)");
-        const ref = yield* Evaluate(AssignmentExpression);
-        let arg = GetValue(ref);
-
-        if (arg instanceof AbruptCompletion) {
-          return arg;
-        }
-
-        if (arg instanceof Completion) {
-          arg = arg.Value;
-        }
-
-        precedingArgs.push(arg);
-      }
-    }
-
-    return precedingArgs;
-  }
-  function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
-    switch (true) {
-      case isTemplateLiteral(ArgumentsOrTemplateLiteral):
-        return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
-
-      case Array.isArray(ArgumentsOrTemplateLiteral):
-        return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
-
-      default:
-        throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
-    }
-  }
-
-  function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
-    const spreadRef = yield* Evaluate(SpreadElement.argument);
-    let spreadObj = GetValue(spreadRef);
-
-    if (spreadObj instanceof AbruptCompletion) {
-      return spreadObj;
-    }
-
-    if (spreadObj instanceof Completion) {
-      spreadObj = spreadObj.Value;
-    }
-
-    let iteratorRecord = GetIterator(spreadObj);
-
-    if (iteratorRecord instanceof AbruptCompletion) {
-      return iteratorRecord;
-    }
-
-    if (iteratorRecord instanceof Completion) {
-      iteratorRecord = iteratorRecord.Value;
-    }
-
-    while (true) {
-      let next = IteratorStep(iteratorRecord);
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (next === Value.false) {
-        return nextIndex;
-      }
-
-      let nextValue = IteratorValue(next);
-
-      if (nextValue instanceof AbruptCompletion) {
-        return nextValue;
-      }
-
-      if (nextValue instanceof Completion) {
-        nextValue = nextValue.Value;
-      }
-
-      let idxNum = ToUint32(new Value(nextIndex));
-      Assert(!(idxNum instanceof AbruptCompletion), "");
-
-      if (idxNum instanceof Completion) {
-        idxNum = idxNum.Value;
-      }
-
-      let idxStr = ToString(idxNum);
-      Assert(!(idxStr instanceof AbruptCompletion), "");
-
-      if (idxStr instanceof Completion) {
-        idxStr = idxStr.Value;
-      }
-
-      let status = CreateDataProperty(array, idxStr, nextValue);
-      Assert(!(status instanceof AbruptCompletion), "");
-
-      if (status instanceof Completion) {
-        status = status.Value;
-      }
-
-      Assert(status === Value.true, "status === Value.true");
-      nextIndex += 1;
-    }
-  }
-
-  function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
-    const initResult = yield* Evaluate(AssignmentExpression);
-    let initValue = GetValue(initResult);
-
-    if (initValue instanceof AbruptCompletion) {
-      return initValue;
-    }
-
-    if (initValue instanceof Completion) {
-      initValue = initValue.Value;
-    }
-
-    let idxNum = ToUint32(new Value(nextIndex));
-    Assert(!(idxNum instanceof AbruptCompletion), "");
-
-    if (idxNum instanceof Completion) {
-      idxNum = idxNum.Value;
-    }
-
-    let idxStr = ToString(idxNum);
-    Assert(!(idxStr instanceof AbruptCompletion), "");
-
-    if (idxStr instanceof Completion) {
-      idxStr = idxStr.Value;
-    }
-
-    let created = CreateDataProperty(array, idxStr, initValue);
-    Assert(!(created instanceof AbruptCompletion), "");
-
-    if (created instanceof Completion) {
-      created = created.Value;
-    }
-
-    Assert(created === Value.true, "created === Value.true");
-    return nextIndex + 1;
-  }
-
-  function* ArrayAccumulation(ElementList, array, nextIndex) {
-    let postIndex = nextIndex;
-
-    for (const element of ElementList) {
-      switch (true) {
-        case !element:
-          // Elision
-          postIndex += 1;
-          break;
-
-        case isExpression(element):
-          postIndex = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
-
-          if (postIndex instanceof AbruptCompletion) {
-            return postIndex;
-          }
-
-          if (postIndex instanceof Completion) {
-            postIndex = postIndex.Value;
-          }
-
-          break;
-
-        case isSpreadElement(element):
-          postIndex = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
-
-          if (postIndex instanceof AbruptCompletion) {
-            return postIndex;
-          }
-
-          if (postIndex instanceof Completion) {
-            postIndex = postIndex.Value;
-          }
-
-          break;
-
-        default:
-          throw new OutOfRange('ArrayAccumulation', element);
-      }
-    }
-
-    return postIndex;
-  } // 12.2.5.3 #sec-array-initializer-runtime-semantics-evaluation
-  // ArrayLiteral :
-  //   `[` Elision `]`
-  //   `[` ElementList `]`
-  //   `[` ElementList `,` Elision `]`
-
-
-  function* Evaluate_ArrayLiteral(ArrayLiteral) {
-    let array = ArrayCreate(new Value(0));
-    Assert(!(array instanceof AbruptCompletion), "");
-
-    if (array instanceof Completion) {
-      array = array.Value;
-    }
-
-    let len = yield* ArrayAccumulation(ArrayLiteral.elements, array, 0);
-
-    if (len instanceof AbruptCompletion) {
-      return len;
-    }
-
-    if (len instanceof Completion) {
-      len = len.Value;
-    }
-
-    Assert(!(Set$1(array, new Value('length'), ToUint32(new Value(len)), Value.false) instanceof AbruptCompletion), ""); // NOTE: The above Set cannot fail because of the nature of the object returned by ArrayCreate.
-
-    return array;
-  }
-
-  //   ArrowFunction : ArrowParameters `=>` ConciseBody
-
-  function Evaluate_ArrowFunction(ArrowFunction) {
-    const {
-      params: ArrowParameters
-    } = ArrowFunction;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const parameters = ArrowParameters;
-    const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope);
-    closure.SourceText = sourceTextMatchedBy(ArrowFunction);
-    return closure;
-  } // https://github.com/tc39/ecma262/pull/1406
-  //   ExpressionBody : AssignmentExpression
-
-  function* Evaluate_ExpressionBody(ExpressionBody) {
-    const AssignmentExpression = ExpressionBody;
-    const exprRef = yield* Evaluate(AssignmentExpression);
-    let exprValue = GetValue(exprRef);
-
-    if (exprValue instanceof AbruptCompletion) {
-      return exprValue;
-    }
-
-    if (exprValue instanceof Completion) {
-      exprValue = exprValue.Value;
-    }
-
-    return new ReturnCompletion(exprValue);
-  }
-
   //   AssignmentExpression :
   //     LeftHandSideExpression `=` AssignmentExpression
   //     LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -7046,6 +5956,416 @@
       }
     }
     return yield* EvaluateCall(func, ref, args);
+  }
+
+  const HasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
+
+  function deepFreeze(o) {
+    Object.freeze(o);
+    Object.getOwnPropertyNames(o).forEach(prop => {
+      if (HasOwnProperty(o, prop) && o[prop] !== null && (typeof o[prop] === 'object' || typeof o[prop] === 'function') && !Object.isFrozen(o[prop])) {
+        deepFreeze(o[prop]);
+      }
+    });
+    return o;
+  } // Copied from acorn/src/scopeflags.js.
+
+
+  const SCOPE_FUNCTION = 2;
+  const SCOPE_ASYNC = 4;
+  const SCOPE_GENERATOR = 8;
+
+  function functionFlags(async, generator) {
+    // eslint-disable-next-line no-bitwise
+    return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
+  }
+
+  const optionalChainToken = {
+    label: '?.'
+  };
+  const nullishCoalescingToken = {
+    label: '??',
+    binop: 0
+  };
+  const Parser = acorn.Parser.extend(P => class Parse262 extends P {
+    constructor(options = {}, source) {
+      super({ ...options,
+        ecmaVersion: 2020,
+        // adds needed ParenthesizedExpression production
+        preserveParens: true,
+        locations: true
+      }, source);
+
+      if (options.strict === true) {
+        this.strict = true;
+      }
+
+      this.containsTopLevelAwait = false;
+    }
+
+    parse() {
+      const body = super.parse();
+      body.containsTopLevelAwait = this.containsTopLevelAwait;
+      deepFreeze(body);
+      return body;
+    }
+
+    finishNode(node, type) {
+      node.strict = this.strict;
+      const ret = super.finishNode(node, type);
+
+      node.sourceText = () => this.input.slice(node.start, node.end);
+
+      if (ret.type === 'MethodDefinition' && ret.static) {
+        ret.start += 7; // don't include `static` in the source text
+      }
+
+      return ret;
+    }
+
+    getTokenFromCode(code) {
+      if (code === 63) {
+        this.pos += 1;
+
+        if (surroundingAgent.feature('OptionalChaining')) {
+          const next = this.input.charCodeAt(this.pos);
+
+          if (next === 46) {
+            const nextNext = this.input.charCodeAt(this.pos + 1);
+
+            if (nextNext < 48 || nextNext > 57) {
+              this.pos += 1;
+              return this.finishToken(optionalChainToken);
+            }
+          }
+        }
+
+        if (surroundingAgent.feature('NullishCoalescing')) {
+          const next = this.input.charCodeAt(this.pos);
+
+          if (next === 63) {
+            this.pos += 1;
+            return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
+          }
+        }
+
+        return this.finishToken(acorn.tokTypes.question);
+      }
+
+      return super.getTokenFromCode(code);
+    }
+
+    parseSubscripts(base, startPos, startLoc, noCalls) {
+      if (noCalls) {
+        return super.parseSubscripts(base, startPos, startLoc, noCalls);
+      }
+
+      const maybeAsyncArrow = base.type === 'Identifier' && base.name === 'async' && this.lastTokEnd === base.end && !this.canInsertSemicolon() && this.input.slice(base.start, base.end) === 'async';
+      /**
+       * Optional chains are hard okay?
+       *
+       *  a.b?.c
+       *  @=>
+       *  OptionalExpression a.b?.c
+       *      MemberExpression a.b
+       *      OptionalChain ?.c
+       *
+       *  a.b?.c.d.e
+       *  @=>
+       *  OptionalExpressoin a.b?.c.d.e
+       *      MemberExpression a.b
+       *      OptionalChain ?.c.d.e
+       *          OptionalChain ?.c.d
+       *              OptionalChain ?.c
+       *              Identifier .d
+       *          Identifier .e
+       *
+       *  a.b?.c.d
+       *  @=>
+       *  OptionalExpression a.b?.c.d
+       *      MemberExpression a.b
+       *      OptionalChain ?.c.d
+       *          OptionalChain ?.c
+       *          Identifier .d
+       *
+       *  a.b?.c.d?.e.f
+       *  @=>
+       *  OptionalExpression a.b?.c.d?.e.f
+       *      OptionalExpression a.b?.c.d
+       *          MemberExpression a.b
+       *          OptionalChain ?.c.d
+       *              OptionalChain ?.c
+       *              Identifier .d
+       *      OptionalChain ?.e.f
+       *          OptionalChain ?.e
+       *          Identifier .f
+       */
+
+      while (true) {
+        if (this.eat(optionalChainToken)) {
+          const node = this.startNodeAt(startPos, startLoc);
+          node.object = base;
+          node.chain = this.parseOptionalChain(startPos, startLoc);
+          base = this.finishNode(node, 'OptionalExpression');
+        } else {
+          const element = this.parseSubscript(base, startPos, startLoc, noCalls, maybeAsyncArrow);
+
+          if (element === base) {
+            break;
+          }
+
+          base = element;
+        }
+      }
+
+      return base;
+    }
+
+    parseOptionalChain(startPos, startLoc) {
+      let base = this.startNodeAt(startPos, startLoc);
+
+      if (this.eat(acorn.tokTypes.bracketL)) {
+        base.property = this.parseExpression();
+        this.expect(acorn.tokTypes.bracketR);
+        base.computed = true;
+        base = this.finishNode(base, 'OptionalChain');
+      } else if (this.eat(acorn.tokTypes.parenL)) {
+        base.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
+      } else {
+        base.property = this.parseIdent(true);
+        base.computed = false;
+      }
+
+      base.base = null;
+      base = this.finishNode(base, 'OptionalChain');
+
+      while (true) {
+        const computed = this.eat(acorn.tokTypes.bracketL);
+
+        if (computed || this.eat(acorn.tokTypes.dot)) {
+          const node = this.startNodeAt(startPos, startLoc);
+          node.base = base;
+          node.property = computed ? this.parseExpression() : this.parseIdent(true);
+
+          if (computed) {
+            this.expect(acorn.tokTypes.bracketR);
+          }
+
+          node.computed = computed;
+          base = this.finishNode(node, 'OptionalChain');
+        } else if (this.eat(acorn.tokTypes.parenL)) {
+          const node = this.startNodeAt(startPos, startLoc);
+          node.base = base;
+          node.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
+          base = this.finishNode(node, 'OptionalChain');
+        } else if (this.eat(acorn.tokTypes.backQuote)) {
+          this.raise(this.start, 'Cannot tag an optional chain');
+        } else {
+          break;
+        }
+      }
+
+      return base;
+    }
+
+    buildBinary(startPos, startLoc, left, right, op, logical) {
+      if (op === '??') {
+        if (left.type === 'LogicalExpression') {
+          this.raise(left.start, 'Cannot mix &&, ||, and ??');
+        }
+
+        if (right.type === 'LogicalExpression') {
+          this.raise(right.start, 'Cannot mix &&, ||, and ??');
+        }
+      } else if (logical) {
+        if (left.operator === '??') {
+          this.raise(left.start, 'Cannot mix &&, ||, and ??');
+        }
+
+        if (right.operator === '??') {
+          this.raise(right.start, 'Cannot mix &&, ||, and ??');
+        }
+      }
+
+      return super.buildBinary(startPos, startLoc, left, right, op, logical);
+    }
+
+    parseAwait(...args) {
+      const node = super.parseAwait(...args);
+
+      if (!this.inFunction) {
+        this.containsTopLevelAwait = true;
+      }
+
+      return node;
+    } // Adapted from several different places in Acorn.
+
+
+    static parseFunctionBody(sourceText, async, generator) {
+      const parser = new Parser({
+        sourceType: 'script'
+      }, sourceText); // Parser.prototype.parse()
+
+      const node = parser.startNode();
+      parser.nextToken(); // Parser.prototype.parseFunction()
+
+      parser.initFunction(node);
+      parser.enterScope(functionFlags(async, generator)); // Parser.prototype.parseBlock()
+
+      const body = [];
+
+      while (!parser.eat(acorn.tokTypes.eof)) {
+        const stmt = parser.parseStatement(null);
+        body.push(stmt);
+      } // Parser.prototype.parseFunctionBody()
+
+
+      parser.adaptDirectivePrologue(body);
+      deepFreeze(body);
+      return body;
+    }
+
+  });
+  function ParseAsFunctionBody(sourceText) {
+    return Parser.parseFunctionBody(sourceText, false, false);
+  }
+  function ParseAsGeneratorBody(sourceText) {
+    return Parser.parseFunctionBody(sourceText, false, true);
+  }
+  function ParseAsAsyncFunctionBody(sourceText) {
+    return Parser.parseFunctionBody(sourceText, true, false);
+  }
+  function ParseAsAsyncGeneratorBody(sourceText) {
+    return Parser.parseFunctionBody(sourceText, true, true);
+  } // Adapted from several different places in Acorn.
+  // `strict` refers to ContainsUseStrict of the corresponding function body.
+
+  function ParseAsFormalParameters(sourceText, strict, enableAwait, enableYield) {
+    // Adapted from different places in Acorn.
+    const parser = new Parser({
+      sourceType: 'script'
+    }, sourceText);
+    parser.strict = strict; // Parser.prototype.parse()
+
+    const node = parser.startNode();
+    parser.nextToken(); // Parser.prototype.parseFunction()
+
+    parser.initFunction(node);
+    parser.enterScope(functionFlags(enableAwait, enableYield)); // Parser.prototype.parseFunctionParams()
+
+    const params = parser.parseBindingList(acorn.tokTypes.eof, false, true);
+    parser.checkYieldAwaitInDefaultParams(); // Parser.prototype.parseFunctionBody()
+
+    const simple = parser.isSimpleParamList(params);
+
+    if (strict && !simple) {
+      parser.raiseRecoverable(node.start, 'Illegal \'use strict\' directive in function with non-simple parameter list');
+    }
+
+    parser.checkParams({
+      params
+    }, !strict && simple);
+    deepFreeze(params);
+    return params;
+  }
+  const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.expression.body.body[0];
+  const forwardingConstructorNode = Parser.parse('(class extends X { constructor(...args) { super(...args); } })').body[0].expression.expression.body.body[0];
+
+  function forwardError(fn) {
+    try {
+      return fn();
+    } catch (e) {
+      if (e.name === 'SyntaxError') {
+        return [surroundingAgent.Throw('SyntaxError', e.message).Value];
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  function ParseScript(sourceText, realm, hostDefined = {}, strict) {
+    const body = forwardError(() => Parser.parse(sourceText, {
+      sourceType: 'script',
+      strict
+    }));
+
+    if (Array.isArray(body)) {
+      return body;
+    }
+
+    return {
+      Realm: realm,
+      Environment: undefined,
+      ECMAScriptCode: body,
+      HostDefined: hostDefined
+    };
+  }
+  function ParseModule(sourceText, realm, hostDefined = {}) {
+    // Assert: sourceText is an ECMAScript source text (see clause 10).
+    const body = forwardError(() => Parser.parse(sourceText, {
+      sourceType: 'module',
+      allowAwaitOutsideFunction: surroundingAgent.feature('TopLevelAwait')
+    }));
+
+    if (Array.isArray(body)) {
+      return body;
+    }
+
+    const requestedModules = ModuleRequests_ModuleItemList(body.body);
+    const importEntries = ImportEntries_ModuleItemList(body.body);
+    const importedBoundNames = ImportedLocalNames(importEntries);
+    const indirectExportEntries = [];
+    const localExportEntries = [];
+    const starExportEntries = [];
+    const exportEntries = ExportEntries_ModuleItemList(body.body);
+
+    for (const ee of exportEntries) {
+      if (ee.ModuleRequest === Value.null) {
+        if (!importedBoundNames.includes(ee.LocalName)) {
+          localExportEntries.push(ee);
+        } else {
+          const ie = importEntries.find(e => e.LocalName === ee.LocalName);
+
+          if (ie.ImportName === new Value('*')) {
+            // Assert: This is a re-export of an imported module namespace object.
+            localExportEntries.push(ee);
+          } else {
+            indirectExportEntries.push(new ExportEntryRecord({
+              ModuleRequest: ie.ModuleRequest,
+              ImportName: ie.ImportName,
+              LocalName: Value.null,
+              ExportName: ee.ExportName
+            }));
+          }
+        }
+      } else if (ee.ImportName === new Value('*')) {
+        starExportEntries.push(ee);
+      } else {
+        indirectExportEntries.push(ee);
+      }
+    }
+
+    return new SourceTextModuleRecord({
+      Realm: realm,
+      Environment: Value.undefined,
+      Namespace: Value.undefined,
+      Async: body.containsTopLevelAwait ? Value.true : Value.false,
+      AsyncEvaluating: Value.false,
+      TopLevelCapability: Value.undefined,
+      AsyncParentModules: Value.undefined,
+      PendingAsyncDependencies: Value.undefined,
+      Status: 'unlinked',
+      EvaluationError: Value.undefined,
+      HostDefined: hostDefined,
+      ECMAScriptCode: body,
+      RequestedModules: requestedModules,
+      ImportEntries: importEntries,
+      LocalExportEntries: localExportEntries,
+      IndirectExportEntries: indirectExportEntries,
+      StarExportEntries: starExportEntries,
+      DFSIndex: Value.undefined,
+      DFSAncestorIndex: Value.undefined
+    });
   }
 
   //   ClassTail : ClassHeritage `{` ClassBody `}`
@@ -14179,2412 +13499,688 @@
     return yield* Evaluate_YieldExpression_WithoutStar(YieldExpression);
   }
 
-  // 25.7 #sec-async-function-objects
-  // 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
+  //   StatementList : StatementList StatementListItem
+  //
+  // (implicit)
+  //   StatementList : StatementListItem
 
-  function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
-    const runningContext = surroundingAgent.runningExecutionContext;
-    const asyncContext = runningContext.copy();
+  function* Evaluate_StatementList(StatementList) {
+    if (StatementList.length === 0) {
+      return new NormalCompletion(undefined);
+    }
 
-    asyncContext.codeEvaluationState = function* resumer() {
-      const evaluator = isExpressionBody(asyncFunctionBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
-      const result = EnsureCompletion((yield* evaluator(asyncFunctionBody))); // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+    let sl = yield* Evaluate(StatementList[0]);
 
-      surroundingAgent.executionContextStack.pop(asyncContext);
+    if (StatementList.length === 1) {
+      return sl;
+    }
 
-      if (result.Type === 'normal') {
-        Assert(!(Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]) instanceof AbruptCompletion), "");
-      } else if (result.Type === 'return') {
-        Assert(!(Call(promiseCapability.Resolve, Value.undefined, [result.Value]) instanceof AbruptCompletion), "");
-      } else {
-        Assert(result.Type === 'throw', "result.Type === 'throw'");
-        Assert(!(Call(promiseCapability.Reject, Value.undefined, [result.Value]) instanceof AbruptCompletion), "");
+    for (const StatementListItem of StatementList.slice(1)) {
+      if (sl instanceof AbruptCompletion) {
+        return sl;
       }
 
-      return Value.undefined;
-    }();
-
-    surroundingAgent.executionContextStack.push(asyncContext);
-    const result = EnsureCompletion(resume(asyncContext, undefined));
-    Assert(surroundingAgent.runningExecutionContext === runningContext, "surroundingAgent.runningExecutionContext === runningContext");
-    Assert(result.Type === 'normal' && result.Value === Value.undefined, "result.Type === 'normal' && result.Value === Value.undefined");
-    return Value.undefined;
-  }
-
-  // 25.5 #sec-asyncgenerator-objects
-  // 25.5.3.1 #sec-asyncgeneratorrequest-records
-
-  class AsyncGeneratorRequestRecord {
-    constructor(completion, promiseCapability) {
-      this.Completion = completion;
-      this.Capability = promiseCapability;
-    }
-
-  } // 25.5.3.2 #sec-asyncgeneratorstart
-
-
-  function AsyncGeneratorStart(generator, generatorBody) {
-    // Assert: generator is an AsyncGenerator instance.
-    Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
-    const genContext = surroundingAgent.runningExecutionContext;
-    genContext.Generator = generator;
-
-    genContext.codeEvaluationState = function* resumer() {
-      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody))); // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
-
-      surroundingAgent.executionContextStack.pop(genContext);
-      generator.AsyncGeneratorState = 'completed';
-      let resultValue;
-
-      if (result instanceof NormalCompletion) {
-        resultValue = Value.undefined;
-      } else {
-        resultValue = result.Value;
-
-        if (result.Type !== 'return') {
-          let _val = AsyncGeneratorReject(generator, resultValue);
-
-          Assert(!(_val instanceof AbruptCompletion), "");
-
-          if (_val instanceof Completion) {
-            _val = _val.Value;
-          }
-
-          return _val;
-        }
+      if (sl instanceof Completion) {
+        sl = sl.Value;
       }
 
-      let _val2 = AsyncGeneratorResolve(generator, resultValue, Value.true);
+      let s = yield* Evaluate(StatementListItem); // We don't always return a Completion value, but here we actually need it
+      // to be a Completion.
 
-      Assert(!(_val2 instanceof AbruptCompletion), "");
+      s = EnsureCompletion(s);
+      sl = UpdateEmpty(s, sl);
+    }
 
-      if (_val2 instanceof Completion) {
-        _val2 = _val2.Value;
+    return sl;
+  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
+  //   ModuleItemList :
+  //     ModuleItem
+  //     ModuleItemList ModuleItem
+
+  function* Evaluate_ModuleItemList(ModuleItemList) {
+    if (ModuleItemList.length === 0) {
+      return new NormalCompletion(undefined);
+    }
+
+    let sl = yield* Evaluate(ModuleItemList[0]);
+
+    if (ModuleItemList.length === 1) {
+      return sl;
+    }
+
+    for (const ModuleItemListItem of ModuleItemList.slice(1)) {
+      if (sl instanceof AbruptCompletion) {
+        return sl;
       }
 
-      return _val2;
-    }();
-
-    generator.AsyncGeneratorContext = genContext;
-    generator.AsyncGeneratorState = 'suspendedStart';
-    generator.AsyncGeneratorQueue = [];
-    return Value.undefined;
-  } // 25.5.3.3 #sec-asyncgeneratorresolve
-
-  function AsyncGeneratorResolve(generator, value, done) {
-    // Assert: generator is an AsyncGenerator instance.
-    const queue = generator.AsyncGeneratorQueue;
-    Assert(queue.length > 0, "queue.length > 0");
-    const next = queue.shift();
-    const promiseCapability = next.Capability;
-    let iteratorResult = CreateIterResultObject(value, done);
-    Assert(!(iteratorResult instanceof AbruptCompletion), "");
-
-    if (iteratorResult instanceof Completion) {
-      iteratorResult = iteratorResult.Value;
-    }
-
-    Assert(!(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]) instanceof AbruptCompletion), "");
-    Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
-    return Value.undefined;
-  } // 25.5.3.4 #sec-asyncgeneratorreject
-
-
-  function AsyncGeneratorReject(generator, exception) {
-    // Assert: generator is an AsyncGenerator instance.
-    const queue = generator.AsyncGeneratorQueue;
-    Assert(queue.length > 0, "queue.length > 0");
-    const next = queue.shift();
-    const promiseCapability = next.Capability;
-    Assert(!(Call(promiseCapability.Reject, Value.undefined, [exception]) instanceof AbruptCompletion), "");
-    Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
-    return Value.undefined;
-  } // 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
-
-
-  function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value = Value.undefined]) {
-    const F = surroundingAgent.activeFunctionObject;
-    F.Generator.AsyncGeneratorState = 'completed';
-
-    let _val3 = AsyncGeneratorResolve(F.Generator, value, Value.true);
-
-    Assert(!(_val3 instanceof AbruptCompletion), "");
-
-    if (_val3 instanceof Completion) {
-      _val3 = _val3.Value;
-    }
-
-    return _val3;
-  } // 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
-
-
-  function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason = Value.undefined]) {
-    const F = surroundingAgent.activeFunctionObject;
-    F.Generator.AsyncGeneratorState = 'completed';
-
-    let _val4 = AsyncGeneratorReject(F.Generator, reason);
-
-    Assert(!(_val4 instanceof AbruptCompletion), "");
-
-    if (_val4 instanceof Completion) {
-      _val4 = _val4.Value;
-    }
-
-    return _val4;
-  } // 25.5.3.5 #sec-asyncgeneratorresumenext
-
-
-  function AsyncGeneratorResumeNext(generator) {
-    // Assert: generator is an AsyncGenerator instance.
-    let state = generator.AsyncGeneratorState;
-    Assert(state !== 'executing', "state !== 'executing'");
-
-    if (state === 'awaiting-return') {
-      return Value.undefined;
-    }
-
-    const queue = generator.AsyncGeneratorQueue;
-
-    if (queue.length === 0) {
-      return Value.undefined;
-    }
-
-    const next = queue[0];
-    Assert(next instanceof AsyncGeneratorRequestRecord, "next instanceof AsyncGeneratorRequestRecord");
-    const completion = next.Completion;
-
-    if (completion instanceof AbruptCompletion) {
-      if (state === 'suspendedStart') {
-        generator.AsyncGeneratorState = 'completed';
-        state = 'completed';
+      if (sl instanceof Completion) {
+        sl = sl.Value;
       }
 
-      if (state === 'completed') {
-        if (completion.Type === 'return') {
-          generator.AsyncGeneratorState = 'awaiting-return';
-          let promise = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+      let s = yield* Evaluate(ModuleItemListItem); // We don't always return a Completion value, but here we actually need it
+      // to be a Completion.
 
-          if (promise instanceof AbruptCompletion) {
-            return promise;
-          }
-
-          if (promise instanceof Completion) {
-            promise = promise.Value;
-          }
-
-          const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
-          let onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
-          Assert(!(onFulfilled instanceof AbruptCompletion), "");
-
-          if (onFulfilled instanceof Completion) {
-            onFulfilled = onFulfilled.Value;
-          }
-
-          onFulfilled.Generator = generator;
-          const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
-          let onRejected = CreateBuiltinFunction(stepsRejected, ['Generator']);
-          Assert(!(onRejected instanceof AbruptCompletion), "");
-
-          if (onRejected instanceof Completion) {
-            onRejected = onRejected.Value;
-          }
-
-          onRejected.Generator = generator;
-          Assert(!(PerformPromiseThen(promise, onFulfilled, onRejected) instanceof AbruptCompletion), "");
-          return Value.undefined;
-        } else {
-          Assert(completion.Type === 'throw', "completion.Type === 'throw'");
-          Assert(!(AsyncGeneratorReject(generator, completion.Value) instanceof AbruptCompletion), "");
-          return Value.undefined;
-        }
-      }
-    } else if (state === 'completed') {
-      let _val5 = AsyncGeneratorResolve(generator, Value.undefined, Value.true);
-
-      Assert(!(_val5 instanceof AbruptCompletion), "");
-
-      if (_val5 instanceof Completion) {
-        _val5 = _val5.Value;
-      }
-
-      return _val5;
+      s = EnsureCompletion(s);
+      sl = UpdateEmpty(s, sl);
     }
 
-    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
-    const genContext = generator.AsyncGeneratorContext;
-    const callerContext = surroundingAgent.runningExecutionContext; // Suspend callerContext
-
-    generator.AsyncGeneratorState = 'executing';
-    surroundingAgent.executionContextStack.push(genContext);
-    const result = resume(genContext, completion);
-    Assert(!(result instanceof AbruptCompletion), "!(result instanceof AbruptCompletion)");
-    Assert(surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext");
-    return Value.undefined;
-  } // 25.5.3.6 #sec-asyncgeneratorenqueue
-
-
-  function AsyncGeneratorEnqueue(generator, completion) {
-    Assert(completion instanceof Completion, "completion instanceof Completion");
-    let promiseCapability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-    Assert(!(promiseCapability instanceof AbruptCompletion), "");
-
-    if (promiseCapability instanceof Completion) {
-      promiseCapability = promiseCapability.Value;
-    }
-
-    if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
-      const badGeneratorError = surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'AsyncGenerator', generator)).Value;
-      Assert(!(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]) instanceof AbruptCompletion), "");
-      return promiseCapability.Promise;
-    }
-
-    const queue = generator.AsyncGeneratorQueue;
-    const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
-    queue.push(request);
-    const state = generator.AsyncGeneratorState;
-
-    if (state !== 'executing') {
-      Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
-    }
-
-    return promiseCapability.Promise;
-  } // 25.5.3.7 #sec-asyncgeneratoryield
-
-  function* AsyncGeneratorYield(value) {
-    const genContext = surroundingAgent.runningExecutionContext;
-    Assert(genContext.Generator !== Value.undefined, "genContext.Generator !== Value.undefined");
-    const generator = genContext.Generator;
-    Assert(GetGeneratorKind() === 'async', "GetGeneratorKind() === 'async'");
-    value = yield* Await(value);
-
-    if (value instanceof AbruptCompletion) {
-      return value;
-    }
-
-    if (value instanceof Completion) {
-      value = value.Value;
-    }
-
-    generator.AsyncGeneratorState = 'suspendedYield';
-    surroundingAgent.executionContextStack.pop(genContext);
-    const resumptionValue = EnsureCompletion((yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false)));
-
-    if (resumptionValue.Type !== 'return') {
-      return Completion(resumptionValue);
-    }
-
-    const awaited = EnsureCompletion((yield* Await(resumptionValue.Value)));
-
-    if (awaited.Type === 'Throw') {
-      return Completion(awaited);
-    }
-
-    Assert(awaited.Type === 'normal', "awaited.Type === 'normal'");
-    return new Completion('return', awaited.Value, undefined);
-  }
-
-  // 6 #sec-ecmascript-data-types-and-values
-  // 6.1.4 #leading-surrogate
-
-  function isLeadingSurrogate(cp) {
-    return cp >= 0xD800 && cp <= 0xDBFF;
-  } // 6.1.4 #trailing-surrogate
-
-  function isTrailingSurrogate(cp) {
-    return cp >= 0xDC00 && cp <= 0xDFFF;
-  } // 6.1.7 #integer-index
-
-  function isIntegerIndex(V) {
-    if (Type(V) !== 'String') {
-      return false;
-    }
-
-    let numeric = CanonicalNumericIndexString(V);
-    Assert(!(numeric instanceof AbruptCompletion), "");
-
-    if (numeric instanceof Completion) {
-      numeric = numeric.Value;
-    }
-
-    if (numeric === Value.undefined) {
-      return false;
-    }
-
-    if (Object.is(numeric.numberValue(), +0)) {
-      return true;
-    }
-
-    return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
-  } // 6.1.7 #array-index
-
-  function isArrayIndex(V) {
-    if (Type(V) !== 'String') {
-      return false;
-    }
-
-    let numeric = CanonicalNumericIndexString(V);
-    Assert(!(numeric instanceof AbruptCompletion), "");
-
-    if (numeric instanceof Completion) {
-      numeric = numeric.Value;
-    }
-
-    if (numeric === Value.undefined) {
-      return false;
-    }
-
-    if (Object.is(numeric.numberValue(), +0)) {
-      return true;
-    }
-
-    return numeric.numberValue() > 0 && numeric.numberValue() < 2 ** 32 - 1;
-  }
-
-  // 24.3 #sec-dataview-objects
-  // 24.3.1.1 #sec-getviewvalue
-
-  function GetViewValue(view, requestIndex, isLittleEndian, type) {
-    {
-      const hygienicTemp = RequireInternalSlot(view, 'DataView');
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
-
-    let _hygienicTemp = ToIndex(requestIndex);
-
-    if (_hygienicTemp instanceof AbruptCompletion) {
-      return _hygienicTemp;
-    }
-
-    if (_hygienicTemp instanceof Completion) {
-      _hygienicTemp = _hygienicTemp.Value;
-    }
-
-    const getIndex = _hygienicTemp.numberValue();
-
-    isLittleEndian = ToBoolean(isLittleEndian);
-    Assert(!(isLittleEndian instanceof AbruptCompletion), "");
-
-    if (isLittleEndian instanceof Completion) {
-      isLittleEndian = isLittleEndian.Value;
-    }
-
-    const buffer = view.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
-    }
-
-    const viewOffset = view.ByteOffset.numberValue();
-    const viewSize = view.ByteLength.numberValue();
-    const elementSize = numericTypeInfo.get(type).ElementSize;
-
-    if (getIndex + elementSize > viewSize) {
-      return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
-    }
-
-    const bufferIndex = new Value(getIndex + viewOffset);
-    return GetValueFromBuffer(buffer, bufferIndex, type, false, 'Unordered', isLittleEndian);
-  } // 24.3.1.2 #sec-setviewvalue
-
-  function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
-    {
-      const hygienicTemp = RequireInternalSlot(view, 'DataView');
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
-
-    let _hygienicTemp2 = ToIndex(requestIndex);
-
-    if (_hygienicTemp2 instanceof AbruptCompletion) {
-      return _hygienicTemp2;
-    }
-
-    if (_hygienicTemp2 instanceof Completion) {
-      _hygienicTemp2 = _hygienicTemp2.Value;
-    }
-
-    const getIndex = _hygienicTemp2.numberValue();
-
-    let numberValue = ToNumber(value);
-
-    if (numberValue instanceof AbruptCompletion) {
-      return numberValue;
-    }
-
-    if (numberValue instanceof Completion) {
-      numberValue = numberValue.Value;
-    }
-
-    isLittleEndian = ToBoolean(isLittleEndian);
-    Assert(!(isLittleEndian instanceof AbruptCompletion), "");
-
-    if (isLittleEndian instanceof Completion) {
-      isLittleEndian = isLittleEndian.Value;
-    }
-
-    const buffer = view.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
-    }
-
-    const viewOffset = view.ByteOffset.numberValue();
-    const viewSize = view.ByteLength.numberValue();
-    const elementSize = numericTypeInfo.get(type).ElementSize;
-
-    if (getIndex + elementSize > viewSize) {
-      return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
-    }
-
-    const bufferIndex = new Value(getIndex + viewOffset);
-    return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, 'Unordered', isLittleEndian);
-  }
-
-  const mod = (n, m) => {
-    const r = n % m;
-    return Math.floor(r >= 0 ? r : r + m);
-  }; // 20.3.1.2 #sec-day-number-and-time-within-day
-
-
-  function Day(t) {
-    return new Value(Math.floor(t.numberValue() / msPerDay));
-  }
-  const msPerDay = 86400000;
-  function TimeWithinDay(t) {
-    return new Value(mod(t.numberValue(), msPerDay));
-  } // 20.3.1.3 #sec-year-number
-
-  function DaysInYear(y) {
-    y = y.numberValue();
-
-    if (mod(y, 4) !== 0) {
-      return new Value(365);
-    }
-
-    if (mod(y, 4) === 0 && mod(y, 100) !== 0) {
-      return new Value(366);
-    }
-
-    if (mod(y, 100) === 0 && mod(y, 400) !== 0) {
-      return new Value(365);
-    }
-
-    if (mod(y, 400) === 0) {
-      return new Value(366);
+    return sl;
+  } // (implicit)
+  //   StatementListItem :
+  //     Statement
+  //     Declaration
+  //
+  //   Statement :
+  //     BlockStatement
+  //     ExpressionStatement
+  //     VariableStatement
+  //     EmptyStatement
+  //     ExpressionStatement
+  //     IfStatement
+  //     BreakableStatement
+  //     ContinueStatement
+  //     BreakStatement
+  //     ReturnStatement
+  //     WithStatement
+  //     LabelledStatement
+  //     ThrowStatement
+  //     TryStatement
+  //     DebuggerStatement
+  //
+  //   Declaration :
+  //     HoistableDeclaration
+  //     ClassDeclaration
+  //     LexicalDeclaration
+
+  function* Evaluate_StatementListItem(StatementListItem) {
+    switch (true) {
+      case isBlockStatement(StatementListItem):
+        return yield* Evaluate_BlockStatement(StatementListItem);
+
+      case isVariableStatement(StatementListItem):
+        return yield* Evaluate_VariableStatement(StatementListItem);
+
+      case isEmptyStatement(StatementListItem):
+        return Evaluate_EmptyStatement();
+
+      case isExpressionStatement(StatementListItem):
+        return yield* Evaluate_ExpressionStatement(StatementListItem);
+
+      case isIfStatement(StatementListItem):
+        return yield* Evaluate_IfStatement(StatementListItem);
+
+      case isBreakableStatement(StatementListItem):
+        return yield* Evaluate_BreakableStatement(StatementListItem);
+
+      case isContinueStatement(StatementListItem):
+        return Evaluate_ContinueStatement(StatementListItem);
+
+      case isBreakStatement(StatementListItem):
+        return Evaluate_BreakStatement(StatementListItem);
+
+      case isReturnStatement(StatementListItem):
+        return yield* Evaluate_ReturnStatement(StatementListItem);
+
+      case isWithStatement(StatementListItem):
+        return yield* Evaluate_WithStatement(StatementListItem);
+
+      case isLabelledStatement(StatementListItem):
+        return yield* Evaluate_LabelledStatement(StatementListItem);
+
+      case isThrowStatement(StatementListItem):
+        return yield* Evaluate_ThrowStatement(StatementListItem.argument);
+
+      case isTryStatement(StatementListItem):
+        return yield* Evaluate_TryStatement(StatementListItem);
+
+      case isDebuggerStatement(StatementListItem):
+        return Evaluate_DebuggerStatement();
+
+      case isHoistableDeclaration(StatementListItem):
+        return Evaluate_HoistableDeclaration(StatementListItem);
+
+      case isClassDeclaration(StatementListItem):
+        return yield* Evaluate_ClassDeclaration(StatementListItem);
+
+      case isLexicalDeclaration(StatementListItem):
+        return yield* Evaluate_LexicalDeclaration(StatementListItem);
+
+      default:
+        throw new OutOfRange('Evaluate_StatementListItem', StatementListItem);
     }
   }
-  function DayFromYear(y) {
-    y = y.numberValue();
-    return new Value(365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400));
-  }
-  function TimeFromYear(y) {
-    return new Value(msPerDay * DayFromYear(y).numberValue());
-  }
-  const msPerAverageYear = 12 * 30.436875 * msPerDay;
-  function YearFromTime(t) {
-    t = t.numberValue();
-    let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
 
-    if (TimeFromYear(new Value(year)).numberValue() > t) {
-      year -= 1;
-    }
+  const Evaluate_Statement = Evaluate_StatementListItem; // 13.5.1 #sec-expression-statement-runtime-semantics-evaluation
+  //   ExpressionStatement : Expression `;`
 
-    return new Value(year);
-  }
-  function InLeapYear(t) {
-    if (DaysInYear(YearFromTime(t)).numberValue() === 365) {
-      return new Value(0);
-    }
-
-    if (DaysInYear(YearFromTime(t)).numberValue() === 366) {
-      return new Value(1);
-    }
-  } // 20.3.1.4 #sec-month-number
-
-  function MonthFromTime(t) {
-    const dayWithinYear = DayWithinYear(t).numberValue();
-    const inLeapYear = InLeapYear(t).numberValue();
-
-    if (dayWithinYear >= 0 && dayWithinYear < 31) {
-      return new Value(0);
-    }
-
-    if (dayWithinYear >= 31 && dayWithinYear < 59 + inLeapYear) {
-      return new Value(1);
-    }
-
-    if (dayWithinYear >= 59 + inLeapYear && dayWithinYear < 90 + inLeapYear) {
-      return new Value(2);
-    }
-
-    if (dayWithinYear >= 90 + inLeapYear && dayWithinYear < 120 + inLeapYear) {
-      return new Value(3);
-    }
-
-    if (dayWithinYear >= 120 + inLeapYear && dayWithinYear < 151 + inLeapYear) {
-      return new Value(4);
-    }
-
-    if (dayWithinYear >= 151 + inLeapYear && dayWithinYear < 181 + inLeapYear) {
-      return new Value(5);
-    }
-
-    if (dayWithinYear >= 181 + inLeapYear && dayWithinYear < 212 + inLeapYear) {
-      return new Value(6);
-    }
-
-    if (dayWithinYear >= 212 + inLeapYear && dayWithinYear < 243 + inLeapYear) {
-      return new Value(7);
-    }
-
-    if (dayWithinYear >= 243 + inLeapYear && dayWithinYear < 273 + inLeapYear) {
-      return new Value(8);
-    }
-
-    if (dayWithinYear >= 273 + inLeapYear && dayWithinYear < 304 + inLeapYear) {
-      return new Value(9);
-    }
-
-    if (dayWithinYear >= 304 + inLeapYear && dayWithinYear < 334 + inLeapYear) {
-      return new Value(10);
-    }
-
-    if (dayWithinYear >= 334 + inLeapYear && dayWithinYear < 365 + inLeapYear) {
-      return new Value(11);
-    }
-  }
-  function DayWithinYear(t) {
-    return new Value(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
-  } // 20.3.1.5 #sec-date-number
-
-  function DateFromTime(t) {
-    const dayWithinYear = DayWithinYear(t).numberValue();
-    const monthFromTime = MonthFromTime(t).numberValue();
-    const inLeapYear = InLeapYear(t).numberValue();
-
-    switch (monthFromTime) {
-      case 0:
-        return new Value(dayWithinYear + 1);
-
-      case 1:
-        return new Value(dayWithinYear - 30);
-
-      case 2:
-        return new Value(dayWithinYear - 58 - inLeapYear);
-
-      case 3:
-        return new Value(dayWithinYear - 89 - inLeapYear);
-
-      case 4:
-        return new Value(dayWithinYear - 119 - inLeapYear);
-
-      case 5:
-        return new Value(dayWithinYear - 150 - inLeapYear);
-
-      case 6:
-        return new Value(dayWithinYear - 180 - inLeapYear);
-
-      case 7:
-        return new Value(dayWithinYear - 211 - inLeapYear);
-
-      case 8:
-        return new Value(dayWithinYear - 242 - inLeapYear);
-
-      case 9:
-        return new Value(dayWithinYear - 272 - inLeapYear);
-
-      case 10:
-        return new Value(dayWithinYear - 303 - inLeapYear);
-
-      case 11:
-        return new Value(dayWithinYear - 333 - inLeapYear);
-
-      default: // Unreachable
-
-    }
-  } // 20.3.1.6 #sec-week-day
-
-  function WeekDay(t) {
-    return new Value(mod(Day(t).numberValue() + 4, 7));
-  } // 20.3.1.7 #sec-local-time-zone-adjustment
-
-  function LocalTZA()
-  /* t, isUTC */
-  {
-    // TODO: implement this function properly.
-    return 0;
-  } // 20.3.1.8 #sec-localtime
-
-  function LocalTime(t) {
-    return new Value(t.numberValue() + LocalTZA());
-  } // 20.3.1.9 #sec-utc-t
-
-  function UTC(t) {
-    return new Value(t.numberValue() - LocalTZA());
-  } // 20.3.1.10 #sec-hours-minutes-second-and-milliseconds
-
-  function HourFromTime(t) {
-    return new Value(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
-  }
-  function MinFromTime(t) {
-    return new Value(mod(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
-  }
-  function SecFromTime(t) {
-    return new Value(mod(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
-  }
-  function msFromTime(t) {
-    return new Value(mod(t.numberValue(), msPerSecond));
-  }
-  const HoursPerDay = 24;
-  const MinutesPerHour = 60;
-  const SecondsPerMinute = 60;
-  const msPerSecond = 1000;
-  const msPerMinute = msPerSecond * SecondsPerMinute;
-  const msPerHour = msPerMinute * MinutesPerHour; // 20.3.1.11 #sec-maketime
-
-  function MakeTime(hour, min, sec, ms) {
-    if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
-      return new Value(NaN);
-    }
-
-    let _val = ToInteger(hour);
-
-    Assert(!(_val instanceof AbruptCompletion), "");
-
-    if (_val instanceof Completion) {
-      _val = _val.Value;
-    }
-
-    const h = _val.numberValue();
-
-    let _val2 = ToInteger(min);
-
-    Assert(!(_val2 instanceof AbruptCompletion), "");
-
-    if (_val2 instanceof Completion) {
-      _val2 = _val2.Value;
-    }
-
-    const m = _val2.numberValue();
-
-    let _val3 = ToInteger(sec);
-
-    Assert(!(_val3 instanceof AbruptCompletion), "");
-
-    if (_val3 instanceof Completion) {
-      _val3 = _val3.Value;
-    }
-
-    const s = _val3.numberValue();
-
-    let _val4 = ToInteger(ms);
-
-    Assert(!(_val4 instanceof AbruptCompletion), "");
-
-    if (_val4 instanceof Completion) {
-      _val4 = _val4.Value;
-    }
-
-    const milli = _val4.numberValue();
-
-    const t = h * msPerHour + m * msPerMinute + s * msPerSecond + milli;
-    return new Value(t);
-  }
-  const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]; // 20.3.1.12 #sec-makeday
-
-  function MakeDay(year, month, date) {
-    if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
-      return new Value(NaN);
-    }
-
-    let _val5 = ToInteger(year);
-
-    Assert(!(_val5 instanceof AbruptCompletion), "");
-
-    if (_val5 instanceof Completion) {
-      _val5 = _val5.Value;
-    }
-
-    const y = _val5.numberValue();
-
-    let _val6 = ToInteger(month);
-
-    Assert(!(_val6 instanceof AbruptCompletion), "");
-
-    if (_val6 instanceof Completion) {
-      _val6 = _val6.Value;
-    }
-
-    const m = _val6.numberValue();
-
-    let _val7 = ToInteger(date);
-
-    Assert(!(_val7 instanceof AbruptCompletion), "");
-
-    if (_val7 instanceof Completion) {
-      _val7 = _val7.Value;
-    }
-
-    const dt = _val7.numberValue();
-
-    const ym = y + Math.floor(m / 12);
-    const mn = mod(m, 12);
-    const ymday = DayFromYear(new Value(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
-    const t = new Value(ymday * msPerDay);
-    return new Value(Day(t).numberValue() + dt - 1);
-  } // 20.3.1.13 #sec-makedate
-
-  function MakeDate(day, time) {
-    if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
-      return new Value(NaN);
-    }
-
-    return new Value(day.numberValue() * msPerDay + time.numberValue());
-  } // 20.3.1.14 #sec-timeclip
-
-  function TimeClip(time) {
-    if (!Number.isFinite(time.numberValue())) {
-      return new Value(NaN);
-    }
-
-    if (Math.abs(time.numberValue()) > 8.64e15) {
-      return new Value(NaN);
-    }
-
-    let _val8 = ToInteger(time);
-
-    Assert(!(_val8 instanceof AbruptCompletion), "");
-
-    if (_val8 instanceof Completion) {
-      _val8 = _val8.Value;
-    }
-
-    let clippedTime = _val8.numberValue();
-
-    if (Object.is(clippedTime, -0)) {
-      clippedTime = 0;
-    }
-
-    return new Value(clippedTime);
+  function* Evaluate_ExpressionStatement(ExpressionStatement) {
+    const exprRef = yield* Evaluate(ExpressionStatement.expression);
+    return GetValue(exprRef);
   }
 
-  // 8.3 #sec-execution-contexts
-  // 8.3.1 #sec-getactivescriptormodule
+  function EvaluateBinopValues(operator, lval, rval) {
+    switch (operator) {
+      case '*':
+      case '/':
+      case '%':
+        return EvaluateBinopValues_MultiplicativeExpression(operator, lval, rval);
 
-  function GetActiveScriptOrModule() {
-    if (surroundingAgent.executionContextStack.length === 0) {
-      return Value.null;
+      case '+':
+        return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
+
+      case '-':
+        return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
+
+      case '<<':
+      case '>>':
+      case '>>>':
+        return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
+
+      case '&':
+        return EvaluateBinopValues_BitwiseANDExpression(lval, rval);
+
+      case '^':
+        return EvaluateBinopValues_BitwiseXORExpression(lval, rval);
+
+      case '|':
+        return EvaluateBinopValues_BitwiseORExpression(lval, rval);
+
+      case '**':
+        return EvaluateBinopValues_ExponentiationExpression(lval, rval);
+
+      default:
+        throw new OutOfRange('EvaluateBinopValues', operator);
     }
-
-    const ec = [...surroundingAgent.executionContextStack].reverse().find(e => e.ScriptOrModule !== undefined);
-
-    if (!ec) {
-      return Value.null;
-    }
-
-    return ec.ScriptOrModule;
-  } // 8.3.2 #sec-resolvebinding
-
-  function ResolveBinding(name, env, strict) {
-    if (!env || Type(env) === 'Undefined') {
-      env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    }
-
-    Assert(env instanceof LexicalEnvironment, "env instanceof LexicalEnvironment");
-    return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
-  } // 8.3.3 #sec-getthisenvironment
-
-  function GetThisEnvironment() {
-    let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-
-    while (true) {
-      // eslint-disable-line no-constant-condition
-      const envRec = lex.EnvironmentRecord;
-      const exists = envRec.HasThisBinding();
-
-      if (exists === Value.true) {
-        return envRec;
-      }
-
-      const outer = lex.outerEnvironmentReference;
-      Assert(Type(outer) !== 'Null', "Type(outer) !== 'Null'");
-      lex = outer;
-    }
-  } // 8.3.4 #sec-resolvethisbinding
-
-  function ResolveThisBinding() {
-    const envRec = GetThisEnvironment();
-    return envRec.GetThisBinding();
-  } // 8.3.5 #sec-getnewtarget
-
-  function GetNewTarget() {
-    const envRec = GetThisEnvironment();
-    Assert('NewTarget' in envRec, "'NewTarget' in envRec");
-    return envRec.NewTarget;
-  } // 8.3.6 #sec-getglobalobject
-
-  function GetGlobalObject() {
-    const ctx = surroundingAgent.runningExecutionContext;
-    const currentRealm = ctx.Realm;
-    return currentRealm.GlobalObject;
   }
+  function* Evaluate_Expression(Expression) {
+    return EnsureCompletion((yield* Inner_Evaluate_Expression(Expression)));
+  } // (implicit)
 
-  // 9.2 #sec-ecmascript-function-objects
-  // 9.3 #sec-built-in-function-objects
-  // and
-  // 14.9 #sec-tail-position-calls
-  // 9.2.1.1 #sec-prepareforordinarycall
+  function* Inner_Evaluate_Expression(Expression) {
+    switch (true) {
+      case isThis(Expression):
+        return Evaluate_ThisExpression();
 
-  function PrepareForOrdinaryCall(F, newTarget) {
-    Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object', "Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object'"); // const callerContext = surroundingAgent.runningExecutionContext;
+      case isIdentifierReference(Expression):
+        return Evaluate_Identifier(Expression);
 
-    const calleeContext = new ExecutionContext();
-    calleeContext.Function = F;
-    const calleeRealm = F.Realm;
-    calleeContext.Realm = calleeRealm;
-    calleeContext.ScriptOrModule = F.ScriptOrModule;
-    const localEnv = NewFunctionEnvironment(F, newTarget);
-    calleeContext.LexicalEnvironment = localEnv;
-    calleeContext.VariableEnvironment = localEnv; // Suspend(callerContext);
+      case isLiteral(Expression):
+        return Evaluate_Literal(Expression);
 
-    surroundingAgent.executionContextStack.push(calleeContext);
-    return calleeContext;
-  } // 9.2.1.2 #sec-ordinarycallbindthis
+      case isArrayLiteral(Expression):
+        return yield* Evaluate_ArrayLiteral(Expression);
+
+      case isObjectLiteral(Expression):
+        return yield* Evaluate_ObjectLiteral(Expression);
+
+      case isFunctionExpression(Expression):
+        return Evaluate_FunctionExpression(Expression);
+
+      case isClassExpression(Expression):
+        return yield* Evaluate_ClassExpression(Expression);
+
+      case isGeneratorExpression(Expression):
+        return Evaluate_GeneratorExpression(Expression);
+
+      case isAsyncFunctionExpression(Expression):
+        return Evaluate_AsyncFunctionExpression(Expression);
+
+      case isAsyncGeneratorExpression(Expression):
+        return Evaluate_AsyncGeneratorExpression(Expression);
+
+      case isRegularExpressionLiteral(Expression):
+        return Evaluate_RegularExpressionLiteral(Expression);
+
+      case isTemplateLiteral(Expression):
+        return yield* Evaluate_TemplateLiteral(Expression);
+
+      case isActualMemberExpression(Expression):
+        return yield* Evaluate_MemberExpression(Expression);
+
+      case isOptionalExpression(Expression):
+        return yield* Evaluate_OptionalExpression(Expression);
+
+      case isSuperProperty(Expression):
+        return yield* Evaluate_SuperProperty(Expression);
+
+      case isSuperCall(Expression):
+        return yield* Evaluate_SuperCall(Expression);
+
+      case isImportCall(Expression):
+        return yield* Evaluate_ImportCall(Expression);
+
+      case isTaggedTemplate(Expression):
+        return yield* Evaluate_TaggedTemplate(Expression);
+
+      case isMetaProperty(Expression):
+        return yield* Evaluate_MetaProperty();
+
+      case isActualNewExpression(Expression):
+        return yield* Evaluate_NewExpression(Expression);
+
+      case isActualCallExpression(Expression):
+        return yield* Evaluate_CallExpression(Expression);
+
+      case isActualUpdateExpression(Expression):
+        return yield* Evaluate_UpdateExpression(Expression);
+
+      case isActualUnaryExpression(Expression):
+        return yield* Evaluate_UnaryExpression(Expression);
+
+      case isAwaitExpression(Expression):
+        return yield* Evaluate_AwaitExpression(Expression);
+
+      case isActualExponentiationExpression(Expression):
+        return yield* Evaluate_ExponentiationExpression(Expression);
+
+      case isActualMultiplicativeExpression(Expression):
+        return yield* Evaluate_MultiplicativeExpression(Expression);
+
+      case isActualAdditiveExpression(Expression):
+        return yield* Evaluate_AdditiveExpression(Expression);
+
+      case isActualShiftExpression(Expression):
+        return yield* Evaluate_ShiftExpression(Expression);
+
+      case isActualRelationalExpression(Expression):
+        return yield* Evaluate_RelationalExpression(Expression);
+
+      case isActualEqualityExpression(Expression):
+        return yield* Evaluate_EqualityExpression(Expression);
+
+      case isActualBitwiseANDExpression(Expression):
+      case isActualBitwiseXORExpression(Expression):
+      case isActualBitwiseORExpression(Expression):
+        return yield* Evaluate_BinaryBitwiseExpression(Expression);
+
+      case isActualLogicalANDExpression(Expression):
+        return yield* Evaluate_LogicalANDExpression(Expression);
+
+      case isActualLogicalORExpression(Expression):
+        return yield* Evaluate_LogicalORExpression(Expression);
+
+      case isActualCoalesceExpression(Expression):
+        return yield* Evaluate_CoalesceExpression(Expression);
+
+      case isActualConditionalExpression(Expression):
+        return yield* Evaluate_ConditionalExpression(Expression);
+
+      case isYieldExpression(Expression):
+        return yield* Evaluate_YieldExpression(Expression);
+
+      case isArrowFunction(Expression):
+        return Evaluate_ArrowFunction(Expression);
+
+      case isAsyncArrowFunction(Expression):
+        return Evaluate_AsyncArrowFunction(Expression);
+
+      case isActualAssignmentExpression(Expression):
+        return yield* Evaluate_AssignmentExpression(Expression);
+
+      case isExpressionWithComma(Expression):
+        return yield* Evaluate_ExpressionWithComma(Expression);
+      // 12.2.10.5 #sec-grouping-operator-runtime-semantics-evaluation
+
+      case isParenthesizedExpression(Expression):
+        return yield* Evaluate(Expression.expression);
+
+      default:
+        throw new OutOfRange('Evaluate_Expression', Expression);
+    }
+  } // 15.1.7 #sec-script-semantics-runtime-semantics-evaluation
+  //   Script : [empty]
+  //
+  // (implicit)
+  //   Script : ScriptBody
+  //   ScriptBody : StatementList
 
 
-  function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
-    const thisMode = F.ThisMode;
-
-    if (thisMode === 'lexical') {
+  function Evaluate_Script(Script) {
+    if (Script.length === 0) {
       return new NormalCompletion(Value.undefined);
     }
 
-    const calleeRealm = F.Realm;
-    const localEnv = calleeContext.LexicalEnvironment;
-    let thisValue;
-
-    if (thisMode === 'strict') {
-      thisValue = thisArgument;
-    } else {
-      if (thisArgument === Value.undefined || thisArgument === Value.null) {
-        const globalEnv = calleeRealm.GlobalEnv;
-        const globalEnvRec = globalEnv.EnvironmentRecord;
-        Assert(globalEnvRec instanceof GlobalEnvironmentRecord, "globalEnvRec instanceof GlobalEnvironmentRecord");
-        thisValue = globalEnvRec.GlobalThisValue;
-      } else {
-        thisValue = ToObject(thisArgument);
-        Assert(!(thisValue instanceof AbruptCompletion), "");
-
-        if (thisValue instanceof Completion) {
-          thisValue = thisValue.Value;
-        } // NOTE: ToObject produces wrapper objects using calleeRealm.
-
-      }
-    }
-
-    const envRec = localEnv.EnvironmentRecord;
-    Assert(envRec instanceof FunctionEnvironmentRecord, "envRec instanceof FunctionEnvironmentRecord");
-    Assert(envRec.ThisBindingStatus !== 'initialized', "envRec.ThisBindingStatus !== 'initialized'");
-    return envRec.BindThisValue(thisValue);
-  } // 9.2.1.3 #sec-ordinarycallevaluatebody
-
-
-  function* OrdinaryCallEvaluateBody(F, argumentsList) {
-    switch (getFunctionBodyType(F.ECMAScriptCode)) {
-      // FunctionBody : FunctionStatementList
-      // ConciseBody : `{` FunctionBody `}`
-      case 'FunctionBody':
-      case 'ConciseBody_FunctionBody':
-        return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-      // ConciseBody : ExpressionBody
-
-      case 'ConciseBody_ExpressionBody':
-        return yield* EvaluateBody_ConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-      case 'GeneratorBody':
-        return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-      case 'AsyncFunctionBody':
-      case 'AsyncConciseBody_AsyncFunctionBody':
-        return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-      case 'AsyncConciseBody_ExpressionBody':
-        return yield* EvaluateBody_AsyncConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-      case 'AsyncGeneratorBody':
-        return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-      default:
-        throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
-    }
-  } // 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
-
-  function FunctionCallSlot(thisArgument, argumentsList) {
-    const F = this;
-    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-
-    if (F.FunctionKind === 'classConstructor') {
-      return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
-    } // const callerContext = surroundingAgent.runningExecutionContext;
-
-
-    const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
-    Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
-    OrdinaryCallBindThis(F, calleeContext, thisArgument);
-    let result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList))); // Remove calleeContext from the execution context stack and
-    // restore callerContext as the running execution context.
-
-    surroundingAgent.executionContextStack.pop(calleeContext);
-
-    if (result.Type === 'return') {
-      return new NormalCompletion(result.Value);
-    }
-
-    if (result instanceof AbruptCompletion) {
-      return result;
-    }
-
-    if (result instanceof Completion) {
-      result = result.Value;
-    }
-
-    return new NormalCompletion(Value.undefined);
-  } // 9.2.2 #sec-ecmascript-function-objects-construct-argumentslist-newtarget
-
-
-  function FunctionConstructSlot(argumentsList, newTarget) {
-    const F = this;
-    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-    Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'"); // const callerContext = surroundingAgent.runningExecutionContext;
-
-    const kind = F.ConstructorKind;
-    let thisArgument;
-
-    if (kind === 'base') {
-      thisArgument = OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
-
-      if (thisArgument instanceof AbruptCompletion) {
-        return thisArgument;
-      }
-
-      if (thisArgument instanceof Completion) {
-        thisArgument = thisArgument.Value;
-      }
-    }
-
-    const calleeContext = PrepareForOrdinaryCall(F, newTarget);
-    Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
-
-    if (kind === 'base') {
-      OrdinaryCallBindThis(F, calleeContext, thisArgument);
-    }
-
-    const constructorEnv = calleeContext.LexicalEnvironment;
-    const envRec = constructorEnv.EnvironmentRecord;
-    let result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList))); // Remove calleeContext from the execution context stack and
-    // restore callerContext as the running execution context.
-
-    surroundingAgent.executionContextStack.pop(calleeContext);
-
-    if (result.Type === 'return') {
-      if (Type(result.Value) === 'Object') {
-        return new NormalCompletion(result.Value);
-      }
-
-      if (kind === 'base') {
-        return new NormalCompletion(thisArgument);
-      }
-
-      if (Type(result.Value) !== 'Undefined') {
-        return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
-      }
-    } else {
-      if (result instanceof AbruptCompletion) {
-        return result;
-      }
-
-      if (result instanceof Completion) {
-        result = result.Value;
-      }
-    }
-
-    return envRec.GetThisBinding();
-  } // 9.2 #sec-ecmascript-function-objects
-
-
-  const esFunctionInternalSlots = Object.freeze(['Environment', 'FormalParameters', 'FunctionKind', 'ECMAScriptCode', 'ConstructorKind', 'Realm', 'ScriptOrModule', 'ThisMode', 'Strict', 'HomeObject']); // 9.2.3 #sec-functionallocate
-
-  function FunctionAllocate(functionPrototype, functionKind) {
-    Assert(Type(functionPrototype) === 'Object', "Type(functionPrototype) === 'Object'");
-    Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator'].includes(functionKind), "['normal', 'non-constructor', 'generator', 'async', 'async generator']\n    .includes(functionKind)");
-    const needsConstruct = functionKind === 'normal';
-
-    if (functionKind === 'non-constructor') {
-      functionKind = 'Normal';
-    }
-
-    const F = new FunctionValue(functionPrototype);
-
-    for (const internalSlot of esFunctionInternalSlots) {
-      F[internalSlot] = Value.undefined;
-    }
-
-    F.Call = FunctionCallSlot;
-
-    if (needsConstruct) {
-      F.Construct = FunctionConstructSlot;
-      F.ConstructorKind = 'base';
-    }
-
-    F.FunctionKind = functionKind;
-    F.Prototype = functionPrototype;
-    F.Extensible = Value.true;
-    F.Realm = surroundingAgent.currentRealmRecord;
-    return F;
-  } // 9.2.4 #sec-functioninitialize
-
-  function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
-    let len;
-
-    switch (kind) {
-      case 'Normal':
-      case 'Method':
-        len = ExpectedArgumentCount_FormalParameters(ParameterList);
-        break;
-
-      case 'Arrow':
-        len = ExpectedArgumentCount_ArrowParameters(ParameterList);
-        break;
-
-      default:
-        throw new OutOfRange('FunctionInitialize kind', kind);
-    }
-
-    Assert(!(SetFunctionLength(F, new Value(len)) instanceof AbruptCompletion), "");
-    const Strict = isStrictModeCode(Body);
-    F.Strict = Strict;
-    F.Environment = Scope;
-    F.FormalParameters = ParameterList;
-    F.ECMAScriptCode = Body;
-    F.ScriptOrModule = GetActiveScriptOrModule();
-
-    if (kind === 'Arrow') {
-      F.ThisMode = 'lexical';
-    } else if (Strict) {
-      F.ThisMode = 'strict';
-    } else {
-      F.ThisMode = 'global';
-    }
-
-    return F;
-  } // 9.2.5 #sec-functioncreate
-  // Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
-  // instead take in the entire function node as Body and save it in
-  // ECMAScriptCode as such.
-
-  function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
-    if (prototype === undefined) {
-      prototype = surroundingAgent.intrinsic('%Function.prototype%');
-    }
-
-    const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
-    const F = FunctionAllocate(prototype, allocKind);
-    return FunctionInitialize(F, kind, ParameterList, Body, Scope);
-  } // 9.2.6 #sec-generatorfunctioncreate
-
-  function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
-    const functionPrototype = surroundingAgent.intrinsic('%Generator%');
-    const F = FunctionAllocate(functionPrototype, 'generator');
-    return FunctionInitialize(F, kind, ParameterList, Body, Scope);
-  } // 9.2.7 #sec-asyncgeneratorfunctioncreate
-
-  function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
-    const functionPrototype = surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%');
-    let F = FunctionAllocate(functionPrototype, 'generator');
-    Assert(!(F instanceof AbruptCompletion), "");
-
-    if (F instanceof Completion) {
-      F = F.Value;
-    }
-
-    let _val = FunctionInitialize(F, kind, ParameterList, Body, Scope);
-
-    Assert(!(_val instanceof AbruptCompletion), "");
-
-    if (_val instanceof Completion) {
-      _val = _val.Value;
-    }
-
-    return _val;
-  } // 9.2.8 #sec-async-functions-abstract-operations-async-function-create
-
-  function AsyncFunctionCreate(kind, parameters, body, Scope) {
-    const functionPrototype = surroundingAgent.intrinsic('%AsyncFunction.prototype%');
-    let F = FunctionAllocate(functionPrototype, 'async');
-    Assert(!(F instanceof AbruptCompletion), "");
-
-    if (F instanceof Completion) {
-      F = F.Value;
-    }
-
-    let _val2 = FunctionInitialize(F, kind, parameters, body, Scope);
-
-    Assert(!(_val2 instanceof AbruptCompletion), "");
-
-    if (_val2 instanceof Completion) {
-      _val2 = _val2.Value;
-    }
-
-    return _val2;
-  } // 9.2.10 #sec-makeconstructor
-
-  function MakeConstructor(F, writablePrototype, prototype) {
-    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-    Assert(IsConstructor(F) === Value.true, "IsConstructor(F) === Value.true");
-
-    let _val3 = IsExtensible(F);
-
-    Assert(!(_val3 instanceof AbruptCompletion), "");
-
-    if (_val3 instanceof Completion) {
-      _val3 = _val3.Value;
-    }
-
-    let _val4 = HasOwnProperty(F, new Value('prototype'));
-
-    Assert(!(_val4 instanceof AbruptCompletion), "");
-
-    if (_val4 instanceof Completion) {
-      _val4 = _val4.Value;
-    }
-
-    Assert(_val3 === Value.true && _val4 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
-
-    if (writablePrototype === undefined) {
-      writablePrototype = true;
-    }
-
-    if (prototype === undefined) {
-      prototype = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-      Assert(!(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
-        Value: F,
-        Writable: writablePrototype ? Value.true : Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.true
-      })) instanceof AbruptCompletion), "");
-    }
-
-    Assert(!(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: writablePrototype ? Value.true : Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-    return new NormalCompletion(Value.undefined);
-  } // 9.2.11 #sec-makeclassconstructor
-
-  function MakeClassConstructor(F) {
-    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-    Assert(F.FunctionKind === 'normal', "F.FunctionKind === 'normal'");
-    F.FunctionKind = 'classConstructor';
-    return new NormalCompletion(Value.undefined);
-  } // 9.2.12 #sec-makemethod
-
-  function MakeMethod(F, homeObject) {
-    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-    Assert(Type(homeObject) === 'Object', "Type(homeObject) === 'Object'");
-    F.HomeObject = homeObject;
-    return new NormalCompletion(Value.undefined);
-  } // 9.2.13 #sec-setfunctionname
-
-  function SetFunctionName(F, name, prefix) {
-    Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false");
-    Assert(Type(name) === 'Symbol' || Type(name) === 'String', "Type(name) === 'Symbol' || Type(name) === 'String'");
-    Assert(!prefix || Type(prefix) === 'String', "!prefix || Type(prefix) === 'String'");
-
-    if (Type(name) === 'Symbol') {
-      const description = name.Description;
-
-      if (Type(description) === 'Undefined') {
-        name = new Value('');
-      } else {
-        name = new Value(`[${description.stringValue()}]`);
-      }
-    }
-
-    if (prefix !== undefined) {
-      name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
-    }
-
-    let _val5 = DefinePropertyOrThrow(F, new Value('name'), Descriptor({
-      Value: name,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    Assert(!(_val5 instanceof AbruptCompletion), "");
-
-    if (_val5 instanceof Completion) {
-      _val5 = _val5.Value;
-    }
-
-    return _val5;
-  } // 9.2.14 #sec-setfunctionlength
-
-  function SetFunctionLength(F, length) {
-    Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false");
-    Assert(Type(length) === 'Number', "Type(length) === 'Number'");
-
-    let _val6 = IsInteger(length);
-
-    Assert(!(_val6 instanceof AbruptCompletion), "");
-
-    if (_val6 instanceof Completion) {
-      _val6 = _val6.Value;
-    }
-
-    Assert(length.numberValue() >= 0 && _val6 === Value.true, "length.numberValue() >= 0 && X(IsInteger(length)) === Value.true");
-
-    let _val7 = DefinePropertyOrThrow(F, new Value('length'), Descriptor({
-      Value: length,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    Assert(!(_val7 instanceof AbruptCompletion), "");
-
-    if (_val7 instanceof Completion) {
-      _val7 = _val7.Value;
-    }
-
-    return _val7;
-  } // 9.3.3 #sec-createbuiltinfunction
-
-  function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isConstructor = Value.false) {
-    Assert(typeof steps === 'function', "typeof steps === 'function'");
-
-    if (realm === undefined) {
-      realm = surroundingAgent.currentRealmRecord;
-    }
-
-    Assert(realm instanceof Realm, "realm instanceof Realm");
-
-    if (prototype === undefined) {
-      prototype = realm.Intrinsics['%Function.prototype%'];
-    }
-
-    const func = new BuiltinFunctionValue(steps, isConstructor);
-
-    for (const slot of internalSlotsList) {
-      func[slot] = Value.undefined;
-    }
-
-    func.Realm = realm;
-    func.Prototype = prototype;
-    func.Extensible = Value.true;
-    func.ScriptOrModule = Value.null;
-    return func;
-  } // 14.9.3 #sec-preparefortailcall
-
-  function PrepareForTailCall() {// const leafContext = surroundingAgent.runningExecutionContext;
-    // Suspend(leafContext);
-    // surroundingAgent.executionContextStack.pop();
-    // Assert: leafContext has no further use. It will never
-    // be activated as the running execution context.
-  }
-
-  // 25.4 #sec-generator-objects
-  // 25.4.3.1 #sec-generatorstart
-
-  function GeneratorStart(generator, generatorBody) {
-    Assert(Type(generator.GeneratorState) === 'Undefined', "Type(generator.GeneratorState) === 'Undefined'");
-    const genContext = surroundingAgent.runningExecutionContext;
-    genContext.Generator = generator;
-
-    genContext.codeEvaluationState = function* resumer() {
-      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody)));
-      surroundingAgent.executionContextStack.pop(genContext);
-      generator.GeneratorState = 'completed';
-      genContext.codeEvaluationState = null;
-      let resultValue;
-
-      if (result.Type === 'normal') {
-        resultValue = Value.undefined;
-      } else if (result.Type === 'return') {
-        resultValue = result.Value;
-      } else {
-        Assert(result.Type === 'throw', "result.Type === 'throw'");
-        return Completion(result);
-      }
-
-      let _val = CreateIterResultObject(resultValue, Value.true);
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      return _val;
-    }();
-
-    generator.GeneratorContext = genContext;
-    generator.GeneratorState = 'suspendedStart';
-    return new NormalCompletion(Value.undefined);
-  } // 25.4.3.2 #sec-generatorvalidate
-
-  function GeneratorValidate(generator) {
-    {
-      const hygienicTemp = RequireInternalSlot(generator, 'GeneratorState');
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator");
-    const state = generator.GeneratorState;
-
-    if (state === 'executing') {
-      return surroundingAgent.Throw('TypeError', 'Cannot manipulate an executing generator');
-    }
-
-    return state;
-  } // 25.4.3.3 #sec-generatorresume
-
-  function GeneratorResume(generator, value) {
-    let state = GeneratorValidate(generator);
-
-    if (state instanceof AbruptCompletion) {
-      return state;
-    }
-
-    if (state instanceof Completion) {
-      state = state.Value;
-    }
-
-    if (state === 'completed') {
-      let _val2 = CreateIterResultObject(Value.undefined, Value.true);
-
-      Assert(!(_val2 instanceof AbruptCompletion), "");
-
-      if (_val2 instanceof Completion) {
-        _val2 = _val2.Value;
-      }
-
-      return _val2;
-    }
-
-    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
-    const genContext = generator.GeneratorContext;
-    const originalStackLength = surroundingAgent.executionContextStack.length;
-    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
-
-    generator.GeneratorState = 'executing';
-    surroundingAgent.executionContextStack.push(genContext);
-    const result = resume(genContext, new NormalCompletion(value));
-    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
-    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
-    return Completion(result);
-  } // 25.4.3.4 #sec-generatorresumeabrupt
-
-  function GeneratorResumeAbrupt(generator, abruptCompletion) {
-    Assert(abruptCompletion instanceof AbruptCompletion, "abruptCompletion instanceof AbruptCompletion");
-    let state = GeneratorValidate(generator);
-
-    if (state instanceof AbruptCompletion) {
-      return state;
-    }
-
-    if (state instanceof Completion) {
-      state = state.Value;
-    }
-
-    if (state === 'suspendedStart') {
-      generator.GeneratorState = 'completed';
-      generator.GeneratorContext = null;
-      state = 'completed';
-    }
-
-    if (state === 'completed') {
-      if (abruptCompletion.Type === 'return') {
-        let _val3 = CreateIterResultObject(abruptCompletion.Value, Value.true);
-
-        Assert(!(_val3 instanceof AbruptCompletion), "");
-
-        if (_val3 instanceof Completion) {
-          _val3 = _val3.Value;
-        }
-
-        return _val3;
-      }
-
-      return Completion(abruptCompletion);
-    }
-
-    Assert(state === 'suspendedYield', "state === 'suspendedYield'");
-    const genContext = generator.GeneratorContext;
-    const originalStackLength = surroundingAgent.executionContextStack.length;
-    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
-
-    generator.GeneratorState = 'executing';
-    surroundingAgent.executionContextStack.push(genContext);
-    const result = resume(genContext, abruptCompletion);
-    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
-    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
-    return Completion(result);
-  } // 25.4.3.5 #sec-getgeneratorkind
-
-  function GetGeneratorKind() {
-    const genContext = surroundingAgent.runningExecutionContext;
-
-    if (!genContext.Generator) {
-      return 'non-generator';
-    }
-
-    const generator = genContext.Generator;
-
-    if ('AsyncGeneratorState' in generator) {
-      return 'async';
-    }
-
-    return 'sync';
-  } // 25.4.3.6 #sec-generatoryield
-
-  function* GeneratorYield(iterNextObj) {
-    const genContext = surroundingAgent.runningExecutionContext;
-    const generator = genContext.Generator;
-    Assert(GetGeneratorKind() === 'sync', "GetGeneratorKind() === 'sync'");
-    generator.GeneratorState = 'suspendedYield';
-    surroundingAgent.executionContextStack.pop(genContext);
-    const resumptionValue = yield new NormalCompletion(iterNextObj);
-    return resumptionValue;
-  }
-
-  // 18 #sec-global-object
-  // 18.2.1.1 #sec-performeval
-
-  function PerformEval(x, callerRealm, strictCaller, direct) {
-    if (direct === false) {
-      Assert(strictCaller === false, "strictCaller === false");
-    }
-
-    if (Type(x) !== 'String') {
-      return x;
-    }
-
-    const evalRealm = surroundingAgent.currentRealmRecord;
-    {
-      const hygienicTemp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    /*
-    const thisEnvRec = X(GetThisEnvironment());
-    let inFunction;
-    let inMethod;
-    let inDerivedConstructor;
-    if (thisEnvRec instanceof FunctionEnvironmentRecord) {
-      const F = thisEnvRec.FunctionObject;
-      inFunction = true;
-      inMethod = thisEnvRec.HasSuperBinding() === Value.true;
-      if (F.ConstructorKind === 'derived') {
-        inDerivedConstructor = true;
-      } else {
-        inDerivedConstructor = false;
-      }
-    } else {
-      inFunction = false;
-      inMethod = false;
-      inDerivedConstructor = false;
-    }
-    */
-
-    const r = ParseScript(x.stringValue(), evalRealm, undefined, strictCaller);
-
-    if (Array.isArray(r)) {
-      return surroundingAgent.Throw('SyntaxError');
-    }
-
-    const script = r.ECMAScriptCode; // If script Contains ScriptBody is false, return undefined.
-
-    const body = script.body;
-    let strictEval;
-
-    if (strictCaller === true) {
-      strictEval = true;
-    } else {
-      strictEval = IsStrict(script);
-    }
-
-    const ctx = surroundingAgent.runningExecutionContext;
-    let lexEnv;
-    let varEnv;
-
-    if (direct === true) {
-      lexEnv = NewDeclarativeEnvironment(ctx.LexicalEnvironment);
-      varEnv = ctx.VariableEnvironment;
-    } else {
-      lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
-      varEnv = evalRealm.GlobalEnv;
-    }
-
-    if (strictEval === true) {
-      varEnv = lexEnv;
-    } // If ctx is not already suspended, suspend ctx.
-
-
-    const evalCtx = new ExecutionContext();
-    evalCtx.Function = Value.null;
-    evalCtx.Realm = evalRealm;
-    evalCtx.ScriptOrModule = ctx.ScriptOrModule;
-    evalCtx.VariableEnvironment = varEnv;
-    evalCtx.LexicalEnvironment = lexEnv;
-    surroundingAgent.executionContextStack.push(evalCtx);
-    let result = EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval);
-
-    if (result.Type === 'normal') {
-      result = Evaluate_Script(body);
-    }
+    return unwind(Evaluate_StatementList(Script));
+  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
+  //   ModuleBody : ModuleItemList
+
+  function* Evaluate_ModuleBody(ModuleBody) {
+    const ModuleItemList = ModuleBody;
+    const result = EnsureCompletion((yield* Evaluate_ModuleItemList(ModuleItemList)));
 
     if (result.Type === 'normal' && result.Value === undefined) {
-      result = new NormalCompletion(Value.undefined);
+      return new NormalCompletion(Value.undefined);
     }
-
-    surroundingAgent.executionContextStack.pop(evalCtx); // Resume the context that is now on the top of the execution context stack as the running execution context.
 
     return Completion(result);
-  } // 18.2.1.3 #sec-evaldeclarationinstantiation
+  } // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation
+  //   Module : [empty]
+  //
+  // (implicit)
+  //   Module : ModuleBody
 
-  function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
-    const varNames = VarDeclaredNames_ScriptBody(body).map(Value);
-    const varDeclarations = VarScopedDeclarations_ScriptBody(body);
-    const lexEnvRec = lexEnv.EnvironmentRecord;
-    const varEnvRec = varEnv.EnvironmentRecord;
-
-    if (strict === false) {
-      if (varEnvRec instanceof GlobalEnvironmentRecord) {
-        for (const name of varNames) {
-          if (varEnvRec.HasLexicalDeclaration(name) === Value.true) {
-            return surroundingAgent.Throw('SyntaxError');
-          } // NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
-
-        }
-      }
-
-      let thisLex = lexEnv; // Assert: The following loop will terminate.
-
-      while (thisLex !== varEnv) {
-        const thisEnvRec = thisLex.EnvironmentRecord;
-
-        if (!(thisEnvRec instanceof ObjectEnvironmentRecord)) {
-          for (const name of varNames) {
-            if (thisEnvRec.HasBinding(name) === Value.true) {
-              return surroundingAgent.Throw('SyntaxError'); // NOTE: Annex B.3.5 defines alternate semantics for the above step.
-            } // NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration
-
-          }
-        }
-
-        thisLex = thisLex.outerEnvironmentReference;
-      }
+  function Evaluate_Module(Module) {
+    if (Module.length === 0) {
+      return new NormalCompletion(Value.undefined);
     }
 
-    const functionsToInitialize = [];
-    const declaredFunctionNames = [];
-
-    for (const d of [...varDeclarations].reverse()) {
-      if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
-        Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d) || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d), "isFunctionDeclaration(d) || isGeneratorDeclaration(d)\n             || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)");
-        const fn = new Value(BoundNames_FunctionDeclaration(d)[0]);
-
-        if (!declaredFunctionNames.includes(fn)) {
-          if (varEnvRec instanceof GlobalEnvironmentRecord) {
-            let fnDefinable = varEnvRec.CanDeclareGlobalFunction(fn);
-
-            if (fnDefinable instanceof AbruptCompletion) {
-              return fnDefinable;
-            }
-
-            if (fnDefinable instanceof Completion) {
-              fnDefinable = fnDefinable.Value;
-            }
-
-            if (fnDefinable === Value.false) {
-              return surroundingAgent.Throw('TypeError');
-            }
-          }
-
-          declaredFunctionNames.push(fn);
-          functionsToInitialize.unshift(d);
-        }
-      }
-    } // NOTE: Annex B.3.3.3 adds additional steps at this point.
-
-
-    const declaredVarNames = [];
-
-    for (const d of varDeclarations) {
-      let boundNames;
-
-      if (isVariableDeclaration(d)) {
-        boundNames = BoundNames_VariableDeclaration(d);
-      } else if (isForBinding(d)) {
-        boundNames = BoundNames_ForBinding(d);
-      } else if (isBindingIdentifier(d)) {
-        boundNames = BoundNames_BindingIdentifier(d);
-      }
-
-      if (boundNames !== undefined) {
-        for (const vn of boundNames.map(Value)) {
-          if (!declaredFunctionNames.includes(vn)) {
-            if (varEnvRec instanceof GlobalEnvironmentRecord) {
-              let vnDefinable = varEnvRec.CanDeclareGlobalVar(vn);
-
-              if (vnDefinable instanceof AbruptCompletion) {
-                return vnDefinable;
-              }
-
-              if (vnDefinable instanceof Completion) {
-                vnDefinable = vnDefinable.Value;
-              }
-
-              if (vnDefinable === Value.false) {
-                return surroundingAgent.Throw('TypeError');
-              }
-            }
-
-            if (!declaredVarNames.includes(vn)) {
-              declaredVarNames.push(vn);
-            }
-          }
-        }
-      }
-    } // NOTE: No abnormal terminations occur after this algorithm step unless
-    // varEnvRec is a global Environment Record and the global object is a Proxy exotic object.
-
-
-    const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(body);
-
-    for (const d of lexDeclarations) {
-      for (const dn of BoundNames_Declaration(d).map(Value)) {
-        if (IsConstantDeclaration(d)) {
-          {
-            const hygienicTemp = lexEnvRec.CreateImmutableBinding(dn, Value.true);
-
-            if (hygienicTemp instanceof AbruptCompletion) {
-              return hygienicTemp;
-            }
-          }
-        } else {
-          {
-            const hygienicTemp = lexEnvRec.CreateMutableBinding(dn, Value.false);
-
-            if (hygienicTemp instanceof AbruptCompletion) {
-              return hygienicTemp;
-            }
-          }
-        }
-      }
+    return unwind(Evaluate_ModuleBody(Module));
+  }
+  function* Evaluate(Production) {
+    if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
+      surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production, surroundingAgent.currentRealmRecord);
     }
 
-    for (const f of functionsToInitialize) {
-      const fn = new Value(BoundNames_FunctionDeclaration(f)[0]);
-      const fo = InstantiateFunctionObject(f, lexEnv);
+    switch (true) {
+      case isImportDeclaration(Production):
+        return new NormalCompletion(undefined);
 
-      if (varEnvRec instanceof GlobalEnvironmentRecord) {
-        {
-          const hygienicTemp = varEnvRec.CreateGlobalFunctionBinding(fn, fo, Value.true);
+      case isExportDeclaration(Production):
+        return yield* Evaluate_ExportDeclaration(Production);
 
-          if (hygienicTemp instanceof AbruptCompletion) {
-            return hygienicTemp;
-          }
-        }
-      } else {
-        const bindingExists = varEnvRec.HasBinding(fn);
+      case isStatement(Production):
+      case isDeclaration(Production):
+        return yield* Evaluate_Statement(Production);
 
-        if (bindingExists === Value.false) {
-          let status = varEnvRec.CreateMutableBinding(fn, Value.true);
-          Assert(!(status instanceof AbruptCompletion), "");
+      case isExpression(Production):
+        return yield* Evaluate_Expression(Production);
 
-          if (status instanceof Completion) {
-            status = status.Value;
-          }
-
-          Assert(!(status instanceof AbruptCompletion), "!(status instanceof AbruptCompletion)");
-          Assert(!(varEnvRec.InitializeBinding(fn, fo) instanceof AbruptCompletion), "");
-        } else {
-          Assert(!(varEnvRec.SetMutableBinding(fn, fo, Value.false) instanceof AbruptCompletion), "");
-        }
-      }
+      default:
+        throw new OutOfRange('Evaluate', Production);
     }
-
-    for (const vn of declaredVarNames) {
-      if (!declaredFunctionNames.includes(vn)) {
-        if (varEnvRec instanceof GlobalEnvironmentRecord) {
-          {
-            const hygienicTemp = varEnvRec.CreateGlobalVarBinding(vn, Value.true);
-
-            if (hygienicTemp instanceof AbruptCompletion) {
-              return hygienicTemp;
-            }
-          }
-        } else {
-          const bindingExists = varEnvRec.HasBinding(vn);
-
-          if (bindingExists === Value.false) {
-            let status = varEnvRec.CreateMutableBinding(vn, Value.true);
-            Assert(!(status instanceof AbruptCompletion), "");
-
-            if (status instanceof Completion) {
-              status = status.Value;
-            }
-
-            Assert(!(status instanceof AbruptCompletion), "!(status instanceof AbruptCompletion)");
-            Assert(!(varEnvRec.InitializeBinding(vn, Value.undefined) instanceof AbruptCompletion), "");
-          }
-        }
-      }
-    }
-
-    return new NormalCompletion(undefined);
   }
 
-  // 7.4 #sec-operations-on-iterator-objects
-  // and
-  // 25.1 #sec-iteration
-  // 7.4.1 #sec-getiterator
-
-  function GetIterator(obj, hint, method) {
-    if (!hint) {
-      hint = 'sync';
+  class ImportEntryRecord {
+    constructor({
+      ModuleRequest,
+      ImportName,
+      LocalName
+    }) {
+      Assert(Type(ModuleRequest) === 'String', "Type(ModuleRequest) === 'String'");
+      Assert(Type(ImportName) === 'String', "Type(ImportName) === 'String'");
+      Assert(Type(LocalName) === 'String', "Type(LocalName) === 'String'");
+      this.ModuleRequest = ModuleRequest;
+      this.ImportName = ImportName;
+      this.LocalName = LocalName;
     }
 
-    Assert(hint === 'sync' || hint === 'async', "hint === 'sync' || hint === 'async'");
+  } // #exportentry-record
 
-    if (!method) {
-      if (hint === 'async') {
-        method = GetMethod(obj, wellKnownSymbols.asyncIterator);
-
-        if (method instanceof AbruptCompletion) {
-          return method;
-        }
-
-        if (method instanceof Completion) {
-          method = method.Value;
-        }
-
-        if (method === Value.undefined) {
-          let syncMethod = GetMethod(obj, wellKnownSymbols.iterator);
-
-          if (syncMethod instanceof AbruptCompletion) {
-            return syncMethod;
-          }
-
-          if (syncMethod instanceof Completion) {
-            syncMethod = syncMethod.Value;
-          }
-
-          let syncIteratorRecord = GetIterator(obj, 'sync', syncMethod);
-
-          if (syncIteratorRecord instanceof AbruptCompletion) {
-            return syncIteratorRecord;
-          }
-
-          if (syncIteratorRecord instanceof Completion) {
-            syncIteratorRecord = syncIteratorRecord.Value;
-          }
-
-          return CreateAsyncFromSyncIterator(syncIteratorRecord);
-        }
-      } else {
-        method = GetMethod(obj, wellKnownSymbols.iterator);
-
-        if (method instanceof AbruptCompletion) {
-          return method;
-        }
-
-        if (method instanceof Completion) {
-          method = method.Value;
-        }
-      }
+  class ExportEntryRecord {
+    constructor({
+      ExportName,
+      ModuleRequest,
+      ImportName,
+      LocalName
+    }) {
+      Assert(Type(ExportName) === 'String' || Type(ExportName) === 'Null', "Type(ExportName) === 'String' || Type(ExportName) === 'Null'");
+      Assert(Type(ModuleRequest) === 'String' || Type(ModuleRequest) === 'Null', "Type(ModuleRequest) === 'String' || Type(ModuleRequest) === 'Null'");
+      Assert(Type(ImportName) === 'String' || Type(ImportName) === 'Null', "Type(ImportName) === 'String' || Type(ImportName) === 'Null'");
+      Assert(Type(LocalName) === 'String' || Type(LocalName) === 'Null', "Type(LocalName) === 'String' || Type(LocalName) === 'Null'");
+      this.ExportName = ExportName;
+      this.ModuleRequest = ModuleRequest;
+      this.ImportName = ImportName;
+      this.LocalName = LocalName;
     }
 
-    let iterator = Call(method, obj);
+  } // #resolvedbinding-record
 
-    if (iterator instanceof AbruptCompletion) {
-      return iterator;
+  class ResolvedBindingRecord {
+    constructor({
+      Module,
+      BindingName
+    }) {
+      Assert(Module instanceof AbstractModuleRecord, "Module instanceof AbstractModuleRecord");
+      Assert(Type(BindingName) === 'String', "Type(BindingName) === 'String'");
+      this.Module = Module;
+      this.BindingName = BindingName;
     }
 
-    if (iterator instanceof Completion) {
-      iterator = iterator.Value;
+  } // 15.2.1.15 #sec-abstract-module-records
+
+  class AbstractModuleRecord {
+    constructor({
+      Realm,
+      Environment,
+      Namespace,
+      HostDefined
+    }) {
+      this.Realm = Realm;
+      this.Environment = Environment;
+      this.Namespace = Namespace;
+      this.HostDefined = HostDefined;
     }
 
-    if (Type(iterator) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
+  } // 15.2.1.16 #sec-cyclic-module-records
 
-    let nextMethod = GetV(iterator, new Value('next'));
+  class CyclicModuleRecord extends AbstractModuleRecord {
+    constructor(init) {
+      super(init);
+      this.Status = init.Status;
+      this.EvaluationError = init.EvaluationError;
+      this.DFSIndex = init.DFSIndex;
+      this.DFSAncestorIndex = init.DFSAncestorIndex;
+      this.RequestedModules = init.RequestedModules;
+      this.Async = init.Async;
+      this.AsyncEvaluating = init.AsyncEvaluating;
+      this.TopLevelCapability = init.TopLevelCapability;
+      this.AsyncParentModules = init.AsyncParentModules;
+      this.PendingAsyncDependencies = init.PendingAsyncDependencies;
+    } // 15.2.1.16.1 #sec-moduledeclarationlinking
 
-    if (nextMethod instanceof AbruptCompletion) {
-      return nextMethod;
-    }
 
-    if (nextMethod instanceof Completion) {
-      nextMethod = nextMethod.Value;
-    }
-
-    const iteratorRecord = {
-      Iterator: iterator,
-      NextMethod: nextMethod,
-      Done: Value.false
-    };
-    return EnsureCompletion(iteratorRecord);
-  } // 7.4.2 #sec-iteratornext
-
-  function IteratorNext(iteratorRecord, value) {
-    let result;
-
-    if (!value) {
-      result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
+    Link() {
+      const module = this;
+      Assert(module.Status !== 'linking' && module.Status !== 'evaluating', "module.Status !== 'linking' && module.Status !== 'evaluating'");
+      const stack = [];
+      const result = InnerModuleLinking(module, stack, 0);
 
       if (result instanceof AbruptCompletion) {
+        for (const m of stack) {
+          Assert(m.Status === 'linking', "m.Status === 'linking'");
+          m.Status = 'unlinked';
+          m.Environment = Value.undefined;
+          m.DFSIndex = Value.undefined;
+          m.DFSAncestorIndex = Value.undefined;
+        }
+
+        Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
         return result;
       }
 
-      if (result instanceof Completion) {
-        result = result.Value;
+      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
+      Assert(stack.length === 0, "stack.length === 0");
+      return Value.undefined;
+    } // 15.2.1.16.2 #sec-moduleevaluation
+
+
+    Evaluate() {
+      let module = this;
+      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
+
+      if (module.Status === 'evaluated') {
+        module = GetAsyncCycleRoot(module);
       }
-    } else {
-      result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]);
+
+      if (module.TopLevelCapability !== Value.undefined) {
+        return module.TopLevelCapability.Promise;
+      }
+
+      const stack = [];
+      let capability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+      Assert(!(capability instanceof AbruptCompletion), "");
+
+      if (capability instanceof Completion) {
+        capability = capability.Value;
+      }
+
+      module.TopLevelCapability = capability;
+      const result = InnerModuleEvaluation(module, stack, 0);
 
       if (result instanceof AbruptCompletion) {
-        return result;
-      }
-
-      if (result instanceof Completion) {
-        result = result.Value;
-      }
-    }
-
-    if (Type(result) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return EnsureCompletion(result);
-  } // 7.4.3 #sec-iteratorcomplete
-
-  function IteratorComplete(iterResult) {
-    Assert(Type(iterResult) === 'Object', "Type(iterResult) === 'Object'");
-
-    let _hygienicTemp = Get(iterResult, new Value('done'));
-
-    if (_hygienicTemp instanceof AbruptCompletion) {
-      return _hygienicTemp;
-    }
-
-    if (_hygienicTemp instanceof Completion) {
-      _hygienicTemp = _hygienicTemp.Value;
-    }
-
-    return EnsureCompletion(ToBoolean(_hygienicTemp));
-  } // 7.4.4 #sec-iteratorvalue
-
-  function IteratorValue(iterResult) {
-    Assert(Type(iterResult) === 'Object', "Type(iterResult) === 'Object'");
-
-    let _hygienicTemp2 = Get(iterResult, new Value('value'));
-
-    if (_hygienicTemp2 instanceof AbruptCompletion) {
-      return _hygienicTemp2;
-    }
-
-    if (_hygienicTemp2 instanceof Completion) {
-      _hygienicTemp2 = _hygienicTemp2.Value;
-    }
-
-    return EnsureCompletion(_hygienicTemp2);
-  } // 7.4.5 #sec-iteratorstep
-
-  function IteratorStep(iteratorRecord) {
-    let result = IteratorNext(iteratorRecord);
-
-    if (result instanceof AbruptCompletion) {
-      return result;
-    }
-
-    if (result instanceof Completion) {
-      result = result.Value;
-    }
-
-    let done = IteratorComplete(result);
-
-    if (done instanceof AbruptCompletion) {
-      return done;
-    }
-
-    if (done instanceof Completion) {
-      done = done.Value;
-    }
-
-    if (done === Value.true) {
-      return EnsureCompletion(Value.false);
-    }
-
-    return EnsureCompletion(result);
-  } // 7.4.6 #sec-iteratorclose
-
-  function IteratorClose(iteratorRecord, completion) {
-    // TODO: completion should be a Completion Record so this should not be necessary
-    completion = EnsureCompletion(completion);
-    Assert(Type(iteratorRecord.Iterator) === 'Object', "Type(iteratorRecord.Iterator) === 'Object'");
-    Assert(completion instanceof Completion, "completion instanceof Completion");
-    const iterator = iteratorRecord.Iterator;
-    let ret = GetMethod(iterator, new Value('return'));
-
-    if (ret instanceof AbruptCompletion) {
-      return ret;
-    }
-
-    if (ret instanceof Completion) {
-      ret = ret.Value;
-    }
-
-    if (ret === Value.undefined) {
-      return Completion(completion);
-    }
-
-    const innerResult = EnsureCompletion(Call(ret, iterator));
-
-    if (completion.Type === 'throw') {
-      return Completion(completion);
-    }
-
-    if (innerResult.Type === 'throw') {
-      return Completion(innerResult);
-    }
-
-    if (Type(innerResult.Value) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return Completion(completion);
-  } // 7.4.7 #sec-asynciteratorclose
-
-  function* AsyncIteratorClose(iteratorRecord, completion) {
-    Assert(Type(iteratorRecord.Iterator) === 'Object', "Type(iteratorRecord.Iterator) === 'Object'");
-    Assert(completion instanceof Completion, "completion instanceof Completion");
-    const iterator = iteratorRecord.Iterator;
-    let ret = GetMethod(iterator, new Value('return'));
-
-    if (ret instanceof AbruptCompletion) {
-      return ret;
-    }
-
-    if (ret instanceof Completion) {
-      ret = ret.Value;
-    }
-
-    if (ret === Value.undefined) {
-      return Completion(completion);
-    }
-
-    let innerResult = EnsureCompletion(Call(ret, iterator));
-
-    if (innerResult.Type === 'normal') {
-      innerResult = EnsureCompletion((yield* Await(innerResult.Value)));
-    }
-
-    if (completion.Type === 'throw') {
-      return Completion(completion);
-    }
-
-    if (innerResult.Type === 'throw') {
-      return Completion(innerResult);
-    }
-
-    if (Type(innerResult.Value) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return Completion(completion);
-  } // 7.4.8 #sec-createiterresultobject
-
-  function CreateIterResultObject(value, done) {
-    Assert(Type(done) === 'Boolean', "Type(done) === 'Boolean'");
-    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    Assert(!(CreateDataProperty(obj, new Value('value'), value) instanceof AbruptCompletion), "");
-    Assert(!(CreateDataProperty(obj, new Value('done'), done) instanceof AbruptCompletion), "");
-    return obj;
-  } // 7.4.9 #sec-createlistiteratorRecord
-
-  function CreateListIteratorRecord(list) {
-    const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), ['IteratedList', 'ListIteratorNextIndex']);
-    iterator.IteratedList = list;
-    iterator.ListIteratorNextIndex = 0;
-    const steps = ListIteratorNextSteps;
-    let next = CreateBuiltinFunction(steps, []);
-    Assert(!(next instanceof AbruptCompletion), "");
-
-    if (next instanceof Completion) {
-      next = next.Value;
-    }
-
-    return {
-      Iterator: iterator,
-      NextMethod: next,
-      Done: Value.false
-    };
-  } // 7.4.9.1 #sec-listiterator-next
-
-  function ListIteratorNextSteps(args, {
-    thisValue
-  }) {
-    const O = thisValue;
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert('IteratedList' in O, "'IteratedList' in O");
-    const list = O.IteratedList;
-    const index = O.ListIteratorNextIndex;
-    const len = list.length;
-
-    if (index >= len) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    }
-
-    O.ListIteratorNextIndex += 1;
-    return CreateIterResultObject(list[index], Value.false);
-  } // 25.1.4.1 #sec-createasyncfromsynciterator
-
-
-  function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-    let asyncIterator = ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
-    Assert(!(asyncIterator instanceof AbruptCompletion), "");
-
-    if (asyncIterator instanceof Completion) {
-      asyncIterator = asyncIterator.Value;
-    }
-
-    asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-    let nextMethod = Get(asyncIterator, new Value('next'));
-    Assert(!(nextMethod instanceof AbruptCompletion), "");
-
-    if (nextMethod instanceof Completion) {
-      nextMethod = nextMethod.Value;
-    }
-
-    return {
-      Iterator: asyncIterator,
-      NextMethod: nextMethod,
-      Done: Value.false
-    };
-  } // 25.1.4.2.4 #sec-async-from-sync-iterator-value-unwrap-functions
-
-  function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
-    const F = this;
-
-    let _val = CreateIterResultObject(value, F.Done);
-
-    Assert(!(_val instanceof AbruptCompletion), "");
-
-    if (_val instanceof Completion) {
-      _val = _val.Value;
-    }
-
-    return _val;
-  } // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
-
-
-  function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
-    let done = IteratorComplete(result);
-
-    if (done instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
-
-      if (hygenicTemp2 instanceof AbruptCompletion) {
-        return hygenicTemp2;
-      }
-
-      return promiseCapability.Promise;
-    } else if (done instanceof Completion) {
-      done = done.Value;
-    }
-
-    let value = IteratorValue(result);
-
-    if (value instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [value.Value]);
-
-      if (hygenicTemp2 instanceof AbruptCompletion) {
-        return hygenicTemp2;
-      }
-
-      return promiseCapability.Promise;
-    } else if (value instanceof Completion) {
-      value = value.Value;
-    }
-
-    let valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
-
-    if (valueWrapper instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [valueWrapper.Value]);
-
-      if (hygenicTemp2 instanceof AbruptCompletion) {
-        return hygenicTemp2;
-      }
-
-      return promiseCapability.Promise;
-    } else if (valueWrapper instanceof Completion) {
-      valueWrapper = valueWrapper.Value;
-    }
-
-    const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-    let onFulfilled = CreateBuiltinFunction(steps, ['Done']);
-    Assert(!(onFulfilled instanceof AbruptCompletion), "");
-
-    if (onFulfilled instanceof Completion) {
-      onFulfilled = onFulfilled.Value;
-    }
-
-    onFulfilled.Done = done;
-    Assert(!(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability) instanceof AbruptCompletion), "");
-    return promiseCapability.Promise;
-  }
-
-  function ModuleNamespaceCreate(module, exports) {
-    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
-    Assert(module.Namespace === Value.undefined, "module.Namespace === Value.undefined");
-    Assert(Array.isArray(exports), "Array.isArray(exports)");
-    const M = new ModuleNamespaceExoticObjectValue();
-    M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-      Value: new Value('Module')
-    }));
-    M.Module = module;
-    const sortedExports = [...exports].sort((x, y) => {
-      let result = SortCompare(x, y, Value.undefined);
-      Assert(!(result instanceof AbruptCompletion), "");
-
-      if (result instanceof Completion) {
-        result = result.Value;
-      }
-
-      return result.numberValue();
-    });
-    M.Exports = sortedExports;
-    module.Namespace = M;
-    return M;
-  }
-
-  function InnerModuleLinking(module, stack, index) {
-    if (!(module instanceof CyclicModuleRecord)) {
-      {
-        const hygienicTemp = module.Link();
-
-        if (hygienicTemp instanceof AbruptCompletion) {
-          return hygienicTemp;
+        for (const m of stack) {
+          Assert(m.Status === 'evaluating', "m.Status === 'evaluating'");
+          m.Status = 'evaluated';
+          m.EvaluationError = result;
         }
-      }
-      return index;
-    }
 
-    if (module.Status === 'linking' || module.Status === 'linked' || module.Status === 'evaluated') {
-      return index;
-    }
-
-    Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
-    module.Status = 'linking';
-    module.DFSIndex = index;
-    module.DFSAncestorIndex = index;
-    index += 1;
-    stack.push(module);
-
-    for (const required of module.RequestedModules) {
-      let requiredModule = HostResolveImportedModule(module, required);
-
-      if (requiredModule instanceof AbruptCompletion) {
-        return requiredModule;
-      }
-
-      if (requiredModule instanceof Completion) {
-        requiredModule = requiredModule.Value;
-      }
-
-      index = InnerModuleLinking(requiredModule, stack, index);
-
-      if (index instanceof AbruptCompletion) {
-        return index;
-      }
-
-      if (index instanceof Completion) {
-        index = index.Value;
-      }
-
-      if (requiredModule instanceof CyclicModuleRecord) {
-        Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated'");
-        Assert(requiredModule.Status === 'linking' === stack.includes(requiredModule), "(requiredModule.Status === 'linking') === stack.includes(requiredModule)");
-
-        if (requiredModule.Status === 'linking') {
-          module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
-        }
-      }
-    }
-
-    {
-      const hygienicTemp = module.InitializeEnvironment();
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
-    Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
-
-    if (module.DFSAncestorIndex === module.DFSIndex) {
-      let done = false;
-
-      while (done === false) {
-        const requiredModule = stack.pop();
-        Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-        requiredModule.Status = 'linked';
-
-        if (requiredModule === module) {
-          done = true;
-        }
-      }
-    }
-
-    return index;
-  } // 15.2.1.16.2.1 #sec-innermoduleevaluation
-
-  function InnerModuleEvaluation(module, stack, index) {
-    if (!(module instanceof CyclicModuleRecord)) {
-      {
-        const hygienicTemp = module.Evaluate();
-
-        if (hygienicTemp instanceof AbruptCompletion) {
-          return hygienicTemp;
-        }
-      }
-      return index;
-    }
-
-    if (module.Status === 'evaluated') {
-      if (module.EvaluationError === Value.undefined) {
-        return index;
+        Assert(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
+        Assert(!(Call(capability.Reject, Value.undefined, [result.Value]) instanceof AbruptCompletion), "");
       } else {
-        return module.EvaluationError;
-      }
-    }
+        Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined, "module.Status === 'evaluated' && module.EvaluationError === Value.undefined");
 
-    if (module.Status === 'evaluating') {
-      return index;
-    }
-
-    Assert(module.Status === 'linked', "module.Status === 'linked'");
-    module.Status = 'evaluating';
-    module.DFSIndex = index;
-    module.DFSAncestorIndex = index;
-    index += 1;
-    stack.push(module);
-
-    for (const required of module.RequestedModules) {
-      let requiredModule = HostResolveImportedModule(module, required);
-      Assert(!(requiredModule instanceof AbruptCompletion), "");
-
-      if (requiredModule instanceof Completion) {
-        requiredModule = requiredModule.Value;
-      }
-
-      index = InnerModuleEvaluation(requiredModule, stack, index);
-
-      if (index instanceof AbruptCompletion) {
-        return index;
-      }
-
-      if (index instanceof Completion) {
-        index = index.Value;
-      }
-
-      if (requiredModule instanceof CyclicModuleRecord) {
-        Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated'");
-
-        if (stack.includes(requiredModule)) {
-          Assert(requiredModule.Status === 'evaluating', "requiredModule.Status === 'evaluating'");
+        if (module.AsyncEvaluating === Value.false) {
+          Assert(!(Call(capability.Resolve, Value.undefined, [Value.undefined]) instanceof AbruptCompletion), "");
         }
 
-        if (requiredModule.Status === 'evaluating') {
-          module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+        Assert(stack.length === 0, "stack.length === 0");
+      }
+
+      return capability.Promise;
+    }
+
+  } // 15.2.1.17 #sec-source-text-module-records
+
+  class SourceTextModuleRecord extends CyclicModuleRecord {
+    constructor(init) {
+      super(init);
+      ({
+        ECMAScriptCode: this.ECMAScriptCode,
+        ImportEntries: this.ImportEntries,
+        LocalExportEntries: this.LocalExportEntries,
+        IndirectExportEntries: this.IndirectExportEntries,
+        StarExportEntries: this.StarExportEntries
+      } = init);
+    } // 15.2.1.17.2 #sec-getexportednames
+
+
+    GetExportedNames(exportStarSet) {
+      const module = this;
+
+      if (!exportStarSet) {
+        exportStarSet = [];
+      }
+
+      Assert(Array.isArray(exportStarSet) && exportStarSet.every(e => e instanceof SourceTextModuleRecord), "Array.isArray(exportStarSet) && exportStarSet.every((e) => e instanceof SourceTextModuleRecord)");
+
+      if (exportStarSet.includes(module)) {
+        // Assert: We've reached the starting point of an import * circularity.
+        return [];
+      }
+
+      exportStarSet.push(module);
+      const exportedNames = [];
+
+      for (const e of module.LocalExportEntries) {
+        // Assert: module provides the direct binding for this export.
+        exportedNames.push(e.ExportName);
+      }
+
+      for (const e of module.IndirectExportEntries) {
+        // Assert: module imports a specific binding for this export.
+        exportedNames.push(e.ExportName);
+      }
+
+      for (const e of module.StarExportEntries) {
+        let requestedModule = HostResolveImportedModule(module, e.ModuleRequest);
+
+        if (requestedModule instanceof AbruptCompletion) {
+          return requestedModule;
+        }
+
+        if (requestedModule instanceof Completion) {
+          requestedModule = requestedModule.Value;
+        }
+
+        let starNames = requestedModule.GetExportedNames(exportStarSet);
+
+        if (starNames instanceof AbruptCompletion) {
+          return starNames;
+        }
+
+        if (starNames instanceof Completion) {
+          starNames = starNames.Value;
+        }
+
+        for (const n of starNames) {
+          if (SameValue(n, new Value('default')) === Value.false) {
+            if (!exportedNames.includes(n)) {
+              exportedNames.push(n);
+            }
+          }
         }
       }
-    }
 
-    {
-      const hygienicTemp = module.ExecuteModule();
+      return exportedNames;
+    } // 15.2.1.17.3 #sec-resolveexport
 
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
+
+    ResolveExport(exportName, resolveSet) {
+      const module = this;
+
+      if (!resolveSet) {
+        resolveSet = [];
       }
-    }
-    Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
-    Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
 
-    if (module.DFSAncestorIndex === module.DFSIndex) {
-      let done = false;
+      Assert(Array.isArray(resolveSet) && resolveSet.every(e => 'Module' in e && 'ExportName' in e), "Array.isArray(resolveSet) && resolveSet.every((e) => 'Module' in e && 'ExportName' in e)");
 
-      while (done === false) {
-        const requiredModule = stack.pop();
-        Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-        requiredModule.Status = 'evaluated';
-
-        if (requiredModule === module) {
-          done = true;
+      for (const r of resolveSet) {
+        if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
+          // Assert: This is a circular import request.
+          return null;
         }
       }
-    }
 
-    return index;
-  } // 15.2.1.21 #sec-getmodulenamespace
+      resolveSet.push({
+        Module: module,
+        ExportName: exportName
+      });
 
-  function GetModuleNamespace(module) {
-    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
-
-    if (module instanceof CyclicModuleRecord) {
-      Assert(module.Status !== 'unlinked', "module.Status !== 'unlinked'");
-    }
-
-    let namespace = module.Namespace;
-
-    if (namespace === Value.undefined) {
-      let exportedNames = module.GetExportedNames();
-
-      if (exportedNames instanceof AbruptCompletion) {
-        return exportedNames;
+      for (const e of module.LocalExportEntries) {
+        if (SameValue(exportName, e.ExportName) === Value.true) {
+          // Assert: module provides the direct binding for this export.
+          return new ResolvedBindingRecord({
+            Module: module,
+            BindingName: e.LocalName
+          });
+        }
       }
 
-      if (exportedNames instanceof Completion) {
-        exportedNames = exportedNames.Value;
+      for (const e of module.IndirectExportEntries) {
+        if (SameValue(exportName, e.ExportName) === Value.true) {
+          let importedModule = HostResolveImportedModule(module, e.ModuleRequest);
+
+          if (importedModule instanceof AbruptCompletion) {
+            return importedModule;
+          }
+
+          if (importedModule instanceof Completion) {
+            importedModule = importedModule.Value;
+          }
+
+          return importedModule.ResolveExport(e.ImportName, resolveSet);
+        }
       }
 
-      const unambiguousNames = [];
+      if (SameValue(exportName, new Value('default')) === Value.true) {
+        // Assert: A default export was not explicitly defined by this module.
+        return null; // NOTE: A default export cannot be provided by an export *.
+      }
 
-      for (const name of exportedNames) {
-        let resolution = module.ResolveExport(name);
+      let starResolution = null;
+
+      for (const e of module.StarExportEntries) {
+        let importedModule = HostResolveImportedModule(module, e.ModuleRequest);
+
+        if (importedModule instanceof AbruptCompletion) {
+          return importedModule;
+        }
+
+        if (importedModule instanceof Completion) {
+          importedModule = importedModule.Value;
+        }
+
+        let resolution = importedModule.ResolveExport(exportName, resolveSet);
 
         if (resolution instanceof AbruptCompletion) {
           return resolution;
@@ -16594,4074 +14190,168 @@
           resolution = resolution.Value;
         }
 
-        if (resolution instanceof ResolvedBindingRecord) {
-          unambiguousNames.push(name);
-        }
-      }
-
-      namespace = ModuleNamespaceCreate(module, unambiguousNames);
-    }
-
-    return namespace;
-  }
-
-  // 7.3 #sec-operations-on-objects
-  // 7.3.1 #sec-get-o-p
-
-  function Get(O, P) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // TODO: This should just return Q(O.Get(P, O))
-
-    let _hygienicTemp = O.Get(P, O);
-
-    if (_hygienicTemp instanceof AbruptCompletion) {
-      return _hygienicTemp;
-    }
-
-    if (_hygienicTemp instanceof Completion) {
-      _hygienicTemp = _hygienicTemp.Value;
-    }
-
-    return new NormalCompletion(_hygienicTemp);
-  } // 7.3.2 #sec-getv
-
-  function GetV(V, P) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let O = ToObject(V);
-
-    if (O instanceof AbruptCompletion) {
-      return O;
-    }
-
-    if (O instanceof Completion) {
-      O = O.Value;
-    }
-
-    return O.Get(P, V);
-  } // 7.3.3 #sec-set-o-p-v-throw
-
-  function Set$1(O, P, V, Throw) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    Assert(Type(Throw) === 'Boolean', "Type(Throw) === 'Boolean'");
-    let success = O.Set(P, V, O);
-
-    if (success instanceof AbruptCompletion) {
-      return success;
-    }
-
-    if (success instanceof Completion) {
-      success = success.Value;
-    }
-
-    if (success === Value.false && Throw === Value.true) {
-      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', P, O));
-    }
-
-    return success;
-  } // 7.3.4 #sec-createdataproperty
-
-  function CreateDataProperty(O, P, V) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    const newDesc = Descriptor({
-      Value: V,
-      Writable: Value.true,
-      Enumerable: Value.true,
-      Configurable: Value.true
-    });
-    return O.DefineOwnProperty(P, newDesc);
-  } // 7.3.5 #sec-createmethodproperty
-
-  function CreateMethodProperty(O, P, V) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    const newDesc = Descriptor({
-      Value: V,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    });
-    return O.DefineOwnProperty(P, newDesc);
-  } // 7.3.6 #sec-createdatapropertyorthrow
-
-  function CreateDataPropertyOrThrow(O, P, V) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let success = CreateDataProperty(O, P, V);
-
-    if (success instanceof AbruptCompletion) {
-      return success;
-    }
-
-    if (success instanceof Completion) {
-      success = success.Value;
-    }
-
-    if (success === Value.false) {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return success;
-  } // 7.3.7 #sec-definepropertyorthrow
-
-  function DefinePropertyOrThrow(O, P, desc) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let success = O.DefineOwnProperty(P, desc);
-
-    if (success instanceof AbruptCompletion) {
-      return success;
-    }
-
-    if (success instanceof Completion) {
-      success = success.Value;
-    }
-
-    if (success === Value.false) {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return success;
-  } // 7.3.8 #sec-deletepropertyorthrow
-
-  function DeletePropertyOrThrow(O, P) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let success = O.Delete(P);
-
-    if (success instanceof AbruptCompletion) {
-      return success;
-    }
-
-    if (success instanceof Completion) {
-      success = success.Value;
-    }
-
-    if (success === Value.false) {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    return success;
-  } // 7.3.9 #sec-getmethod
-
-  function GetMethod(V, P) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let func = GetV(V, P);
-
-    if (func instanceof AbruptCompletion) {
-      return func;
-    }
-
-    if (func instanceof Completion) {
-      func = func.Value;
-    }
-
-    if (func === Value.null || func === Value.undefined) {
-      return Value.undefined;
-    }
-
-    if (IsCallable(func) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
-    }
-
-    return func;
-  } // 7.3.10 #sec-hasproperty
-
-  function HasProperty(O, P) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    return O.HasProperty(P);
-  } // 7.3.11 #sec-hasownproperty
-
-  function HasOwnProperty(O, P) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let desc = O.GetOwnProperty(P);
-
-    if (desc instanceof AbruptCompletion) {
-      return desc;
-    }
-
-    if (desc instanceof Completion) {
-      desc = desc.Value;
-    }
-
-    if (desc === Value.undefined) {
-      return Value.false;
-    }
-
-    return Value.true;
-  } // 7.3.12 #sec-call
-
-  function Call(F, V, argumentsList) {
-    if (!argumentsList) {
-      argumentsList = [];
-    }
-
-    Assert(argumentsList.every(a => a instanceof Value), "argumentsList.every((a) => a instanceof Value)");
-
-    if (IsCallable(F) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', F));
-    }
-
-    return F.Call(V, argumentsList);
-  } // 7.3.13 #sec-construct
-
-  function Construct(F, argumentsList, newTarget) {
-    if (!newTarget) {
-      newTarget = F;
-    }
-
-    if (!argumentsList) {
-      argumentsList = [];
-    }
-
-    Assert(IsConstructor(F) === Value.true, "IsConstructor(F) === Value.true");
-    Assert(IsConstructor(newTarget) === Value.true, "IsConstructor(newTarget) === Value.true");
-    return F.Construct(argumentsList, newTarget);
-  } // 7.3.14 #sec-setintegritylevel
-
-  function SetIntegrityLevel(O, level) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
-    let status = O.PreventExtensions();
-
-    if (status instanceof AbruptCompletion) {
-      return status;
-    }
-
-    if (status instanceof Completion) {
-      status = status.Value;
-    }
-
-    if (status === Value.false) {
-      return Value.false;
-    }
-
-    let keys = O.OwnPropertyKeys();
-
-    if (keys instanceof AbruptCompletion) {
-      return keys;
-    }
-
-    if (keys instanceof Completion) {
-      keys = keys.Value;
-    }
-
-    if (level === 'sealed') {
-      for (const k of keys) {
-        {
-          const hygienicTemp = DefinePropertyOrThrow(O, k, Descriptor({
-            Configurable: Value.false
-          }));
-
-          if (hygienicTemp instanceof AbruptCompletion) {
-            return hygienicTemp;
-          }
-        }
-      }
-    } else if (level === 'frozen') {
-      for (const k of keys) {
-        let currentDesc = O.GetOwnProperty(k);
-
-        if (currentDesc instanceof AbruptCompletion) {
-          return currentDesc;
+        if (resolution === 'ambiguous') {
+          return 'ambiguous';
         }
 
-        if (currentDesc instanceof Completion) {
-          currentDesc = currentDesc.Value;
-        }
+        if (resolution !== null) {
+          Assert(resolution instanceof ResolvedBindingRecord, "resolution instanceof ResolvedBindingRecord");
 
-        if (currentDesc !== Value.undefined) {
-          let desc;
-
-          if (IsAccessorDescriptor(currentDesc) === true) {
-            desc = Descriptor({
-              Configurable: Value.false
-            });
+          if (starResolution === null) {
+            starResolution = resolution;
           } else {
-            desc = Descriptor({
-              Configurable: Value.false,
-              Writable: Value.false
-            });
-          }
-
-          {
-            const hygienicTemp = DefinePropertyOrThrow(O, k, desc);
-
-            if (hygienicTemp instanceof AbruptCompletion) {
-              return hygienicTemp;
+            // Assert: There is more than one * import that includes the requested name.
+            if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName, starResolution.BindingName) === Value.false) {
+              return 'ambiguous';
             }
           }
         }
       }
-    }
 
-    return Value.true;
-  } // 7.3.15 #sec-testintegritylevel
+      return starResolution;
+    } // 15.2.1.17.4 #sec-source-text-module-record-initialize-environment
 
-  function TestIntegrityLevel(O, level) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
-    let extensible = IsExtensible(O);
 
-    if (extensible instanceof AbruptCompletion) {
-      return extensible;
-    }
+    InitializeEnvironment() {
+      const module = this;
 
-    if (extensible instanceof Completion) {
-      extensible = extensible.Value;
-    }
+      for (const e of module.IndirectExportEntries) {
+        let resolution = module.ResolveExport(e.ExportName);
 
-    if (extensible === Value.true) {
-      return Value.false;
-    }
-
-    let keys = O.OwnPropertyKeys();
-
-    if (keys instanceof AbruptCompletion) {
-      return keys;
-    }
-
-    if (keys instanceof Completion) {
-      keys = keys.Value;
-    }
-
-    for (const k of keys) {
-      let currentDesc = O.GetOwnProperty(k);
-
-      if (currentDesc instanceof AbruptCompletion) {
-        return currentDesc;
-      }
-
-      if (currentDesc instanceof Completion) {
-        currentDesc = currentDesc.Value;
-      }
-
-      if (currentDesc !== Value.undefined) {
-        if (currentDesc.Configurable === Value.true) {
-          return Value.false;
+        if (resolution instanceof AbruptCompletion) {
+          return resolution;
         }
 
-        if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
-          if (currentDesc.Writable === Value.true) {
-            return Value.false;
-          }
-        }
-      }
-    }
-
-    return Value.true;
-  } // 7.3.16 #sec-createarrayfromlist
-
-  function CreateArrayFromList(elements) {
-    Assert(elements.every(e => e instanceof Value), "elements.every((e) => e instanceof Value)");
-    let array = ArrayCreate(new Value(0));
-    Assert(!(array instanceof AbruptCompletion), "");
-
-    if (array instanceof Completion) {
-      array = array.Value;
-    }
-
-    let n = 0;
-
-    for (const e of elements) {
-      let nStr = ToString(new Value(n));
-      Assert(!(nStr instanceof AbruptCompletion), "");
-
-      if (nStr instanceof Completion) {
-        nStr = nStr.Value;
-      }
-
-      let status = CreateDataProperty(array, nStr, e);
-      Assert(!(status instanceof AbruptCompletion), "");
-
-      if (status instanceof Completion) {
-        status = status.Value;
-      }
-
-      Assert(status === Value.true, "status === Value.true");
-      n += 1;
-    }
-
-    return array;
-  } // 7.3.17 #sec-lengthofarraylike
-
-  function LengthOfArrayLike(obj) {
-    Assert(Type(obj) === 'Object', "Type(obj) === 'Object'");
-
-    let _hygienicTemp2 = Get(obj, new Value('length'));
-
-    if (_hygienicTemp2 instanceof AbruptCompletion) {
-      return _hygienicTemp2;
-    }
-
-    if (_hygienicTemp2 instanceof Completion) {
-      _hygienicTemp2 = _hygienicTemp2.Value;
-    }
-
-    return ToLength(_hygienicTemp2);
-  } // 7.3.17 #sec-createlistfromarraylike
-
-  function CreateListFromArrayLike(obj, elementTypes) {
-    if (!elementTypes) {
-      elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
-    }
-
-    if (Type(obj) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    let _hygienicTemp3 = LengthOfArrayLike(obj);
-
-    if (_hygienicTemp3 instanceof AbruptCompletion) {
-      return _hygienicTemp3;
-    }
-
-    if (_hygienicTemp3 instanceof Completion) {
-      _hygienicTemp3 = _hygienicTemp3.Value;
-    }
-
-    const len = _hygienicTemp3.numberValue();
-
-    const list = [];
-    let index = 0;
-
-    while (index < len) {
-      let indexName = ToString(new Value(index));
-      Assert(!(indexName instanceof AbruptCompletion), "");
-
-      if (indexName instanceof Completion) {
-        indexName = indexName.Value;
-      }
-
-      let next = Get(obj, indexName);
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (!elementTypes.includes(Type(next))) {
-        // TODO: throw with an error message
-        return surroundingAgent.Throw('TypeError');
-      }
-
-      list.push(next);
-      index += 1;
-    }
-
-    return list;
-  } // 7.3.18 #sec-invoke
-
-  function Invoke(V, P, argumentsList) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-
-    if (!argumentsList) {
-      argumentsList = [];
-    }
-
-    let func = GetV(V, P);
-
-    if (func instanceof AbruptCompletion) {
-      return func;
-    }
-
-    if (func instanceof Completion) {
-      func = func.Value;
-    }
-
-    return Call(func, V, argumentsList);
-  } // 7.3.19 #sec-ordinaryhasinstance
-
-  function OrdinaryHasInstance(C, O) {
-    if (IsCallable(C) === Value.false) {
-      return Value.false;
-    }
-
-    if ('BoundTargetFunction' in C) {
-      const BC = C.BoundTargetFunction;
-      return InstanceofOperator(O, BC);
-    }
-
-    if (Type(O) !== 'Object') {
-      return Value.false;
-    }
-
-    let P = Get(C, new Value('prototype'));
-
-    if (P instanceof AbruptCompletion) {
-      return P;
-    }
-
-    if (P instanceof Completion) {
-      P = P.Value;
-    }
-
-    if (Type(P) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    while (true) {
-      O = O.GetPrototypeOf();
-
-      if (O instanceof AbruptCompletion) {
-        return O;
-      }
-
-      if (O instanceof Completion) {
-        O = O.Value;
-      }
-
-      if (O === Value.null) {
-        return Value.false;
-      }
-
-      if (SameValue(P, O) === Value.true) {
-        return Value.true;
-      }
-    }
-  } // 7.3.20 #sec-speciesconstructor
-
-  function SpeciesConstructor(O, defaultConstructor) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    let C = Get(O, new Value('constructor'));
-
-    if (C instanceof AbruptCompletion) {
-      return C;
-    }
-
-    if (C instanceof Completion) {
-      C = C.Value;
-    }
-
-    if (C === Value.undefined) {
-      return defaultConstructor;
-    }
-
-    if (Type(C) !== 'Object') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
-    }
-
-    let S = Get(C, wellKnownSymbols.species);
-
-    if (S instanceof AbruptCompletion) {
-      return S;
-    }
-
-    if (S instanceof Completion) {
-      S = S.Value;
-    }
-
-    if (S === Value.undefined || S === Value.null) {
-      return defaultConstructor;
-    }
-
-    if (IsConstructor(S) === Value.true) {
-      return S;
-    } // TODO: throw with an error message
-
-
-    return surroundingAgent.Throw('TypeError');
-  } // 7.3.21 #sec-enumerableownpropertynames
-
-  function EnumerableOwnPropertyNames(O, kind) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    let ownKeys = O.OwnPropertyKeys();
-
-    if (ownKeys instanceof AbruptCompletion) {
-      return ownKeys;
-    }
-
-    if (ownKeys instanceof Completion) {
-      ownKeys = ownKeys.Value;
-    }
-
-    const properties = [];
-
-    for (const key of ownKeys) {
-      if (Type(key) === 'String') {
-        let desc = O.GetOwnProperty(key);
-
-        if (desc instanceof AbruptCompletion) {
-          return desc;
+        if (resolution instanceof Completion) {
+          resolution = resolution.Value;
         }
 
-        if (desc instanceof Completion) {
-          desc = desc.Value;
+        if (resolution === null || resolution === 'ambiguous') {
+          return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, e.ExportName, module));
+        } // Assert: resolution is a ResolvedBinding Record.
+
+      } // Assert: All named exports from module are resolvable.
+
+
+      const realm = module.Realm;
+      Assert(realm !== Value.undefined, "realm !== Value.undefined");
+      const env = NewModuleEnvironment(realm.GlobalEnv);
+      module.Environment = env;
+      const envRec = env.EnvironmentRecord;
+
+      for (const ie of module.ImportEntries) {
+        let importedModule = HostResolveImportedModule(module, ie.ModuleRequest);
+        Assert(!(importedModule instanceof AbruptCompletion), "");
+
+        if (importedModule instanceof Completion) {
+          importedModule = importedModule.Value;
         }
 
-        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
-          if (kind === 'key') {
-            properties.push(key);
-          } else {
-            let value = Get(O, key);
+        if (ie.ImportName === new Value('*')) {
+          let namespace = GetModuleNamespace(importedModule);
 
-            if (value instanceof AbruptCompletion) {
-              return value;
-            }
-
-            if (value instanceof Completion) {
-              value = value.Value;
-            }
-
-            if (kind === 'value') {
-              properties.push(value);
-            } else {
-              Assert(kind === 'key+value', "kind === 'key+value'");
-              let entry = CreateArrayFromList([key, value]);
-              Assert(!(entry instanceof AbruptCompletion), "");
-
-              if (entry instanceof Completion) {
-                entry = entry.Value;
-              }
-
-              properties.push(entry);
-            }
-          }
-        }
-      }
-    } // Order the elements of properties so they are in the same relative
-    // order as would be produced by the Iterator that would be returned
-    // if the EnumerateObjectProperties internal method were invoked with O.
-
-
-    return properties;
-  } // 7.3.22 #sec-getfunctionrealm
-
-  function GetFunctionRealm(obj) {
-    let _val = IsCallable(obj);
-
-    Assert(!(_val instanceof AbruptCompletion), "");
-
-    if (_val instanceof Completion) {
-      _val = _val.Value;
-    }
-
-    Assert(_val === Value.true, "X(IsCallable(obj)) === Value.true");
-
-    if ('Realm' in obj) {
-      return obj.Realm;
-    }
-
-    if ('BoundTargetFunction' in obj) {
-      const target = obj.BoundTargetFunction;
-      return GetFunctionRealm(target);
-    }
-
-    if (obj instanceof ProxyExoticObjectValue) {
-      if (Type(obj.ProxyHandler) === 'Null') {
-        return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'GetFunctionRealm'));
-      }
-
-      const proxyTarget = obj.ProxyTarget;
-      return GetFunctionRealm(proxyTarget);
-    }
-
-    return surroundingAgent.currentRealmRecord;
-  } // 7.3.23 #sec-copydataproperties
-
-  function CopyDataProperties(target, source, excludedItems) {
-    Assert(Type(target) === 'Object', "Type(target) === 'Object'");
-    Assert(excludedItems.every(i => IsPropertyKey(i)), "excludedItems.every((i) => IsPropertyKey(i))");
-
-    if (source === Value.undefined || source === Value.null) {
-      return target;
-    }
-
-    let from = ToObject(source);
-    Assert(!(from instanceof AbruptCompletion), "");
-
-    if (from instanceof Completion) {
-      from = from.Value;
-    }
-
-    let keys = from.OwnPropertyKeys();
-
-    if (keys instanceof AbruptCompletion) {
-      return keys;
-    }
-
-    if (keys instanceof Completion) {
-      keys = keys.Value;
-    }
-
-    for (const nextKey of keys) {
-      let excluded = false;
-
-      for (const e of excludedItems) {
-        if (SameValue(e, nextKey) === Value.true) {
-          excluded = true;
-        }
-      }
-
-      if (excluded === false) {
-        let desc = from.GetOwnProperty(nextKey);
-
-        if (desc instanceof AbruptCompletion) {
-          return desc;
-        }
-
-        if (desc instanceof Completion) {
-          desc = desc.Value;
-        }
-
-        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
-          let propValue = Get(from, nextKey);
-
-          if (propValue instanceof AbruptCompletion) {
-            return propValue;
+          if (namespace instanceof AbruptCompletion) {
+            return namespace;
           }
 
-          if (propValue instanceof Completion) {
-            propValue = propValue.Value;
+          if (namespace instanceof Completion) {
+            namespace = namespace.Value;
           }
 
-          Assert(!(CreateDataProperty(target, nextKey, propValue) instanceof AbruptCompletion), "");
-        }
-      }
-    }
-
-    return target;
-  }
-
-  function OrdinaryGetPrototypeOf(O) {
-    return O.Prototype;
-  } // 9.1.2.1 OrdinarySetPrototypeOf
-
-  function OrdinarySetPrototypeOf(O, V) {
-    Assert(Type(V) === 'Object' || Type(V) === 'Null', "Type(V) === 'Object' || Type(V) === 'Null'");
-    const current = O.Prototype;
-
-    if (SameValue(V, current) === Value.true) {
-      return Value.true;
-    }
-
-    const extensible = O.Extensible;
-
-    if (extensible === Value.false) {
-      return Value.false;
-    }
-
-    let p = V;
-    let done = false;
-
-    while (done === false) {
-      if (p === Value.null) {
-        done = true;
-      } else if (SameValue(p, O) === Value.true) {
-        return Value.false;
-      } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
-        done = true;
-      } else {
-        p = p.Prototype;
-      }
-    }
-
-    O.Prototype = V;
-    return Value.true;
-  } // 9.1.3.1 OrdinaryIsExtensible
-
-  function OrdinaryIsExtensible(O) {
-    return O.Extensible;
-  } // 9.1.4.1 OrdinaryPreventExtensions
-
-  function OrdinaryPreventExtensions(O) {
-    O.Extensible = Value.false;
-    return Value.true;
-  } // 9.1.5.1 OrdinaryGetOwnProperty
-
-  function OrdinaryGetOwnProperty(O, P) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-
-    if (!O.properties.has(P)) {
-      return Value.undefined;
-    }
-
-    const D = Descriptor({});
-    const x = O.properties.get(P);
-
-    if (IsDataDescriptor(x)) {
-      D.Value = x.Value;
-      D.Writable = x.Writable;
-    } else if (IsAccessorDescriptor(x)) {
-      D.Get = x.Get;
-      D.Set = x.Set;
-    }
-
-    D.Enumerable = x.Enumerable;
-    D.Configurable = x.Configurable;
-    return D;
-  } // 9.1.6.1 OrdinaryDefineOwnProperty
-
-  function OrdinaryDefineOwnProperty(O, P, Desc) {
-    let current = O.GetOwnProperty(P);
-
-    if (current instanceof AbruptCompletion) {
-      return current;
-    }
-
-    if (current instanceof Completion) {
-      current = current.Value;
-    }
-
-    let extensible = IsExtensible(O);
-
-    if (extensible instanceof AbruptCompletion) {
-      return extensible;
-    }
-
-    if (extensible instanceof Completion) {
-      extensible = extensible.Value;
-    }
-
-    return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
-  } // 9.1.6.2 #sec-iscompatiblepropertydescriptor
-
-  function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
-    return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
-  } // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-
-  function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-    Assert(O === Value.undefined || IsPropertyKey(P), "O === Value.undefined || IsPropertyKey(P)");
-
-    if (current === Value.undefined) {
-      if (extensible === Value.false) {
-        return Value.false;
-      }
-
-      Assert(extensible === Value.true, "extensible === Value.true");
-
-      if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-        if (Type(O) !== 'Undefined') {
-          O.properties.set(P, Descriptor({
-            Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
-            Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
-            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
-          }));
-        }
-      } else {
-        Assert(IsAccessorDescriptor(Desc), "IsAccessorDescriptor(Desc)");
-
-        if (Type(O) !== 'Undefined') {
-          O.properties.set(P, Descriptor({
-            Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
-            Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
-            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
-            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
-          }));
-        }
-      }
-
-      return Value.true;
-    }
-
-    if (Desc.everyFieldIsAbsent()) {
-      return Value.true;
-    }
-
-    if (current.Configurable === Value.false) {
-      if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
-        return Value.false;
-      }
-
-      if (Desc.Enumerable !== undefined && Desc.Enumerable !== current.Enumerable) {
-        return Value.false;
-      }
-    }
-
-    if (IsGenericDescriptor(Desc)) ; else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-      if (current.Configurable === Value.false) {
-        return Value.false;
-      }
-
-      if (IsDataDescriptor(current)) {
-        if (Type(O) !== 'Undefined') {
-          const entry = O.properties.get(P);
-          entry.Value = undefined;
-          entry.Writable = undefined;
-          entry.Get = Value.undefined;
-          entry.Set = Value.undefined;
-        }
-      } else {
-        if (Type(O) !== 'Undefined') {
-          const entry = O.properties.get(P);
-          entry.Get = undefined;
-          entry.Set = undefined;
-          entry.Value = Value.undefined;
-          entry.Writable = Value.false;
-        }
-      }
-    } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
-      if (current.Configurable === Value.false && current.Writable === Value.false) {
-        if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
-          return Value.false;
-        }
-
-        if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.false) {
-          return Value.false;
-        }
-
-        return Value.true;
-      }
-    } else {
-      Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc), "IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc)");
-
-      if (current.Configurable === Value.false) {
-        if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === Value.false) {
-          return Value.false;
-        }
-
-        if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get) === Value.false) {
-          return Value.false;
-        }
-
-        return Value.true;
-      }
-    }
-
-    if (Type(O) !== 'Undefined') {
-      const target = O.properties.get(P);
-
-      if (Desc.Value !== undefined) {
-        target.Value = Desc.Value;
-      }
-
-      if (Desc.Writable !== undefined) {
-        target.Writable = Desc.Writable;
-      }
-
-      if (Desc.Get !== undefined) {
-        target.Get = Desc.Get;
-      }
-
-      if (Desc.Set !== undefined) {
-        target.Set = Desc.Set;
-      }
-
-      if (Desc.Enumerable !== undefined) {
-        target.Enumerable = Desc.Enumerable;
-      }
-
-      if (Desc.Configurable !== undefined) {
-        target.Configurable = Desc.Configurable;
-      }
-    }
-
-    return Value.true;
-  } // 9.1.7.1 OrdinaryHasProperty
-
-  function OrdinaryHasProperty(O, P) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let hasOwn = O.GetOwnProperty(P);
-
-    if (hasOwn instanceof AbruptCompletion) {
-      return hasOwn;
-    }
-
-    if (hasOwn instanceof Completion) {
-      hasOwn = hasOwn.Value;
-    }
-
-    if (Type(hasOwn) !== 'Undefined') {
-      return Value.true;
-    }
-
-    let parent = O.GetPrototypeOf();
-
-    if (parent instanceof AbruptCompletion) {
-      return parent;
-    }
-
-    if (parent instanceof Completion) {
-      parent = parent.Value;
-    }
-
-    if (Type(parent) !== 'Null') {
-      return parent.HasProperty(P);
-    }
-
-    return Value.false;
-  } // 9.1.8.1
-
-  function OrdinaryGet(O, P, Receiver) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let desc = O.GetOwnProperty(P);
-
-    if (desc instanceof AbruptCompletion) {
-      return desc;
-    }
-
-    if (desc instanceof Completion) {
-      desc = desc.Value;
-    }
-
-    if (Type(desc) === 'Undefined') {
-      let parent = O.GetPrototypeOf();
-
-      if (parent instanceof AbruptCompletion) {
-        return parent;
-      }
-
-      if (parent instanceof Completion) {
-        parent = parent.Value;
-      }
-
-      if (Type(parent) === 'Null') {
-        return Value.undefined;
-      }
-
-      return parent.Get(P, Receiver);
-    }
-
-    if (IsDataDescriptor(desc)) {
-      return desc.Value;
-    }
-
-    Assert(IsAccessorDescriptor(desc), "IsAccessorDescriptor(desc)");
-    const getter = desc.Get;
-
-    if (Type(getter) === 'Undefined') {
-      return Value.undefined;
-    }
-
-    return Call(getter, Receiver);
-  } // 9.1.9.1 OrdinarySet
-
-  function OrdinarySet(O, P, V, Receiver) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let ownDesc = O.GetOwnProperty(P);
-
-    if (ownDesc instanceof AbruptCompletion) {
-      return ownDesc;
-    }
-
-    if (ownDesc instanceof Completion) {
-      ownDesc = ownDesc.Value;
-    }
-
-    return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
-  } // 9.1.9.2 OrdinarySetWithOwnDescriptor
-
-  function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-
-    if (Type(ownDesc) === 'Undefined') {
-      let parent = O.GetPrototypeOf();
-
-      if (parent instanceof AbruptCompletion) {
-        return parent;
-      }
-
-      if (parent instanceof Completion) {
-        parent = parent.Value;
-      }
-
-      if (Type(parent) !== 'Null') {
-        return parent.Set(P, V, Receiver);
-      }
-
-      ownDesc = Descriptor({
-        Value: Value.undefined,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: Value.true
-      });
-    }
-
-    if (IsDataDescriptor(ownDesc)) {
-      if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
-        return Value.false;
-      }
-
-      if (Type(Receiver) !== 'Object') {
-        return Value.false;
-      }
-
-      let existingDescriptor = Receiver.GetOwnProperty(P);
-
-      if (existingDescriptor instanceof AbruptCompletion) {
-        return existingDescriptor;
-      }
-
-      if (existingDescriptor instanceof Completion) {
-        existingDescriptor = existingDescriptor.Value;
-      }
-
-      if (Type(existingDescriptor) !== 'Undefined') {
-        if (IsAccessorDescriptor(existingDescriptor)) {
-          return Value.false;
-        }
-
-        if (existingDescriptor.Writable === Value.false) {
-          return Value.false;
-        }
-
-        const valueDesc = Descriptor({
-          Value: V
-        });
-        return Receiver.DefineOwnProperty(P, valueDesc);
-      }
-
-      return CreateDataProperty(Receiver, P, V);
-    }
-
-    Assert(IsAccessorDescriptor(ownDesc), "IsAccessorDescriptor(ownDesc)");
-    const setter = ownDesc.Set;
-
-    if (setter === undefined || Type(setter) === 'Undefined') {
-      return Value.false;
-    }
-
-    {
-      const hygienicTemp = Call(setter, Receiver, [V]);
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    return Value.true;
-  } // 9.1.10.1 OrdinaryDelete
-
-  function OrdinaryDelete(O, P) {
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let desc = O.GetOwnProperty(P);
-
-    if (desc instanceof AbruptCompletion) {
-      return desc;
-    }
-
-    if (desc instanceof Completion) {
-      desc = desc.Value;
-    }
-
-    if (Type(desc) === 'Undefined') {
-      return Value.true;
-    }
-
-    if (desc.Configurable === Value.true) {
-      O.properties.delete(P);
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 9.1.11.1
-
-  function OrdinaryOwnPropertyKeys(O) {
-    const keys = []; // For each own property key P of O that is an array index, in ascending numeric index order, do
-    //   Add P as the last element of keys.
-
-    for (const P of O.properties.keys()) {
-      if (isArrayIndex(P)) {
-        keys.push(P);
-      }
-    }
-
-    keys.sort((a, b) => Number.parseInt(a.stringValue(), 10) - Number.parseInt(b.stringValue(), 10)); // For each own property key P of O such that Type(P) is String and
-    // P is not an array index, in ascending chronological order of property creation, do
-    //   Add P as the last element of keys.
-
-    for (const P of O.properties.keys()) {
-      if (Type(P) === 'String' && isArrayIndex(P) === false) {
-        keys.push(P);
-      }
-    } // For each own property key P of O such that Type(P) is Symbol,
-    // in ascending chronological order of property creation, do
-    //   Add P as the last element of keys.
-
-
-    for (const P of O.properties.keys()) {
-      if (Type(P) === 'Symbol') {
-        keys.push(P);
-      }
-    }
-
-    return keys;
-  } // 9.1.12 ObjectCreate
-
-  function ObjectCreate(proto, internalSlotsList) {
-    Assert(Type(proto) === 'Null' || Type(proto) === 'Object', "Type(proto) === 'Null' || Type(proto) === 'Object'");
-
-    if (!internalSlotsList) {
-      internalSlotsList = [];
-    }
-
-    const obj = new ObjectValue();
-
-    for (const slot of internalSlotsList) {
-      obj[slot] = Value.undefined;
-    } // The following steps happen in ObjectValue constructor:
-    //
-    // Set obj's essential internal methods to the default ordinary
-    // object definitions specified in 9.1.
-
-
-    obj.Prototype = proto;
-    obj.Extensible = Value.true;
-    return obj;
-  } // 9.1.13 OrdinaryCreateFromConstructor
-
-  function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
-    let proto = GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
-
-    if (proto instanceof AbruptCompletion) {
-      return proto;
-    }
-
-    if (proto instanceof Completion) {
-      proto = proto.Value;
-    }
-
-    return ObjectCreate(proto, internalSlotsList);
-  } // 9.1.14 GetPrototypeFromConstructor
-
-  function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
-    // Assert: intrinsicDefaultProto is a String value that
-    // is this specification's name of an intrinsic object.
-    Assert(IsCallable(constructor) === Value.true, "IsCallable(constructor) === Value.true");
-    let proto = Get(constructor, new Value('prototype'));
-
-    if (proto instanceof AbruptCompletion) {
-      return proto;
-    }
-
-    if (proto instanceof Completion) {
-      proto = proto.Value;
-    }
-
-    if (Type(proto) !== 'Object') {
-      let realm = GetFunctionRealm(constructor);
-
-      if (realm instanceof AbruptCompletion) {
-        return realm;
-      }
-
-      if (realm instanceof Completion) {
-        realm = realm.Value;
-      }
-
-      proto = realm.Intrinsics[intrinsicDefaultProto];
-    }
-
-    return proto;
-  } // 9.4.5.7 #sec-integerindexedobjectcreate
-
-  function IntegerIndexedObjectCreate(prototype, internalSlotsList) {
-    Assert(internalSlotsList.includes('ViewedArrayBuffer'), "internalSlotsList.includes('ViewedArrayBuffer')");
-    Assert(internalSlotsList.includes('ArrayLength'), "internalSlotsList.includes('ArrayLength')");
-    Assert(internalSlotsList.includes('ByteOffset'), "internalSlotsList.includes('ByteOffset')");
-    Assert(internalSlotsList.includes('TypedArrayName'), "internalSlotsList.includes('TypedArrayName')");
-    const A = new IntegerIndexedExoticObjectValue();
-
-    for (const slot of internalSlotsList) {
-      A[slot] = Value.undefined;
-    }
-
-    A.Prototype = prototype;
-    A.Extensible = Value.true;
-    return A;
-  } // 9.4.5.8 #sec-integerindexedelementget
-
-  function IntegerIndexedElementGet(O, index) {
-    Assert(Type(index) === 'Number', "Type(index) === 'Number'");
-    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O && 'ArrayLength' in O && 'ByteOffset' in O && 'TypedArrayName' in O, "O instanceof ObjectValue\n      && 'ViewedArrayBuffer' in O\n      && 'ArrayLength' in O\n      && 'ByteOffset' in O\n      && 'TypedArrayName' in O");
-    const buffer = O.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
-    }
-
-    if (IsInteger(index) === Value.false) {
-      return Value.undefined;
-    }
-
-    index = index.numberValue();
-
-    if (Object.is(index, -0)) {
-      return Value.undefined;
-    }
-
-    const length = O.ArrayLength.numberValue();
-
-    if (index < 0 || index >= length) {
-      return Value.undefined;
-    }
-
-    const offset = O.ByteOffset.numberValue();
-    const arrayTypeName = O.TypedArrayName.stringValue();
-    const {
-      ElementSize: elementSize,
-      ElementType: elementType
-    } = typedArrayInfo.get(arrayTypeName);
-    const indexedPosition = index * elementSize + offset;
-    return GetValueFromBuffer(buffer, new Value(indexedPosition), elementType);
-  } // 9.4.5.9 #sec-integerindexedelementset
-
-  function IntegerIndexedElementSet(O, index, value) {
-    Assert(Type(index) === 'Number', "Type(index) === 'Number'");
-    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O && 'ArrayLength' in O && 'ByteOffset' in O && 'TypedArrayName' in O, "O instanceof ObjectValue\n      && 'ViewedArrayBuffer' in O\n      && 'ArrayLength' in O\n      && 'ByteOffset' in O\n      && 'TypedArrayName' in O");
-    let numValue = ToNumber(value);
-
-    if (numValue instanceof AbruptCompletion) {
-      return numValue;
-    }
-
-    if (numValue instanceof Completion) {
-      numValue = numValue.Value;
-    }
-
-    const buffer = O.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
-    }
-
-    if (IsInteger(index) === Value.false) {
-      return Value.false;
-    }
-
-    if (Object.is(index.numberValue(), -0)) {
-      return Value.false;
-    }
-
-    const length = O.ArrayLength;
-
-    if (index.numberValue() < 0 || index.numberValue() >= length.numberValue()) {
-      return Value.false;
-    }
-
-    const offset = O.ByteOffset;
-    const arrayTypeName = O.TypedArrayName.stringValue();
-    const {
-      ElementSize: elementSize,
-      ElementType: elementType
-    } = typedArrayInfo.get(arrayTypeName);
-    const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue());
-    Assert(!(SetValueInBuffer(buffer, indexedPosition, elementType, numValue) instanceof AbruptCompletion), "");
-    return Value.true;
-  }
-
-  // 25.6 #sec-promise-objects
-  // 25.6.1.1 #sec-promisecapability-records
-
-  class PromiseCapabilityRecord {
-    constructor() {
-      this.Promise = Value.undefined;
-      this.Resolve = Value.undefined;
-      this.Reject = Value.undefined;
-    }
-
-  } // 25.6.1.2 #sec-promisereaction-records
-
-  class PromiseReactionRecord {
-    constructor(O) {
-      Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
-      Assert(O.Type === 'Fulfill' || O.Type === 'Reject', "O.Type === 'Fulfill' || O.Type === 'Reject'");
-      Assert(O.Handler instanceof FunctionValue || O.Handler === Value.undefined, "O.Handler instanceof FunctionValue\n        || O.Handler === Value.undefined");
-      this.Capability = O.Capability;
-      this.Type = O.Type;
-      this.Handler = O.Handler;
-    }
-
-  } // 25.6.1.3 #sec-createresolvingfunctions
-
-  function CreateResolvingFunctions(promise) {
-    const alreadyResolved = {
-      Value: false
-    };
-    const stepsResolve = PromiseResolveFunctions;
-    let resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
-    Assert(!(resolve instanceof AbruptCompletion), "");
-
-    if (resolve instanceof Completion) {
-      resolve = resolve.Value;
-    }
-
-    SetFunctionLength(resolve, new Value(1));
-    resolve.Promise = promise;
-    resolve.AlreadyResolved = alreadyResolved;
-    const stepsReject = PromiseRejectFunctions;
-    let reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
-    Assert(!(reject instanceof AbruptCompletion), "");
-
-    if (reject instanceof Completion) {
-      reject = reject.Value;
-    }
-
-    SetFunctionLength(reject, new Value(1));
-    reject.Promise = promise;
-    reject.AlreadyResolved = alreadyResolved;
-    return {
-      Resolve: resolve,
-      Reject: reject
-    };
-  } // 25.6.1.3.1 #sec-promise-reject-functions
-
-  function PromiseRejectFunctions([reason = Value.undefined]) {
-    const F = this;
-    Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'");
-    const promise = F.Promise;
-    const alreadyResolved = F.AlreadyResolved;
-
-    if (alreadyResolved.Value === true) {
-      return Value.undefined;
-    }
-
-    alreadyResolved.Value = true;
-    return RejectPromise(promise, reason);
-  } // 25.6.1.3.2 #sec-promise-resolve-functions
-
-
-  function PromiseResolveFunctions([resolution = Value.undefined]) {
-    const F = this;
-    Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'");
-    const promise = F.Promise;
-    const alreadyResolved = F.AlreadyResolved;
-
-    if (alreadyResolved.Value === true) {
-      return Value.undefined;
-    }
-
-    alreadyResolved.Value = true;
-
-    if (SameValue(resolution, promise) === Value.true) {
-      const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
-      return RejectPromise(promise, selfResolutionError);
-    }
-
-    if (Type(resolution) !== 'Object') {
-      return FulfillPromise(promise, resolution);
-    }
-
-    const then = Get(resolution, new Value('then'));
-
-    if (then instanceof AbruptCompletion) {
-      return RejectPromise(promise, then.Value);
-    }
-
-    const thenAction = then.Value;
-
-    if (IsCallable(thenAction) === Value.false) {
-      return FulfillPromise(promise, resolution);
-    }
-
-    EnqueueJob('PromiseJobs', PromiseResolveThenableJob, [promise, resolution, thenAction]);
-    return Value.undefined;
-  } // 25.6.1.4 #sec-fulfillpromise
-
-
-  function FulfillPromise(promise, value) {
-    Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
-    const reactions = promise.PromiseFulfillReactions;
-    promise.PromiseResult = value;
-    promise.PromiseFulfillReactions = undefined;
-    promise.PromiseRejectReactions = undefined;
-    promise.PromiseState = 'fulfilled';
-    return TriggerPromiseReactions(reactions, value);
-  } // 25.6.1.5 #sec-newpromisecapability
-
-
-  function NewPromiseCapability(C) {
-    if (IsConstructor(C) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
-    }
-
-    const promiseCapability = new PromiseCapabilityRecord();
-    const steps = GetCapabilitiesExecutorFunctions;
-    let executor = CreateBuiltinFunction(steps, ['Capability']);
-    Assert(!(executor instanceof AbruptCompletion), "");
-
-    if (executor instanceof Completion) {
-      executor = executor.Value;
-    }
-
-    SetFunctionLength(executor, new Value(2));
-    executor.Capability = promiseCapability;
-    let promise = Construct(C, [executor]);
-
-    if (promise instanceof AbruptCompletion) {
-      return promise;
-    }
-
-    if (promise instanceof Completion) {
-      promise = promise.Value;
-    }
-
-    if (IsCallable(promiseCapability.Resolve) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('PromiseResolveFunction', promiseCapability.Resolve));
-    }
-
-    if (IsCallable(promiseCapability.Reject) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('PromiseRejectFunction', promiseCapability.Reject));
-    }
-
-    promiseCapability.Promise = promise;
-    return promiseCapability;
-  } // 25.6.1.5.1 #sec-getcapabilitiesexecutor-functions
-
-  function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
-    const F = this;
-    const promiseCapability = F.Capability;
-
-    if (Type(promiseCapability.Resolve) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
-    }
-
-    if (Type(promiseCapability.Reject) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
-    }
-
-    promiseCapability.Resolve = resolve;
-    promiseCapability.Reject = reject;
-    return Value.undefined;
-  } // 25.6.1.6 #sec-ispromise
-
-
-  function IsPromise(x) {
-    if (Type(x) !== 'Object') {
-      return Value.false;
-    }
-
-    if (!('PromiseState' in x)) {
-      return Value.false;
-    }
-
-    return Value.true;
-  } // 25.6.1.7 #sec-rejectpromise
-
-  function RejectPromise(promise, reason) {
-    Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
-    const reactions = promise.PromiseRejectReactions;
-    promise.PromiseResult = reason;
-    promise.PromiseFulfillReactions = undefined;
-    promise.PromiseRejectReactions = undefined;
-    promise.PromiseState = 'rejected';
-
-    if (promise.PromiseIsHandled === Value.false) {
-      HostPromiseRejectionTracker(promise, 'reject');
-    }
-
-    return TriggerPromiseReactions(reactions, reason);
-  } // 25.6.1.8 #sec-triggerpromisereactions
-
-
-  function TriggerPromiseReactions(reactions, argument) {
-    reactions.forEach(reaction => {
-      EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
-    });
-    return Value.undefined;
-  } // 25.6.2.1 #sec-promisereactionjob
-
-
-  function PromiseReactionJob(reaction, argument) {
-    Assert(reaction instanceof PromiseReactionRecord, "reaction instanceof PromiseReactionRecord");
-    const promiseCapability = reaction.Capability;
-    const type = reaction.Type;
-    const handler = reaction.Handler;
-    let handlerResult;
-
-    if (handler === Value.undefined) {
-      if (type === 'Fulfill') {
-        handlerResult = new NormalCompletion(argument);
-      } else {
-        Assert(type === 'Reject', "type === 'Reject'");
-        handlerResult = new ThrowCompletion(argument);
-      }
-    } else {
-      handlerResult = Call(handler, Value.undefined, [argument]);
-    }
-
-    if (promiseCapability === Value.undefined) {
-      Assert(!(handlerResult instanceof AbruptCompletion), "!(handlerResult instanceof AbruptCompletion)");
-      return new NormalCompletion(undefined);
-    }
-
-    let status;
-
-    if (handlerResult instanceof AbruptCompletion) {
-      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
-    } else {
-      status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
-    }
-
-    return status;
-  } // 25.6.2.2 #sec-promiseresolvethenablejob
-
-  function PromiseResolveThenableJob(promiseToResolve, thenable, then) {
-    const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
-    const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
-
-    if (thenCallResult instanceof AbruptCompletion) {
-      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
-      return status;
-    }
-
-    return thenCallResult;
-  } // 25.6.4.5.1 #sec-promise-resolve
-
-
-  function PromiseResolve(C, x) {
-    Assert(Type(C) === 'Object', "Type(C) === 'Object'");
-
-    if (IsPromise(x) === Value.true) {
-      let xConstructor = Get(x, new Value('constructor'));
-
-      if (xConstructor instanceof AbruptCompletion) {
-        return xConstructor;
-      }
-
-      if (xConstructor instanceof Completion) {
-        xConstructor = xConstructor.Value;
-      }
-
-      if (SameValue(xConstructor, C) === Value.true) {
-        return x;
-      }
-    }
-
-    let promiseCapability = NewPromiseCapability(C);
-
-    if (promiseCapability instanceof AbruptCompletion) {
-      return promiseCapability;
-    }
-
-    if (promiseCapability instanceof Completion) {
-      promiseCapability = promiseCapability.Value;
-    }
-
-    {
-      const hygienicTemp = Call(promiseCapability.Resolve, Value.undefined, [x]);
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    return promiseCapability.Promise;
-  } // 25.6.5.4.1 #sec-performpromisethen
-
-  function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
-    Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true");
-
-    if (resultCapability) {
-      Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
-    } else {
-      resultCapability = Value.undefined;
-    }
-
-    if (IsCallable(onFulfilled) === Value.false) {
-      onFulfilled = Value.undefined;
-    }
-
-    if (IsCallable(onRejected) === Value.false) {
-      onRejected = Value.undefined;
-    }
-
-    const fulfillReaction = new PromiseReactionRecord({
-      Capability: resultCapability,
-      Type: 'Fulfill',
-      Handler: onFulfilled
-    });
-    const rejectReaction = new PromiseReactionRecord({
-      Capability: resultCapability,
-      Type: 'Reject',
-      Handler: onRejected
-    });
-
-    if (promise.PromiseState === 'pending') {
-      promise.PromiseFulfillReactions.push(fulfillReaction);
-      promise.PromiseRejectReactions.push(rejectReaction);
-    } else if (promise.PromiseState === 'fulfilled') {
-      const value = promise.PromiseResult;
-      EnqueueJob('PromiseJobs', PromiseReactionJob, [fulfillReaction, value]);
-    } else {
-      Assert(promise.PromiseState === 'rejected', "promise.PromiseState === 'rejected'");
-      const reason = promise.PromiseResult;
-
-      if (promise.PromiseIsHandled === Value.false) {
-        HostPromiseRejectionTracker(promise, 'handler');
-      }
-
-      EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
-    }
-
-    promise.PromiseIsHandled = Value.true;
-
-    if (resultCapability === Value.undefined) {
-      return Value.undefined;
-    } else {
-      return resultCapability.Promise;
-    }
-  }
-
-  function GetBase(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    return V.BaseValue;
-  } // 6.2.4.2 #sec-getreferencedname
-
-  function GetReferencedName(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    return V.ReferencedName;
-  } // 6.2.4.3 #sec-isstrictreference
-
-  function IsStrictReference(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    return V.StrictReference;
-  } // 6.2.4.4 #sec-hasprimitivebase
-
-  function HasPrimitiveBase(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-
-    if (V.BaseValue instanceof PrimitiveValue) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 6.2.4.5 #sec-ispropertyreference
-
-  function IsPropertyReference(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-
-    if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V) === Value.true) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 6.2.4.6 #sec-isunresolvablereference
-
-  function IsUnresolvableReference(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-
-    if (V.BaseValue === Value.undefined) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 6.2.4.7 #sec-issuperreference
-
-  function IsSuperReference(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    return 'ThisValue' in V ? Value.true : Value.false;
-  } // 6.2.4.8 #sec-getvalue
-
-  function GetValue(V) {
-    if (V instanceof AbruptCompletion) {
-      return V;
-    }
-
-    if (V instanceof Completion) {
-      V = V.Value;
-    }
-
-    if (Type(V) !== 'Reference') {
-      return V;
-    }
-
-    let base = GetBase(V);
-
-    if (IsUnresolvableReference(V) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
-    }
-
-    if (IsPropertyReference(V) === Value.true) {
-      if (HasPrimitiveBase(V) === Value.true) {
-        Assert(base !== Value.undefined && base !== Value.null, "base !== Value.undefined && base !== Value.null");
-        base = ToObject(base);
-        Assert(!(base instanceof AbruptCompletion), "");
-
-        if (base instanceof Completion) {
-          base = base.Value;
-        }
-      }
-
-      return base.Get(GetReferencedName(V), GetThisValue(V));
-    } else {
-      return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
-    }
-  } // 6.2.4.9 #sec-putvalue
-
-  function PutValue(V, W) {
-    if (V instanceof AbruptCompletion) {
-      return V;
-    }
-
-    if (V instanceof Completion) {
-      V = V.Value;
-    }
-
-    if (W instanceof AbruptCompletion) {
-      return W;
-    }
-
-    if (W instanceof Completion) {
-      W = W.Value;
-    }
-
-    if (Type(V) !== 'Reference') {
-      return surroundingAgent.Throw('ReferenceError');
-    }
-
-    let base = GetBase(V);
-
-    if (IsUnresolvableReference(V) === Value.true) {
-      if (IsStrictReference(V) === Value.true) {
-        return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
-      }
-
-      const globalObj = GetGlobalObject();
-      return Set$1(globalObj, GetReferencedName(V), W, Value.false);
-    } else if (IsPropertyReference(V) === Value.true) {
-      if (HasPrimitiveBase(V) === Value.true) {
-        Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null', "Type(base) !== 'Undefined' && Type(base) !== 'Null'");
-        base = ToObject(base);
-        Assert(!(base instanceof AbruptCompletion), "");
-
-        if (base instanceof Completion) {
-          base = base.Value;
-        }
-      }
-
-      let succeeded = base.Set(GetReferencedName(V), W, GetThisValue(V));
-
-      if (succeeded instanceof AbruptCompletion) {
-        return succeeded;
-      }
-
-      if (succeeded instanceof Completion) {
-        succeeded = succeeded.Value;
-      }
-
-      if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-        return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferencedName(V), base));
-      }
-
-      return new NormalCompletion(Value.undefined);
-    } else {
-      return base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V));
-    }
-  } // 6.2.4.10 #sec-getthisvalue
-
-  function GetThisValue(V) {
-    Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true");
-
-    if (IsSuperReference(V) === Value.true) {
-      return V.ThisValue;
-    }
-
-    return GetBase(V);
-  } // 6.2.4.11 #sec-initializereferencedbinding
-
-  function InitializeReferencedBinding(V, W) {
-    if (V instanceof AbruptCompletion) {
-      return V;
-    }
-
-    if (V instanceof Completion) {
-      V = V.Value;
-    }
-
-    if (W instanceof AbruptCompletion) {
-      return W;
-    }
-
-    if (W instanceof Completion) {
-      W = W.Value;
-    }
-
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    Assert(IsUnresolvableReference(V) === Value.false, "IsUnresolvableReference(V) === Value.false");
-    const base = GetBase(V);
-    Assert(Type(base) === 'EnvironmentRecord', "Type(base) === 'EnvironmentRecord'");
-    return base.InitializeBinding(GetReferencedName(V), W);
-  }
-
-  function RegExpAlloc(newTarget) {
-    let obj = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
-
-    if (obj instanceof AbruptCompletion) {
-      return obj;
-    }
-
-    if (obj instanceof Completion) {
-      obj = obj.Value;
-    }
-
-    Assert(!(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-    return obj;
-  } // 21.2.3.2.2 #sec-regexpinitialize
-
-  function RegExpInitialize(obj, pattern, flags) {
-    let P;
-
-    if (pattern === Value.undefined) {
-      P = new Value('');
-    } else {
-      P = ToString(pattern);
-
-      if (P instanceof AbruptCompletion) {
-        return P;
-      }
-
-      if (P instanceof Completion) {
-        P = P.Value;
-      }
-    }
-
-    let F;
-
-    if (flags === Value.undefined) {
-      F = new Value('');
-    } else {
-      F = ToString(flags);
-
-      if (F instanceof AbruptCompletion) {
-        return F;
-      }
-
-      if (F instanceof Completion) {
-        F = F.Value;
-      }
-    }
-
-    const f = F.stringValue();
-
-    if (/^[gimsuy]*$/.test(f) === false || new global.Set(f).size !== f.length) {
-      return surroundingAgent.Throw('SyntaxError', msg('InvalidRegExpFlags', f));
-    }
-
-    const BMP = !f.includes('u');
-      // TODO: remove this once internal parsing is implemented
-
-
-    try {
-      new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        return surroundingAgent.Throw('SyntaxError', e.message);
-      }
-
-      throw e;
-    }
-
-    obj.OriginalSource = P;
-    obj.OriginalFlags = F;
-    obj.RegExpMatcher = getMatcher(P, F);
-    {
-      const hygienicTemp = Set$1(obj, new Value('lastIndex'), new Value(0), Value.true);
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    return obj;
-  } // TODO: implement an independant matcher
-
-  function getMatcher(P, F) {
-    const regex = new RegExp(P.stringValue(), F.stringValue());
-    const unicode = F.stringValue().includes('u');
-    return function RegExpMatcher(S, lastIndex) {
-      regex.lastIndex = lastIndex.numberValue();
-      const result = regex.exec(S.stringValue());
-
-      if (result === null) {
-        return null;
-      }
-
-      if (result.index > lastIndex.numberValue()) {
-        return null;
-      }
-
-      const captures = [];
-
-      for (const capture of result.slice(1)) {
-        if (capture === undefined) {
-          captures.push(Value.undefined);
-        } else if (unicode) {
-          captures.push(Array.from(capture).map(char => char.codePointAt(0)));
+          Assert(!(envRec.CreateImmutableBinding(ie.LocalName, Value.true) instanceof AbruptCompletion), "");
+          envRec.InitializeBinding(ie.LocalName, namespace);
         } else {
-          captures.push(capture.split('').map(char => char.charCodeAt(0)));
+          let resolution = importedModule.ResolveExport(ie.ImportName);
+
+          if (resolution instanceof AbruptCompletion) {
+            return resolution;
+          }
+
+          if (resolution instanceof Completion) {
+            resolution = resolution.Value;
+          }
+
+          if (resolution === null || resolution === 'ambiguous') {
+            return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule));
+          }
+
+          envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
         }
       }
 
-      return {
-        endIndex: new Value(result.index + result[0].length),
-        captures
-      };
-    };
-  } // 21.2.3.2.3 #sec-regexpcreate
-
-
-  function RegExpCreate(P, F) {
-    let obj = RegExpAlloc(surroundingAgent.intrinsic('%RegExp%'));
-
-    if (obj instanceof AbruptCompletion) {
-      return obj;
-    }
-
-    if (obj instanceof Completion) {
-      obj = obj.Value;
-    }
-
-    return RegExpInitialize(obj, P, F);
-  } // 21.2.3.2.4 #sec-escaperegexppattern
-
-  function EscapeRegExpPattern(P, F) {
-    // TODO: implement this without host
-    const re = new RegExp(P.stringValue(), F.stringValue());
-    return new Value(re.source);
-  }
-
-  // 10 #sec-ecmascript-language-source-code
-  // 10.1.1 #sec-utf16encoding
-
-  function UTF16Encoding(cp) {
-    Assert(cp >= 0 && cp <= 0x10FFFF, "cp >= 0 && cp <= 0x10FFFF");
-
-    if (cp <= 0xFFFF) {
-      return [cp];
-    }
-
-    const cu1 = Math.floor((cp - 0x10000) / 0x400) + 0xD800;
-    const cu2 = (cp - 0x10000) % 0x400 + 0xDC00;
-    return [cu1, cu2];
-  } // 10.1.2 #sec-utf16decode
-
-  function UTF16Decode(lead, trail) {
-    Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail), "isLeadingSurrogate(lead) && isTrailingSurrogate(trail)");
-    const cp = (lead - 0xD800) * 0x400 + (trail - 0xDC00) + 0x10000;
-    return cp;
-  } // 10.1.3 #sec-codepointat
-
-  function CodePointAt(string, position) {
-    const size = string.stringValue().length;
-    Assert(position >= 0 && position < size, "position >= 0 && position < size");
-    const first = string.stringValue().charCodeAt(position);
-    let cp = first;
-
-    if (!isLeadingSurrogate(first) && !isTrailingSurrogate(first)) {
-      return {
-        CodePoint: new Value(cp),
-        CodeUnitCount: new Value(1),
-        IsUnpairedSurrogate: Value.false
-      };
-    }
-
-    if (isTrailingSurrogate(first) || position + 1 === size) {
-      return {
-        CodePoint: new Value(cp),
-        CodeUnitCount: new Value(1),
-        IsUnpairedSurrogate: Value.true
-      };
-    }
-
-    const second = string.stringValue().charCodeAt(position + 1);
-
-    if (!isTrailingSurrogate(second)) {
-      return {
-        CodePoint: new Value(cp),
-        CodeUnitCount: new Value(1),
-        IsUnpairedSurrogate: Value.true
-      };
-    }
-
-    cp = UTF16Decode(first, second);
-    Assert(!(cp instanceof AbruptCompletion), "");
-
-    if (cp instanceof Completion) {
-      cp = cp.Value;
-    }
-
-    return {
-      CodePoint: new Value(cp),
-      CodeUnitCount: new Value(2),
-      IsUnpairedSurrogate: Value.false
-    };
-  }
-
-  function IsAccessorDescriptor(Desc) {
-    if (Type(Desc) === 'Undefined') {
-      return false;
-    }
-
-    if (Desc.Get === undefined && Desc.Set === undefined) {
-      return false;
-    }
-
-    return true;
-  } // 6.2.5.2 IsDataDescriptor
-
-  function IsDataDescriptor(Desc) {
-    if (Type(Desc) === 'Undefined') {
-      return false;
-    }
-
-    if (Desc.Value === undefined && Desc.Writable === undefined) {
-      return false;
-    }
-
-    return true;
-  } // 6.2.5.3 IsGenericDescriptor
-
-  function IsGenericDescriptor(Desc) {
-    if (Type(Desc) === 'Undefined') {
-      return false;
-    }
-
-    if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
-      return true;
-    }
-
-    return false;
-  } // 6.2.5.4 #sec-frompropertydescriptor
-
-  function FromPropertyDescriptor(Desc) {
-    if (Type(Desc) === 'Undefined') {
-      return Value.undefined;
-    }
-
-    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-
-    if (Desc.Value !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('value'), Desc.Value) instanceof AbruptCompletion), "");
-    }
-
-    if (Desc.Writable !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('writable'), Desc.Writable) instanceof AbruptCompletion), "");
-    }
-
-    if (Desc.Get !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('get'), Desc.Get) instanceof AbruptCompletion), "");
-    }
-
-    if (Desc.Set !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('set'), Desc.Set) instanceof AbruptCompletion), "");
-    }
-
-    if (Desc.Enumerable !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable) instanceof AbruptCompletion), "");
-    }
-
-    if (Desc.Configurable !== undefined) {
-      Assert(!(CreateDataProperty(obj, new Value('configurable'), Desc.Configurable) instanceof AbruptCompletion), "");
-    } // Assert: All of the above CreateDataProperty operations return true.
-
-
-    return obj;
-  } // 6.2.5.5 #sec-topropertydescriptor
-
-  function ToPropertyDescriptor(Obj) {
-    if (Type(Obj) !== 'Object') {
-      return surroundingAgent.Throw('TypeError', msg('NotAnObject', Obj));
-    }
-
-    const desc = Descriptor({});
-    let hasEnumerable = HasProperty(Obj, new Value('enumerable'));
-
-    if (hasEnumerable instanceof AbruptCompletion) {
-      return hasEnumerable;
-    }
-
-    if (hasEnumerable instanceof Completion) {
-      hasEnumerable = hasEnumerable.Value;
-    }
-
-    if (hasEnumerable === Value.true) {
-      let _hygienicTemp = Get(Obj, new Value('enumerable'));
-
-      if (_hygienicTemp instanceof AbruptCompletion) {
-        return _hygienicTemp;
-      }
-
-      if (_hygienicTemp instanceof Completion) {
-        _hygienicTemp = _hygienicTemp.Value;
-      }
-
-      const enumerable = ToBoolean(_hygienicTemp);
-      desc.Enumerable = enumerable;
-    }
-
-    let hasConfigurable = HasProperty(Obj, new Value('configurable'));
-
-    if (hasConfigurable instanceof AbruptCompletion) {
-      return hasConfigurable;
-    }
-
-    if (hasConfigurable instanceof Completion) {
-      hasConfigurable = hasConfigurable.Value;
-    }
-
-    if (hasConfigurable === Value.true) {
-      let _hygienicTemp2 = Get(Obj, new Value('configurable'));
-
-      if (_hygienicTemp2 instanceof AbruptCompletion) {
-        return _hygienicTemp2;
-      }
-
-      if (_hygienicTemp2 instanceof Completion) {
-        _hygienicTemp2 = _hygienicTemp2.Value;
-      }
-
-      const conf = ToBoolean(_hygienicTemp2);
-      desc.Configurable = conf;
-    }
-
-    let hasValue = HasProperty(Obj, new Value('value'));
-
-    if (hasValue instanceof AbruptCompletion) {
-      return hasValue;
-    }
-
-    if (hasValue instanceof Completion) {
-      hasValue = hasValue.Value;
-    }
-
-    if (hasValue === Value.true) {
-      let value = Get(Obj, new Value('value'));
-
-      if (value instanceof AbruptCompletion) {
-        return value;
-      }
-
-      if (value instanceof Completion) {
-        value = value.Value;
-      }
-
-      desc.Value = value;
-    }
-
-    let hasWritable = HasProperty(Obj, new Value('writable'));
-
-    if (hasWritable instanceof AbruptCompletion) {
-      return hasWritable;
-    }
-
-    if (hasWritable instanceof Completion) {
-      hasWritable = hasWritable.Value;
-    }
-
-    if (hasWritable === Value.true) {
-      let _hygienicTemp3 = Get(Obj, new Value('writable'));
-
-      if (_hygienicTemp3 instanceof AbruptCompletion) {
-        return _hygienicTemp3;
-      }
-
-      if (_hygienicTemp3 instanceof Completion) {
-        _hygienicTemp3 = _hygienicTemp3.Value;
-      }
-
-      const writable = ToBoolean(_hygienicTemp3);
-      desc.Writable = writable;
-    }
-
-    let hasGet = HasProperty(Obj, new Value('get'));
-
-    if (hasGet instanceof AbruptCompletion) {
-      return hasGet;
-    }
-
-    if (hasGet instanceof Completion) {
-      hasGet = hasGet.Value;
-    }
-
-    if (hasGet === Value.true) {
-      let getter = Get(Obj, new Value('get'));
-
-      if (getter instanceof AbruptCompletion) {
-        return getter;
-      }
-
-      if (getter instanceof Completion) {
-        getter = getter.Value;
-      }
-
-      if (IsCallable(getter) === Value.false && Type(getter) !== 'Undefined') {
-        return surroundingAgent.Throw('TypeError', msg('NotAFunction', getter));
-      }
-
-      desc.Get = getter;
-    }
-
-    let hasSet = HasProperty(Obj, new Value('set'));
-
-    if (hasSet instanceof AbruptCompletion) {
-      return hasSet;
-    }
-
-    if (hasSet instanceof Completion) {
-      hasSet = hasSet.Value;
-    }
-
-    if (hasSet === Value.true) {
-      let setter = Get(Obj, new Value('set'));
-
-      if (setter instanceof AbruptCompletion) {
-        return setter;
-      }
-
-      if (setter instanceof Completion) {
-        setter = setter.Value;
-      }
-
-      if (IsCallable(setter) === Value.false && Type(setter) !== 'Undefined') {
-        return surroundingAgent.Throw('TypeError', msg('NotAFunction', setter));
-      }
-
-      desc.Set = setter;
-    }
-
-    if (desc.Get !== undefined || desc.Set !== undefined) {
-      if (desc.Value !== undefined || desc.Writable !== undefined) {
-        return surroundingAgent.Throw('TypeError', 'invalid descriptor');
-      }
-    }
-
-    return desc;
-  } // 6.2.5.6 #sec-completepropertydescriptor
-
-  function CompletePropertyDescriptor(Desc) {
-    Assert(Type(Desc) === 'Descriptor', "Type(Desc) === 'Descriptor'");
-    const like = Descriptor({
-      Value: Value.undefined,
-      Writable: false,
-      Get: Value.undefined,
-      Set: Value.undefined,
-      Enumerable: false,
-      Configurable: false
-    });
-
-    if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-      if (Desc.Value === undefined) {
-        Desc.Value = like.Value;
-      }
-
-      if (Desc.Writable === undefined) {
-        Desc.Writable = like.Writable;
-      }
-    } else {
-      if (Desc.Get === undefined) {
-        Desc.Get = like.Get;
-      }
-
-      if (Desc.Set === undefined) {
-        Desc.Set = like.Set;
-      }
-    }
-
-    if (Desc.Enumerable === undefined) {
-      Desc.Enumerable = like.Enumerable;
-    }
-
-    if (Desc.Configurable === undefined) {
-      Desc.Configurable = like.Configurable;
-    }
-
-    return Desc;
-  } // 6.2.7.1 #sec-createbytedatablock
-
-  function CreateByteDataBlock(size) {
-    size = size.numberValue();
-    Assert(size >= 0, "size >= 0");
-    let db;
-
-    try {
-      db = new DataBlock(size);
-    } catch (err) {
-      return surroundingAgent.Throw('RangeError', 'Cannot allocate memory');
-    }
-
-    return db;
-  } // 6.2.7.3 #sec-copydatablockbytes
-
-  function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
-    Assert(Type(toIndex) === 'Number', "Type(toIndex) === 'Number'");
-    Assert(Type(fromIndex) === 'Number', "Type(fromIndex) === 'Number'");
-    Assert(Type(count) === 'Number', "Type(count) === 'Number'");
-    toIndex = toIndex.numberValue();
-    fromIndex = fromIndex.numberValue();
-    count = count.numberValue();
-    Assert(fromBlock !== toBlock, "fromBlock !== toBlock");
-    Assert(Type(fromBlock) === 'Data Block'
-    /* || Type(fromBlock) === 'Shared Data Block' */
-    , "Type(fromBlock) === 'Data Block'");
-    Assert(Type(toBlock) === 'Data Block'
-    /* || Type(toBlock) === 'Shared Data Block' */
-    , "Type(toBlock) === 'Data Block'");
-    Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0, "Number.isSafeInteger(fromIndex) && fromIndex >= 0");
-    Assert(Number.isSafeInteger(toIndex) && toIndex >= 0, "Number.isSafeInteger(toIndex) && toIndex >= 0");
-    Assert(Number.isSafeInteger(count) && count >= 0, "Number.isSafeInteger(count) && count >= 0");
-    const fromSize = fromBlock.byteLength;
-    Assert(fromIndex + count <= fromSize, "fromIndex + count <= fromSize");
-    const toSize = toBlock.byteLength;
-    Assert(toIndex + count <= toSize, "toIndex + count <= toSize");
-
-    while (count > 0) {
-      // if (Type(fromBlock) === 'Shared Data Block') {
-      //   ...
-      // } else {
-      Assert(Type(toBlock) !== 'Shared Data Block', "Type(toBlock) !== 'Shared Data Block'");
-      toBlock[toIndex] = fromBlock[fromIndex]; // }
-
-      toIndex += 1;
-      fromIndex += 1;
-      count -= 1;
-    }
-
-    return new NormalCompletion(undefined);
-  }
-
-  function StringCreate(value, prototype) {
-    Assert(Type(value) === 'String', "Type(value) === 'String'");
-    const S = new StringExoticObjectValue();
-    S.StringData = value;
-    S.Prototype = prototype;
-    S.Extensible = Value.true;
-    const length = new Value(value.stringValue().length);
-    Assert(!(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
-      Value: length,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })) instanceof AbruptCompletion), "");
-    return S;
-  } // 9.4.3.5 #sec-stringgetownproperty
-
-  function StringGetOwnProperty(S, P) {
-    Assert(Type(S) === 'Object' && 'StringData' in S, "Type(S) === 'Object' && 'StringData' in S");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-
-    if (Type(P) !== 'String') {
-      return Value.undefined;
-    }
-
-    let index = CanonicalNumericIndexString(P);
-    Assert(!(index instanceof AbruptCompletion), "");
-
-    if (index instanceof Completion) {
-      index = index.Value;
-    }
-
-    if (Type(index) === 'Undefined') {
-      return Value.undefined;
-    }
-
-    if (IsInteger(index) === Value.false) {
-      return Value.undefined;
-    }
-
-    if (Object.is(index.numberValue(), -0)) {
-      return Value.undefined;
-    }
-
-    const str = S.StringData;
-    Assert(Type(str) === 'String', "Type(str) === 'String'");
-    const len = str.stringValue().length;
-
-    if (index.numberValue() < 0 || len <= index.numberValue()) {
-      return Value.undefined;
-    }
-
-    const resultStr = str.stringValue()[index.numberValue()];
-    return Descriptor({
-      Value: new Value(resultStr),
-      Writable: Value.false,
-      Enumerable: Value.true,
-      Configurable: Value.false
-    });
-  }
-
-  function SymbolDescriptiveString(sym) {
-    Assert(Type(sym) === 'Symbol', "Type(sym) === 'Symbol'");
-    let desc = sym.Description;
-
-    if (Type(desc) === 'Undefined') {
-      desc = new Value('');
-    }
-
-    return new Value(`Symbol(${desc.stringValue()})`);
-  }
-
-  // 7.2 #sec-testing-and-comparison-operations
-  // 7.2.1 #sec-requireobjectcoercible
-
-  function RequireObjectCoercible(argument) {
-    const type = Type(argument);
-
-    switch (type) {
-      case 'Undefined':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
-
-      case 'Null':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
-
-      case 'Boolean':
-      case 'Number':
-      case 'String':
-      case 'Symbol':
-      case 'Object':
-        return argument;
-
-      default:
-        throw new OutOfRange('RequireObjectCoercible', {
-          type,
-          argument
-        });
-    }
-  } // 7.2.2 #sec-isarray
-
-  function IsArray(argument) {
-    if (Type(argument) !== 'Object') {
-      return Value.false;
-    }
-
-    if (argument instanceof ArrayExoticObjectValue) {
-      return Value.true;
-    }
-
-    if (argument instanceof ProxyExoticObjectValue) {
-      if (Type(argument.ProxyHandler) === 'Null') {
-        return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'IsArray'));
-      }
-
-      const target = argument.ProxyTarget;
-      return IsArray(target);
-    }
-
-    return Value.false;
-  } // 7.2.3 #sec-iscallable
-
-  function IsCallable(argument) {
-    if (Type(argument) !== 'Object') {
-      return Value.false;
-    }
-
-    if ('Call' in argument) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 7.2.4 #sec-isconstructor
-
-  function IsConstructor(argument) {
-    if (Type(argument) !== 'Object') {
-      return Value.false;
-    }
-
-    if ('Construct' in argument) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 7.2.5 #sec-isextensible-o
-
-  function IsExtensible(O) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    return O.IsExtensible();
-  } // 7.2.6 #sec-isinteger
-
-  function IsInteger(argument) {
-    if (Type(argument) !== 'Number') {
-      return Value.false;
-    }
-
-    if (argument.isNaN() || argument.isInfinity()) {
-      return Value.false;
-    }
-
-    if (Math.floor(Math.abs(argument.numberValue())) !== Math.abs(argument.numberValue())) {
-      return Value.false;
-    }
-
-    return Value.true;
-  } // 7.2.7 #sec-ispropertykey
-
-  function IsPropertyKey(argument) {
-    if (Type(argument) === 'String') {
-      return true;
-    }
-
-    if (Type(argument) === 'Symbol') {
-      return true;
-    }
-
-    return false;
-  } // 7.2.8 #sec-isregexp
-
-  function IsRegExp(argument) {
-    if (Type(argument) !== 'Object') {
-      return Value.false;
-    }
-
-    let matcher = Get(argument, wellKnownSymbols.match);
-
-    if (matcher instanceof AbruptCompletion) {
-      return matcher;
-    }
-
-    if (matcher instanceof Completion) {
-      matcher = matcher.Value;
-    }
-
-    if (matcher !== Value.undefined) {
-      return ToBoolean(matcher);
-    }
-
-    if ('RegExpMatcher' in argument) {
-      return Value.true;
-    }
-
-    return Value.false;
-  } // 7.2.9 #sec-isstringprefix
-
-  function IsStringPrefix(p, q) {
-    Assert(Type(p) === 'String', "Type(p) === 'String'");
-    Assert(Type(q) === 'String', "Type(q) === 'String'");
-    return q.stringValue().startsWith(p.stringValue());
-  } // 7.2.10 #sec-samevalue
-
-  function SameValue(x, y) {
-    if (Type(x) !== Type(y)) {
-      return Value.false;
-    }
-
-    if (Type(x) === 'Number') {
-      if (x.isNaN() && y.isNaN()) {
-        return Value.true;
-      }
-
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
-
-      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-        return Value.false;
-      }
-
-      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-        return Value.false;
-      }
-
-      if (xVal === yVal) {
-        return Value.true;
-      }
-
-      return Value.false;
-    }
-
-    return SameValueNonNumber(x, y);
-  } // 7.2.11 #sec-samevaluezero
-
-  function SameValueZero(x, y) {
-    if (Type(x) !== Type(y)) {
-      return Value.false;
-    }
-
-    if (Type(x) === 'Number') {
-      if (x.isNaN() && y.isNaN()) {
-        return Value.true;
-      }
-
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
-
-      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-        return Value.true;
-      }
-
-      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-        return Value.true;
-      }
-
-      if (xVal === yVal) {
-        return Value.true;
-      }
-
-      return Value.false;
-    }
-
-    return SameValueNonNumber(x, y);
-  } // 7.2.12 #sec-samevaluenonnumber
-
-  function SameValueNonNumber(x, y) {
-    Assert(Type(x) !== 'Number', "Type(x) !== 'Number'");
-    Assert(Type(x) === Type(y), "Type(x) === Type(y)");
-
-    if (Type(x) === 'Undefined') {
-      return Value.true;
-    }
-
-    if (Type(x) === 'Null') {
-      return Value.true;
-    }
-
-    if (Type(x) === 'String') {
-      if (x.stringValue() === y.stringValue()) {
-        return Value.true;
-      }
-
-      return Value.false;
-    }
-
-    if (Type(x) === 'Boolean') {
-      if (x === y) {
-        return Value.true;
-      }
-
-      return Value.false;
-    }
-
-    if (Type(x) === 'Symbol') {
-      return x === y ? Value.true : Value.false;
-    }
-
-    return x === y ? Value.true : Value.false;
-  } // 7.2.13 #sec-abstract-relational-comparison
-
-  function AbstractRelationalComparison(x, y, LeftFirst = true) {
-    let px;
-    let py;
-
-    if (LeftFirst === true) {
-      px = ToPrimitive(x, 'Number');
-
-      if (px instanceof AbruptCompletion) {
-        return px;
-      }
-
-      if (px instanceof Completion) {
-        px = px.Value;
-      }
-
-      py = ToPrimitive(y, 'Number');
-
-      if (py instanceof AbruptCompletion) {
-        return py;
-      }
-
-      if (py instanceof Completion) {
-        py = py.Value;
-      }
-    } else {
-      py = ToPrimitive(y, 'Number');
-
-      if (py instanceof AbruptCompletion) {
-        return py;
-      }
-
-      if (py instanceof Completion) {
-        py = py.Value;
-      }
-
-      px = ToPrimitive(x, 'Number');
-
-      if (px instanceof AbruptCompletion) {
-        return px;
-      }
-
-      if (px instanceof Completion) {
-        px = px.Value;
-      }
-    }
-
-    if (Type(px) === 'String' && Type(py) === 'String') {
-      if (IsStringPrefix(py, px)) {
-        return Value.false;
-      }
-
-      if (IsStringPrefix(px, py)) {
-        return Value.true;
-      }
-
-      let k = 0;
-
-      while (true) {
-        if (px.stringValue()[k] !== py.stringValue()[k]) {
-          break;
+      const code = module.ECMAScriptCode.body;
+      const varDeclarations = VarScopedDeclarations_ModuleBody(code);
+      const declaredVarNames = [];
+
+      for (const d of varDeclarations) {
+        for (const dn of BoundNames_VariableDeclaration(d).map(Value)) {
+          if (!declaredVarNames.includes(dn)) {
+            Assert(!(envRec.CreateMutableBinding(dn, Value.false) instanceof AbruptCompletion), "");
+            envRec.InitializeBinding(dn, Value.undefined);
+            declaredVarNames.push(dn);
+          }
         }
-
-        k += 1;
       }
 
-      const m = px.stringValue().charCodeAt(k);
-      const n = py.stringValue().charCodeAt(k);
+      const lexDeclarations = LexicallyScopedDeclarations_Module(code);
 
-      if (m < n) {
-        return Value.true;
+      for (const d of lexDeclarations) {
+        for (const dn of BoundNames_ModuleItem(d).map(Value)) {
+          if (IsConstantDeclaration(d)) {
+            {
+              const hygienicTemp = envRec.CreateImmutableBinding(dn, Value.true);
+
+              if (hygienicTemp instanceof AbruptCompletion) {
+                return hygienicTemp;
+              }
+            }
+          } else {
+            {
+              const hygienicTemp = envRec.CreateMutableBinding(dn, Value.false);
+
+              if (hygienicTemp instanceof AbruptCompletion) {
+                return hygienicTemp;
+              }
+            }
+          }
+
+          if (isFunctionDeclaration(d) || isGeneratorDeclaration(d) || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
+            const fo = InstantiateFunctionObject(d, env);
+            envRec.InitializeBinding(dn, fo);
+          }
+        }
+      }
+
+      return new NormalCompletion(undefined);
+    } // 15.2.1.17.5 #sec-source-text-module-record-execute-module
+
+
+    ExecuteModule(capability) {
+      const module = this;
+      const moduleCtx = new ExecutionContext();
+      moduleCtx.Function = Value.null;
+      Assert(module.Realm !== Value.undefined, "module.Realm !== Value.undefined");
+      moduleCtx.Realm = module.Realm;
+      moduleCtx.ScriptOrModule = module; // Assert: module has been linked and declarations in its module environment have been instantiated.
+
+      moduleCtx.VariableEnvironment = module.Environment;
+      moduleCtx.LexicalEnvironment = module.Environment; // Suspend the currently running execution context.
+
+      if (module.Async === Value.false) {
+        Assert(capability === undefined, "capability === undefined");
+        surroundingAgent.executionContextStack.push(moduleCtx);
+        const result = Evaluate_Module(module.ECMAScriptCode.body);
+        surroundingAgent.executionContextStack.pop(moduleCtx); // Resume the context that is now on the top of the execution context stack as the running execution context.
+
+        return Completion(result);
       } else {
-        return Value.false;
-      }
-    } else {
-      let nx = ToNumber(px);
-
-      if (nx instanceof AbruptCompletion) {
-        return nx;
-      }
-
-      if (nx instanceof Completion) {
-        nx = nx.Value;
-      }
-
-      let ny = ToNumber(py);
-
-      if (ny instanceof AbruptCompletion) {
-        return ny;
-      }
-
-      if (ny instanceof Completion) {
-        ny = ny.Value;
-      }
-
-      if (nx.isNaN()) {
+        Assert(capability instanceof PromiseCapabilityRecord, "capability instanceof PromiseCapabilityRecord");
+        Assert(!(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleCtx) instanceof AbruptCompletion), "");
         return Value.undefined;
       }
-
-      if (ny.isNaN()) {
-        return Value.undefined;
-      } // If nx and ny are the same Number value, return false.
-      // If nx is +0 and ny is -0, return false.
-      // If nx is -0 and ny is +0, return false.
-
-
-      if (nx.numberValue() === ny.numberValue()) {
-        return Value.false;
-      }
-
-      if (nx.numberValue() === +Infinity) {
-        return Value.false;
-      }
-
-      if (ny.numberValue() === +Infinity) {
-        return Value.true;
-      }
-
-      if (ny.numberValue() === -Infinity) {
-        return Value.false;
-      }
-
-      if (nx.numberValue() === -Infinity) {
-        return Value.true;
-      }
-
-      return nx.numberValue() < ny.numberValue() ? Value.true : Value.false;
-    }
-  } // 7.2.14 #sec-abstract-equality-comparison
-
-  function AbstractEqualityComparison(x, y) {
-    if (Type(x) === Type(y)) {
-      return StrictEqualityComparison(x, y);
     }
 
-    if (x === Value.null && y === Value.undefined) {
-      return Value.true;
-    }
-
-    if (x === Value.undefined && y === Value.null) {
-      return Value.true;
-    }
-
-    if (Type(x) === 'Number' && Type(y) === 'String') {
-      let _val = ToNumber(y);
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      return AbstractEqualityComparison(x, _val);
-    }
-
-    if (Type(x) === 'String' && Type(y) === 'Number') {
-      let _val2 = ToNumber(x);
-
-      Assert(!(_val2 instanceof AbruptCompletion), "");
-
-      if (_val2 instanceof Completion) {
-        _val2 = _val2.Value;
-      }
-
-      return AbstractEqualityComparison(_val2, y);
-    }
-
-    if (Type(x) === 'Boolean') {
-      let _val3 = ToNumber(x);
-
-      Assert(!(_val3 instanceof AbruptCompletion), "");
-
-      if (_val3 instanceof Completion) {
-        _val3 = _val3.Value;
-      }
-
-      return AbstractEqualityComparison(_val3, y);
-    }
-
-    if (Type(y) === 'Boolean') {
-      let _val4 = ToNumber(y);
-
-      Assert(!(_val4 instanceof AbruptCompletion), "");
-
-      if (_val4 instanceof Completion) {
-        _val4 = _val4.Value;
-      }
-
-      return AbstractEqualityComparison(x, _val4);
-    }
-
-    if (['String', 'Number', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
-      let _hygienicTemp = ToPrimitive(y);
-
-      if (_hygienicTemp instanceof AbruptCompletion) {
-        return _hygienicTemp;
-      }
-
-      if (_hygienicTemp instanceof Completion) {
-        _hygienicTemp = _hygienicTemp.Value;
-      }
-
-      return AbstractEqualityComparison(x, _hygienicTemp);
-    }
-
-    if (Type(x) === 'Object' && ['String', 'Number', 'Symbol'].includes(Type(y))) {
-      let _hygienicTemp2 = ToPrimitive(x);
-
-      if (_hygienicTemp2 instanceof AbruptCompletion) {
-        return _hygienicTemp2;
-      }
-
-      if (_hygienicTemp2 instanceof Completion) {
-        _hygienicTemp2 = _hygienicTemp2.Value;
-      }
-
-      return AbstractEqualityComparison(_hygienicTemp2, y);
-    }
-
-    return Value.false;
-  } // 7.2.15 #sec-strict-equality-comparison
-
-  function StrictEqualityComparison(x, y) {
-    if (Type(x) !== Type(y)) {
-      return Value.false;
-    }
-
-    if (Type(x) === 'Number') {
-      if (x.isNaN()) {
-        return Value.false;
-      }
-
-      if (y.isNaN()) {
-        return Value.false;
-      }
-
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
-
-      if (xVal === yVal) {
-        return Value.true;
-      }
-
-      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-        return Value.true;
-      }
-
-      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-        return Value.true;
-      }
-
-      return Value.false;
-    }
-
-    return SameValueNonNumber(x, y);
   }
-
-  function ToPrimitive(input, PreferredType) {
-    Assert(input instanceof Value, "input instanceof Value");
-
-    if (Type(input) === 'Object') {
-      let hint;
-
-      if (PreferredType === undefined) {
-        hint = new Value('default');
-      } else if (PreferredType === 'String') {
-        hint = new Value('string');
-      } else {
-        Assert(PreferredType === 'Number', "PreferredType === 'Number'");
-        hint = new Value('number');
-      }
-
-      let exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
-
-      if (exoticToPrim instanceof AbruptCompletion) {
-        return exoticToPrim;
-      }
-
-      if (exoticToPrim instanceof Completion) {
-        exoticToPrim = exoticToPrim.Value;
-      }
-
-      if (exoticToPrim !== Value.undefined) {
-        let result = Call(exoticToPrim, input, [hint]);
-
-        if (result instanceof AbruptCompletion) {
-          return result;
-        }
-
-        if (result instanceof Completion) {
-          result = result.Value;
-        }
-
-        if (Type(result) !== 'Object') {
-          return result;
-        }
-
-        return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
-      }
-
-      if (hint.stringValue() === 'default') {
-        hint = new Value('number');
-      }
-
-      return OrdinaryToPrimitive(input, hint);
-    }
-
-    return input;
-  } // 7.1.1.1 #sec-ordinarytoprimitive
-
-  function OrdinaryToPrimitive(O, hint) {
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert(Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number'), "Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number')");
-    let methodNames;
-
-    if (hint.stringValue() === 'string') {
-      methodNames = [new Value('toString'), new Value('valueOf')];
-    } else {
-      methodNames = [new Value('valueOf'), new Value('toString')];
-    }
-
-    for (const name of methodNames) {
-      let method = Get(O, name);
-
-      if (method instanceof AbruptCompletion) {
-        return method;
-      }
-
-      if (method instanceof Completion) {
-        method = method.Value;
-      }
-
-      if (IsCallable(method) === Value.true) {
-        let result = Call(method, O);
-
-        if (result instanceof AbruptCompletion) {
-          return result;
-        }
-
-        if (result instanceof Completion) {
-          result = result.Value;
-        }
-
-        if (Type(result) !== 'Object') {
-          return result;
-        }
-      }
-    }
-
-    return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
-  } // 7.1.2 #sec-toboolean
-
-  function ToBoolean(argument) {
-    const type = Type(argument);
-
-    switch (type) {
-      case 'Undefined':
-        return Value.false;
-
-      case 'Null':
-        return Value.false;
-
-      case 'Boolean':
-        return argument;
-
-      case 'Number':
-        if (argument.numberValue() === 0 || argument.isNaN()) {
-          return Value.false;
-        }
-
-        return Value.true;
-
-      case 'String':
-        if (argument.stringValue().length === 0) {
-          return Value.false;
-        }
-
-        return Value.true;
-
-      case 'Symbol':
-        return Value.true;
-
-      case 'Object':
-        return Value.true;
-
-      default:
-        throw new OutOfRange('ToBoolean', {
-          type,
-          argument
-        });
-    }
-  } // 7.1.3 #sec-tonumber
-
-  function ToNumber(argument) {
-    const type = Type(argument);
-
-    switch (type) {
-      case 'Undefined':
-        return new Value(NaN);
-
-      case 'Null':
-        return new Value(0);
-
-      case 'Boolean':
-        if (argument === Value.true) {
-          return new Value(1);
-        }
-
-        return new Value(0);
-
-      case 'Number':
-        return argument;
-
-      case 'String':
-        return MV_StringNumericLiteral(argument.stringValue());
-
-      case 'Symbol':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
-
-      case 'Object':
-        {
-          let primValue = ToPrimitive(argument, 'Number');
-
-          if (primValue instanceof AbruptCompletion) {
-            return primValue;
-          }
-
-          if (primValue instanceof Completion) {
-            primValue = primValue.Value;
-          }
-
-          return ToNumber(primValue);
-        }
-
-      default:
-        throw new OutOfRange('ToNumber', {
-          type,
-          argument
-        });
-    }
-  }
-
-  const sign = n => n >= 0 ? 1 : -1;
-
-  const mod$1 = (n, m) => {
-    const r = n % m;
-    return Math.floor(r >= 0 ? r : r + m);
-  }; // 7.1.4 #sec-tointeger
-
-
-  function ToInteger(argument) {
-    let _hygienicTemp = ToNumber(argument);
-
-    if (_hygienicTemp instanceof AbruptCompletion) {
-      return _hygienicTemp;
-    }
-
-    if (_hygienicTemp instanceof Completion) {
-      _hygienicTemp = _hygienicTemp.Value;
-    }
-
-    const number = _hygienicTemp.numberValue();
-
-    if (Number.isNaN(number)) {
-      return new Value(0);
-    }
-
-    if (number === 0 || !Number.isFinite(number)) {
-      return new Value(number);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    return new Value(int);
-  } // 7.1.5 #sec-toint32
-
-  function ToInt32(argument) {
-    let _hygienicTemp2 = ToNumber(argument);
-
-    if (_hygienicTemp2 instanceof AbruptCompletion) {
-      return _hygienicTemp2;
-    }
-
-    if (_hygienicTemp2 instanceof Completion) {
-      _hygienicTemp2 = _hygienicTemp2.Value;
-    }
-
-    const number = _hygienicTemp2.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int32bit = mod$1(int, 2 ** 32);
-
-    if (int32bit >= 2 ** 31) {
-      return new Value(int32bit - 2 ** 32);
-    }
-
-    return new Value(int32bit);
-  } // 7.1.6 #sec-touint32
-
-  function ToUint32(argument) {
-    let _hygienicTemp3 = ToNumber(argument);
-
-    if (_hygienicTemp3 instanceof AbruptCompletion) {
-      return _hygienicTemp3;
-    }
-
-    if (_hygienicTemp3 instanceof Completion) {
-      _hygienicTemp3 = _hygienicTemp3.Value;
-    }
-
-    const number = _hygienicTemp3.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int32bit = mod$1(int, 2 ** 32);
-    return new Value(int32bit);
-  } // 7.1.7 #sec-toint16
-
-  function ToInt16(argument) {
-    let _hygienicTemp4 = ToNumber(argument);
-
-    if (_hygienicTemp4 instanceof AbruptCompletion) {
-      return _hygienicTemp4;
-    }
-
-    if (_hygienicTemp4 instanceof Completion) {
-      _hygienicTemp4 = _hygienicTemp4.Value;
-    }
-
-    const number = _hygienicTemp4.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int16bit = mod$1(int, 2 ** 16);
-
-    if (int16bit >= 2 ** 15) {
-      return new Value(int16bit - 2 ** 16);
-    }
-
-    return new Value(int16bit);
-  } // 7.1.8 #sec-touint16
-
-  function ToUint16(argument) {
-    let _hygienicTemp5 = ToNumber(argument);
-
-    if (_hygienicTemp5 instanceof AbruptCompletion) {
-      return _hygienicTemp5;
-    }
-
-    if (_hygienicTemp5 instanceof Completion) {
-      _hygienicTemp5 = _hygienicTemp5.Value;
-    }
-
-    const number = _hygienicTemp5.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int16bit = mod$1(int, 2 ** 16);
-    return new Value(int16bit);
-  } // 7.1.9 #sec-toint8
-
-  function ToInt8(argument) {
-    let _hygienicTemp6 = ToNumber(argument);
-
-    if (_hygienicTemp6 instanceof AbruptCompletion) {
-      return _hygienicTemp6;
-    }
-
-    if (_hygienicTemp6 instanceof Completion) {
-      _hygienicTemp6 = _hygienicTemp6.Value;
-    }
-
-    const number = _hygienicTemp6.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int8bit = mod$1(int, 2 ** 8);
-
-    if (int8bit >= 2 ** 7) {
-      return new Value(int8bit - 2 ** 8);
-    }
-
-    return new Value(int8bit);
-  } // 7.1.10 #sec-touint8
-
-  function ToUint8(argument) {
-    let _hygienicTemp7 = ToNumber(argument);
-
-    if (_hygienicTemp7 instanceof AbruptCompletion) {
-      return _hygienicTemp7;
-    }
-
-    if (_hygienicTemp7 instanceof Completion) {
-      _hygienicTemp7 = _hygienicTemp7.Value;
-    }
-
-    const number = _hygienicTemp7.numberValue();
-
-    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-      return new Value(0);
-    }
-
-    const int = sign(number) * Math.floor(Math.abs(number));
-    const int8bit = mod$1(int, 2 ** 8);
-    return new Value(int8bit);
-  } // 7.1.11 #sec-touint8clamp
-
-  function ToUint8Clamp(argument) {
-    let _hygienicTemp8 = ToNumber(argument);
-
-    if (_hygienicTemp8 instanceof AbruptCompletion) {
-      return _hygienicTemp8;
-    }
-
-    if (_hygienicTemp8 instanceof Completion) {
-      _hygienicTemp8 = _hygienicTemp8.Value;
-    }
-
-    const number = _hygienicTemp8.numberValue();
-
-    if (Number.isNaN(number)) {
-      return new Value(0);
-    }
-
-    if (number <= 0) {
-      return new Value(0);
-    }
-
-    if (number >= 255) {
-      return new Value(255);
-    }
-
-    const f = Math.floor(number);
-
-    if (f + 0.5 < number) {
-      return new Value(f + 1);
-    }
-
-    if (number < f + 0.5) {
-      return new Value(f);
-    }
-
-    if (f % 2 === 1) {
-      return new Value(f + 1);
-    }
-
-    return new Value(f);
-  } // 7.1.12 #sec-tostring
-
-  function ToString(argument) {
-    const type = Type(argument);
-
-    switch (type) {
-      case 'Undefined':
-        return new Value('undefined');
-
-      case 'Null':
-        return new Value('null');
-
-      case 'Boolean':
-        return new Value(argument === Value.true ? 'true' : 'false');
-
-      case 'Number':
-        return NumberToString(argument);
-
-      case 'String':
-        return argument;
-
-      case 'Symbol':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
-
-      case 'Object':
-        {
-          let primValue = ToPrimitive(argument, 'String');
-
-          if (primValue instanceof AbruptCompletion) {
-            return primValue;
-          }
-
-          if (primValue instanceof Completion) {
-            primValue = primValue.Value;
-          }
-
-          return ToString(primValue);
-        }
-
-      default:
-        throw new OutOfRange('ToString', {
-          type,
-          argument
-        });
-    }
-  } // 7.1.12.1 #sec-tostring-applied-to-the-number-type
-
-  function NumberToString(m) {
-    if (m.isNaN()) {
-      return new Value('NaN');
-    }
-
-    const mVal = m.numberValue();
-
-    if (mVal === 0) {
-      return new Value('0');
-    }
-
-    if (mVal < 0) {
-      let _val = NumberToString(new Value(-mVal));
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      const str = _val.stringValue();
-
-      return new Value(`-${str}`);
-    }
-
-    if (m.isInfinity()) {
-      return new Value('Infinity');
-    } // TODO: implement properly
-
-
-    return new Value(`${mVal}`);
-  } // 7.1.13 #sec-toobject
-
-  function ToObject(argument) {
-    const type = Type(argument);
-
-    switch (type) {
-      case 'Undefined':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
-
-      case 'Null':
-        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
-
-      case 'Boolean':
-        {
-          const obj = ObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
-          obj.BooleanData = argument;
-          return obj;
-        }
-
-      case 'Number':
-        {
-          const obj = ObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'));
-          obj.NumberData = argument;
-          return obj;
-        }
-
-      case 'String':
-        return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
-
-      case 'Symbol':
-        {
-          const obj = ObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
-          obj.SymbolData = argument;
-          return obj;
-        }
-
-      case 'Object':
-        return argument;
-
-      default:
-        throw new OutOfRange('ToObject', {
-          type,
-          argument
-        });
-    }
-  } // 7.1.14 #sec-topropertykey
-
-  function ToPropertyKey(argument) {
-    let key = ToPrimitive(argument, 'String');
-
-    if (key instanceof AbruptCompletion) {
-      return key;
-    }
-
-    if (key instanceof Completion) {
-      key = key.Value;
-    }
-
-    if (Type(key) === 'Symbol') {
-      return key;
-    }
-
-    let _val2 = ToString(key);
-
-    Assert(!(_val2 instanceof AbruptCompletion), "");
-
-    if (_val2 instanceof Completion) {
-      _val2 = _val2.Value;
-    }
-
-    return _val2;
-  } // 7.1.15 #sec-tolength
-
-  function ToLength(argument) {
-    let len = ToInteger(argument);
-
-    if (len instanceof AbruptCompletion) {
-      return len;
-    }
-
-    if (len instanceof Completion) {
-      len = len.Value;
-    }
-
-    if (len.numberValue() <= 0) {
-      return new Value(0);
-    }
-
-    return new Value(Math.min(len.numberValue(), 2 ** 53 - 1));
-  } // 7.1.16 #sec-canonicalnumericindexstring
-
-  function CanonicalNumericIndexString(argument) {
-    Assert(Type(argument) === 'String', "Type(argument) === 'String'");
-
-    if (argument.stringValue() === '-0') {
-      return new Value(-0);
-    }
-
-    let n = ToNumber(argument);
-    Assert(!(n instanceof AbruptCompletion), "");
-
-    if (n instanceof Completion) {
-      n = n.Value;
-    }
-
-    let _val3 = ToString(n);
-
-    Assert(!(_val3 instanceof AbruptCompletion), "");
-
-    if (_val3 instanceof Completion) {
-      _val3 = _val3.Value;
-    }
-
-    if (SameValue(_val3, argument) === Value.false) {
-      return Value.undefined;
-    }
-
-    return n;
-  } // 7.1.17 #sec-toindex
-
-  function ToIndex(value) {
-    let index;
-
-    if (Type(value) === 'Undefined') {
-      index = new Value(0);
-    } else {
-      let integerIndex = ToInteger(value);
-
-      if (integerIndex instanceof AbruptCompletion) {
-        return integerIndex;
-      }
-
-      if (integerIndex instanceof Completion) {
-        integerIndex = integerIndex.Value;
-      }
-
-      if (integerIndex.numberValue() < 0) {
-        return surroundingAgent.Throw('RangeError', msg('NegativeIndex'));
-      }
-
-      index = ToLength(integerIndex);
-      Assert(!(index instanceof AbruptCompletion), "");
-
-      if (index instanceof Completion) {
-        index = index.Value;
-      }
-
-      if (SameValueZero(integerIndex, index) === Value.false) {
-        return surroundingAgent.Throw('RangeError', msg('OutOfRange', 'Index'));
-      }
-    }
-
-    return index;
-  }
-
-  const typedArrayInfo = new Map([['Int8Array', {
-    Intrinsic: '%Int8Array%',
-    ElementType: 'Int8',
-    ElementSize: 1,
-    ConversionOperation: ToInt8
-  }], ['Uint8Array', {
-    Intrinsic: '%Uint8Array%',
-    ElementType: 'Uint8',
-    ElementSize: 1,
-    ConversionOperation: ToUint8
-  }], ['Uint8ClampedArray', {
-    Intrinsic: '%Uint8ClampedArray%',
-    ElementType: 'Uint8C',
-    ElementSize: 1,
-    ConversionOperation: ToUint8Clamp
-  }], ['Int16Array', {
-    Intrinsic: '%Int16Array%',
-    ElementType: 'Int16',
-    ElementSize: 2,
-    ConversionOperation: ToInt16
-  }], ['Uint16Array', {
-    Intrinsic: '%Uint16Array%',
-    ElementType: 'Uint16',
-    ElementSize: 2,
-    ConversionOperation: ToUint16
-  }], ['Int32Array', {
-    Intrinsic: '%Int32Array%',
-    ElementType: 'Int32',
-    ElementSize: 4,
-    ConversionOperation: ToInt32
-  }], ['Uint32Array', {
-    Intrinsic: '%Uint32Array%',
-    ElementType: 'Uint32',
-    ElementSize: 4,
-    ConversionOperation: ToUint32
-  }], ['Float32Array', {
-    Intrinsic: '%Float32Array%',
-    ElementType: 'Float32',
-    ElementSize: 4
-  }], ['Float64Array', {
-    Intrinsic: '%Float64Array%',
-    ElementType: 'Float64',
-    ElementSize: 8
-  }]]);
-  const numericTypeInfo = new Map([...typedArrayInfo.values()].map(info => [info.ElementType, info])); // 22.2.2.1.1 #sec-iterabletolist
-
-  function IterableToList(items, method) {
-    let iteratorRecord = GetIterator(items, 'sync', method);
-
-    if (iteratorRecord instanceof AbruptCompletion) {
-      return iteratorRecord;
-    }
-
-    if (iteratorRecord instanceof Completion) {
-      iteratorRecord = iteratorRecord.Value;
-    }
-
-    const values = [];
-    let next = Value.true;
-
-    while (next !== Value.false) {
-      next = IteratorStep(iteratorRecord);
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (next !== Value.false) {
-        let nextValue = IteratorValue(next);
-
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
-        }
-
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-
-        values.push(nextValue);
-      }
-    }
-
-    return values;
-  } // 22.2.3.5.1 #sec-validatetypedarray
-
-  function ValidateTypedArray(O) {
-    {
-      const hygienicTemp = RequireInternalSlot(O, 'TypedArrayName');
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-    Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-    const buffer = O.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
-    }
-
-    return buffer;
-  } // 22.2.4.2.1 #sec-allocatetypedarray
-
-  function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
-    let proto = GetPrototypeFromConstructor(newTarget, defaultProto);
-
-    if (proto instanceof AbruptCompletion) {
-      return proto;
-    }
-
-    if (proto instanceof Completion) {
-      proto = proto.Value;
-    }
-
-    const obj = IntegerIndexedObjectCreate(proto, ['ViewedArrayBuffer', 'TypedArrayName', 'ByteLength', 'ByteOffset', 'ArrayLength']);
-    Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
-    obj.TypedArrayName = constructorName;
-
-    if (length === undefined) {
-      obj.ByteLength = new Value(0);
-      obj.ByteOffset = new Value(0);
-      obj.ArrayLength = new Value(0);
-    } else {
-      {
-        const hygienicTemp = AllocateTypedArrayBuffer(obj, length);
-
-        if (hygienicTemp instanceof AbruptCompletion) {
-          return hygienicTemp;
-        }
-      }
-    }
-
-    return obj;
-  } // 22.2.4.2.2 #sec-allocatetypedarraybuffer
-
-  function AllocateTypedArrayBuffer(O, length) {
-    Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O, "Type(O) === 'Object' && 'ViewedArrayBuffer' in O");
-    Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
-    Assert(length.numberValue() >= 0, "length.numberValue() >= 0");
-    const constructorName = O.TypedArrayName.stringValue();
-    const elementSize = typedArrayInfo.get(constructorName).ElementSize;
-    const byteLength = new Value(elementSize * length.numberValue());
-    let data = AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
-
-    if (data instanceof AbruptCompletion) {
-      return data;
-    }
-
-    if (data instanceof Completion) {
-      data = data.Value;
-    }
-
-    O.ViewedArrayBuffer = data;
-    O.ByteLength = byteLength;
-    O.ByteOffset = new Value(0);
-    O.ArrayLength = length;
-    return O;
-  } // 22.2.4.6 #typedarray-create
-
-  function TypedArrayCreate(constructor, argumentList) {
-    let newTypedArray = Construct(constructor, argumentList);
-
-    if (newTypedArray instanceof AbruptCompletion) {
-      return newTypedArray;
-    }
-
-    if (newTypedArray instanceof Completion) {
-      newTypedArray = newTypedArray.Value;
-    }
-
-    {
-      const hygienicTemp = ValidateTypedArray(newTypedArray);
-
-      if (hygienicTemp instanceof AbruptCompletion) {
-        return hygienicTemp;
-      }
-    }
-
-    if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
-      if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
-        return surroundingAgent.Throw('TypeError', msg('TypedArrayTooSmall', newTypedArray.ArrayLength, argumentList[0]));
-      }
-    }
-
-    return newTypedArray;
-  } // 22.2.4.7 #typedarray-species-create
-
-  function TypedArraySpeciesCreate(exemplar, argumentList) {
-    Assert(Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar, "Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar");
-    const intrinsicName = typedArrayInfo.get(exemplar.TypedArrayName.stringValue()).Intrinsic;
-    const defaultConstructor = surroundingAgent.intrinsic(intrinsicName);
-    let constructor = SpeciesConstructor(exemplar, defaultConstructor);
-
-    if (constructor instanceof AbruptCompletion) {
-      return constructor;
-    }
-
-    if (constructor instanceof Completion) {
-      constructor = constructor.Value;
-    }
-
-    return TypedArrayCreate(constructor, argumentList);
-  }
-
-
-
-  var AbstractOps = /*#__PURE__*/Object.freeze({
-    CreateUnmappedArgumentsObject: CreateUnmappedArgumentsObject,
-    CreateMappedArgumentsObject: CreateMappedArgumentsObject,
-    ArrayCreate: ArrayCreate,
-    ArraySpeciesCreate: ArraySpeciesCreate,
-    ArraySetLength: ArraySetLength,
-    IsConcatSpreadable: IsConcatSpreadable,
-    SortCompare: SortCompare,
-    CreateArrayIterator: CreateArrayIterator,
-    AllocateArrayBuffer: AllocateArrayBuffer,
-    IsDetachedBuffer: IsDetachedBuffer,
-    DetachArrayBuffer: DetachArrayBuffer,
-    CloneArrayBuffer: CloneArrayBuffer,
-    RawBytesToNumber: RawBytesToNumber,
-    GetValueFromBuffer: GetValueFromBuffer,
-    NumberToRawBytes: NumberToRawBytes,
-    SetValueInBuffer: SetValueInBuffer,
-    IsSharedArrayBuffer: IsSharedArrayBuffer,
-    AsyncFunctionStart: AsyncFunctionStart,
-    AsyncGeneratorStart: AsyncGeneratorStart,
-    AsyncGeneratorEnqueue: AsyncGeneratorEnqueue,
-    AsyncGeneratorYield: AsyncGeneratorYield,
-    isLeadingSurrogate: isLeadingSurrogate,
-    isTrailingSurrogate: isTrailingSurrogate,
-    isIntegerIndex: isIntegerIndex,
-    isArrayIndex: isArrayIndex,
-    GetViewValue: GetViewValue,
-    SetViewValue: SetViewValue,
-    Day: Day,
-    msPerDay: msPerDay,
-    TimeWithinDay: TimeWithinDay,
-    DaysInYear: DaysInYear,
-    DayFromYear: DayFromYear,
-    TimeFromYear: TimeFromYear,
-    msPerAverageYear: msPerAverageYear,
-    YearFromTime: YearFromTime,
-    InLeapYear: InLeapYear,
-    MonthFromTime: MonthFromTime,
-    DayWithinYear: DayWithinYear,
-    DateFromTime: DateFromTime,
-    WeekDay: WeekDay,
-    LocalTZA: LocalTZA,
-    LocalTime: LocalTime,
-    UTC: UTC,
-    HourFromTime: HourFromTime,
-    MinFromTime: MinFromTime,
-    SecFromTime: SecFromTime,
-    msFromTime: msFromTime,
-    HoursPerDay: HoursPerDay,
-    MinutesPerHour: MinutesPerHour,
-    SecondsPerMinute: SecondsPerMinute,
-    msPerSecond: msPerSecond,
-    msPerMinute: msPerMinute,
-    msPerHour: msPerHour,
-    MakeTime: MakeTime,
-    MakeDay: MakeDay,
-    MakeDate: MakeDate,
-    TimeClip: TimeClip,
-    GetActiveScriptOrModule: GetActiveScriptOrModule,
-    ResolveBinding: ResolveBinding,
-    GetThisEnvironment: GetThisEnvironment,
-    ResolveThisBinding: ResolveThisBinding,
-    GetNewTarget: GetNewTarget,
-    GetGlobalObject: GetGlobalObject,
-    OrdinaryCallEvaluateBody: OrdinaryCallEvaluateBody,
-    FunctionAllocate: FunctionAllocate,
-    FunctionInitialize: FunctionInitialize,
-    FunctionCreate: FunctionCreate,
-    GeneratorFunctionCreate: GeneratorFunctionCreate,
-    AsyncGeneratorFunctionCreate: AsyncGeneratorFunctionCreate,
-    AsyncFunctionCreate: AsyncFunctionCreate,
-    MakeConstructor: MakeConstructor,
-    MakeClassConstructor: MakeClassConstructor,
-    MakeMethod: MakeMethod,
-    SetFunctionName: SetFunctionName,
-    SetFunctionLength: SetFunctionLength,
-    CreateBuiltinFunction: CreateBuiltinFunction,
-    PrepareForTailCall: PrepareForTailCall,
-    GeneratorStart: GeneratorStart,
-    GeneratorValidate: GeneratorValidate,
-    GeneratorResume: GeneratorResume,
-    GeneratorResumeAbrupt: GeneratorResumeAbrupt,
-    GetGeneratorKind: GetGeneratorKind,
-    GeneratorYield: GeneratorYield,
-    PerformEval: PerformEval,
-    GetIterator: GetIterator,
-    IteratorNext: IteratorNext,
-    IteratorComplete: IteratorComplete,
-    IteratorValue: IteratorValue,
-    IteratorStep: IteratorStep,
-    IteratorClose: IteratorClose,
-    AsyncIteratorClose: AsyncIteratorClose,
-    CreateIterResultObject: CreateIterResultObject,
-    CreateListIteratorRecord: CreateListIteratorRecord,
-    CreateAsyncFromSyncIterator: CreateAsyncFromSyncIterator,
-    AsyncFromSyncIteratorContinuation: AsyncFromSyncIteratorContinuation,
-    ModuleNamespaceCreate: ModuleNamespaceCreate,
-    InnerModuleLinking: InnerModuleLinking,
-    InnerModuleEvaluation: InnerModuleEvaluation,
-    GetModuleNamespace: GetModuleNamespace,
-    Assert: Assert,
-    RequireInternalSlot: RequireInternalSlot,
-    sourceTextMatchedBy: sourceTextMatchedBy,
-    isStrictModeCode: isStrictModeCode,
-    Get: Get,
-    GetV: GetV,
-    Set: Set$1,
-    CreateDataProperty: CreateDataProperty,
-    CreateMethodProperty: CreateMethodProperty,
-    CreateDataPropertyOrThrow: CreateDataPropertyOrThrow,
-    DefinePropertyOrThrow: DefinePropertyOrThrow,
-    DeletePropertyOrThrow: DeletePropertyOrThrow,
-    GetMethod: GetMethod,
-    HasProperty: HasProperty,
-    HasOwnProperty: HasOwnProperty,
-    Call: Call,
-    Construct: Construct,
-    SetIntegrityLevel: SetIntegrityLevel,
-    TestIntegrityLevel: TestIntegrityLevel,
-    CreateArrayFromList: CreateArrayFromList,
-    LengthOfArrayLike: LengthOfArrayLike,
-    CreateListFromArrayLike: CreateListFromArrayLike,
-    Invoke: Invoke,
-    OrdinaryHasInstance: OrdinaryHasInstance,
-    SpeciesConstructor: SpeciesConstructor,
-    EnumerableOwnPropertyNames: EnumerableOwnPropertyNames,
-    GetFunctionRealm: GetFunctionRealm,
-    CopyDataProperties: CopyDataProperties,
-    OrdinaryGetPrototypeOf: OrdinaryGetPrototypeOf,
-    OrdinarySetPrototypeOf: OrdinarySetPrototypeOf,
-    OrdinaryIsExtensible: OrdinaryIsExtensible,
-    OrdinaryPreventExtensions: OrdinaryPreventExtensions,
-    OrdinaryGetOwnProperty: OrdinaryGetOwnProperty,
-    OrdinaryDefineOwnProperty: OrdinaryDefineOwnProperty,
-    IsCompatiblePropertyDescriptor: IsCompatiblePropertyDescriptor,
-    ValidateAndApplyPropertyDescriptor: ValidateAndApplyPropertyDescriptor,
-    OrdinaryHasProperty: OrdinaryHasProperty,
-    OrdinaryGet: OrdinaryGet,
-    OrdinarySet: OrdinarySet,
-    OrdinarySetWithOwnDescriptor: OrdinarySetWithOwnDescriptor,
-    OrdinaryDelete: OrdinaryDelete,
-    OrdinaryOwnPropertyKeys: OrdinaryOwnPropertyKeys,
-    ObjectCreate: ObjectCreate,
-    OrdinaryCreateFromConstructor: OrdinaryCreateFromConstructor,
-    GetPrototypeFromConstructor: GetPrototypeFromConstructor,
-    IntegerIndexedObjectCreate: IntegerIndexedObjectCreate,
-    IntegerIndexedElementGet: IntegerIndexedElementGet,
-    IntegerIndexedElementSet: IntegerIndexedElementSet,
-    PromiseCapabilityRecord: PromiseCapabilityRecord,
-    PromiseReactionRecord: PromiseReactionRecord,
-    CreateResolvingFunctions: CreateResolvingFunctions,
-    NewPromiseCapability: NewPromiseCapability,
-    IsPromise: IsPromise,
-    PromiseReactionJob: PromiseReactionJob,
-    PromiseResolve: PromiseResolve,
-    PerformPromiseThen: PerformPromiseThen,
-    GetBase: GetBase,
-    GetReferencedName: GetReferencedName,
-    IsStrictReference: IsStrictReference,
-    HasPrimitiveBase: HasPrimitiveBase,
-    IsPropertyReference: IsPropertyReference,
-    IsUnresolvableReference: IsUnresolvableReference,
-    IsSuperReference: IsSuperReference,
-    GetValue: GetValue,
-    PutValue: PutValue,
-    GetThisValue: GetThisValue,
-    InitializeReferencedBinding: InitializeReferencedBinding,
-    RegExpAlloc: RegExpAlloc,
-    RegExpInitialize: RegExpInitialize,
-    RegExpCreate: RegExpCreate,
-    EscapeRegExpPattern: EscapeRegExpPattern,
-    UTF16Encoding: UTF16Encoding,
-    UTF16Decode: UTF16Decode,
-    CodePointAt: CodePointAt,
-    IsAccessorDescriptor: IsAccessorDescriptor,
-    IsDataDescriptor: IsDataDescriptor,
-    IsGenericDescriptor: IsGenericDescriptor,
-    FromPropertyDescriptor: FromPropertyDescriptor,
-    ToPropertyDescriptor: ToPropertyDescriptor,
-    CompletePropertyDescriptor: CompletePropertyDescriptor,
-    CreateByteDataBlock: CreateByteDataBlock,
-    CopyDataBlockBytes: CopyDataBlockBytes,
-    StringCreate: StringCreate,
-    StringGetOwnProperty: StringGetOwnProperty,
-    SymbolDescriptiveString: SymbolDescriptiveString,
-    RequireObjectCoercible: RequireObjectCoercible,
-    IsArray: IsArray,
-    IsCallable: IsCallable,
-    IsConstructor: IsConstructor,
-    IsExtensible: IsExtensible,
-    IsInteger: IsInteger,
-    IsPropertyKey: IsPropertyKey,
-    IsRegExp: IsRegExp,
-    IsStringPrefix: IsStringPrefix,
-    SameValue: SameValue,
-    SameValueZero: SameValueZero,
-    SameValueNonNumber: SameValueNonNumber,
-    AbstractRelationalComparison: AbstractRelationalComparison,
-    AbstractEqualityComparison: AbstractEqualityComparison,
-    StrictEqualityComparison: StrictEqualityComparison,
-    ToPrimitive: ToPrimitive,
-    OrdinaryToPrimitive: OrdinaryToPrimitive,
-    ToBoolean: ToBoolean,
-    ToNumber: ToNumber,
-    ToInteger: ToInteger,
-    ToInt32: ToInt32,
-    ToUint32: ToUint32,
-    ToInt16: ToInt16,
-    ToUint16: ToUint16,
-    ToInt8: ToInt8,
-    ToUint8: ToUint8,
-    ToUint8Clamp: ToUint8Clamp,
-    ToString: ToString,
-    NumberToString: NumberToString,
-    ToObject: ToObject,
-    ToPropertyKey: ToPropertyKey,
-    ToLength: ToLength,
-    CanonicalNumericIndexString: CanonicalNumericIndexString,
-    ToIndex: ToIndex,
-    typedArrayInfo: typedArrayInfo,
-    numericTypeInfo: numericTypeInfo,
-    IterableToList: IterableToList,
-    ValidateTypedArray: ValidateTypedArray,
-    AllocateTypedArray: AllocateTypedArray,
-    AllocateTypedArrayBuffer: AllocateTypedArrayBuffer,
-    TypedArrayCreate: TypedArrayCreate,
-    TypedArraySpeciesCreate: TypedArraySpeciesCreate
-  });
 
   class LexicalEnvironment {
     constructor() {
@@ -21109,7 +14799,7 @@
 
       const ObjRec = envRec.ObjectRecord;
       const globalObject = ObjRec.bindingObject;
-      let existingProp = HasOwnProperty(globalObject, N);
+      let existingProp = HasOwnProperty$1(globalObject, N);
 
       if (existingProp instanceof AbruptCompletion) {
         return existingProp;
@@ -21211,7 +14901,7 @@
       const envRec = this;
       const ObjRec = envRec.ObjectRecord;
       const globalObject = ObjRec.bindingObject;
-      let hasProperty = HasOwnProperty(globalObject, N);
+      let hasProperty = HasOwnProperty$1(globalObject, N);
 
       if (hasProperty instanceof AbruptCompletion) {
         return hasProperty;
@@ -21263,7 +14953,7 @@
       const envRec = this;
       const ObjRec = envRec.ObjectRecord;
       const globalObject = ObjRec.bindingObject;
-      let hasProperty = HasOwnProperty(globalObject, N);
+      let hasProperty = HasOwnProperty$1(globalObject, N);
 
       if (hasProperty instanceof AbruptCompletion) {
         return hasProperty;
@@ -21506,1112 +15196,6 @@
     env.EnvironmentRecord = envRec;
     env.outerEnvironmentReference = E;
     return env;
-  }
-
-  class ImportEntryRecord {
-    constructor({
-      ModuleRequest,
-      ImportName,
-      LocalName
-    }) {
-      Assert(Type(ModuleRequest) === 'String', "Type(ModuleRequest) === 'String'");
-      Assert(Type(ImportName) === 'String', "Type(ImportName) === 'String'");
-      Assert(Type(LocalName) === 'String', "Type(LocalName) === 'String'");
-      this.ModuleRequest = ModuleRequest;
-      this.ImportName = ImportName;
-      this.LocalName = LocalName;
-    }
-
-  } // #exportentry-record
-
-  class ExportEntryRecord {
-    constructor({
-      ExportName,
-      ModuleRequest,
-      ImportName,
-      LocalName
-    }) {
-      Assert(Type(ExportName) === 'String' || Type(ExportName) === 'Null', "Type(ExportName) === 'String' || Type(ExportName) === 'Null'");
-      Assert(Type(ModuleRequest) === 'String' || Type(ModuleRequest) === 'Null', "Type(ModuleRequest) === 'String' || Type(ModuleRequest) === 'Null'");
-      Assert(Type(ImportName) === 'String' || Type(ImportName) === 'Null', "Type(ImportName) === 'String' || Type(ImportName) === 'Null'");
-      Assert(Type(LocalName) === 'String' || Type(LocalName) === 'Null', "Type(LocalName) === 'String' || Type(LocalName) === 'Null'");
-      this.ExportName = ExportName;
-      this.ModuleRequest = ModuleRequest;
-      this.ImportName = ImportName;
-      this.LocalName = LocalName;
-    }
-
-  } // #resolvedbinding-record
-
-  class ResolvedBindingRecord {
-    constructor({
-      Module,
-      BindingName
-    }) {
-      Assert(Module instanceof AbstractModuleRecord, "Module instanceof AbstractModuleRecord");
-      Assert(Type(BindingName) === 'String', "Type(BindingName) === 'String'");
-      this.Module = Module;
-      this.BindingName = BindingName;
-    }
-
-  } // 15.2.1.15 #sec-abstract-module-records
-
-  class AbstractModuleRecord {
-    constructor({
-      Realm,
-      Environment,
-      Namespace,
-      HostDefined
-    }) {
-      this.Realm = Realm;
-      this.Environment = Environment;
-      this.Namespace = Namespace;
-      this.HostDefined = HostDefined;
-    }
-
-  } // 15.2.1.16 #sec-cyclic-module-records
-
-  class CyclicModuleRecord extends AbstractModuleRecord {
-    constructor(init) {
-      super(init);
-      this.Status = init.Status;
-      this.EvaluationError = init.EvaluationError;
-      this.DFSIndex = init.DFSIndex;
-      this.DFSAncestorIndex = init.DFSAncestorIndex;
-      this.RequestedModules = init.RequestedModules;
-    } // 15.2.1.16.1 #sec-moduledeclarationlinking
-
-
-    Link() {
-      const module = this;
-      Assert(module.Status !== 'linking' && module.Status !== 'evaluating', "module.Status !== 'linking' && module.Status !== 'evaluating'");
-      const stack = [];
-      const result = InnerModuleLinking(module, stack, 0);
-
-      if (result instanceof AbruptCompletion) {
-        for (const m of stack) {
-          Assert(m.Status === 'linking', "m.Status === 'linking'");
-          m.Status = 'unlinked';
-          m.Environment = Value.undefined;
-          m.DFSIndex = Value.undefined;
-          m.DFSAncestorIndex = Value.undefined;
-        }
-
-        Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
-        return result;
-      }
-
-      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
-      Assert(stack.length === 0, "stack.length === 0");
-      return Value.undefined;
-    } // 15.2.1.16.2 #sec-moduleevaluation
-
-
-    Evaluate() {
-      const module = this;
-      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
-      const stack = [];
-      const result = InnerModuleEvaluation(module, stack, 0);
-
-      if (result instanceof AbruptCompletion) {
-        for (const m of stack) {
-          Assert(m.Status === 'evaluating', "m.Status === 'evaluating'");
-          m.Status = 'evaluated';
-          m.EvaluationError = result;
-        }
-
-        Assert(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
-        return result;
-      }
-
-      Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined, "module.Status === 'evaluated' && module.EvaluationError === Value.undefined");
-      Assert(stack.length === 0, "stack.length === 0");
-      return Value.undefined;
-    }
-
-  } // 15.2.1.17 #sec-source-text-module-records
-
-  class SourceTextModuleRecord extends CyclicModuleRecord {
-    constructor(init) {
-      super(init);
-      ({
-        ECMAScriptCode: this.ECMAScriptCode,
-        ImportEntries: this.ImportEntries,
-        LocalExportEntries: this.LocalExportEntries,
-        IndirectExportEntries: this.IndirectExportEntries,
-        StarExportEntries: this.StarExportEntries
-      } = init);
-    } // 15.2.1.17.2 #sec-getexportednames
-
-
-    GetExportedNames(exportStarSet) {
-      const module = this;
-
-      if (!exportStarSet) {
-        exportStarSet = [];
-      }
-
-      Assert(Array.isArray(exportStarSet) && exportStarSet.every(e => e instanceof SourceTextModuleRecord), "Array.isArray(exportStarSet) && exportStarSet.every((e) => e instanceof SourceTextModuleRecord)");
-
-      if (exportStarSet.includes(module)) {
-        // Assert: We've reached the starting point of an import * circularity.
-        return [];
-      }
-
-      exportStarSet.push(module);
-      const exportedNames = [];
-
-      for (const e of module.LocalExportEntries) {
-        // Assert: module provides the direct binding for this export.
-        exportedNames.push(e.ExportName);
-      }
-
-      for (const e of module.IndirectExportEntries) {
-        // Assert: module imports a specific binding for this export.
-        exportedNames.push(e.ExportName);
-      }
-
-      for (const e of module.StarExportEntries) {
-        let requestedModule = HostResolveImportedModule(module, e.ModuleRequest);
-
-        if (requestedModule instanceof AbruptCompletion) {
-          return requestedModule;
-        }
-
-        if (requestedModule instanceof Completion) {
-          requestedModule = requestedModule.Value;
-        }
-
-        let starNames = requestedModule.GetExportedNames(exportStarSet);
-
-        if (starNames instanceof AbruptCompletion) {
-          return starNames;
-        }
-
-        if (starNames instanceof Completion) {
-          starNames = starNames.Value;
-        }
-
-        for (const n of starNames) {
-          if (SameValue(n, new Value('default')) === Value.false) {
-            if (!exportedNames.includes(n)) {
-              exportedNames.push(n);
-            }
-          }
-        }
-      }
-
-      return exportedNames;
-    } // 15.2.1.17.3 #sec-resolveexport
-
-
-    ResolveExport(exportName, resolveSet) {
-      const module = this;
-
-      if (!resolveSet) {
-        resolveSet = [];
-      }
-
-      Assert(Array.isArray(resolveSet) && resolveSet.every(e => 'Module' in e && 'ExportName' in e), "Array.isArray(resolveSet) && resolveSet.every((e) => 'Module' in e && 'ExportName' in e)");
-
-      for (const r of resolveSet) {
-        if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
-          // Assert: This is a circular import request.
-          return null;
-        }
-      }
-
-      resolveSet.push({
-        Module: module,
-        ExportName: exportName
-      });
-
-      for (const e of module.LocalExportEntries) {
-        if (SameValue(exportName, e.ExportName) === Value.true) {
-          // Assert: module provides the direct binding for this export.
-          return new ResolvedBindingRecord({
-            Module: module,
-            BindingName: e.LocalName
-          });
-        }
-      }
-
-      for (const e of module.IndirectExportEntries) {
-        if (SameValue(exportName, e.ExportName) === Value.true) {
-          let importedModule = HostResolveImportedModule(module, e.ModuleRequest);
-
-          if (importedModule instanceof AbruptCompletion) {
-            return importedModule;
-          }
-
-          if (importedModule instanceof Completion) {
-            importedModule = importedModule.Value;
-          }
-
-          return importedModule.ResolveExport(e.ImportName, resolveSet);
-        }
-      }
-
-      if (SameValue(exportName, new Value('default')) === Value.true) {
-        // Assert: A default export was not explicitly defined by this module.
-        return null; // NOTE: A default export cannot be provided by an export *.
-      }
-
-      let starResolution = null;
-
-      for (const e of module.StarExportEntries) {
-        let importedModule = HostResolveImportedModule(module, e.ModuleRequest);
-
-        if (importedModule instanceof AbruptCompletion) {
-          return importedModule;
-        }
-
-        if (importedModule instanceof Completion) {
-          importedModule = importedModule.Value;
-        }
-
-        let resolution = importedModule.ResolveExport(exportName, resolveSet);
-
-        if (resolution instanceof AbruptCompletion) {
-          return resolution;
-        }
-
-        if (resolution instanceof Completion) {
-          resolution = resolution.Value;
-        }
-
-        if (resolution === 'ambiguous') {
-          return 'ambiguous';
-        }
-
-        if (resolution !== null) {
-          Assert(resolution instanceof ResolvedBindingRecord, "resolution instanceof ResolvedBindingRecord");
-
-          if (starResolution === null) {
-            starResolution = resolution;
-          } else {
-            // Assert: There is more than one * import that includes the requested name.
-            if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName, starResolution.BindingName) === Value.false) {
-              return 'ambiguous';
-            }
-          }
-        }
-      }
-
-      return starResolution;
-    } // 15.2.1.17.4 #sec-source-text-module-record-initialize-environment
-
-
-    InitializeEnvironment() {
-      const module = this;
-
-      for (const e of module.IndirectExportEntries) {
-        let resolution = module.ResolveExport(e.ExportName);
-
-        if (resolution instanceof AbruptCompletion) {
-          return resolution;
-        }
-
-        if (resolution instanceof Completion) {
-          resolution = resolution.Value;
-        }
-
-        if (resolution === null || resolution === 'ambiguous') {
-          return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, e.ExportName, module));
-        } // Assert: resolution is a ResolvedBinding Record.
-
-      } // Assert: All named exports from module are resolvable.
-
-
-      const realm = module.Realm;
-      Assert(realm !== Value.undefined, "realm !== Value.undefined");
-      const env = NewModuleEnvironment(realm.GlobalEnv);
-      module.Environment = env;
-      const envRec = env.EnvironmentRecord;
-
-      for (const ie of module.ImportEntries) {
-        let importedModule = HostResolveImportedModule(module, ie.ModuleRequest);
-        Assert(!(importedModule instanceof AbruptCompletion), "");
-
-        if (importedModule instanceof Completion) {
-          importedModule = importedModule.Value;
-        }
-
-        if (ie.ImportName === new Value('*')) {
-          let namespace = GetModuleNamespace(importedModule);
-
-          if (namespace instanceof AbruptCompletion) {
-            return namespace;
-          }
-
-          if (namespace instanceof Completion) {
-            namespace = namespace.Value;
-          }
-
-          Assert(!(envRec.CreateImmutableBinding(ie.LocalName, Value.true) instanceof AbruptCompletion), "");
-          envRec.InitializeBinding(ie.LocalName, namespace);
-        } else {
-          let resolution = importedModule.ResolveExport(ie.ImportName);
-
-          if (resolution instanceof AbruptCompletion) {
-            return resolution;
-          }
-
-          if (resolution instanceof Completion) {
-            resolution = resolution.Value;
-          }
-
-          if (resolution === null || resolution === 'ambiguous') {
-            return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule));
-          }
-
-          envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
-        }
-      }
-
-      const code = module.ECMAScriptCode.body;
-      const varDeclarations = VarScopedDeclarations_ModuleBody(code);
-      const declaredVarNames = [];
-
-      for (const d of varDeclarations) {
-        for (const dn of BoundNames_VariableDeclaration(d).map(Value)) {
-          if (!declaredVarNames.includes(dn)) {
-            Assert(!(envRec.CreateMutableBinding(dn, Value.false) instanceof AbruptCompletion), "");
-            envRec.InitializeBinding(dn, Value.undefined);
-            declaredVarNames.push(dn);
-          }
-        }
-      }
-
-      const lexDeclarations = LexicallyScopedDeclarations_Module(code);
-
-      for (const d of lexDeclarations) {
-        for (const dn of BoundNames_ModuleItem(d).map(Value)) {
-          if (IsConstantDeclaration(d)) {
-            {
-              const hygienicTemp = envRec.CreateImmutableBinding(dn, Value.true);
-
-              if (hygienicTemp instanceof AbruptCompletion) {
-                return hygienicTemp;
-              }
-            }
-          } else {
-            {
-              const hygienicTemp = envRec.CreateMutableBinding(dn, Value.false);
-
-              if (hygienicTemp instanceof AbruptCompletion) {
-                return hygienicTemp;
-              }
-            }
-          }
-
-          if (isFunctionDeclaration(d) || isGeneratorDeclaration(d) || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
-            const fo = InstantiateFunctionObject(d, env);
-            envRec.InitializeBinding(dn, fo);
-          }
-        }
-      }
-
-      return new NormalCompletion(undefined);
-    } // 15.2.1.17.5 #sec-source-text-module-record-execute-module
-
-
-    ExecuteModule() {
-      const module = this;
-      const moduleCtx = new ExecutionContext();
-      moduleCtx.Function = Value.null;
-      Assert(module.Realm !== Value.undefined, "module.Realm !== Value.undefined");
-      moduleCtx.Realm = module.Realm;
-      moduleCtx.ScriptOrModule = module; // Assert: module has been linked and declarations in its module environment have been instantiated.
-
-      moduleCtx.VariableEnvironment = module.Environment;
-      moduleCtx.LexicalEnvironment = module.Environment; // Suspend the currently running execution context.
-
-      surroundingAgent.executionContextStack.push(moduleCtx);
-      const result = Evaluate_Module(module.ECMAScriptCode.body);
-      surroundingAgent.executionContextStack.pop(moduleCtx); // Resume the context that is now on the top of the execution context stack as the running execution context.
-
-      return Completion(result);
-    }
-
-  }
-
-  const HasOwnProperty$1 = Function.call.bind(Object.prototype.hasOwnProperty);
-
-  function deepFreeze(o) {
-    Object.freeze(o);
-    Object.getOwnPropertyNames(o).forEach(prop => {
-      if (HasOwnProperty$1(o, prop) && o[prop] !== null && (typeof o[prop] === 'object' || typeof o[prop] === 'function') && !Object.isFrozen(o[prop])) {
-        deepFreeze(o[prop]);
-      }
-    });
-    return o;
-  } // Copied from acorn/src/scopeflags.js.
-
-
-  const SCOPE_FUNCTION = 2;
-  const SCOPE_ASYNC = 4;
-  const SCOPE_GENERATOR = 8;
-
-  function functionFlags(async, generator) {
-    // eslint-disable-next-line no-bitwise
-    return SCOPE_FUNCTION | (async ? SCOPE_ASYNC : 0) | (generator ? SCOPE_GENERATOR : 0);
-  }
-
-  const optionalChainToken = {
-    label: '?.'
-  };
-  const nullishCoalescingToken = {
-    label: '??',
-    binop: 0
-  };
-  const Parser = acorn.Parser.extend(P => class Parse262 extends P {
-    constructor(options = {}, source) {
-      super({ ...options,
-        ecmaVersion: 2020,
-        // adds needed ParenthesizedExpression production
-        preserveParens: true,
-        locations: true
-      }, source);
-
-      if (options.strict === true) {
-        this.strict = true;
-      }
-    }
-
-    parse() {
-      const body = super.parse();
-      deepFreeze(body);
-      return body;
-    }
-
-    finishNode(node, type) {
-      node.strict = this.strict;
-      const ret = super.finishNode(node, type);
-
-      node.sourceText = () => this.input.slice(node.start, node.end);
-
-      if (ret.type === 'MethodDefinition' && ret.static) {
-        ret.start += 7; // don't include `static` in the source text
-      }
-
-      return ret;
-    }
-
-    getTokenFromCode(code) {
-      if (code === 63) {
-        this.pos += 1;
-
-        if (surroundingAgent.feature('OptionalChaining')) {
-          const next = this.input.charCodeAt(this.pos);
-
-          if (next === 46) {
-            const nextNext = this.input.charCodeAt(this.pos + 1);
-
-            if (nextNext < 48 || nextNext > 57) {
-              this.pos += 1;
-              return this.finishToken(optionalChainToken);
-            }
-          }
-        }
-
-        if (surroundingAgent.feature('NullishCoalescing')) {
-          const next = this.input.charCodeAt(this.pos);
-
-          if (next === 63) {
-            this.pos += 1;
-            return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
-          }
-        }
-
-        return this.finishToken(acorn.tokTypes.question);
-      }
-
-      return super.getTokenFromCode(code);
-    }
-
-    parseSubscripts(base, startPos, startLoc, noCalls) {
-      if (noCalls) {
-        return super.parseSubscripts(base, startPos, startLoc, noCalls);
-      }
-
-      const maybeAsyncArrow = base.type === 'Identifier' && base.name === 'async' && this.lastTokEnd === base.end && !this.canInsertSemicolon() && this.input.slice(base.start, base.end) === 'async';
-      /**
-       * Optional chains are hard okay?
-       *
-       *  a.b?.c
-       *  @=>
-       *  OptionalExpression a.b?.c
-       *      MemberExpression a.b
-       *      OptionalChain ?.c
-       *
-       *  a.b?.c.d.e
-       *  @=>
-       *  OptionalExpressoin a.b?.c.d.e
-       *      MemberExpression a.b
-       *      OptionalChain ?.c.d.e
-       *          OptionalChain ?.c.d
-       *              OptionalChain ?.c
-       *              Identifier .d
-       *          Identifier .e
-       *
-       *  a.b?.c.d
-       *  @=>
-       *  OptionalExpression a.b?.c.d
-       *      MemberExpression a.b
-       *      OptionalChain ?.c.d
-       *          OptionalChain ?.c
-       *          Identifier .d
-       *
-       *  a.b?.c.d?.e.f
-       *  @=>
-       *  OptionalExpression a.b?.c.d?.e.f
-       *      OptionalExpression a.b?.c.d
-       *          MemberExpression a.b
-       *          OptionalChain ?.c.d
-       *              OptionalChain ?.c
-       *              Identifier .d
-       *      OptionalChain ?.e.f
-       *          OptionalChain ?.e
-       *          Identifier .f
-       */
-
-      while (true) {
-        if (this.eat(optionalChainToken)) {
-          const node = this.startNodeAt(startPos, startLoc);
-          node.object = base;
-          node.chain = this.parseOptionalChain(startPos, startLoc);
-          base = this.finishNode(node, 'OptionalExpression');
-        } else {
-          const element = this.parseSubscript(base, startPos, startLoc, noCalls, maybeAsyncArrow);
-
-          if (element === base) {
-            break;
-          }
-
-          base = element;
-        }
-      }
-
-      return base;
-    }
-
-    parseOptionalChain(startPos, startLoc) {
-      let base = this.startNodeAt(startPos, startLoc);
-
-      if (this.eat(acorn.tokTypes.bracketL)) {
-        base.property = this.parseExpression();
-        this.expect(acorn.tokTypes.bracketR);
-        base.computed = true;
-        base = this.finishNode(base, 'OptionalChain');
-      } else if (this.eat(acorn.tokTypes.parenL)) {
-        base.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
-      } else {
-        base.property = this.parseIdent(true);
-        base.computed = false;
-      }
-
-      base.base = null;
-      base = this.finishNode(base, 'OptionalChain');
-
-      while (true) {
-        const computed = this.eat(acorn.tokTypes.bracketL);
-
-        if (computed || this.eat(acorn.tokTypes.dot)) {
-          const node = this.startNodeAt(startPos, startLoc);
-          node.base = base;
-          node.property = computed ? this.parseExpression() : this.parseIdent(true);
-
-          if (computed) {
-            this.expect(acorn.tokTypes.bracketR);
-          }
-
-          node.computed = computed;
-          base = this.finishNode(node, 'OptionalChain');
-        } else if (this.eat(acorn.tokTypes.parenL)) {
-          const node = this.startNodeAt(startPos, startLoc);
-          node.base = base;
-          node.arguments = this.parseExprList(acorn.tokTypes.parenR, this.options.ecmaVersion >= 8, false, undefined);
-          base = this.finishNode(node, 'OptionalChain');
-        } else if (this.eat(acorn.tokTypes.backQuote)) {
-          this.raise(this.start, 'Cannot tag an optional chain');
-        } else {
-          break;
-        }
-      }
-
-      return base;
-    }
-
-    buildBinary(startPos, startLoc, left, right, op, logical) {
-      if (op === '??') {
-        if (left.type === 'LogicalExpression') {
-          this.raise(left.start, 'Cannot mix &&, ||, and ??');
-        }
-
-        if (right.type === 'LogicalExpression') {
-          this.raise(right.start, 'Cannot mix &&, ||, and ??');
-        }
-      } else if (logical) {
-        if (left.operator === '??') {
-          this.raise(left.start, 'Cannot mix &&, ||, and ??');
-        }
-
-        if (right.operator === '??') {
-          this.raise(right.start, 'Cannot mix &&, ||, and ??');
-        }
-      }
-
-      return super.buildBinary(startPos, startLoc, left, right, op, logical);
-    } // Adapted from several different places in Acorn.
-
-
-    static parseFunctionBody(sourceText, async, generator) {
-      const parser = new Parser({
-        sourceType: 'script'
-      }, sourceText); // Parser.prototype.parse()
-
-      const node = parser.startNode();
-      parser.nextToken(); // Parser.prototype.parseFunction()
-
-      parser.initFunction(node);
-      parser.enterScope(functionFlags(async, generator)); // Parser.prototype.parseBlock()
-
-      const body = [];
-
-      while (!parser.eat(acorn.tokTypes.eof)) {
-        const stmt = parser.parseStatement(null);
-        body.push(stmt);
-      } // Parser.prototype.parseFunctionBody()
-
-
-      parser.adaptDirectivePrologue(body);
-      deepFreeze(body);
-      return body;
-    }
-
-  });
-  function ParseAsFunctionBody(sourceText) {
-    return Parser.parseFunctionBody(sourceText, false, false);
-  }
-  function ParseAsGeneratorBody(sourceText) {
-    return Parser.parseFunctionBody(sourceText, false, true);
-  }
-  function ParseAsAsyncFunctionBody(sourceText) {
-    return Parser.parseFunctionBody(sourceText, true, false);
-  }
-  function ParseAsAsyncGeneratorBody(sourceText) {
-    return Parser.parseFunctionBody(sourceText, true, true);
-  } // Adapted from several different places in Acorn.
-  // `strict` refers to ContainsUseStrict of the corresponding function body.
-
-  function ParseAsFormalParameters(sourceText, strict, enableAwait, enableYield) {
-    // Adapted from different places in Acorn.
-    const parser = new Parser({
-      sourceType: 'script'
-    }, sourceText);
-    parser.strict = strict; // Parser.prototype.parse()
-
-    const node = parser.startNode();
-    parser.nextToken(); // Parser.prototype.parseFunction()
-
-    parser.initFunction(node);
-    parser.enterScope(functionFlags(enableAwait, enableYield)); // Parser.prototype.parseFunctionParams()
-
-    const params = parser.parseBindingList(acorn.tokTypes.eof, false, true);
-    parser.checkYieldAwaitInDefaultParams(); // Parser.prototype.parseFunctionBody()
-
-    const simple = parser.isSimpleParamList(params);
-
-    if (strict && !simple) {
-      parser.raiseRecoverable(node.start, 'Illegal \'use strict\' directive in function with non-simple parameter list');
-    }
-
-    parser.checkParams({
-      params
-    }, !strict && simple);
-    deepFreeze(params);
-    return params;
-  }
-  const emptyConstructorNode = Parser.parse('(class { constructor() {} })').body[0].expression.expression.body.body[0];
-  const forwardingConstructorNode = Parser.parse('(class extends X { constructor(...args) { super(...args); } })').body[0].expression.expression.body.body[0];
-
-  function forwardError(fn) {
-    try {
-      return fn();
-    } catch (e) {
-      if (e.name === 'SyntaxError') {
-        return [surroundingAgent.Throw('SyntaxError', e.message).Value];
-      } else {
-        throw e;
-      }
-    }
-  }
-
-  function ParseScript(sourceText, realm, hostDefined = {}, strict) {
-    const body = forwardError(() => Parser.parse(sourceText, {
-      sourceType: 'script',
-      strict
-    }));
-
-    if (Array.isArray(body)) {
-      return body;
-    }
-
-    return {
-      Realm: realm,
-      Environment: undefined,
-      ECMAScriptCode: body,
-      HostDefined: hostDefined
-    };
-  }
-  function ParseModule(sourceText, realm, hostDefined = {}) {
-    // Assert: sourceText is an ECMAScript source text (see clause 10).
-    const body = forwardError(() => Parser.parse(sourceText, {
-      sourceType: 'module'
-    }));
-
-    if (Array.isArray(body)) {
-      return body;
-    }
-
-    const requestedModules = ModuleRequests_ModuleItemList(body.body);
-    const importEntries = ImportEntries_ModuleItemList(body.body);
-    const importedBoundNames = ImportedLocalNames(importEntries);
-    const indirectExportEntries = [];
-    const localExportEntries = [];
-    const starExportEntries = [];
-    const exportEntries = ExportEntries_ModuleItemList(body.body);
-
-    for (const ee of exportEntries) {
-      if (ee.ModuleRequest === Value.null) {
-        if (!importedBoundNames.includes(ee.LocalName)) {
-          localExportEntries.push(ee);
-        } else {
-          const ie = importEntries.find(e => e.LocalName === ee.LocalName);
-
-          if (ie.ImportName === new Value('*')) {
-            // Assert: This is a re-export of an imported module namespace object.
-            localExportEntries.push(ee);
-          } else {
-            indirectExportEntries.push(new ExportEntryRecord({
-              ModuleRequest: ie.ModuleRequest,
-              ImportName: ie.ImportName,
-              LocalName: Value.null,
-              ExportName: ee.ExportName
-            }));
-          }
-        }
-      } else if (ee.ImportName === new Value('*')) {
-        starExportEntries.push(ee);
-      } else {
-        indirectExportEntries.push(ee);
-      }
-    }
-
-    return new SourceTextModuleRecord({
-      Realm: realm,
-      Environment: Value.undefined,
-      Namespace: Value.undefined,
-      Status: 'unlinked',
-      EvaluationError: Value.undefined,
-      HostDefined: hostDefined,
-      ECMAScriptCode: body,
-      RequestedModules: requestedModules,
-      ImportEntries: importEntries,
-      LocalExportEntries: localExportEntries,
-      IndirectExportEntries: indirectExportEntries,
-      StarExportEntries: starExportEntries,
-      DFSIndex: Value.undefined,
-      DFSAncestorIndex: Value.undefined
-    });
-  }
-
-  const FEATURES = Object.freeze([{
-    name: 'globalThis',
-    url: 'https://github.com/tc39/proposal-global'
-  }, {
-    name: 'Promise.allSettled',
-    url: 'https://github.com/tc39/proposal-promise-allSettled'
-  }, {
-    name: 'OptionalChaining',
-    url: 'https://github.com/tc39/proposal-optional-chaining'
-  }, {
-    name: 'NullishCoalescing',
-    url: 'https://github.com/tc39/proposal-nullish-coalescing'
-  }].map(Object.freeze));
-  class Agent {
-    constructor(options = {}) {
-      this.LittleEndian = Value.true;
-      this.CanBlock = true;
-      this.Signifier = Agent.Increment;
-      Agent.Increment += 1;
-      this.IsLockFree1 = true;
-      this.IsLockFree2 = true;
-      this.CandidateExecution = undefined;
-      this.executionContextStack = [];
-      const stackPop = this.executionContextStack.pop;
-
-      this.executionContextStack.pop = function pop(...args) {
-        const popped = stackPop.call(this);
-
-        if (args.length === 1) {
-          Assert(args[0] === popped, "args[0] === popped");
-        }
-      };
-
-      this.jobQueue = [];
-      this.hostDefinedOptions = { ...options,
-        features: FEATURES.reduce((acc, {
-          name
-        }) => {
-          if (options.features) {
-            acc[name] = options.features.includes(name);
-          } else {
-            acc[name] = false;
-          }
-
-          return acc;
-        }, {})
-      };
-    }
-
-    get runningExecutionContext() {
-      return this.executionContextStack[this.executionContextStack.length - 1];
-    }
-
-    get currentRealmRecord() {
-      return this.runningExecutionContext.Realm;
-    }
-
-    get activeFunctionObject() {
-      return this.runningExecutionContext.Function;
-    }
-
-    intrinsic(name) {
-      return this.currentRealmRecord.Intrinsics[name];
-    }
-
-    Throw(type, message) {
-      const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-      const error = Construct(cons, message ? [new Value(message)] : []);
-      error.hostTrace = new Error().stack;
-      return new ThrowCompletion(error);
-    }
-
-    feature(name) {
-      return this.hostDefinedOptions.features[name];
-    }
-
-  }
-  Agent.Increment = 0;
-  let surroundingAgent;
-  function setSurroundingAgent(a) {
-    surroundingAgent = a;
-  }
-  class ExecutionContext {
-    constructor() {
-      this.codeEvaluationState = undefined;
-      this.Function = undefined;
-      this.Realm = undefined;
-      this.ScriptOrModule = undefined;
-      this.LexicalEnvironment = undefined;
-    }
-
-    copy() {
-      const e = new ExecutionContext();
-      e.codeEvaluationState = this.codeEvaluationState;
-      e.Function = this.Function;
-      e.Realm = this.Realm;
-      e.ScriptOrModule = this.ScriptOrModule;
-      e.LexicalEnvironment = this.LexicalEnvironment;
-      return e;
-    }
-
-  } // 8.4.1 #sec-enqueuejob
-
-  function EnqueueJob(queueName, job, args) {
-    const callerContext = surroundingAgent.runningExecutionContext;
-    const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = callerContext.ScriptOrModule;
-    const pending = {
-      Job: job,
-      Arguments: args,
-      Realm: callerRealm,
-      ScriptOrModule: callerScriptOrModule,
-      HostDefined: undefined
-    };
-    surroundingAgent.jobQueue.push(pending);
-  } // 8.5 #sec-initializehostdefinedrealm
-
-  function ScriptEvaluation(scriptRecord) {
-    const globalEnv = scriptRecord.Realm.GlobalEnv;
-    const scriptCtx = new ExecutionContext();
-    scriptCtx.Function = Value.null;
-    scriptCtx.Realm = scriptRecord.Realm;
-    scriptCtx.ScriptOrModule = scriptRecord;
-    scriptCtx.VariableEnvironment = globalEnv;
-    scriptCtx.LexicalEnvironment = globalEnv;
-    scriptCtx.HostDefined = scriptRecord.HostDefined; // Suspend runningExecutionContext
-
-    surroundingAgent.executionContextStack.push(scriptCtx);
-    const scriptBody = scriptRecord.ECMAScriptCode.body;
-    let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
-
-    if (result.Type === 'normal') {
-      result = Evaluate_Script(scriptBody);
-    }
-
-    if (result.Type === 'normal' && !result.Value) {
-      result = new NormalCompletion(Value.undefined);
-    } // Suspend scriptCtx
-
-
-    surroundingAgent.executionContextStack.pop(scriptCtx); // Resume(surroundingAgent.runningExecutionContext);
-
-    return result;
-  } // 15.1.12 #sec-scriptevaluationjob
-
-  function ScriptEvaluationJob(sourceText, hostDefined) {
-    const realm = surroundingAgent.currentRealmRecord;
-    const s = ParseScript(sourceText, realm, hostDefined);
-
-    if (Array.isArray(s)) {
-      HostReportErrors(s);
-      return new NormalCompletion(undefined);
-    }
-
-    return ScriptEvaluation(s);
-  } // 15.2.1.22 #sec-toplevelmoduleevaluationjob
-
-  function HostReportErrors(errorList) {
-    if (surroundingAgent.hostDefinedOptions.reportError) {
-      errorList.forEach(error => {
-        surroundingAgent.hostDefinedOptions.reportError(error);
-      });
-    }
-  }
-  function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
-    if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
-      {
-        const hygienicTemp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
-
-        if (hygienicTemp instanceof AbruptCompletion) {
-          return hygienicTemp;
-        }
-      }
-    }
-
-    return new NormalCompletion(undefined);
-  }
-  function HostPromiseRejectionTracker(promise, operation) {
-    if (surroundingAgent.hostDefinedOptions.promiseRejectionTracker) {
-      Assert(!(surroundingAgent.hostDefinedOptions.promiseRejectionTracker(promise, operation) instanceof AbruptCompletion), "");
-    }
-  }
-  function HostHasSourceTextAvailable(func) {
-    if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
-      let _val = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
-
-      Assert(!(_val instanceof AbruptCompletion), "");
-
-      if (_val instanceof Completion) {
-        _val = _val.Value;
-      }
-
-      return _val;
-    }
-
-    return Value.true;
-  }
-  function HostResolveImportedModule(referencingScriptOrModule, specifier) {
-    const Realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
-
-    if (Realm.HostDefined.resolveImportedModule) {
-      if (!Realm.HostDefined.moduleMap) {
-        Realm.HostDefined.moduleMap = new Map();
-      }
-
-      specifier = specifier.stringValue();
-      const key = `${referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.specifier : ''}\u0000${specifier}`;
-
-      if (Realm.HostDefined.moduleMap.has(key)) {
-        return Realm.HostDefined.moduleMap.get(key);
-      }
-
-      const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
-      let apiModule = Realm.HostDefined.resolveImportedModule(publicModule, specifier);
-
-      if (apiModule instanceof AbruptCompletion) {
-        return apiModule;
-      }
-
-      if (apiModule instanceof Completion) {
-        apiModule = apiModule.Value;
-      }
-
-      Realm.HostDefined.moduleMap.set(key, apiModule.module);
-      return apiModule.module;
-    }
-
-    return surroundingAgent.Throw('Error', msg('CouldNotResolveModule', specifier));
-  }
-
-  function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
-    if (completion instanceof AbruptCompletion) {
-      Assert(!(Call(promiseCapability.Reject, Value.undefined, [completion.Value]) instanceof AbruptCompletion), "");
-    } else {
-      Assert(completion instanceof NormalCompletion && completion.Value === Value.undefined, "completion instanceof NormalCompletion && completion.Value === Value.undefined");
-      let moduleRecord = HostResolveImportedModule(referencingScriptOrModule, specifier);
-      Assert(!(moduleRecord instanceof AbruptCompletion), "");
-
-      if (moduleRecord instanceof Completion) {
-        moduleRecord = moduleRecord.Value;
-      }
-
-      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-
-      if (namespace instanceof AbruptCompletion) {
-        Assert(!(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]) instanceof AbruptCompletion), "");
-      } else {
-        Assert(!(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]) instanceof AbruptCompletion), "");
-      }
-    }
-  }
-
-  function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
-    let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
-
-    if (!(completion instanceof AbruptCompletion)) {
-      const module = completion.Value;
-
-      if (module instanceof CyclicModuleRecord) {
-        if (module.Status !== 'linking' && module.Status !== 'evaluating') {
-          completion = EnsureCompletion(module.Link());
-        } // !!! WILLFUL VIOLATION !!!
-        // The spec requires that we call module.Evaluate() here,
-        // but if module.Status is 'evaluating', an assertion will fail.
-
-
-        if (!(completion instanceof AbruptCompletion) && (module.Status === 'linked' || module.Status === 'evaluated')) {
-          completion = EnsureCompletion(module.Evaluate());
-        }
-      } else {
-        completion = EnsureCompletion(module.Link());
-
-        if (!(completion instanceof AbruptCompletion)) {
-          completion = EnsureCompletion(module.Evaluate());
-        }
-      }
-    }
-
-    if (!(completion instanceof AbruptCompletion)) {
-      completion = new NormalCompletion(Value.undefined);
-    }
-
-    FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
-    return new NormalCompletion(Value.undefined);
   }
 
   function Value(value) {
@@ -23032,7 +15616,7 @@
       }
 
       const map = args.ParameterMap;
-      let isMapped = HasOwnProperty(map, P);
+      let isMapped = HasOwnProperty$1(map, P);
       Assert(!(isMapped instanceof AbruptCompletion), "");
 
       if (isMapped instanceof Completion) {
@@ -23049,7 +15633,7 @@
     DefineOwnProperty(P, Desc) {
       const args = this;
       const map = args.ParameterMap;
-      let isMapped = HasOwnProperty(map, P);
+      let isMapped = HasOwnProperty$1(map, P);
       Assert(!(isMapped instanceof AbruptCompletion), "");
 
       if (isMapped instanceof Completion) {
@@ -23110,7 +15694,7 @@
     Get(P, Receiver) {
       const args = this;
       const map = args.ParameterMap;
-      let isMapped = HasOwnProperty(map, P);
+      let isMapped = HasOwnProperty$1(map, P);
       Assert(!(isMapped instanceof AbruptCompletion), "");
 
       if (isMapped instanceof Completion) {
@@ -23134,7 +15718,7 @@
       } else {
         map = args.ParameterMap;
 
-        let _val6 = HasOwnProperty(map, P);
+        let _val6 = HasOwnProperty$1(map, P);
 
         Assert(!(_val6 instanceof AbruptCompletion), "");
 
@@ -23156,7 +15740,7 @@
     Delete(P) {
       const args = this;
       const map = args.ParameterMap;
-      let isMapped = HasOwnProperty(map, P);
+      let isMapped = HasOwnProperty$1(map, P);
       Assert(!(isMapped instanceof AbruptCompletion), "");
 
       if (isMapped instanceof Completion) {
@@ -24706,7 +17290,7 @@
       O = O.Value;
     }
 
-    return HasOwnProperty(O, P);
+    return HasOwnProperty$1(O, P);
   }
 
   function ObjectProto_isPrototypeOf([V = Value.undefined], {
@@ -25656,7 +18240,7 @@
 
       if (prop === Value.undefined) {
         Assert(!internalMethodsRestricted, "!internalMethodsRestricted");
-        let hasOwn = HasOwnProperty(obj, curProp);
+        let hasOwn = HasOwnProperty$1(obj, curProp);
 
         if (hasOwn instanceof AbruptCompletion) {
           return hasOwn;
@@ -30290,7 +22874,7 @@
       F = F.Value;
     }
 
-    let targetHasLength = HasOwnProperty(Target, new Value('length'));
+    let targetHasLength = HasOwnProperty$1(Target, new Value('length'));
 
     if (targetHasLength instanceof AbruptCompletion) {
       return targetHasLength;
@@ -42535,14 +35119,7676 @@
     return global;
   }
 
+  const FEATURES = Object.freeze([{
+    name: 'globalThis',
+    url: 'https://github.com/tc39/proposal-global'
+  }, {
+    name: 'Promise.allSettled',
+    url: 'https://github.com/tc39/proposal-promise-allSettled'
+  }, {
+    name: 'OptionalChaining',
+    url: 'https://github.com/tc39/proposal-optional-chaining'
+  }, {
+    name: 'NullishCoalescing',
+    url: 'https://github.com/tc39/proposal-nullish-coalescing'
+  }, {
+    name: 'TopLevelAwait',
+    url: 'https://github.com/tc39/proposal-top-level-await'
+  }].map(Object.freeze));
+  class Agent {
+    constructor(options = {}) {
+      this.LittleEndian = Value.true;
+      this.CanBlock = true;
+      this.Signifier = Agent.Increment;
+      Agent.Increment += 1;
+      this.IsLockFree1 = true;
+      this.IsLockFree2 = true;
+      this.CandidateExecution = undefined;
+      this.executionContextStack = [];
+      const stackPop = this.executionContextStack.pop;
+
+      this.executionContextStack.pop = function pop(...args) {
+        const popped = stackPop.call(this);
+
+        if (args.length === 1) {
+          Assert(args[0] === popped, "args[0] === popped");
+        }
+      };
+
+      this.jobQueue = [];
+      this.hostDefinedOptions = { ...options,
+        features: FEATURES.reduce((acc, {
+          name
+        }) => {
+          if (options.features) {
+            acc[name] = options.features.includes(name);
+          } else {
+            acc[name] = false;
+          }
+
+          return acc;
+        }, {})
+      };
+    }
+
+    get runningExecutionContext() {
+      return this.executionContextStack[this.executionContextStack.length - 1];
+    }
+
+    get currentRealmRecord() {
+      return this.runningExecutionContext.Realm;
+    }
+
+    get activeFunctionObject() {
+      return this.runningExecutionContext.Function;
+    }
+
+    intrinsic(name) {
+      return this.currentRealmRecord.Intrinsics[name];
+    }
+
+    Throw(type, message) {
+      const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
+      const error = Construct(cons, message ? [new Value(message)] : []);
+      error.hostTrace = new Error().stack;
+      return new ThrowCompletion(error);
+    }
+
+    feature(name) {
+      return this.hostDefinedOptions.features[name];
+    }
+
+  }
+  Agent.Increment = 0;
+  let surroundingAgent;
+  function setSurroundingAgent(a) {
+    surroundingAgent = a;
+  }
+  class ExecutionContext {
+    constructor() {
+      this.codeEvaluationState = undefined;
+      this.Function = undefined;
+      this.Realm = undefined;
+      this.ScriptOrModule = undefined;
+      this.LexicalEnvironment = undefined;
+    }
+
+    copy() {
+      const e = new ExecutionContext();
+      e.codeEvaluationState = this.codeEvaluationState;
+      e.Function = this.Function;
+      e.Realm = this.Realm;
+      e.ScriptOrModule = this.ScriptOrModule;
+      e.LexicalEnvironment = this.LexicalEnvironment;
+      return e;
+    }
+
+  } // 8.4.1 #sec-enqueuejob
+
+  function EnqueueJob(queueName, job, args) {
+    const callerContext = surroundingAgent.runningExecutionContext;
+    const callerRealm = callerContext.Realm;
+    const callerScriptOrModule = callerContext.ScriptOrModule;
+    const pending = {
+      Job: job,
+      Arguments: args,
+      Realm: callerRealm,
+      ScriptOrModule: callerScriptOrModule,
+      HostDefined: undefined
+    };
+    surroundingAgent.jobQueue.push(pending);
+  } // 8.5 #sec-initializehostdefinedrealm
+
+  function ScriptEvaluation(scriptRecord) {
+    const globalEnv = scriptRecord.Realm.GlobalEnv;
+    const scriptCtx = new ExecutionContext();
+    scriptCtx.Function = Value.null;
+    scriptCtx.Realm = scriptRecord.Realm;
+    scriptCtx.ScriptOrModule = scriptRecord;
+    scriptCtx.VariableEnvironment = globalEnv;
+    scriptCtx.LexicalEnvironment = globalEnv;
+    scriptCtx.HostDefined = scriptRecord.HostDefined; // Suspend runningExecutionContext
+
+    surroundingAgent.executionContextStack.push(scriptCtx);
+    const scriptBody = scriptRecord.ECMAScriptCode.body;
+    let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
+
+    if (result.Type === 'normal') {
+      result = Evaluate_Script(scriptBody);
+    }
+
+    if (result.Type === 'normal' && !result.Value) {
+      result = new NormalCompletion(Value.undefined);
+    } // Suspend scriptCtx
+
+
+    surroundingAgent.executionContextStack.pop(scriptCtx); // Resume(surroundingAgent.runningExecutionContext);
+
+    return result;
+  } // 15.1.12 #sec-scriptevaluationjob
+
+  function ScriptEvaluationJob(sourceText, hostDefined) {
+    const realm = surroundingAgent.currentRealmRecord;
+    const s = ParseScript(sourceText, realm, hostDefined);
+
+    if (Array.isArray(s)) {
+      HostReportErrors(s);
+      return new NormalCompletion(undefined);
+    }
+
+    return ScriptEvaluation(s);
+  } // 15.2.1.22 #sec-toplevelmoduleevaluationjob
+
+
+  function HostReportErrors(errorList) {
+    if (surroundingAgent.hostDefinedOptions.reportError) {
+      errorList.forEach(error => {
+        surroundingAgent.hostDefinedOptions.reportError(error);
+      });
+    }
+  }
+  function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
+    if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
+      {
+        const hygienicTemp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+
+        if (hygienicTemp instanceof AbruptCompletion) {
+          return hygienicTemp;
+        }
+      }
+    }
+
+    return new NormalCompletion(undefined);
+  }
+  function HostPromiseRejectionTracker(promise, operation) {
+    if (surroundingAgent.hostDefinedOptions.promiseRejectionTracker) {
+      Assert(!(surroundingAgent.hostDefinedOptions.promiseRejectionTracker(promise, operation) instanceof AbruptCompletion), "");
+    }
+  }
+  function HostHasSourceTextAvailable(func) {
+    if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
+      let _val = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      return _val;
+    }
+
+    return Value.true;
+  }
+  function HostResolveImportedModule(referencingScriptOrModule, specifier) {
+    const Realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
+
+    if (Realm.HostDefined.resolveImportedModule) {
+      if (!Realm.HostDefined.moduleMap) {
+        Realm.HostDefined.moduleMap = new Map();
+      }
+
+      specifier = specifier.stringValue();
+      const key = `${referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.specifier : ''}\u0000${specifier}`;
+
+      if (Realm.HostDefined.moduleMap.has(key)) {
+        return Realm.HostDefined.moduleMap.get(key);
+      }
+
+      const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
+      let apiModule = Realm.HostDefined.resolveImportedModule(publicModule, specifier);
+
+      if (apiModule instanceof AbruptCompletion) {
+        return apiModule;
+      }
+
+      if (apiModule instanceof Completion) {
+        apiModule = apiModule.Value;
+      }
+
+      Realm.HostDefined.moduleMap.set(key, apiModule.module);
+      return apiModule.module;
+    }
+
+    return surroundingAgent.Throw('Error', msg('CouldNotResolveModule', specifier));
+  }
+
+  function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
+    if (completion instanceof AbruptCompletion) {
+      Assert(!(Call(promiseCapability.Reject, Value.undefined, [completion.Value]) instanceof AbruptCompletion), "");
+    } else {
+      Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
+      let onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
+        Assert(v === Value.undefined, "v === Value.undefined");
+        let moduleRecord = HostResolveImportedModule(referencingScriptOrModule, specifier);
+        Assert(!(moduleRecord instanceof AbruptCompletion), "");
+
+        if (moduleRecord instanceof Completion) {
+          moduleRecord = moduleRecord.Value;
+        }
+
+        // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+        const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
+
+        if (namespace instanceof AbruptCompletion) {
+          Assert(!(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]) instanceof AbruptCompletion), "");
+        } else {
+          Assert(!(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]) instanceof AbruptCompletion), "");
+        }
+
+        return Value.undefined;
+      }, []);
+      Assert(!(onFulfilled instanceof AbruptCompletion), "");
+
+      if (onFulfilled instanceof Completion) {
+        onFulfilled = onFulfilled.Value;
+      }
+
+      let onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
+        Assert(!(Call(promiseCapability.Reject, Value.undefined, [r]) instanceof AbruptCompletion), "");
+        return Value.undefined;
+      }, []);
+      Assert(!(onRejected instanceof AbruptCompletion), "");
+
+      if (onRejected instanceof Completion) {
+        onRejected = onRejected.Value;
+      }
+
+      Assert(!(PerformPromiseThen(completion.Value, onFulfilled, onRejected) instanceof AbruptCompletion), "");
+    }
+  }
+
+  function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
+    let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
+
+    if (!(completion instanceof AbruptCompletion)) {
+      const module = completion.Value;
+
+      if (module instanceof CyclicModuleRecord) {
+        if (module.Status !== 'linking' && module.Status !== 'evaluating') {
+          completion = EnsureCompletion(module.Link());
+        }
+
+        if (!(completion instanceof AbruptCompletion)) {
+          // !!! WILLFUL VIOLATION !!!
+          // The spec requires that we call module.Evaluate() here,
+          // but if module.Status is 'evaluating', an assertion will fail.
+          if (module.Status === 'linked' || module.Status === 'evaluated') {
+            completion = EnsureCompletion(module.Evaluate());
+          } else {
+            completion = new NormalCompletion(module.TopLevelCapability.Promise);
+          }
+        }
+      } else {
+        completion = EnsureCompletion(module.Link());
+
+        if (!(completion instanceof AbruptCompletion)) {
+          completion = EnsureCompletion(module.Evaluate());
+        }
+      }
+    }
+
+    FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
+    return new NormalCompletion(Value.undefined);
+  }
+
+  // 9.4.4 #sec-arguments-exotic-objects
+  // 9.4.4.6 #sec-createunmappedargumentsobject
+
+  function CreateUnmappedArgumentsObject(argumentsList) {
+    const len = argumentsList.length;
+    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
+    obj.ParameterMap = Value.undefined;
+    DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
+      Value: new Value(len),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+    let index = 0;
+
+    while (index < len) {
+      const val = argumentsList[index];
+      let idxStr = ToString(new Value(index));
+      Assert(!(idxStr instanceof AbruptCompletion), "");
+
+      if (idxStr instanceof Completion) {
+        idxStr = idxStr.Value;
+      }
+
+      Assert(!(CreateDataProperty(obj, idxStr, val) instanceof AbruptCompletion), "");
+      index += 1;
+    }
+
+    Assert(!(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
+      Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    })) instanceof AbruptCompletion), "");
+    Assert(!(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
+      Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
+      Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+    return obj;
+  }
+
+  function ArgGetterSteps() {
+    const f = this;
+    const name = f.Name;
+    const env = f.Env;
+    return env.GetBindingValue(name, Value.false);
+  } // 9.4.4.7.1 #sec-makearggetter
+
+
+  function MakeArgGetter(name, env) {
+    const steps = ArgGetterSteps;
+    let getter = CreateBuiltinFunction(steps, ['Name', 'Env']);
+    Assert(!(getter instanceof AbruptCompletion), "");
+
+    if (getter instanceof Completion) {
+      getter = getter.Value;
+    }
+
+    getter.Name = name;
+    getter.Env = env;
+    return getter;
+  }
+
+  function ArgSetterSteps([value]) {
+    Assert(value !== undefined, "value !== undefined");
+    const f = this;
+    const name = f.Name;
+    const env = f.Env;
+    return env.SetMutableBinding(name, value, Value.false);
+  } // 9.4.4.7.2 #sec-makeargsetter
+
+
+  function MakeArgSetter(name, env) {
+    const steps = ArgSetterSteps;
+    let setter = CreateBuiltinFunction(steps, ['Name', 'Env']);
+    Assert(!(setter instanceof AbruptCompletion), "");
+
+    if (setter instanceof Completion) {
+      setter = setter.Value;
+    }
+
+    SetFunctionLength(setter, new Value(1));
+    setter.Name = name;
+    setter.Env = env;
+    return setter;
+  } // 9.4.4.7 #sec-createmappedargumentsobject
+
+
+  function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
+    // Assert: formals does not contain a rest parameter, any binding
+    // patterns, or any initializers. It may contain duplicate identifiers.
+    const len = argumentsList.length;
+    const obj = new ArgumentsExoticObjectValue();
+    obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
+    obj.Extensible = Value.true;
+    const map = ObjectCreate(Value.null);
+    obj.ParameterMap = map;
+    const parameterNames = BoundNames_FormalParameters(formals).map(Value);
+    const numberOfParameters = parameterNames.length;
+    let index = 0;
+
+    while (index < len) {
+      const val = argumentsList[index];
+      let idxStr = ToString(new Value(index));
+      Assert(!(idxStr instanceof AbruptCompletion), "");
+
+      if (idxStr instanceof Completion) {
+        idxStr = idxStr.Value;
+      }
+
+      Assert(!(CreateDataProperty(obj, idxStr, val) instanceof AbruptCompletion), "");
+      index += 1;
+    }
+
+    Assert(!(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
+      Value: new Value(len),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    })) instanceof AbruptCompletion), "");
+    const mappedNames = [];
+    index = numberOfParameters - 1;
+
+    while (index >= 0) {
+      const name = parameterNames[index];
+
+      if (!mappedNames.includes(name)) {
+        mappedNames.push(name);
+
+        if (index < len) {
+          const g = MakeArgGetter(name, env);
+          const p = MakeArgSetter(name, env);
+
+          let _val = ToString(new Value(index));
+
+          Assert(!(_val instanceof AbruptCompletion), "");
+
+          if (_val instanceof Completion) {
+            _val = _val.Value;
+          }
+
+          Assert(!(map.DefineOwnProperty(_val, Descriptor({
+            Set: p,
+            Get: g,
+            Enumerable: Value.false,
+            Configurable: Value.true
+          })) instanceof AbruptCompletion), "");
+        }
+      }
+
+      index -= 1;
+    }
+
+    Assert(!(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
+      Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    })) instanceof AbruptCompletion), "");
+    Assert(!(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
+      Value: func,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    })) instanceof AbruptCompletion), "");
+    return obj;
+  }
+
+  // 9.4.2 #sec-array-exotic-objects
+  // and
+  // 22.1 #sec-array-objects
+  // 9.4.2.2 #sec-arraycreate
+
+  function ArrayCreate(length, proto) {
+    Assert(length.numberValue() >= 0, "length.numberValue() >= 0");
+
+    if (Object.is(length.numberValue(), -0)) {
+      length = new Value(0);
+    }
+
+    if (length.numberValue() > 2 ** 32 - 1) {
+      return surroundingAgent.Throw('RangeError');
+    }
+
+    if (proto === undefined) {
+      proto = surroundingAgent.intrinsic('%Array.prototype%');
+    }
+
+    const A = new ArrayExoticObjectValue();
+    A.Prototype = proto;
+    A.Extensible = Value.true;
+    Assert(!(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+      Value: length,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+    return A;
+  } // 9.4.2.3 #sec-arrayspeciescreate
+
+  function ArraySpeciesCreate(originalArray, length) {
+    Assert(Type(length) === 'Number' && Number.isInteger(length.numberValue()) && length.numberValue() >= 0, "Type(length) === 'Number' && Number.isInteger(length.numberValue()) && length.numberValue() >= 0");
+
+    if (Object.is(length.numberValue(), -0)) {
+      length = new Value(+0);
+    }
+
+    let isArray = IsArray(originalArray);
+
+    if (isArray instanceof AbruptCompletion) {
+      return isArray;
+    }
+
+    if (isArray instanceof Completion) {
+      isArray = isArray.Value;
+    }
+
+    if (isArray === Value.false) {
+      return ArrayCreate(length);
+    }
+
+    let C = Get(originalArray, new Value('constructor'));
+
+    if (C instanceof AbruptCompletion) {
+      return C;
+    }
+
+    if (C instanceof Completion) {
+      C = C.Value;
+    }
+
+    if (IsConstructor(C) === Value.true) {
+      const thisRealm = surroundingAgent.currentRealmRecord;
+      let realmC = GetFunctionRealm(C);
+
+      if (realmC instanceof AbruptCompletion) {
+        return realmC;
+      }
+
+      if (realmC instanceof Completion) {
+        realmC = realmC.Value;
+      }
+
+      if (thisRealm !== realmC) {
+        if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
+          C = Value.undefined;
+        }
+      }
+    }
+
+    if (Type(C) === 'Object') {
+      C = Get(C, wellKnownSymbols.species);
+
+      if (C instanceof AbruptCompletion) {
+        return C;
+      }
+
+      if (C instanceof Completion) {
+        C = C.Value;
+      }
+
+      if (C === Value.null) {
+        C = Value.undefined;
+      }
+    }
+
+    if (C === Value.undefined) {
+      return ArrayCreate(length);
+    }
+
+    if (IsConstructor(C) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    }
+
+    return Construct(C, [length]);
+  } // 9.4.2.4 #sec-arraysetlength
+
+  function ArraySetLength(A, Desc) {
+    if (Desc.Value === undefined) {
+      return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
+    }
+
+    const newLenDesc = Descriptor({ ...Desc
+    });
+
+    let _hygienicTemp = ToUint32(Desc.Value);
+
+    if (_hygienicTemp instanceof AbruptCompletion) {
+      return _hygienicTemp;
+    }
+
+    if (_hygienicTemp instanceof Completion) {
+      _hygienicTemp = _hygienicTemp.Value;
+    }
+
+    const newLen = _hygienicTemp.numberValue();
+
+    let _hygienicTemp2 = ToNumber(Desc.Value);
+
+    if (_hygienicTemp2 instanceof AbruptCompletion) {
+      return _hygienicTemp2;
+    }
+
+    if (_hygienicTemp2 instanceof Completion) {
+      _hygienicTemp2 = _hygienicTemp2.Value;
+    }
+
+    const numberLen = _hygienicTemp2.numberValue();
+
+    if (newLen !== numberLen) {
+      return surroundingAgent.Throw('RangeError', 'Invalid array length');
+    }
+
+    newLenDesc.Value = new Value(newLen);
+    const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+    Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc), "Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc)");
+    let oldLen = oldLenDesc.Value.numberValue();
+
+    if (newLen >= oldLen) {
+      return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+    }
+
+    if (oldLenDesc.Writable === Value.false) {
+      return Value.false;
+    }
+
+    let newWritable;
+
+    if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
+      newWritable = true;
+    } else {
+      newWritable = false;
+      newLenDesc.Writable = Value.true;
+    }
+
+    let succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+    Assert(!(succeeded instanceof AbruptCompletion), "");
+
+    if (succeeded instanceof Completion) {
+      succeeded = succeeded.Value;
+    }
+
+    if (succeeded === Value.false) {
+      return Value.false;
+    }
+
+    while (newLen < oldLen) {
+      oldLen -= 1;
+      let idxToDelete = ToString(new Value(oldLen));
+      Assert(!(idxToDelete instanceof AbruptCompletion), "");
+
+      if (idxToDelete instanceof Completion) {
+        idxToDelete = idxToDelete.Value;
+      }
+
+      let deleteSucceeded = A.Delete(idxToDelete);
+      Assert(!(deleteSucceeded instanceof AbruptCompletion), "");
+
+      if (deleteSucceeded instanceof Completion) {
+        deleteSucceeded = deleteSucceeded.Value;
+      }
+
+      if (deleteSucceeded === Value.false) {
+        newLenDesc.Value = new Value(oldLen + 1);
+
+        if (newWritable === false) {
+          newLenDesc.Writable = Value.false;
+        }
+
+        Assert(!(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc) instanceof AbruptCompletion), "");
+        return Value.false;
+      }
+    }
+
+    if (newWritable === false) {
+      OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+        Writable: Value.false
+      }));
+    }
+
+    return Value.true;
+  } // 22.1.3.1.1 #sec-isconcatspreadable
+
+  function IsConcatSpreadable(O) {
+    if (Type(O) !== 'Object') {
+      return Value.false;
+    }
+
+    let spreadable = Get(O, wellKnownSymbols.isConcatSpreadable);
+
+    if (spreadable instanceof AbruptCompletion) {
+      return spreadable;
+    }
+
+    if (spreadable instanceof Completion) {
+      spreadable = spreadable.Value;
+    }
+
+    if (spreadable !== Value.undefined) {
+      return ToBoolean(spreadable);
+    }
+
+    return IsArray(O);
+  } // 22.1.3.27.1 #sec-sortcompare
+
+  function SortCompare(x, y, comparefn) {
+    if (x === Value.undefined && y === Value.undefined) {
+      return new Value(+0);
+    }
+
+    if (x === Value.undefined) {
+      return new Value(1);
+    }
+
+    if (y === Value.undefined) {
+      return new Value(-1);
+    }
+
+    if (comparefn !== Value.undefined) {
+      let callRes = Call(comparefn, Value.undefined, [x, y]);
+
+      if (callRes instanceof AbruptCompletion) {
+        return callRes;
+      }
+
+      if (callRes instanceof Completion) {
+        callRes = callRes.Value;
+      }
+
+      let v = ToNumber(callRes);
+
+      if (v instanceof AbruptCompletion) {
+        return v;
+      }
+
+      if (v instanceof Completion) {
+        v = v.Value;
+      }
+
+      if (v.isNaN()) {
+        return new Value(+0);
+      }
+
+      return v;
+    }
+
+    let xString = ToString(x);
+
+    if (xString instanceof AbruptCompletion) {
+      return xString;
+    }
+
+    if (xString instanceof Completion) {
+      xString = xString.Value;
+    }
+
+    let yString = ToString(y);
+
+    if (yString instanceof AbruptCompletion) {
+      return yString;
+    }
+
+    if (yString instanceof Completion) {
+      yString = yString.Value;
+    }
+
+    const xSmaller = AbstractRelationalComparison(xString, yString);
+
+    if (xSmaller === Value.true) {
+      return new Value(-1);
+    }
+
+    const ySmaller = AbstractRelationalComparison(yString, xString);
+
+    if (ySmaller === Value.true) {
+      return new Value(1);
+    }
+
+    return new Value(+0);
+  } // 22.1.5.1 #sec-createarrayiterator
+
+  function CreateArrayIterator(array, kind) {
+    Assert(Type(array) === 'Object', "Type(array) === 'Object'");
+    const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), ['IteratedObject', 'ArrayIteratorNextIndex', 'ArrayIterationKind']);
+    iterator.IteratedObject = array;
+    iterator.ArrayIteratorNextIndex = 0;
+    iterator.ArrayIterationKind = kind;
+    return iterator;
+  }
+
+  // 24.1 #sec-arraybuffer-objects
+  // and, for now
+  // 24.2 #sec-sharedarraybuffer-objects
+  // 24.1.1.1 #sec-allocatearraybuffer
+
+  function AllocateArrayBuffer(constructor, byteLength) {
+    let obj = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
+
+    if (obj instanceof AbruptCompletion) {
+      return obj;
+    }
+
+    if (obj instanceof Completion) {
+      obj = obj.Value;
+    }
+
+    Assert(byteLength.numberValue() >= 0, "byteLength.numberValue() >= 0");
+    Assert(Number.isInteger(byteLength.numberValue()), "Number.isInteger(byteLength.numberValue())");
+    let block = CreateByteDataBlock(byteLength);
+
+    if (block instanceof AbruptCompletion) {
+      return block;
+    }
+
+    if (block instanceof Completion) {
+      block = block.Value;
+    }
+
+    obj.ArrayBufferData = block;
+    obj.ArrayBufferByteLength = byteLength;
+    return obj;
+  } // 24.1.1.2 #sec-isdetachedbuffer
+
+  function IsDetachedBuffer(arrayBuffer) {
+    Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer");
+
+    if (Type(arrayBuffer.ArrayBufferData) === 'Null') {
+      return true;
+    }
+
+    return false;
+  } // 24.1.1.3 #sec-detacharraybuffer
+
+  function DetachArrayBuffer(arrayBuffer, key) {
+    Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer");
+    Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
+
+    if (key === undefined) {
+      key = Value.undefined;
+    }
+
+    if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetachKeyMismatch', key, arrayBuffer));
+    }
+
+    arrayBuffer.ArrayBufferData = Value.null;
+    arrayBuffer.ArrayBufferByteLength = new Value(0);
+    return new NormalCompletion(Value.null);
+  } // 24.1.1.4 #sec-clonearraybuffer
+
+  function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
+    Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer, "Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer");
+    Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true");
+    let targetBuffer = AllocateArrayBuffer(cloneConstructor, srcLength);
+
+    if (targetBuffer instanceof AbruptCompletion) {
+      return targetBuffer;
+    }
+
+    if (targetBuffer instanceof Completion) {
+      targetBuffer = targetBuffer.Value;
+    }
+
+    if (IsDetachedBuffer(srcBuffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+
+    const srcBlock = srcBuffer.ArrayBufferData;
+    const targetBlock = targetBuffer.ArrayBufferData;
+    CopyDataBlockBytes(targetBlock, new Value(0), srcBlock, srcByteOffset, srcLength);
+    return targetBuffer;
+  }
+  const throwawayBuffer = new ArrayBuffer(8);
+  const throwawayDataView = new DataView(throwawayBuffer);
+  const throwawayArray$1 = new Uint8Array(throwawayBuffer); // 24.1.1.5 #sec-rawbytestonumber
+  // Sigh…
+
+  function RawBytesToNumber(type, rawBytes, isLittleEndian) {
+    isLittleEndian = isLittleEndian === Value.true;
+    const elementSize = numericTypeInfo.get(type).ElementSize;
+    Assert(elementSize === rawBytes.length, "elementSize === rawBytes.length");
+    const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
+    Object.assign(throwawayArray$1, rawBytes);
+    return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian));
+  } // 24.1.1.6 #sec-getvaluefrombuffer
+
+  function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
+    byteIndex = byteIndex.numberValue();
+    Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
+    const info = numericTypeInfo.get(type);
+    Assert(info !== undefined, "info !== undefined");
+    Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
+    Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
+    const block = arrayBuffer.ArrayBufferData;
+    const elementSize = info.ElementSize; // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
+    //
+    // } else {
+
+    const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)]; // }
+
+    if (isLittleEndian === undefined) {
+      isLittleEndian = surroundingAgent.LittleEndian;
+    }
+
+    return RawBytesToNumber(type, rawValue, isLittleEndian);
+  } // An implementation must always choose the same encoding for each
+  // implementation distinguishable NaN value.
+
+  const float32NaNLE = Object.freeze([0, 0, 192, 127]);
+  const float32NaNBE = Object.freeze([127, 192, 0, 0]);
+  const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
+  const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]); // 24.1.1.7 #sec-numbertorawbytes
+
+  function NumberToRawBytes(type, value, isLittleEndian) {
+    Assert(Type(isLittleEndian) === 'Boolean', "Type(isLittleEndian) === 'Boolean'");
+    isLittleEndian = isLittleEndian === Value.true;
+    let rawBytes; // One day, we will write our own IEEE 754 and two's complement encoder…
+
+    if (type === 'Float32') {
+      if (Number.isNaN(value.numberValue())) {
+        rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
+      } else {
+        throwawayDataView.setFloat32(0, value.numberValue(), isLittleEndian);
+        rawBytes = [...throwawayArray$1.subarray(0, 4)];
+      }
+    } else if (type === 'Float64') {
+      if (Number.isNaN(value.numberValue())) {
+        rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
+      } else {
+        throwawayDataView.setFloat64(0, value.numberValue(), isLittleEndian);
+        rawBytes = [...throwawayArray$1.subarray(0, 8)];
+      }
+    } else {
+      const info = numericTypeInfo.get(type);
+      const n = info.ElementSize;
+      const convOp = info.ConversionOperation;
+
+      let _val = convOp(value);
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      const intValue = _val.numberValue();
+
+      const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
+      throwawayDataView[`set${dataViewType}`](0, intValue, isLittleEndian);
+      rawBytes = [...throwawayArray$1.subarray(0, n)];
+    }
+
+    return rawBytes;
+  } // 24.1.1.8 #sec-setvalueinbuffer
+
+  function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
+    byteIndex = byteIndex.numberValue();
+    Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
+    const info = numericTypeInfo.get(type);
+    Assert(info !== undefined, "info !== undefined");
+    Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
+    Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
+    Assert(Type(value) === 'Number', "Type(value) === 'Number'");
+    const block = arrayBuffer.ArrayBufferData; // const elementSize = info.ElementSize;
+
+    if (isLittleEndian === undefined) {
+      isLittleEndian = surroundingAgent.LittleEndian;
+    }
+
+    const rawBytes = NumberToRawBytes(type, value, isLittleEndian); // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
+    //
+    // } else {
+
+    for (let i = 0; i < rawBytes.length; i += 1) {
+      block[byteIndex + i] = rawBytes[i];
+    } // }
+
+
+    return new NormalCompletion(Value.undefined);
+  } // 24.2.1.2 #sec-issharedarraybuffer
+
+  function IsSharedArrayBuffer(obj) {
+    Assert(Type(obj) === 'Object' && 'ArrayBufferData' in obj, "Type(obj) === 'Object' && 'ArrayBufferData' in obj");
+    const bufferData = obj.ArrayBufferData;
+
+    if (Type(bufferData) === 'Null') {
+      return Value.false;
+    }
+
+    if (Type(bufferData) === 'Data Block') {
+      return Value.false;
+    }
+
+    Assert(Type(bufferData) === 'Shared Data Block', "Type(bufferData) === 'Shared Data Block'");
+    return Value.true;
+  }
+
+  // 25.7 #sec-async-function-objects
+  // https://tc39.es/proposal-top-level-await/#sec-asyncblockstart
+
+  function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
+    const runningContext = surroundingAgent.runningExecutionContext;
+
+    asyncContext.codeEvaluationState = function* resumer() {
+      const evaluator = isExpressionBody(asyncBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
+      const result = EnsureCompletion((yield* evaluator(asyncBody))); // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+
+      surroundingAgent.executionContextStack.pop(asyncContext);
+
+      if (result.Type === 'normal') {
+        Assert(!(Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]) instanceof AbruptCompletion), "");
+      } else if (result.Type === 'return') {
+        Assert(!(Call(promiseCapability.Resolve, Value.undefined, [result.Value]) instanceof AbruptCompletion), "");
+      } else {
+        Assert(result.Type === 'throw', "result.Type === 'throw'");
+        Assert(!(Call(promiseCapability.Reject, Value.undefined, [result.Value]) instanceof AbruptCompletion), "");
+      }
+
+      return Value.undefined;
+    }();
+
+    surroundingAgent.executionContextStack.push(asyncContext);
+    const result = EnsureCompletion(resume(asyncContext, undefined));
+    Assert(surroundingAgent.runningExecutionContext === runningContext, "surroundingAgent.runningExecutionContext === runningContext");
+    Assert(result.Type === 'normal' && result.Value === Value.undefined, "result.Type === 'normal' && result.Value === Value.undefined");
+    return Value.undefined;
+  } // 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
+
+  function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
+    const runningContext = surroundingAgent.runningExecutionContext;
+    const asyncContext = runningContext.copy();
+    Assert(!(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext) instanceof AbruptCompletion), "");
+  }
+
+  // 25.5 #sec-asyncgenerator-objects
+  // 25.5.3.1 #sec-asyncgeneratorrequest-records
+
+  class AsyncGeneratorRequestRecord {
+    constructor(completion, promiseCapability) {
+      this.Completion = completion;
+      this.Capability = promiseCapability;
+    }
+
+  } // 25.5.3.2 #sec-asyncgeneratorstart
+
+
+  function AsyncGeneratorStart(generator, generatorBody) {
+    // Assert: generator is an AsyncGenerator instance.
+    Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
+    const genContext = surroundingAgent.runningExecutionContext;
+    genContext.Generator = generator;
+
+    genContext.codeEvaluationState = function* resumer() {
+      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody))); // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
+
+      surroundingAgent.executionContextStack.pop(genContext);
+      generator.AsyncGeneratorState = 'completed';
+      let resultValue;
+
+      if (result instanceof NormalCompletion) {
+        resultValue = Value.undefined;
+      } else {
+        resultValue = result.Value;
+
+        if (result.Type !== 'return') {
+          let _val = AsyncGeneratorReject(generator, resultValue);
+
+          Assert(!(_val instanceof AbruptCompletion), "");
+
+          if (_val instanceof Completion) {
+            _val = _val.Value;
+          }
+
+          return _val;
+        }
+      }
+
+      let _val2 = AsyncGeneratorResolve(generator, resultValue, Value.true);
+
+      Assert(!(_val2 instanceof AbruptCompletion), "");
+
+      if (_val2 instanceof Completion) {
+        _val2 = _val2.Value;
+      }
+
+      return _val2;
+    }();
+
+    generator.AsyncGeneratorContext = genContext;
+    generator.AsyncGeneratorState = 'suspendedStart';
+    generator.AsyncGeneratorQueue = [];
+    return Value.undefined;
+  } // 25.5.3.3 #sec-asyncgeneratorresolve
+
+  function AsyncGeneratorResolve(generator, value, done) {
+    // Assert: generator is an AsyncGenerator instance.
+    const queue = generator.AsyncGeneratorQueue;
+    Assert(queue.length > 0, "queue.length > 0");
+    const next = queue.shift();
+    const promiseCapability = next.Capability;
+    let iteratorResult = CreateIterResultObject(value, done);
+    Assert(!(iteratorResult instanceof AbruptCompletion), "");
+
+    if (iteratorResult instanceof Completion) {
+      iteratorResult = iteratorResult.Value;
+    }
+
+    Assert(!(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]) instanceof AbruptCompletion), "");
+    Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
+    return Value.undefined;
+  } // 25.5.3.4 #sec-asyncgeneratorreject
+
+
+  function AsyncGeneratorReject(generator, exception) {
+    // Assert: generator is an AsyncGenerator instance.
+    const queue = generator.AsyncGeneratorQueue;
+    Assert(queue.length > 0, "queue.length > 0");
+    const next = queue.shift();
+    const promiseCapability = next.Capability;
+    Assert(!(Call(promiseCapability.Reject, Value.undefined, [exception]) instanceof AbruptCompletion), "");
+    Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
+    return Value.undefined;
+  } // 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
+
+
+  function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value = Value.undefined]) {
+    const F = surroundingAgent.activeFunctionObject;
+    F.Generator.AsyncGeneratorState = 'completed';
+
+    let _val3 = AsyncGeneratorResolve(F.Generator, value, Value.true);
+
+    Assert(!(_val3 instanceof AbruptCompletion), "");
+
+    if (_val3 instanceof Completion) {
+      _val3 = _val3.Value;
+    }
+
+    return _val3;
+  } // 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
+
+
+  function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason = Value.undefined]) {
+    const F = surroundingAgent.activeFunctionObject;
+    F.Generator.AsyncGeneratorState = 'completed';
+
+    let _val4 = AsyncGeneratorReject(F.Generator, reason);
+
+    Assert(!(_val4 instanceof AbruptCompletion), "");
+
+    if (_val4 instanceof Completion) {
+      _val4 = _val4.Value;
+    }
+
+    return _val4;
+  } // 25.5.3.5 #sec-asyncgeneratorresumenext
+
+
+  function AsyncGeneratorResumeNext(generator) {
+    // Assert: generator is an AsyncGenerator instance.
+    let state = generator.AsyncGeneratorState;
+    Assert(state !== 'executing', "state !== 'executing'");
+
+    if (state === 'awaiting-return') {
+      return Value.undefined;
+    }
+
+    const queue = generator.AsyncGeneratorQueue;
+
+    if (queue.length === 0) {
+      return Value.undefined;
+    }
+
+    const next = queue[0];
+    Assert(next instanceof AsyncGeneratorRequestRecord, "next instanceof AsyncGeneratorRequestRecord");
+    const completion = next.Completion;
+
+    if (completion instanceof AbruptCompletion) {
+      if (state === 'suspendedStart') {
+        generator.AsyncGeneratorState = 'completed';
+        state = 'completed';
+      }
+
+      if (state === 'completed') {
+        if (completion.Type === 'return') {
+          generator.AsyncGeneratorState = 'awaiting-return';
+          let promise = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+
+          if (promise instanceof AbruptCompletion) {
+            return promise;
+          }
+
+          if (promise instanceof Completion) {
+            promise = promise.Value;
+          }
+
+          const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
+          let onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
+          Assert(!(onFulfilled instanceof AbruptCompletion), "");
+
+          if (onFulfilled instanceof Completion) {
+            onFulfilled = onFulfilled.Value;
+          }
+
+          onFulfilled.Generator = generator;
+          const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
+          let onRejected = CreateBuiltinFunction(stepsRejected, ['Generator']);
+          Assert(!(onRejected instanceof AbruptCompletion), "");
+
+          if (onRejected instanceof Completion) {
+            onRejected = onRejected.Value;
+          }
+
+          onRejected.Generator = generator;
+          Assert(!(PerformPromiseThen(promise, onFulfilled, onRejected) instanceof AbruptCompletion), "");
+          return Value.undefined;
+        } else {
+          Assert(completion.Type === 'throw', "completion.Type === 'throw'");
+          Assert(!(AsyncGeneratorReject(generator, completion.Value) instanceof AbruptCompletion), "");
+          return Value.undefined;
+        }
+      }
+    } else if (state === 'completed') {
+      let _val5 = AsyncGeneratorResolve(generator, Value.undefined, Value.true);
+
+      Assert(!(_val5 instanceof AbruptCompletion), "");
+
+      if (_val5 instanceof Completion) {
+        _val5 = _val5.Value;
+      }
+
+      return _val5;
+    }
+
+    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
+    const genContext = generator.AsyncGeneratorContext;
+    const callerContext = surroundingAgent.runningExecutionContext; // Suspend callerContext
+
+    generator.AsyncGeneratorState = 'executing';
+    surroundingAgent.executionContextStack.push(genContext);
+    const result = resume(genContext, completion);
+    Assert(!(result instanceof AbruptCompletion), "!(result instanceof AbruptCompletion)");
+    Assert(surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext");
+    return Value.undefined;
+  } // 25.5.3.6 #sec-asyncgeneratorenqueue
+
+
+  function AsyncGeneratorEnqueue(generator, completion) {
+    Assert(completion instanceof Completion, "completion instanceof Completion");
+    let promiseCapability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+    Assert(!(promiseCapability instanceof AbruptCompletion), "");
+
+    if (promiseCapability instanceof Completion) {
+      promiseCapability = promiseCapability.Value;
+    }
+
+    if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
+      const badGeneratorError = surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'AsyncGenerator', generator)).Value;
+      Assert(!(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]) instanceof AbruptCompletion), "");
+      return promiseCapability.Promise;
+    }
+
+    const queue = generator.AsyncGeneratorQueue;
+    const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
+    queue.push(request);
+    const state = generator.AsyncGeneratorState;
+
+    if (state !== 'executing') {
+      Assert(!(AsyncGeneratorResumeNext(generator) instanceof AbruptCompletion), "");
+    }
+
+    return promiseCapability.Promise;
+  } // 25.5.3.7 #sec-asyncgeneratoryield
+
+  function* AsyncGeneratorYield(value) {
+    const genContext = surroundingAgent.runningExecutionContext;
+    Assert(genContext.Generator !== Value.undefined, "genContext.Generator !== Value.undefined");
+    const generator = genContext.Generator;
+    Assert(GetGeneratorKind() === 'async', "GetGeneratorKind() === 'async'");
+    value = yield* Await(value);
+
+    if (value instanceof AbruptCompletion) {
+      return value;
+    }
+
+    if (value instanceof Completion) {
+      value = value.Value;
+    }
+
+    generator.AsyncGeneratorState = 'suspendedYield';
+    surroundingAgent.executionContextStack.pop(genContext);
+    const resumptionValue = EnsureCompletion((yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false)));
+
+    if (resumptionValue.Type !== 'return') {
+      return Completion(resumptionValue);
+    }
+
+    const awaited = EnsureCompletion((yield* Await(resumptionValue.Value)));
+
+    if (awaited.Type === 'Throw') {
+      return Completion(awaited);
+    }
+
+    Assert(awaited.Type === 'normal', "awaited.Type === 'normal'");
+    return new Completion('return', awaited.Value, undefined);
+  }
+
+  // 6 #sec-ecmascript-data-types-and-values
+  // 6.1.4 #leading-surrogate
+
+  function isLeadingSurrogate(cp) {
+    return cp >= 0xD800 && cp <= 0xDBFF;
+  } // 6.1.4 #trailing-surrogate
+
+  function isTrailingSurrogate(cp) {
+    return cp >= 0xDC00 && cp <= 0xDFFF;
+  } // 6.1.7 #integer-index
+
+  function isIntegerIndex(V) {
+    if (Type(V) !== 'String') {
+      return false;
+    }
+
+    let numeric = CanonicalNumericIndexString(V);
+    Assert(!(numeric instanceof AbruptCompletion), "");
+
+    if (numeric instanceof Completion) {
+      numeric = numeric.Value;
+    }
+
+    if (numeric === Value.undefined) {
+      return false;
+    }
+
+    if (Object.is(numeric.numberValue(), +0)) {
+      return true;
+    }
+
+    return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
+  } // 6.1.7 #array-index
+
+  function isArrayIndex(V) {
+    if (Type(V) !== 'String') {
+      return false;
+    }
+
+    let numeric = CanonicalNumericIndexString(V);
+    Assert(!(numeric instanceof AbruptCompletion), "");
+
+    if (numeric instanceof Completion) {
+      numeric = numeric.Value;
+    }
+
+    if (numeric === Value.undefined) {
+      return false;
+    }
+
+    if (Object.is(numeric.numberValue(), +0)) {
+      return true;
+    }
+
+    return numeric.numberValue() > 0 && numeric.numberValue() < 2 ** 32 - 1;
+  }
+
+  // 24.3 #sec-dataview-objects
+  // 24.3.1.1 #sec-getviewvalue
+
+  function GetViewValue(view, requestIndex, isLittleEndian, type) {
+    {
+      const hygienicTemp = RequireInternalSlot(view, 'DataView');
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
+
+    let _hygienicTemp = ToIndex(requestIndex);
+
+    if (_hygienicTemp instanceof AbruptCompletion) {
+      return _hygienicTemp;
+    }
+
+    if (_hygienicTemp instanceof Completion) {
+      _hygienicTemp = _hygienicTemp.Value;
+    }
+
+    const getIndex = _hygienicTemp.numberValue();
+
+    isLittleEndian = ToBoolean(isLittleEndian);
+    Assert(!(isLittleEndian instanceof AbruptCompletion), "");
+
+    if (isLittleEndian instanceof Completion) {
+      isLittleEndian = isLittleEndian.Value;
+    }
+
+    const buffer = view.ViewedArrayBuffer;
+
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+
+    const viewOffset = view.ByteOffset.numberValue();
+    const viewSize = view.ByteLength.numberValue();
+    const elementSize = numericTypeInfo.get(type).ElementSize;
+
+    if (getIndex + elementSize > viewSize) {
+      return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
+    }
+
+    const bufferIndex = new Value(getIndex + viewOffset);
+    return GetValueFromBuffer(buffer, bufferIndex, type, false, 'Unordered', isLittleEndian);
+  } // 24.3.1.2 #sec-setviewvalue
+
+  function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
+    {
+      const hygienicTemp = RequireInternalSlot(view, 'DataView');
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
+
+    let _hygienicTemp2 = ToIndex(requestIndex);
+
+    if (_hygienicTemp2 instanceof AbruptCompletion) {
+      return _hygienicTemp2;
+    }
+
+    if (_hygienicTemp2 instanceof Completion) {
+      _hygienicTemp2 = _hygienicTemp2.Value;
+    }
+
+    const getIndex = _hygienicTemp2.numberValue();
+
+    let numberValue = ToNumber(value);
+
+    if (numberValue instanceof AbruptCompletion) {
+      return numberValue;
+    }
+
+    if (numberValue instanceof Completion) {
+      numberValue = numberValue.Value;
+    }
+
+    isLittleEndian = ToBoolean(isLittleEndian);
+    Assert(!(isLittleEndian instanceof AbruptCompletion), "");
+
+    if (isLittleEndian instanceof Completion) {
+      isLittleEndian = isLittleEndian.Value;
+    }
+
+    const buffer = view.ViewedArrayBuffer;
+
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+
+    const viewOffset = view.ByteOffset.numberValue();
+    const viewSize = view.ByteLength.numberValue();
+    const elementSize = numericTypeInfo.get(type).ElementSize;
+
+    if (getIndex + elementSize > viewSize) {
+      return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
+    }
+
+    const bufferIndex = new Value(getIndex + viewOffset);
+    return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, 'Unordered', isLittleEndian);
+  }
+
+  const mod = (n, m) => {
+    const r = n % m;
+    return Math.floor(r >= 0 ? r : r + m);
+  }; // 20.3.1.2 #sec-day-number-and-time-within-day
+
+
+  function Day(t) {
+    return new Value(Math.floor(t.numberValue() / msPerDay));
+  }
+  const msPerDay = 86400000;
+  function TimeWithinDay(t) {
+    return new Value(mod(t.numberValue(), msPerDay));
+  } // 20.3.1.3 #sec-year-number
+
+  function DaysInYear(y) {
+    y = y.numberValue();
+
+    if (mod(y, 4) !== 0) {
+      return new Value(365);
+    }
+
+    if (mod(y, 4) === 0 && mod(y, 100) !== 0) {
+      return new Value(366);
+    }
+
+    if (mod(y, 100) === 0 && mod(y, 400) !== 0) {
+      return new Value(365);
+    }
+
+    if (mod(y, 400) === 0) {
+      return new Value(366);
+    }
+  }
+  function DayFromYear(y) {
+    y = y.numberValue();
+    return new Value(365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400));
+  }
+  function TimeFromYear(y) {
+    return new Value(msPerDay * DayFromYear(y).numberValue());
+  }
+  const msPerAverageYear = 12 * 30.436875 * msPerDay;
+  function YearFromTime(t) {
+    t = t.numberValue();
+    let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
+
+    if (TimeFromYear(new Value(year)).numberValue() > t) {
+      year -= 1;
+    }
+
+    return new Value(year);
+  }
+  function InLeapYear(t) {
+    if (DaysInYear(YearFromTime(t)).numberValue() === 365) {
+      return new Value(0);
+    }
+
+    if (DaysInYear(YearFromTime(t)).numberValue() === 366) {
+      return new Value(1);
+    }
+  } // 20.3.1.4 #sec-month-number
+
+  function MonthFromTime(t) {
+    const dayWithinYear = DayWithinYear(t).numberValue();
+    const inLeapYear = InLeapYear(t).numberValue();
+
+    if (dayWithinYear >= 0 && dayWithinYear < 31) {
+      return new Value(0);
+    }
+
+    if (dayWithinYear >= 31 && dayWithinYear < 59 + inLeapYear) {
+      return new Value(1);
+    }
+
+    if (dayWithinYear >= 59 + inLeapYear && dayWithinYear < 90 + inLeapYear) {
+      return new Value(2);
+    }
+
+    if (dayWithinYear >= 90 + inLeapYear && dayWithinYear < 120 + inLeapYear) {
+      return new Value(3);
+    }
+
+    if (dayWithinYear >= 120 + inLeapYear && dayWithinYear < 151 + inLeapYear) {
+      return new Value(4);
+    }
+
+    if (dayWithinYear >= 151 + inLeapYear && dayWithinYear < 181 + inLeapYear) {
+      return new Value(5);
+    }
+
+    if (dayWithinYear >= 181 + inLeapYear && dayWithinYear < 212 + inLeapYear) {
+      return new Value(6);
+    }
+
+    if (dayWithinYear >= 212 + inLeapYear && dayWithinYear < 243 + inLeapYear) {
+      return new Value(7);
+    }
+
+    if (dayWithinYear >= 243 + inLeapYear && dayWithinYear < 273 + inLeapYear) {
+      return new Value(8);
+    }
+
+    if (dayWithinYear >= 273 + inLeapYear && dayWithinYear < 304 + inLeapYear) {
+      return new Value(9);
+    }
+
+    if (dayWithinYear >= 304 + inLeapYear && dayWithinYear < 334 + inLeapYear) {
+      return new Value(10);
+    }
+
+    if (dayWithinYear >= 334 + inLeapYear && dayWithinYear < 365 + inLeapYear) {
+      return new Value(11);
+    }
+  }
+  function DayWithinYear(t) {
+    return new Value(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
+  } // 20.3.1.5 #sec-date-number
+
+  function DateFromTime(t) {
+    const dayWithinYear = DayWithinYear(t).numberValue();
+    const monthFromTime = MonthFromTime(t).numberValue();
+    const inLeapYear = InLeapYear(t).numberValue();
+
+    switch (monthFromTime) {
+      case 0:
+        return new Value(dayWithinYear + 1);
+
+      case 1:
+        return new Value(dayWithinYear - 30);
+
+      case 2:
+        return new Value(dayWithinYear - 58 - inLeapYear);
+
+      case 3:
+        return new Value(dayWithinYear - 89 - inLeapYear);
+
+      case 4:
+        return new Value(dayWithinYear - 119 - inLeapYear);
+
+      case 5:
+        return new Value(dayWithinYear - 150 - inLeapYear);
+
+      case 6:
+        return new Value(dayWithinYear - 180 - inLeapYear);
+
+      case 7:
+        return new Value(dayWithinYear - 211 - inLeapYear);
+
+      case 8:
+        return new Value(dayWithinYear - 242 - inLeapYear);
+
+      case 9:
+        return new Value(dayWithinYear - 272 - inLeapYear);
+
+      case 10:
+        return new Value(dayWithinYear - 303 - inLeapYear);
+
+      case 11:
+        return new Value(dayWithinYear - 333 - inLeapYear);
+
+      default: // Unreachable
+
+    }
+  } // 20.3.1.6 #sec-week-day
+
+  function WeekDay(t) {
+    return new Value(mod(Day(t).numberValue() + 4, 7));
+  } // 20.3.1.7 #sec-local-time-zone-adjustment
+
+  function LocalTZA()
+  /* t, isUTC */
+  {
+    // TODO: implement this function properly.
+    return 0;
+  } // 20.3.1.8 #sec-localtime
+
+  function LocalTime(t) {
+    return new Value(t.numberValue() + LocalTZA());
+  } // 20.3.1.9 #sec-utc-t
+
+  function UTC(t) {
+    return new Value(t.numberValue() - LocalTZA());
+  } // 20.3.1.10 #sec-hours-minutes-second-and-milliseconds
+
+  function HourFromTime(t) {
+    return new Value(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
+  }
+  function MinFromTime(t) {
+    return new Value(mod(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
+  }
+  function SecFromTime(t) {
+    return new Value(mod(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
+  }
+  function msFromTime(t) {
+    return new Value(mod(t.numberValue(), msPerSecond));
+  }
+  const HoursPerDay = 24;
+  const MinutesPerHour = 60;
+  const SecondsPerMinute = 60;
+  const msPerSecond = 1000;
+  const msPerMinute = msPerSecond * SecondsPerMinute;
+  const msPerHour = msPerMinute * MinutesPerHour; // 20.3.1.11 #sec-maketime
+
+  function MakeTime(hour, min, sec, ms) {
+    if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
+      return new Value(NaN);
+    }
+
+    let _val = ToInteger(hour);
+
+    Assert(!(_val instanceof AbruptCompletion), "");
+
+    if (_val instanceof Completion) {
+      _val = _val.Value;
+    }
+
+    const h = _val.numberValue();
+
+    let _val2 = ToInteger(min);
+
+    Assert(!(_val2 instanceof AbruptCompletion), "");
+
+    if (_val2 instanceof Completion) {
+      _val2 = _val2.Value;
+    }
+
+    const m = _val2.numberValue();
+
+    let _val3 = ToInteger(sec);
+
+    Assert(!(_val3 instanceof AbruptCompletion), "");
+
+    if (_val3 instanceof Completion) {
+      _val3 = _val3.Value;
+    }
+
+    const s = _val3.numberValue();
+
+    let _val4 = ToInteger(ms);
+
+    Assert(!(_val4 instanceof AbruptCompletion), "");
+
+    if (_val4 instanceof Completion) {
+      _val4 = _val4.Value;
+    }
+
+    const milli = _val4.numberValue();
+
+    const t = h * msPerHour + m * msPerMinute + s * msPerSecond + milli;
+    return new Value(t);
+  }
+  const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]; // 20.3.1.12 #sec-makeday
+
+  function MakeDay(year, month, date) {
+    if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
+      return new Value(NaN);
+    }
+
+    let _val5 = ToInteger(year);
+
+    Assert(!(_val5 instanceof AbruptCompletion), "");
+
+    if (_val5 instanceof Completion) {
+      _val5 = _val5.Value;
+    }
+
+    const y = _val5.numberValue();
+
+    let _val6 = ToInteger(month);
+
+    Assert(!(_val6 instanceof AbruptCompletion), "");
+
+    if (_val6 instanceof Completion) {
+      _val6 = _val6.Value;
+    }
+
+    const m = _val6.numberValue();
+
+    let _val7 = ToInteger(date);
+
+    Assert(!(_val7 instanceof AbruptCompletion), "");
+
+    if (_val7 instanceof Completion) {
+      _val7 = _val7.Value;
+    }
+
+    const dt = _val7.numberValue();
+
+    const ym = y + Math.floor(m / 12);
+    const mn = mod(m, 12);
+    const ymday = DayFromYear(new Value(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
+    const t = new Value(ymday * msPerDay);
+    return new Value(Day(t).numberValue() + dt - 1);
+  } // 20.3.1.13 #sec-makedate
+
+  function MakeDate(day, time) {
+    if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
+      return new Value(NaN);
+    }
+
+    return new Value(day.numberValue() * msPerDay + time.numberValue());
+  } // 20.3.1.14 #sec-timeclip
+
+  function TimeClip(time) {
+    if (!Number.isFinite(time.numberValue())) {
+      return new Value(NaN);
+    }
+
+    if (Math.abs(time.numberValue()) > 8.64e15) {
+      return new Value(NaN);
+    }
+
+    let _val8 = ToInteger(time);
+
+    Assert(!(_val8 instanceof AbruptCompletion), "");
+
+    if (_val8 instanceof Completion) {
+      _val8 = _val8.Value;
+    }
+
+    let clippedTime = _val8.numberValue();
+
+    if (Object.is(clippedTime, -0)) {
+      clippedTime = 0;
+    }
+
+    return new Value(clippedTime);
+  }
+
+  // 8.3 #sec-execution-contexts
+  // 8.3.1 #sec-getactivescriptormodule
+
+  function GetActiveScriptOrModule() {
+    if (surroundingAgent.executionContextStack.length === 0) {
+      return Value.null;
+    }
+
+    const ec = [...surroundingAgent.executionContextStack].reverse().find(e => e.ScriptOrModule !== undefined);
+
+    if (!ec) {
+      return Value.null;
+    }
+
+    return ec.ScriptOrModule;
+  } // 8.3.2 #sec-resolvebinding
+
+  function ResolveBinding(name, env, strict) {
+    if (!env || Type(env) === 'Undefined') {
+      env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    }
+
+    Assert(env instanceof LexicalEnvironment, "env instanceof LexicalEnvironment");
+    return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
+  } // 8.3.3 #sec-getthisenvironment
+
+  function GetThisEnvironment() {
+    let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+
+    while (true) {
+      // eslint-disable-line no-constant-condition
+      const envRec = lex.EnvironmentRecord;
+      const exists = envRec.HasThisBinding();
+
+      if (exists === Value.true) {
+        return envRec;
+      }
+
+      const outer = lex.outerEnvironmentReference;
+      Assert(Type(outer) !== 'Null', "Type(outer) !== 'Null'");
+      lex = outer;
+    }
+  } // 8.3.4 #sec-resolvethisbinding
+
+  function ResolveThisBinding() {
+    const envRec = GetThisEnvironment();
+    return envRec.GetThisBinding();
+  } // 8.3.5 #sec-getnewtarget
+
+  function GetNewTarget() {
+    const envRec = GetThisEnvironment();
+    Assert('NewTarget' in envRec, "'NewTarget' in envRec");
+    return envRec.NewTarget;
+  } // 8.3.6 #sec-getglobalobject
+
+  function GetGlobalObject() {
+    const ctx = surroundingAgent.runningExecutionContext;
+    const currentRealm = ctx.Realm;
+    return currentRealm.GlobalObject;
+  }
+
+  // 9.2 #sec-ecmascript-function-objects
+  // 9.3 #sec-built-in-function-objects
+  // and
+  // 14.9 #sec-tail-position-calls
+  // 9.2.1.1 #sec-prepareforordinarycall
+
+  function PrepareForOrdinaryCall(F, newTarget) {
+    Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object', "Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object'"); // const callerContext = surroundingAgent.runningExecutionContext;
+
+    const calleeContext = new ExecutionContext();
+    calleeContext.Function = F;
+    const calleeRealm = F.Realm;
+    calleeContext.Realm = calleeRealm;
+    calleeContext.ScriptOrModule = F.ScriptOrModule;
+    const localEnv = NewFunctionEnvironment(F, newTarget);
+    calleeContext.LexicalEnvironment = localEnv;
+    calleeContext.VariableEnvironment = localEnv; // Suspend(callerContext);
+
+    surroundingAgent.executionContextStack.push(calleeContext);
+    return calleeContext;
+  } // 9.2.1.2 #sec-ordinarycallbindthis
+
+
+  function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+    const thisMode = F.ThisMode;
+
+    if (thisMode === 'lexical') {
+      return new NormalCompletion(Value.undefined);
+    }
+
+    const calleeRealm = F.Realm;
+    const localEnv = calleeContext.LexicalEnvironment;
+    let thisValue;
+
+    if (thisMode === 'strict') {
+      thisValue = thisArgument;
+    } else {
+      if (thisArgument === Value.undefined || thisArgument === Value.null) {
+        const globalEnv = calleeRealm.GlobalEnv;
+        const globalEnvRec = globalEnv.EnvironmentRecord;
+        Assert(globalEnvRec instanceof GlobalEnvironmentRecord, "globalEnvRec instanceof GlobalEnvironmentRecord");
+        thisValue = globalEnvRec.GlobalThisValue;
+      } else {
+        thisValue = ToObject(thisArgument);
+        Assert(!(thisValue instanceof AbruptCompletion), "");
+
+        if (thisValue instanceof Completion) {
+          thisValue = thisValue.Value;
+        } // NOTE: ToObject produces wrapper objects using calleeRealm.
+
+      }
+    }
+
+    const envRec = localEnv.EnvironmentRecord;
+    Assert(envRec instanceof FunctionEnvironmentRecord, "envRec instanceof FunctionEnvironmentRecord");
+    Assert(envRec.ThisBindingStatus !== 'initialized', "envRec.ThisBindingStatus !== 'initialized'");
+    return envRec.BindThisValue(thisValue);
+  } // 9.2.1.3 #sec-ordinarycallevaluatebody
+
+
+  function* OrdinaryCallEvaluateBody(F, argumentsList) {
+    switch (getFunctionBodyType(F.ECMAScriptCode)) {
+      // FunctionBody : FunctionStatementList
+      // ConciseBody : `{` FunctionBody `}`
+      case 'FunctionBody':
+      case 'ConciseBody_FunctionBody':
+        return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
+      // ConciseBody : ExpressionBody
+
+      case 'ConciseBody_ExpressionBody':
+        return yield* EvaluateBody_ConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
+
+      case 'GeneratorBody':
+        return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
+      case 'AsyncFunctionBody':
+      case 'AsyncConciseBody_AsyncFunctionBody':
+        return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
+      case 'AsyncConciseBody_ExpressionBody':
+        return yield* EvaluateBody_AsyncConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
+
+      case 'AsyncGeneratorBody':
+        return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
+
+      default:
+        throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
+    }
+  } // 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
+
+  function FunctionCallSlot(thisArgument, argumentsList) {
+    const F = this;
+    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
+
+    if (F.FunctionKind === 'classConstructor') {
+      return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
+    } // const callerContext = surroundingAgent.runningExecutionContext;
+
+
+    const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
+    Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
+    OrdinaryCallBindThis(F, calleeContext, thisArgument);
+    let result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList))); // Remove calleeContext from the execution context stack and
+    // restore callerContext as the running execution context.
+
+    surroundingAgent.executionContextStack.pop(calleeContext);
+
+    if (result.Type === 'return') {
+      return new NormalCompletion(result.Value);
+    }
+
+    if (result instanceof AbruptCompletion) {
+      return result;
+    }
+
+    if (result instanceof Completion) {
+      result = result.Value;
+    }
+
+    return new NormalCompletion(Value.undefined);
+  } // 9.2.2 #sec-ecmascript-function-objects-construct-argumentslist-newtarget
+
+
+  function FunctionConstructSlot(argumentsList, newTarget) {
+    const F = this;
+    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
+    Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'"); // const callerContext = surroundingAgent.runningExecutionContext;
+
+    const kind = F.ConstructorKind;
+    let thisArgument;
+
+    if (kind === 'base') {
+      thisArgument = OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
+
+      if (thisArgument instanceof AbruptCompletion) {
+        return thisArgument;
+      }
+
+      if (thisArgument instanceof Completion) {
+        thisArgument = thisArgument.Value;
+      }
+    }
+
+    const calleeContext = PrepareForOrdinaryCall(F, newTarget);
+    Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
+
+    if (kind === 'base') {
+      OrdinaryCallBindThis(F, calleeContext, thisArgument);
+    }
+
+    const constructorEnv = calleeContext.LexicalEnvironment;
+    const envRec = constructorEnv.EnvironmentRecord;
+    let result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList))); // Remove calleeContext from the execution context stack and
+    // restore callerContext as the running execution context.
+
+    surroundingAgent.executionContextStack.pop(calleeContext);
+
+    if (result.Type === 'return') {
+      if (Type(result.Value) === 'Object') {
+        return new NormalCompletion(result.Value);
+      }
+
+      if (kind === 'base') {
+        return new NormalCompletion(thisArgument);
+      }
+
+      if (Type(result.Value) !== 'Undefined') {
+        return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
+      }
+    } else {
+      if (result instanceof AbruptCompletion) {
+        return result;
+      }
+
+      if (result instanceof Completion) {
+        result = result.Value;
+      }
+    }
+
+    return envRec.GetThisBinding();
+  } // 9.2 #sec-ecmascript-function-objects
+
+
+  const esFunctionInternalSlots = Object.freeze(['Environment', 'FormalParameters', 'FunctionKind', 'ECMAScriptCode', 'ConstructorKind', 'Realm', 'ScriptOrModule', 'ThisMode', 'Strict', 'HomeObject']); // 9.2.3 #sec-functionallocate
+
+  function FunctionAllocate(functionPrototype, functionKind) {
+    Assert(Type(functionPrototype) === 'Object', "Type(functionPrototype) === 'Object'");
+    Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator'].includes(functionKind), "['normal', 'non-constructor', 'generator', 'async', 'async generator']\n    .includes(functionKind)");
+    const needsConstruct = functionKind === 'normal';
+
+    if (functionKind === 'non-constructor') {
+      functionKind = 'Normal';
+    }
+
+    const F = new FunctionValue(functionPrototype);
+
+    for (const internalSlot of esFunctionInternalSlots) {
+      F[internalSlot] = Value.undefined;
+    }
+
+    F.Call = FunctionCallSlot;
+
+    if (needsConstruct) {
+      F.Construct = FunctionConstructSlot;
+      F.ConstructorKind = 'base';
+    }
+
+    F.FunctionKind = functionKind;
+    F.Prototype = functionPrototype;
+    F.Extensible = Value.true;
+    F.Realm = surroundingAgent.currentRealmRecord;
+    return F;
+  } // 9.2.4 #sec-functioninitialize
+
+  function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
+    let len;
+
+    switch (kind) {
+      case 'Normal':
+      case 'Method':
+        len = ExpectedArgumentCount_FormalParameters(ParameterList);
+        break;
+
+      case 'Arrow':
+        len = ExpectedArgumentCount_ArrowParameters(ParameterList);
+        break;
+
+      default:
+        throw new OutOfRange('FunctionInitialize kind', kind);
+    }
+
+    Assert(!(SetFunctionLength(F, new Value(len)) instanceof AbruptCompletion), "");
+    const Strict = isStrictModeCode(Body);
+    F.Strict = Strict;
+    F.Environment = Scope;
+    F.FormalParameters = ParameterList;
+    F.ECMAScriptCode = Body;
+    F.ScriptOrModule = GetActiveScriptOrModule();
+
+    if (kind === 'Arrow') {
+      F.ThisMode = 'lexical';
+    } else if (Strict) {
+      F.ThisMode = 'strict';
+    } else {
+      F.ThisMode = 'global';
+    }
+
+    return F;
+  } // 9.2.5 #sec-functioncreate
+  // Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
+  // instead take in the entire function node as Body and save it in
+  // ECMAScriptCode as such.
+
+  function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
+    if (prototype === undefined) {
+      prototype = surroundingAgent.intrinsic('%Function.prototype%');
+    }
+
+    const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
+    const F = FunctionAllocate(prototype, allocKind);
+    return FunctionInitialize(F, kind, ParameterList, Body, Scope);
+  } // 9.2.6 #sec-generatorfunctioncreate
+
+  function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
+    const functionPrototype = surroundingAgent.intrinsic('%Generator%');
+    const F = FunctionAllocate(functionPrototype, 'generator');
+    return FunctionInitialize(F, kind, ParameterList, Body, Scope);
+  } // 9.2.7 #sec-asyncgeneratorfunctioncreate
+
+  function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
+    const functionPrototype = surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%');
+    let F = FunctionAllocate(functionPrototype, 'generator');
+    Assert(!(F instanceof AbruptCompletion), "");
+
+    if (F instanceof Completion) {
+      F = F.Value;
+    }
+
+    let _val = FunctionInitialize(F, kind, ParameterList, Body, Scope);
+
+    Assert(!(_val instanceof AbruptCompletion), "");
+
+    if (_val instanceof Completion) {
+      _val = _val.Value;
+    }
+
+    return _val;
+  } // 9.2.8 #sec-async-functions-abstract-operations-async-function-create
+
+  function AsyncFunctionCreate(kind, parameters, body, Scope) {
+    const functionPrototype = surroundingAgent.intrinsic('%AsyncFunction.prototype%');
+    let F = FunctionAllocate(functionPrototype, 'async');
+    Assert(!(F instanceof AbruptCompletion), "");
+
+    if (F instanceof Completion) {
+      F = F.Value;
+    }
+
+    let _val2 = FunctionInitialize(F, kind, parameters, body, Scope);
+
+    Assert(!(_val2 instanceof AbruptCompletion), "");
+
+    if (_val2 instanceof Completion) {
+      _val2 = _val2.Value;
+    }
+
+    return _val2;
+  } // 9.2.10 #sec-makeconstructor
+
+  function MakeConstructor(F, writablePrototype, prototype) {
+    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
+    Assert(IsConstructor(F) === Value.true, "IsConstructor(F) === Value.true");
+
+    let _val3 = IsExtensible(F);
+
+    Assert(!(_val3 instanceof AbruptCompletion), "");
+
+    if (_val3 instanceof Completion) {
+      _val3 = _val3.Value;
+    }
+
+    let _val4 = HasOwnProperty$1(F, new Value('prototype'));
+
+    Assert(!(_val4 instanceof AbruptCompletion), "");
+
+    if (_val4 instanceof Completion) {
+      _val4 = _val4.Value;
+    }
+
+    Assert(_val3 === Value.true && _val4 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
+
+    if (writablePrototype === undefined) {
+      writablePrototype = true;
+    }
+
+    if (prototype === undefined) {
+      prototype = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+      Assert(!(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
+        Value: F,
+        Writable: writablePrototype ? Value.true : Value.false,
+        Enumerable: Value.false,
+        Configurable: Value.true
+      })) instanceof AbruptCompletion), "");
+    }
+
+    Assert(!(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: writablePrototype ? Value.true : Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+    return new NormalCompletion(Value.undefined);
+  } // 9.2.11 #sec-makeclassconstructor
+
+  function MakeClassConstructor(F) {
+    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
+    Assert(F.FunctionKind === 'normal', "F.FunctionKind === 'normal'");
+    F.FunctionKind = 'classConstructor';
+    return new NormalCompletion(Value.undefined);
+  } // 9.2.12 #sec-makemethod
+
+  function MakeMethod(F, homeObject) {
+    Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
+    Assert(Type(homeObject) === 'Object', "Type(homeObject) === 'Object'");
+    F.HomeObject = homeObject;
+    return new NormalCompletion(Value.undefined);
+  } // 9.2.13 #sec-setfunctionname
+
+  function SetFunctionName(F, name, prefix) {
+    Assert(IsExtensible(F) === Value.true && HasOwnProperty$1(F, new Value('name')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false");
+    Assert(Type(name) === 'Symbol' || Type(name) === 'String', "Type(name) === 'Symbol' || Type(name) === 'String'");
+    Assert(!prefix || Type(prefix) === 'String', "!prefix || Type(prefix) === 'String'");
+
+    if (Type(name) === 'Symbol') {
+      const description = name.Description;
+
+      if (Type(description) === 'Undefined') {
+        name = new Value('');
+      } else {
+        name = new Value(`[${description.stringValue()}]`);
+      }
+    }
+
+    if (prefix !== undefined) {
+      name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    }
+
+    let _val5 = DefinePropertyOrThrow(F, new Value('name'), Descriptor({
+      Value: name,
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+
+    Assert(!(_val5 instanceof AbruptCompletion), "");
+
+    if (_val5 instanceof Completion) {
+      _val5 = _val5.Value;
+    }
+
+    return _val5;
+  } // 9.2.14 #sec-setfunctionlength
+
+  function SetFunctionLength(F, length) {
+    Assert(IsExtensible(F) === Value.true && HasOwnProperty$1(F, new Value('length')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false");
+    Assert(Type(length) === 'Number', "Type(length) === 'Number'");
+
+    let _val6 = IsInteger(length);
+
+    Assert(!(_val6 instanceof AbruptCompletion), "");
+
+    if (_val6 instanceof Completion) {
+      _val6 = _val6.Value;
+    }
+
+    Assert(length.numberValue() >= 0 && _val6 === Value.true, "length.numberValue() >= 0 && X(IsInteger(length)) === Value.true");
+
+    let _val7 = DefinePropertyOrThrow(F, new Value('length'), Descriptor({
+      Value: length,
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+
+    Assert(!(_val7 instanceof AbruptCompletion), "");
+
+    if (_val7 instanceof Completion) {
+      _val7 = _val7.Value;
+    }
+
+    return _val7;
+  } // 9.3.3 #sec-createbuiltinfunction
+
+  function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isConstructor = Value.false) {
+    Assert(typeof steps === 'function', "typeof steps === 'function'");
+
+    if (realm === undefined) {
+      realm = surroundingAgent.currentRealmRecord;
+    }
+
+    Assert(realm instanceof Realm, "realm instanceof Realm");
+
+    if (prototype === undefined) {
+      prototype = realm.Intrinsics['%Function.prototype%'];
+    }
+
+    const func = new BuiltinFunctionValue(steps, isConstructor);
+
+    for (const slot of internalSlotsList) {
+      func[slot] = Value.undefined;
+    }
+
+    func.Realm = realm;
+    func.Prototype = prototype;
+    func.Extensible = Value.true;
+    func.ScriptOrModule = Value.null;
+    return func;
+  } // 14.9.3 #sec-preparefortailcall
+
+  function PrepareForTailCall() {// const leafContext = surroundingAgent.runningExecutionContext;
+    // Suspend(leafContext);
+    // surroundingAgent.executionContextStack.pop();
+    // Assert: leafContext has no further use. It will never
+    // be activated as the running execution context.
+  }
+
+  // 25.4 #sec-generator-objects
+  // 25.4.3.1 #sec-generatorstart
+
+  function GeneratorStart(generator, generatorBody) {
+    Assert(Type(generator.GeneratorState) === 'Undefined', "Type(generator.GeneratorState) === 'Undefined'");
+    const genContext = surroundingAgent.runningExecutionContext;
+    genContext.Generator = generator;
+
+    genContext.codeEvaluationState = function* resumer() {
+      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody)));
+      surroundingAgent.executionContextStack.pop(genContext);
+      generator.GeneratorState = 'completed';
+      genContext.codeEvaluationState = null;
+      let resultValue;
+
+      if (result.Type === 'normal') {
+        resultValue = Value.undefined;
+      } else if (result.Type === 'return') {
+        resultValue = result.Value;
+      } else {
+        Assert(result.Type === 'throw', "result.Type === 'throw'");
+        return Completion(result);
+      }
+
+      let _val = CreateIterResultObject(resultValue, Value.true);
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      return _val;
+    }();
+
+    generator.GeneratorContext = genContext;
+    generator.GeneratorState = 'suspendedStart';
+    return new NormalCompletion(Value.undefined);
+  } // 25.4.3.2 #sec-generatorvalidate
+
+  function GeneratorValidate(generator) {
+    {
+      const hygienicTemp = RequireInternalSlot(generator, 'GeneratorState');
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator");
+    const state = generator.GeneratorState;
+
+    if (state === 'executing') {
+      return surroundingAgent.Throw('TypeError', 'Cannot manipulate an executing generator');
+    }
+
+    return state;
+  } // 25.4.3.3 #sec-generatorresume
+
+  function GeneratorResume(generator, value) {
+    let state = GeneratorValidate(generator);
+
+    if (state instanceof AbruptCompletion) {
+      return state;
+    }
+
+    if (state instanceof Completion) {
+      state = state.Value;
+    }
+
+    if (state === 'completed') {
+      let _val2 = CreateIterResultObject(Value.undefined, Value.true);
+
+      Assert(!(_val2 instanceof AbruptCompletion), "");
+
+      if (_val2 instanceof Completion) {
+        _val2 = _val2.Value;
+      }
+
+      return _val2;
+    }
+
+    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
+    const genContext = generator.GeneratorContext;
+    const originalStackLength = surroundingAgent.executionContextStack.length;
+    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
+
+    generator.GeneratorState = 'executing';
+    surroundingAgent.executionContextStack.push(genContext);
+    const result = resume(genContext, new NormalCompletion(value));
+    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
+    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
+    return Completion(result);
+  } // 25.4.3.4 #sec-generatorresumeabrupt
+
+  function GeneratorResumeAbrupt(generator, abruptCompletion) {
+    Assert(abruptCompletion instanceof AbruptCompletion, "abruptCompletion instanceof AbruptCompletion");
+    let state = GeneratorValidate(generator);
+
+    if (state instanceof AbruptCompletion) {
+      return state;
+    }
+
+    if (state instanceof Completion) {
+      state = state.Value;
+    }
+
+    if (state === 'suspendedStart') {
+      generator.GeneratorState = 'completed';
+      generator.GeneratorContext = null;
+      state = 'completed';
+    }
+
+    if (state === 'completed') {
+      if (abruptCompletion.Type === 'return') {
+        let _val3 = CreateIterResultObject(abruptCompletion.Value, Value.true);
+
+        Assert(!(_val3 instanceof AbruptCompletion), "");
+
+        if (_val3 instanceof Completion) {
+          _val3 = _val3.Value;
+        }
+
+        return _val3;
+      }
+
+      return Completion(abruptCompletion);
+    }
+
+    Assert(state === 'suspendedYield', "state === 'suspendedYield'");
+    const genContext = generator.GeneratorContext;
+    const originalStackLength = surroundingAgent.executionContextStack.length;
+    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
+
+    generator.GeneratorState = 'executing';
+    surroundingAgent.executionContextStack.push(genContext);
+    const result = resume(genContext, abruptCompletion);
+    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
+    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
+    return Completion(result);
+  } // 25.4.3.5 #sec-getgeneratorkind
+
+  function GetGeneratorKind() {
+    const genContext = surroundingAgent.runningExecutionContext;
+
+    if (!genContext.Generator) {
+      return 'non-generator';
+    }
+
+    const generator = genContext.Generator;
+
+    if ('AsyncGeneratorState' in generator) {
+      return 'async';
+    }
+
+    return 'sync';
+  } // 25.4.3.6 #sec-generatoryield
+
+  function* GeneratorYield(iterNextObj) {
+    const genContext = surroundingAgent.runningExecutionContext;
+    const generator = genContext.Generator;
+    Assert(GetGeneratorKind() === 'sync', "GetGeneratorKind() === 'sync'");
+    generator.GeneratorState = 'suspendedYield';
+    surroundingAgent.executionContextStack.pop(genContext);
+    const resumptionValue = yield new NormalCompletion(iterNextObj);
+    return resumptionValue;
+  }
+
+  // 18 #sec-global-object
+  // 18.2.1.1 #sec-performeval
+
+  function PerformEval(x, callerRealm, strictCaller, direct) {
+    if (direct === false) {
+      Assert(strictCaller === false, "strictCaller === false");
+    }
+
+    if (Type(x) !== 'String') {
+      return x;
+    }
+
+    const evalRealm = surroundingAgent.currentRealmRecord;
+    {
+      const hygienicTemp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    /*
+    const thisEnvRec = X(GetThisEnvironment());
+    let inFunction;
+    let inMethod;
+    let inDerivedConstructor;
+    if (thisEnvRec instanceof FunctionEnvironmentRecord) {
+      const F = thisEnvRec.FunctionObject;
+      inFunction = true;
+      inMethod = thisEnvRec.HasSuperBinding() === Value.true;
+      if (F.ConstructorKind === 'derived') {
+        inDerivedConstructor = true;
+      } else {
+        inDerivedConstructor = false;
+      }
+    } else {
+      inFunction = false;
+      inMethod = false;
+      inDerivedConstructor = false;
+    }
+    */
+
+    const r = ParseScript(x.stringValue(), evalRealm, undefined, strictCaller);
+
+    if (Array.isArray(r)) {
+      return surroundingAgent.Throw('SyntaxError');
+    }
+
+    const script = r.ECMAScriptCode; // If script Contains ScriptBody is false, return undefined.
+
+    const body = script.body;
+    let strictEval;
+
+    if (strictCaller === true) {
+      strictEval = true;
+    } else {
+      strictEval = IsStrict(script);
+    }
+
+    const ctx = surroundingAgent.runningExecutionContext;
+    let lexEnv;
+    let varEnv;
+
+    if (direct === true) {
+      lexEnv = NewDeclarativeEnvironment(ctx.LexicalEnvironment);
+      varEnv = ctx.VariableEnvironment;
+    } else {
+      lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
+      varEnv = evalRealm.GlobalEnv;
+    }
+
+    if (strictEval === true) {
+      varEnv = lexEnv;
+    } // If ctx is not already suspended, suspend ctx.
+
+
+    const evalCtx = new ExecutionContext();
+    evalCtx.Function = Value.null;
+    evalCtx.Realm = evalRealm;
+    evalCtx.ScriptOrModule = ctx.ScriptOrModule;
+    evalCtx.VariableEnvironment = varEnv;
+    evalCtx.LexicalEnvironment = lexEnv;
+    surroundingAgent.executionContextStack.push(evalCtx);
+    let result = EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval);
+
+    if (result.Type === 'normal') {
+      result = Evaluate_Script(body);
+    }
+
+    if (result.Type === 'normal' && result.Value === undefined) {
+      result = new NormalCompletion(Value.undefined);
+    }
+
+    surroundingAgent.executionContextStack.pop(evalCtx); // Resume the context that is now on the top of the execution context stack as the running execution context.
+
+    return Completion(result);
+  } // 18.2.1.3 #sec-evaldeclarationinstantiation
+
+  function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
+    const varNames = VarDeclaredNames_ScriptBody(body).map(Value);
+    const varDeclarations = VarScopedDeclarations_ScriptBody(body);
+    const lexEnvRec = lexEnv.EnvironmentRecord;
+    const varEnvRec = varEnv.EnvironmentRecord;
+
+    if (strict === false) {
+      if (varEnvRec instanceof GlobalEnvironmentRecord) {
+        for (const name of varNames) {
+          if (varEnvRec.HasLexicalDeclaration(name) === Value.true) {
+            return surroundingAgent.Throw('SyntaxError');
+          } // NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
+
+        }
+      }
+
+      let thisLex = lexEnv; // Assert: The following loop will terminate.
+
+      while (thisLex !== varEnv) {
+        const thisEnvRec = thisLex.EnvironmentRecord;
+
+        if (!(thisEnvRec instanceof ObjectEnvironmentRecord)) {
+          for (const name of varNames) {
+            if (thisEnvRec.HasBinding(name) === Value.true) {
+              return surroundingAgent.Throw('SyntaxError'); // NOTE: Annex B.3.5 defines alternate semantics for the above step.
+            } // NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration
+
+          }
+        }
+
+        thisLex = thisLex.outerEnvironmentReference;
+      }
+    }
+
+    const functionsToInitialize = [];
+    const declaredFunctionNames = [];
+
+    for (const d of [...varDeclarations].reverse()) {
+      if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
+        Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d) || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d), "isFunctionDeclaration(d) || isGeneratorDeclaration(d)\n             || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)");
+        const fn = new Value(BoundNames_FunctionDeclaration(d)[0]);
+
+        if (!declaredFunctionNames.includes(fn)) {
+          if (varEnvRec instanceof GlobalEnvironmentRecord) {
+            let fnDefinable = varEnvRec.CanDeclareGlobalFunction(fn);
+
+            if (fnDefinable instanceof AbruptCompletion) {
+              return fnDefinable;
+            }
+
+            if (fnDefinable instanceof Completion) {
+              fnDefinable = fnDefinable.Value;
+            }
+
+            if (fnDefinable === Value.false) {
+              return surroundingAgent.Throw('TypeError');
+            }
+          }
+
+          declaredFunctionNames.push(fn);
+          functionsToInitialize.unshift(d);
+        }
+      }
+    } // NOTE: Annex B.3.3.3 adds additional steps at this point.
+
+
+    const declaredVarNames = [];
+
+    for (const d of varDeclarations) {
+      let boundNames;
+
+      if (isVariableDeclaration(d)) {
+        boundNames = BoundNames_VariableDeclaration(d);
+      } else if (isForBinding(d)) {
+        boundNames = BoundNames_ForBinding(d);
+      } else if (isBindingIdentifier(d)) {
+        boundNames = BoundNames_BindingIdentifier(d);
+      }
+
+      if (boundNames !== undefined) {
+        for (const vn of boundNames.map(Value)) {
+          if (!declaredFunctionNames.includes(vn)) {
+            if (varEnvRec instanceof GlobalEnvironmentRecord) {
+              let vnDefinable = varEnvRec.CanDeclareGlobalVar(vn);
+
+              if (vnDefinable instanceof AbruptCompletion) {
+                return vnDefinable;
+              }
+
+              if (vnDefinable instanceof Completion) {
+                vnDefinable = vnDefinable.Value;
+              }
+
+              if (vnDefinable === Value.false) {
+                return surroundingAgent.Throw('TypeError');
+              }
+            }
+
+            if (!declaredVarNames.includes(vn)) {
+              declaredVarNames.push(vn);
+            }
+          }
+        }
+      }
+    } // NOTE: No abnormal terminations occur after this algorithm step unless
+    // varEnvRec is a global Environment Record and the global object is a Proxy exotic object.
+
+
+    const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(body);
+
+    for (const d of lexDeclarations) {
+      for (const dn of BoundNames_Declaration(d).map(Value)) {
+        if (IsConstantDeclaration(d)) {
+          {
+            const hygienicTemp = lexEnvRec.CreateImmutableBinding(dn, Value.true);
+
+            if (hygienicTemp instanceof AbruptCompletion) {
+              return hygienicTemp;
+            }
+          }
+        } else {
+          {
+            const hygienicTemp = lexEnvRec.CreateMutableBinding(dn, Value.false);
+
+            if (hygienicTemp instanceof AbruptCompletion) {
+              return hygienicTemp;
+            }
+          }
+        }
+      }
+    }
+
+    for (const f of functionsToInitialize) {
+      const fn = new Value(BoundNames_FunctionDeclaration(f)[0]);
+      const fo = InstantiateFunctionObject(f, lexEnv);
+
+      if (varEnvRec instanceof GlobalEnvironmentRecord) {
+        {
+          const hygienicTemp = varEnvRec.CreateGlobalFunctionBinding(fn, fo, Value.true);
+
+          if (hygienicTemp instanceof AbruptCompletion) {
+            return hygienicTemp;
+          }
+        }
+      } else {
+        const bindingExists = varEnvRec.HasBinding(fn);
+
+        if (bindingExists === Value.false) {
+          let status = varEnvRec.CreateMutableBinding(fn, Value.true);
+          Assert(!(status instanceof AbruptCompletion), "");
+
+          if (status instanceof Completion) {
+            status = status.Value;
+          }
+
+          Assert(!(status instanceof AbruptCompletion), "!(status instanceof AbruptCompletion)");
+          Assert(!(varEnvRec.InitializeBinding(fn, fo) instanceof AbruptCompletion), "");
+        } else {
+          Assert(!(varEnvRec.SetMutableBinding(fn, fo, Value.false) instanceof AbruptCompletion), "");
+        }
+      }
+    }
+
+    for (const vn of declaredVarNames) {
+      if (!declaredFunctionNames.includes(vn)) {
+        if (varEnvRec instanceof GlobalEnvironmentRecord) {
+          {
+            const hygienicTemp = varEnvRec.CreateGlobalVarBinding(vn, Value.true);
+
+            if (hygienicTemp instanceof AbruptCompletion) {
+              return hygienicTemp;
+            }
+          }
+        } else {
+          const bindingExists = varEnvRec.HasBinding(vn);
+
+          if (bindingExists === Value.false) {
+            let status = varEnvRec.CreateMutableBinding(vn, Value.true);
+            Assert(!(status instanceof AbruptCompletion), "");
+
+            if (status instanceof Completion) {
+              status = status.Value;
+            }
+
+            Assert(!(status instanceof AbruptCompletion), "!(status instanceof AbruptCompletion)");
+            Assert(!(varEnvRec.InitializeBinding(vn, Value.undefined) instanceof AbruptCompletion), "");
+          }
+        }
+      }
+    }
+
+    return new NormalCompletion(undefined);
+  }
+
+  // 7.4 #sec-operations-on-iterator-objects
+  // and
+  // 25.1 #sec-iteration
+  // 7.4.1 #sec-getiterator
+
+  function GetIterator(obj, hint, method) {
+    if (!hint) {
+      hint = 'sync';
+    }
+
+    Assert(hint === 'sync' || hint === 'async', "hint === 'sync' || hint === 'async'");
+
+    if (!method) {
+      if (hint === 'async') {
+        method = GetMethod(obj, wellKnownSymbols.asyncIterator);
+
+        if (method instanceof AbruptCompletion) {
+          return method;
+        }
+
+        if (method instanceof Completion) {
+          method = method.Value;
+        }
+
+        if (method === Value.undefined) {
+          let syncMethod = GetMethod(obj, wellKnownSymbols.iterator);
+
+          if (syncMethod instanceof AbruptCompletion) {
+            return syncMethod;
+          }
+
+          if (syncMethod instanceof Completion) {
+            syncMethod = syncMethod.Value;
+          }
+
+          let syncIteratorRecord = GetIterator(obj, 'sync', syncMethod);
+
+          if (syncIteratorRecord instanceof AbruptCompletion) {
+            return syncIteratorRecord;
+          }
+
+          if (syncIteratorRecord instanceof Completion) {
+            syncIteratorRecord = syncIteratorRecord.Value;
+          }
+
+          return CreateAsyncFromSyncIterator(syncIteratorRecord);
+        }
+      } else {
+        method = GetMethod(obj, wellKnownSymbols.iterator);
+
+        if (method instanceof AbruptCompletion) {
+          return method;
+        }
+
+        if (method instanceof Completion) {
+          method = method.Value;
+        }
+      }
+    }
+
+    let iterator = Call(method, obj);
+
+    if (iterator instanceof AbruptCompletion) {
+      return iterator;
+    }
+
+    if (iterator instanceof Completion) {
+      iterator = iterator.Value;
+    }
+
+    if (Type(iterator) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    let nextMethod = GetV(iterator, new Value('next'));
+
+    if (nextMethod instanceof AbruptCompletion) {
+      return nextMethod;
+    }
+
+    if (nextMethod instanceof Completion) {
+      nextMethod = nextMethod.Value;
+    }
+
+    const iteratorRecord = {
+      Iterator: iterator,
+      NextMethod: nextMethod,
+      Done: Value.false
+    };
+    return EnsureCompletion(iteratorRecord);
+  } // 7.4.2 #sec-iteratornext
+
+  function IteratorNext(iteratorRecord, value) {
+    let result;
+
+    if (!value) {
+      result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
+
+      if (result instanceof AbruptCompletion) {
+        return result;
+      }
+
+      if (result instanceof Completion) {
+        result = result.Value;
+      }
+    } else {
+      result = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]);
+
+      if (result instanceof AbruptCompletion) {
+        return result;
+      }
+
+      if (result instanceof Completion) {
+        result = result.Value;
+      }
+    }
+
+    if (Type(result) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return EnsureCompletion(result);
+  } // 7.4.3 #sec-iteratorcomplete
+
+  function IteratorComplete(iterResult) {
+    Assert(Type(iterResult) === 'Object', "Type(iterResult) === 'Object'");
+
+    let _hygienicTemp = Get(iterResult, new Value('done'));
+
+    if (_hygienicTemp instanceof AbruptCompletion) {
+      return _hygienicTemp;
+    }
+
+    if (_hygienicTemp instanceof Completion) {
+      _hygienicTemp = _hygienicTemp.Value;
+    }
+
+    return EnsureCompletion(ToBoolean(_hygienicTemp));
+  } // 7.4.4 #sec-iteratorvalue
+
+  function IteratorValue(iterResult) {
+    Assert(Type(iterResult) === 'Object', "Type(iterResult) === 'Object'");
+
+    let _hygienicTemp2 = Get(iterResult, new Value('value'));
+
+    if (_hygienicTemp2 instanceof AbruptCompletion) {
+      return _hygienicTemp2;
+    }
+
+    if (_hygienicTemp2 instanceof Completion) {
+      _hygienicTemp2 = _hygienicTemp2.Value;
+    }
+
+    return EnsureCompletion(_hygienicTemp2);
+  } // 7.4.5 #sec-iteratorstep
+
+  function IteratorStep(iteratorRecord) {
+    let result = IteratorNext(iteratorRecord);
+
+    if (result instanceof AbruptCompletion) {
+      return result;
+    }
+
+    if (result instanceof Completion) {
+      result = result.Value;
+    }
+
+    let done = IteratorComplete(result);
+
+    if (done instanceof AbruptCompletion) {
+      return done;
+    }
+
+    if (done instanceof Completion) {
+      done = done.Value;
+    }
+
+    if (done === Value.true) {
+      return EnsureCompletion(Value.false);
+    }
+
+    return EnsureCompletion(result);
+  } // 7.4.6 #sec-iteratorclose
+
+  function IteratorClose(iteratorRecord, completion) {
+    // TODO: completion should be a Completion Record so this should not be necessary
+    completion = EnsureCompletion(completion);
+    Assert(Type(iteratorRecord.Iterator) === 'Object', "Type(iteratorRecord.Iterator) === 'Object'");
+    Assert(completion instanceof Completion, "completion instanceof Completion");
+    const iterator = iteratorRecord.Iterator;
+    let ret = GetMethod(iterator, new Value('return'));
+
+    if (ret instanceof AbruptCompletion) {
+      return ret;
+    }
+
+    if (ret instanceof Completion) {
+      ret = ret.Value;
+    }
+
+    if (ret === Value.undefined) {
+      return Completion(completion);
+    }
+
+    const innerResult = EnsureCompletion(Call(ret, iterator));
+
+    if (completion.Type === 'throw') {
+      return Completion(completion);
+    }
+
+    if (innerResult.Type === 'throw') {
+      return Completion(innerResult);
+    }
+
+    if (Type(innerResult.Value) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return Completion(completion);
+  } // 7.4.7 #sec-asynciteratorclose
+
+  function* AsyncIteratorClose(iteratorRecord, completion) {
+    Assert(Type(iteratorRecord.Iterator) === 'Object', "Type(iteratorRecord.Iterator) === 'Object'");
+    Assert(completion instanceof Completion, "completion instanceof Completion");
+    const iterator = iteratorRecord.Iterator;
+    let ret = GetMethod(iterator, new Value('return'));
+
+    if (ret instanceof AbruptCompletion) {
+      return ret;
+    }
+
+    if (ret instanceof Completion) {
+      ret = ret.Value;
+    }
+
+    if (ret === Value.undefined) {
+      return Completion(completion);
+    }
+
+    let innerResult = EnsureCompletion(Call(ret, iterator));
+
+    if (innerResult.Type === 'normal') {
+      innerResult = EnsureCompletion((yield* Await(innerResult.Value)));
+    }
+
+    if (completion.Type === 'throw') {
+      return Completion(completion);
+    }
+
+    if (innerResult.Type === 'throw') {
+      return Completion(innerResult);
+    }
+
+    if (Type(innerResult.Value) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return Completion(completion);
+  } // 7.4.8 #sec-createiterresultobject
+
+  function CreateIterResultObject(value, done) {
+    Assert(Type(done) === 'Boolean', "Type(done) === 'Boolean'");
+    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    Assert(!(CreateDataProperty(obj, new Value('value'), value) instanceof AbruptCompletion), "");
+    Assert(!(CreateDataProperty(obj, new Value('done'), done) instanceof AbruptCompletion), "");
+    return obj;
+  } // 7.4.9 #sec-createlistiteratorRecord
+
+  function CreateListIteratorRecord(list) {
+    const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), ['IteratedList', 'ListIteratorNextIndex']);
+    iterator.IteratedList = list;
+    iterator.ListIteratorNextIndex = 0;
+    const steps = ListIteratorNextSteps;
+    let next = CreateBuiltinFunction(steps, []);
+    Assert(!(next instanceof AbruptCompletion), "");
+
+    if (next instanceof Completion) {
+      next = next.Value;
+    }
+
+    return {
+      Iterator: iterator,
+      NextMethod: next,
+      Done: Value.false
+    };
+  } // 7.4.9.1 #sec-listiterator-next
+
+  function ListIteratorNextSteps(args, {
+    thisValue
+  }) {
+    const O = thisValue;
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert('IteratedList' in O, "'IteratedList' in O");
+    const list = O.IteratedList;
+    const index = O.ListIteratorNextIndex;
+    const len = list.length;
+
+    if (index >= len) {
+      return CreateIterResultObject(Value.undefined, Value.true);
+    }
+
+    O.ListIteratorNextIndex += 1;
+    return CreateIterResultObject(list[index], Value.false);
+  } // 25.1.4.1 #sec-createasyncfromsynciterator
+
+
+  function CreateAsyncFromSyncIterator(syncIteratorRecord) {
+    let asyncIterator = ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
+    Assert(!(asyncIterator instanceof AbruptCompletion), "");
+
+    if (asyncIterator instanceof Completion) {
+      asyncIterator = asyncIterator.Value;
+    }
+
+    asyncIterator.SyncIteratorRecord = syncIteratorRecord;
+    let nextMethod = Get(asyncIterator, new Value('next'));
+    Assert(!(nextMethod instanceof AbruptCompletion), "");
+
+    if (nextMethod instanceof Completion) {
+      nextMethod = nextMethod.Value;
+    }
+
+    return {
+      Iterator: asyncIterator,
+      NextMethod: nextMethod,
+      Done: Value.false
+    };
+  } // 25.1.4.2.4 #sec-async-from-sync-iterator-value-unwrap-functions
+
+  function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
+    const F = this;
+
+    let _val = CreateIterResultObject(value, F.Done);
+
+    Assert(!(_val instanceof AbruptCompletion), "");
+
+    if (_val instanceof Completion) {
+      _val = _val.Value;
+    }
+
+    return _val;
+  } // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
+
+
+  function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
+    let done = IteratorComplete(result);
+
+    if (done instanceof AbruptCompletion) {
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
+
+      if (hygenicTemp2 instanceof AbruptCompletion) {
+        return hygenicTemp2;
+      }
+
+      return promiseCapability.Promise;
+    } else if (done instanceof Completion) {
+      done = done.Value;
+    }
+
+    let value = IteratorValue(result);
+
+    if (value instanceof AbruptCompletion) {
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [value.Value]);
+
+      if (hygenicTemp2 instanceof AbruptCompletion) {
+        return hygenicTemp2;
+      }
+
+      return promiseCapability.Promise;
+    } else if (value instanceof Completion) {
+      value = value.Value;
+    }
+
+    let valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+
+    if (valueWrapper instanceof AbruptCompletion) {
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [valueWrapper.Value]);
+
+      if (hygenicTemp2 instanceof AbruptCompletion) {
+        return hygenicTemp2;
+      }
+
+      return promiseCapability.Promise;
+    } else if (valueWrapper instanceof Completion) {
+      valueWrapper = valueWrapper.Value;
+    }
+
+    const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
+    let onFulfilled = CreateBuiltinFunction(steps, ['Done']);
+    Assert(!(onFulfilled instanceof AbruptCompletion), "");
+
+    if (onFulfilled instanceof Completion) {
+      onFulfilled = onFulfilled.Value;
+    }
+
+    onFulfilled.Done = done;
+    Assert(!(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability) instanceof AbruptCompletion), "");
+    return promiseCapability.Promise;
+  }
+
+  function ModuleNamespaceCreate(module, exports) {
+    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
+    Assert(module.Namespace === Value.undefined, "module.Namespace === Value.undefined");
+    Assert(Array.isArray(exports), "Array.isArray(exports)");
+    const M = new ModuleNamespaceExoticObjectValue();
+    M.properties.set(wellKnownSymbols.toStringTag, Descriptor({
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false,
+      Value: new Value('Module')
+    }));
+    M.Module = module;
+    const sortedExports = [...exports].sort((x, y) => {
+      let result = SortCompare(x, y, Value.undefined);
+      Assert(!(result instanceof AbruptCompletion), "");
+
+      if (result instanceof Completion) {
+        result = result.Value;
+      }
+
+      return result.numberValue();
+    });
+    M.Exports = sortedExports;
+    module.Namespace = M;
+    return M;
+  }
+
+  function InnerModuleLinking(module, stack, index) {
+    if (!(module instanceof CyclicModuleRecord)) {
+      {
+        const hygienicTemp = module.Link();
+
+        if (hygienicTemp instanceof AbruptCompletion) {
+          return hygienicTemp;
+        }
+      }
+      return index;
+    }
+
+    if (module.Status === 'linking' || module.Status === 'linked' || module.Status === 'evaluated') {
+      return index;
+    }
+
+    Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
+    module.Status = 'linking';
+    module.DFSIndex = index;
+    module.DFSAncestorIndex = index;
+    index += 1;
+    stack.push(module);
+
+    for (const required of module.RequestedModules) {
+      let requiredModule = HostResolveImportedModule(module, required);
+
+      if (requiredModule instanceof AbruptCompletion) {
+        return requiredModule;
+      }
+
+      if (requiredModule instanceof Completion) {
+        requiredModule = requiredModule.Value;
+      }
+
+      index = InnerModuleLinking(requiredModule, stack, index);
+
+      if (index instanceof AbruptCompletion) {
+        return index;
+      }
+
+      if (index instanceof Completion) {
+        index = index.Value;
+      }
+
+      if (requiredModule instanceof CyclicModuleRecord) {
+        Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated'");
+        Assert(requiredModule.Status === 'linking' === stack.includes(requiredModule), "(requiredModule.Status === 'linking') === stack.includes(requiredModule)");
+
+        if (requiredModule.Status === 'linking') {
+          module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+        }
+      }
+    }
+
+    {
+      const hygienicTemp = module.InitializeEnvironment();
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
+    Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
+
+    if (module.DFSAncestorIndex === module.DFSIndex) {
+      let done = false;
+
+      while (done === false) {
+        const requiredModule = stack.pop();
+        Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
+        requiredModule.Status = 'linked';
+
+        if (requiredModule === module) {
+          done = true;
+        }
+      }
+    }
+
+    return index;
+  } // 15.2.1.16.2.1 #sec-innermoduleevaluation
+
+  function InnerModuleEvaluation(module, stack, index) {
+    if (!(module instanceof CyclicModuleRecord)) {
+      {
+        const hygienicTemp = module.Evaluate();
+
+        if (hygienicTemp instanceof AbruptCompletion) {
+          return hygienicTemp;
+        }
+      }
+      return index;
+    }
+
+    if (module.Status === 'evaluated') {
+      if (module.EvaluationError === Value.undefined) {
+        return index;
+      } else {
+        return module.EvaluationError;
+      }
+    }
+
+    if (module.Status === 'evaluating') {
+      return index;
+    }
+
+    Assert(module.Status === 'linked', "module.Status === 'linked'");
+    module.Status = 'evaluating';
+    module.DFSIndex = index;
+    module.DFSAncestorIndex = index;
+    module.PendingAsyncDependencies = 0;
+    module.AsyncParentModules = [];
+    index += 1;
+    stack.push(module);
+
+    for (const required of module.RequestedModules) {
+      let requiredModule = HostResolveImportedModule(module, required);
+      Assert(!(requiredModule instanceof AbruptCompletion), "");
+
+      if (requiredModule instanceof Completion) {
+        requiredModule = requiredModule.Value;
+      }
+
+      index = InnerModuleEvaluation(requiredModule, stack, index);
+
+      if (index instanceof AbruptCompletion) {
+        return index;
+      }
+
+      if (index instanceof Completion) {
+        index = index.Value;
+      }
+
+      if (requiredModule instanceof CyclicModuleRecord) {
+        Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated'");
+
+        if (stack.includes(requiredModule)) {
+          Assert(requiredModule.Status === 'evaluating', "requiredModule.Status === 'evaluating'");
+        }
+
+        if (requiredModule.Status === 'evaluating') {
+          module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
+        } else {
+          requiredModule = GetAsyncCycleRoot(requiredModule);
+          Assert(requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluated'");
+
+          if (requiredModule.EvaluationError !== Value.undefined) {
+            return module.EvaluationError;
+          }
+        }
+
+        if (requiredModule.AsyncEvaluating === Value.true) {
+          module.PendingAsyncDependencies += 1;
+          requiredModule.AsyncParentModules.push(module);
+        }
+      }
+    }
+
+    if (module.PendingAsyncDependencies > 0) {
+      module.AsyncEvaluating = Value.true;
+    } else if (module.Async === Value.true) {
+      Assert(!(ExecuteAsyncModule(module) instanceof AbruptCompletion), "");
+    } else {
+      {
+        const hygienicTemp = module.ExecuteModule();
+
+        if (hygienicTemp instanceof AbruptCompletion) {
+          return hygienicTemp;
+        }
+      }
+    }
+
+    Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
+    Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
+
+    if (module.DFSAncestorIndex === module.DFSIndex) {
+      let done = false;
+
+      while (done === false) {
+        const requiredModule = stack.pop();
+        Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
+        requiredModule.Status = 'evaluated';
+
+        if (requiredModule === module) {
+          done = true;
+        }
+      }
+    }
+
+    return index;
+  } // https://tc39.es/proposal-top-level-await/#sec-execute-async-module
+
+  function ExecuteAsyncModule(module) {
+    Assert(module.Status === 'evaluating' || module.Status === 'evaluated', "module.Status === 'evaluating' || module.Status === 'evaluated'");
+    Assert(module.Async === Value.true, "module.Async === Value.true");
+    module.AsyncEvaluating = Value.true;
+    let capability = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+    Assert(!(capability instanceof AbruptCompletion), "");
+
+    if (capability instanceof Completion) {
+      capability = capability.Value;
+    }
+
+    const stepsFulfilled = CallAsyncModuleFulfilled;
+    const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Module']);
+    onFulfilled.Module = module;
+    const stepsRejected = CallAsyncModuleRejected;
+    const onRejected = CreateBuiltinFunction(stepsRejected, ['Module']);
+    onRejected.Module = module;
+    Assert(!(PerformPromiseThen(capability.Promise, onFulfilled, onRejected) instanceof AbruptCompletion), "");
+    Assert(!(module.ExecuteModule(capability) instanceof AbruptCompletion), "");
+    return Value.undefined;
+  } // https://tc39.es/proposal-top-level-await/#sec-execute-async-module
+
+
+  function CallAsyncModuleFulfilled() {
+    const f = surroundingAgent.activeFunctionObject;
+    const module = f.Module;
+    Assert(!(AsyncModuleExecutionFulfilled(module) instanceof AbruptCompletion), "");
+    return Value.undefined;
+  } // https://tc39.es/proposal-top-level-await/#sec-execute-async-module
+
+
+  function CallAsyncModuleRejected([error = Value.undefined]) {
+    const f = surroundingAgent.activeFunctionObject;
+    const module = f.Module;
+    Assert(!(AsyncModuleExecutionRejected(module, error) instanceof AbruptCompletion), "");
+    return Value.undefined;
+  } // https://tc39.es/proposal-top-level-await/#sec-getcycleroot
+
+
+  function GetAsyncCycleRoot(module) {
+    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
+
+    if (module.AsyncParentModules.length === 0) {
+      return module;
+    }
+
+    while (module.DFSIndex > module.DFSAncestorIndex) {
+      Assert(module.AsyncParentModules.length > 0, "module.AsyncParentModules.length > 0");
+      const nextCycleModule = module.AsyncParentModules[0];
+      Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex, "nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex");
+      module = nextCycleModule;
+    }
+
+    Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
+    return module;
+  } // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
+
+  function AsyncModuleExecutionFulfilled(module) {
+    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
+
+    if (module.AsyncEvaluating === Value.false) {
+      Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
+      return Value.undefined;
+    }
+
+    Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
+    module.AsyncEvaluating = Value.false;
+
+    for (const m of module.AsyncParentModules) {
+      if (module.DFSIndex !== module.DFSAncestorIndex) {
+        Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
+      }
+
+      m.PendingAsyncDependencies -= 1;
+
+      if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
+        Assert(m.AsyncEvaluating === Value.true, "m.AsyncEvaluating === Value.true");
+        let cycleRoot = GetAsyncCycleRoot(m);
+        Assert(!(cycleRoot instanceof AbruptCompletion), "");
+
+        if (cycleRoot instanceof Completion) {
+          cycleRoot = cycleRoot.Value;
+        }
+
+        if (cycleRoot.EvaluationError !== Value.undefined) {
+          return Value.undefined;
+        }
+
+        if (m.Async === Value.true) {
+          Assert(!(ExecuteAsyncModule(m) instanceof AbruptCompletion), "");
+        } else {
+          const result = m.ExecuteModule();
+
+          if (result instanceof NormalCompletion) {
+            Assert(!(AsyncModuleExecutionFulfilled(m) instanceof AbruptCompletion), "");
+          } else {
+            Assert(!(AsyncModuleExecutionRejected(m, result.Value) instanceof AbruptCompletion), "");
+          }
+        }
+      }
+    }
+
+    if (module.TopLevelCapability !== Value.undefined) {
+      Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
+      Assert(!(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]) instanceof AbruptCompletion), "");
+    }
+
+    return Value.undefined;
+  } // https://tc39.es/proposal-top-level-await/#sec-AsyncModuleExecutionRejected
+
+
+  function AsyncModuleExecutionRejected(module, error) {
+    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
+
+    if (module.AsyncEvaluating === Value.false) {
+      Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
+      return Value.undefined;
+    }
+
+    Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
+    module.EvaluationError = new ThrowCompletion(error);
+    module.AsyncEvaluating = Value.false;
+
+    for (const m of module.AsyncParentModules) {
+      if (module.DFSIndex !== module.DFSAncestorIndex) {
+        Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
+      }
+
+      Assert(!(AsyncModuleExecutionRejected(m, error) instanceof AbruptCompletion), "");
+    }
+
+    if (module.TopLevelCapability !== Value.undefined) {
+      Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
+      Assert(!(Call(module.TopLevelCapability.Reject, Value.undefined, [error]) instanceof AbruptCompletion), "");
+    }
+
+    return Value.undefined;
+  } // 15.2.1.21 #sec-getmodulenamespace
+
+
+  function GetModuleNamespace(module) {
+    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
+
+    if (module instanceof CyclicModuleRecord) {
+      Assert(module.Status !== 'unlinked', "module.Status !== 'unlinked'");
+    }
+
+    let namespace = module.Namespace;
+
+    if (namespace === Value.undefined) {
+      let exportedNames = module.GetExportedNames();
+
+      if (exportedNames instanceof AbruptCompletion) {
+        return exportedNames;
+      }
+
+      if (exportedNames instanceof Completion) {
+        exportedNames = exportedNames.Value;
+      }
+
+      const unambiguousNames = [];
+
+      for (const name of exportedNames) {
+        let resolution = module.ResolveExport(name);
+
+        if (resolution instanceof AbruptCompletion) {
+          return resolution;
+        }
+
+        if (resolution instanceof Completion) {
+          resolution = resolution.Value;
+        }
+
+        if (resolution instanceof ResolvedBindingRecord) {
+          unambiguousNames.push(name);
+        }
+      }
+
+      namespace = ModuleNamespaceCreate(module, unambiguousNames);
+    }
+
+    return namespace;
+  }
+
+  // 7.3 #sec-operations-on-objects
+  // 7.3.1 #sec-get-o-p
+
+  function Get(O, P) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // TODO: This should just return Q(O.Get(P, O))
+
+    let _hygienicTemp = O.Get(P, O);
+
+    if (_hygienicTemp instanceof AbruptCompletion) {
+      return _hygienicTemp;
+    }
+
+    if (_hygienicTemp instanceof Completion) {
+      _hygienicTemp = _hygienicTemp.Value;
+    }
+
+    return new NormalCompletion(_hygienicTemp);
+  } // 7.3.2 #sec-getv
+
+  function GetV(V, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let O = ToObject(V);
+
+    if (O instanceof AbruptCompletion) {
+      return O;
+    }
+
+    if (O instanceof Completion) {
+      O = O.Value;
+    }
+
+    return O.Get(P, V);
+  } // 7.3.3 #sec-set-o-p-v-throw
+
+  function Set$1(O, P, V, Throw) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    Assert(Type(Throw) === 'Boolean', "Type(Throw) === 'Boolean'");
+    let success = O.Set(P, V, O);
+
+    if (success instanceof AbruptCompletion) {
+      return success;
+    }
+
+    if (success instanceof Completion) {
+      success = success.Value;
+    }
+
+    if (success === Value.false && Throw === Value.true) {
+      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', P, O));
+    }
+
+    return success;
+  } // 7.3.4 #sec-createdataproperty
+
+  function CreateDataProperty(O, P, V) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    const newDesc = Descriptor({
+      Value: V,
+      Writable: Value.true,
+      Enumerable: Value.true,
+      Configurable: Value.true
+    });
+    return O.DefineOwnProperty(P, newDesc);
+  } // 7.3.5 #sec-createmethodproperty
+
+  function CreateMethodProperty(O, P, V) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    const newDesc = Descriptor({
+      Value: V,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    });
+    return O.DefineOwnProperty(P, newDesc);
+  } // 7.3.6 #sec-createdatapropertyorthrow
+
+  function CreateDataPropertyOrThrow(O, P, V) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let success = CreateDataProperty(O, P, V);
+
+    if (success instanceof AbruptCompletion) {
+      return success;
+    }
+
+    if (success instanceof Completion) {
+      success = success.Value;
+    }
+
+    if (success === Value.false) {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return success;
+  } // 7.3.7 #sec-definepropertyorthrow
+
+  function DefinePropertyOrThrow(O, P, desc) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let success = O.DefineOwnProperty(P, desc);
+
+    if (success instanceof AbruptCompletion) {
+      return success;
+    }
+
+    if (success instanceof Completion) {
+      success = success.Value;
+    }
+
+    if (success === Value.false) {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return success;
+  } // 7.3.8 #sec-deletepropertyorthrow
+
+  function DeletePropertyOrThrow(O, P) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let success = O.Delete(P);
+
+    if (success instanceof AbruptCompletion) {
+      return success;
+    }
+
+    if (success instanceof Completion) {
+      success = success.Value;
+    }
+
+    if (success === Value.false) {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    return success;
+  } // 7.3.9 #sec-getmethod
+
+  function GetMethod(V, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let func = GetV(V, P);
+
+    if (func instanceof AbruptCompletion) {
+      return func;
+    }
+
+    if (func instanceof Completion) {
+      func = func.Value;
+    }
+
+    if (func === Value.null || func === Value.undefined) {
+      return Value.undefined;
+    }
+
+    if (IsCallable(func) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
+    }
+
+    return func;
+  } // 7.3.10 #sec-hasproperty
+
+  function HasProperty(O, P) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    return O.HasProperty(P);
+  } // 7.3.11 #sec-hasownproperty
+
+  function HasOwnProperty$1(O, P) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let desc = O.GetOwnProperty(P);
+
+    if (desc instanceof AbruptCompletion) {
+      return desc;
+    }
+
+    if (desc instanceof Completion) {
+      desc = desc.Value;
+    }
+
+    if (desc === Value.undefined) {
+      return Value.false;
+    }
+
+    return Value.true;
+  } // 7.3.12 #sec-call
+
+  function Call(F, V, argumentsList) {
+    if (!argumentsList) {
+      argumentsList = [];
+    }
+
+    Assert(argumentsList.every(a => a instanceof Value), "argumentsList.every((a) => a instanceof Value)");
+
+    if (IsCallable(F) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('NotAFunction', F));
+    }
+
+    return F.Call(V, argumentsList);
+  } // 7.3.13 #sec-construct
+
+  function Construct(F, argumentsList, newTarget) {
+    if (!newTarget) {
+      newTarget = F;
+    }
+
+    if (!argumentsList) {
+      argumentsList = [];
+    }
+
+    Assert(IsConstructor(F) === Value.true, "IsConstructor(F) === Value.true");
+    Assert(IsConstructor(newTarget) === Value.true, "IsConstructor(newTarget) === Value.true");
+    return F.Construct(argumentsList, newTarget);
+  } // 7.3.14 #sec-setintegritylevel
+
+  function SetIntegrityLevel(O, level) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
+    let status = O.PreventExtensions();
+
+    if (status instanceof AbruptCompletion) {
+      return status;
+    }
+
+    if (status instanceof Completion) {
+      status = status.Value;
+    }
+
+    if (status === Value.false) {
+      return Value.false;
+    }
+
+    let keys = O.OwnPropertyKeys();
+
+    if (keys instanceof AbruptCompletion) {
+      return keys;
+    }
+
+    if (keys instanceof Completion) {
+      keys = keys.Value;
+    }
+
+    if (level === 'sealed') {
+      for (const k of keys) {
+        {
+          const hygienicTemp = DefinePropertyOrThrow(O, k, Descriptor({
+            Configurable: Value.false
+          }));
+
+          if (hygienicTemp instanceof AbruptCompletion) {
+            return hygienicTemp;
+          }
+        }
+      }
+    } else if (level === 'frozen') {
+      for (const k of keys) {
+        let currentDesc = O.GetOwnProperty(k);
+
+        if (currentDesc instanceof AbruptCompletion) {
+          return currentDesc;
+        }
+
+        if (currentDesc instanceof Completion) {
+          currentDesc = currentDesc.Value;
+        }
+
+        if (currentDesc !== Value.undefined) {
+          let desc;
+
+          if (IsAccessorDescriptor(currentDesc) === true) {
+            desc = Descriptor({
+              Configurable: Value.false
+            });
+          } else {
+            desc = Descriptor({
+              Configurable: Value.false,
+              Writable: Value.false
+            });
+          }
+
+          {
+            const hygienicTemp = DefinePropertyOrThrow(O, k, desc);
+
+            if (hygienicTemp instanceof AbruptCompletion) {
+              return hygienicTemp;
+            }
+          }
+        }
+      }
+    }
+
+    return Value.true;
+  } // 7.3.15 #sec-testintegritylevel
+
+  function TestIntegrityLevel(O, level) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
+    let extensible = IsExtensible(O);
+
+    if (extensible instanceof AbruptCompletion) {
+      return extensible;
+    }
+
+    if (extensible instanceof Completion) {
+      extensible = extensible.Value;
+    }
+
+    if (extensible === Value.true) {
+      return Value.false;
+    }
+
+    let keys = O.OwnPropertyKeys();
+
+    if (keys instanceof AbruptCompletion) {
+      return keys;
+    }
+
+    if (keys instanceof Completion) {
+      keys = keys.Value;
+    }
+
+    for (const k of keys) {
+      let currentDesc = O.GetOwnProperty(k);
+
+      if (currentDesc instanceof AbruptCompletion) {
+        return currentDesc;
+      }
+
+      if (currentDesc instanceof Completion) {
+        currentDesc = currentDesc.Value;
+      }
+
+      if (currentDesc !== Value.undefined) {
+        if (currentDesc.Configurable === Value.true) {
+          return Value.false;
+        }
+
+        if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
+          if (currentDesc.Writable === Value.true) {
+            return Value.false;
+          }
+        }
+      }
+    }
+
+    return Value.true;
+  } // 7.3.16 #sec-createarrayfromlist
+
+  function CreateArrayFromList(elements) {
+    Assert(elements.every(e => e instanceof Value), "elements.every((e) => e instanceof Value)");
+    let array = ArrayCreate(new Value(0));
+    Assert(!(array instanceof AbruptCompletion), "");
+
+    if (array instanceof Completion) {
+      array = array.Value;
+    }
+
+    let n = 0;
+
+    for (const e of elements) {
+      let nStr = ToString(new Value(n));
+      Assert(!(nStr instanceof AbruptCompletion), "");
+
+      if (nStr instanceof Completion) {
+        nStr = nStr.Value;
+      }
+
+      let status = CreateDataProperty(array, nStr, e);
+      Assert(!(status instanceof AbruptCompletion), "");
+
+      if (status instanceof Completion) {
+        status = status.Value;
+      }
+
+      Assert(status === Value.true, "status === Value.true");
+      n += 1;
+    }
+
+    return array;
+  } // 7.3.17 #sec-lengthofarraylike
+
+  function LengthOfArrayLike(obj) {
+    Assert(Type(obj) === 'Object', "Type(obj) === 'Object'");
+
+    let _hygienicTemp2 = Get(obj, new Value('length'));
+
+    if (_hygienicTemp2 instanceof AbruptCompletion) {
+      return _hygienicTemp2;
+    }
+
+    if (_hygienicTemp2 instanceof Completion) {
+      _hygienicTemp2 = _hygienicTemp2.Value;
+    }
+
+    return ToLength(_hygienicTemp2);
+  } // 7.3.17 #sec-createlistfromarraylike
+
+  function CreateListFromArrayLike(obj, elementTypes) {
+    if (!elementTypes) {
+      elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
+    }
+
+    if (Type(obj) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    let _hygienicTemp3 = LengthOfArrayLike(obj);
+
+    if (_hygienicTemp3 instanceof AbruptCompletion) {
+      return _hygienicTemp3;
+    }
+
+    if (_hygienicTemp3 instanceof Completion) {
+      _hygienicTemp3 = _hygienicTemp3.Value;
+    }
+
+    const len = _hygienicTemp3.numberValue();
+
+    const list = [];
+    let index = 0;
+
+    while (index < len) {
+      let indexName = ToString(new Value(index));
+      Assert(!(indexName instanceof AbruptCompletion), "");
+
+      if (indexName instanceof Completion) {
+        indexName = indexName.Value;
+      }
+
+      let next = Get(obj, indexName);
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (!elementTypes.includes(Type(next))) {
+        // TODO: throw with an error message
+        return surroundingAgent.Throw('TypeError');
+      }
+
+      list.push(next);
+      index += 1;
+    }
+
+    return list;
+  } // 7.3.18 #sec-invoke
+
+  function Invoke(V, P, argumentsList) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+
+    if (!argumentsList) {
+      argumentsList = [];
+    }
+
+    let func = GetV(V, P);
+
+    if (func instanceof AbruptCompletion) {
+      return func;
+    }
+
+    if (func instanceof Completion) {
+      func = func.Value;
+    }
+
+    return Call(func, V, argumentsList);
+  } // 7.3.19 #sec-ordinaryhasinstance
+
+  function OrdinaryHasInstance(C, O) {
+    if (IsCallable(C) === Value.false) {
+      return Value.false;
+    }
+
+    if ('BoundTargetFunction' in C) {
+      const BC = C.BoundTargetFunction;
+      return InstanceofOperator(O, BC);
+    }
+
+    if (Type(O) !== 'Object') {
+      return Value.false;
+    }
+
+    let P = Get(C, new Value('prototype'));
+
+    if (P instanceof AbruptCompletion) {
+      return P;
+    }
+
+    if (P instanceof Completion) {
+      P = P.Value;
+    }
+
+    if (Type(P) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    while (true) {
+      O = O.GetPrototypeOf();
+
+      if (O instanceof AbruptCompletion) {
+        return O;
+      }
+
+      if (O instanceof Completion) {
+        O = O.Value;
+      }
+
+      if (O === Value.null) {
+        return Value.false;
+      }
+
+      if (SameValue(P, O) === Value.true) {
+        return Value.true;
+      }
+    }
+  } // 7.3.20 #sec-speciesconstructor
+
+  function SpeciesConstructor(O, defaultConstructor) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    let C = Get(O, new Value('constructor'));
+
+    if (C instanceof AbruptCompletion) {
+      return C;
+    }
+
+    if (C instanceof Completion) {
+      C = C.Value;
+    }
+
+    if (C === Value.undefined) {
+      return defaultConstructor;
+    }
+
+    if (Type(C) !== 'Object') {
+      // TODO: throw with an error message
+      return surroundingAgent.Throw('TypeError');
+    }
+
+    let S = Get(C, wellKnownSymbols.species);
+
+    if (S instanceof AbruptCompletion) {
+      return S;
+    }
+
+    if (S instanceof Completion) {
+      S = S.Value;
+    }
+
+    if (S === Value.undefined || S === Value.null) {
+      return defaultConstructor;
+    }
+
+    if (IsConstructor(S) === Value.true) {
+      return S;
+    } // TODO: throw with an error message
+
+
+    return surroundingAgent.Throw('TypeError');
+  } // 7.3.21 #sec-enumerableownpropertynames
+
+  function EnumerableOwnPropertyNames(O, kind) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    let ownKeys = O.OwnPropertyKeys();
+
+    if (ownKeys instanceof AbruptCompletion) {
+      return ownKeys;
+    }
+
+    if (ownKeys instanceof Completion) {
+      ownKeys = ownKeys.Value;
+    }
+
+    const properties = [];
+
+    for (const key of ownKeys) {
+      if (Type(key) === 'String') {
+        let desc = O.GetOwnProperty(key);
+
+        if (desc instanceof AbruptCompletion) {
+          return desc;
+        }
+
+        if (desc instanceof Completion) {
+          desc = desc.Value;
+        }
+
+        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
+          if (kind === 'key') {
+            properties.push(key);
+          } else {
+            let value = Get(O, key);
+
+            if (value instanceof AbruptCompletion) {
+              return value;
+            }
+
+            if (value instanceof Completion) {
+              value = value.Value;
+            }
+
+            if (kind === 'value') {
+              properties.push(value);
+            } else {
+              Assert(kind === 'key+value', "kind === 'key+value'");
+              let entry = CreateArrayFromList([key, value]);
+              Assert(!(entry instanceof AbruptCompletion), "");
+
+              if (entry instanceof Completion) {
+                entry = entry.Value;
+              }
+
+              properties.push(entry);
+            }
+          }
+        }
+      }
+    } // Order the elements of properties so they are in the same relative
+    // order as would be produced by the Iterator that would be returned
+    // if the EnumerateObjectProperties internal method were invoked with O.
+
+
+    return properties;
+  } // 7.3.22 #sec-getfunctionrealm
+
+  function GetFunctionRealm(obj) {
+    let _val = IsCallable(obj);
+
+    Assert(!(_val instanceof AbruptCompletion), "");
+
+    if (_val instanceof Completion) {
+      _val = _val.Value;
+    }
+
+    Assert(_val === Value.true, "X(IsCallable(obj)) === Value.true");
+
+    if ('Realm' in obj) {
+      return obj.Realm;
+    }
+
+    if ('BoundTargetFunction' in obj) {
+      const target = obj.BoundTargetFunction;
+      return GetFunctionRealm(target);
+    }
+
+    if (obj instanceof ProxyExoticObjectValue) {
+      if (Type(obj.ProxyHandler) === 'Null') {
+        return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'GetFunctionRealm'));
+      }
+
+      const proxyTarget = obj.ProxyTarget;
+      return GetFunctionRealm(proxyTarget);
+    }
+
+    return surroundingAgent.currentRealmRecord;
+  } // 7.3.23 #sec-copydataproperties
+
+  function CopyDataProperties(target, source, excludedItems) {
+    Assert(Type(target) === 'Object', "Type(target) === 'Object'");
+    Assert(excludedItems.every(i => IsPropertyKey(i)), "excludedItems.every((i) => IsPropertyKey(i))");
+
+    if (source === Value.undefined || source === Value.null) {
+      return target;
+    }
+
+    let from = ToObject(source);
+    Assert(!(from instanceof AbruptCompletion), "");
+
+    if (from instanceof Completion) {
+      from = from.Value;
+    }
+
+    let keys = from.OwnPropertyKeys();
+
+    if (keys instanceof AbruptCompletion) {
+      return keys;
+    }
+
+    if (keys instanceof Completion) {
+      keys = keys.Value;
+    }
+
+    for (const nextKey of keys) {
+      let excluded = false;
+
+      for (const e of excludedItems) {
+        if (SameValue(e, nextKey) === Value.true) {
+          excluded = true;
+        }
+      }
+
+      if (excluded === false) {
+        let desc = from.GetOwnProperty(nextKey);
+
+        if (desc instanceof AbruptCompletion) {
+          return desc;
+        }
+
+        if (desc instanceof Completion) {
+          desc = desc.Value;
+        }
+
+        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
+          let propValue = Get(from, nextKey);
+
+          if (propValue instanceof AbruptCompletion) {
+            return propValue;
+          }
+
+          if (propValue instanceof Completion) {
+            propValue = propValue.Value;
+          }
+
+          Assert(!(CreateDataProperty(target, nextKey, propValue) instanceof AbruptCompletion), "");
+        }
+      }
+    }
+
+    return target;
+  }
+
+  function OrdinaryGetPrototypeOf(O) {
+    return O.Prototype;
+  } // 9.1.2.1 OrdinarySetPrototypeOf
+
+  function OrdinarySetPrototypeOf(O, V) {
+    Assert(Type(V) === 'Object' || Type(V) === 'Null', "Type(V) === 'Object' || Type(V) === 'Null'");
+    const current = O.Prototype;
+
+    if (SameValue(V, current) === Value.true) {
+      return Value.true;
+    }
+
+    const extensible = O.Extensible;
+
+    if (extensible === Value.false) {
+      return Value.false;
+    }
+
+    let p = V;
+    let done = false;
+
+    while (done === false) {
+      if (p === Value.null) {
+        done = true;
+      } else if (SameValue(p, O) === Value.true) {
+        return Value.false;
+      } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
+        done = true;
+      } else {
+        p = p.Prototype;
+      }
+    }
+
+    O.Prototype = V;
+    return Value.true;
+  } // 9.1.3.1 OrdinaryIsExtensible
+
+  function OrdinaryIsExtensible(O) {
+    return O.Extensible;
+  } // 9.1.4.1 OrdinaryPreventExtensions
+
+  function OrdinaryPreventExtensions(O) {
+    O.Extensible = Value.false;
+    return Value.true;
+  } // 9.1.5.1 OrdinaryGetOwnProperty
+
+  function OrdinaryGetOwnProperty(O, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+
+    if (!O.properties.has(P)) {
+      return Value.undefined;
+    }
+
+    const D = Descriptor({});
+    const x = O.properties.get(P);
+
+    if (IsDataDescriptor(x)) {
+      D.Value = x.Value;
+      D.Writable = x.Writable;
+    } else if (IsAccessorDescriptor(x)) {
+      D.Get = x.Get;
+      D.Set = x.Set;
+    }
+
+    D.Enumerable = x.Enumerable;
+    D.Configurable = x.Configurable;
+    return D;
+  } // 9.1.6.1 OrdinaryDefineOwnProperty
+
+  function OrdinaryDefineOwnProperty(O, P, Desc) {
+    let current = O.GetOwnProperty(P);
+
+    if (current instanceof AbruptCompletion) {
+      return current;
+    }
+
+    if (current instanceof Completion) {
+      current = current.Value;
+    }
+
+    let extensible = IsExtensible(O);
+
+    if (extensible instanceof AbruptCompletion) {
+      return extensible;
+    }
+
+    if (extensible instanceof Completion) {
+      extensible = extensible.Value;
+    }
+
+    return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
+  } // 9.1.6.2 #sec-iscompatiblepropertydescriptor
+
+  function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
+    return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
+  } // 9.1.6.3 ValidateAndApplyPropertyDescriptor
+
+  function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
+    Assert(O === Value.undefined || IsPropertyKey(P), "O === Value.undefined || IsPropertyKey(P)");
+
+    if (current === Value.undefined) {
+      if (extensible === Value.false) {
+        return Value.false;
+      }
+
+      Assert(extensible === Value.true, "extensible === Value.true");
+
+      if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
+        if (Type(O) !== 'Undefined') {
+          O.properties.set(P, Descriptor({
+            Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
+            Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
+            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
+            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
+          }));
+        }
+      } else {
+        Assert(IsAccessorDescriptor(Desc), "IsAccessorDescriptor(Desc)");
+
+        if (Type(O) !== 'Undefined') {
+          O.properties.set(P, Descriptor({
+            Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
+            Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
+            Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
+            Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
+          }));
+        }
+      }
+
+      return Value.true;
+    }
+
+    if (Desc.everyFieldIsAbsent()) {
+      return Value.true;
+    }
+
+    if (current.Configurable === Value.false) {
+      if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
+        return Value.false;
+      }
+
+      if (Desc.Enumerable !== undefined && Desc.Enumerable !== current.Enumerable) {
+        return Value.false;
+      }
+    }
+
+    if (IsGenericDescriptor(Desc)) ; else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
+      if (current.Configurable === Value.false) {
+        return Value.false;
+      }
+
+      if (IsDataDescriptor(current)) {
+        if (Type(O) !== 'Undefined') {
+          const entry = O.properties.get(P);
+          entry.Value = undefined;
+          entry.Writable = undefined;
+          entry.Get = Value.undefined;
+          entry.Set = Value.undefined;
+        }
+      } else {
+        if (Type(O) !== 'Undefined') {
+          const entry = O.properties.get(P);
+          entry.Get = undefined;
+          entry.Set = undefined;
+          entry.Value = Value.undefined;
+          entry.Writable = Value.false;
+        }
+      }
+    } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
+      if (current.Configurable === Value.false && current.Writable === Value.false) {
+        if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
+          return Value.false;
+        }
+
+        if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.false) {
+          return Value.false;
+        }
+
+        return Value.true;
+      }
+    } else {
+      Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc), "IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc)");
+
+      if (current.Configurable === Value.false) {
+        if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === Value.false) {
+          return Value.false;
+        }
+
+        if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get) === Value.false) {
+          return Value.false;
+        }
+
+        return Value.true;
+      }
+    }
+
+    if (Type(O) !== 'Undefined') {
+      const target = O.properties.get(P);
+
+      if (Desc.Value !== undefined) {
+        target.Value = Desc.Value;
+      }
+
+      if (Desc.Writable !== undefined) {
+        target.Writable = Desc.Writable;
+      }
+
+      if (Desc.Get !== undefined) {
+        target.Get = Desc.Get;
+      }
+
+      if (Desc.Set !== undefined) {
+        target.Set = Desc.Set;
+      }
+
+      if (Desc.Enumerable !== undefined) {
+        target.Enumerable = Desc.Enumerable;
+      }
+
+      if (Desc.Configurable !== undefined) {
+        target.Configurable = Desc.Configurable;
+      }
+    }
+
+    return Value.true;
+  } // 9.1.7.1 OrdinaryHasProperty
+
+  function OrdinaryHasProperty(O, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let hasOwn = O.GetOwnProperty(P);
+
+    if (hasOwn instanceof AbruptCompletion) {
+      return hasOwn;
+    }
+
+    if (hasOwn instanceof Completion) {
+      hasOwn = hasOwn.Value;
+    }
+
+    if (Type(hasOwn) !== 'Undefined') {
+      return Value.true;
+    }
+
+    let parent = O.GetPrototypeOf();
+
+    if (parent instanceof AbruptCompletion) {
+      return parent;
+    }
+
+    if (parent instanceof Completion) {
+      parent = parent.Value;
+    }
+
+    if (Type(parent) !== 'Null') {
+      return parent.HasProperty(P);
+    }
+
+    return Value.false;
+  } // 9.1.8.1
+
+  function OrdinaryGet(O, P, Receiver) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let desc = O.GetOwnProperty(P);
+
+    if (desc instanceof AbruptCompletion) {
+      return desc;
+    }
+
+    if (desc instanceof Completion) {
+      desc = desc.Value;
+    }
+
+    if (Type(desc) === 'Undefined') {
+      let parent = O.GetPrototypeOf();
+
+      if (parent instanceof AbruptCompletion) {
+        return parent;
+      }
+
+      if (parent instanceof Completion) {
+        parent = parent.Value;
+      }
+
+      if (Type(parent) === 'Null') {
+        return Value.undefined;
+      }
+
+      return parent.Get(P, Receiver);
+    }
+
+    if (IsDataDescriptor(desc)) {
+      return desc.Value;
+    }
+
+    Assert(IsAccessorDescriptor(desc), "IsAccessorDescriptor(desc)");
+    const getter = desc.Get;
+
+    if (Type(getter) === 'Undefined') {
+      return Value.undefined;
+    }
+
+    return Call(getter, Receiver);
+  } // 9.1.9.1 OrdinarySet
+
+  function OrdinarySet(O, P, V, Receiver) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let ownDesc = O.GetOwnProperty(P);
+
+    if (ownDesc instanceof AbruptCompletion) {
+      return ownDesc;
+    }
+
+    if (ownDesc instanceof Completion) {
+      ownDesc = ownDesc.Value;
+    }
+
+    return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
+  } // 9.1.9.2 OrdinarySetWithOwnDescriptor
+
+  function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+
+    if (Type(ownDesc) === 'Undefined') {
+      let parent = O.GetPrototypeOf();
+
+      if (parent instanceof AbruptCompletion) {
+        return parent;
+      }
+
+      if (parent instanceof Completion) {
+        parent = parent.Value;
+      }
+
+      if (Type(parent) !== 'Null') {
+        return parent.Set(P, V, Receiver);
+      }
+
+      ownDesc = Descriptor({
+        Value: Value.undefined,
+        Writable: Value.true,
+        Enumerable: Value.true,
+        Configurable: Value.true
+      });
+    }
+
+    if (IsDataDescriptor(ownDesc)) {
+      if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
+        return Value.false;
+      }
+
+      if (Type(Receiver) !== 'Object') {
+        return Value.false;
+      }
+
+      let existingDescriptor = Receiver.GetOwnProperty(P);
+
+      if (existingDescriptor instanceof AbruptCompletion) {
+        return existingDescriptor;
+      }
+
+      if (existingDescriptor instanceof Completion) {
+        existingDescriptor = existingDescriptor.Value;
+      }
+
+      if (Type(existingDescriptor) !== 'Undefined') {
+        if (IsAccessorDescriptor(existingDescriptor)) {
+          return Value.false;
+        }
+
+        if (existingDescriptor.Writable === Value.false) {
+          return Value.false;
+        }
+
+        const valueDesc = Descriptor({
+          Value: V
+        });
+        return Receiver.DefineOwnProperty(P, valueDesc);
+      }
+
+      return CreateDataProperty(Receiver, P, V);
+    }
+
+    Assert(IsAccessorDescriptor(ownDesc), "IsAccessorDescriptor(ownDesc)");
+    const setter = ownDesc.Set;
+
+    if (setter === undefined || Type(setter) === 'Undefined') {
+      return Value.false;
+    }
+
+    {
+      const hygienicTemp = Call(setter, Receiver, [V]);
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    return Value.true;
+  } // 9.1.10.1 OrdinaryDelete
+
+  function OrdinaryDelete(O, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let desc = O.GetOwnProperty(P);
+
+    if (desc instanceof AbruptCompletion) {
+      return desc;
+    }
+
+    if (desc instanceof Completion) {
+      desc = desc.Value;
+    }
+
+    if (Type(desc) === 'Undefined') {
+      return Value.true;
+    }
+
+    if (desc.Configurable === Value.true) {
+      O.properties.delete(P);
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 9.1.11.1
+
+  function OrdinaryOwnPropertyKeys(O) {
+    const keys = []; // For each own property key P of O that is an array index, in ascending numeric index order, do
+    //   Add P as the last element of keys.
+
+    for (const P of O.properties.keys()) {
+      if (isArrayIndex(P)) {
+        keys.push(P);
+      }
+    }
+
+    keys.sort((a, b) => Number.parseInt(a.stringValue(), 10) - Number.parseInt(b.stringValue(), 10)); // For each own property key P of O such that Type(P) is String and
+    // P is not an array index, in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'String' && isArrayIndex(P) === false) {
+        keys.push(P);
+      }
+    } // For each own property key P of O such that Type(P) is Symbol,
+    // in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+
+
+    for (const P of O.properties.keys()) {
+      if (Type(P) === 'Symbol') {
+        keys.push(P);
+      }
+    }
+
+    return keys;
+  } // 9.1.12 ObjectCreate
+
+  function ObjectCreate(proto, internalSlotsList) {
+    Assert(Type(proto) === 'Null' || Type(proto) === 'Object', "Type(proto) === 'Null' || Type(proto) === 'Object'");
+
+    if (!internalSlotsList) {
+      internalSlotsList = [];
+    }
+
+    const obj = new ObjectValue();
+
+    for (const slot of internalSlotsList) {
+      obj[slot] = Value.undefined;
+    } // The following steps happen in ObjectValue constructor:
+    //
+    // Set obj's essential internal methods to the default ordinary
+    // object definitions specified in 9.1.
+
+
+    obj.Prototype = proto;
+    obj.Extensible = Value.true;
+    return obj;
+  } // 9.1.13 OrdinaryCreateFromConstructor
+
+  function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
+    let proto = GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
+
+    if (proto instanceof AbruptCompletion) {
+      return proto;
+    }
+
+    if (proto instanceof Completion) {
+      proto = proto.Value;
+    }
+
+    return ObjectCreate(proto, internalSlotsList);
+  } // 9.1.14 GetPrototypeFromConstructor
+
+  function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
+    // Assert: intrinsicDefaultProto is a String value that
+    // is this specification's name of an intrinsic object.
+    Assert(IsCallable(constructor) === Value.true, "IsCallable(constructor) === Value.true");
+    let proto = Get(constructor, new Value('prototype'));
+
+    if (proto instanceof AbruptCompletion) {
+      return proto;
+    }
+
+    if (proto instanceof Completion) {
+      proto = proto.Value;
+    }
+
+    if (Type(proto) !== 'Object') {
+      let realm = GetFunctionRealm(constructor);
+
+      if (realm instanceof AbruptCompletion) {
+        return realm;
+      }
+
+      if (realm instanceof Completion) {
+        realm = realm.Value;
+      }
+
+      proto = realm.Intrinsics[intrinsicDefaultProto];
+    }
+
+    return proto;
+  } // 9.4.5.7 #sec-integerindexedobjectcreate
+
+  function IntegerIndexedObjectCreate(prototype, internalSlotsList) {
+    Assert(internalSlotsList.includes('ViewedArrayBuffer'), "internalSlotsList.includes('ViewedArrayBuffer')");
+    Assert(internalSlotsList.includes('ArrayLength'), "internalSlotsList.includes('ArrayLength')");
+    Assert(internalSlotsList.includes('ByteOffset'), "internalSlotsList.includes('ByteOffset')");
+    Assert(internalSlotsList.includes('TypedArrayName'), "internalSlotsList.includes('TypedArrayName')");
+    const A = new IntegerIndexedExoticObjectValue();
+
+    for (const slot of internalSlotsList) {
+      A[slot] = Value.undefined;
+    }
+
+    A.Prototype = prototype;
+    A.Extensible = Value.true;
+    return A;
+  } // 9.4.5.8 #sec-integerindexedelementget
+
+  function IntegerIndexedElementGet(O, index) {
+    Assert(Type(index) === 'Number', "Type(index) === 'Number'");
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O && 'ArrayLength' in O && 'ByteOffset' in O && 'TypedArrayName' in O, "O instanceof ObjectValue\n      && 'ViewedArrayBuffer' in O\n      && 'ArrayLength' in O\n      && 'ByteOffset' in O\n      && 'TypedArrayName' in O");
+    const buffer = O.ViewedArrayBuffer;
+
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+    }
+
+    if (IsInteger(index) === Value.false) {
+      return Value.undefined;
+    }
+
+    index = index.numberValue();
+
+    if (Object.is(index, -0)) {
+      return Value.undefined;
+    }
+
+    const length = O.ArrayLength.numberValue();
+
+    if (index < 0 || index >= length) {
+      return Value.undefined;
+    }
+
+    const offset = O.ByteOffset.numberValue();
+    const arrayTypeName = O.TypedArrayName.stringValue();
+    const {
+      ElementSize: elementSize,
+      ElementType: elementType
+    } = typedArrayInfo.get(arrayTypeName);
+    const indexedPosition = index * elementSize + offset;
+    return GetValueFromBuffer(buffer, new Value(indexedPosition), elementType);
+  } // 9.4.5.9 #sec-integerindexedelementset
+
+  function IntegerIndexedElementSet(O, index, value) {
+    Assert(Type(index) === 'Number', "Type(index) === 'Number'");
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O && 'ArrayLength' in O && 'ByteOffset' in O && 'TypedArrayName' in O, "O instanceof ObjectValue\n      && 'ViewedArrayBuffer' in O\n      && 'ArrayLength' in O\n      && 'ByteOffset' in O\n      && 'TypedArrayName' in O");
+    let numValue = ToNumber(value);
+
+    if (numValue instanceof AbruptCompletion) {
+      return numValue;
+    }
+
+    if (numValue instanceof Completion) {
+      numValue = numValue.Value;
+    }
+
+    const buffer = O.ViewedArrayBuffer;
+
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+    }
+
+    if (IsInteger(index) === Value.false) {
+      return Value.false;
+    }
+
+    if (Object.is(index.numberValue(), -0)) {
+      return Value.false;
+    }
+
+    const length = O.ArrayLength;
+
+    if (index.numberValue() < 0 || index.numberValue() >= length.numberValue()) {
+      return Value.false;
+    }
+
+    const offset = O.ByteOffset;
+    const arrayTypeName = O.TypedArrayName.stringValue();
+    const {
+      ElementSize: elementSize,
+      ElementType: elementType
+    } = typedArrayInfo.get(arrayTypeName);
+    const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue());
+    Assert(!(SetValueInBuffer(buffer, indexedPosition, elementType, numValue) instanceof AbruptCompletion), "");
+    return Value.true;
+  }
+
+  // 25.6 #sec-promise-objects
+  // 25.6.1.1 #sec-promisecapability-records
+
+  class PromiseCapabilityRecord {
+    constructor() {
+      this.Promise = Value.undefined;
+      this.Resolve = Value.undefined;
+      this.Reject = Value.undefined;
+    }
+
+  } // 25.6.1.2 #sec-promisereaction-records
+
+  class PromiseReactionRecord {
+    constructor(O) {
+      Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
+      Assert(O.Type === 'Fulfill' || O.Type === 'Reject', "O.Type === 'Fulfill' || O.Type === 'Reject'");
+      Assert(O.Handler instanceof FunctionValue || O.Handler === Value.undefined, "O.Handler instanceof FunctionValue\n        || O.Handler === Value.undefined");
+      this.Capability = O.Capability;
+      this.Type = O.Type;
+      this.Handler = O.Handler;
+    }
+
+  } // 25.6.1.3 #sec-createresolvingfunctions
+
+  function CreateResolvingFunctions(promise) {
+    const alreadyResolved = {
+      Value: false
+    };
+    const stepsResolve = PromiseResolveFunctions;
+    let resolve = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
+    Assert(!(resolve instanceof AbruptCompletion), "");
+
+    if (resolve instanceof Completion) {
+      resolve = resolve.Value;
+    }
+
+    SetFunctionLength(resolve, new Value(1));
+    resolve.Promise = promise;
+    resolve.AlreadyResolved = alreadyResolved;
+    const stepsReject = PromiseRejectFunctions;
+    let reject = CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']);
+    Assert(!(reject instanceof AbruptCompletion), "");
+
+    if (reject instanceof Completion) {
+      reject = reject.Value;
+    }
+
+    SetFunctionLength(reject, new Value(1));
+    reject.Promise = promise;
+    reject.AlreadyResolved = alreadyResolved;
+    return {
+      Resolve: resolve,
+      Reject: reject
+    };
+  } // 25.6.1.3.1 #sec-promise-reject-functions
+
+  function PromiseRejectFunctions([reason = Value.undefined]) {
+    const F = this;
+    Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'");
+    const promise = F.Promise;
+    const alreadyResolved = F.AlreadyResolved;
+
+    if (alreadyResolved.Value === true) {
+      return Value.undefined;
+    }
+
+    alreadyResolved.Value = true;
+    return RejectPromise(promise, reason);
+  } // 25.6.1.3.2 #sec-promise-resolve-functions
+
+
+  function PromiseResolveFunctions([resolution = Value.undefined]) {
+    const F = this;
+    Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'");
+    const promise = F.Promise;
+    const alreadyResolved = F.AlreadyResolved;
+
+    if (alreadyResolved.Value === true) {
+      return Value.undefined;
+    }
+
+    alreadyResolved.Value = true;
+
+    if (SameValue(resolution, promise) === Value.true) {
+      const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
+      return RejectPromise(promise, selfResolutionError);
+    }
+
+    if (Type(resolution) !== 'Object') {
+      return FulfillPromise(promise, resolution);
+    }
+
+    const then = Get(resolution, new Value('then'));
+
+    if (then instanceof AbruptCompletion) {
+      return RejectPromise(promise, then.Value);
+    }
+
+    const thenAction = then.Value;
+
+    if (IsCallable(thenAction) === Value.false) {
+      return FulfillPromise(promise, resolution);
+    }
+
+    EnqueueJob('PromiseJobs', PromiseResolveThenableJob, [promise, resolution, thenAction]);
+    return Value.undefined;
+  } // 25.6.1.4 #sec-fulfillpromise
+
+
+  function FulfillPromise(promise, value) {
+    Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
+    const reactions = promise.PromiseFulfillReactions;
+    promise.PromiseResult = value;
+    promise.PromiseFulfillReactions = undefined;
+    promise.PromiseRejectReactions = undefined;
+    promise.PromiseState = 'fulfilled';
+    return TriggerPromiseReactions(reactions, value);
+  } // 25.6.1.5 #sec-newpromisecapability
+
+
+  function NewPromiseCapability(C) {
+    if (IsConstructor(C) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    }
+
+    const promiseCapability = new PromiseCapabilityRecord();
+    const steps = GetCapabilitiesExecutorFunctions;
+    let executor = CreateBuiltinFunction(steps, ['Capability']);
+    Assert(!(executor instanceof AbruptCompletion), "");
+
+    if (executor instanceof Completion) {
+      executor = executor.Value;
+    }
+
+    SetFunctionLength(executor, new Value(2));
+    executor.Capability = promiseCapability;
+    let promise = Construct(C, [executor]);
+
+    if (promise instanceof AbruptCompletion) {
+      return promise;
+    }
+
+    if (promise instanceof Completion) {
+      promise = promise.Value;
+    }
+
+    if (IsCallable(promiseCapability.Resolve) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('PromiseResolveFunction', promiseCapability.Resolve));
+    }
+
+    if (IsCallable(promiseCapability.Reject) === Value.false) {
+      return surroundingAgent.Throw('TypeError', msg('PromiseRejectFunction', promiseCapability.Reject));
+    }
+
+    promiseCapability.Promise = promise;
+    return promiseCapability;
+  } // 25.6.1.5.1 #sec-getcapabilitiesexecutor-functions
+
+  function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
+    const F = this;
+    const promiseCapability = F.Capability;
+
+    if (Type(promiseCapability.Resolve) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
+    }
+
+    if (Type(promiseCapability.Reject) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
+    }
+
+    promiseCapability.Resolve = resolve;
+    promiseCapability.Reject = reject;
+    return Value.undefined;
+  } // 25.6.1.6 #sec-ispromise
+
+
+  function IsPromise(x) {
+    if (Type(x) !== 'Object') {
+      return Value.false;
+    }
+
+    if (!('PromiseState' in x)) {
+      return Value.false;
+    }
+
+    return Value.true;
+  } // 25.6.1.7 #sec-rejectpromise
+
+  function RejectPromise(promise, reason) {
+    Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
+    const reactions = promise.PromiseRejectReactions;
+    promise.PromiseResult = reason;
+    promise.PromiseFulfillReactions = undefined;
+    promise.PromiseRejectReactions = undefined;
+    promise.PromiseState = 'rejected';
+
+    if (promise.PromiseIsHandled === Value.false) {
+      HostPromiseRejectionTracker(promise, 'reject');
+    }
+
+    return TriggerPromiseReactions(reactions, reason);
+  } // 25.6.1.8 #sec-triggerpromisereactions
+
+
+  function TriggerPromiseReactions(reactions, argument) {
+    reactions.forEach(reaction => {
+      EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
+    });
+    return Value.undefined;
+  } // 25.6.2.1 #sec-promisereactionjob
+
+
+  function PromiseReactionJob(reaction, argument) {
+    Assert(reaction instanceof PromiseReactionRecord, "reaction instanceof PromiseReactionRecord");
+    const promiseCapability = reaction.Capability;
+    const type = reaction.Type;
+    const handler = reaction.Handler;
+    let handlerResult;
+
+    if (handler === Value.undefined) {
+      if (type === 'Fulfill') {
+        handlerResult = new NormalCompletion(argument);
+      } else {
+        Assert(type === 'Reject', "type === 'Reject'");
+        handlerResult = new ThrowCompletion(argument);
+      }
+    } else {
+      handlerResult = Call(handler, Value.undefined, [argument]);
+    }
+
+    if (promiseCapability === Value.undefined) {
+      Assert(!(handlerResult instanceof AbruptCompletion), "!(handlerResult instanceof AbruptCompletion)");
+      return new NormalCompletion(undefined);
+    }
+
+    let status;
+
+    if (handlerResult instanceof AbruptCompletion) {
+      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+    } else {
+      status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
+    }
+
+    return status;
+  } // 25.6.2.2 #sec-promiseresolvethenablejob
+
+  function PromiseResolveThenableJob(promiseToResolve, thenable, then) {
+    const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
+    const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
+
+    if (thenCallResult instanceof AbruptCompletion) {
+      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
+      return status;
+    }
+
+    return thenCallResult;
+  } // 25.6.4.5.1 #sec-promise-resolve
+
+
+  function PromiseResolve(C, x) {
+    Assert(Type(C) === 'Object', "Type(C) === 'Object'");
+
+    if (IsPromise(x) === Value.true) {
+      let xConstructor = Get(x, new Value('constructor'));
+
+      if (xConstructor instanceof AbruptCompletion) {
+        return xConstructor;
+      }
+
+      if (xConstructor instanceof Completion) {
+        xConstructor = xConstructor.Value;
+      }
+
+      if (SameValue(xConstructor, C) === Value.true) {
+        return x;
+      }
+    }
+
+    let promiseCapability = NewPromiseCapability(C);
+
+    if (promiseCapability instanceof AbruptCompletion) {
+      return promiseCapability;
+    }
+
+    if (promiseCapability instanceof Completion) {
+      promiseCapability = promiseCapability.Value;
+    }
+
+    {
+      const hygienicTemp = Call(promiseCapability.Resolve, Value.undefined, [x]);
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    return promiseCapability.Promise;
+  } // 25.6.5.4.1 #sec-performpromisethen
+
+  function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+    Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true");
+
+    if (resultCapability) {
+      Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
+    } else {
+      resultCapability = Value.undefined;
+    }
+
+    if (IsCallable(onFulfilled) === Value.false) {
+      onFulfilled = Value.undefined;
+    }
+
+    if (IsCallable(onRejected) === Value.false) {
+      onRejected = Value.undefined;
+    }
+
+    const fulfillReaction = new PromiseReactionRecord({
+      Capability: resultCapability,
+      Type: 'Fulfill',
+      Handler: onFulfilled
+    });
+    const rejectReaction = new PromiseReactionRecord({
+      Capability: resultCapability,
+      Type: 'Reject',
+      Handler: onRejected
+    });
+
+    if (promise.PromiseState === 'pending') {
+      promise.PromiseFulfillReactions.push(fulfillReaction);
+      promise.PromiseRejectReactions.push(rejectReaction);
+    } else if (promise.PromiseState === 'fulfilled') {
+      const value = promise.PromiseResult;
+      EnqueueJob('PromiseJobs', PromiseReactionJob, [fulfillReaction, value]);
+    } else {
+      Assert(promise.PromiseState === 'rejected', "promise.PromiseState === 'rejected'");
+      const reason = promise.PromiseResult;
+
+      if (promise.PromiseIsHandled === Value.false) {
+        HostPromiseRejectionTracker(promise, 'handler');
+      }
+
+      EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
+    }
+
+    promise.PromiseIsHandled = Value.true;
+
+    if (resultCapability === Value.undefined) {
+      return Value.undefined;
+    } else {
+      return resultCapability.Promise;
+    }
+  }
+
+  function GetBase(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+    return V.BaseValue;
+  } // 6.2.4.2 #sec-getreferencedname
+
+  function GetReferencedName(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+    return V.ReferencedName;
+  } // 6.2.4.3 #sec-isstrictreference
+
+  function IsStrictReference(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+    return V.StrictReference;
+  } // 6.2.4.4 #sec-hasprimitivebase
+
+  function HasPrimitiveBase(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+
+    if (V.BaseValue instanceof PrimitiveValue) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 6.2.4.5 #sec-ispropertyreference
+
+  function IsPropertyReference(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+
+    if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V) === Value.true) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 6.2.4.6 #sec-isunresolvablereference
+
+  function IsUnresolvableReference(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+
+    if (V.BaseValue === Value.undefined) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 6.2.4.7 #sec-issuperreference
+
+  function IsSuperReference(V) {
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+    return 'ThisValue' in V ? Value.true : Value.false;
+  } // 6.2.4.8 #sec-getvalue
+
+  function GetValue(V) {
+    if (V instanceof AbruptCompletion) {
+      return V;
+    }
+
+    if (V instanceof Completion) {
+      V = V.Value;
+    }
+
+    if (Type(V) !== 'Reference') {
+      return V;
+    }
+
+    let base = GetBase(V);
+
+    if (IsUnresolvableReference(V) === Value.true) {
+      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
+    }
+
+    if (IsPropertyReference(V) === Value.true) {
+      if (HasPrimitiveBase(V) === Value.true) {
+        Assert(base !== Value.undefined && base !== Value.null, "base !== Value.undefined && base !== Value.null");
+        base = ToObject(base);
+        Assert(!(base instanceof AbruptCompletion), "");
+
+        if (base instanceof Completion) {
+          base = base.Value;
+        }
+      }
+
+      return base.Get(GetReferencedName(V), GetThisValue(V));
+    } else {
+      return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
+    }
+  } // 6.2.4.9 #sec-putvalue
+
+  function PutValue(V, W) {
+    if (V instanceof AbruptCompletion) {
+      return V;
+    }
+
+    if (V instanceof Completion) {
+      V = V.Value;
+    }
+
+    if (W instanceof AbruptCompletion) {
+      return W;
+    }
+
+    if (W instanceof Completion) {
+      W = W.Value;
+    }
+
+    if (Type(V) !== 'Reference') {
+      return surroundingAgent.Throw('ReferenceError');
+    }
+
+    let base = GetBase(V);
+
+    if (IsUnresolvableReference(V) === Value.true) {
+      if (IsStrictReference(V) === Value.true) {
+        return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
+      }
+
+      const globalObj = GetGlobalObject();
+      return Set$1(globalObj, GetReferencedName(V), W, Value.false);
+    } else if (IsPropertyReference(V) === Value.true) {
+      if (HasPrimitiveBase(V) === Value.true) {
+        Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null', "Type(base) !== 'Undefined' && Type(base) !== 'Null'");
+        base = ToObject(base);
+        Assert(!(base instanceof AbruptCompletion), "");
+
+        if (base instanceof Completion) {
+          base = base.Value;
+        }
+      }
+
+      let succeeded = base.Set(GetReferencedName(V), W, GetThisValue(V));
+
+      if (succeeded instanceof AbruptCompletion) {
+        return succeeded;
+      }
+
+      if (succeeded instanceof Completion) {
+        succeeded = succeeded.Value;
+      }
+
+      if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
+        return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferencedName(V), base));
+      }
+
+      return new NormalCompletion(Value.undefined);
+    } else {
+      return base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V));
+    }
+  } // 6.2.4.10 #sec-getthisvalue
+
+  function GetThisValue(V) {
+    Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true");
+
+    if (IsSuperReference(V) === Value.true) {
+      return V.ThisValue;
+    }
+
+    return GetBase(V);
+  } // 6.2.4.11 #sec-initializereferencedbinding
+
+  function InitializeReferencedBinding(V, W) {
+    if (V instanceof AbruptCompletion) {
+      return V;
+    }
+
+    if (V instanceof Completion) {
+      V = V.Value;
+    }
+
+    if (W instanceof AbruptCompletion) {
+      return W;
+    }
+
+    if (W instanceof Completion) {
+      W = W.Value;
+    }
+
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+    Assert(IsUnresolvableReference(V) === Value.false, "IsUnresolvableReference(V) === Value.false");
+    const base = GetBase(V);
+    Assert(Type(base) === 'EnvironmentRecord', "Type(base) === 'EnvironmentRecord'");
+    return base.InitializeBinding(GetReferencedName(V), W);
+  }
+
+  function RegExpAlloc(newTarget) {
+    let obj = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
+
+    if (obj instanceof AbruptCompletion) {
+      return obj;
+    }
+
+    if (obj instanceof Completion) {
+      obj = obj.Value;
+    }
+
+    Assert(!(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+    return obj;
+  } // 21.2.3.2.2 #sec-regexpinitialize
+
+  function RegExpInitialize(obj, pattern, flags) {
+    let P;
+
+    if (pattern === Value.undefined) {
+      P = new Value('');
+    } else {
+      P = ToString(pattern);
+
+      if (P instanceof AbruptCompletion) {
+        return P;
+      }
+
+      if (P instanceof Completion) {
+        P = P.Value;
+      }
+    }
+
+    let F;
+
+    if (flags === Value.undefined) {
+      F = new Value('');
+    } else {
+      F = ToString(flags);
+
+      if (F instanceof AbruptCompletion) {
+        return F;
+      }
+
+      if (F instanceof Completion) {
+        F = F.Value;
+      }
+    }
+
+    const f = F.stringValue();
+
+    if (/^[gimsuy]*$/.test(f) === false || new global.Set(f).size !== f.length) {
+      return surroundingAgent.Throw('SyntaxError', msg('InvalidRegExpFlags', f));
+    }
+
+    const BMP = !f.includes('u');
+      // TODO: remove this once internal parsing is implemented
+
+
+    try {
+      new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        return surroundingAgent.Throw('SyntaxError', e.message);
+      }
+
+      throw e;
+    }
+
+    obj.OriginalSource = P;
+    obj.OriginalFlags = F;
+    obj.RegExpMatcher = getMatcher(P, F);
+    {
+      const hygienicTemp = Set$1(obj, new Value('lastIndex'), new Value(0), Value.true);
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    return obj;
+  } // TODO: implement an independant matcher
+
+  function getMatcher(P, F) {
+    const regex = new RegExp(P.stringValue(), F.stringValue());
+    const unicode = F.stringValue().includes('u');
+    return function RegExpMatcher(S, lastIndex) {
+      regex.lastIndex = lastIndex.numberValue();
+      const result = regex.exec(S.stringValue());
+
+      if (result === null) {
+        return null;
+      }
+
+      if (result.index > lastIndex.numberValue()) {
+        return null;
+      }
+
+      const captures = [];
+
+      for (const capture of result.slice(1)) {
+        if (capture === undefined) {
+          captures.push(Value.undefined);
+        } else if (unicode) {
+          captures.push(Array.from(capture).map(char => char.codePointAt(0)));
+        } else {
+          captures.push(capture.split('').map(char => char.charCodeAt(0)));
+        }
+      }
+
+      return {
+        endIndex: new Value(result.index + result[0].length),
+        captures
+      };
+    };
+  } // 21.2.3.2.3 #sec-regexpcreate
+
+
+  function RegExpCreate(P, F) {
+    let obj = RegExpAlloc(surroundingAgent.intrinsic('%RegExp%'));
+
+    if (obj instanceof AbruptCompletion) {
+      return obj;
+    }
+
+    if (obj instanceof Completion) {
+      obj = obj.Value;
+    }
+
+    return RegExpInitialize(obj, P, F);
+  } // 21.2.3.2.4 #sec-escaperegexppattern
+
+  function EscapeRegExpPattern(P, F) {
+    // TODO: implement this without host
+    const re = new RegExp(P.stringValue(), F.stringValue());
+    return new Value(re.source);
+  }
+
+  // 10 #sec-ecmascript-language-source-code
+  // 10.1.1 #sec-utf16encoding
+
+  function UTF16Encoding(cp) {
+    Assert(cp >= 0 && cp <= 0x10FFFF, "cp >= 0 && cp <= 0x10FFFF");
+
+    if (cp <= 0xFFFF) {
+      return [cp];
+    }
+
+    const cu1 = Math.floor((cp - 0x10000) / 0x400) + 0xD800;
+    const cu2 = (cp - 0x10000) % 0x400 + 0xDC00;
+    return [cu1, cu2];
+  } // 10.1.2 #sec-utf16decode
+
+  function UTF16Decode(lead, trail) {
+    Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail), "isLeadingSurrogate(lead) && isTrailingSurrogate(trail)");
+    const cp = (lead - 0xD800) * 0x400 + (trail - 0xDC00) + 0x10000;
+    return cp;
+  } // 10.1.3 #sec-codepointat
+
+  function CodePointAt(string, position) {
+    const size = string.stringValue().length;
+    Assert(position >= 0 && position < size, "position >= 0 && position < size");
+    const first = string.stringValue().charCodeAt(position);
+    let cp = first;
+
+    if (!isLeadingSurrogate(first) && !isTrailingSurrogate(first)) {
+      return {
+        CodePoint: new Value(cp),
+        CodeUnitCount: new Value(1),
+        IsUnpairedSurrogate: Value.false
+      };
+    }
+
+    if (isTrailingSurrogate(first) || position + 1 === size) {
+      return {
+        CodePoint: new Value(cp),
+        CodeUnitCount: new Value(1),
+        IsUnpairedSurrogate: Value.true
+      };
+    }
+
+    const second = string.stringValue().charCodeAt(position + 1);
+
+    if (!isTrailingSurrogate(second)) {
+      return {
+        CodePoint: new Value(cp),
+        CodeUnitCount: new Value(1),
+        IsUnpairedSurrogate: Value.true
+      };
+    }
+
+    cp = UTF16Decode(first, second);
+    Assert(!(cp instanceof AbruptCompletion), "");
+
+    if (cp instanceof Completion) {
+      cp = cp.Value;
+    }
+
+    return {
+      CodePoint: new Value(cp),
+      CodeUnitCount: new Value(2),
+      IsUnpairedSurrogate: Value.false
+    };
+  }
+
+  function IsAccessorDescriptor(Desc) {
+    if (Type(Desc) === 'Undefined') {
+      return false;
+    }
+
+    if (Desc.Get === undefined && Desc.Set === undefined) {
+      return false;
+    }
+
+    return true;
+  } // 6.2.5.2 IsDataDescriptor
+
+  function IsDataDescriptor(Desc) {
+    if (Type(Desc) === 'Undefined') {
+      return false;
+    }
+
+    if (Desc.Value === undefined && Desc.Writable === undefined) {
+      return false;
+    }
+
+    return true;
+  } // 6.2.5.3 IsGenericDescriptor
+
+  function IsGenericDescriptor(Desc) {
+    if (Type(Desc) === 'Undefined') {
+      return false;
+    }
+
+    if (!IsAccessorDescriptor(Desc) && !IsDataDescriptor(Desc)) {
+      return true;
+    }
+
+    return false;
+  } // 6.2.5.4 #sec-frompropertydescriptor
+
+  function FromPropertyDescriptor(Desc) {
+    if (Type(Desc) === 'Undefined') {
+      return Value.undefined;
+    }
+
+    const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+
+    if (Desc.Value !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('value'), Desc.Value) instanceof AbruptCompletion), "");
+    }
+
+    if (Desc.Writable !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('writable'), Desc.Writable) instanceof AbruptCompletion), "");
+    }
+
+    if (Desc.Get !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('get'), Desc.Get) instanceof AbruptCompletion), "");
+    }
+
+    if (Desc.Set !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('set'), Desc.Set) instanceof AbruptCompletion), "");
+    }
+
+    if (Desc.Enumerable !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable) instanceof AbruptCompletion), "");
+    }
+
+    if (Desc.Configurable !== undefined) {
+      Assert(!(CreateDataProperty(obj, new Value('configurable'), Desc.Configurable) instanceof AbruptCompletion), "");
+    } // Assert: All of the above CreateDataProperty operations return true.
+
+
+    return obj;
+  } // 6.2.5.5 #sec-topropertydescriptor
+
+  function ToPropertyDescriptor(Obj) {
+    if (Type(Obj) !== 'Object') {
+      return surroundingAgent.Throw('TypeError', msg('NotAnObject', Obj));
+    }
+
+    const desc = Descriptor({});
+    let hasEnumerable = HasProperty(Obj, new Value('enumerable'));
+
+    if (hasEnumerable instanceof AbruptCompletion) {
+      return hasEnumerable;
+    }
+
+    if (hasEnumerable instanceof Completion) {
+      hasEnumerable = hasEnumerable.Value;
+    }
+
+    if (hasEnumerable === Value.true) {
+      let _hygienicTemp = Get(Obj, new Value('enumerable'));
+
+      if (_hygienicTemp instanceof AbruptCompletion) {
+        return _hygienicTemp;
+      }
+
+      if (_hygienicTemp instanceof Completion) {
+        _hygienicTemp = _hygienicTemp.Value;
+      }
+
+      const enumerable = ToBoolean(_hygienicTemp);
+      desc.Enumerable = enumerable;
+    }
+
+    let hasConfigurable = HasProperty(Obj, new Value('configurable'));
+
+    if (hasConfigurable instanceof AbruptCompletion) {
+      return hasConfigurable;
+    }
+
+    if (hasConfigurable instanceof Completion) {
+      hasConfigurable = hasConfigurable.Value;
+    }
+
+    if (hasConfigurable === Value.true) {
+      let _hygienicTemp2 = Get(Obj, new Value('configurable'));
+
+      if (_hygienicTemp2 instanceof AbruptCompletion) {
+        return _hygienicTemp2;
+      }
+
+      if (_hygienicTemp2 instanceof Completion) {
+        _hygienicTemp2 = _hygienicTemp2.Value;
+      }
+
+      const conf = ToBoolean(_hygienicTemp2);
+      desc.Configurable = conf;
+    }
+
+    let hasValue = HasProperty(Obj, new Value('value'));
+
+    if (hasValue instanceof AbruptCompletion) {
+      return hasValue;
+    }
+
+    if (hasValue instanceof Completion) {
+      hasValue = hasValue.Value;
+    }
+
+    if (hasValue === Value.true) {
+      let value = Get(Obj, new Value('value'));
+
+      if (value instanceof AbruptCompletion) {
+        return value;
+      }
+
+      if (value instanceof Completion) {
+        value = value.Value;
+      }
+
+      desc.Value = value;
+    }
+
+    let hasWritable = HasProperty(Obj, new Value('writable'));
+
+    if (hasWritable instanceof AbruptCompletion) {
+      return hasWritable;
+    }
+
+    if (hasWritable instanceof Completion) {
+      hasWritable = hasWritable.Value;
+    }
+
+    if (hasWritable === Value.true) {
+      let _hygienicTemp3 = Get(Obj, new Value('writable'));
+
+      if (_hygienicTemp3 instanceof AbruptCompletion) {
+        return _hygienicTemp3;
+      }
+
+      if (_hygienicTemp3 instanceof Completion) {
+        _hygienicTemp3 = _hygienicTemp3.Value;
+      }
+
+      const writable = ToBoolean(_hygienicTemp3);
+      desc.Writable = writable;
+    }
+
+    let hasGet = HasProperty(Obj, new Value('get'));
+
+    if (hasGet instanceof AbruptCompletion) {
+      return hasGet;
+    }
+
+    if (hasGet instanceof Completion) {
+      hasGet = hasGet.Value;
+    }
+
+    if (hasGet === Value.true) {
+      let getter = Get(Obj, new Value('get'));
+
+      if (getter instanceof AbruptCompletion) {
+        return getter;
+      }
+
+      if (getter instanceof Completion) {
+        getter = getter.Value;
+      }
+
+      if (IsCallable(getter) === Value.false && Type(getter) !== 'Undefined') {
+        return surroundingAgent.Throw('TypeError', msg('NotAFunction', getter));
+      }
+
+      desc.Get = getter;
+    }
+
+    let hasSet = HasProperty(Obj, new Value('set'));
+
+    if (hasSet instanceof AbruptCompletion) {
+      return hasSet;
+    }
+
+    if (hasSet instanceof Completion) {
+      hasSet = hasSet.Value;
+    }
+
+    if (hasSet === Value.true) {
+      let setter = Get(Obj, new Value('set'));
+
+      if (setter instanceof AbruptCompletion) {
+        return setter;
+      }
+
+      if (setter instanceof Completion) {
+        setter = setter.Value;
+      }
+
+      if (IsCallable(setter) === Value.false && Type(setter) !== 'Undefined') {
+        return surroundingAgent.Throw('TypeError', msg('NotAFunction', setter));
+      }
+
+      desc.Set = setter;
+    }
+
+    if (desc.Get !== undefined || desc.Set !== undefined) {
+      if (desc.Value !== undefined || desc.Writable !== undefined) {
+        return surroundingAgent.Throw('TypeError', 'invalid descriptor');
+      }
+    }
+
+    return desc;
+  } // 6.2.5.6 #sec-completepropertydescriptor
+
+  function CompletePropertyDescriptor(Desc) {
+    Assert(Type(Desc) === 'Descriptor', "Type(Desc) === 'Descriptor'");
+    const like = Descriptor({
+      Value: Value.undefined,
+      Writable: false,
+      Get: Value.undefined,
+      Set: Value.undefined,
+      Enumerable: false,
+      Configurable: false
+    });
+
+    if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
+      if (Desc.Value === undefined) {
+        Desc.Value = like.Value;
+      }
+
+      if (Desc.Writable === undefined) {
+        Desc.Writable = like.Writable;
+      }
+    } else {
+      if (Desc.Get === undefined) {
+        Desc.Get = like.Get;
+      }
+
+      if (Desc.Set === undefined) {
+        Desc.Set = like.Set;
+      }
+    }
+
+    if (Desc.Enumerable === undefined) {
+      Desc.Enumerable = like.Enumerable;
+    }
+
+    if (Desc.Configurable === undefined) {
+      Desc.Configurable = like.Configurable;
+    }
+
+    return Desc;
+  } // 6.2.7.1 #sec-createbytedatablock
+
+  function CreateByteDataBlock(size) {
+    size = size.numberValue();
+    Assert(size >= 0, "size >= 0");
+    let db;
+
+    try {
+      db = new DataBlock(size);
+    } catch (err) {
+      return surroundingAgent.Throw('RangeError', 'Cannot allocate memory');
+    }
+
+    return db;
+  } // 6.2.7.3 #sec-copydatablockbytes
+
+  function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
+    Assert(Type(toIndex) === 'Number', "Type(toIndex) === 'Number'");
+    Assert(Type(fromIndex) === 'Number', "Type(fromIndex) === 'Number'");
+    Assert(Type(count) === 'Number', "Type(count) === 'Number'");
+    toIndex = toIndex.numberValue();
+    fromIndex = fromIndex.numberValue();
+    count = count.numberValue();
+    Assert(fromBlock !== toBlock, "fromBlock !== toBlock");
+    Assert(Type(fromBlock) === 'Data Block'
+    /* || Type(fromBlock) === 'Shared Data Block' */
+    , "Type(fromBlock) === 'Data Block'");
+    Assert(Type(toBlock) === 'Data Block'
+    /* || Type(toBlock) === 'Shared Data Block' */
+    , "Type(toBlock) === 'Data Block'");
+    Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0, "Number.isSafeInteger(fromIndex) && fromIndex >= 0");
+    Assert(Number.isSafeInteger(toIndex) && toIndex >= 0, "Number.isSafeInteger(toIndex) && toIndex >= 0");
+    Assert(Number.isSafeInteger(count) && count >= 0, "Number.isSafeInteger(count) && count >= 0");
+    const fromSize = fromBlock.byteLength;
+    Assert(fromIndex + count <= fromSize, "fromIndex + count <= fromSize");
+    const toSize = toBlock.byteLength;
+    Assert(toIndex + count <= toSize, "toIndex + count <= toSize");
+
+    while (count > 0) {
+      // if (Type(fromBlock) === 'Shared Data Block') {
+      //   ...
+      // } else {
+      Assert(Type(toBlock) !== 'Shared Data Block', "Type(toBlock) !== 'Shared Data Block'");
+      toBlock[toIndex] = fromBlock[fromIndex]; // }
+
+      toIndex += 1;
+      fromIndex += 1;
+      count -= 1;
+    }
+
+    return new NormalCompletion(undefined);
+  }
+
+  function StringCreate(value, prototype) {
+    Assert(Type(value) === 'String', "Type(value) === 'String'");
+    const S = new StringExoticObjectValue();
+    S.StringData = value;
+    S.Prototype = prototype;
+    S.Extensible = Value.true;
+    const length = new Value(value.stringValue().length);
+    Assert(!(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
+      Value: length,
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })) instanceof AbruptCompletion), "");
+    return S;
+  } // 9.4.3.5 #sec-stringgetownproperty
+
+  function StringGetOwnProperty(S, P) {
+    Assert(Type(S) === 'Object' && 'StringData' in S, "Type(S) === 'Object' && 'StringData' in S");
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+
+    if (Type(P) !== 'String') {
+      return Value.undefined;
+    }
+
+    let index = CanonicalNumericIndexString(P);
+    Assert(!(index instanceof AbruptCompletion), "");
+
+    if (index instanceof Completion) {
+      index = index.Value;
+    }
+
+    if (Type(index) === 'Undefined') {
+      return Value.undefined;
+    }
+
+    if (IsInteger(index) === Value.false) {
+      return Value.undefined;
+    }
+
+    if (Object.is(index.numberValue(), -0)) {
+      return Value.undefined;
+    }
+
+    const str = S.StringData;
+    Assert(Type(str) === 'String', "Type(str) === 'String'");
+    const len = str.stringValue().length;
+
+    if (index.numberValue() < 0 || len <= index.numberValue()) {
+      return Value.undefined;
+    }
+
+    const resultStr = str.stringValue()[index.numberValue()];
+    return Descriptor({
+      Value: new Value(resultStr),
+      Writable: Value.false,
+      Enumerable: Value.true,
+      Configurable: Value.false
+    });
+  }
+
+  function SymbolDescriptiveString(sym) {
+    Assert(Type(sym) === 'Symbol', "Type(sym) === 'Symbol'");
+    let desc = sym.Description;
+
+    if (Type(desc) === 'Undefined') {
+      desc = new Value('');
+    }
+
+    return new Value(`Symbol(${desc.stringValue()})`);
+  }
+
+  // 7.2 #sec-testing-and-comparison-operations
+  // 7.2.1 #sec-requireobjectcoercible
+
+  function RequireObjectCoercible(argument) {
+    const type = Type(argument);
+
+    switch (type) {
+      case 'Undefined':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
+
+      case 'Null':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
+
+      case 'Boolean':
+      case 'Number':
+      case 'String':
+      case 'Symbol':
+      case 'Object':
+        return argument;
+
+      default:
+        throw new OutOfRange('RequireObjectCoercible', {
+          type,
+          argument
+        });
+    }
+  } // 7.2.2 #sec-isarray
+
+  function IsArray(argument) {
+    if (Type(argument) !== 'Object') {
+      return Value.false;
+    }
+
+    if (argument instanceof ArrayExoticObjectValue) {
+      return Value.true;
+    }
+
+    if (argument instanceof ProxyExoticObjectValue) {
+      if (Type(argument.ProxyHandler) === 'Null') {
+        return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'IsArray'));
+      }
+
+      const target = argument.ProxyTarget;
+      return IsArray(target);
+    }
+
+    return Value.false;
+  } // 7.2.3 #sec-iscallable
+
+  function IsCallable(argument) {
+    if (Type(argument) !== 'Object') {
+      return Value.false;
+    }
+
+    if ('Call' in argument) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 7.2.4 #sec-isconstructor
+
+  function IsConstructor(argument) {
+    if (Type(argument) !== 'Object') {
+      return Value.false;
+    }
+
+    if ('Construct' in argument) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 7.2.5 #sec-isextensible-o
+
+  function IsExtensible(O) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    return O.IsExtensible();
+  } // 7.2.6 #sec-isinteger
+
+  function IsInteger(argument) {
+    if (Type(argument) !== 'Number') {
+      return Value.false;
+    }
+
+    if (argument.isNaN() || argument.isInfinity()) {
+      return Value.false;
+    }
+
+    if (Math.floor(Math.abs(argument.numberValue())) !== Math.abs(argument.numberValue())) {
+      return Value.false;
+    }
+
+    return Value.true;
+  } // 7.2.7 #sec-ispropertykey
+
+  function IsPropertyKey(argument) {
+    if (Type(argument) === 'String') {
+      return true;
+    }
+
+    if (Type(argument) === 'Symbol') {
+      return true;
+    }
+
+    return false;
+  } // 7.2.8 #sec-isregexp
+
+  function IsRegExp(argument) {
+    if (Type(argument) !== 'Object') {
+      return Value.false;
+    }
+
+    let matcher = Get(argument, wellKnownSymbols.match);
+
+    if (matcher instanceof AbruptCompletion) {
+      return matcher;
+    }
+
+    if (matcher instanceof Completion) {
+      matcher = matcher.Value;
+    }
+
+    if (matcher !== Value.undefined) {
+      return ToBoolean(matcher);
+    }
+
+    if ('RegExpMatcher' in argument) {
+      return Value.true;
+    }
+
+    return Value.false;
+  } // 7.2.9 #sec-isstringprefix
+
+  function IsStringPrefix(p, q) {
+    Assert(Type(p) === 'String', "Type(p) === 'String'");
+    Assert(Type(q) === 'String', "Type(q) === 'String'");
+    return q.stringValue().startsWith(p.stringValue());
+  } // 7.2.10 #sec-samevalue
+
+  function SameValue(x, y) {
+    if (Type(x) !== Type(y)) {
+      return Value.false;
+    }
+
+    if (Type(x) === 'Number') {
+      if (x.isNaN() && y.isNaN()) {
+        return Value.true;
+      }
+
+      const xVal = x.numberValue();
+      const yVal = y.numberValue();
+
+      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+        return Value.false;
+      }
+
+      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+        return Value.false;
+      }
+
+      if (xVal === yVal) {
+        return Value.true;
+      }
+
+      return Value.false;
+    }
+
+    return SameValueNonNumber(x, y);
+  } // 7.2.11 #sec-samevaluezero
+
+  function SameValueZero(x, y) {
+    if (Type(x) !== Type(y)) {
+      return Value.false;
+    }
+
+    if (Type(x) === 'Number') {
+      if (x.isNaN() && y.isNaN()) {
+        return Value.true;
+      }
+
+      const xVal = x.numberValue();
+      const yVal = y.numberValue();
+
+      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+        return Value.true;
+      }
+
+      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+        return Value.true;
+      }
+
+      if (xVal === yVal) {
+        return Value.true;
+      }
+
+      return Value.false;
+    }
+
+    return SameValueNonNumber(x, y);
+  } // 7.2.12 #sec-samevaluenonnumber
+
+  function SameValueNonNumber(x, y) {
+    Assert(Type(x) !== 'Number', "Type(x) !== 'Number'");
+    Assert(Type(x) === Type(y), "Type(x) === Type(y)");
+
+    if (Type(x) === 'Undefined') {
+      return Value.true;
+    }
+
+    if (Type(x) === 'Null') {
+      return Value.true;
+    }
+
+    if (Type(x) === 'String') {
+      if (x.stringValue() === y.stringValue()) {
+        return Value.true;
+      }
+
+      return Value.false;
+    }
+
+    if (Type(x) === 'Boolean') {
+      if (x === y) {
+        return Value.true;
+      }
+
+      return Value.false;
+    }
+
+    if (Type(x) === 'Symbol') {
+      return x === y ? Value.true : Value.false;
+    }
+
+    return x === y ? Value.true : Value.false;
+  } // 7.2.13 #sec-abstract-relational-comparison
+
+  function AbstractRelationalComparison(x, y, LeftFirst = true) {
+    let px;
+    let py;
+
+    if (LeftFirst === true) {
+      px = ToPrimitive(x, 'Number');
+
+      if (px instanceof AbruptCompletion) {
+        return px;
+      }
+
+      if (px instanceof Completion) {
+        px = px.Value;
+      }
+
+      py = ToPrimitive(y, 'Number');
+
+      if (py instanceof AbruptCompletion) {
+        return py;
+      }
+
+      if (py instanceof Completion) {
+        py = py.Value;
+      }
+    } else {
+      py = ToPrimitive(y, 'Number');
+
+      if (py instanceof AbruptCompletion) {
+        return py;
+      }
+
+      if (py instanceof Completion) {
+        py = py.Value;
+      }
+
+      px = ToPrimitive(x, 'Number');
+
+      if (px instanceof AbruptCompletion) {
+        return px;
+      }
+
+      if (px instanceof Completion) {
+        px = px.Value;
+      }
+    }
+
+    if (Type(px) === 'String' && Type(py) === 'String') {
+      if (IsStringPrefix(py, px)) {
+        return Value.false;
+      }
+
+      if (IsStringPrefix(px, py)) {
+        return Value.true;
+      }
+
+      let k = 0;
+
+      while (true) {
+        if (px.stringValue()[k] !== py.stringValue()[k]) {
+          break;
+        }
+
+        k += 1;
+      }
+
+      const m = px.stringValue().charCodeAt(k);
+      const n = py.stringValue().charCodeAt(k);
+
+      if (m < n) {
+        return Value.true;
+      } else {
+        return Value.false;
+      }
+    } else {
+      let nx = ToNumber(px);
+
+      if (nx instanceof AbruptCompletion) {
+        return nx;
+      }
+
+      if (nx instanceof Completion) {
+        nx = nx.Value;
+      }
+
+      let ny = ToNumber(py);
+
+      if (ny instanceof AbruptCompletion) {
+        return ny;
+      }
+
+      if (ny instanceof Completion) {
+        ny = ny.Value;
+      }
+
+      if (nx.isNaN()) {
+        return Value.undefined;
+      }
+
+      if (ny.isNaN()) {
+        return Value.undefined;
+      } // If nx and ny are the same Number value, return false.
+      // If nx is +0 and ny is -0, return false.
+      // If nx is -0 and ny is +0, return false.
+
+
+      if (nx.numberValue() === ny.numberValue()) {
+        return Value.false;
+      }
+
+      if (nx.numberValue() === +Infinity) {
+        return Value.false;
+      }
+
+      if (ny.numberValue() === +Infinity) {
+        return Value.true;
+      }
+
+      if (ny.numberValue() === -Infinity) {
+        return Value.false;
+      }
+
+      if (nx.numberValue() === -Infinity) {
+        return Value.true;
+      }
+
+      return nx.numberValue() < ny.numberValue() ? Value.true : Value.false;
+    }
+  } // 7.2.14 #sec-abstract-equality-comparison
+
+  function AbstractEqualityComparison(x, y) {
+    if (Type(x) === Type(y)) {
+      return StrictEqualityComparison(x, y);
+    }
+
+    if (x === Value.null && y === Value.undefined) {
+      return Value.true;
+    }
+
+    if (x === Value.undefined && y === Value.null) {
+      return Value.true;
+    }
+
+    if (Type(x) === 'Number' && Type(y) === 'String') {
+      let _val = ToNumber(y);
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      return AbstractEqualityComparison(x, _val);
+    }
+
+    if (Type(x) === 'String' && Type(y) === 'Number') {
+      let _val2 = ToNumber(x);
+
+      Assert(!(_val2 instanceof AbruptCompletion), "");
+
+      if (_val2 instanceof Completion) {
+        _val2 = _val2.Value;
+      }
+
+      return AbstractEqualityComparison(_val2, y);
+    }
+
+    if (Type(x) === 'Boolean') {
+      let _val3 = ToNumber(x);
+
+      Assert(!(_val3 instanceof AbruptCompletion), "");
+
+      if (_val3 instanceof Completion) {
+        _val3 = _val3.Value;
+      }
+
+      return AbstractEqualityComparison(_val3, y);
+    }
+
+    if (Type(y) === 'Boolean') {
+      let _val4 = ToNumber(y);
+
+      Assert(!(_val4 instanceof AbruptCompletion), "");
+
+      if (_val4 instanceof Completion) {
+        _val4 = _val4.Value;
+      }
+
+      return AbstractEqualityComparison(x, _val4);
+    }
+
+    if (['String', 'Number', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
+      let _hygienicTemp = ToPrimitive(y);
+
+      if (_hygienicTemp instanceof AbruptCompletion) {
+        return _hygienicTemp;
+      }
+
+      if (_hygienicTemp instanceof Completion) {
+        _hygienicTemp = _hygienicTemp.Value;
+      }
+
+      return AbstractEqualityComparison(x, _hygienicTemp);
+    }
+
+    if (Type(x) === 'Object' && ['String', 'Number', 'Symbol'].includes(Type(y))) {
+      let _hygienicTemp2 = ToPrimitive(x);
+
+      if (_hygienicTemp2 instanceof AbruptCompletion) {
+        return _hygienicTemp2;
+      }
+
+      if (_hygienicTemp2 instanceof Completion) {
+        _hygienicTemp2 = _hygienicTemp2.Value;
+      }
+
+      return AbstractEqualityComparison(_hygienicTemp2, y);
+    }
+
+    return Value.false;
+  } // 7.2.15 #sec-strict-equality-comparison
+
+  function StrictEqualityComparison(x, y) {
+    if (Type(x) !== Type(y)) {
+      return Value.false;
+    }
+
+    if (Type(x) === 'Number') {
+      if (x.isNaN()) {
+        return Value.false;
+      }
+
+      if (y.isNaN()) {
+        return Value.false;
+      }
+
+      const xVal = x.numberValue();
+      const yVal = y.numberValue();
+
+      if (xVal === yVal) {
+        return Value.true;
+      }
+
+      if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+        return Value.true;
+      }
+
+      if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+        return Value.true;
+      }
+
+      return Value.false;
+    }
+
+    return SameValueNonNumber(x, y);
+  }
+
+  function ToPrimitive(input, PreferredType) {
+    Assert(input instanceof Value, "input instanceof Value");
+
+    if (Type(input) === 'Object') {
+      let hint;
+
+      if (PreferredType === undefined) {
+        hint = new Value('default');
+      } else if (PreferredType === 'String') {
+        hint = new Value('string');
+      } else {
+        Assert(PreferredType === 'Number', "PreferredType === 'Number'");
+        hint = new Value('number');
+      }
+
+      let exoticToPrim = GetMethod(input, wellKnownSymbols.toPrimitive);
+
+      if (exoticToPrim instanceof AbruptCompletion) {
+        return exoticToPrim;
+      }
+
+      if (exoticToPrim instanceof Completion) {
+        exoticToPrim = exoticToPrim.Value;
+      }
+
+      if (exoticToPrim !== Value.undefined) {
+        let result = Call(exoticToPrim, input, [hint]);
+
+        if (result instanceof AbruptCompletion) {
+          return result;
+        }
+
+        if (result instanceof Completion) {
+          result = result.Value;
+        }
+
+        if (Type(result) !== 'Object') {
+          return result;
+        }
+
+        return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
+      }
+
+      if (hint.stringValue() === 'default') {
+        hint = new Value('number');
+      }
+
+      return OrdinaryToPrimitive(input, hint);
+    }
+
+    return input;
+  } // 7.1.1.1 #sec-ordinarytoprimitive
+
+  function OrdinaryToPrimitive(O, hint) {
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
+    Assert(Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number'), "Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number')");
+    let methodNames;
+
+    if (hint.stringValue() === 'string') {
+      methodNames = [new Value('toString'), new Value('valueOf')];
+    } else {
+      methodNames = [new Value('valueOf'), new Value('toString')];
+    }
+
+    for (const name of methodNames) {
+      let method = Get(O, name);
+
+      if (method instanceof AbruptCompletion) {
+        return method;
+      }
+
+      if (method instanceof Completion) {
+        method = method.Value;
+      }
+
+      if (IsCallable(method) === Value.true) {
+        let result = Call(method, O);
+
+        if (result instanceof AbruptCompletion) {
+          return result;
+        }
+
+        if (result instanceof Completion) {
+          result = result.Value;
+        }
+
+        if (Type(result) !== 'Object') {
+          return result;
+        }
+      }
+    }
+
+    return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
+  } // 7.1.2 #sec-toboolean
+
+  function ToBoolean(argument) {
+    const type = Type(argument);
+
+    switch (type) {
+      case 'Undefined':
+        return Value.false;
+
+      case 'Null':
+        return Value.false;
+
+      case 'Boolean':
+        return argument;
+
+      case 'Number':
+        if (argument.numberValue() === 0 || argument.isNaN()) {
+          return Value.false;
+        }
+
+        return Value.true;
+
+      case 'String':
+        if (argument.stringValue().length === 0) {
+          return Value.false;
+        }
+
+        return Value.true;
+
+      case 'Symbol':
+        return Value.true;
+
+      case 'Object':
+        return Value.true;
+
+      default:
+        throw new OutOfRange('ToBoolean', {
+          type,
+          argument
+        });
+    }
+  } // 7.1.3 #sec-tonumber
+
+  function ToNumber(argument) {
+    const type = Type(argument);
+
+    switch (type) {
+      case 'Undefined':
+        return new Value(NaN);
+
+      case 'Null':
+        return new Value(0);
+
+      case 'Boolean':
+        if (argument === Value.true) {
+          return new Value(1);
+        }
+
+        return new Value(0);
+
+      case 'Number':
+        return argument;
+
+      case 'String':
+        return MV_StringNumericLiteral(argument.stringValue());
+
+      case 'Symbol':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
+
+      case 'Object':
+        {
+          let primValue = ToPrimitive(argument, 'Number');
+
+          if (primValue instanceof AbruptCompletion) {
+            return primValue;
+          }
+
+          if (primValue instanceof Completion) {
+            primValue = primValue.Value;
+          }
+
+          return ToNumber(primValue);
+        }
+
+      default:
+        throw new OutOfRange('ToNumber', {
+          type,
+          argument
+        });
+    }
+  }
+
+  const sign = n => n >= 0 ? 1 : -1;
+
+  const mod$1 = (n, m) => {
+    const r = n % m;
+    return Math.floor(r >= 0 ? r : r + m);
+  }; // 7.1.4 #sec-tointeger
+
+
+  function ToInteger(argument) {
+    let _hygienicTemp = ToNumber(argument);
+
+    if (_hygienicTemp instanceof AbruptCompletion) {
+      return _hygienicTemp;
+    }
+
+    if (_hygienicTemp instanceof Completion) {
+      _hygienicTemp = _hygienicTemp.Value;
+    }
+
+    const number = _hygienicTemp.numberValue();
+
+    if (Number.isNaN(number)) {
+      return new Value(0);
+    }
+
+    if (number === 0 || !Number.isFinite(number)) {
+      return new Value(number);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    return new Value(int);
+  } // 7.1.5 #sec-toint32
+
+  function ToInt32(argument) {
+    let _hygienicTemp2 = ToNumber(argument);
+
+    if (_hygienicTemp2 instanceof AbruptCompletion) {
+      return _hygienicTemp2;
+    }
+
+    if (_hygienicTemp2 instanceof Completion) {
+      _hygienicTemp2 = _hygienicTemp2.Value;
+    }
+
+    const number = _hygienicTemp2.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int32bit = mod$1(int, 2 ** 32);
+
+    if (int32bit >= 2 ** 31) {
+      return new Value(int32bit - 2 ** 32);
+    }
+
+    return new Value(int32bit);
+  } // 7.1.6 #sec-touint32
+
+  function ToUint32(argument) {
+    let _hygienicTemp3 = ToNumber(argument);
+
+    if (_hygienicTemp3 instanceof AbruptCompletion) {
+      return _hygienicTemp3;
+    }
+
+    if (_hygienicTemp3 instanceof Completion) {
+      _hygienicTemp3 = _hygienicTemp3.Value;
+    }
+
+    const number = _hygienicTemp3.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int32bit = mod$1(int, 2 ** 32);
+    return new Value(int32bit);
+  } // 7.1.7 #sec-toint16
+
+  function ToInt16(argument) {
+    let _hygienicTemp4 = ToNumber(argument);
+
+    if (_hygienicTemp4 instanceof AbruptCompletion) {
+      return _hygienicTemp4;
+    }
+
+    if (_hygienicTemp4 instanceof Completion) {
+      _hygienicTemp4 = _hygienicTemp4.Value;
+    }
+
+    const number = _hygienicTemp4.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int16bit = mod$1(int, 2 ** 16);
+
+    if (int16bit >= 2 ** 15) {
+      return new Value(int16bit - 2 ** 16);
+    }
+
+    return new Value(int16bit);
+  } // 7.1.8 #sec-touint16
+
+  function ToUint16(argument) {
+    let _hygienicTemp5 = ToNumber(argument);
+
+    if (_hygienicTemp5 instanceof AbruptCompletion) {
+      return _hygienicTemp5;
+    }
+
+    if (_hygienicTemp5 instanceof Completion) {
+      _hygienicTemp5 = _hygienicTemp5.Value;
+    }
+
+    const number = _hygienicTemp5.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int16bit = mod$1(int, 2 ** 16);
+    return new Value(int16bit);
+  } // 7.1.9 #sec-toint8
+
+  function ToInt8(argument) {
+    let _hygienicTemp6 = ToNumber(argument);
+
+    if (_hygienicTemp6 instanceof AbruptCompletion) {
+      return _hygienicTemp6;
+    }
+
+    if (_hygienicTemp6 instanceof Completion) {
+      _hygienicTemp6 = _hygienicTemp6.Value;
+    }
+
+    const number = _hygienicTemp6.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int8bit = mod$1(int, 2 ** 8);
+
+    if (int8bit >= 2 ** 7) {
+      return new Value(int8bit - 2 ** 8);
+    }
+
+    return new Value(int8bit);
+  } // 7.1.10 #sec-touint8
+
+  function ToUint8(argument) {
+    let _hygienicTemp7 = ToNumber(argument);
+
+    if (_hygienicTemp7 instanceof AbruptCompletion) {
+      return _hygienicTemp7;
+    }
+
+    if (_hygienicTemp7 instanceof Completion) {
+      _hygienicTemp7 = _hygienicTemp7.Value;
+    }
+
+    const number = _hygienicTemp7.numberValue();
+
+    if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
+      return new Value(0);
+    }
+
+    const int = sign(number) * Math.floor(Math.abs(number));
+    const int8bit = mod$1(int, 2 ** 8);
+    return new Value(int8bit);
+  } // 7.1.11 #sec-touint8clamp
+
+  function ToUint8Clamp(argument) {
+    let _hygienicTemp8 = ToNumber(argument);
+
+    if (_hygienicTemp8 instanceof AbruptCompletion) {
+      return _hygienicTemp8;
+    }
+
+    if (_hygienicTemp8 instanceof Completion) {
+      _hygienicTemp8 = _hygienicTemp8.Value;
+    }
+
+    const number = _hygienicTemp8.numberValue();
+
+    if (Number.isNaN(number)) {
+      return new Value(0);
+    }
+
+    if (number <= 0) {
+      return new Value(0);
+    }
+
+    if (number >= 255) {
+      return new Value(255);
+    }
+
+    const f = Math.floor(number);
+
+    if (f + 0.5 < number) {
+      return new Value(f + 1);
+    }
+
+    if (number < f + 0.5) {
+      return new Value(f);
+    }
+
+    if (f % 2 === 1) {
+      return new Value(f + 1);
+    }
+
+    return new Value(f);
+  } // 7.1.12 #sec-tostring
+
+  function ToString(argument) {
+    const type = Type(argument);
+
+    switch (type) {
+      case 'Undefined':
+        return new Value('undefined');
+
+      case 'Null':
+        return new Value('null');
+
+      case 'Boolean':
+        return new Value(argument === Value.true ? 'true' : 'false');
+
+      case 'Number':
+        return NumberToString(argument);
+
+      case 'String':
+        return argument;
+
+      case 'Symbol':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
+
+      case 'Object':
+        {
+          let primValue = ToPrimitive(argument, 'String');
+
+          if (primValue instanceof AbruptCompletion) {
+            return primValue;
+          }
+
+          if (primValue instanceof Completion) {
+            primValue = primValue.Value;
+          }
+
+          return ToString(primValue);
+        }
+
+      default:
+        throw new OutOfRange('ToString', {
+          type,
+          argument
+        });
+    }
+  } // 7.1.12.1 #sec-tostring-applied-to-the-number-type
+
+  function NumberToString(m) {
+    if (m.isNaN()) {
+      return new Value('NaN');
+    }
+
+    const mVal = m.numberValue();
+
+    if (mVal === 0) {
+      return new Value('0');
+    }
+
+    if (mVal < 0) {
+      let _val = NumberToString(new Value(-mVal));
+
+      Assert(!(_val instanceof AbruptCompletion), "");
+
+      if (_val instanceof Completion) {
+        _val = _val.Value;
+      }
+
+      const str = _val.stringValue();
+
+      return new Value(`-${str}`);
+    }
+
+    if (m.isInfinity()) {
+      return new Value('Infinity');
+    } // TODO: implement properly
+
+
+    return new Value(`${mVal}`);
+  } // 7.1.13 #sec-toobject
+
+  function ToObject(argument) {
+    const type = Type(argument);
+
+    switch (type) {
+      case 'Undefined':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
+
+      case 'Null':
+        return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
+
+      case 'Boolean':
+        {
+          const obj = ObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
+          obj.BooleanData = argument;
+          return obj;
+        }
+
+      case 'Number':
+        {
+          const obj = ObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'));
+          obj.NumberData = argument;
+          return obj;
+        }
+
+      case 'String':
+        return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
+
+      case 'Symbol':
+        {
+          const obj = ObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
+          obj.SymbolData = argument;
+          return obj;
+        }
+
+      case 'Object':
+        return argument;
+
+      default:
+        throw new OutOfRange('ToObject', {
+          type,
+          argument
+        });
+    }
+  } // 7.1.14 #sec-topropertykey
+
+  function ToPropertyKey(argument) {
+    let key = ToPrimitive(argument, 'String');
+
+    if (key instanceof AbruptCompletion) {
+      return key;
+    }
+
+    if (key instanceof Completion) {
+      key = key.Value;
+    }
+
+    if (Type(key) === 'Symbol') {
+      return key;
+    }
+
+    let _val2 = ToString(key);
+
+    Assert(!(_val2 instanceof AbruptCompletion), "");
+
+    if (_val2 instanceof Completion) {
+      _val2 = _val2.Value;
+    }
+
+    return _val2;
+  } // 7.1.15 #sec-tolength
+
+  function ToLength(argument) {
+    let len = ToInteger(argument);
+
+    if (len instanceof AbruptCompletion) {
+      return len;
+    }
+
+    if (len instanceof Completion) {
+      len = len.Value;
+    }
+
+    if (len.numberValue() <= 0) {
+      return new Value(0);
+    }
+
+    return new Value(Math.min(len.numberValue(), 2 ** 53 - 1));
+  } // 7.1.16 #sec-canonicalnumericindexstring
+
+  function CanonicalNumericIndexString(argument) {
+    Assert(Type(argument) === 'String', "Type(argument) === 'String'");
+
+    if (argument.stringValue() === '-0') {
+      return new Value(-0);
+    }
+
+    let n = ToNumber(argument);
+    Assert(!(n instanceof AbruptCompletion), "");
+
+    if (n instanceof Completion) {
+      n = n.Value;
+    }
+
+    let _val3 = ToString(n);
+
+    Assert(!(_val3 instanceof AbruptCompletion), "");
+
+    if (_val3 instanceof Completion) {
+      _val3 = _val3.Value;
+    }
+
+    if (SameValue(_val3, argument) === Value.false) {
+      return Value.undefined;
+    }
+
+    return n;
+  } // 7.1.17 #sec-toindex
+
+  function ToIndex(value) {
+    let index;
+
+    if (Type(value) === 'Undefined') {
+      index = new Value(0);
+    } else {
+      let integerIndex = ToInteger(value);
+
+      if (integerIndex instanceof AbruptCompletion) {
+        return integerIndex;
+      }
+
+      if (integerIndex instanceof Completion) {
+        integerIndex = integerIndex.Value;
+      }
+
+      if (integerIndex.numberValue() < 0) {
+        return surroundingAgent.Throw('RangeError', msg('NegativeIndex'));
+      }
+
+      index = ToLength(integerIndex);
+      Assert(!(index instanceof AbruptCompletion), "");
+
+      if (index instanceof Completion) {
+        index = index.Value;
+      }
+
+      if (SameValueZero(integerIndex, index) === Value.false) {
+        return surroundingAgent.Throw('RangeError', msg('OutOfRange', 'Index'));
+      }
+    }
+
+    return index;
+  }
+
+  const typedArrayInfo = new Map([['Int8Array', {
+    Intrinsic: '%Int8Array%',
+    ElementType: 'Int8',
+    ElementSize: 1,
+    ConversionOperation: ToInt8
+  }], ['Uint8Array', {
+    Intrinsic: '%Uint8Array%',
+    ElementType: 'Uint8',
+    ElementSize: 1,
+    ConversionOperation: ToUint8
+  }], ['Uint8ClampedArray', {
+    Intrinsic: '%Uint8ClampedArray%',
+    ElementType: 'Uint8C',
+    ElementSize: 1,
+    ConversionOperation: ToUint8Clamp
+  }], ['Int16Array', {
+    Intrinsic: '%Int16Array%',
+    ElementType: 'Int16',
+    ElementSize: 2,
+    ConversionOperation: ToInt16
+  }], ['Uint16Array', {
+    Intrinsic: '%Uint16Array%',
+    ElementType: 'Uint16',
+    ElementSize: 2,
+    ConversionOperation: ToUint16
+  }], ['Int32Array', {
+    Intrinsic: '%Int32Array%',
+    ElementType: 'Int32',
+    ElementSize: 4,
+    ConversionOperation: ToInt32
+  }], ['Uint32Array', {
+    Intrinsic: '%Uint32Array%',
+    ElementType: 'Uint32',
+    ElementSize: 4,
+    ConversionOperation: ToUint32
+  }], ['Float32Array', {
+    Intrinsic: '%Float32Array%',
+    ElementType: 'Float32',
+    ElementSize: 4
+  }], ['Float64Array', {
+    Intrinsic: '%Float64Array%',
+    ElementType: 'Float64',
+    ElementSize: 8
+  }]]);
+  const numericTypeInfo = new Map([...typedArrayInfo.values()].map(info => [info.ElementType, info])); // 22.2.2.1.1 #sec-iterabletolist
+
+  function IterableToList(items, method) {
+    let iteratorRecord = GetIterator(items, 'sync', method);
+
+    if (iteratorRecord instanceof AbruptCompletion) {
+      return iteratorRecord;
+    }
+
+    if (iteratorRecord instanceof Completion) {
+      iteratorRecord = iteratorRecord.Value;
+    }
+
+    const values = [];
+    let next = Value.true;
+
+    while (next !== Value.false) {
+      next = IteratorStep(iteratorRecord);
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (next !== Value.false) {
+        let nextValue = IteratorValue(next);
+
+        if (nextValue instanceof AbruptCompletion) {
+          return nextValue;
+        }
+
+        if (nextValue instanceof Completion) {
+          nextValue = nextValue.Value;
+        }
+
+        values.push(nextValue);
+      }
+    }
+
+    return values;
+  } // 22.2.3.5.1 #sec-validatetypedarray
+
+  function ValidateTypedArray(O) {
+    {
+      const hygienicTemp = RequireInternalSlot(O, 'TypedArrayName');
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+    Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
+    const buffer = O.ViewedArrayBuffer;
+
+    if (IsDetachedBuffer(buffer)) {
+      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    }
+
+    return buffer;
+  } // 22.2.4.2.1 #sec-allocatetypedarray
+
+  function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
+    let proto = GetPrototypeFromConstructor(newTarget, defaultProto);
+
+    if (proto instanceof AbruptCompletion) {
+      return proto;
+    }
+
+    if (proto instanceof Completion) {
+      proto = proto.Value;
+    }
+
+    const obj = IntegerIndexedObjectCreate(proto, ['ViewedArrayBuffer', 'TypedArrayName', 'ByteLength', 'ByteOffset', 'ArrayLength']);
+    Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
+    obj.TypedArrayName = constructorName;
+
+    if (length === undefined) {
+      obj.ByteLength = new Value(0);
+      obj.ByteOffset = new Value(0);
+      obj.ArrayLength = new Value(0);
+    } else {
+      {
+        const hygienicTemp = AllocateTypedArrayBuffer(obj, length);
+
+        if (hygienicTemp instanceof AbruptCompletion) {
+          return hygienicTemp;
+        }
+      }
+    }
+
+    return obj;
+  } // 22.2.4.2.2 #sec-allocatetypedarraybuffer
+
+  function AllocateTypedArrayBuffer(O, length) {
+    Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O, "Type(O) === 'Object' && 'ViewedArrayBuffer' in O");
+    Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
+    Assert(length.numberValue() >= 0, "length.numberValue() >= 0");
+    const constructorName = O.TypedArrayName.stringValue();
+    const elementSize = typedArrayInfo.get(constructorName).ElementSize;
+    const byteLength = new Value(elementSize * length.numberValue());
+    let data = AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
+
+    if (data instanceof AbruptCompletion) {
+      return data;
+    }
+
+    if (data instanceof Completion) {
+      data = data.Value;
+    }
+
+    O.ViewedArrayBuffer = data;
+    O.ByteLength = byteLength;
+    O.ByteOffset = new Value(0);
+    O.ArrayLength = length;
+    return O;
+  } // 22.2.4.6 #typedarray-create
+
+  function TypedArrayCreate(constructor, argumentList) {
+    let newTypedArray = Construct(constructor, argumentList);
+
+    if (newTypedArray instanceof AbruptCompletion) {
+      return newTypedArray;
+    }
+
+    if (newTypedArray instanceof Completion) {
+      newTypedArray = newTypedArray.Value;
+    }
+
+    {
+      const hygienicTemp = ValidateTypedArray(newTypedArray);
+
+      if (hygienicTemp instanceof AbruptCompletion) {
+        return hygienicTemp;
+      }
+    }
+
+    if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
+      if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
+        return surroundingAgent.Throw('TypeError', msg('TypedArrayTooSmall', newTypedArray.ArrayLength, argumentList[0]));
+      }
+    }
+
+    return newTypedArray;
+  } // 22.2.4.7 #typedarray-species-create
+
+  function TypedArraySpeciesCreate(exemplar, argumentList) {
+    Assert(Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar, "Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar");
+    const intrinsicName = typedArrayInfo.get(exemplar.TypedArrayName.stringValue()).Intrinsic;
+    const defaultConstructor = surroundingAgent.intrinsic(intrinsicName);
+    let constructor = SpeciesConstructor(exemplar, defaultConstructor);
+
+    if (constructor instanceof AbruptCompletion) {
+      return constructor;
+    }
+
+    if (constructor instanceof Completion) {
+      constructor = constructor.Value;
+    }
+
+    return TypedArrayCreate(constructor, argumentList);
+  }
+
+
+
+  var AbstractOps = /*#__PURE__*/Object.freeze({
+    CreateUnmappedArgumentsObject: CreateUnmappedArgumentsObject,
+    CreateMappedArgumentsObject: CreateMappedArgumentsObject,
+    ArrayCreate: ArrayCreate,
+    ArraySpeciesCreate: ArraySpeciesCreate,
+    ArraySetLength: ArraySetLength,
+    IsConcatSpreadable: IsConcatSpreadable,
+    SortCompare: SortCompare,
+    CreateArrayIterator: CreateArrayIterator,
+    AllocateArrayBuffer: AllocateArrayBuffer,
+    IsDetachedBuffer: IsDetachedBuffer,
+    DetachArrayBuffer: DetachArrayBuffer,
+    CloneArrayBuffer: CloneArrayBuffer,
+    RawBytesToNumber: RawBytesToNumber,
+    GetValueFromBuffer: GetValueFromBuffer,
+    NumberToRawBytes: NumberToRawBytes,
+    SetValueInBuffer: SetValueInBuffer,
+    IsSharedArrayBuffer: IsSharedArrayBuffer,
+    AsyncBlockStart: AsyncBlockStart,
+    AsyncFunctionStart: AsyncFunctionStart,
+    AsyncGeneratorStart: AsyncGeneratorStart,
+    AsyncGeneratorEnqueue: AsyncGeneratorEnqueue,
+    AsyncGeneratorYield: AsyncGeneratorYield,
+    isLeadingSurrogate: isLeadingSurrogate,
+    isTrailingSurrogate: isTrailingSurrogate,
+    isIntegerIndex: isIntegerIndex,
+    isArrayIndex: isArrayIndex,
+    GetViewValue: GetViewValue,
+    SetViewValue: SetViewValue,
+    Day: Day,
+    msPerDay: msPerDay,
+    TimeWithinDay: TimeWithinDay,
+    DaysInYear: DaysInYear,
+    DayFromYear: DayFromYear,
+    TimeFromYear: TimeFromYear,
+    msPerAverageYear: msPerAverageYear,
+    YearFromTime: YearFromTime,
+    InLeapYear: InLeapYear,
+    MonthFromTime: MonthFromTime,
+    DayWithinYear: DayWithinYear,
+    DateFromTime: DateFromTime,
+    WeekDay: WeekDay,
+    LocalTZA: LocalTZA,
+    LocalTime: LocalTime,
+    UTC: UTC,
+    HourFromTime: HourFromTime,
+    MinFromTime: MinFromTime,
+    SecFromTime: SecFromTime,
+    msFromTime: msFromTime,
+    HoursPerDay: HoursPerDay,
+    MinutesPerHour: MinutesPerHour,
+    SecondsPerMinute: SecondsPerMinute,
+    msPerSecond: msPerSecond,
+    msPerMinute: msPerMinute,
+    msPerHour: msPerHour,
+    MakeTime: MakeTime,
+    MakeDay: MakeDay,
+    MakeDate: MakeDate,
+    TimeClip: TimeClip,
+    GetActiveScriptOrModule: GetActiveScriptOrModule,
+    ResolveBinding: ResolveBinding,
+    GetThisEnvironment: GetThisEnvironment,
+    ResolveThisBinding: ResolveThisBinding,
+    GetNewTarget: GetNewTarget,
+    GetGlobalObject: GetGlobalObject,
+    OrdinaryCallEvaluateBody: OrdinaryCallEvaluateBody,
+    FunctionAllocate: FunctionAllocate,
+    FunctionInitialize: FunctionInitialize,
+    FunctionCreate: FunctionCreate,
+    GeneratorFunctionCreate: GeneratorFunctionCreate,
+    AsyncGeneratorFunctionCreate: AsyncGeneratorFunctionCreate,
+    AsyncFunctionCreate: AsyncFunctionCreate,
+    MakeConstructor: MakeConstructor,
+    MakeClassConstructor: MakeClassConstructor,
+    MakeMethod: MakeMethod,
+    SetFunctionName: SetFunctionName,
+    SetFunctionLength: SetFunctionLength,
+    CreateBuiltinFunction: CreateBuiltinFunction,
+    PrepareForTailCall: PrepareForTailCall,
+    GeneratorStart: GeneratorStart,
+    GeneratorValidate: GeneratorValidate,
+    GeneratorResume: GeneratorResume,
+    GeneratorResumeAbrupt: GeneratorResumeAbrupt,
+    GetGeneratorKind: GetGeneratorKind,
+    GeneratorYield: GeneratorYield,
+    PerformEval: PerformEval,
+    GetIterator: GetIterator,
+    IteratorNext: IteratorNext,
+    IteratorComplete: IteratorComplete,
+    IteratorValue: IteratorValue,
+    IteratorStep: IteratorStep,
+    IteratorClose: IteratorClose,
+    AsyncIteratorClose: AsyncIteratorClose,
+    CreateIterResultObject: CreateIterResultObject,
+    CreateListIteratorRecord: CreateListIteratorRecord,
+    CreateAsyncFromSyncIterator: CreateAsyncFromSyncIterator,
+    AsyncFromSyncIteratorContinuation: AsyncFromSyncIteratorContinuation,
+    ModuleNamespaceCreate: ModuleNamespaceCreate,
+    InnerModuleLinking: InnerModuleLinking,
+    InnerModuleEvaluation: InnerModuleEvaluation,
+    GetAsyncCycleRoot: GetAsyncCycleRoot,
+    GetModuleNamespace: GetModuleNamespace,
+    Assert: Assert,
+    RequireInternalSlot: RequireInternalSlot,
+    sourceTextMatchedBy: sourceTextMatchedBy,
+    isStrictModeCode: isStrictModeCode,
+    Get: Get,
+    GetV: GetV,
+    Set: Set$1,
+    CreateDataProperty: CreateDataProperty,
+    CreateMethodProperty: CreateMethodProperty,
+    CreateDataPropertyOrThrow: CreateDataPropertyOrThrow,
+    DefinePropertyOrThrow: DefinePropertyOrThrow,
+    DeletePropertyOrThrow: DeletePropertyOrThrow,
+    GetMethod: GetMethod,
+    HasProperty: HasProperty,
+    HasOwnProperty: HasOwnProperty$1,
+    Call: Call,
+    Construct: Construct,
+    SetIntegrityLevel: SetIntegrityLevel,
+    TestIntegrityLevel: TestIntegrityLevel,
+    CreateArrayFromList: CreateArrayFromList,
+    LengthOfArrayLike: LengthOfArrayLike,
+    CreateListFromArrayLike: CreateListFromArrayLike,
+    Invoke: Invoke,
+    OrdinaryHasInstance: OrdinaryHasInstance,
+    SpeciesConstructor: SpeciesConstructor,
+    EnumerableOwnPropertyNames: EnumerableOwnPropertyNames,
+    GetFunctionRealm: GetFunctionRealm,
+    CopyDataProperties: CopyDataProperties,
+    OrdinaryGetPrototypeOf: OrdinaryGetPrototypeOf,
+    OrdinarySetPrototypeOf: OrdinarySetPrototypeOf,
+    OrdinaryIsExtensible: OrdinaryIsExtensible,
+    OrdinaryPreventExtensions: OrdinaryPreventExtensions,
+    OrdinaryGetOwnProperty: OrdinaryGetOwnProperty,
+    OrdinaryDefineOwnProperty: OrdinaryDefineOwnProperty,
+    IsCompatiblePropertyDescriptor: IsCompatiblePropertyDescriptor,
+    ValidateAndApplyPropertyDescriptor: ValidateAndApplyPropertyDescriptor,
+    OrdinaryHasProperty: OrdinaryHasProperty,
+    OrdinaryGet: OrdinaryGet,
+    OrdinarySet: OrdinarySet,
+    OrdinarySetWithOwnDescriptor: OrdinarySetWithOwnDescriptor,
+    OrdinaryDelete: OrdinaryDelete,
+    OrdinaryOwnPropertyKeys: OrdinaryOwnPropertyKeys,
+    ObjectCreate: ObjectCreate,
+    OrdinaryCreateFromConstructor: OrdinaryCreateFromConstructor,
+    GetPrototypeFromConstructor: GetPrototypeFromConstructor,
+    IntegerIndexedObjectCreate: IntegerIndexedObjectCreate,
+    IntegerIndexedElementGet: IntegerIndexedElementGet,
+    IntegerIndexedElementSet: IntegerIndexedElementSet,
+    PromiseCapabilityRecord: PromiseCapabilityRecord,
+    PromiseReactionRecord: PromiseReactionRecord,
+    CreateResolvingFunctions: CreateResolvingFunctions,
+    NewPromiseCapability: NewPromiseCapability,
+    IsPromise: IsPromise,
+    PromiseReactionJob: PromiseReactionJob,
+    PromiseResolve: PromiseResolve,
+    PerformPromiseThen: PerformPromiseThen,
+    GetBase: GetBase,
+    GetReferencedName: GetReferencedName,
+    IsStrictReference: IsStrictReference,
+    HasPrimitiveBase: HasPrimitiveBase,
+    IsPropertyReference: IsPropertyReference,
+    IsUnresolvableReference: IsUnresolvableReference,
+    IsSuperReference: IsSuperReference,
+    GetValue: GetValue,
+    PutValue: PutValue,
+    GetThisValue: GetThisValue,
+    InitializeReferencedBinding: InitializeReferencedBinding,
+    RegExpAlloc: RegExpAlloc,
+    RegExpInitialize: RegExpInitialize,
+    RegExpCreate: RegExpCreate,
+    EscapeRegExpPattern: EscapeRegExpPattern,
+    UTF16Encoding: UTF16Encoding,
+    UTF16Decode: UTF16Decode,
+    CodePointAt: CodePointAt,
+    IsAccessorDescriptor: IsAccessorDescriptor,
+    IsDataDescriptor: IsDataDescriptor,
+    IsGenericDescriptor: IsGenericDescriptor,
+    FromPropertyDescriptor: FromPropertyDescriptor,
+    ToPropertyDescriptor: ToPropertyDescriptor,
+    CompletePropertyDescriptor: CompletePropertyDescriptor,
+    CreateByteDataBlock: CreateByteDataBlock,
+    CopyDataBlockBytes: CopyDataBlockBytes,
+    StringCreate: StringCreate,
+    StringGetOwnProperty: StringGetOwnProperty,
+    SymbolDescriptiveString: SymbolDescriptiveString,
+    RequireObjectCoercible: RequireObjectCoercible,
+    IsArray: IsArray,
+    IsCallable: IsCallable,
+    IsConstructor: IsConstructor,
+    IsExtensible: IsExtensible,
+    IsInteger: IsInteger,
+    IsPropertyKey: IsPropertyKey,
+    IsRegExp: IsRegExp,
+    IsStringPrefix: IsStringPrefix,
+    SameValue: SameValue,
+    SameValueZero: SameValueZero,
+    SameValueNonNumber: SameValueNonNumber,
+    AbstractRelationalComparison: AbstractRelationalComparison,
+    AbstractEqualityComparison: AbstractEqualityComparison,
+    StrictEqualityComparison: StrictEqualityComparison,
+    ToPrimitive: ToPrimitive,
+    OrdinaryToPrimitive: OrdinaryToPrimitive,
+    ToBoolean: ToBoolean,
+    ToNumber: ToNumber,
+    ToInteger: ToInteger,
+    ToInt32: ToInt32,
+    ToUint32: ToUint32,
+    ToInt16: ToInt16,
+    ToUint16: ToUint16,
+    ToInt8: ToInt8,
+    ToUint8: ToUint8,
+    ToUint8Clamp: ToUint8Clamp,
+    ToString: ToString,
+    NumberToString: NumberToString,
+    ToObject: ToObject,
+    ToPropertyKey: ToPropertyKey,
+    ToLength: ToLength,
+    CanonicalNumericIndexString: CanonicalNumericIndexString,
+    ToIndex: ToIndex,
+    typedArrayInfo: typedArrayInfo,
+    numericTypeInfo: numericTypeInfo,
+    IterableToList: IterableToList,
+    ValidateTypedArray: ValidateTypedArray,
+    AllocateTypedArray: AllocateTypedArray,
+    AllocateTypedArrayBuffer: AllocateTypedArrayBuffer,
+    TypedArrayCreate: TypedArrayCreate,
+    TypedArraySpeciesCreate: TypedArraySpeciesCreate
+  });
+
   const Abstract = { ...AbstractOps,
     Type
   };
   const {
     ObjectCreate: ObjectCreate$1,
     CreateBuiltinFunction: CreateBuiltinFunction$1,
-    Assert: Assert$1,
-    InnerModuleEvaluation: InnerModuleEvaluation$1,
     GetModuleNamespace: GetModuleNamespace$1
   } = Abstract;
   function initializeAgent(options = {}) {
@@ -42653,88 +42899,7 @@
           Link: () => this.scope(() => module.Link()),
           GetNamespace: () => this.scope(() => GetModuleNamespace$1(module)),
           Evaluate: () => this.scope(() => {
-            Assert$1(module.Status === 'linked', "module.Status === 'linked'");
-            const stack = [];
-            let index = 0; // InnerModuleEvaluation
-
-            module.Status = 'evaluating';
-            module.DFSIndex = index;
-            module.DFSAncestorIndex = index;
-            stack.push(module);
-
-            for (const required of module.RequestedModules) {
-              let requiredModule = HostResolveImportedModule(module, required);
-              Assert$1(!(requiredModule instanceof AbruptCompletion), "");
-
-              if (requiredModule instanceof Completion) {
-                requiredModule = requiredModule.Value;
-              }
-
-              index = InnerModuleEvaluation$1(requiredModule, stack, index);
-
-              if (index instanceof AbruptCompletion) {
-                return index;
-              }
-
-              if (index instanceof Completion) {
-                index = index.Value;
-              }
-
-              if (requiredModule instanceof CyclicModuleRecord) {
-                Assert$1(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated'");
-
-                if (stack.includes(requiredModule)) {
-                  Assert$1(requiredModule.Status === 'evaluating', "requiredModule.Status === 'evaluating'");
-                }
-
-                if (requiredModule.Status === 'evaluating') {
-                  module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
-                }
-              }
-            }
-
-            let result = module.ExecuteModule();
-
-            if (result instanceof AbruptCompletion) {
-              return result;
-            }
-
-            if (result instanceof Completion) {
-              result = result.Value;
-            }
-
-            Assert$1(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
-            Assert$1(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
-
-            if (module.DFSAncestorIndex === module.DFSIndex) {
-              let done = false;
-
-              while (done === false) {
-                const requiredModule = stack.pop();
-                Assert$1(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-                requiredModule.Status = 'evaluated';
-
-                if (requiredModule === module) {
-                  done = true;
-                }
-              }
-            } // END InnerModuleEvaluation
-            // Source Text Module Record Evaluate()
-
-
-            if (result instanceof AbruptCompletion) {
-              for (const m of stack) {
-                Assert$1(m.Status === 'evaluating', "m.Status === 'evaluating'");
-                m.Status = 'evaluated';
-                m.EvaluationError = result;
-              }
-
-              Assert$1(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
-              return result;
-            }
-
-            Assert$1(module.Status === 'evaluated' && module.EvaluationError === Value.undefined, "module.Status === 'evaluated' && module.EvaluationError === Value.undefined");
-            Assert$1(stack.length === 0, "stack.length === 0");
+            const result = module.Evaluate();
             runJobQueue();
             return result;
           })
@@ -42809,7 +42974,7 @@
     try {
       let _val = Get(value, wellKnownSymbols.toStringTag);
 
-      Assert$1(!(_val instanceof AbruptCompletion), "");
+      Assert(!(_val instanceof AbruptCompletion), "");
 
       if (_val instanceof Completion) {
         _val = _val.Value;
@@ -42843,7 +43008,7 @@
           if (toString.nativeFunction === objectToString.nativeFunction) {
             let _val2 = Call(toString, value);
 
-            Assert$1(!(_val2 instanceof AbruptCompletion), "");
+            Assert(!(_val2 instanceof AbruptCompletion), "");
 
             if (_val2 instanceof Completion) {
               _val2 = _val2.Value;
@@ -42853,7 +43018,7 @@
           } else {
             const tag = getObjectTag(value, false) || 'Unknown';
             let ctor = Get(value, new Value('constructor'));
-            Assert$1(!(ctor instanceof AbruptCompletion), "");
+            Assert(!(ctor instanceof AbruptCompletion), "");
 
             if (ctor instanceof Completion) {
               ctor = ctor.Value;
@@ -42862,7 +43027,7 @@
             if (Type(ctor) === 'Object') {
               let _val3 = Get(ctor, new Value('name'));
 
-              Assert$1(!(_val3 instanceof AbruptCompletion), "");
+              Assert(!(_val3 instanceof AbruptCompletion), "");
 
               if (_val3 instanceof Completion) {
                 _val3 = _val3.Value;
@@ -42957,7 +43122,7 @@
 
           if (!e.stringValue) {
             e = Call(toString, value);
-            Assert$1(!(e instanceof AbruptCompletion), "");
+            Assert(!(e instanceof AbruptCompletion), "");
 
             if (e instanceof Completion) {
               e = e.Value;
@@ -42990,7 +43155,7 @@
         try {
           const tag = getObjectTag(value, true);
           let keys = value.OwnPropertyKeys();
-          Assert$1(!(keys instanceof AbruptCompletion), "");
+          Assert(!(keys instanceof AbruptCompletion), "");
 
           if (keys instanceof Completion) {
             keys = keys.Value;
@@ -43008,7 +43173,7 @@
 
             for (const key of keys) {
               let C = value.GetOwnProperty(key);
-              Assert$1(!(C instanceof AbruptCompletion), "");
+              Assert(!(C instanceof AbruptCompletion), "");
 
               if (C instanceof Completion) {
                 C = C.Value;
@@ -43025,7 +43190,7 @@
 
             for (const key of keys) {
               let C = value.GetOwnProperty(key);
-              Assert$1(!(C instanceof AbruptCompletion), "");
+              Assert(!(C instanceof AbruptCompletion), "");
 
               if (C instanceof Completion) {
                 C = C.Value;
