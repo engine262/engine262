@@ -6,7 +6,7 @@
   "dependencies": {
     "@snek/source-map-support": "^1.0.4",
     "acorn": "^7.0.0",
-    "nearley": "^2.18.0"
+    "nearley": "^2.16.0"
   },
   "bin": {
     "engine262": "bin/engine262.js"
