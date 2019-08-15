@@ -111,6 +111,8 @@ initializeAgent({
 
 const realm = new Realm({
   // resolveImportedModule() {},
+  // getImportMetaProperties() {},
+  // finalizeImportMeta() {},
 });
 
 realm.evaluateScript(`

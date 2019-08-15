@@ -174,6 +174,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     super(init);
 
     ({
+      ImportMeta: this.ImportMeta,
       ECMAScriptCode: this.ECMAScriptCode,
       ImportEntries: this.ImportEntries,
       LocalExportEntries: this.LocalExportEntries,

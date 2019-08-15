@@ -141,13 +141,13 @@ if (argv.length === 0) {
       const module = result;
       realm.moduleEntry = module;
       result = module.Link();
-    }
-    if (!(result instanceof AbruptCompletion)) {
-      result = module.Evaluate();
-    }
-    if (!(result instanceof AbruptCompletion)) {
-      if (result.PromiseState === 'rejected') {
-        result = Throw(realm, result.PromiseResult);
+      if (!(result instanceof AbruptCompletion)) {
+        result = module.Evaluate();
+      }
+      if (!(result instanceof AbruptCompletion)) {
+        if (result.PromiseState === 'rejected') {
+          result = Throw(realm, result.PromiseResult);
+        }
       }
     }
   } else {

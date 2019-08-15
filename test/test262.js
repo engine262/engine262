@@ -180,6 +180,7 @@ if (!process.send) {
     features: [
       'globalThis', 'Promise.allSettled',
       'OptionalChaining', 'TopLevelAwait',
+      'import.meta',
     ],
     promiseRejectionTracker(...args) {
       if (promiseRejectionTracker) {

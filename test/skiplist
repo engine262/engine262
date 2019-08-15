@@ -84,6 +84,9 @@ built-ins/ThrowTypeError/frozen.js
 // "Identifier 'fn' has already been declared"
 language/module-code/top-level-await/await-expr-func-expression.js
 
+// https://github.com/tc39/ecma262/pull/1670
+language/expressions/import.meta/distinct-for-each-module.js
+
 // https://github.com/acornjs/acorn/issues/861
 language/expressions/assignment/member-expr-ident-name-case-escaped.js
 language/expressions/assignment/member-expr-ident-name-const-escaped.js

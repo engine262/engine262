@@ -42,6 +42,10 @@ export const FEATURES = Object.freeze([
     name: 'TopLevelAwait',
     url: 'https://github.com/tc39/proposal-top-level-await',
   },
+  {
+    name: 'import.meta',
+    url: 'https://github.com/tc39/proposal-import-meta',
+  },
 ].map(Object.freeze));
 
 export class Agent {
@@ -367,4 +371,22 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
     FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
   }, []);
   return new NormalCompletion(Value.undefined);
+}
+
+// https://tc39.es/proposal-import-meta/#sec-hostgetimportmetaproperties
+export function HostGetImportMetaProperties(moduleRecord) {
+  const realm = surroundingAgent.currentRealmRecord;
+  if (realm.HostDefined.getImportMetaProperties) {
+    return X(realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public));
+  }
+  return [];
+}
+
+// https://tc39.es/proposal-import-meta/#sec-hostfinalizeimportmeta
+export function HostFinalizeImportMeta(importMeta, moduleRecord) {
+  const realm = surroundingAgent.currentRealmRecord;
+  if (realm.HostDefined.finalizeImportMeta) {
+    return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public));
+  }
+  return Value.undefined;
 }

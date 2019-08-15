@@ -32,8 +32,6 @@ export-star-as-namespace-from-module
 
 hashbang
 
-import.meta
-
 numeric-separator-literal
 
 proxy-missing-checks

@@ -35,6 +35,7 @@ function functionFlags(async, generator) {
 
 const optionalChainToken = { label: '?.' };
 const nullishCoalescingToken = { label: '??', binop: 0 };
+const skipWhiteSpace = /(?:\s|\/\/.*|\/\*[^]*?\*\/)*/g;
 
 const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
   constructor(options = {}, source) {
@@ -91,6 +92,45 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
       return this.finishToken(acorn.tokTypes.question);
     }
     return super.getTokenFromCode(code);
+  }
+
+  parseStatement(context, topLevel, exports) {
+    if (this.type === acorn.tokTypes._import && surroundingAgent.feature('import.meta')) { // eslint-disable-line no-underscore-dangle
+      skipWhiteSpace.lastIndex = this.pos;
+      const skip = skipWhiteSpace.exec(this.input);
+      const next = this.pos + skip[0].length;
+      const nextCh = this.input.charCodeAt(next);
+      if (nextCh === 40 || nextCh === 46) { // '(' '.'
+        const node = this.startNode();
+        return this.parseExpressionStatement(node, this.parseExpression());
+      }
+    }
+    return super.parseStatement(context, topLevel, exports);
+  }
+
+  parseExprImport() {
+    const node = this.startNode();
+    const meta = this.parseIdent(true);
+    switch (this.type) {
+      case acorn.tokTypes.parenL:
+        return this.parseDynamicImport(node);
+      case acorn.tokTypes.dot:
+        if (!surroundingAgent.feature('import.meta')) {
+          return this.unexpected();
+        }
+        if (!(this.inModule || this.allowImportExportAnywhere)) {
+          return this.unexpected();
+        }
+        this.next();
+        node.meta = meta;
+        node.property = this.parseIdent(true);
+        if (node.property.name !== 'meta' || this.containsEsc) {
+          return this.unexpected();
+        }
+        return this.finishNode(node, 'MetaProperty');
+      default:
+        return this.unexpected();
+    }
   }
 
   parseSubscripts(base, startPos, startLoc, noCalls) {
@@ -388,6 +428,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     Realm: realm,
     Environment: Value.undefined,
     Namespace: Value.undefined,
+    ImportMeta: Value.undefined,
     Async: body.containsTopLevelAwait ? Value.true : Value.false,
     AsyncEvaluating: Value.false,
     TopLevelCapability: Value.undefined,

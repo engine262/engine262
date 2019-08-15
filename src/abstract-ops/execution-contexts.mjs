@@ -18,13 +18,13 @@ export function GetActiveScriptOrModule() {
   if (surroundingAgent.executionContextStack.length === 0) {
     return Value.null;
   }
-  const ec = [...surroundingAgent.executionContextStack]
-    .reverse()
-    .find((e) => e.ScriptOrModule !== undefined);
-  if (!ec) {
-    return Value.null;
+  for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
+    const e = surroundingAgent.executionContextStack[i];
+    if (e.ScriptOrModule !== undefined) {
+      return e.ScriptOrModule;
+    }
   }
-  return ec.ScriptOrModule;
+  return Value.null;
 }
 
 // 8.3.2 #sec-resolvebinding
