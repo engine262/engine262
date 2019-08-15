@@ -264,7 +264,7 @@ export function isSuperCall(node) {
 
 // #prod-ImportCall
 export function isImportCall(node) {
-  return node.type === 'CallExpression' && node.callee.type === 'Import';
+  return node.type === 'ImportExpression';
 }
 
 // Used in #prod-UpdateExpression

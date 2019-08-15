@@ -26,7 +26,7 @@ function createRealm() {
   const realm = new Realm({
     resolveImportedModule(referencingModule, specifier) {
       const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
-      if (resolved === realm.moduleEntry.specifier) {
+      if (realm.moduleEntry && resolved === realm.moduleEntry.specifier) {
         return realm.moduleEntry;
       }
       if (moduleCache.has(resolved)) {
@@ -141,8 +141,13 @@ if (argv.length === 0) {
       const module = result;
       realm.moduleEntry = module;
       result = module.Link();
-      if (!(result instanceof AbruptCompletion)) {
-        result = module.Evaluate();
+    }
+    if (!(result instanceof AbruptCompletion)) {
+      result = module.Evaluate();
+    }
+    if (!(result instanceof AbruptCompletion)) {
+      if (result.PromiseState === 'rejected') {
+        result = Throw(realm, result.PromiseResult);
       }
     }
   } else {

@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const babel = require('rollup-plugin-babel');
-const acornBigInt = require('acorn-bigint');
 const { name, version } = require('./package.json');
 
 const { USE_DO_EXPRESSIONS } = process.env;
@@ -27,7 +26,6 @@ module.exports = () => ({
     }),
   ],
   acornInjectPlugins: [
-    acornBigInt,
     ...(USE_DO_EXPRESSIONS ? [
       (P) => class ParserWithDoExpressions extends P {
         parseExprAtom(...args) {
@@ -40,7 +38,7 @@ module.exports = () => ({
           return super.parseExprAtom(...args);
         }
       },
-    ] : [])
+    ] : []),
   ],
   output: [
     {

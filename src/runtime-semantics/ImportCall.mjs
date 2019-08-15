@@ -10,7 +10,7 @@ import { Q, X, IfAbruptRejectPromise } from '../completion.mjs';
 
 // #sec-import-calls
 // ImportCall : `import` `(` AssignmentExpression `)`
-export function* Evaluate_ImportCall({ arguments: [AssignmentExpression] }) {
+export function* Evaluate_ImportCall({ source: AssignmentExpression }) {
   const referencingScriptOrModule = X(GetActiveScriptOrModule());
   const argRef = yield* Evaluate(AssignmentExpression);
   const specifier = Q(GetValue(argRef));

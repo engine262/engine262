@@ -25,6 +25,7 @@ module.exports = {
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
     'arrow-parens': ['error', 'always'],
     'lines-between-class-members': 'off',
+    'max-classes-per-file': 'off',
     'max-len': 'off',
     'camelcase': 'off',
     'class-methods-use-this': 'off',
