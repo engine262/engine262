@@ -351,7 +351,7 @@ function StringProto_search([regexp = Value.undefined], { thisValue }) {
 }
 
 // 21.1.3.19 #sec-string.prototype.slice
-function StringProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+export function StringProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const len = S.length;

@@ -498,6 +498,11 @@ export function isOptionalChainWithArguments(node) {
   return isOptionalChain(node) && Array.isArray(node.arguments);
 }
 
+// https://github.com/tc39/proposal-slice-notation
+export function isSliceExpression(node) {
+  return node.type === 'SliceExpression';
+}
+
 // #prod-Expression
 export function isExpression(node) {
   return (
@@ -573,6 +578,9 @@ export function isExpression(node) {
 
     // ConditionalExpression
       || isActualConditionalExpression(node)
+
+    // SliceExpression
+      || isSliceExpression(node)
 
     // AssignmentExpression
       || isYieldExpression(node)

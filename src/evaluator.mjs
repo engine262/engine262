@@ -60,6 +60,7 @@ import {
   isParenthesizedExpression,
   isRegularExpressionLiteral,
   isReturnStatement,
+  isSliceExpression,
   isStatement,
   isSuperCall,
   isSuperProperty,
@@ -126,6 +127,7 @@ import {
   Evaluate_RelationalExpression,
   Evaluate_ReturnStatement,
   Evaluate_ShiftExpression,
+  Evaluate_SliceExpression,
   Evaluate_SuperCall,
   Evaluate_SuperProperty,
   Evaluate_TaggedTemplate,
@@ -371,6 +373,9 @@ function* Inner_Evaluate_Expression(Expression) {
 
     case isOptionalExpression(Expression):
       return yield* Evaluate_OptionalExpression(Expression);
+
+    case isSliceExpression(Expression):
+      return yield* Evaluate_SliceExpression(Expression);
 
     case isSuperProperty(Expression):
       return yield* Evaluate_SuperProperty(Expression);

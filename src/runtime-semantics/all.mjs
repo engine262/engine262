@@ -63,6 +63,7 @@ export * from './RelationalOperators.mjs';
 export * from './RestBindingInitialization.mjs';
 export * from './ReturnStatement.mjs';
 export * from './ShiftExpression.mjs';
+export * from './SliceExpression.mjs';
 export * from './StringPad.mjs';
 export * from './SuperCall.mjs';
 export * from './SuperProperty.mjs';

@@ -270,6 +270,41 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     return node;
   }
 
+  // Parse a slice (`start:end:step`) operator or a conditional (`cond ? a : b`) operator
+  parseMaybeConditional(noIn, refDestructuringErrors) {
+    let startPos = this.start, startLoc = this.startLoc
+    let startIndex, endIndex, step; // can't name them 'start', 'end' because those are Parser properties
+    if (!this.eat(acorn.tokTypes.colon)) {
+      startIndex = super.parseMaybeConditional(noIn, refDestructuringErrors);
+
+      if (this.type !== acorn.tokTypes.colon || !surroundingAgent.feature('sliceNotation')) return startIndex; // not a SliceExpression, return the parsed expression
+
+      this.eat(acorn.tokTypes.colon);
+    }
+
+    // now we're sure to be in a slice operator, we've already parsed (start):
+
+    let hasSecondColon = this.eat(acorn.tokTypes.colon);
+    if (!hasSecondColon && this.type !== acorn.tokTypes.bracketR) {
+      endIndex = super.parseMaybeConditional(noIn, refDestructuringErrors);
+
+      hasSecondColon = this.eat(acorn.tokTypes.colon);
+    }
+
+    // we're after end, (start):(end)(:(step)) and parse a possible step expression
+    //                                 ^
+
+    if (hasSecondColon && this.type !== acorn.tokTypes.bracketR) {
+      step = super.parseMaybeConditional(noIn, refDestructuringErrors);
+    }
+
+    let node = this.startNodeAt(startPos, startLoc)
+    node.startIndex = startIndex;
+    node.endIndex = endIndex;
+    node.step = step;
+    return this.finishNode(node, 'SliceExpression');
+  }
+
   // Adapted from several different places in Acorn.
   static parseFunctionBody(sourceText, async, generator) {
     const parser = new Parser({

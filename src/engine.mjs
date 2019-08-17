@@ -46,6 +46,10 @@ export const FEATURES = Object.freeze([
     name: 'import.meta',
     url: 'https://github.com/tc39/proposal-import-meta',
   },
+  {
+    name: 'sliceNotation',
+    url: 'https://github.com/tc39/proposal-slice-notation',
+  },
 ].map(Object.freeze));
 
 export class Agent {

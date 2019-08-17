@@ -353,7 +353,7 @@ function ArrayProto_shift(args, { thisValue }) {
 }
 
 // 22.1.3.25 #sec-array.prototype.slice
-function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+export function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O)).numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();

@@ -47,6 +47,7 @@ module.exports = () => ({
       sourcemap: true,
       name,
       banner,
+      globals: { acorn: 'acorn', nearley: 'nearley' },
     },
     {
       file: 'dist/engine262.mjs',
