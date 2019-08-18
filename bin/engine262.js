@@ -18,6 +18,7 @@ const {
   Object: APIObject,
   Abstract,
   Throw,
+  ToString,
   FEATURES,
 } = require('..');
 
@@ -43,15 +44,46 @@ function createRealm() {
   });
 
   const print = new Value(realm, (args) => {
-    console.log(...args.map((a) => inspect(a))); // eslint-disable-line no-console
+    for (const arg of args) {
+      const s = ToString(realm, arg);
+      if (s instanceof AbruptCompletion) {
+        return s;
+      }
+      process.stdout.write(s);
+      process.stdout.write(' ');
+    }
+    process.stdout.write('\n');
     return Value.undefined;
   }, [], realm);
-  const raw = new Value(realm, (args) => {
-    console.log(...args); // eslint-disable-line no-console
-    return Value.undefined;
-  }, [], realm);
-  Abstract.CreateDataProperty(print, new Value(realm, 'raw'), raw);
   Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
+
+  {
+    const console = new APIObject(realm);
+    Abstract.CreateDataProperty(realm.global, new Value(realm, 'console'), console);
+
+    const format = (args) => args.map((a) => inspect(a), realm).join(' ');
+
+    const log = new Value(realm, (args) => {
+      process.stdout.write(`${format(args)}\n`);
+      return Value.undefined;
+    });
+
+    Abstract.CreateDataProperty(console, new Value(realm, 'log'), log);
+
+    const error = new Value(realm, (args) => {
+      process.stderr.write(`${format(args)}\n`);
+      return Value.undefined;
+    });
+
+    Abstract.CreateDataProperty(console, new Value(realm, 'error'), error);
+
+    const debug = new Value(realm, (args) => {
+      process.stderr.write(`${util.format(...args)}\n`);
+      return Value.undefined;
+    });
+
+    Abstract.CreateDataProperty(console, new Value(realm, 'debug'), debug);
+  }
 
   const $ = new APIObject(realm);
   realm.$ = $;

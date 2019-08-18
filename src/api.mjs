@@ -28,13 +28,14 @@ import {
   EnsureCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
-import { OutOfRange } from './helpers.mjs';
+import { OutOfRange, msg } from './helpers.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const {
   ObjectCreate,
   CreateBuiltinFunction,
   GetModuleNamespace,
+  ToPrimitive,
 } = Abstract;
 export {
   AbruptCompletion,
@@ -191,7 +192,13 @@ class APIValue extends Value {
   }
 }
 
-function Throw(realm, V, ...args) {
+export {
+  APIRealm as Realm,
+  APIValue as Value,
+  APIObject as Object,
+};
+
+export function Throw(realm, V, ...args) {
   return realm.scope(() => {
     if (typeof V === 'string') {
       return surroundingAgent.Throw(V, args[0]);
@@ -200,13 +207,30 @@ function Throw(realm, V, ...args) {
   });
 }
 
-export {
-  APIRealm as Realm,
-  APIValue as Value,
-  APIObject as Object,
-  Throw,
-};
-
+export function ToString(realm, value) {
+  return realm.scope(() => {
+    while (true) {
+      const type = Type(value);
+      switch (type) {
+        case 'String':
+          return value.stringValue();
+        case 'Number':
+          return value.numberValue().toString();
+        case 'Boolean':
+          return value.booleanValue().toString();
+        case 'Undefined':
+          return 'undefined';
+        case 'Null':
+          return 'null';
+        case 'Symbol':
+          return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
+        default:
+          value = Q(ToPrimitive(value, 'String'));
+          break;
+      }
+    }
+  });
+}
 
 const getObjectTag = (value, wrap) => {
   try {
