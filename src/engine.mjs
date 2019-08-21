@@ -19,7 +19,7 @@ import {
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
-import { msg } from './helpers.mjs';
+import { CallSite, msg } from './helpers.mjs';
 
 export const FEATURES = Object.freeze([
   {
@@ -123,7 +123,10 @@ export class ExecutionContext {
     this.Function = undefined;
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
+    this.VariableEnvironment = undefined;
     this.LexicalEnvironment = undefined;
+
+    this.callSite = new CallSite(this);
   }
 
   copy() {
@@ -133,6 +136,8 @@ export class ExecutionContext {
     e.Realm = this.Realm;
     e.ScriptOrModule = this.ScriptOrModule;
     e.LexicalEnvironment = this.LexicalEnvironment;
+
+    e.callSite = this.callSite.clone();
     return e;
   }
 }

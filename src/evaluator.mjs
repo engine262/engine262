@@ -498,6 +498,8 @@ export function Evaluate_Module(Module) {
 }
 
 export function* Evaluate(Production) {
+  surroundingAgent.runningExecutionContext.callSite.setLocation(Production);
+
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(Production, surroundingAgent.currentRealmRecord);
   }

@@ -1,7 +1,6 @@
 import { surroundingAgent } from './engine.mjs';
-import { AbstractModuleRecord } from './modules.mjs';
 import { Value, Descriptor } from './value.mjs';
-import { ToString, DefinePropertyOrThrow } from './abstract-ops/all.mjs';
+import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 import { inspect } from './api.mjs';
 
@@ -43,33 +42,143 @@ export function resume(context, completion) {
   return value;
 }
 
-export function captureStack(O) {
-  const stack = surroundingAgent.executionContextStack
-    .filter((e) => e.Function !== Value.null)
-    .slice(0, -1) // remove error constructor
-    .map((e) => {
-      let string = '\n  at ';
-      const functionName = e.Function.properties.get(new Value('name'));
+export class CallSite {
+  constructor(context) {
+    this.context = context;
+    this.lineNumber = null;
+    this.columnNumber = null;
+    this.constructCall = false;
+  }
+
+  clone() {
+    const c = new CallSite(this.context);
+    c.lineNumber = this.lineNumber;
+    c.columnNumber = this.columnNumber;
+    c.constructCall = this.constructCall;
+    return c;
+  }
+
+  isTopLevel() {
+    return this.context.Function === Value.null;
+  }
+
+  isConstructCall() {
+    return this.constructCall;
+  }
+
+  isAsync() {
+    if (this.context.Function !== Value.null) {
+      return this.context.Function.ECMAScriptCode && this.context.Function.ECMAScriptCode.async;
+    }
+    return false;
+  }
+
+  isNative() {
+    return !!this.context.Function.nativeFunction;
+  }
+
+  getFunctionName() {
+    if (this.context.Function !== Value.null) {
+      const name = this.context.Function.properties.get(new Value('name'));
+      if (name) {
+        return X(ToString(name.Value)).stringValue();
+      }
+    }
+    return null;
+  }
+
+  getSpecifier() {
+    if (this.context.ScriptOrModule !== Value.null) {
+      return this.context.ScriptOrModule.HostDefined.specifier;
+    }
+    return null;
+  }
+
+  setLocation(node) {
+    const { line, column } = node.loc.start;
+    this.lineNumber = line;
+    this.columnNumber = column;
+  }
+
+  loc() {
+    if (this.isNative()) {
+      return 'native';
+    }
+    let out = '';
+    const specifier = this.getSpecifier();
+    if (specifier) {
+      out += specifier;
+    } else {
+      out += '<anonymous>';
+    }
+    if (this.lineNumber !== null) {
+      out += `:${this.lineNumber}`;
+      if (this.columnNumber !== null) {
+        out += `:${this.columnNumber}`;
+      }
+    }
+    return out.trim();
+  }
+
+  toString() {
+    const isAsync = this.isAsync();
+    const functionName = this.getFunctionName();
+    const isMethodCall = !(this.isTopLevel() || this.isConstructCall());
+
+    let string = isAsync ? 'async ' : '';
+
+    if (isMethodCall) {
       if (functionName) {
-        string += X(ToString(functionName.Value)).stringValue();
+        string += functionName;
       } else {
         string += '<anonymous>';
       }
-      if (e.ScriptOrModule instanceof AbstractModuleRecord) {
-        string += e.ScriptOrModule.HostDefined.specifier;
+    } else if (this.isConstructCall()) {
+      string += 'new ';
+      if (functionName) {
+        string += functionName;
+      } else {
+        string += '<anonymous>';
       }
-      return string;
-    })
-    .reverse();
+    } else if (functionName) {
+      string += functionName;
+    } else {
+      return `${string}${this.loc()}`;
+    }
 
-  const errorString = X(ToString(O)).stringValue();
-  const trace = `${errorString}${stack.join('')}`;
+    return `${string} (${this.loc()})`;
+  }
+}
+
+export function captureStack(O) {
+  const stack = [];
+  for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
+    const e = surroundingAgent.executionContextStack[i];
+    if (e.VariableEnvironment === undefined) {
+      break;
+    }
+    stack.push(e.callSite.clone());
+  }
+
+  let cache = null;
 
   X(DefinePropertyOrThrow(O, new Value('stack'), Descriptor({
-    Value: new Value(trace),
-    Writable: Value.true,
+    Get: CreateBuiltinFunction(() => {
+      if (cache === null) {
+        let errorString = X(ToString(O)).stringValue();
+        stack.forEach((s) => {
+          errorString = `${errorString}\n    at ${s.toString()}`;
+        });
+        cache = new Value(errorString);
+      }
+      return cache;
+    }, []),
+    Set: CreateBuiltinFunction(([value = Value.undefined]) => {
+      cache = value;
+      return Value.undefined;
+    }, []),
     Enumerable: Value.false,
-    Configurable: Value.false,
+    Configurable: Value.true,
   })));
 }
 
