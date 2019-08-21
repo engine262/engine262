@@ -366,11 +366,11 @@ export function inspect(v, realm = surroundingAgent.currentRealmRecord, compact 
         } else {
           const oc = compact;
           compact = true;
-          cache.forEach((c) => {
-            out = `${out} ${c[0]}: ${c[1]},`;
+          cache.forEach((c, i) => {
+            out = `${out}${i === 0 ? '' : ','} ${c[0]}: ${c[1]}`;
           });
           compact = oc;
-          return `${out.slice(0, -1)} ${isArray ? ']' : '}'}`;
+          return `${out} ${isArray ? ']' : '}'}`;
         }
       } catch (e) {
         return compactObject(toString);
