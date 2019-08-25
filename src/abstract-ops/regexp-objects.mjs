@@ -42,7 +42,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   }
 
   const f = F.stringValue();
-  if (/^[gimsuy]*$/.test(f) === false || (new global.Set(f).size !== f.length)) {
+  if (/^[gimsuy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
     return surroundingAgent.Throw('SyntaxError', msg('InvalidRegExpFlags', f));
   }
 

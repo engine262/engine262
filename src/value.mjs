@@ -1161,7 +1161,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
       return trapResult;
     }
-    const uncheckedResultKeys = new global.Set(trapResult);
+    const uncheckedResultKeys = new globalThis.Set(trapResult);
     for (const key of targetNonconfigurableKeys) {
       if (!uncheckedResultKeys.has(key)) {
         return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap result does not include non-configurable key');
