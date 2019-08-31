@@ -81,11 +81,48 @@ language/expressions/super/prop-expr-*.js
 built-ins/ThrowTypeError/extensible.js
 built-ins/ThrowTypeError/frozen.js
 
-// "Identifier 'fn' has already been declared"
-language/module-code/top-level-await/await-expr-func-expression.js
-
 // https://github.com/tc39/ecma262/pull/1670
 language/expressions/import.meta/distinct-for-each-module.js
+
+// https://github.com/tc39/test262/pull/2326
+built-ins/TypedArray/prototype/sort/sorted-values.js
+
+// https://github.com/tc39/ecma262/pull/1490
+built-ins/Promise/executor-function-name.js
+built-ins/Promise/executor-function-name.js
+built-ins/Promise/reject-function-name.js
+built-ins/Promise/resolve-function-name.js
+built-ins/Promise/reject-function-name.js
+built-ins/Promise/resolve-function-name.js
+built-ins/ThrowTypeError/name.js
+built-ins/ThrowTypeError/name.js
+built-ins/Promise/all/resolve-element-function-name.js
+built-ins/Promise/all/resolve-element-function-name.js
+built-ins/Promise/allSettled/resolve-element-function-name.js
+built-ins/Promise/allSettled/resolve-element-function-name.js
+built-ins/Promise/allSettled/reject-element-function-name.js
+built-ins/Promise/allSettled/reject-element-function-name.js
+built-ins/Proxy/revocable/revocation-function-name.js
+built-ins/Proxy/revocable/revocation-function-name.js
+language/expressions/assignment/fn-name-lhs-member.js
+language/expressions/assignment/fn-name-lhs-member.js
+language/expressions/assignment/fn-name-lhs-cover.js
+language/expressions/async-arrow-function/name.js
+language/expressions/async-arrow-function/name.js
+language/expressions/arrow-function/name.js
+language/expressions/assignment/fn-name-lhs-cover.js
+language/expressions/async-generator/name.js
+language/expressions/async-generator/name.js
+language/expressions/arrow-function/name.js
+language/expressions/async-function/name.js
+language/expressions/async-function/name.js
+language/expressions/class/name.js
+language/expressions/class/name.js
+language/expressions/function/name.js
+language/expressions/function/name.js
+language/expressions/generators/name.js
+language/expressions/generators/name.js
+
 
 // https://github.com/acornjs/acorn/issues/861
 language/expressions/assignment/member-expr-ident-name-case-escaped.js

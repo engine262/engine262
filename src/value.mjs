@@ -128,6 +128,10 @@ export class NumberValue extends PrimitiveValue {
   isInfinity() {
     return !Number.isFinite(this.number) && !this.isNaN();
   }
+
+  isFinite() {
+    return Number.isFinite(this.number);
+  }
 }
 
 const negativeZero = new NumberValue(-0);

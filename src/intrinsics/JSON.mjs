@@ -302,7 +302,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       return QuoteJSONString(value);
     }
     if (Type(value) === 'Number') {
-      if (!value.isInfinity()) {
+      if (value.isFinite()) {
         return X(ToString(value));
       }
       return new Value('null');
@@ -394,7 +394,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     const stepback = indent;
     indent = `${indent}${gap}`;
     const partial = [];
-    const len = Q(Get(value, new Value('length'))).numberValue();
+    const len = Q(LengthOfArrayLike(value)).numberValue();
     let index = 0;
     while (index < len) {
       const indexStr = X(ToString(new Value(index)));
@@ -438,7 +438,8 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
         const len = Q(LengthOfArrayLike(replacer)).numberValue();
         let k = 0;
         while (k < len) {
-          const v = Q(Get(replacer, X(ToString(new Value(k)))));
+          const vStr = X(ToString(new Value(k)));
+          const v = Q(Get(replacer, vStr));
           let item = Value.undefined;
           if (Type(v) === 'String') {
             item = v;
@@ -449,7 +450,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
               item = Q(ToString(v));
             }
           }
-          if (Type(item) !== 'undefined' && !PropertyList.includes(item)) {
+          if (item !== Value.undefined && !PropertyList.includes(item)) {
             PropertyList.push(item);
           }
           k += 1;
