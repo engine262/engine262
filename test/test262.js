@@ -292,7 +292,7 @@ if (!process.send) {
           if (operation === 'reject') {
             tracked.add(promise);
           } else if (operation === 'handle') {
-            tracked.remove(promise);
+            tracked.delete(promise);
           }
         };
         $262.handlePrint = (m) => {
