@@ -287,7 +287,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
     Assert(promise.PromiseState === 'rejected');
     const reason = promise.PromiseResult;
     if (promise.PromiseIsHandled === Value.false) {
-      HostPromiseRejectionTracker(promise, 'handler');
+      HostPromiseRejectionTracker(promise, 'handle');
     }
     EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
   }
