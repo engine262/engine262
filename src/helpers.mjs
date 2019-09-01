@@ -1,7 +1,7 @@
 import { surroundingAgent } from './engine.mjs';
 import { Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+import { X, AwaitFulfilledFunctions } from './completion.mjs';
 import { inspect } from './api.mjs';
 
 export class OutOfRange extends RangeError {
@@ -150,6 +150,31 @@ export class CallSite {
   }
 }
 
+function captureAsyncStack(stack) {
+  let promise = stack[0].context.promiseCapability.Promise;
+  for (let i = 0; i < 10; i += 1) {
+    if (promise.PromiseFulfillReactions.length !== 1) {
+      return;
+    }
+    const [reaction] = promise.PromiseFulfillReactions;
+    if (reaction.handler.nativeFunction === AwaitFulfilledFunctions) {
+      const asyncContext = reaction.Handler.AsyncContext;
+      stack.push(asyncContext.callSite.clone());
+      if ('PromiseState' in asyncContext.promiseCapability.Promise) {
+        promise = asyncContext.promiseCapability.Promise;
+      } else {
+        return;
+      }
+    } else {
+      if ('PromiseState' in reaction.Capability.Promise) {
+        promise = reaction.Capability.Promise;
+      } else {
+        return;
+      }
+    }
+  }
+}
+
 export function captureStack(O) {
   const stack = [];
   for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
@@ -158,6 +183,11 @@ export function captureStack(O) {
       break;
     }
     stack.push(e.callSite.clone());
+  }
+
+  if (stack.length > 0 && stack[0].context.promiseCapability) {
+    stack.pop();
+    captureAsyncStack(stack);
   }
 
   let cache = null;

@@ -127,6 +127,7 @@ export class ExecutionContext {
     this.LexicalEnvironment = undefined;
 
     this.callSite = new CallSite(this);
+    this.promiseCapability = undefined;
   }
 
   copy() {
@@ -135,9 +136,11 @@ export class ExecutionContext {
     e.Function = this.Function;
     e.Realm = this.Realm;
     e.ScriptOrModule = this.ScriptOrModule;
+    e.VariableEnvironment = this.VariableEnvironment;
     e.LexicalEnvironment = this.LexicalEnvironment;
 
     e.callSite = this.callSite.clone();
+    e.promiseCapability = this.promiseCapability;
     return e;
   }
 }

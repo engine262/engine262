@@ -14,6 +14,8 @@ import { resume } from '../helpers.mjs';
 
 // https://tc39.es/proposal-top-level-await/#sec-asyncblockstart
 export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
+  asyncContext.promiseCapability = promiseCapability;
+
   const runningContext = surroundingAgent.runningExecutionContext;
   asyncContext.codeEvaluationState = (function* resumer() {
     const evaluator = isExpressionBody(asyncBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
