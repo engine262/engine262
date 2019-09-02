@@ -103,13 +103,13 @@ const { Realm, initializeAgent } = require('engine262');
 initializeAgent({
   // onDebugger() {},
   // ensureCanCompileStrings() {},
-  // promiseRejectionTracker() {},
   // hasSourceTextAvailable() {},
   // onNodeEvaluation() {},
   // features: [],
 })
 
 const realm = new Realm({
+  // promiseRejectionTracker() {},
   // resolveImportedModule() {},
   // getImportMetaProperties() {},
   // finalizeImportMeta() {},

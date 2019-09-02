@@ -175,19 +175,12 @@ if (!process.send) {
 
   const harnessSource = fs.readFileSync(path.resolve(__dirname, './test262/harness/assert.js'), 'utf8');
 
-  let promiseRejectionTracker;
   initializeAgent({
     features: [
       'globalThis', 'Promise.allSettled',
       'OptionalChaining', 'TopLevelAwait',
       'import.meta',
     ],
-    promiseRejectionTracker(...args) {
-      if (promiseRejectionTracker) {
-        return promiseRejectionTracker(...args);
-      }
-      return undefined;
-    },
   });
 
   function isError(realm, type, value) {
@@ -216,7 +209,20 @@ if (!process.send) {
 
   function createRealm(file) {
     const resolverCache = new Map();
+    const trackedPromises = new Set();
     const realm = new Realm({
+      promiseRejectionTracker(promise, operation) {
+        switch (operation) {
+          case 'reject':
+            trackedPromises.add(promise);
+            break;
+          case 'handle':
+            trackedPromises.delete(promise);
+            break;
+          default:
+            break;
+        }
+      },
       resolveImportedModule(referencingScriptOrModule, specifier) {
         try {
           let base;
@@ -259,6 +265,7 @@ if (!process.send) {
     Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
     $262.realm = realm;
+    $262.trackedPromises = trackedPromises;
     $262.evalScript = (...args) => realm.evaluateScript(...args);
     $262.resolverCache = resolverCache;
 
@@ -279,22 +286,14 @@ if (!process.send) {
     let timeout;
     if (attrs.flags.async) {
       asyncPromise = new Promise((resolve, reject) => {
-        const tracked = new Set();
         timeout = setTimeout(() => {
-          const failure = [...tracked][0];
+          const failure = [...$262.trackedPromises][0];
           if (failure) {
             resolve({ status: 'FAIL', error: inspect(failure.PromiseResult, $262.realm) });
           } else {
             reject(new Error('timeout'));
           }
         }, 2500);
-        promiseRejectionTracker = (promise, operation) => {
-          if (operation === 'reject') {
-            tracked.add(promise);
-          } else if (operation === 'handle') {
-            tracked.delete(promise);
-          }
-        };
         $262.handlePrint = (m) => {
           if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
             resolve({ status: 'PASS' });
@@ -303,9 +302,6 @@ if (!process.send) {
           }
           $262.handlePrint = undefined;
         };
-      });
-      asyncPromise.finally(() => {
-        promiseRejectionTracker = undefined;
       });
     }
 

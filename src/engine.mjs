@@ -293,8 +293,9 @@ export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
 }
 
 export function HostPromiseRejectionTracker(promise, operation) {
-  if (surroundingAgent.hostDefinedOptions.promiseRejectionTracker) {
-    X(surroundingAgent.hostDefinedOptions.promiseRejectionTracker(promise, operation));
+  const realm = surroundingAgent.currentRealmRecord;
+  if (realm && realm.HostDefined.promiseRejectionTracker) {
+    X(realm.HostDefined.promiseRejectionTracker(promise, operation));
   }
 }
 
@@ -306,8 +307,8 @@ export function HostHasSourceTextAvailable(func) {
 }
 
 export function HostResolveImportedModule(referencingScriptOrModule, specifier) {
-  const Realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
-  if (Realm.HostDefined.resolveImportedModule) {
+  const realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
+  if (realm.HostDefined.resolveImportedModule) {
     specifier = specifier.stringValue();
     if (referencingScriptOrModule !== Value.null) {
       if (!referencingScriptOrModule.HostDefined.moduleMap) {
@@ -318,7 +319,7 @@ export function HostResolveImportedModule(referencingScriptOrModule, specifier) 
       }
     }
     const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
-    const apiModule = Q(Realm.HostDefined.resolveImportedModule(publicModule, specifier));
+    const apiModule = Q(realm.HostDefined.resolveImportedModule(publicModule, specifier));
     if (referencingScriptOrModule !== Value.null) {
       referencingScriptOrModule.HostDefined.moduleMap.set(specifier, apiModule.module);
     }
