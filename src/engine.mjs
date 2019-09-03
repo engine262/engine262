@@ -139,7 +139,7 @@ export class ExecutionContext {
     e.VariableEnvironment = this.VariableEnvironment;
     e.LexicalEnvironment = this.LexicalEnvironment;
 
-    e.callSite = this.callSite.clone();
+    e.callSite = this.callSite.clone(e);
     e.promiseCapability = this.promiseCapability;
     return e;
   }

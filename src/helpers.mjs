@@ -50,8 +50,8 @@ export class CallSite {
     this.constructCall = false;
   }
 
-  clone() {
-    const c = new CallSite(this.context);
+  clone(context = this.context) {
+    const c = new CallSite(context);
     c.lineNumber = this.lineNumber;
     c.columnNumber = this.columnNumber;
     c.constructCall = this.constructCall;
@@ -157,7 +157,7 @@ function captureAsyncStack(stack) {
       return;
     }
     const [reaction] = promise.PromiseFulfillReactions;
-    if (reaction.handler.nativeFunction === AwaitFulfilledFunctions) {
+    if (reaction.Handler.nativeFunction === AwaitFulfilledFunctions) {
       const asyncContext = reaction.Handler.AsyncContext;
       stack.push(asyncContext.callSite.clone());
       if ('PromiseState' in asyncContext.promiseCapability.Promise) {
@@ -186,7 +186,6 @@ export function captureStack(O) {
   }
 
   if (stack.length > 0 && stack[0].context.promiseCapability) {
-    stack.pop();
     captureAsyncStack(stack);
   }
 
