@@ -61,7 +61,7 @@ const INSPECTORS = {
     }
     if ('PromiseState' in v) {
       ctx.indent += 1;
-      const result = i(v.Value);
+      const result = v.PromiseState === 'pending' ? 'undefined' : i(v.Value);
       ctx.indent -= 1;
       return `Promise {
   [[PromiseState]]: ${v.PromiseState}
