@@ -4,7 +4,7 @@ import { Realm as APIRealm } from './api.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
 } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+import { Q, X } from './completion.mjs';
 
 const getObjectTag = (value, wrap) => {
   try {
@@ -75,6 +75,15 @@ const INSPECTORS = {
         return `[Function: ${name.Value.stringValue()}]`;
       }
       return '[Function]';
+    }
+
+    if ('ErrorData' in v) {
+      let e = Q(Get(v, new Value('stack')));
+      if (!e.stringValue) {
+        const toString = Q(Get(v, new Value('toString')));
+        e = X(Call(toString, v));
+      }
+      return e.stringValue();
     }
 
     if ('BooleanData' in v) {
