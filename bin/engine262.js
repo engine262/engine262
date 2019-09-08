@@ -61,7 +61,12 @@ function createRealm() {
     const console = new APIObject(realm);
     Abstract.CreateDataProperty(realm.global, new Value(realm, 'console'), console);
 
-    const format = (args) => args.map((a) => inspect(a), realm).join(' ');
+    const format = (args) => args.map((a, i) => {
+      if (i === 0 && Abstract.Type(a) === 'String') {
+        return a.stringValue();
+      }
+      return inspect(a, realm);
+    }).join(' ');
 
     const log = new Value(realm, (args) => {
       process.stdout.write(`${format(args)}\n`);

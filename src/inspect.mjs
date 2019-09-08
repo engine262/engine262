@@ -138,7 +138,7 @@ const INSPECTORS = {
         }
       }
 
-      let out = `${tag} {`;
+      let out = tag ? `${tag} {` : '{';
       if (cache.length > 5) {
         cache.forEach((c) => {
           out = `${out}\n${'  '.repeat(ctx.indent)}${c[0]}: ${c[1]},`;
