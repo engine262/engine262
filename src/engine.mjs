@@ -230,18 +230,23 @@ export function ScriptEvaluation(scriptRecord) {
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptCtx);
   const scriptBody = scriptRecord.ECMAScriptCode.body;
-  let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
-  if (result.Type === 'normal') {
-    result = Evaluate_Script(scriptBody, globalEnv);
-  }
-  if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(Value.undefined);
-  }
-  // Suspend scriptCtx
-  surroundingAgent.executionContextStack.pop(scriptCtx);
-  // Resume(surroundingAgent.runningExecutionContext);
+  try {
+    let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
-  return result;
+    if (result.Type === 'normal') {
+      result = Evaluate_Script(scriptBody, globalEnv);
+    }
+
+    if (result.Type === 'normal' && !result.Value) {
+      result = new NormalCompletion(Value.undefined);
+    }
+
+    return result;
+  } finally {
+    // Suspend scriptCtx
+    surroundingAgent.executionContextStack.pop(scriptCtx);
+    // Resume(surroundingAgent.runningExecutionContext);
+  }
 }
 
 // 15.1.12 #sec-scriptevaluationjob
