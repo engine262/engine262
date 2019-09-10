@@ -98,15 +98,16 @@ Or, use the API:
 ```js
 'use strict';
 
-const { Realm, initializeAgent } = require('engine262');
+const { Agent, Realm } = require('engine262');
 
-initializeAgent({
+const agent = new Agent({
   // onDebugger() {},
   // ensureCanCompileStrings() {},
   // hasSourceTextAvailable() {},
   // onNodeEvaluation() {},
   // features: [],
-})
+});
+agent.enter();
 
 const realm = new Realm({
   // promiseRejectionTracker() {},

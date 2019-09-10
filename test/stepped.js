@@ -41,14 +41,14 @@ if (isMainThread) {
   });
 } else {
   const {
+    Agent,
     Realm,
     AbruptCompletion,
-    initializeAgent,
     inspect,
   } = require('..');
 
   const shared32 = new Int32Array(workerData.shared);
-  initializeAgent({
+  const agent = new Agent({
     onNodeEvaluation(node) {
       if (node.type === 'ExpressionStatement') {
         return;
@@ -58,6 +58,7 @@ if (isMainThread) {
       Atomics.store(shared32, 0, 0);
     },
   });
+  agent.enter();
 
   const realm = new Realm();
 

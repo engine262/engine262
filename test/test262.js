@@ -156,14 +156,15 @@ if (!process.send) {
   const fs = require('fs');
   const minimatch = require('minimatch');
   const {
+    FEATURES,
     Object: APIObject,
     AbruptCompletion,
     Abstract,
     inspect,
+    Agent,
     Realm,
     Value,
     Throw,
-    initializeAgent,
   } = require('..');
 
   const readList = (name) => {
@@ -175,13 +176,10 @@ if (!process.send) {
 
   const harnessSource = fs.readFileSync(path.resolve(__dirname, './test262/harness/assert.js'), 'utf8');
 
-  initializeAgent({
-    features: [
-      'globalThis', 'Promise.allSettled',
-      'OptionalChaining', 'TopLevelAwait',
-      'import.meta',
-    ],
+  const agent = new Agent({
+    features: FEATURES.map((f) => f.name),
   });
+  agent.enter();
 
   function isError(realm, type, value) {
     if (Abstract.Type(value) !== 'Object') {

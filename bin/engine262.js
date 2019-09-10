@@ -9,8 +9,8 @@ const path = require('path');
 const util = require('util');
 const snekparse = require('./snekparse');
 const {
-  initializeAgent,
   inspect,
+  Agent,
   Realm,
   Completion,
   AbruptCompletion,
@@ -147,9 +147,8 @@ if (argv.features === 'all') {
   features = [];
 }
 
-initializeAgent({
-  features,
-});
+const agent = new Agent({ features });
+agent.enter();
 
 const realm = createRealm();
 

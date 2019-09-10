@@ -46,14 +46,6 @@ export {
 
 export { inspect } from './inspect.mjs';
 
-export function initializeAgent(options = {}) {
-  if (surroundingAgent) {
-    throw new Error('Surrounding Agent is already initialized');
-  }
-  const agent = new Agent(options);
-  setSurroundingAgent(agent);
-}
-
 function runJobQueue() {
   while (true) { // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
@@ -71,6 +63,41 @@ function runJobQueue() {
     if (result instanceof AbruptCompletion) {
       HostReportErrors(result.Value);
     }
+  }
+}
+
+class APIAgent {
+  constructor(options = {}) {
+    this.agent = new Agent(options);
+    this.active = false;
+    this.outerAgent = undefined;
+  }
+
+  scope(cb) {
+    this.enter();
+    try {
+      return cb();
+    } finally {
+      this.exit();
+    }
+  }
+
+  enter() {
+    if (this.active) {
+      throw new Error('Agent is already entered');
+    }
+    this.active = true;
+    this.outerAgent = surroundingAgent;
+    setSurroundingAgent(this.agent);
+  }
+
+  exit() {
+    if (!this.active) {
+      throw new Error('Agent is not entered');
+    }
+    setSurroundingAgent(this.outerAgent);
+    this.outerAgent = undefined;
+    this.active = false;
   }
 }
 
@@ -161,10 +188,12 @@ class APIRealm {
     }
     this.active = true;
     surroundingAgent.executionContextStack.push(this.context);
-    const res = cb();
-    surroundingAgent.executionContextStack.pop(this.context);
-    this.active = false;
-    return res;
+    try {
+      return cb();
+    } finally {
+      surroundingAgent.executionContextStack.pop(this.context);
+      this.active = false;
+    }
   }
 }
 
@@ -194,6 +223,7 @@ class APIValue extends Value {
 }
 
 export {
+  APIAgent as Agent,
   APIRealm as Realm,
   APIValue as Value,
   APIObject as Object,
