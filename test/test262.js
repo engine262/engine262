@@ -4,9 +4,24 @@
 
 require('@snek/source-map-support/register');
 const path = require('path');
+const fs = require('fs');
 
 const CI = !!process.env.CONTINUOUS_INTEGRATION;
 const override = process.argv[2];
+
+const ANSI = CI ? {
+  reset: '',
+  red: '',
+  green: '',
+  yellow: '',
+  blue: '',
+} : {
+  reset: '\u001b[0m',
+  red: '\u001b[31m',
+  green: '\u001b[32m',
+  yellow: '\u001b[33m',
+  blue: '\u001b[34m',
+};
 
 process.on('unhandledRejection', (reason) => {
   require('fs').writeSync(0, `\n${require('util').inspect(reason)}\n`);
@@ -14,101 +29,57 @@ process.on('unhandledRejection', (reason) => {
 });
 
 if (!process.send) {
-  const start = Date.now();
+  // supervisor
 
+  const os = require('os');
   const childProcess = require('child_process');
   const readline = require('readline');
-  const os = require('os');
   const TestStream = require('test262-stream');
+  const minimatch = require('minimatch');
 
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(os.cpus().length * 0.75);
 
+  let skipped = 0;
   let passed = 0;
   let failed = 0;
-  let skipped = 0;
   let total = 0;
 
-  const ansi = CI ? {
-    reset: '',
-    red: '',
-    green: '',
-    yellow: '',
-    blue: '',
-  } : {
-    reset: '\u001b[0m',
-    red: '\u001b[31m',
-    green: '\u001b[32m',
-    yellow: '\u001b[33m',
-    blue: '\u001b[34m',
-  };
-
+  const start = Date.now();
+  const handledPerSecLast5 = [];
   const pad = (n, l, c = '0') => n.toString().padStart(l, c);
-  const getStatusLine = () => {
+  const average = (array) => (array.reduce((a, b) => a + b, 0) / array.length) || 0;
+  const printStatusLine = () => {
     const elapsed = Math.floor((Date.now() - start) / 1000);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
 
     const time = `${pad(min, 2)}:${pad(sec, 2)}`;
-    const completed = `${ansi.blue}:${pad(total, 5, ' ')}${ansi.reset}`;
-    const p = `${ansi.green}+${pad(passed, 5, ' ')}${ansi.reset}`;
-    const f = `${ansi.red}-${pad(failed, 5, ' ')}${ansi.reset}`;
-    const s = `${ansi.yellow}»${pad(skipped, 5, ' ')}${ansi.reset}`;
+    const completed = `${ANSI.blue}:${pad(total, 5, ' ')}${ANSI.reset}`;
+    const p = `${ANSI.green}+${pad(passed, 5, ' ')}${ANSI.reset}`;
+    const f = `${ANSI.red}-${pad(failed, 5, ' ')}${ANSI.reset}`;
+    const s = `${ANSI.yellow}»${pad(skipped, 5, ' ')}${ANSI.reset}`;
 
-    const line = `[${time}|${completed}|${p}|${f}|${s}]`;
+    const line = `[${time}|${completed}|${p}|${f}|${s}] (${average(handledPerSecLast5).toFixed(2)}/s)`;
 
-    return line;
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
+    process.stdout.write(line);
   };
 
-  if (CI) {
-    setInterval(() => {
-      console.log(getStatusLine()); // eslint-disable-line no-console
-    }, 5000).unref();
-  }
-
-  let lastFail = 0;
-  const testOutputPrefixLength = '[00:00|:    0|+    0|-    0|»    0]: '.length;
-  function printProgress(test, log) {
-    const line = `${getStatusLine()}: ${test}`;
-    if (CI) {
-      if (lastFail < failed || log || test === 'Done') {
-        lastFail = failed;
-        console.log(line); // eslint-disable-line no-console
-        if (log) {
-          console.log(...log); // eslint-disable-line no-console
-        }
-      }
-    } else {
-      readline.clearLine(process.stdout, 0);
-      readline.cursorTo(process.stdout, 0);
-
-      const length = testOutputPrefixLength + test.length;
-      if (length >= process.stdout.columns) {
-        const diff = process.stdout.columns - length - 3;
-        process.stdout.write(`${line.slice(0, diff)}...`);
-      } else {
-        process.stdout.write(line);
-      }
-      if (log) {
-        console.log(''); // eslint-disable-line no-console
-        console.log(...log); // eslint-disable-line no-console
-      }
-    }
-  }
-
-  let finished = 0;
-  const workers = Array.from({ length: NUM_WORKERS }, () => {
+  let handledPerSecCounter = 0;
+  const workers = Array.from({ length: NUM_WORKERS }, (_, i) => {
     const c = childProcess.fork(__filename);
     c.on('message', ({ file, status, error }) => {
+      handledPerSecCounter += 1;
       switch (status) {
         case 'PASS':
           passed += 1;
-          printProgress(file);
           break;
         case 'FAIL':
           failed += 1;
-          printProgress(file, [error, '\n']);
+          process.stderr.write(`\nFAILURE! ${file}\n${error}\n`);
           break;
         case 'SKIP':
           skipped += 1;
@@ -118,54 +89,14 @@ if (!process.send) {
       }
     });
     c.on('exit', () => {
-      finished += 1;
-      if (finished === workers.length) {
-        printProgress('Done');
+      workers[i] = undefined;
+      if (workers.every((w) => w === undefined)) {
+        printStatusLine();
+        process.exit(0);
       }
     });
     return c;
   });
-
-  const stream = new TestStream(path.resolve(__dirname, 'test262'), {
-    paths: [override || 'test'],
-  });
-
-  (async () => {
-    for await (const test of stream) {
-      if (test.file.includes('annexB') || test.file.includes('intl402')) {
-        continue;
-      }
-
-      const worker = workers[total % workers.length];
-      total += 1;
-      worker.send(test, () => {});
-    }
-
-    workers.forEach((w) => {
-      w.send('END', () => {});
-    });
-  })();
-
-  process.on('exit', () => {
-    if (passed + failed + skipped < total || failed > 0) {
-      process.exitCode = 1;
-    }
-  });
-  process.on('SIGINT', () => process.exit());
-} else {
-  const fs = require('fs');
-  const minimatch = require('minimatch');
-  const {
-    FEATURES,
-    Object: APIObject,
-    AbruptCompletion,
-    Abstract,
-    inspect,
-    Agent,
-    Realm,
-    Value,
-    Throw,
-  } = require('..');
 
   const readList = (name) => {
     const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
@@ -174,38 +105,67 @@ if (!process.send) {
   const skiplist = readList('skiplist').map((t) => `test/${t}`);
   const features = readList('features');
 
-  const harnessSource = fs.readFileSync(path.resolve(__dirname, './test262/harness/assert.js'), 'utf8');
+  const stream = new TestStream(path.resolve(__dirname, 'test262'), {
+    paths: [override || 'test'],
+    omitRuntime: true,
+  });
+
+  let workerIndex = 0;
+  stream.on('data', (test) => {
+    total += 1;
+
+    if (/annexB|intl402/.test(test.file)
+      || (test.attrs.features && test.attrs.features.some((feature) => features.includes(feature)))
+      || /\b(reg ?exp?)\b/i.test(test.attrs.description) || /\b(reg ?exp?)\b/.test(test.contents)
+      || test.attrs.includes.includes('nativeFunctionMatcher.js')
+      || skiplist.find((t) => minimatch(test.file, t))) {
+      skipped += 1;
+      return;
+    }
+
+    workers[workerIndex].send(test);
+    workerIndex += 1;
+    if (workerIndex >= workers.length) {
+      workerIndex = 0;
+    }
+  });
+
+  stream.on('end', () => {
+    workers.forEach((w) => {
+      w.send('DONE');
+    });
+  });
+
+  setInterval(() => {
+    handledPerSecLast5.unshift(handledPerSecCounter);
+    handledPerSecCounter = 0;
+    if (handledPerSecLast5.length > 5) {
+      handledPerSecLast5.length = 5;
+    }
+  }, 1000).unref();
+
+  printStatusLine();
+  setInterval(() => {
+    printStatusLine();
+  }, CI ? 5000 : 500).unref();
+} else {
+  // worker
+
+  const {
+    Agent, Realm, Value,
+    FEATURES, Abstract,
+    Object: APIObject,
+    Throw,
+    AbruptCompletion,
+    inspect,
+  } = require('..');
 
   const agent = new Agent({
     features: FEATURES.map((f) => f.name),
   });
   agent.enter();
 
-  function isError(realm, type, value) {
-    if (Abstract.Type(value) !== 'Object') {
-      return false;
-    }
-    const proto = value.Prototype;
-    if (!proto || Abstract.Type(proto) !== 'Object') {
-      return false;
-    }
-    const ctorDesc = proto.properties.get(new Value(realm, 'constructor'));
-    if (!ctorDesc || !Abstract.IsDataDescriptor(ctorDesc)) {
-      return false;
-    }
-    const ctor = ctorDesc.Value;
-    if (Abstract.Type(ctor) !== 'Object' || Abstract.IsCallable(ctor) !== Value.true) {
-      return false;
-    }
-    const namePropDesc = ctor.properties.get(new Value(realm, 'name'));
-    if (!namePropDesc || !Abstract.IsDataDescriptor(namePropDesc)) {
-      return false;
-    }
-    const nameProp = namePropDesc.Value;
-    return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
-  }
-
-  function createRealm(file) {
+  const createRealm = (file) => {
     const resolverCache = new Map();
     const trackedPromises = new Set();
     const realm = new Realm({
@@ -234,8 +194,7 @@ if (!process.send) {
             return resolverCache.get(resolved);
           }
           const source = fs.readFileSync(resolved, 'utf8');
-          const full = `${harnessSource}\n\n${source}`;
-          const m = realm.createSourceTextModule(resolved, full);
+          const m = realm.createSourceTextModule(resolved, source);
           resolverCache.set(resolved, m);
           return m;
         } catch (e) {
@@ -256,8 +215,7 @@ if (!process.send) {
 
     Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
     Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
-    Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'),
-      new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
+    Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'), new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
     Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
     Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
@@ -268,16 +226,35 @@ if (!process.send) {
     $262.resolverCache = resolverCache;
 
     return $262;
-  }
+  };
 
-  async function run({ file, contents, attrs }) {
-    if ((attrs.features && attrs.features.some((feature) => features.includes(feature)))
-      || /\b(reg ?exp?)\b/i.test(attrs.description) || /\b(reg ?exp?)\b/.test(contents)
-      || attrs.includes.includes('nativeFunctionMatcher.js')
-      || skiplist.find((t) => minimatch(file, t))) {
-      return { status: 'SKIP' };
+  const isError = (realm, type, value) => {
+    if (Abstract.Type(value) !== 'Object') {
+      return false;
     }
+    const proto = value.Prototype;
+    if (!proto || Abstract.Type(proto) !== 'Object') {
+      return false;
+    }
+    const ctorDesc = proto.properties.get(new Value(realm, 'constructor'));
+    if (!ctorDesc || !Abstract.IsDataDescriptor(ctorDesc)) {
+      return false;
+    }
+    const ctor = ctorDesc.Value;
+    if (Abstract.Type(ctor) !== 'Object' || Abstract.IsCallable(ctor) !== Value.true) {
+      return false;
+    }
+    const namePropDesc = ctor.properties.get(new Value(realm, 'name'));
+    if (!namePropDesc || !Abstract.IsDataDescriptor(namePropDesc)) {
+      return false;
+    }
+    const nameProp = namePropDesc.Value;
+    return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
+  };
 
+  const includeCache = {};
+
+  const run = ({ file, contents, attrs }) => {
     const specifier = path.resolve(__dirname, 'test262', file);
     const $262 = createRealm(specifier);
     let asyncPromise;
@@ -303,6 +280,15 @@ if (!process.send) {
       });
     }
 
+    attrs.includes.unshift('assert.js', 'sta.js');
+    if (attrs.flags.async) {
+      attrs.includes.unshift('doneprintHandle.js');
+    }
+    attrs.includes.forEach((include) => {
+      const p = path.resolve(__dirname, `./test262/harness/${include}`);
+      const source = includeCache[include] || fs.readFileSync(p, 'utf8');
+      $262.evalScript(source, { specifier: p });
+    });
     let completion;
     if (attrs.flags.module) {
       completion = $262.realm.createSourceTextModule(specifier, contents);
@@ -343,31 +329,16 @@ if (!process.send) {
     } else {
       return { status: 'PASS' };
     }
-  }
+  };
 
   let p = Promise.resolve();
   process.on('message', (test) => {
-    if (test === 'END') {
-      p = p.then(() => {
-        process.exit(0); // stops thread
-      });
+    if (test === 'DONE') {
+      p = p.then(() => process.exit(0));
     } else {
-      p = p.then(async () => {
-        try {
-          const { status, error } = await run(test);
-          process.send({ file: test.file, status, error }, (err) => {
-            if (err) {
-              process.exit(1);
-            }
-          });
-        } catch (e) {
-          process.send({ file: test.file, status: 'FAIL', error: e.stack }, (err) => {
-            if (err) {
-              process.exit(1);
-            }
-          });
-        }
-      });
+      p = p
+        .then(() => run(test))
+        .then((r) => process.send({ file: test.file, ...r }));
     }
   });
 }

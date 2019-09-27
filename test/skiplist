@@ -24,6 +24,9 @@ language/computed-property-names/class/static/method-symbol.js
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
+// https://github.com/tc39/test262/issues/2372
+built-ins/Array/prototype/flatMap/array-like-objects-nested.js
+
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
 built-ins/Date/parse/time-value-maximum-range.js

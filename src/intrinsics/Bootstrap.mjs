@@ -61,13 +61,13 @@ export function assignProps(realmRec, obj, props) {
       } else {
         value = v;
       }
-      X(obj.DefineOwnProperty(name, Descriptor({
+      obj.properties.set(name, Descriptor({
         Value: value,
         Writable: Value.true,
         Enumerable: Value.false,
         Configurable: Value.true,
         ...descriptor,
-      })));
+      }));
     }
   }
 }
