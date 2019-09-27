@@ -188,12 +188,10 @@ class APIRealm {
     }
     this.active = true;
     surroundingAgent.executionContextStack.push(this.context);
-    try {
-      return cb();
-    } finally {
-      surroundingAgent.executionContextStack.pop(this.context);
-      this.active = false;
-    }
+    const r = cb();
+    surroundingAgent.executionContextStack.pop(this.context);
+    this.active = false;
+    return r;
   }
 }
 
