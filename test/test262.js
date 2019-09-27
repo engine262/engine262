@@ -63,9 +63,11 @@ if (!process.send) {
 
     const line = `[${time}|${completed}|${p}|${f}|${s}] (${average(handledPerSecLast5).toFixed(2)}/s)`;
 
-    readline.clearLine(process.stdout, 0);
-    readline.cursorTo(process.stdout, 0);
-    process.stdout.write(line);
+    if (!CI) {
+      readline.clearLine(process.stdout, 0);
+      readline.cursorTo(process.stdout, 0);
+    }
+    process.stdout.write(`${line}${CI ? '\n' : ''}`);
   };
 
   let handledPerSecCounter = 0;
