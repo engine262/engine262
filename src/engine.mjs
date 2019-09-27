@@ -27,10 +27,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-global',
   },
   {
-    name: 'Promise.allSettled',
-    url: 'https://github.com/tc39/proposal-promise-allSettled',
-  },
-  {
     name: 'OptionalChaining',
     url: 'https://github.com/tc39/proposal-optional-chaining',
   },

@@ -165,7 +165,7 @@ function captureAsyncStack(stack) {
       } else {
         return;
       }
-    } else {
+    } else if (reaction.Capability !== Value.undefined) {
       if ('PromiseState' in reaction.Capability.Promise) {
         promise = reaction.Capability.Promise;
       } else {

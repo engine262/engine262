@@ -341,9 +341,7 @@ function Promise_symbolSpecies(args, { thisValue }) {
 export function CreatePromise(realmRec) {
   const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
-    surroundingAgent.feature('Promise.allSettled')
-      ? ['allSettled', Promise_allSettled, 1]
-      : undefined,
+    ['allSettled', Promise_allSettled, 1],
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],

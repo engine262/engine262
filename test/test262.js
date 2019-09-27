@@ -90,7 +90,11 @@ if (!process.send) {
           break;
       }
     });
-    c.on('exit', () => {
+    c.on('exit', (code) => {
+      if (code !== 0) {
+        printStatusLine();
+        process.exit(1);
+      }
       workers[i] = undefined;
       if (workers.every((w) => w === undefined)) {
         printStatusLine();
@@ -125,7 +129,7 @@ if (!process.send) {
       return;
     }
 
-    workers[workerIndex].send(test);
+    workers[workerIndex].send(test, () => 0);
     workerIndex += 1;
     if (workerIndex >= workers.length) {
       workerIndex = 0;
@@ -340,6 +344,10 @@ if (!process.send) {
     } else {
       p = p
         .then(() => run(test))
+        .catch((e) => {
+          process.send({ file: test.file, status: 'FAIL', error: e.stack || e });
+          process.exit(1);
+        })
         .then((r) => process.send({ file: test.file, ...r }));
     }
   });
