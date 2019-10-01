@@ -438,6 +438,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     EvaluationError: Value.undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,
+    Context: Value.undefined,
     RequestedModules: requestedModules,
     ImportEntries: importEntries,
     LocalExportEntries: localExportEntries,

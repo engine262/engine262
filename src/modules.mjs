@@ -176,6 +176,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     ({
       ImportMeta: this.ImportMeta,
       ECMAScriptCode: this.ECMAScriptCode,
+      Context: this.Context,
       ImportEntries: this.ImportEntries,
       LocalExportEntries: this.LocalExportEntries,
       IndirectExportEntries: this.IndirectExportEntries,
@@ -305,6 +306,17 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
       }
     }
+
+    const moduleCtx = new ExecutionContext();
+    moduleCtx.Function = Value.null;
+    Assert(module.Realm !== Value.undefined);
+    moduleCtx.Realm = module.Realm;
+    moduleCtx.ScriptOrModule = module;
+    moduleCtx.VariableEnvironment = module.Environment;
+    moduleCtx.LexicalEnvironment = module.Environment;
+    module.Context = moduleCtx;
+    surroundingAgent.executionContextStack.push(moduleCtx);
+
     const code = module.ECMAScriptCode.body;
     const varDeclarations = VarScopedDeclarations_ModuleBody(code);
     const declaredVarNames = [];
@@ -332,21 +344,16 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
       }
     }
+
+    surroundingAgent.executionContextStack.pop(moduleCtx);
+
     return new NormalCompletion(undefined);
   }
 
   // 15.2.1.17.5 #sec-source-text-module-record-execute-module
   ExecuteModule(capability) {
     const module = this;
-    const moduleCtx = new ExecutionContext();
-    moduleCtx.Function = Value.null;
-    Assert(module.Realm !== Value.undefined);
-    moduleCtx.Realm = module.Realm;
-    moduleCtx.ScriptOrModule = module;
-    // Assert: module has been linked and declarations in its module environment have been instantiated.
-    moduleCtx.VariableEnvironment = module.Environment;
-    moduleCtx.LexicalEnvironment = module.Environment;
-    // Suspend the currently running execution context.
+    const moduleCtx = module.Context;
     if (module.Async === Value.false) {
       Assert(capability === undefined);
       surroundingAgent.executionContextStack.push(moduleCtx);

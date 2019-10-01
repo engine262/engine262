@@ -171,7 +171,7 @@ if (!process.send) {
   });
   agent.enter();
 
-  const createRealm = (file) => {
+  const createRealm = () => {
     const resolverCache = new Map();
     const trackedPromises = new Set();
     const realm = new Realm({
@@ -189,12 +189,7 @@ if (!process.send) {
       },
       resolveImportedModule(referencingScriptOrModule, specifier) {
         try {
-          let base;
-          if (referencingScriptOrModule === null) {
-            base = path.dirname(file);
-          } else {
-            base = path.dirname(referencingScriptOrModule.specifier);
-          }
+          const base = path.dirname(referencingScriptOrModule.specifier);
           const resolved = path.resolve(base, specifier);
           if (resolverCache.has(resolved)) {
             return resolverCache.get(resolved);
@@ -262,7 +257,7 @@ if (!process.send) {
 
   const run = ({ file, contents, attrs }) => {
     const specifier = path.resolve(__dirname, 'test262', file);
-    const $262 = createRealm(specifier);
+    const $262 = createRealm();
     let asyncPromise;
     let timeout;
     if (attrs.flags.async) {

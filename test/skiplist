@@ -16,6 +16,54 @@ language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
 
+// odd interactions of parser and tla variables from acorn
+language/module-code/top-level-await/syntax/for-await-await-expr-func-expression.js
+language/module-code/top-level-await/syntax/for-await-await-expr-array-literal.js
+language/module-code/top-level-await/syntax/for-await-await-expr-identifier.js
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-string.js
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-number.js
+language/module-code/top-level-await/syntax/for-await-await-expr-new-expr.js
+language/module-code/top-level-await/syntax/for-await-await-expr-nested.js
+language/module-code/top-level-await/syntax/for-await-await-expr-null.js
+language/module-code/top-level-await/syntax/for-await-await-expr-obj-literal.js
+language/module-code/top-level-await/syntax/for-await-await-expr-template-literal.js
+language/module-code/top-level-await/syntax/for-await-await-expr-this.js
+
+// other failures in parsing TLA await from acorn
+language/module-code/top-level-await/syntax/for-await-expr-array-literal.js
+language/module-code/top-level-await/syntax/for-await-expr-func-expression.js
+language/module-code/top-level-await/syntax/for-await-expr-identifier.js
+language/module-code/top-level-await/syntax/for-await-expr-literal-number.js
+language/module-code/top-level-await/syntax/for-await-expr-literal-string.js
+language/module-code/top-level-await/syntax/for-await-expr-nested.js
+language/module-code/top-level-await/syntax/for-await-expr-new-expr.js
+language/module-code/top-level-await/syntax/for-await-expr-null.js
+language/module-code/top-level-await/syntax/for-await-expr-obj-literal.js
+language/module-code/top-level-await/syntax/for-await-expr-template-literal.js
+language/module-code/top-level-await/syntax/for-await-expr-this.js
+language/module-code/top-level-await/syntax/for-in-await-expr-array-literal.js
+language/module-code/top-level-await/syntax/for-in-await-expr-func-expression.js
+language/module-code/top-level-await/syntax/for-in-await-expr-identifier.js
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-number.js
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-string.js
+language/module-code/top-level-await/syntax/for-in-await-expr-nested.js
+language/module-code/top-level-await/syntax/for-in-await-expr-new-expr.js
+language/module-code/top-level-await/syntax/for-in-await-expr-null.js
+language/module-code/top-level-await/syntax/for-in-await-expr-obj-literal.js
+language/module-code/top-level-await/syntax/for-in-await-expr-template-literal.js
+language/module-code/top-level-await/syntax/for-in-await-expr-this.js
+language/module-code/top-level-await/syntax/for-of-await-expr-array-literal.js
+language/module-code/top-level-await/syntax/for-of-await-expr-func-expression.js
+language/module-code/top-level-await/syntax/for-of-await-expr-identifier.js
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-number.js
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-string.js
+language/module-code/top-level-await/syntax/for-of-await-expr-nested.js
+language/module-code/top-level-await/syntax/for-of-await-expr-new-expr.js
+language/module-code/top-level-await/syntax/for-of-await-expr-null.js
+language/module-code/top-level-await/syntax/for-of-await-expr-obj-literal.js
+language/module-code/top-level-await/syntax/for-of-await-expr-template-literal.js
+language/module-code/top-level-await/syntax/for-of-await-expr-this.js
+
 // TODO(72): https://github.com/tc39/ecma262/pull/1330
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
