@@ -5,7 +5,7 @@
   "main": "dist/engine262",
   "dependencies": {
     "@snek/source-map-support": "^1.0.4",
-    "acorn": "^7.0.0",
+    "acorn": "^7.1.0",
     "nearley": "^2.16.0"
   },
   "bin": {
