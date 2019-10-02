@@ -1,7 +1,6 @@
 import {
   ArrayCreate,
-  Assert,
-  CreateDataProperty,
+  CreateDataPropertyOrThrow,
   GetIterator,
   GetValue,
   IteratorStep,
@@ -29,10 +28,8 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
       return nextIndex;
     }
     const nextValue = Q(IteratorValue(next));
-    const idxNum = X(ToUint32(new Value(nextIndex)));
-    const idxStr = X(ToString(idxNum));
-    const status = X(CreateDataProperty(array, idxStr, nextValue));
-    Assert(status === Value.true);
+    const nextIndexStr = X(ToString(new Value(nextIndex)));
+    X(CreateDataPropertyOrThrow(array, nextIndexStr, nextValue));
     nextIndex += 1;
   }
 }
@@ -40,10 +37,8 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
 function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
   const initResult = yield* Evaluate(AssignmentExpression);
   const initValue = Q(GetValue(initResult));
-  const idxNum = X(ToUint32(new Value(nextIndex)));
-  const idxStr = X(ToString(idxNum));
-  const created = X(CreateDataProperty(array, idxStr, initValue));
-  Assert(created === Value.true);
+  const initIndex = X(ToString(new Value(nextIndex)));
+  X(CreateDataPropertyOrThrow(array, initIndex, initValue));
   return nextIndex + 1;
 }
 
