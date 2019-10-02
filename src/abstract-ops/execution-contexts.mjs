@@ -66,7 +66,6 @@ export function GetNewTarget() {
 
 // 8.3.6 #sec-getglobalobject
 export function GetGlobalObject() {
-  const ctx = surroundingAgent.runningExecutionContext;
-  const currentRealm = ctx.Realm;
+  const currentRealm = surroundingAgent.currentRealmRecord;
   return currentRealm.GlobalObject;
 }

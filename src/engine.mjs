@@ -23,10 +23,6 @@ import { CallSite, msg } from './helpers.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'globalThis',
-    url: 'https://github.com/tc39/proposal-global',
-  },
-  {
     name: 'OptionalChaining',
     url: 'https://github.com/tc39/proposal-optional-chaining',
   },

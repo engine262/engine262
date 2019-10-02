@@ -246,9 +246,6 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   if (thisValue === Value.undefined) {
     thisValue = globalObj;
   }
-  if (surroundingAgent.feature('globalThis')) {
-    intrinsics['%GlobalThisValue%'] = thisValue;
-  }
   realmRec.GlobalObject = globalObj;
   const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
   realmRec.GlobalEnv = newGlobalEnv;
@@ -272,6 +269,13 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.false,
     })));
   });
+
+  Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
+    Value: realmRec.GlobalEnv.EnvironmentRecord.GlobalThisValue,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  })));
 
   [
     // Function Properties of the Global Object
@@ -334,15 +338,6 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
-
-  if (surroundingAgent.feature('globalThis')) {
-    Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
-      Value: realmRec.Intrinsics['%GlobalThisValue%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   return global;
 }
