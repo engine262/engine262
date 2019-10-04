@@ -44,13 +44,16 @@ function createRealm() {
   });
 
   const print = new Value(realm, (args) => {
-    for (const arg of args) {
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
       const s = ToString(realm, arg);
       if (s instanceof AbruptCompletion) {
         return s;
       }
       process.stdout.write(s);
-      process.stdout.write(' ');
+      if (i !== args.length - 1) {
+        process.stdout.write(' ');
+      }
     }
     process.stdout.write('\n');
     return Value.undefined;
