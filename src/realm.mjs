@@ -4,14 +4,10 @@ import {
 } from './value.mjs';
 import {
   Assert,
-  CreateBuiltinFunction,
   DefinePropertyOrThrow,
   ObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
 } from './abstract-ops/all.mjs';
 import { NewGlobalEnvironment } from './environment.mjs';
-import { surroundingAgent } from './engine.mjs';
 import { Q, X } from './completion.mjs';
 
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
@@ -68,6 +64,7 @@ import { CreateIsFinite } from './intrinsics/isFinite.mjs';
 import { CreateIsNaN } from './intrinsics/isNaN.mjs';
 import { CreateParseFloat } from './intrinsics/parseFloat.mjs';
 import { CreateParseInt } from './intrinsics/parseInt.mjs';
+import { CreateThrowTypeError } from './intrinsics/ThrowTypeError.mjs';
 import { CreateTypedArray } from './intrinsics/TypedArray.mjs';
 import { CreateTypedArrayPrototype } from './intrinsics/TypedArrayPrototype.mjs';
 import { CreateTypedArrayConstructors } from './intrinsics/TypedArrayConstructors.mjs';
@@ -120,30 +117,11 @@ export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  const objProto = ObjectCreate(Value.null);
-  intrinsics['%Object.prototype%'] = objProto;
+  intrinsics['%Object.prototype%'] = ObjectCreate(Value.null);
 
-  const thrower = X(CreateBuiltinFunction(
-    () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
-      + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
-    [], realmRec, Value.null,
-  ));
-  thrower.DefineOwnProperty(new Value('length'), Descriptor({
-    Value: new Value(0),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
-  intrinsics['%ThrowTypeError%'] = thrower;
-
-  const funcProto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, objProto);
-  SetFunctionLength(funcProto, new Value(0));
-  SetFunctionName(funcProto, new Value(''));
-  intrinsics['%Function.prototype%'] = funcProto;
-
-  thrower.SetPrototypeOf(funcProto);
-
-  AddRestrictedFunctionProperties(funcProto, realmRec);
+  CreateFunctionPrototype(realmRec);
+  CreateObjectPrototype(realmRec);
+  CreateThrowTypeError(realmRec);
 
   CreateEval(realmRec);
   CreateIsFinite(realmRec);
@@ -151,7 +129,6 @@ export function CreateIntrinsics(realmRec) {
   CreateParseFloat(realmRec);
   CreateParseInt(realmRec);
 
-  CreateObjectPrototype(realmRec);
   CreateObject(realmRec);
 
   CreateErrorPrototype(realmRec);
@@ -159,7 +136,6 @@ export function CreateIntrinsics(realmRec) {
   CreateNativeError(realmRec);
 
   CreateFunction(realmRec);
-  CreateFunctionPrototype(realmRec);
 
   CreateIteratorPrototype(realmRec);
   CreateAsyncIteratorPrototype(realmRec);
@@ -233,6 +209,8 @@ export function CreateIntrinsics(realmRec) {
   CreateWeakSet(realmRec);
 
   CreateJSON(realmRec);
+
+  AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
   return intrinsics;
 }

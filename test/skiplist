@@ -128,10 +128,6 @@ language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
 
-// https://github.com/tc39/ecma262/pull/1635
-built-ins/ThrowTypeError/extensible.js
-built-ins/ThrowTypeError/frozen.js
-
 // https://github.com/tc39/ecma262/pull/1670
 language/expressions/import.meta/distinct-for-each-module.js
 

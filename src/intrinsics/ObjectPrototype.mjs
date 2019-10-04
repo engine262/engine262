@@ -11,7 +11,6 @@ import {
   SameValue,
   ToObject,
   ToPropertyKey,
-  Assert,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
@@ -97,7 +96,6 @@ function ObjectProto_valueOf(argList, { thisValue }) {
 
 export function CreateObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
-  Assert(proto);
 
   assignProps(realmRec, proto, [
     ['hasOwnProperty', ObjectProto_hasOwnProperty, 1],
@@ -110,6 +108,4 @@ export function CreateObjectPrototype(realmRec) {
 
   realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, new Value('toString')));
   realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, new Value('valueOf')));
-
-  realmRec.Intrinsics['%Object.prototype%'] = proto;
 }

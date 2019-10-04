@@ -17,6 +17,7 @@ import {
   SetFunctionLength,
   SetFunctionName,
   ToInteger,
+  CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
 import {
   ObjectValue,
@@ -146,9 +147,11 @@ function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
 }
 
 export function CreateFunctionPrototype(realmRec) {
-  Assert(realmRec.Intrinsics['%Function.prototype%']);
-  const proto = realmRec.Intrinsics['%Function.prototype%'];
-  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
+  const proto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
+  realmRec.Intrinsics['%Function.prototype%'] = proto;
+
+  SetFunctionLength(proto, new Value(0));
+  SetFunctionName(proto, new Value(''));
 
   const readonly = { Writable: Value.false, Configurable: Value.false };
   assignProps(realmRec, proto, [
