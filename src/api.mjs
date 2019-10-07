@@ -246,7 +246,7 @@ export function ToString(realm, value) {
         case 'Number':
           return value.numberValue().toString();
         case 'Boolean':
-          return value.booleanValue().toString();
+          return value === Value.true ? 'true' : 'false';
         case 'Undefined':
           return 'undefined';
         case 'Null':
