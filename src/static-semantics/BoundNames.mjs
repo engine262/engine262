@@ -87,6 +87,9 @@ export function BoundNames_VariableDeclarationList(VariableDeclarationList) {
 //     BindingPattern Initializer
 export function BoundNames_VariableDeclaration(VariableDeclaration) {
   switch (true) {
+    // FIXME: This condition is a hack, formalize it
+    case VariableDeclaration.id === undefined:
+      return [VariableDeclaration.name];
     case isBindingIdentifier(VariableDeclaration.id):
       return BoundNames_BindingIdentifier(VariableDeclaration.id);
     case isBindingPattern(VariableDeclaration.id):
