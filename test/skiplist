@@ -77,9 +77,6 @@ language/expressions/object/method-definition/name-invoke-fn-strict.js
 language/expressions/super/prop-dot-*.js
 language/expressions/super/prop-expr-*.js
 
-// https://github.com/tc39/ecma262/pull/1670
-language/expressions/import.meta/distinct-for-each-module.js
-
 // https://github.com/tc39/ecma262/pull/1490
 built-ins/Promise/executor-function-name.js
 built-ins/Promise/executor-function-name.js
