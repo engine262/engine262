@@ -212,15 +212,15 @@ export function AgentSignifier() {
 // 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
-  const scriptCtx = new ExecutionContext();
-  scriptCtx.Function = Value.null;
-  scriptCtx.Realm = scriptRecord.Realm;
-  scriptCtx.ScriptOrModule = scriptRecord;
-  scriptCtx.VariableEnvironment = globalEnv;
-  scriptCtx.LexicalEnvironment = globalEnv;
-  scriptCtx.HostDefined = scriptRecord.HostDefined;
+  const scriptContext = new ExecutionContext();
+  scriptContext.Function = Value.null;
+  scriptContext.Realm = scriptRecord.Realm;
+  scriptContext.ScriptOrModule = scriptRecord;
+  scriptContext.VariableEnvironment = globalEnv;
+  scriptContext.LexicalEnvironment = globalEnv;
+  scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
-  surroundingAgent.executionContextStack.push(scriptCtx);
+  surroundingAgent.executionContextStack.push(scriptContext);
   const scriptBody = scriptRecord.ECMAScriptCode.body;
   let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
@@ -233,7 +233,7 @@ export function ScriptEvaluation(scriptRecord) {
   }
 
   // Suspend scriptCtx
-  surroundingAgent.executionContextStack.pop(scriptCtx);
+  surroundingAgent.executionContextStack.pop(scriptContext);
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;

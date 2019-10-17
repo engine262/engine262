@@ -87,12 +87,12 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   } else {
     strictEval = IsStrict(script);
   }
-  const ctx = surroundingAgent.runningExecutionContext;
+  const runningContext = surroundingAgent.runningExecutionContext;
   let lexEnv;
   let varEnv;
   if (direct === true) {
-    lexEnv = NewDeclarativeEnvironment(ctx.LexicalEnvironment);
-    varEnv = ctx.VariableEnvironment;
+    lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
+    varEnv = runningContext.VariableEnvironment;
   } else {
     lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
     varEnv = evalRealm.GlobalEnv;
@@ -100,14 +100,14 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   if (strictEval === true) {
     varEnv = lexEnv;
   }
-  // If ctx is not already suspended, suspend ctx.
-  const evalCtx = new ExecutionContext();
-  evalCtx.Function = Value.null;
-  evalCtx.Realm = evalRealm;
-  evalCtx.ScriptOrModule = ctx.ScriptOrModule;
-  evalCtx.VariableEnvironment = varEnv;
-  evalCtx.LexicalEnvironment = lexEnv;
-  surroundingAgent.executionContextStack.push(evalCtx);
+  // If runningContext is not already suspended, suspend runningContext.
+  const evalContext = new ExecutionContext();
+  evalContext.Function = Value.null;
+  evalContext.Realm = evalRealm;
+  evalContext.ScriptOrModule = runningContext.ScriptOrModule;
+  evalContext.VariableEnvironment = varEnv;
+  evalContext.LexicalEnvironment = lexEnv;
+  surroundingAgent.executionContextStack.push(evalContext);
   let result = EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval);
   if (result.Type === 'normal') {
     result = Evaluate_Script(body);
@@ -115,7 +115,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   if (result.Type === 'normal' && result.Value === undefined) {
     result = new NormalCompletion(Value.undefined);
   }
-  surroundingAgent.executionContextStack.pop(evalCtx);
+  surroundingAgent.executionContextStack.pop(evalContext);
   // Resume the context that is now on the top of the execution context stack as the running execution context.
   return Completion(result);
 }

@@ -307,15 +307,15 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       }
     }
 
-    const moduleCtx = new ExecutionContext();
-    moduleCtx.Function = Value.null;
+    const moduleContext = new ExecutionContext();
+    moduleContext.Function = Value.null;
     Assert(module.Realm !== Value.undefined);
-    moduleCtx.Realm = module.Realm;
-    moduleCtx.ScriptOrModule = module;
-    moduleCtx.VariableEnvironment = module.Environment;
-    moduleCtx.LexicalEnvironment = module.Environment;
-    module.Context = moduleCtx;
-    surroundingAgent.executionContextStack.push(moduleCtx);
+    moduleContext.Realm = module.Realm;
+    moduleContext.ScriptOrModule = module;
+    moduleContext.VariableEnvironment = module.Environment;
+    moduleContext.LexicalEnvironment = module.Environment;
+    module.Context = moduleContext;
+    surroundingAgent.executionContextStack.push(moduleContext);
 
     const code = module.ECMAScriptCode.body;
     const varDeclarations = VarScopedDeclarations_ModuleBody(code);
@@ -345,7 +345,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       }
     }
 
-    surroundingAgent.executionContextStack.pop(moduleCtx);
+    surroundingAgent.executionContextStack.pop(moduleContext);
 
     return new NormalCompletion(undefined);
   }
@@ -353,17 +353,17 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   // 15.2.1.17.5 #sec-source-text-module-record-execute-module
   ExecuteModule(capability) {
     const module = this;
-    const moduleCtx = module.Context;
+    const moduleContext = module.Context;
     if (module.Async === Value.false) {
       Assert(capability === undefined);
-      surroundingAgent.executionContextStack.push(moduleCtx);
+      surroundingAgent.executionContextStack.push(moduleContext);
       const result = Evaluate_Module(module.ECMAScriptCode.body);
-      surroundingAgent.executionContextStack.pop(moduleCtx);
+      surroundingAgent.executionContextStack.pop(moduleContext);
       // Resume the context that is now on the top of the execution context stack as the running execution context.
       return Completion(result);
     } else {
       Assert(capability instanceof PromiseCapabilityRecord);
-      X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleCtx));
+      X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleContext));
       return Value.undefined;
     }
   }
