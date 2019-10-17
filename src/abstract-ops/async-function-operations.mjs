@@ -41,7 +41,8 @@ export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
 
 // 25.7.5.1 #sec-async-functions-abstract-operations-async-function-start
 export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
-  const runningContext = surroundingAgent.runningExecutionContext;
-  const asyncContext = runningContext.copy();
+  const asyncContext = surroundingAgent.runningExecutionContext;
+  surroundingAgent.executionContextStack.pop();
   X(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
+  surroundingAgent.executionContextStack.push(asyncContext);
 }
