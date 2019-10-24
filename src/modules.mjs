@@ -294,7 +294,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     const envRec = env.EnvironmentRecord;
     for (const ie of module.ImportEntries) {
       const importedModule = X(HostResolveImportedModule(module, ie.ModuleRequest));
-      if (ie.ImportName === new Value('*')) {
+      if (ie.ImportName.stringValue() === '*') {
         const namespace = Q(GetModuleNamespace(importedModule));
         X(envRec.CreateImmutableBinding(ie.LocalName, Value.true));
         envRec.InitializeBinding(ie.LocalName, namespace);
@@ -321,26 +321,26 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     const varDeclarations = VarScopedDeclarations_ModuleBody(code);
     const declaredVarNames = [];
     for (const d of varDeclarations) {
-      for (const dn of BoundNames_VariableDeclaration(d).map(Value)) {
+      for (const dn of BoundNames_VariableDeclaration(d)) {
         if (!declaredVarNames.includes(dn)) {
-          X(envRec.CreateMutableBinding(dn, Value.false));
-          envRec.InitializeBinding(dn, Value.undefined);
+          X(envRec.CreateMutableBinding(new Value(dn), Value.false));
+          envRec.InitializeBinding(new Value(dn), Value.undefined);
           declaredVarNames.push(dn);
         }
       }
     }
     const lexDeclarations = LexicallyScopedDeclarations_Module(code);
     for (const d of lexDeclarations) {
-      for (const dn of BoundNames_ModuleItem(d).map(Value)) {
+      for (const dn of BoundNames_ModuleItem(d)) {
         if (IsConstantDeclaration(d)) {
-          Q(envRec.CreateImmutableBinding(dn, Value.true));
+          Q(envRec.CreateImmutableBinding(new Value(dn), Value.true));
         } else {
-          Q(envRec.CreateMutableBinding(dn, Value.false));
+          Q(envRec.CreateMutableBinding(new Value(dn), Value.false));
         }
         if (isFunctionDeclaration(d) || isGeneratorDeclaration(d)
             || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d)) {
           const fo = InstantiateFunctionObject(d, env);
-          envRec.InitializeBinding(dn, fo);
+          envRec.InitializeBinding(new Value(dn), fo);
         }
       }
     }

@@ -10,6 +10,7 @@ import {
   Assert,
   SortCompare,
 } from './all.mjs';
+import { ValueSet } from '../helpers.mjs';
 
 // 9.4.6.11 #sec-modulenamespacecreate
 export function ModuleNamespaceCreate(module, exports) {
@@ -28,7 +29,7 @@ export function ModuleNamespaceCreate(module, exports) {
     const result = X(SortCompare(x, y, Value.undefined));
     return result.numberValue();
   });
-  M.Exports = sortedExports;
+  M.Exports = new ValueSet(sortedExports);
   module.Namespace = M;
   return M;
 }

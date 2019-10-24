@@ -16,6 +16,7 @@ import {
 } from '../value.mjs';
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
+import { ValueSet } from '../helpers.mjs';
 
 // This file covers abstract operations defined in
 // 9.4.4 #sec-arguments-exotic-objects
@@ -112,12 +113,12 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  const mappedNames = [];
+  const mappedNames = new ValueSet();
   index = numberOfParameters - 1;
   while (index >= 0) {
     const name = parameterNames[index];
-    if (!mappedNames.includes(name)) {
-      mappedNames.push(name);
+    if (!mappedNames.has(name)) {
+      mappedNames.add(name);
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);

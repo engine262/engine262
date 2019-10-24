@@ -21,7 +21,7 @@ import {
   ToBoolean,
 } from './abstract-ops/all.mjs';
 import { NormalCompletion, Q } from './completion.mjs';
-import { msg } from './helpers.mjs';
+import { ValueMap, msg } from './helpers.mjs';
 
 export class LexicalEnvironment {
   constructor() {
@@ -36,7 +36,7 @@ export class EnvironmentRecord {}
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   constructor() {
     super();
-    this.bindings = new Map();
+    this.bindings = new ValueMap();
   }
 
   HasBinding(N) {

@@ -1,8 +1,116 @@
 import { surroundingAgent } from './engine.mjs';
-import { Value, Descriptor } from './value.mjs';
+import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
 import { inspect } from './api.mjs';
+
+function convertValueForKey(key) {
+  switch (Type(key)) {
+    case 'String':
+      return key.stringValue();
+    case 'Number':
+      if (key.numberValue() === 0 && Object.is(key.numberValue(), -0)) {
+        return key;
+      }
+      return key.numberValue();
+    default:
+      return key;
+  }
+}
+
+export class ValueMap extends Map {
+  constructor(init) {
+    super();
+    if (init !== null && init !== undefined) {
+      for (const [k, v] of init) {
+        this.set(convertValueForKey(k), v);
+      }
+    }
+  }
+
+  get(key) {
+    return super.get(convertValueForKey(key));
+  }
+
+  set(key, value) {
+    return super.set(convertValueForKey(key), value);
+  }
+
+  has(key) {
+    return super.has(convertValueForKey(key));
+  }
+
+  delete(key) {
+    return super.delete(convertValueForKey(key));
+  }
+
+  * keys() {
+    for (const [key] of this) {
+      yield key;
+    }
+  }
+
+  * values() {
+    for (const [, value] of this) {
+      yield value;
+    }
+  }
+
+  entries() {
+    return this[Symbol.iterator]();
+  }
+
+  * [Symbol.iterator]() {
+    for (const [key, value] of super.entries()) {
+      if (typeof key === 'string' || typeof key === 'number') {
+        yield [new Value(key), value];
+      } else {
+        yield [key, value];
+      }
+    }
+  }
+}
+
+export class ValueSet extends Set {
+  constructor(init) {
+    super();
+    if (init !== undefined && init !== null) {
+      for (const item of init) {
+        this.add(item);
+      }
+    }
+  }
+
+  add(item) {
+    return super.add(convertValueForKey(item));
+  }
+
+  has(item) {
+    return super.has(convertValueForKey(item));
+  }
+
+  delete(item) {
+    return super.delete(convertValueForKey(item));
+  }
+
+  keys() {
+    return this[Symbol.iterator]();
+  }
+
+  values() {
+    return this[Symbol.iterator]();
+  }
+
+  * [Symbol.iterator]() {
+    for (const key of super.values()) {
+      if (typeof key === 'string' || typeof key === 'number') {
+        yield new Value(key);
+      } else {
+        yield key;
+      }
+    }
+  }
+}
 
 export class OutOfRange extends RangeError {
   constructor(fn, detail) {

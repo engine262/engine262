@@ -47,7 +47,9 @@ import {
   Q,
   X,
 } from './completion.mjs';
-import { OutOfRange, msg } from './helpers.mjs';
+import {
+  ValueMap, ValueSet, OutOfRange, msg,
+} from './helpers.mjs';
 import { ResolvedBindingRecord } from './modules.mjs';
 
 export function Value(value) {
@@ -56,28 +58,11 @@ export function Value(value) {
   }
 
   if (typeof value === 'string') {
-    if (stringMap.has(value)) {
-      return stringMap.get(value);
-    }
-    const s = new StringValue(value);
-    stringMap.set(value, s);
-    return s;
+    return new StringValue(value);
   }
 
   if (typeof value === 'number') {
-    // Redundant value === 0 added to work around a bug in some older versions
-    // of V8.
-    // Refs: https://github.com/nodejs/node/issues/25268
-    // Refs: https://crbug.com/903043
-    if (value === 0 && Object.is(value, -0)) {
-      return negativeZero;
-    }
-    if (numberMap.has(value)) {
-      return numberMap.get(value);
-    }
-    const s = new NumberValue(value);
-    numberMap.set(value, s);
-    return s;
+    return new NumberValue(value);
   }
 
   if (typeof value === 'function') {
@@ -134,8 +119,6 @@ export class NumberValue extends PrimitiveValue {
   }
 }
 
-const negativeZero = new NumberValue(-0);
-
 export class StringValue extends PrimitiveValue {
   constructor(string) {
     super();
@@ -183,7 +166,7 @@ export class ObjectValue extends Value {
     this.Prototype = undefined;
     this.Extensible = undefined;
     this.IsClassPrototype = false;
-    this.properties = new Map();
+    this.properties = new ValueMap();
   }
 
   GetPrototypeOf() {
@@ -673,7 +656,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
   constructor() {
     super();
     this.Module = null;
-    this.Exports = [];
+    this.Exports = null;
     this.Prototype = Value.null;
   }
 
@@ -698,7 +681,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return OrdinaryGetOwnProperty(O, P);
     }
     const exports = O.Exports;
-    if (!exports.includes(P)) {
+    if (!exports.has(P)) {
       return Value.undefined;
     }
     const value = Q(O.Get(P, O));
@@ -746,7 +729,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return OrdinaryHasProperty(O, P);
     }
     const exports = O.Exports;
-    if (exports.includes(P)) {
+    if (exports.has(P)) {
       return Value.true;
     }
     return Value.false;
@@ -760,7 +743,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return OrdinaryGet(O, P, Receiver);
     }
     const exports = O.Exports;
-    if (!exports.includes(P)) {
+    if (!exports.has(P)) {
       return Value.undefined;
     }
     const m = O.Module;
@@ -788,7 +771,7 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
       return Q(OrdinaryDelete(O, P));
     }
     const exports = O.Exports;
-    if (exports.includes(P)) {
+    if (exports.has(P)) {
       return Value.false;
     }
     return Value.true;
@@ -1145,7 +1128,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     const trapResultArray = Q(Call(trap, handler, [target]));
     const trapResult = Q(CreateListFromArrayLike(trapResultArray, ['String', 'Symbol']));
-    if (trapResult.some((e) => trapResult.indexOf(e) !== trapResult.lastIndexOf(e))) {
+    if (new ValueSet(trapResult).size !== trapResult.length) {
       return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap returned duplicate keys');
     }
     const extensibleTarget = Q(IsExtensible(target));
@@ -1165,7 +1148,7 @@ export class ProxyExoticObjectValue extends ObjectValue {
     if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
       return trapResult;
     }
-    const uncheckedResultKeys = new globalThis.Set(trapResult);
+    const uncheckedResultKeys = new ValueSet(trapResult);
     for (const key of targetNonconfigurableKeys) {
       if (!uncheckedResultKeys.has(key)) {
         return surroundingAgent.Throw('TypeError', '\'ownKeys\' on proxy: trap result does not include non-configurable key');
@@ -1209,10 +1192,6 @@ export class SuperReference extends Reference {
     this.thisValue = thisValue;
   }
 }
-
-// TODO(devsnek): clean this up somehow
-const stringMap = new Map();
-const numberMap = new Map();
 
 export function Descriptor(O) {
   if (new.target === Descriptor) {

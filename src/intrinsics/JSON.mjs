@@ -29,6 +29,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { ValueSet } from '../helpers.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -434,7 +435,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     } else {
       const isArray = Q(IsArray(replacer));
       if (isArray === Value.true) {
-        PropertyList = [];
+        PropertyList = new ValueSet();
         const len = Q(LengthOfArrayLike(replacer)).numberValue();
         let k = 0;
         while (k < len) {
@@ -450,8 +451,8 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
               item = Q(ToString(v));
             }
           }
-          if (item !== Value.undefined && !PropertyList.includes(item)) {
-            PropertyList.push(item);
+          if (item !== Value.undefined && !PropertyList.has(item)) {
+            PropertyList.add(item);
           }
           k += 1;
         }

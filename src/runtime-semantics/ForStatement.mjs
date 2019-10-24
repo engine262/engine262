@@ -63,7 +63,7 @@ import {
   DeclarativeEnvironmentRecord,
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { ValueSet, OutOfRange } from '../helpers.mjs';
 
 // 13.7.1.2 #sec-loopcontinues
 function LoopContinues(completion, labelSet) {
@@ -76,7 +76,7 @@ function LoopContinues(completion, labelSet) {
   if (completion.Target === undefined) {
     return true;
   }
-  if (labelSet.includes(completion.Target)) {
+  if (labelSet.has(completion.Target)) {
     return true;
   }
   return false;
@@ -146,7 +146,7 @@ function BindingInstantiation_ForDeclaration(ForDeclaration, environment) {
 function* ForInOfHeadEvaluation(TDZnames, expr, iterationKind) {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   if (TDZnames.length > 0) {
-    Assert(new Set(TDZnames).size === TDZnames.length);
+    Assert(new ValueSet(TDZnames).size === TDZnames.length);
     const TDZ = NewDeclarativeEnvironment(oldEnv);
     const TDZEnvRec = TDZ.EnvironmentRecord;
     for (const name of TDZnames) {
@@ -451,7 +451,7 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
 }
 
 function* InternalEnumerateObjectProperties(O) {
-  const visited = new Set();
+  const visited = new ValueSet();
   const keys = Q(O.OwnPropertyKeys());
   for (const key of keys) {
     if (Type(key) === 'Symbol') {

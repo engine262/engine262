@@ -8,6 +8,7 @@ import {
   ExportEntries_ModuleItemList,
   ImportedLocalNames,
 } from './static-semantics/all.mjs';
+import { ValueSet } from './helpers.mjs';
 
 const HasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 function deepFreeze(o) {
@@ -394,18 +395,18 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
 
   const requestedModules = ModuleRequests_ModuleItemList(body.body);
   const importEntries = ImportEntries_ModuleItemList(body.body);
-  const importedBoundNames = ImportedLocalNames(importEntries);
+  const importedBoundNames = new ValueSet(ImportedLocalNames(importEntries));
   const indirectExportEntries = [];
   const localExportEntries = [];
   const starExportEntries = [];
   const exportEntries = ExportEntries_ModuleItemList(body.body);
   for (const ee of exportEntries) {
     if (ee.ModuleRequest === Value.null) {
-      if (!importedBoundNames.includes(ee.LocalName)) {
+      if (!importedBoundNames.has(ee.LocalName)) {
         localExportEntries.push(ee);
       } else {
-        const ie = importEntries.find((e) => e.LocalName === ee.LocalName);
-        if (ie.ImportName === new Value('*')) {
+        const ie = importEntries.find((e) => e.LocalName.stringValue() === ee.LocalName.stringValue());
+        if (ie.ImportName.stringValue() === '*') {
           // Assert: This is a re-export of an imported module namespace object.
           localExportEntries.push(ee);
         } else {
@@ -417,7 +418,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
           }));
         }
       }
-    } else if (ee.ImportName === new Value('*')) {
+    } else if (ee.ImportName.stringValue() === '*') {
       starExportEntries.push(ee);
     } else {
       indirectExportEntries.push(ee);

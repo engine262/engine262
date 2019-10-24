@@ -7,7 +7,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
 } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { ValueSet, OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
 import {
   Evaluate_SwitchStatement,
@@ -19,7 +19,7 @@ import {
 //     IterationStatement
 //     SwitchStatement
 export function* Evaluate_BreakableStatement(BreakableStatement) {
-  const newLabelSet = [];
+  const newLabelSet = new ValueSet();
   return yield* LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
 }
 

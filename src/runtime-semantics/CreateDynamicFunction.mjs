@@ -33,12 +33,13 @@ import {
   Type,
   Value,
 } from '../value.mjs';
+import { ValueSet } from '../helpers.mjs';
 
 function hasIntersection(reference, check) {
   if (reference.length === 0 || check.length === 0) {
     return false;
   }
-  const refSet = new Set(reference);
+  const refSet = new ValueSet(reference);
   for (const el of check) {
     if (refSet.has(el)) {
       return el;

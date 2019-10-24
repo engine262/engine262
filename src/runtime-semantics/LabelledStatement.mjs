@@ -7,7 +7,7 @@ import {
   LabelledEvaluation_BreakableStatement,
 // LabelledEvaluation_IterationStatement,
 } from './all.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { ValueSet, OutOfRange } from '../helpers.mjs';
 
 // 13.13.14 #sec-labelled-statements-runtime-semantics-labelledevaluation
 function* LabelledEvaluation({
@@ -15,7 +15,7 @@ function* LabelledEvaluation({
   body: LabelledItem,
 }, labelSet) {
   const label = new Value(LabelIdentifier.name);
-  labelSet.push(label);
+  labelSet.add(label);
   let stmtResult;
   switch (true) {
     case isBreakableStatement(LabelledItem):
@@ -39,6 +39,6 @@ function* LabelledEvaluation({
 
 // 13.13.15 #sec-labelled-statements-runtime-semantics-evaluation
 export function* Evaluate_LabelledStatement(LabelledStatement) {
-  const newLabelSet = [];
+  const newLabelSet = new ValueSet();
   return yield* LabelledEvaluation(LabelledStatement, newLabelSet);
 }
