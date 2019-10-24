@@ -53,6 +53,7 @@ const INSPECTORS = {
     }
     return n.toString();
   },
+  BigInt: (v) => `${v.bigintValue()}n`,
   String: (v, ctx) => (ctx.quote ? `'${v.stringValue().replace(/\n/g, '\\n')}'` : v.stringValue()),
   Symbol: (v) => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
   Object: (v, ctx, i) => {
@@ -91,6 +92,9 @@ const INSPECTORS = {
     }
     if ('NumberData' in v) {
       return `[Number ${i(v.NumberData)}]`;
+    }
+    if ('BigIntData' in v) {
+      return `[BigInt ${i(v.BigIntData)}]`;
     }
     if ('StringData' in v) {
       return `[String ${i(v.StringData)}]`;

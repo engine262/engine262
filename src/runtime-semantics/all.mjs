@@ -53,6 +53,7 @@ export * from './MV.mjs';
 export * from './MultiplicativeExpression.mjs';
 export * from './NamedEvaluation.mjs';
 export * from './NewExpression.mjs';
+export * from './NumberToBigInt.mjs';
 export * from './ObjectLiteral.mjs';
 export * from './OptionalExpression.mjs';
 export * from './PropertyBindingInitialization.mjs';

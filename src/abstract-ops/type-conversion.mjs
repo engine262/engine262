@@ -1,6 +1,8 @@
 import {
   Type,
   Value,
+  NumberValue,
+  BigIntValue,
   wellKnownSymbols,
 } from '../value.mjs';
 import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
@@ -94,11 +96,28 @@ export function ToBoolean(argument) {
       return Value.true;
     case 'Symbol':
       return Value.true;
+    case 'BigInt':
+      if (argument.bigintValue() === 0n) {
+        return Value.false;
+      }
+      return Value.true;
     case 'Object':
       return Value.true;
     default:
       throw new OutOfRange('ToBoolean', { type, argument });
   }
+}
+
+// #sec-tonumeric
+export function ToNumeric(value) {
+  // 1. Let primValue be ? ToPrimitive(value, hint Number).
+  const primValue = Q(ToPrimitive(value, 'Number'));
+  // 2. If Type(primValue) is BigInt, return primValue.
+  if (Type(primValue) === 'BigInt') {
+    return primValue;
+  }
+  // 3. Return ? ToNumber(primValue).
+  return Q(ToNumber(primValue));
 }
 
 // 7.1.3 #sec-tonumber
@@ -118,6 +137,8 @@ export function ToNumber(argument) {
       return argument;
     case 'String':
       return MV_StringNumericLiteral(argument.stringValue());
+    case 'BigInt':
+      return surroundingAgent.Throw('TypeError', msg('CannotMixBigints'));
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
     case 'Object': {
@@ -248,6 +269,83 @@ export function ToUint8Clamp(argument) {
   return new Value(f);
 }
 
+// #sec-tobigint
+export function ToBigInt(argument) {
+  // 1. Let prim be ? ToPrimitive(argument, hint Number).
+  const prim = Q(ToPrimitive(argument, 'Number'));
+  // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
+  switch (Type(prim)) {
+    case 'Undefined':
+      // Throw a TypeError exception.
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', prim));
+    case 'Null':
+      // Throw a TypeError exception.
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', argument));
+    case 'Boolean':
+      // Return 1n if prim is true and 0n if prim is false.
+      if (prim === Value.true) {
+        return new Value(1n);
+      }
+      return new Value(0n);
+    case 'BigInt':
+      // Return prim.
+      return prim;
+    case 'Number':
+      // Throw a TypeError exception.
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', prim));
+    case 'String': {
+      // 1. Let n be ! StringToBigInt(prim).
+      const n = X(StringToBigInt(prim));
+      // 2. If n is NaN, throw a SyntaxError exception.
+      if (Number.isNaN(n)) {
+        return surroundingAgent.Throw('SyntaxError');
+      }
+      // 3. Return n.
+      return n;
+    }
+    case 'Symbol':
+      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'bigint'));
+    default:
+      throw new OutOfRange('ToBigInt', argument);
+  }
+}
+
+// #sec-stringtobigint
+export function StringToBigInt(argument) {
+  // Apply the algorithm in 7.1.4.1 (#sec-tonumber-applied-to-the-string-type) with the following changes:
+  // 1. Replace the StrUnsignedDecimalLiteral production with DecimalDigits to not allow Infinity, decimal points, or exponents.
+  // 2. If the MV is NaN, return NaN, otherwise return the BigInt which exactly corresponds to the MV, rather than rounding to a Number.
+  // TODO: Adapt nearley grammar for this.
+  try {
+    return new Value(BigInt(argument.stringValue()));
+  } catch {
+    return NaN;
+  }
+}
+
+// #sec-tobigint64
+export function ToBigInt64(argument) {
+  // 1. Let n be ? ToBigInt(argument).
+  const n = Q(ToBigInt(argument));
+  // 2. Let int64bit be n modulo 2^64.
+  const int64bit = n.bigintValue() % (2n ** 64n);
+  // 3. If int64bit ≥ 2^63, return int64bit - 2^64; otherwise return int64bit.
+  if (int64bit >= 2n ** 63n) {
+    return new Value(int64bit - (2n ** 64n));
+  }
+  return new Value(int64bit);
+}
+
+// #sec-tobiguint64
+export function ToBigUint64(argument) {
+  // 1. Let n be ? ToBigInt(argument).
+  const n = Q(ToBigInt(argument));
+  // 2. Let int64bit be n modulo 2^64.
+  const int64bit = n.bigintValue() % (2n ** 64n);
+  // 3. Return int64bit.
+  return new Value(int64bit);
+}
+
 // 7.1.12 #sec-tostring
 export function ToString(argument) {
   const type = Type(argument);
@@ -259,11 +357,15 @@ export function ToString(argument) {
     case 'Boolean':
       return new Value(argument === Value.true ? 'true' : 'false');
     case 'Number':
-      return NumberToString(argument);
+      // Return ! Number::toString(argument).
+      return X(NumberValue.toString(argument));
     case 'String':
       return argument;
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
+    case 'BigInt':
+      // Return ! BigInt::toString(argument).
+      return X(BigIntValue.toString(argument));
     case 'Object': {
       const primValue = Q(ToPrimitive(argument, 'String'));
       return Q(ToString(primValue));
@@ -271,26 +373,6 @@ export function ToString(argument) {
     default:
       throw new OutOfRange('ToString', { type, argument });
   }
-}
-
-// 7.1.12.1 #sec-tostring-applied-to-the-number-type
-export function NumberToString(m) {
-  if (m.isNaN()) {
-    return new Value('NaN');
-  }
-  const mVal = m.numberValue();
-  if (mVal === 0) {
-    return new Value('0');
-  }
-  if (mVal < 0) {
-    const str = X(NumberToString(new Value(-mVal))).stringValue();
-    return new Value(`-${str}`);
-  }
-  if (m.isInfinity()) {
-    return new Value('Infinity');
-  }
-  // TODO: implement properly
-  return new Value(`${mVal}`);
 }
 
 // 7.1.13 #sec-toobject
@@ -316,6 +398,11 @@ export function ToObject(argument) {
     case 'Symbol': {
       const obj = ObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
       obj.SymbolData = argument;
+      return obj;
+    }
+    case 'BigInt': {
+      const obj = ObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'));
+      obj.BigIntData = argument;
       return obj;
     }
     case 'Object':

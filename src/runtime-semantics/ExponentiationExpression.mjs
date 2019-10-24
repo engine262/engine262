@@ -1,12 +1,16 @@
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Type, TypeNumeric } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { GetValue, ToNumber } from '../abstract-ops/all.mjs';
+import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
 export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
-  const base = Q(ToNumber(lval));
-  const exponent = Q(ToNumber(rval));
-  return new Value(base.numberValue() ** exponent.numberValue());
+  const base = Q(ToNumeric(lval));
+  const exponent = Q(ToNumeric(rval));
+  if (Type(base) !== Type(exponent)) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  return Q(TypeNumeric(base).exponentiate(base, exponent));
 }
 
 // 12.6.3 #sec-exp-operator-runtime-semantics-evaluation

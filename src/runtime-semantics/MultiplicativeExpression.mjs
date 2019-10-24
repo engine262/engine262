@@ -1,27 +1,27 @@
-import {
-  GetValue,
-  ToNumber,
-} from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import {
-  Value,
-} from '../value.mjs';
+import { Type, TypeNumeric } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
-  const lnum = Q(ToNumber(lval));
-  const rnum = Q(ToNumber(rval));
+  const lnum = Q(ToNumeric(lval));
+  const rnum = Q(ToNumeric(rval));
 
-  // Return the result of applying the MultiplicativeOperator (*, /, or %)
-  // to lnum and rnum as specified in 12.7.3.1, 12.7.3.2, or 12.7.3.3.
+  if (Type(lnum) !== Type(rnum)) {
+    return surroundingAgent.Throw('TypeError');
+  }
+
+  const T = TypeNumeric(lnum);
+
   switch (MultiplicativeOperator) {
     case '*':
-      return new Value(lnum.numberValue() * rnum.numberValue());
+      return T.multiply(lnum, rnum);
     case '/':
-      return new Value(lnum.numberValue() / rnum.numberValue());
+      return T.divide(lnum, rnum);
     case '%':
-      return new Value(lnum.numberValue() % rnum.numberValue());
+      return T.remainder(lnum, rnum);
 
     default:
       throw new OutOfRange('EvaluateBinopValues_MultiplicativeExpression', MultiplicativeOperator);

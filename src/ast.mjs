@@ -12,7 +12,8 @@ export function isBooleanLiteral(node) {
 
 // #prod-NumericLiteral
 export function isNumericLiteral(node) {
-  return node.type === 'Literal' && typeof node.value === 'number';
+  return node.type === 'Literal'
+    && (typeof node.value === 'number' || typeof node.value === 'bigint');
 }
 
 // #prod-StringLiteral

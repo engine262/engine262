@@ -67,6 +67,11 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
     if (ret.type === 'MethodDefinition' && ret.static) {
       ret.start += 7; // don't include `static` in the source text
     }
+    if (ret.type === 'Literal' && typeof ret.value === 'bigint') {
+      if (/^0[^xbo]/.test(ret.bigint)) {
+        this.raise(ret.start, 'Invalid or unexpected token');
+      }
+    }
     return ret;
   }
 

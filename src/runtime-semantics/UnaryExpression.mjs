@@ -19,13 +19,13 @@ import {
   IsSuperReference,
   IsUnresolvableReference,
   ToBoolean,
-  ToInt32,
   ToNumber,
   ToObject,
+  ToNumeric,
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
-import { Type, Value } from '../value.mjs';
+import { Type, TypeNumeric, Value } from '../value.mjs';
 import { OutOfRange, msg } from '../helpers.mjs';
 
 // 12.5.3.2 #sec-delete-operator-runtime-semantics-evaluation
@@ -75,7 +75,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
   }
   val = Q(GetValue(val));
 
-  // Return a String according to Table 35.
+  // Return a String according to Table 37.
 
   const type = Type(val);
 
@@ -90,6 +90,8 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
       return new Value('number');
     case 'String':
       return new Value('string');
+    case 'BigInt':
+      return new Value('bigint');
     case 'Symbol':
       return new Value('symbol');
     case 'Object':
@@ -114,22 +116,29 @@ function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
 // 12.5.7.1 #sec-unary-minus-operator-runtime-semantics-evaluation
 // UnaryExpression : `-` UnaryExpression
 function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
+  // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
+  // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const exprVal = Q(GetValue(expr));
-  const oldValue = Q(ToNumber(exprVal));
-  if (oldValue.isNaN()) {
-    return new Value(NaN);
-  }
-  return new Value(-oldValue.numberValue());
+  const oldValue = Q(ToNumeric(exprVal));
+  // 3. Let T be Type(oldValue).
+  const T = TypeNumeric(oldValue);
+  // 4. Return ! T::unaryMinus(oldValue).
+  return X(T.unaryMinus(oldValue));
 }
 
 // 12.5.8.1 #sec-bitwise-not-operator-runtime-semantics-evaluation
 // UnaryExpression : `~` UnaryExpression
 function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
+  // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
+  // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const exprVal = Q(GetValue(expr));
-  const oldValue = Q(ToInt32(exprVal));
-  return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
+  const oldValue = Q(ToNumeric(exprVal));
+  // 3. Let T be Type(oldValue).
+  const T = TypeNumeric(oldValue);
+  // 4. Return ! T::bitwiseNOT(oldValue).
+  return X(T.bitwiseNOT(oldValue));
 }
 
 // 12.5.9.1 #sec-logical-not-operator-runtime-semantics-evaluation

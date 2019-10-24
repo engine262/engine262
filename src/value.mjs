@@ -35,6 +35,7 @@ import {
   StringGetOwnProperty,
   ToBoolean,
   ToPropertyDescriptor,
+  ToInt32,
   ToUint32,
   ToInteger,
   ToString,
@@ -57,19 +58,18 @@ export function Value(value) {
     return undefined;
   }
 
-  if (typeof value === 'string') {
-    return new StringValue(value);
+  switch (typeof value) {
+    case 'string':
+      return new StringValue(value);
+    case 'number':
+      return new NumberValue(value);
+    case 'bigint':
+      return new BigIntValue(value);
+    case 'function':
+      return new BuiltinFunctionValue(value);
+    default:
+      throw new OutOfRange('new Value', value);
   }
-
-  if (typeof value === 'number') {
-    return new NumberValue(value);
-  }
-
-  if (typeof value === 'function') {
-    return new BuiltinFunctionValue(value);
-  }
-
-  throw new OutOfRange('new Value', value);
 }
 
 export class PrimitiveValue extends Value {}
@@ -116,6 +116,508 @@ export class NumberValue extends PrimitiveValue {
 
   isFinite() {
     return Number.isFinite(this.number);
+  }
+
+  // #sec-numeric-types-number-unaryMinus
+  static unaryMinus(x) {
+    if (x.isNaN()) {
+      return new Value(NaN);
+    }
+    return new Value(-x.numberValue());
+  }
+
+  // #sec-numeric-types-number-bitwiseNOT
+  static bitwiseNOT(x) {
+    // 1. Let oldValue be ! ToInt32(x).
+    const oldValue = X(ToInt32(x));
+    // 2. Return the result of applying bitwise complement to oldValue. The result is a signed 32-bit integer.
+    return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
+  }
+
+  // #sec-numeric-types-number-exponentiate
+  static exponentiate(base, exponent) {
+    return new Value(base.numberValue() ** exponent.numberValue());
+  }
+
+  // #sec-numeric-types-number-multiply
+  static multiply(x, y) {
+    return new Value(x.numberValue() * y.numberValue());
+  }
+
+  // #sec-numeric-types-number-divide
+  static divide(x, y) {
+    return new Value(x.numberValue() / y.numberValue());
+  }
+
+  // #sec-numeric-types-number-remainder
+  static remainder(n, d) {
+    return new Value(n.numberValue() % d.numberValue());
+  }
+
+  // #sec-numeric-types-number-add
+  static add(x, y) {
+    return new Value(x.numberValue() + y.numberValue());
+  }
+
+  // #sec-numeric-types-number-subtract
+  static subtract(x, y) {
+    // The result of - operator is x + (-y).
+    return NumberValue.add(x, new Value(-y.numberValue()));
+  }
+
+  // #sec-numeric-types-number-leftShift
+  static leftShift(x, y) {
+    // 1. Let lnum be ! ToInt32(x).
+    const lnum = X(ToInt32(x));
+    // 2. Let rnum be ! ToUint32(y).
+    const rnum = X(ToUint32(y));
+    // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
+    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    // 4. Return the result of left shifting lnum by shiftCount bits. The result is a signed 32-bit integer.
+    return new Value(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
+  }
+
+  // #sec-numeric-types-number-signedRightShift
+  static signedRightShift(x, y) {
+    // 1. Let lnum be ! ToInt32(x).
+    const lnum = X(ToInt32(x));
+    // 2. Let rnum be ! ToUint32(y).
+    const rnum = X(ToUint32(y));
+    // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
+    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    // 4. Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
+    //    The most significant bit is propagated. The result is a signed 32-bit integer.
+    return new Value(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
+  }
+
+  // #sec-numeric-types-number-unsignedRightShift
+  static unsignedRightShift(x, y) {
+    // 1. Let lnum be ! ToInt32(x).
+    const lnum = X(ToInt32(x));
+    // 2. Let rnum be ! ToUint32(y).
+    const rnum = X(ToUint32(y));
+    // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
+    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    // 4. Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
+    //    Vacated bits are filled with zero. The result is an unsigned 32-bit integer.
+    return new Value(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
+  }
+
+  // #sec-numeric-types-number-lessThan
+  static lessThan(x, y) {
+    if (x.isNaN()) {
+      return Value.undefined;
+    }
+    if (y.isNaN()) {
+      return Value.undefined;
+    }
+    // If nx and ny are the same Number value, return false.
+    // If nx is +0 and ny is -0, return false.
+    // If nx is -0 and ny is +0, return false.
+    if (x.numberValue() === y.numberValue()) {
+      return Value.false;
+    }
+    if (x.numberValue() === +Infinity) {
+      return Value.false;
+    }
+    if (y.numberValue() === +Infinity) {
+      return Value.true;
+    }
+    if (y.numberValue() === -Infinity) {
+      return Value.false;
+    }
+    if (x.numberValue() === -Infinity) {
+      return Value.true;
+    }
+    return x.numberValue() < y.numberValue() ? Value.true : Value.false;
+  }
+
+  // #sec-numeric-types-number-equal
+  static equal(x, y) {
+    if (x.isNaN()) {
+      return Value.false;
+    }
+    if (y.isNaN()) {
+      return Value.false;
+    }
+    const xVal = x.numberValue();
+    const yVal = y.numberValue();
+    if (xVal === yVal) {
+      return Value.true;
+    }
+    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+      return Value.true;
+    }
+    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+      return Value.true;
+    }
+    return Value.false;
+  }
+
+  // #sec-numeric-types-number-sameValue
+  static sameValue(x, y) {
+    if (x.isNaN() && y.isNaN()) {
+      return Value.true;
+    }
+    const xVal = x.numberValue();
+    const yVal = y.numberValue();
+    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+      return Value.false;
+    }
+    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+      return Value.false;
+    }
+    if (xVal === yVal) {
+      return Value.true;
+    }
+    return Value.false;
+  }
+
+  // #sec-numeric-types-number-sameValueZero
+  static sameValueZero(x, y) {
+    if (x.isNaN() && y.isNaN()) {
+      return Value.true;
+    }
+    const xVal = x.numberValue();
+    const yVal = y.numberValue();
+    if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
+      return Value.true;
+    }
+    if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
+      return Value.true;
+    }
+    if (xVal === yVal) {
+      return Value.true;
+    }
+    return Value.false;
+  }
+
+  // #sec-numeric-types-number-bitwiseAND
+  static bitwiseAND(x, y) {
+    return NumberBitwiseOp('&', x, y);
+  }
+
+  // #sec-numeric-types-number-bitwiseXOR
+  static bitwiseXOR(x, y) {
+    return NumberBitwiseOp('^', x, y);
+  }
+
+  // #sec-numeric-types-number-bitwiseOR
+  static bitwiseOR(x, y) {
+    return NumberBitwiseOp('|', x, y);
+  }
+
+  // #sec-numeric-types-number-tostring
+  static toString(x) {
+    if (x.isNaN()) {
+      return new Value('NaN');
+    }
+    const xVal = x.numberValue();
+    if (xVal === 0) {
+      return new Value('0');
+    }
+    if (xVal < 0) {
+      const str = X(NumberValue.toString(new Value(-xVal))).stringValue();
+      return new Value(`-${str}`);
+    }
+    if (x.isInfinity()) {
+      return new Value('Infinity');
+    }
+    // TODO: implement properly
+    return new Value(`${xVal}`);
+  }
+}
+
+NumberValue.unit = new NumberValue(1);
+
+// #sec-numberbitwiseop
+function NumberBitwiseOp(op, x, y) {
+  // 1. Let lnum be ! ToInt32(x).
+  const lnum = X(ToInt32(x));
+  // 2. Let rnum be ! ToUint32(y).
+  const rnum = X(ToUint32(y));
+  // 3. Return the result of applying the bitwise operator op to lnum and rnum. The result is a signed 32-bit integer.
+  switch (op) {
+    case '&':
+      return new Value(lnum.numberValue() & rnum.numberValue()); // eslint-disable-line no-bitwise
+    case '|':
+      return new Value(lnum.numberValue() | rnum.numberValue()); // eslint-disable-line no-bitwise
+    case '^':
+      return new Value(lnum.numberValue() ^ rnum.numberValue()); // eslint-disable-line no-bitwise
+    default:
+      throw new OutOfRange('NumberBitwiseOp', op);
+  }
+}
+
+export class BigIntValue extends PrimitiveValue {
+  constructor(bigint) {
+    super();
+    this.bigint = bigint;
+  }
+
+  bigintValue() {
+    return this.bigint;
+  }
+
+  // #sec-numeric-types-bigint-unaryMinus
+  static unaryMinus(x) {
+    if (x.bigintValue() === 0n) {
+      return new Value(0n);
+    }
+    return new Value(-x.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-bitwiseNOT
+  static bitwiseNOT(x) {
+    return new Value(-x.bigintValue() - 1n);
+  }
+
+  // #sec-numeric-types-bigint-exponentiate
+  static exponentiate(base, exponent) {
+    // 1. If exponent < 0n, throw a RangeError exception.
+    if (exponent.bigintValue() < 0n) {
+      return surroundingAgent.Throw('RangeError');
+    }
+    // 2. If base is 0n and exponent is 0n, return 1n.
+    if (base.bigintValue() === 0n && exponent.bigintValue() === 0n) {
+      return new Value(1n);
+    }
+    // 3. Return the BigInt value that represents the mathematical value of base raised to the power exponent.
+    return new Value(base.bigintValue() ** exponent.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-multiply
+  static multiply(x, y) {
+    return new Value(x.bigintValue() * y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-divide
+  static divide(x, y) {
+    // 1. If y is 0n, throw a RangeError exception.
+    if (y.bigintValue() === 0n) {
+      return surroundingAgent.Throw('RangeError');
+    }
+    // 2. Let quotient be the mathematical value of x divided by y.
+    const quotient = x.bigintValue() / y.bigintValue();
+    // 3. Return the BigInt value that represents quotient rounded towards 0 to the next integral value.
+    return new Value(quotient);
+  }
+
+  // #sec-numeric-types-bigint-remainder
+  static remainder(n, d) {
+    // 1. If d is 0n, throw a RangeError exception.
+    if (d.bigintValue() === 0n) {
+      return surroundingAgent.Throw('RangeError');
+    }
+    // 2. If n is 0n, return 0n.
+    if (n.bigintValue() === 0n) {
+      return new Value(0n);
+    }
+    // 3. Let r be the BigInt defined by the mathematical relation r = n - (d × q)
+    //   where q is a BigInt that is negative only if n/d is negative and positive
+    //   only if n/d is positive, and whose magnitude is as large as possible without
+    //   exceeding the magnitude of the true mathematical quotient of n and d.
+    const r = new Value(n.bigintValue() % d.bigintValue());
+    // 4. Return r.
+    return r;
+  }
+
+  // #sec-numeric-types-bigint-add
+  static add(x, y) {
+    return new Value(x.bigintValue() + y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-subtract
+  static subtract(x, y) {
+    return new Value(x.bigintValue() - y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-leftShift
+  static leftShift(x, y) {
+    return new Value(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
+  }
+
+  // #sec-numeric-types-bigint-signedRightShift
+  static signedRightShift(x, y) {
+    // 1. Return BigInt::leftShift(x, -y).
+    return BigIntValue.leftShift(x, new Value(-y.bigintValue()));
+  }
+
+  // #sec-numeric-types-bigint-unsighedRightShift
+  static unsignedRightShift(_x, _y) {
+    return surroundingAgent.Throw('TypeError');
+  }
+
+  // #sec-numeric-types-bigint-lessThan
+  static lessThan(x, y) {
+    return x.bigintValue() < y.bigintValue() ? Value.true : Value.false;
+  }
+
+  // #sec-numeric-types-bigint-equal
+  static equal(x, y) {
+    // Return true if x and y have the same mathematical integer value and false otherwise.
+    return x.bigintValue() === y.bigintValue() ? Value.true : Value.false;
+  }
+
+  // #sec-numeric-types-bigint-sameValue
+  static sameValue(x, y) {
+    // 1. Return BigInt::equal(x, y).
+    return BigIntValue.equal(x, y);
+  }
+
+  // #sec-numeric-types-bigint-sameValueZero
+  static sameValueZero(x, y) {
+    // 1. Return BigInt::equal(x, y).
+    return BigIntValue.equal(x, y);
+  }
+
+  // #sec-numeric-types-bigint-bitwiseAND
+  static bitwiseAND(x, y) {
+    // 1. Return BigIntBitwiseOp("&", x, y).
+    return BigIntBitwiseOp('&', x.bigintValue(), y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-bitwiseXOR
+  static bitwiseXOR(x, y) {
+    // 1. Return BigIntBitwiseOp("^", x, y).
+    return BigIntBitwiseOp('^', x.bigintValue(), y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-bitwiseOR
+  static bitwiseOR(x, y) {
+    // 1. Return BigIntBitwiseOp("|", x, y);
+    return BigIntBitwiseOp('|', x.bigintValue(), y.bigintValue());
+  }
+
+  // #sec-numeric-types-bigint-tostring
+  static toString(x) {
+    // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
+    if (x.bigintValue() < 0n) {
+      const str = X(BigIntValue.toString(new Value(-x.bigintValue()))).stringValue();
+      return new Value(`-${str}`);
+    }
+    // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
+    return new Value(`${x.bigintValue()}`);
+  }
+}
+
+BigIntValue.unit = new BigIntValue(1n);
+
+/*
+// #sec-binaryand
+function BinaryAnd(x, y) {
+  // 1. Assert: x is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 2. Assert: y is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 3. If x is 1 and y is 1, return 1.
+  if (x === 1n && y === 1n) {
+    return 1n;
+  } else {
+    // 4. Else, return 0.
+    return 0n;
+  }
+}
+
+// #sec-binaryor
+function BinaryOr(x, y) {
+  // 1. Assert: x is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 2. Assert: y is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 3. If x is 1 or y is 1, return 1.
+  if (x === 1n || y === 1n) {
+    return 1n;
+  } else {
+    // 4. Else, return 0.
+    return 0n;
+  }
+}
+
+// #sec-binaryxor
+function BinaryXor(x, y) {
+  // 1. Assert: x is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 2. Assert: y is 0 or 1.
+  Assert(x === 0n || x === 1n);
+  // 3. If x is 1 and y is 0, return 1.
+  if (x === 1n && y === 0n) {
+    return 1n;
+  } else if (x === 0n && y === 1n) {
+    // Else if x is 0 and y is 1, return 1.
+    return 1n;
+  } else {
+    // 4. Else, return 0.
+    return 0n;
+  }
+}
+*/
+
+// #sec-bigintbitwiseop
+function BigIntBitwiseOp(op, x, y) {
+  // TODO: figure out why this doesn't work, probably the modulo.
+  /*
+  // 1. Assert: op is "&", "|", or "^".
+  Assert(['&', '|', '^'].includes(op));
+  // 2. Let result be 0n.
+  let result = 0n;
+  // 3. Let shift be 0.
+  let shift = 0n;
+  // 4. Repeat, until (x = 0 or x = -1) and (y = 0 or y = -1),
+  while (!((x === 0n || x === -1n) && (y === 0n || y === -1n))) {
+    // a. Let xDigit be x modulo 2.
+    const xDigit = x % 2n;
+    // b. Let yDigit be y modulo 2.
+    const yDigit = y % 2n;
+    // c. If op is "&", set result to result + 2^shift × BinaryAnd(xDigit, yDigit).
+    if (op === '&') {
+      result += (2n ** shift) * BinaryAnd(xDigit, yDigit);
+    } else if (op === '|') {
+      // d. Else if op is "|", set result to result + 2shift × BinaryOr(xDigit, yDigit).
+      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
+    } else {
+      // i. Assert: op is "^".
+      Assert(op === '^');
+      // ii. Set result to result + 2^shift × BinaryXor(xDigit, yDigit).
+      result += (2n ** shift) * BinaryXor(xDigit, yDigit);
+    }
+    // f. Set shift to shift + 1.
+    shift += 1n;
+    // g. Set x to (x - xDigit) / 2.
+    x = (x - xDigit) / 2n;
+    // h. Set y to (y - yDigit) / 2.
+    y = (y - yDigit) / 2n;
+  }
+  let tmp;
+  // 5. If op is "&", let tmp be BinaryAnd(x modulo 2, y modulo 2).
+  if (op === '&') {
+    tmp = BinaryAnd(x % 2n, y % 2n);
+  } else if (op === '|') {
+    // 6. Else if op is "|", let tmp be BinaryOr(x modulo 2, y modulo 2).
+    tmp = BinaryOr(x % 2n, y % 2n);
+  } else {
+    // a. Assert: op is "^".
+    Assert(op === '^');
+    // b. Let tmp be BinaryXor(x modulo 2, y modulo 2).
+    tmp = BinaryXor(x % 2n, y % 2n);
+  }
+  // 8. If tmp ≠ 0, then
+  if (tmp !== 0n) {
+    // a. Set result to result - 2^shift. NOTE: This extends the sign.
+    result -= 2n ** shift;
+  }
+  // 9. Return result.
+  return new Value(result);
+  */
+  switch (op) {
+    case '&':
+      return new Value(x & y); // eslint-disable-line no-bitwise
+    case '|':
+      return new Value(x | y); // eslint-disable-line no-bitwise
+    case '^':
+      return new Value(x ^ y); // eslint-disable-line no-bitwise
+    default:
+      throw new OutOfRange('BigIntBitwiseOp', op);
   }
 }
 
@@ -1248,6 +1750,10 @@ export function Type(val) {
     return 'Number';
   }
 
+  if (val instanceof BigIntValue) {
+    return 'BigInt';
+  }
+
   if (val instanceof SymbolValue) {
     return 'Symbol';
   }
@@ -1281,4 +1787,17 @@ export function Type(val) {
   }
 
   throw new OutOfRange('Type', val);
+}
+
+// Used for Type(x)::y for numerics
+export function TypeNumeric(val) {
+  if (val instanceof NumberValue) {
+    return NumberValue;
+  }
+
+  if (val instanceof BigIntValue) {
+    return BigIntValue;
+  }
+
+  throw new OutOfRange('TypeNumeric', val);
 }

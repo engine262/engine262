@@ -14,6 +14,8 @@ import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
 import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';
 import { CreateArray } from './intrinsics/Array.mjs';
+import { CreateBigInt } from './intrinsics/BigInt.mjs';
+import { CreateBigIntPrototype } from './intrinsics/BigIntPrototype.mjs';
 import { CreateBooleanPrototype } from './intrinsics/BooleanPrototype.mjs';
 import { CreateBoolean } from './intrinsics/Boolean.mjs';
 import { CreateNumberPrototype } from './intrinsics/NumberPrototype.mjs';
@@ -157,6 +159,9 @@ export function CreateIntrinsics(realmRec) {
   CreateNumberPrototype(realmRec);
   CreateNumber(realmRec);
 
+  CreateBigIntPrototype(realmRec);
+  CreateBigInt(realmRec);
+
   CreateSymbolPrototype(realmRec);
   CreateSymbol(realmRec);
 
@@ -271,6 +276,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Array',
     'ArrayBuffer',
     'Boolean',
+    'BigInt',
     'DataView',
     'Date',
     'Error',

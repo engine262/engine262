@@ -1,33 +1,29 @@
+import { surroundingAgent } from '../engine.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import { GetValue, ToInt32, ToUint32 } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
+import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
+import { Type, TypeNumeric } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 /* eslint-disable no-bitwise */
 
 export function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
+  const lnum = Q(ToNumeric(lval));
+  const rnum = Q(ToNumeric(rval));
+  if (Type(lnum) !== Type(rnum)) {
+    return surroundingAgent.Throw('TypeError');
+  }
+  const T = TypeNumeric(lnum);
+
   switch (operator) {
-    case '<<': {
-      const lnum = Q(ToInt32(lval));
-      const rnum = Q(ToUint32(rval));
-      const shiftCount = rnum.numberValue() & 0x1F;
-      return new Value(lnum.numberValue() << shiftCount);
-    }
+    case '<<':
+      return T.leftShift(lnum, rnum);
 
-    case '>>': {
-      const lnum = Q(ToInt32(lval));
-      const rnum = Q(ToUint32(rval));
-      const shiftCount = rnum.numberValue() & 0x1F;
-      return new Value(lnum.numberValue() >> shiftCount);
-    }
+    case '>>':
+      return T.signedRightShift(lnum, rnum);
 
-    case '>>>': {
-      const lnum = Q(ToUint32(lval));
-      const rnum = Q(ToUint32(rval));
-      const shiftCount = rnum.numberValue() & 0x1F;
-      return new Value(lnum.numberValue() >>> shiftCount);
-    }
+    case '>>>':
+      return T.unsignedRightShift(lnum, rnum);
 
     default:
       throw new OutOfRange('EvaluateBinopValues_ShiftExpression', operator);

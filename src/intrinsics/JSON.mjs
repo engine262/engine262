@@ -29,7 +29,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { ValueSet } from '../helpers.mjs';
+import { ValueSet, msg } from '../helpers.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -288,6 +288,8 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
         value = Q(ToString(value));
       } else if ('BooleanData' in value) {
         value = value.BooleanData;
+      } else if ('BigIntData' in value) {
+        value = value.BigIntData;
       }
     }
     if (value === Value.null) {
@@ -307,6 +309,9 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
         return X(ToString(value));
       }
       return new Value('null');
+    }
+    if (Type(value) === 'BigInt') {
+      return surroundingAgent.Throw('TypeError', msg('CannotJSONSerializeBigInt'));
     }
     if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
       const isArray = Q(IsArray(value));

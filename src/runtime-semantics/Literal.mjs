@@ -20,6 +20,10 @@ export function Evaluate_Literal(Literal) {
     case typeof Literal.value === 'number':
       return new Value(MV_NumericLiteral(Literal.raw));
 
+    case typeof Literal.value === 'bigint':
+      // TODO: Run MV parser on Literal.raw.
+      return new Value(Literal.value);
+
     case typeof Literal.value === 'string':
       return new Value(Literal.value);
 

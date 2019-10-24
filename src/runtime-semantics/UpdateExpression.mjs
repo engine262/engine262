@@ -3,14 +3,10 @@ import { OutOfRange } from '../helpers.mjs';
 import {
   GetValue,
   PutValue,
-  ToNumber,
+  ToNumeric,
 } from '../abstract-ops/all.mjs';
-import {
-  EvaluateBinopValues_AdditiveExpression_Minus,
-  EvaluateBinopValues_AdditiveExpression_Plus,
-} from './all.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { TypeNumeric } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
 
 export function* Evaluate_UpdateExpression({
   operator,
@@ -24,8 +20,8 @@ export function* Evaluate_UpdateExpression({
 
       const lhs = yield* Evaluate(LeftHandSideExpression);
       const lhsValue = Q(GetValue(lhs));
-      const oldValue = Q(ToNumber(lhsValue));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
+      const oldValue = Q(ToNumeric(lhsValue));
+      const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -36,8 +32,8 @@ export function* Evaluate_UpdateExpression({
 
       const lhs = yield* Evaluate(LeftHandSideExpression);
       const lhsVal = Q(GetValue(lhs));
-      const oldValue = Q(ToNumber(lhsVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));
+      const oldValue = Q(ToNumeric(lhsVal));
+      const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(lhs, newValue));
       return oldValue;
     }
@@ -48,8 +44,8 @@ export function* Evaluate_UpdateExpression({
 
       const expr = yield* Evaluate(UnaryExpression);
       const exprVal = Q(GetValue(expr));
-      const oldValue = Q(ToNumber(exprVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Plus(oldValue, new Value(1));
+      const oldValue = Q(ToNumeric(exprVal));
+      const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(expr, newValue));
       return newValue;
     }
@@ -60,8 +56,8 @@ export function* Evaluate_UpdateExpression({
 
       const expr = yield* Evaluate(UnaryExpression);
       const exprVal = Q(GetValue(expr));
-      const oldValue = Q(ToNumber(exprVal));
-      const newValue = EvaluateBinopValues_AdditiveExpression_Minus(oldValue, new Value(1));
+      const oldValue = Q(ToNumeric(exprVal));
+      const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(expr, newValue));
       return newValue;
     }
