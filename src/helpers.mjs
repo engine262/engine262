@@ -183,6 +183,9 @@ export function captureStack(O) {
       break;
     }
     stack.push(e.callSite.clone());
+    if (e.callSite.isAsync()) {
+      i -= 1; // skip original execution context which has no useful information.
+    }
   }
 
   if (stack.length > 0 && stack[0].context.promiseCapability) {

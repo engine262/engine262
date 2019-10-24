@@ -136,7 +136,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
   Assert(F instanceof FunctionValue);
-  if (F.FunctionKind === 'classConstructor') {
+  if (F.IsClassConstructor === Value.true) {
     return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
   }
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -197,7 +197,6 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 const esFunctionInternalSlots = Object.freeze([
   'Environment',
   'FormalParameters',
-  'FunctionKind',
   'ECMAScriptCode',
   'ConstructorKind',
   'Realm',
@@ -205,27 +204,18 @@ const esFunctionInternalSlots = Object.freeze([
   'ThisMode',
   'Strict',
   'HomeObject',
+  'IsClassConstructor',
 ]);
 
 // 9.2.3 #sec-functionallocate
-export function FunctionAllocate(functionPrototype, functionKind) {
+export function FunctionAllocate(functionPrototype) {
   Assert(Type(functionPrototype) === 'Object');
-  Assert(['normal', 'non-constructor', 'generator', 'async', 'async generator']
-    .includes(functionKind));
-  const needsConstruct = functionKind === 'normal';
-  if (functionKind === 'non-constructor') {
-    functionKind = 'Normal';
-  }
   const F = new FunctionValue(functionPrototype);
   for (const internalSlot of esFunctionInternalSlots) {
     F[internalSlot] = Value.undefined;
   }
   F.Call = FunctionCallSlot;
-  if (needsConstruct) {
-    F.Construct = FunctionConstructSlot;
-    F.ConstructorKind = 'base';
-  }
-  F.FunctionKind = functionKind;
+  F.IsClassConstructor = Value.false;
   F.Prototype = functionPrototype;
   F.Extensible = Value.true;
   F.Realm = surroundingAgent.currentRealmRecord;
@@ -273,37 +263,38 @@ export function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
   if (prototype === undefined) {
     prototype = surroundingAgent.intrinsic('%Function.prototype%');
   }
-  const allocKind = kind === 'Normal' ? 'normal' : 'non-constructor';
-  const F = FunctionAllocate(prototype, allocKind);
+  const F = FunctionAllocate(prototype);
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
 // 9.2.6 #sec-generatorfunctioncreate
 export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%Generator%');
-  const F = FunctionAllocate(functionPrototype, 'generator');
+  const F = FunctionAllocate(functionPrototype);
   return FunctionInitialize(F, kind, ParameterList, Body, Scope);
 }
 
 // 9.2.7 #sec-asyncgeneratorfunctioncreate
 export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%');
-  const F = X(FunctionAllocate(functionPrototype, 'generator'));
+  const F = X(FunctionAllocate(functionPrototype));
   return X(FunctionInitialize(F, kind, ParameterList, Body, Scope));
 }
 
 // 9.2.8 #sec-async-functions-abstract-operations-async-function-create
 export function AsyncFunctionCreate(kind, parameters, body, Scope) {
   const functionPrototype = surroundingAgent.intrinsic('%AsyncFunction.prototype%');
-  const F = X(FunctionAllocate(functionPrototype, 'async'));
+  const F = X(FunctionAllocate(functionPrototype));
   return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
 
 // 9.2.10 #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(F instanceof FunctionValue);
-  Assert(IsConstructor(F) === Value.true);
+  Assert(IsConstructor(F) === Value.false);
   Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
+  F.Construct = FunctionConstructSlot;
+  F.ConstructorKind = 'base';
   if (writablePrototype === undefined) {
     writablePrototype = true;
   }
@@ -328,8 +319,8 @@ export function MakeConstructor(F, writablePrototype, prototype) {
 // 9.2.11 #sec-makeclassconstructor
 export function MakeClassConstructor(F) {
   Assert(F instanceof FunctionValue);
-  Assert(F.FunctionKind === 'normal');
-  F.FunctionKind = 'classConstructor';
+  Assert(F.IsClassConstructor === Value.false);
+  F.IsClassConstructor = Value.true;
   return new NormalCompletion(Value.undefined);
 }
 

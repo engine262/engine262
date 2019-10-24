@@ -159,7 +159,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   };
 
   const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
-  const F = FunctionAllocate(proto, kind);
+  const F = FunctionAllocate(proto);
   const realmF = F.Realm;
   const scope = realmF.GlobalEnv;
   FunctionInitialize(F, 'Normal', parameters, fabricatedFunctionNode, scope);

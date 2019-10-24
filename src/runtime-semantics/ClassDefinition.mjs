@@ -84,10 +84,10 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
   const constructorInfo = yield* DefineMethod(constructor, proto, constructorParent);
   Assert(!(constructorInfo instanceof AbruptCompletion));
   const F = constructorInfo.Closure;
+  MakeConstructor(F, false, proto);
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  MakeConstructor(F, false, proto);
   MakeClassConstructor(F);
   if (className !== Value.undefined) {
     X(SetFunctionName(F, className));
