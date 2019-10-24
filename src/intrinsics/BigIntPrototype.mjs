@@ -3,6 +3,7 @@ import { Type, Value } from '../value.mjs';
 import { Assert, ToInteger, ToString } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+import { msg } from '../helpers.mjs';
 
 // #sec-thisbigintvalue
 function thisBigIntValue(value) {
@@ -18,7 +19,7 @@ function thisBigIntValue(value) {
     return value.BigIntData;
   }
   // 3. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'BigInt', value));
 }
 
 // #sec-bigint.prototype.tolocalestring

@@ -3,12 +3,13 @@ import { Type, TypeNumeric } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { msg } from '../helpers.mjs';
 
 export function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
   const base = Q(ToNumeric(lval));
   const exponent = Q(ToNumeric(rval));
   if (Type(base) !== Type(exponent)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
   }
   return Q(TypeNumeric(base).exponentiate(base, exponent));
 }

@@ -138,7 +138,7 @@ export function ToNumber(argument) {
     case 'String':
       return MV_StringNumericLiteral(argument.stringValue());
     case 'BigInt':
-      return surroundingAgent.Throw('TypeError', msg('CannotMixBigints'));
+      return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
     case 'Object': {

@@ -3,7 +3,7 @@ import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
 import { Type, TypeNumeric } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { msg, OutOfRange } from '../helpers.mjs';
 
 /* eslint-disable no-bitwise */
 
@@ -11,7 +11,7 @@ export function EvaluateBinopValues_BitwiseANDExpression(lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
   }
   const T = TypeNumeric(lnum);
   return T.bitwiseAND(lnum, rnum);
@@ -21,7 +21,7 @@ export function EvaluateBinopValues_BitwiseXORExpression(lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
   }
   const T = TypeNumeric(lnum);
   return T.bitwiseXOR(lnum, rnum);
@@ -31,7 +31,7 @@ export function EvaluateBinopValues_BitwiseORExpression(lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
   }
   const T = TypeNumeric(lnum);
   return T.bitwiseOR(lnum, rnum);
