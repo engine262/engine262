@@ -46,10 +46,6 @@ if (!process.send) {
   let failed = 0;
   let total = 0;
 
-  const ESTIMATED_TOTAL = childProcess
-    .execSync(`find ${__dirname}/test262/test -name "*.js" | wc -l`)
-    .toString().trim() * 2; // each test runs strict and sloppy
-
   const start = Date.now();
   const handledPerSecLast5 = [];
   const pad = (n, l, c = '0') => n.toString().padStart(l, c);
@@ -65,9 +61,8 @@ if (!process.send) {
     const f = `${ANSI.red}-${pad(failed, 5, ' ')}${ANSI.reset}`;
     const s = `${ANSI.yellow}»${pad(skipped, 5, ' ')}${ANSI.reset}`;
     const testsPerSec = average(handledPerSecLast5);
-    const eta = (ESTIMATED_TOTAL - (passed + failed + skipped)) / testsPerSec;
 
-    const line = `[${time}|${found}|${p}|${f}|${s}] (${testsPerSec.toFixed(2)}/s, ETA ${eta.toFixed(2)}s)`;
+    const line = `[${time}|${found}|${p}|${f}|${s}] (${testsPerSec.toFixed(2)}/s)`;
 
     if (!CI) {
       readline.clearLine(process.stdout, 0);

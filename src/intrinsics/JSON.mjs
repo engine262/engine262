@@ -14,6 +14,7 @@ import {
   CreateDataProperty,
   EnumerableOwnPropertyNames,
   Get,
+  GetV,
   IsArray,
   IsCallable,
   ObjectCreate,
@@ -272,8 +273,8 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   // 24.5.2.1 #sec-serializejsonproperty
   function SerializeJSONProperty(key, holder) {
     let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
-    if (Type(value) === 'Object') {
-      const toJSON = Q(Get(value, new Value('toJSON')));
+    if (Type(value) === 'Object' || Type(value) === 'BigInt') {
+      const toJSON = Q(GetV(value, new Value('toJSON')));
       if (IsCallable(toJSON) === Value.true) {
         value = Q(Call(toJSON, value, [key]));
       }

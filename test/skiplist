@@ -20,11 +20,6 @@ built-ins/TypedArray/**/BigInt/**/*.js
 built-ins/TypedArrayConstructors/**/BigInt/**/*.js
 built-ins/TypedArrayConstructors/**/bigint-*.js
 
-// https://github.com/tc39/ecma262/issues/1755
-built-ins/JSON/stringify/value-bigint-tojson-receiver.js
-built-ins/JSON/stringify/value-bigint-order.js
-built-ins/JSON/stringify/value-bigint-tojson.js
-
 // https://github.com/tc39/ecma262/issues/1754
 built-ins/Number/bigint-conversion.js
 
