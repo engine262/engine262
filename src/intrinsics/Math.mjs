@@ -1,6 +1,7 @@
 import {
   Descriptor,
   Value,
+  NumberValue,
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
@@ -44,6 +45,16 @@ function Math_acos([x = Value.undefined]) {
   return new Value(Math.acos(x.numberValue()));
 }
 
+// #sec-math.pow
+function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
+  // 1. Set base to ? ToNumber(base).
+  base = Q(ToNumber(base));
+  // 2. Set exponent to ? ToNumber(exponent).
+  exponent = Q(ToNumber(exponent));
+  // 3. Return ! Number::exponentiate(base, exponent).
+  return X(NumberValue.exponentiate(base, exponent));
+}
+
 // 20.2 #sec-math-object
 export function CreateMath(realmRec) {
   // 20.2.1 #sec-value-properties-of-the-math-object
@@ -64,6 +75,7 @@ export function CreateMath(realmRec) {
     ...valueProps,
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
+    ['pow', Math_pow, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
   // 20.2.2 #sec-function-properties-of-the-math-object
@@ -92,7 +104,6 @@ export function CreateMath(realmRec) {
     ['log2', 1],
     ['max', 2],
     ['min', 2],
-    ['pow', 2],
     ['random', 0],
     ['round', 1],
     ['sign', 1],
