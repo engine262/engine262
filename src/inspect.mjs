@@ -126,7 +126,7 @@ const INSPECTORS = {
             if (elem.Value) {
               out.push(i(elem.Value));
             } else {
-              out.push('[Getter]');
+              out.push('<accessor>');
             }
           }
         }
@@ -138,7 +138,10 @@ const INSPECTORS = {
       for (const key of keys) {
         const C = X(v.GetOwnProperty(key));
         if (C.Enumerable === Value.true) {
-          cache.push([i(key), i(C.Value)]);
+          cache.push([
+            i(key),
+            C.Value ? i(C.Value) : '<accessor>',
+          ]);
         }
       }
 
