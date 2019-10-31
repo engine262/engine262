@@ -6,6 +6,8 @@ import {
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 
+const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
+
 const getObjectTag = (value, wrap) => {
   try {
     const s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
@@ -139,7 +141,7 @@ const INSPECTORS = {
         const C = X(v.GetOwnProperty(key));
         if (C.Enumerable === Value.true) {
           cache.push([
-            i(key),
+            Type(key) === 'String' && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
             C.Value ? i(C.Value) : '<accessor>',
           ]);
         }
