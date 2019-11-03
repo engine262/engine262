@@ -1,6 +1,7 @@
 import {
   ArrayExoticObjectValue,
   ProxyExoticObjectValue,
+  IntegerIndexedExoticObjectValue,
   BigIntValue,
   Type,
   TypeNumeric,
@@ -381,4 +382,21 @@ export function StrictEqualityComparison(x, y) {
   }
   // 3. Return ! SameValueNonNumeric(x, y).
   return SameValueNonNumber(x, y);
+}
+
+// #sec-isvalidintegerindex
+export function IsValidIntegerIndex(O, index) {
+  Assert(O instanceof IntegerIndexedExoticObjectValue);
+  Assert(Type(index) === 'Number');
+  if (IsInteger(index) === Value.false) {
+    return Value.false;
+  }
+  index = index.numberValue();
+  if (Object.is(index, -0)) {
+    return Value.false;
+  }
+  if (index < 0 || index >= O.ArrayLength.numberValue()) {
+    return Value.false;
+  }
+  return Value.true;
 }

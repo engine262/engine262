@@ -20,7 +20,7 @@ import {
   IsDataDescriptor,
   IsDetachedBuffer,
   IsExtensible,
-  IsInteger,
+  IsValidIntegerIndex,
   IsGenericDescriptor,
   IsPropertyKey,
   SameValue,
@@ -438,58 +438,35 @@ export function IntegerIndexedObjectCreate(prototype, internalSlotsList) {
 
 // 9.4.5.8 #sec-integerindexedelementget
 export function IntegerIndexedElementGet(O, index) {
+  Assert(O instanceof IntegerIndexedExoticObjectValue);
   Assert(Type(index) === 'Number');
-  Assert(O instanceof ObjectValue
-      && 'ViewedArrayBuffer' in O
-      && 'ArrayLength' in O
-      && 'ByteOffset' in O
-      && 'TypedArrayName' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
   }
-  if (IsInteger(index) === Value.false) {
+  if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.undefined;
   }
-  index = index.numberValue();
-  if (Object.is(index, -0)) {
-    return Value.undefined;
-  }
-  const length = O.ArrayLength.numberValue();
-  if (index < 0 || index >= length) {
-    return Value.undefined;
-  }
-  const offset = O.ByteOffset.numberValue();
+  const offset = O.ByteOffset;
   const arrayTypeName = O.TypedArrayName.stringValue();
   const {
     ElementSize: elementSize,
     ElementType: elementType,
   } = typedArrayInfo.get(arrayTypeName);
-  const indexedPosition = (index * elementSize) + offset;
-  return GetValueFromBuffer(buffer, new Value(indexedPosition), elementType, true, 'Unordered');
+  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  return GetValueFromBuffer(buffer, indexedPosition, elementType, true, 'Unordered');
 }
 
 // 9.4.5.9 #sec-integerindexedelementset
 export function IntegerIndexedElementSet(O, index, value) {
+  Assert(O instanceof IntegerIndexedExoticObjectValue);
   Assert(Type(index) === 'Number');
-  Assert(O instanceof ObjectValue
-      && 'ViewedArrayBuffer' in O
-      && 'ArrayLength' in O
-      && 'ByteOffset' in O
-      && 'TypedArrayName' in O);
   const numValue = Q(ToNumber(value));
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
     return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
   }
-  if (IsInteger(index) === Value.false) {
-    return Value.false;
-  }
-  if (Object.is(index.numberValue(), -0)) {
-    return Value.false;
-  }
-  const length = O.ArrayLength;
-  if (index.numberValue() < 0 || index.numberValue() >= length.numberValue()) {
+  if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.false;
   }
   const offset = O.ByteOffset;

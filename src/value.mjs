@@ -18,7 +18,7 @@ import {
   IsDataDescriptor,
   IsDetachedBuffer,
   IsExtensible,
-  IsInteger,
+  IsValidIntegerIndex,
   IsPropertyKey,
   OrdinaryDefineOwnProperty,
   OrdinaryDelete,
@@ -994,7 +994,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
   GetOwnProperty(P) {
     const O = this;
     Assert(IsPropertyKey(P));
-    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
+    Assert(O instanceof IntegerIndexedExoticObjectValue);
     if (Type(P) === 'String') {
       const numericIndex = X(CanonicalNumericIndexString(P));
       if (numericIndex !== Value.undefined) {
@@ -1017,25 +1017,15 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
   HasProperty(P) {
     const O = this;
     Assert(IsPropertyKey(P));
-    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
+    Assert(O instanceof IntegerIndexedExoticObjectValue);
     if (Type(P) === 'String') {
-      let numericIndex = X(CanonicalNumericIndexString(P));
+      const numericIndex = X(CanonicalNumericIndexString(P));
       if (numericIndex !== Value.undefined) {
         const buffer = O.ViewedArrayBuffer;
         if (IsDetachedBuffer(buffer)) {
           return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
         }
-        if (IsInteger(numericIndex) === Value.false) {
-          return Value.false;
-        }
-        numericIndex = numericIndex.numberValue();
-        if (Object.is(numericIndex, -0)) {
-          return Value.false;
-        }
-        if (numericIndex < 0) {
-          return Value.false;
-        }
-        if (numericIndex >= O.ArrayLength.numberValue()) {
+        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
           return Value.false;
         }
         return Value.true;
@@ -1052,17 +1042,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
     if (Type(P) === 'String') {
       const numericIndex = X(CanonicalNumericIndexString(P));
       if (numericIndex !== Value.undefined) {
-        if (IsInteger(numericIndex) === Value.false) {
-          return Value.false;
-        }
-        if (Object.is(numericIndex.numberValue(), -0)) {
-          return Value.false;
-        }
-        if (numericIndex.numberValue() < 0) {
-          return Value.false;
-        }
-        const length = O.ArrayLength;
-        if (numericIndex.numberValue() >= length.numberValue()) {
+        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
           return Value.false;
         }
         if (IsAccessorDescriptor(Desc)) {
@@ -1117,11 +1097,7 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
   OwnPropertyKeys() {
     const O = this;
     const keys = [];
-    Assert(O instanceof ObjectValue
-        && 'ViewedArrayBuffer' in O
-        && 'ArrayLength' in O
-        && 'ByteOffset' in O
-        && 'TypedArrayName' in O);
+    Assert(O instanceof IntegerIndexedExoticObjectValue);
     const len = O.ArrayLength.numberValue();
     for (let i = 0; i < len; i += 1) {
       keys.push(X(ToString(new Value(i))));
