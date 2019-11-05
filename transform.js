@@ -12,11 +12,25 @@ function fileToImport(file, refPath) {
     .replace('../', './');
 }
 
+function findParentStatementPath(path) {
+  while (path && !path.isStatement()) {
+    path = path.parentPath;
+  }
+  return path;
+}
+
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
     const r = fileToImport(file, COMPLETION_PATH);
     return template.ast(`
-      import { Completion, AbruptCompletion } from "${r}";
+      import { Completion } from "${r}";
+    `);
+  }
+
+  function createImportAbruptCompletion(file) {
+    const r = fileToImport(file, COMPLETION_PATH);
+    return template.ast(`
+      import { AbruptCompletion } from "${r}";
     `);
   }
 
@@ -41,150 +55,97 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
-  // Take care not to evaluate ARGUMENT multiple times.
-  const templates = {
+  const MACROS = {
     Q: {
-      dontCare: template.statement(`
-        {
-          const hygienicTemp = ARGUMENT;
-          if (hygienicTemp instanceof AbruptCompletion) {
-            return hygienicTemp;
-          }
-        }
-      `),
-      newVariable: template.statements(`
-        let ID = ARGUMENT;
-        if (ID instanceof AbruptCompletion) {
-          return ID;
-        }
-        if (ID instanceof Completion) {
-          ID = ID.Value;
-        }
-      `),
-      existingVariable: template.statements(`
-        ID = ARGUMENT;
-        if (ID instanceof AbruptCompletion) {
-          return ID;
-        }
-        if (ID instanceof Completion) {
-          ID = ID.Value;
-        }
-      `),
+      template: template`
+      let ID = ARGUMENT;
+      if (ID instanceof AbruptCompletion) {
+        return ID;
+      }
+      if (ID instanceof Completion) {
+        ID = ID.Value;
+      }
+      `,
+      imports: ['AbruptCompletion', 'Completion'],
     },
     X: {
-      dontCare: template.statement(`
-        Assert(!(ARGUMENT instanceof AbruptCompletion));
-      `),
-      newVariable: template.statements(`
-        let ID = ARGUMENT;
-        Assert(!(ID instanceof AbruptCompletion));
-        if (ID instanceof Completion) {
-          ID = ID.Value;
-        }
-      `),
-      existingVariable: template.statements(`
-        ID = ARGUMENT;
-        Assert(!(ID instanceof AbruptCompletion));
-        if (ID instanceof Completion) {
-          ID = ID.Value;
-        }
-      `),
+      template: template`
+      let ID = ARGUMENT;
+      Assert(!(ID instanceof AbruptCompletion));
+      if (ID instanceof Completion) {
+        ID = ID.Value;
+      }
+      `,
+      imports: ['Assert', 'Completion', 'AbruptCompletion'],
     },
-    IfAbruptRejectPromise: template.statement(`
+    IfAbruptRejectPromise: {
+      template: template`
       if (ID instanceof AbruptCompletion) {
         const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
         if (hygenicTemp2 instanceof AbruptCompletion) {
           return hygenicTemp2;
         }
         return CAPABILITY.Promise;
-      } else if (ID instanceof Completion) {
+      }
+      if (ID instanceof Completion) {
         ID = ID.Value;
       }
-    `),
+      `,
+      imports: ['Call', 'Value', 'AbruptCompletion', 'Completion'],
+    },
   };
-
-  function findParentStatementPath(path) {
-    while (path && !path.isStatement()) {
-      path = path.parentPath;
-    }
-    return path;
-  }
-
-  // Return false for when the VariableDeclaration appears as a loop binding.
-  function isActualVariableDeclaration(path) {
-    return (
-      !(t.isForInStatement(path.parent) && path.parentKey === 'left')
-      && !(t.isForStatement(path.parent) && path.parentKey === 'init')
-    );
-  }
+  MACROS.ReturnIfAbrupt = MACROS.Q;
+  const MACRO_NAMES = Object.keys(MACROS);
 
   return {
     visitor: {
       Program: {
         enter(path, state) {
-          if (state.file.opts.filename === COMPLETION_PATH) {
-            return;
-          }
-          state.foundCompletion = false;
-          state.needCompletion = false;
-          state.foundAssert = false;
-          state.needAssert = false;
-          state.foundCall = false;
-          state.needCall = false;
-          state.foundValue = false;
-          state.needValue = false;
+          state.needed = {};
         },
         exit(path, state) {
-          if (!state.foundCompletion && state.needCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
+          if (state.needed.Completion && !state.file.opts.filename.endsWith('completion.mjs')) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
-          if (!state.foundAssert && state.needAssert) {
+          if (state.needed.AbruptCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
+            path.node.body.unshift(createImportAbruptCompletion(state.file));
+          }
+          if (state.needed.Assert) {
             path.node.body.unshift(createImportAssert(state.file));
           }
-          if (!state.foundCall && state.needCall) {
+          if (state.needed.Call) {
             path.node.body.unshift(createImportCall(state.file));
           }
-          if (!state.foundValue && state.needValue && !state.file.opts.filename.endsWith('value.mjs')) {
+          if (state.needed.Value) {
             path.node.body.unshift(createImportValue(state.file));
           }
         },
-      },
-      ImportDeclaration(path, state) {
-        if (path.node.source.value.endsWith('completion.mjs')) {
-          state.foundCompletion = true;
-          if (!path.node.specifiers.find((s) => s.local.name === 'Completion')) {
-            path.node.specifiers.push(
-              t.ImportSpecifier(t.Identifier('Completion'), t.Identifier('Completion')),
-            );
-          }
-          if (!path.node.specifiers.find((s) => s.local.name === 'AbruptCompletion')) {
-            path.node.specifiers.push(
-              t.ImportSpecifier(t.Identifier('AbruptCompletion'), t.Identifier('AbruptCompletion')),
-            );
-          }
-        }
       },
       CallExpression(path, state) {
         if (!t.isIdentifier(path.node.callee)) {
           return;
         }
-        if (path.node.callee.name === 'Q' || path.node.callee.name === 'ReturnIfAbrupt') {
+
+        const macroName = path.node.callee.name;
+        if (MACRO_NAMES.includes(macroName)) {
+          const macro = MACROS[macroName];
           const [argument] = path.node.arguments;
 
-          if (t.isReturnStatement(path.parentPath)) {
+          if (macro === MACROS.Q && t.isReturnStatement(path.parentPath)) {
             path.replaceWith(argument);
             return;
           }
 
-          state.needCompletion = true;
+          const statementPath = findParentStatementPath(path);
 
-          if (t.isIdentifier(argument)) {
-            // ReturnIfAbrupt(argument)
+          macro.imports.forEach((i) => {
+            state.needed[i] = path.scope.getBinding(i) === undefined;
+          });
+
+          if (macro === MACROS.Q && t.isIdentifier(argument)) {
             const binding = path.scope.getBinding(argument.name);
             binding.path.parent.kind = 'let';
-
-            const parentStatement = findParentStatementPath(path);
-            parentStatement.insertBefore(template.statements.ast`
+            statementPath.insertBefore(template.ast`
               if (${argument} instanceof AbruptCompletion) {
                 return ${argument};
               }
@@ -192,86 +153,31 @@ module.exports = ({ types: t, template }) => {
                 ${argument} = ${argument}.Value;
               }
             `);
-            if (t.isExpressionStatement(path.parent)) {
-              // We don't care about the result.
-              path.remove();
-            } else {
-              path.replaceWith(argument);
-            }
+            path.replaceWith(argument);
           } else {
-            // ReturnIfAbrupt(AbstractOperation())
-            replace(templates.Q, 'hygienicTemp');
-          }
-        } else if (path.node.callee.name === 'X') {
-          state.needCompletion = true;
-          state.needAssert = true;
-          if (path.scope.getBinding('Assert') !== undefined) {
-            state.foundAssert = true;
-          }
-          replace(templates.X, 'val');
-        } else if (path.node.callee.name === 'IfAbruptRejectPromise') {
-          state.needCompletion = true;
-          state.needCall = true;
-          state.needValue = true;
-          if (path.scope.getBinding('Call') !== undefined) {
-            state.foundCall = true;
-          }
-          if (path.scope.getBinding('Value') !== undefined) {
-            state.foundValue = true;
-          }
-          const [ID, CAPABILITY] = path.node.arguments;
-          if (!t.isIdentifier(ID)) {
-            throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier');
-          }
-          if (!t.isIdentifier(CAPABILITY)) {
-            throw path.get('arguments.1').buildCodeFrameError('Second argument to IfAbruptRejectPromise should be an identifier');
-          }
-          const binding = path.scope.getBinding(ID.name);
-          if (!binding) {
-            throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier pointing to a variable');
-          }
-          binding.path.parent.kind = 'let';
-          path.parentPath.replaceWith(templates.IfAbruptRejectPromise({ ID, CAPABILITY }));
-        } else if (path.node.callee.name === 'Assert') {
-          path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
-        }
+            const id = statementPath.scope.generateUidIdentifier();
 
-        function replace(templateObj, temporaryVariableName) {
-          const [ARGUMENT] = path.node.arguments;
-          if (t.isExpressionStatement(path.parent)) {
-            // We don't care about the result.
-            path.parentPath.replaceWith(templateObj.dontCare({ ARGUMENT }));
-          } else if (
-            t.isVariableDeclarator(path.parent)
-            && t.isIdentifier(path.parent.id)
-            && isActualVariableDeclaration(path.parentPath.parentPath)
-          ) {
-            // The result is assigned to a new variable, verbatim.
-            const declarator = path.parentPath;
-            const declaration = declarator.parentPath;
-            const ID = declarator.node.id;
-            declaration.insertBefore(templateObj.newVariable({ ID, ARGUMENT }));
-            if (declaration.node.declarations.length === 1) {
-              declaration.remove();
+            let expansion;
+            if (macro === MACROS.IfAbruptRejectPromise) {
+              const [, capability] = path.node.arguments;
+              if (!t.isIdentifier(argument)) {
+                throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptRejectPromise should be an identifier');
+              }
+              if (!t.isIdentifier(capability)) {
+                throw path.get('arguments.1').buildCodeFrameError('Second argument to IfAbruptRejectPromise should be an identifier');
+              }
+              const binding = path.scope.getBinding(argument.name);
+              binding.path.parent.kind = 'let';
+              expansion = macro.template({ ID: argument, CAPABILITY: capability });
             } else {
-              declarator.remove();
+              expansion = macro.template({ ARGUMENT: argument, ID: id });
             }
-          } else if (
-            t.isAssignmentExpression(path.parent)
-            && t.isIdentifier(path.parent.left)
-            && t.isExpressionStatement(path.parentPath.parent)
-          ) {
-            // The result is assigned to an existing variable, verbatim.
-            const assignmentStatement = path.parentPath.parentPath;
-            const ID = path.parent.left;
-            assignmentStatement.replaceWithMultiple(templateObj.existingVariable({ ID, ARGUMENT }));
-          } else {
-            // Ugliest variant that covers everything else.
-            const parentStatement = findParentStatementPath(path);
-            const ID = parentStatement.scope.generateUidIdentifier(temporaryVariableName);
-            parentStatement.insertBefore(templateObj.newVariable({ ID, ARGUMENT }));
-            path.replaceWith(ID);
+            statementPath.insertBefore(expansion);
+
+            path.replaceWith(id);
           }
+        } else if (macroName === 'Assert') {
+          path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
         }
       },
     },

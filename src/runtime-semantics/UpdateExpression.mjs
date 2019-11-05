@@ -19,8 +19,7 @@ export function* Evaluate_UpdateExpression({
       const LeftHandSideExpression = argument;
 
       const lhs = yield* Evaluate(LeftHandSideExpression);
-      const lhsValue = Q(GetValue(lhs));
-      const oldValue = Q(ToNumeric(lhsValue));
+      const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
       const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(lhs, newValue));
       return oldValue;
@@ -31,8 +30,7 @@ export function* Evaluate_UpdateExpression({
       const LeftHandSideExpression = argument;
 
       const lhs = yield* Evaluate(LeftHandSideExpression);
-      const lhsVal = Q(GetValue(lhs));
-      const oldValue = Q(ToNumeric(lhsVal));
+      const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
       const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(lhs, newValue));
       return oldValue;
@@ -43,8 +41,7 @@ export function* Evaluate_UpdateExpression({
       const UnaryExpression = argument;
 
       const expr = yield* Evaluate(UnaryExpression);
-      const exprVal = Q(GetValue(expr));
-      const oldValue = Q(ToNumeric(exprVal));
+      const oldValue = Q(ToNumeric(Q(GetValue(expr))));
       const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(expr, newValue));
       return newValue;
@@ -55,8 +52,7 @@ export function* Evaluate_UpdateExpression({
       const UnaryExpression = argument;
 
       const expr = yield* Evaluate(UnaryExpression);
-      const exprVal = Q(GetValue(expr));
-      const oldValue = Q(ToNumeric(exprVal));
+      const oldValue = Q(ToNumeric(Q(GetValue(expr))));
       const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
       Q(PutValue(expr, newValue));
       return newValue;

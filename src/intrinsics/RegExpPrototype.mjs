@@ -62,9 +62,7 @@ function RegExpBuiltinExec(R, S) {
   Assert('RegExpMatcher' in R);
   Assert(Type(S) === 'String');
   const length = S.stringValue().length;
-  const lastIndexStr = new Value('lastIndex');
-  const lastIndexValue = Q(Get(R, lastIndexStr));
-  let lastIndex = Q(ToLength(lastIndexValue));
+  let lastIndex = Q(ToLength(Q(Get(R, new Value('lastIndex')))));
   const flags = R.OriginalFlags.stringValue();
   const global = flags.includes('g');
   const sticky = flags.includes('y');
@@ -78,14 +76,14 @@ function RegExpBuiltinExec(R, S) {
   while (matchSucceeded === false) {
     if (lastIndex.numberValue() > length) {
       if (global || sticky) {
-        Q(Set(R, lastIndexStr, new Value(0), Value.true));
+        Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
       }
       return Value.null;
     }
     r = matcher(S, lastIndex);
     if (r === null) {
       if (sticky) {
-        Q(Set(R, lastIndexStr, new Value(0), Value.true));
+        Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
         return Value.null;
       }
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
@@ -102,7 +100,7 @@ function RegExpBuiltinExec(R, S) {
   }
 
   if (global || sticky) {
-    Q(Set(R, lastIndexStr, e, Value.true));
+    Q(Set(R, new Value('lastIndex'), e, Value.true));
   }
 
   const n = r.captures.length;
@@ -275,13 +273,11 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
         }
         return A;
       } else {
-        const firstResult = Q(Get(result, new Value('0')));
-        const matchStr = Q(ToString(firstResult));
+        const matchStr = Q(ToString(Q(Get(result, new Value('0')))));
         const status = CreateDataProperty(A, X(ToString(new Value(n))), matchStr);
         Assert(status === Value.true);
         if (matchStr.stringValue() === '') {
-          const lastIndex = Q(Get(rx, new Value('lastIndex')));
-          const thisIndex = Q(ToLength(lastIndex));
+          const thisIndex = Q(ToLength(Q(Get(rx, new Value('lastIndex')))));
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           Q(Set(rx, new Value('lastIndex'), nextIndex, Value.true));
         }
@@ -299,11 +295,9 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   }
   const S = Q(ToString(string));
   const C = Q(SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
-  const flagsValue = Q(Get(R, new Value('flags')));
-  const flags = Q(ToString(flagsValue));
+  const flags = Q(ToString(Q(Get(R, new Value('flags')))));
   const matcher = Q(Construct(C, [R, flags]));
-  const lastIndexValue = Q(Get(R, new Value('lastIndex')));
-  const lastIndex = Q(ToLength(lastIndexValue));
+  const lastIndex = Q(ToLength(Q(Get(R, new Value('lastIndex')))));
   Q(Set(matcher, new Value('lastIndex'), lastIndex, Value.true));
   let global;
   if (flags.stringValue().includes('g')) {
@@ -372,8 +366,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         const firstResult = Q(Get(result, new Value('0')));
         const matchStr = Q(ToString(firstResult));
         if (matchStr.stringValue() === '') {
-          const lastIndex = Q(Get(rx, new Value('lastIndex')));
-          const thisIndex = Q(ToLength(lastIndex));
+          const thisIndex = Q(ToLength(Q(Get(rx, new Value('lastIndex')))));
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           Q(Set(rx, new Value('lastIndex'), nextIndex, Value.true));
         }
@@ -387,12 +380,10 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     let nCaptures = Q(LengthOfArrayLike(result)).numberValue();
     nCaptures = Math.max(nCaptures - 1, 0);
 
-    const firstResult = Q(Get(result, new Value('0')));
-    const matched = Q(ToString(firstResult));
+    const matched = Q(ToString(Q(Get(result, new Value('0')))));
     const matchLength = matched.stringValue().length;
 
-    const resultIndex = Q(Get(result, new Value('index')));
-    let position = Q(ToInteger(resultIndex));
+    let position = Q(ToInteger(Q(Get(result, new Value('index')))));
     position = new Value(Math.max(Math.min(position.numberValue(), lengthS), 0));
 
     let n = 1;

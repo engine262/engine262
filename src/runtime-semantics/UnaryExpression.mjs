@@ -109,8 +109,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 // UnaryExpression : `+` UnaryExpression
 function* Evaluate_UnaryExpression_Plus(UnaryExpression) {
   const expr = yield* Evaluate(UnaryExpression);
-  const exprVal = Q(GetValue(expr));
-  return Q(ToNumber(exprVal));
+  return Q(ToNumber(Q(GetValue(expr))));
 }
 
 // 12.5.7.1 #sec-unary-minus-operator-runtime-semantics-evaluation
@@ -119,8 +118,7 @@ function* Evaluate_UnaryExpression_Minus(UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  const exprVal = Q(GetValue(expr));
-  const oldValue = Q(ToNumeric(exprVal));
+  const oldValue = Q(ToNumeric(Q(GetValue(expr))));
   // 3. Let T be Type(oldValue).
   const T = TypeNumeric(oldValue);
   // 4. Return ! T::unaryMinus(oldValue).
@@ -133,8 +131,7 @@ function* Evaluate_UnaryExpression_Tilde(UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  const exprVal = Q(GetValue(expr));
-  const oldValue = Q(ToNumeric(exprVal));
+  const oldValue = Q(ToNumeric(Q(GetValue(expr))));
   // 3. Let T be Type(oldValue).
   const T = TypeNumeric(oldValue);
   // 4. Return ! T::bitwiseNOT(oldValue).

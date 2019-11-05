@@ -560,8 +560,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
       const kStr = X(ToString(new Value(k)));
       const nextElement = Q(Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
-        const res = Q(Invoke(nextElement, new Value('toLocaleString')));
-        const S = Q(ToString(res)).stringValue();
+        const S = Q(ToString(Q(Invoke(nextElement, new Value('toLocaleString'))))).stringValue();
         R = `${R}${S}`;
       }
       k += 1;

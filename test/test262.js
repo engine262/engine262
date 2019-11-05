@@ -2,7 +2,7 @@
 
 /* eslint-disable no-inner-declarations */
 
-require('@snek/source-map-support/register');
+// require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
 
