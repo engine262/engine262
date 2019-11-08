@@ -19,6 +19,16 @@ function findParentStatementPath(path) {
   return path;
 }
 
+function isInsideConditionalExpression(path) {
+  while (path && !path.isStatement()) {
+    if (path.isConditionalExpression()) {
+      return true;
+    }
+    path = path.parentPath;
+  }
+  return false;
+}
+
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
     const r = fileToImport(file, COMPLETION_PATH);
@@ -128,12 +138,20 @@ module.exports = ({ types: t, template }) => {
 
         const macroName = path.node.callee.name;
         if (MACRO_NAMES.includes(macroName)) {
+          if (isInsideConditionalExpression(path)) {
+            throw path.buildCodeFrameError('Macros may not be used within conditional expressions');
+          }
+
           const macro = MACROS[macroName];
           const [argument] = path.node.arguments;
 
-          if (macro === MACROS.Q && t.isReturnStatement(path.parentPath)) {
-            path.replaceWith(argument);
+          if (macro === MACROS.Q && (t.isReturnStatement(path.parentPath) || path.parentPath.isArrowFunctionExpression())) {
+            path.replaceWith(path.node.arguments[0]);
             return;
+          }
+
+          if (path.parentPath.isArrowFunctionExpression()) {
+            throw path.buildCodeFrameError('Macros may not be the sole expression of an arrow function');
           }
 
           const statementPath = findParentStatementPath(path);

@@ -101,7 +101,12 @@ function StringProto_endsWith([searchString = Value.undefined, endPosition = Val
   }
   const searchStr = Q(ToString(searchString)).stringValue();
   const len = S.length;
-  const pos = endPosition === Value.undefined ? len : Q(ToInteger(endPosition)).numberValue();
+  let pos;
+  if (endPosition === Value.undefined) {
+    pos = len;
+  } else {
+    pos = Q(ToInteger(endPosition)).numberValue();
+  }
   const end = Math.min(Math.max(pos, 0), len);
   const searchLength = searchStr.length;
   const start = end - searchLength;
@@ -390,7 +395,12 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   const S = Q(ToString(O));
   const A = X(ArrayCreate(new Value(0)));
   let lengthA = 0;
-  const lim = limit === Value.undefined ? new Value((2 ** 32) - 1) : Q(ToUint32(limit));
+  let lim;
+  if (limit === Value.undefined) {
+    lim = new Value((2 ** 32) - 1);
+  } else {
+    lim = Q(ToUint32(limit));
+  }
   const s = S.stringValue().length;
   let p = 0;
   const R = Q(ToString(separator));
