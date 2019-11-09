@@ -1,11 +1,11 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_PropertyName } from './all.mjs';
 import {
   FunctionCreate,
   MakeMethod,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { ReturnIfAbrupt, X } from '../completion.mjs';
+import { Evaluate_PropertyName } from './all.mjs';
 
 // 14.3.7 #sec-runtime-semantics-definemethod
 // MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`

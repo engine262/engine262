@@ -3,14 +3,14 @@ import { GetValue, ToNumeric } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { Type, TypeNumeric } from '../value.mjs';
-import { msg, OutOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 export function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
 
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
+    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
 
   const T = TypeNumeric(lnum);

@@ -3,19 +3,6 @@ import {
   // Suspend,
   ExecutionContext,
 } from '../engine.mjs';
-import {
-  Assert,
-  DefinePropertyOrThrow,
-  GetActiveScriptOrModule,
-  HasOwnProperty,
-  IsConstructor,
-  IsExtensible,
-  IsInteger,
-  ObjectCreate,
-  OrdinaryCreateFromConstructor,
-  ToObject,
-  isStrictModeCode,
-} from './all.mjs';
 import { Realm } from '../realm.mjs';
 import {
   BuiltinFunctionValue,
@@ -48,6 +35,19 @@ import {
   NewFunctionEnvironment,
 } from '../environment.mjs';
 import { unwind, OutOfRange } from '../helpers.mjs';
+import {
+  Assert,
+  DefinePropertyOrThrow,
+  GetActiveScriptOrModule,
+  HasOwnProperty,
+  IsConstructor,
+  IsExtensible,
+  IsInteger,
+  ObjectCreate,
+  OrdinaryCreateFromConstructor,
+  ToObject,
+  isStrictModeCode,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 9.2 #sec-ecmascript-function-objects
@@ -137,7 +137,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 
   Assert(F instanceof FunctionValue);
   if (F.IsClassConstructor === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'Class constructor cannot be called without `new`');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
   }
   // const callerContext = surroundingAgent.runningExecutionContext;
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
@@ -185,7 +185,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
       return new NormalCompletion(thisArgument);
     }
     if (Type(result.Value) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', 'Derived constructors may only return object or undefined');
+      return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
   } else {
     ReturnIfAbrupt(result);

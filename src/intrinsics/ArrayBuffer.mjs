@@ -14,7 +14,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 // 24.1.2 #sec-arraybuffer-constructor
 function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'ArrayBuffer constructor requires new');
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'ArrayBuffer');
   }
   const byteLength = Q(ToIndex(length));
   return Q(AllocateArrayBuffer(NewTarget, byteLength));

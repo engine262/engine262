@@ -4,10 +4,6 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import {
-  BindingInitialization_BindingPattern,
-  NamedEvaluation_Expression,
-} from './all.mjs';
-import {
   isBindingIdentifier,
   isBindingPattern,
 } from '../ast.mjs';
@@ -16,6 +12,10 @@ import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
+import {
+  BindingInitialization_BindingPattern,
+  NamedEvaluation_Expression,
+} from './all.mjs';
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableDeclaration :

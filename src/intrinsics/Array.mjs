@@ -34,7 +34,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { OutOfRange, msg } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 22.1.1 #sec-array-constructor
@@ -65,7 +65,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     } else {
       intLen = ToUint32(len);
       if (intLen.numberValue() !== len.numberValue()) {
-        return surroundingAgent.Throw('RangeError');
+        return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
       }
     }
     Set(array, new Value('length'), intLen, Value.true);
@@ -104,7 +104,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg],
     mapping = false;
   } else {
     if (IsCallable(mapfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', mapfn));
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     if (thisArg !== undefined) {
       T = thisArg;
@@ -124,7 +124,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg],
     let k = 0;
     while (true) { // eslint-disable-line no-constant-condition
       if (k >= (2 ** 53) - 1) {
-        const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength')).Value);
+        const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength').Value);
         return Q(IteratorClose(iteratorRecord, error));
       }
       const Pk = X(ToString(new Value(k)));

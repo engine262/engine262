@@ -9,14 +9,14 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // 23.4.3.1 #sec-weakset.prototype.add
 function WeakSetProto_add([value = Value.undefined], { thisValue }) {
   const S = thisValue;
   Q(RequireInternalSlot(S, 'WeakSetData'));
   if (Type(value) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAnObject', value));
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', value);
   }
   const entries = S.WeakSetData;
   for (const e of entries) {

@@ -36,8 +36,8 @@ import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
-import { Evaluate_PropertyName, NamedEvaluation_Expression } from './all.mjs';
 import { Type, Value } from '../value.mjs';
+import { Evaluate_PropertyName, NamedEvaluation_Expression } from './all.mjs';
 
 // (implicit)
 //   AssignmentPattern :

@@ -64,7 +64,7 @@ function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {
         innerResult = Q(yield* Await(innerResult));
       }
       if (Type(innerResult) !== 'Object') {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
       }
       const done = Q(IteratorComplete(innerResult));
       if (done === Value.true) {
@@ -83,7 +83,7 @@ function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {
           innerResult = Q(yield* Await(innerResult));
         }
         if (Type(innerResult) !== 'Object') {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
         }
         const done = Q(IteratorComplete(innerResult));
         if (done === Value.true) {
@@ -101,7 +101,7 @@ function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {
         } else {
           Q(IteratorClose(iteratorRecord, closeCompletion));
         }
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'IteratorThrowMissing');
       }
     } else {
       Assert(received.Type === 'return');
@@ -117,7 +117,7 @@ function* Evaluate_YieldExpression_Star({ argument: AssignmentExpression }) {
         innerReturnResult = Q(yield* Await(innerReturnResult));
       }
       if (Type(innerReturnResult) !== 'Object') {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'NotAnObject', innerReturnResult);
       }
       const done = Q(IteratorComplete(innerReturnResult));
       if (done === Value.true) {

@@ -27,7 +27,6 @@ import {
   EnsureCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
-import { msg } from './helpers.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const {
@@ -230,7 +229,7 @@ export {
 export function Throw(realm, V, ...args) {
   return realm.scope(() => {
     if (typeof V === 'string') {
-      return surroundingAgent.Throw(V, args[0]);
+      return surroundingAgent.Throw(V, 'Raw', args[0]);
     }
     return new ThrowCompletion(V);
   });
@@ -252,7 +251,7 @@ export function ToString(realm, value) {
         case 'Null':
           return 'null';
         case 'Symbol':
-          return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
+          return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
         default:
           value = Q(ToPrimitive(value, 'String'));
           break;

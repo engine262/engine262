@@ -7,10 +7,10 @@ import {
   SetIntegrityLevel,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { EvaluateCall } from './all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { IsInTailPosition, TemplateStrings_TemplateLiteral } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
+import { EvaluateCall } from './all.mjs';
 
 // 12.2.9.4 #sec-gettemplateobject
 export function GetTemplateObject(templateLiteral) {

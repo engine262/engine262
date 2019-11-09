@@ -29,8 +29,8 @@ import {
   EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
+import { ValueSet } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { ValueSet, msg } from '../helpers.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -49,7 +49,7 @@ class JSONValidator {
     X(this.eatWhitespace());
     Q(this.parseValue());
     if (this.pos < this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSON input doesn\'t end!');
+      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
     }
     return new NormalCompletion(undefined);
   }
@@ -59,7 +59,7 @@ class JSONValidator {
     if (this.pos === this.input.length) {
       this.char = null;
     } else if (this.pos > this.input.length) {
-      return surroundingAgent.Throw('SyntaxError', 'JSON got unexpected EOF');
+      return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
     } else {
       this.char = this.input.charAt(this.pos);
     }
@@ -84,7 +84,7 @@ class JSONValidator {
   expect(c) {
     const { char } = this;
     if (!this.eat(c)) {
-      return surroundingAgent.Throw('SyntaxError', `Expected ${c} but got ${this.char}`);
+      return surroundingAgent.Throw('SyntaxError', 'JSONExpected', c, this.char);
     }
     return char;
   }
@@ -110,25 +110,26 @@ class JSONValidator {
       case '-':
         return Q(this.parseNumber());
       case 'f':
-        if (this.eat('f') && this.eat('a') && this.eat('l') && this.eat('s') && this.eat('e')) {
-          return X(this.eatWhitespace());
-        } else {
-          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing false`);
-        }
+        X(this.expect('f'));
+        Q(this.expect('a'));
+        Q(this.expect('l'));
+        Q(this.expect('s'));
+        Q(this.expect('e'));
+        return X(this.eatWhitespace());
       case 't':
-        if (this.eat('t') && this.eat('r') && this.eat('u') && this.eat('e')) {
-          return X(this.eatWhitespace());
-        } else {
-          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing true`);
-        }
+        X(this.expect('t'));
+        Q(this.expect('r'));
+        Q(this.expect('u'));
+        Q(this.expect('e'));
+        return X(this.eatWhitespace());
       case 'n':
-        if (this.eat('n') && this.eat('u') && this.eat('l') && this.eat('l')) {
-          return X(this.eatWhitespace());
-        } else {
-          return surroundingAgent.Throw('SyntaxError', `Unexpected ${this.char} when parsing null`);
-        }
+        X(this.expect('n'));
+        Q(this.expect('u'));
+        Q(this.expect('l'));
+        Q(this.expect('l'));
+        return X(this.eatWhitespace());
       default:
-        return surroundingAgent.Throw('SyntaxError', `Unexpected character ${this.char}`);
+        return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
     }
   }
 
@@ -145,7 +146,7 @@ class JSONValidator {
         }
       } else {
         if (this.char < ' ') {
-          return surroundingAgent.Throw('SyntaxError', `Unexpected character ${this.char} in JSON`);
+          return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
         }
         Q(this.advance());
       }
@@ -312,7 +313,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       return new Value('null');
     }
     if (Type(value) === 'BigInt') {
-      return surroundingAgent.Throw('TypeError', msg('CannotJSONSerializeBigInt'));
+      return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
     }
     if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
       const isArray = Q(IsArray(value));
@@ -350,7 +351,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   // 24.5.2.4 #sec-serializejsonobject
   function SerializeJSONObject(value) { // eslint-disable-line no-shadow
     if (stack.includes(value)) {
-      return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');
+      return surroundingAgent.Throw('TypeError', 'JSONCircular');
     }
     stack.push(value);
     const stepback = indent;
@@ -395,7 +396,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   // 24.5.2.5 #sec-serializejsonarray
   function SerializeJSONArray(value) { // eslint-disable-line no-shadow
     if (stack.includes(value)) {
-      return surroundingAgent.Throw('TypeError', 'Cannot stringify a circular structure');
+      return surroundingAgent.Throw('TypeError', 'JSONCircular');
     }
     stack.push(value);
     const stepback = indent;

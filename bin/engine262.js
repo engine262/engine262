@@ -2,6 +2,8 @@
 
 'use strict';
 
+/* eslint-disable import/order */
+
 require('@snek/source-map-support/register');
 const repl = require('repl');
 const fs = require('fs');

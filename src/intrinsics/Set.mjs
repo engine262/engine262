@@ -16,11 +16,11 @@ import {
 } from '../value.mjs';
 import { AbruptCompletion, Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 function SetConstructor([iterable], { NewTarget }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Set'));
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Set');
   }
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']));
   set.SetData = [];
@@ -29,7 +29,7 @@ function SetConstructor([iterable], { NewTarget }) {
   }
   const adder = Q(Get(set, new Value('add')));
   if (IsCallable(adder) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', adder));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   const iteratorRecord = Q(GetIterator(iterable));
 

@@ -4,9 +4,9 @@ import {
   isFunctionDeclaration,
   isGeneratorDeclaration,
 } from '../ast.mjs';
-import { Evaluate_FunctionDeclaration } from './all.mjs';
 import { NormalCompletion } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { Evaluate_FunctionDeclaration } from './all.mjs';
 
 // 13.1.8 #sec-statement-semantics-runtime-semantics-evaluation
 //   HoistableDeclaration :

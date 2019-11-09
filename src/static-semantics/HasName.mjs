@@ -8,8 +8,8 @@ import {
   isGeneratorExpression,
   isParenthesizedExpression,
 } from '../ast.mjs';
-import { IsFunctionDefinition_Expression } from './all.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { IsFunctionDefinition_Expression } from './all.mjs';
 
 // 12.2.1.2 #sec-semantics-static-semantics-hasname
 //   PrimaryExpression : CoverParenthesizedExpressionAndArrowParameterList

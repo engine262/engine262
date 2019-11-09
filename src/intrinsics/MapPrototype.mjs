@@ -13,7 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 function CreateMapIterator(map, kind) {
   Q(RequireInternalSlot(map, 'MapData'));
@@ -69,7 +69,7 @@ function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
   const M = thisValue;
   Q(RequireInternalSlot(M, 'MapData'));
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let T;
   if (thisArg !== undefined) {

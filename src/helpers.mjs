@@ -2,7 +2,6 @@ import { surroundingAgent } from './engine.mjs';
 import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
-import { inspect } from './api.mjs';
 
 function convertValueForKey(key) {
   switch (Type(key)) {
@@ -320,60 +319,4 @@ export function captureStack(O) {
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-}
-
-function inlineInspect(V) {
-  if (V instanceof Value) {
-    return inspect(V, surroundingAgent.currentRealmRecord, true);
-  }
-  return `${V}`;
-}
-
-const messages = {
-  AlreadyDeclared: (n) => `${inlineInspect(n)} is already declared`,
-  ArrayPastSafeLength: () => 'Cannot make length of array-like object surpass the bounds of an integer index',
-  BufferDetachKeyMismatch: (k, b) => `${inlineInspect(k)} is not the [[ArrayBufferDetachKey]] of ${inlineInspect(b)}`,
-  BufferDetached: () => 'Cannot operate on detached ArrayBuffer',
-  CannotConvertDecimalToBigInt: (n) => `Cannot convert ${inlineInspect(n)} to a BigInt because it is not an integer`,
-  CannotConvertSymbol: (t) => `Cannot convert a Symbol value to a ${t}`,
-  CannotConvertToBigInt: (v) => `Cannot convert ${inlineInspect(v)} to a BigInt`,
-  CannotConvertToObject: (t) => `Cannot convert ${t} to object`,
-  CannotJSONSerializeBigInt: () => 'Cannot serialize a BigInt to JSON',
-  CannotMixBigInts: () => 'Cannot mix BigInt and other types, use explicit conversions',
-  CannotSetProperty: (p, o) => `Cannot set property ${inlineInspect(p)} on ${inlineInspect(o)}`,
-  ConstructorRequiresNew: (n) => `${n} constructor requires new`,
-  CouldNotResolveModule: (s) => `Could not resolve module ${inlineInspect(s)}`,
-  DataViewOOB: () => 'Offset is outside the bounds of the DataView',
-  InternalSlotMissing: (o, s) => `Internal slot ${s} is missing for ${inlineInspect(o)}`,
-  InvalidHint: (v) => `Invalid hint: ${inlineInspect(v)}`,
-  InvalidRegExpFlags: (f) => `Invalid RegExp flags: ${f}`,
-  NegativeIndex: (n = 'Index') => `${n} cannot be negative`,
-  NotAConstructor: (v) => `${inlineInspect(v)} is not a constructor`,
-  NotAFunction: (v) => `${inlineInspect(v)} is not a function`,
-  NotATypeObject: (t, v) => `${inlineInspect(v)} is not a ${t} object`,
-  NotAnObject: (v) => `${inlineInspect(v)} is not an object`,
-  NotAnTypeObject: (t, v) => `${inlineInspect(v)} is not an ${t} object`,
-  NotDefined: (n) => `${inlineInspect(n)} is not defined`,
-  ObjectToPrimitive: () => 'Cannot convert object to primitive value',
-  OutOfRange: (n) => `${n} is out of range`,
-  PromiseRejectFunction: (v) => `Promise reject function ${inlineInspect(v)} is not callable`,
-  PromiseResolveFunction: (v) => `Promise resolve function ${inlineInspect(v)} is not callable`,
-  ProxyRevoked: (n) => `Cannot perform '${n}' on a proxy that has been revoked`,
-  RegExpArgumentNotAllowed: (m) => `First argument to ${m} must not be a regular expression`,
-  ResolutionNullOrAmbiguous: (r, n, m) => (r === null
-    ? `Could not resolve import ${inlineInspect(n)} from ${m.HostDefined.specifier}`
-    : `Star export ${inlineInspect(n)} from ${m.HostDefined.specifier} is ambiguous`),
-  StrictModeDelete: (n) => `Cannot not delete property ${inlineInspect(n)}`,
-  StringRepeatCount: (v) => `Count ${inlineInspect(v)} is invalid`,
-  SubclassLengthTooSmall: (v) => `Subclass constructor returned a smaller-than-requested object ${inlineInspect(v)}`,
-  SubclassSameValue: (v) => `Subclass constructor returned the same object ${inlineInspect(v)}`,
-  TypedArrayCreationOOB: () => 'Sum of start offset and byte length should be less than the size of underlying buffer',
-  TypedArrayLengthAlignment: (n, m) => `Size of ${n} should be a multiple of ${m}`,
-  TypedArrayOOB: () => 'Sum of start offset and byte length should be less than the size of the TypedArray',
-  TypedArrayOffsetAlignment: (n, m) => `Start offset of ${n} should be a multiple of ${m}`,
-  TypedArrayTooSmall: () => 'Derived TypedArray constructor created an array which was too small',
-};
-
-export function msg(key, ...args) {
-  return messages[key](...args);
 }

@@ -5,7 +5,6 @@ import {
   isLabelledStatement,
   isStatement,
 } from '../ast.mjs';
-
 import { DeclarationPart_Declaration } from './DeclarationPart.mjs';
 import { VarScopedDeclarations_Statement } from './VarScopedDeclarations.mjs';
 

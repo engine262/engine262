@@ -27,10 +27,9 @@ import {
   ToPropertyKey,
   CreateBuiltinFunction,
 } from '../abstract-ops/all.mjs';
-import { AddEntriesFromIterable } from './Map.mjs';
 import { Q, X } from '../completion.mjs';
+import { AddEntriesFromIterable } from './Map.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
 
 function ObjectConstructor([value], { NewTarget }) {
   if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
@@ -66,7 +65,7 @@ function Object_assign([target = Value.undefined, ...sources]) {
 
 function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   if (Type(O) !== 'Object' && Type(O) !== 'Null') {
-    return surroundingAgent.Throw('TypeError', 'Object prototype may only be an Object or null');
+    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   const obj = ObjectCreate(O);
   if (Properties !== Value.undefined) {
@@ -82,7 +81,7 @@ function Object_defineProperties([O = Value.undefined, Properties = Value.undefi
 // #sec-objectdefineproperties ObjectDefineProperties
 function ObjectDefineProperties(O, Properties) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAnObject', O));
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   const props = Q(ToObject(Properties));
   const keys = Q(props.OwnPropertyKeys());
@@ -105,7 +104,7 @@ function ObjectDefineProperties(O, Properties) {
 
 function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Value is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   const key = Q(ToPropertyKey(P));
   const desc = Q(ToPropertyDescriptor(Attributes));
@@ -127,7 +126,7 @@ function Object_freeze([O = Value.undefined]) {
 
   const status = Q(SetIntegrityLevel(O, 'frozen'));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Could not freeze object');
+    return surroundingAgent.Throw('TypeError', 'UnableToFreeze', O);
   }
   return O;
 }
@@ -236,7 +235,7 @@ function Object_preventExtensions([O = Value.undefined]) {
 
   const status = Q(O.PreventExtensions());
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Could not prevent extensions on object');
+    return surroundingAgent.Throw('TypeError', 'UnableToPreventExtensions', O);
   }
   return O;
 }
@@ -248,7 +247,7 @@ function Object_seal([O = Value.undefined]) {
 
   const status = Q(SetIntegrityLevel(O, 'sealed'));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Could not seal object');
+    return surroundingAgent.Throw('TypeError', 'UnableToSeal', O);
   }
   return O;
 }
@@ -256,7 +255,7 @@ function Object_seal([O = Value.undefined]) {
 function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   O = Q(RequireObjectCoercible(O));
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
-    return surroundingAgent.Throw('TypeError', 'Prototype must be an Object or null');
+    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   if (Type(O) !== 'Object') {
     return O;
@@ -264,7 +263,7 @@ function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
 
   const status = Q(O.SetPrototypeOf(proto));
   if (status === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'Could not set prototype of object');
+    return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
   }
   return O;
 }

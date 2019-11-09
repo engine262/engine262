@@ -1,3 +1,6 @@
+import { Q, X } from '../completion.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Value } from '../value.mjs';
 import {
   Assert,
   GetValueFromBuffer,
@@ -9,10 +12,6 @@ import {
   numericTypeInfo,
   RequireInternalSlot,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
-import { Value } from '../value.mjs';
 
 // This file covers abstract operations defined in
 // 24.3 #sec-dataview-objects
@@ -25,13 +24,13 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   isLittleEndian = X(ToBoolean(isLittleEndian));
   const buffer = view.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const viewOffset = view.ByteOffset.numberValue();
   const viewSize = view.ByteLength.numberValue();
   const elementSize = numericTypeInfo.get(type).ElementSize;
   if (getIndex + elementSize > viewSize) {
-    return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
+    return surroundingAgent.Throw('RangeError', 'DataViewOOB');
   }
   const bufferIndex = new Value(getIndex + viewOffset);
   return GetValueFromBuffer(buffer, bufferIndex, type, false, 'Unordered', isLittleEndian);
@@ -46,13 +45,13 @@ export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   isLittleEndian = X(ToBoolean(isLittleEndian));
   const buffer = view.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const viewOffset = view.ByteOffset.numberValue();
   const viewSize = view.ByteLength.numberValue();
   const elementSize = numericTypeInfo.get(type).ElementSize;
   if (getIndex + elementSize > viewSize) {
-    return surroundingAgent.Throw('RangeError', msg('DataViewOOB'));
+    return surroundingAgent.Throw('RangeError', 'DataViewOOB');
   }
   const bufferIndex = new Value(getIndex + viewOffset);
   return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, 'Unordered', isLittleEndian);

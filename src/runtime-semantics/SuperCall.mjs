@@ -7,10 +7,10 @@ import {
   IsConstructor,
 } from '../abstract-ops/all.mjs';
 import { FunctionValue, Type, Value } from '../value.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
 import { Q, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
-import { msg } from '../helpers.mjs';
+import { ArgumentListEvaluation } from './all.mjs';
+
 
 // 12.3.5.2 #sec-getsuperconstructor
 function GetSuperConstructor() {
@@ -20,7 +20,7 @@ function GetSuperConstructor() {
   Assert(activeFunction instanceof FunctionValue);
   const superConstructor = X(activeFunction.GetPrototypeOf());
   if (IsConstructor(superConstructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', superConstructor));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', superConstructor);
   }
   return superConstructor;
 }

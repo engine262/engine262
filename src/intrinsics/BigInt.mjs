@@ -1,15 +1,14 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
 import { ToPrimitive, ToBigInt, ToIndex } from '../abstract-ops/all.mjs';
 import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function BigIntConstructor([value], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', 'BigInt'));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
   }
   // 2. Let prim be ? ToPrimitive(value, hint Number).
   const prim = Q(ToPrimitive(value, 'Number'));

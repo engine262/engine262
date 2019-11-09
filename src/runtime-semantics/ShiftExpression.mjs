@@ -11,7 +11,7 @@ export function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
   const T = TypeNumeric(lnum);
 

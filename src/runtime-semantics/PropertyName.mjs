@@ -52,6 +52,6 @@ function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
 // computed.
 export function* Evaluate_PropertyName(PropertyName, computed) {
   return computed
-    ? yield* Evaluate_ComputedPropertyName(PropertyName)
+    ? (yield* Evaluate_ComputedPropertyName(PropertyName))
     : Evaluate_LiteralPropertyName(PropertyName);
 }

@@ -9,17 +9,17 @@ import {
   isExportDeclarationWithDefaultAndExpression,
 } from '../ast.mjs';
 import { BoundNames_ClassDeclaration, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import {
-  BindingClassDeclarationEvaluation_ClassDeclaration,
-  InitializeBoundName,
-  NamedEvaluation_Expression,
-} from './all.mjs';
 import { GetValue } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { NormalCompletion, ReturnIfAbrupt, Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import {
+  BindingClassDeclarationEvaluation_ClassDeclaration,
+  InitializeBoundName,
+  NamedEvaluation_Expression,
+} from './all.mjs';
 
 export function* Evaluate_ExportDeclaration(ExportDeclaration) {
   switch (true) {

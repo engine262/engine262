@@ -26,10 +26,10 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
 import { Q, X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // 21.2.5.2 #sec-regexp.prototype.exec
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
@@ -48,8 +48,7 @@ export function RegExpExec(R, S) {
   if (IsCallable(exec) === Value.true) {
     const result = Q(Call(exec, R, [S]));
     if (Type(result) !== 'Object' && Type(result) !== 'Null') {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'RegExpExecNotObject', result);
     }
     return result;
   }
@@ -162,13 +161,13 @@ export function AdvanceStringIndex(S, index, unicode) {
 function RegExpProto_dotAllGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('s')) {
@@ -181,7 +180,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
 function RegExpProto_flagsGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
   const global = ToBoolean(Q(Get(R, new Value('global'))));
@@ -215,13 +214,13 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
 function RegExpProto_globalGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('g')) {
@@ -234,13 +233,13 @@ function RegExpProto_globalGetter(args, { thisValue }) {
 function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('i')) {
@@ -253,7 +252,7 @@ function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
 function RegExpProto_match([string = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (Type(rx) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', rx));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
 
@@ -291,7 +290,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
 function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const S = Q(ToString(string));
   const C = Q(SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
@@ -318,13 +317,13 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
 function RegExpProto_multilineGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('m')) {
@@ -337,7 +336,7 @@ function RegExpProto_multilineGetter(args, { thisValue }) {
 function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (Type(rx) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', rx));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
   const lengthS = S.stringValue().length;
@@ -430,7 +429,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
 function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (Type(rx) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', rx));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
 
@@ -456,13 +455,13 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalSource' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return new Value('(?:)');
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   Assert('OriginalFlags' in R);
   const src = R.OriginalSource;
@@ -474,7 +473,7 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
 function RegExpProto_split([string = Value.undefined, limit = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (Type(rx) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', rx));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
 
@@ -557,13 +556,13 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 function RegExpProto_stickyGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('y')) {
@@ -576,7 +575,7 @@ function RegExpProto_stickyGetter(args, { thisValue }) {
 function RegExpProto_test([S = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const string = Q(ToString(S));
   const match = Q(RegExpExec(R, string));
@@ -590,7 +589,7 @@ function RegExpProto_test([S = Value.undefined], { thisValue }) {
 function RegExpProto_toString(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const pattern = Q(ToString(Q(Get(R, new Value('source')))));
   const flags = Q(ToString(Q(Get(R, new Value('flags')))));
@@ -602,13 +601,13 @@ function RegExpProto_toString(args, { thisValue }) {
 function RegExpProto_unicodeGetter(args, { thisValue }) {
   const R = thisValue;
   if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
     if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
       return Value.undefined;
     }
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp', R));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('u')) {

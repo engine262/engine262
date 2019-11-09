@@ -1,6 +1,5 @@
 import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
 import { Type, Value } from '../value.mjs';
 import {
   AllocateArrayBuffer,
@@ -73,7 +72,7 @@ export function ValidateTypedArray(O) {
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   return buffer;
 }
@@ -116,7 +115,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   Q(ValidateTypedArray(newTypedArray));
   if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
     if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
-      return surroundingAgent.Throw('TypeError', msg('TypedArrayTooSmall', newTypedArray.ArrayLength, argumentList[0]));
+      return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
     }
   }
   return newTypedArray;

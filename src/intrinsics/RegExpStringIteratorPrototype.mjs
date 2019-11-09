@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
 import { wellKnownSymbols, Type, Value } from '../value.mjs';
 import {
   Assert,
@@ -10,9 +9,10 @@ import {
   Get,
   Set,
 } from '../abstract-ops/all.mjs';
-import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
 import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
+
 
 // 21.2.5.8.1 #sec-createregexpstringiterator
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
@@ -38,10 +38,10 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
 function RegExpStringIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp String Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp String Iterator', O);
   }
   if (!('IteratingRegExp' in O && 'IteratedString' in O && 'Global' in O && 'Unicode' in O && 'Done' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'RegExp String Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp String Iterator', O);
   }
   if (O.Done === Value.true) {
     return X(CreateIterResultObject(Value.undefined, Value.true));

@@ -21,11 +21,11 @@ import {
   Q,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null');
   const iteratorRecord = Q(GetIterator(iterable));
@@ -36,7 +36,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
     }
     const nextItem = Q(IteratorValue(next));
     if (Type(nextItem) !== 'Object') {
-      const error = new ThrowCompletion(surroundingAgent.Throw('TypeError').Value);
+      const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem).Value);
       return Q(IteratorClose(iteratorRecord, error));
     }
     const k = Get(nextItem, new Value('0'));
@@ -56,7 +56,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
 
 function MapConstructor([iterable], { NewTarget }) {
   if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Map'));
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Map');
   }
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']));
   map.MapData = [];

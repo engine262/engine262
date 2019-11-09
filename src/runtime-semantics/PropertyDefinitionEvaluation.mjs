@@ -30,14 +30,14 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   DefineMethod,
   Evaluate_PropertyName,
   NamedEvaluation_Expression,
 } from './all.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
 
 function hasNonConfigurableProperties(obj) {
   for (const desc of obj.properties.values()) {

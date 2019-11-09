@@ -20,7 +20,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
 import {
   Type,
   Value,
@@ -36,7 +35,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
     if (args.length === 0) {
       // 22.2.4.1 #sec-typedarray
       if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
+        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
       }
       const constructorName = new Value(TypedArray);
       return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, new Value(0)));
@@ -45,7 +44,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       const [length] = args;
       Assert(Type(length) !== 'Object');
       if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
+        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
       }
       const elementLength = Q(ToIndex(length));
       const constructorName = new Value(TypedArray);
@@ -55,14 +54,14 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       const [typedArray] = args;
       Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray);
       if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
+        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
       }
       const constructorName = new Value(TypedArray);
       const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
       const srcArray = typedArray;
       const srcData = srcArray.ViewedArrayBuffer;
       if (IsDetachedBuffer(srcData)) {
-        return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+        return surroundingAgent.Throw('TypeError', 'BufferDetached');
       }
       const elementType = new Value(info.ElementType);
       const elementLength = srcArray.ArrayLength;
@@ -84,7 +83,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       } else {
         data = Q(AllocateArrayBuffer(bufferConstructor, byteLength));
         if (IsDetachedBuffer(srcData)) {
-          return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+          return surroundingAgent.Throw('TypeError', 'BufferDetached');
         }
         let srcByteIndex = srcByteOffset.numberValue();
         let targetByteIndex = 0;
@@ -107,7 +106,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       const [object] = args;
       Assert(Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object));
       if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
+        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
       }
       const constructorName = new Value(TypedArray);
       const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
@@ -142,36 +141,36 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       const [buffer, byteOffset = Value.undefined, length = Value.undefined] = args;
       Assert(Type(buffer) === 'Object' && 'ArrayBufferData' in buffer);
       if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', TypedArray));
+        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
       }
       const constructorName = new Value(TypedArray);
       const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
       const elementSize = info.ElementSize;
       const offset = Q(ToIndex(byteOffset));
       if (offset.numberValue() % elementSize !== 0) {
-        return surroundingAgent.Throw('RangeError', msg('TypedArrayOffsetAlignment', TypedArray, elementSize));
+        return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
       }
       let newLength;
       if (length !== undefined && length !== Value.undefined) {
         newLength = Q(ToIndex(length)).numberValue();
       }
       if (IsDetachedBuffer(buffer)) {
-        return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+        return surroundingAgent.Throw('TypeError', 'BufferDetached');
       }
       const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
       let newByteLength;
       if (length === undefined || length === Value.undefined) {
         if (bufferByteLength % elementSize !== 0) {
-          return surroundingAgent.Throw('RangeError', msg('TypedArrayLengthAlignment', TypedArray, elementSize));
+          return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
         }
         newByteLength = bufferByteLength - offset.numberValue();
         if (newByteLength < 0) {
-          return surroundingAgent.Throw('RangeError', msg('TypedArrayCreationOOB'));
+          return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
         }
       } else {
         newByteLength = newLength * elementSize;
         if (offset.numberValue() + newByteLength > bufferByteLength) {
-          return surroundingAgent.Throw('RangeError', msg('TypedArrayCreationOOB'));
+          return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
         }
       }
       O.ViewedArrayBuffer = buffer;

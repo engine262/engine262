@@ -21,11 +21,11 @@ import {
 import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   BindingInitialization_CatchParameter,
   Evaluate_Block,
 } from './all.mjs';
-import { OutOfRange } from '../helpers.mjs';
 
 // 13.15.7 #sec-runtime-semantics-catchclauseevaluation
 //    With parameter thrownValue.

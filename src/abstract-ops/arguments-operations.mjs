@@ -1,14 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Assert,
-  CreateBuiltinFunction,
-  CreateDataProperty,
-  DefinePropertyOrThrow,
-  ObjectCreate,
-  SetFunctionLength,
-  ToString,
-} from './all.mjs';
-import {
   ArgumentsExoticObjectValue,
   Descriptor,
   Value,
@@ -17,6 +8,15 @@ import {
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
+import {
+  Assert,
+  CreateBuiltinFunction,
+  CreateDataProperty,
+  DefinePropertyOrThrow,
+  ObjectCreate,
+  SetFunctionLength,
+  ToString,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 9.4.4 #sec-arguments-exotic-objects

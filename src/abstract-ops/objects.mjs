@@ -8,6 +8,7 @@ import {
 import {
   surroundingAgent,
 } from '../engine.mjs';
+import { Q, X } from '../completion.mjs';
 import {
   Assert,
   Call,
@@ -29,7 +30,6 @@ import {
   isArrayIndex,
   typedArrayInfo,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O) {
@@ -442,7 +442,7 @@ export function IntegerIndexedElementGet(O, index) {
   Assert(Type(index) === 'Number');
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.undefined;
@@ -464,7 +464,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   const numValue = Q(ToNumber(value));
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'Attempt to access detached ArrayBuffer');
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.false;

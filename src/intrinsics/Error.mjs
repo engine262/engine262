@@ -10,8 +10,8 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
 import { captureStack } from '../helpers.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function ErrorConstructor([message = Value.undefined], { NewTarget }) {
   let newTarget;

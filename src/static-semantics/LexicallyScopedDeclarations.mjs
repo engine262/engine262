@@ -18,12 +18,12 @@ import {
   isExportDeclarationWithDefaultAndExpression,
   isStatementListItem,
 } from '../ast.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   DeclarationPart_Declaration,
   DeclarationPart_HoistableDeclaration,
   TopLevelLexicallyScopedDeclarations_StatementList,
 } from './all.mjs';
-import { OutOfRange } from '../helpers.mjs';
 
 // 13.2.6 #sec-block-static-semantics-lexicallyscopeddeclarations
 //   StatementList : StatementList StatementListItem

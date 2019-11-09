@@ -1,6 +1,6 @@
 import { Type, Value } from '../value.mjs';
-import { CanonicalNumericIndexString } from './all.mjs';
 import { X } from '../completion.mjs';
+import { CanonicalNumericIndexString } from './all.mjs';
 
 // This file covers predicates defined in
 // 6 #sec-ecmascript-data-types-and-values

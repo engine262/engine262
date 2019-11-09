@@ -2,11 +2,11 @@ import {
   isActualMemberExpressionWithBrackets,
   isActualMemberExpressionWithDot,
 } from '../ast.mjs';
-import { EvaluateDynamicPropertyAccess, EvaluateStaticPropertyAccess } from './all.mjs';
 import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { EvaluateDynamicPropertyAccess, EvaluateStaticPropertyAccess } from './all.mjs';
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`

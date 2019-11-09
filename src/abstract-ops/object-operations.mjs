@@ -9,6 +9,13 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  InstanceofOperator,
+} from '../runtime-semantics/all.mjs';
+import {
+  NormalCompletion,
+  Q, X,
+} from '../completion.mjs';
+import {
   ArrayCreate,
   Assert,
   IsAccessorDescriptor,
@@ -22,14 +29,7 @@ import {
   ToObject,
   ToString,
 } from './all.mjs';
-import {
-  InstanceofOperator,
-} from '../runtime-semantics/all.mjs';
-import {
-  NormalCompletion,
-  Q, X,
-} from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // This file covers abstract operations defined in
 // 7.3 #sec-operations-on-objects
@@ -56,7 +56,7 @@ export function Set(O, P, V, Throw) {
   Assert(Type(Throw) === 'Boolean');
   const success = Q(O.Set(P, V, O));
   if (success === Value.false && Throw === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', P, O));
+    return surroundingAgent.Throw('TypeError', 'CannotSetProperty', P, O);
   }
   return success;
 }
@@ -95,8 +95,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
   if (success === Value.false) {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
   return success;
 }
@@ -107,8 +106,7 @@ export function DefinePropertyOrThrow(O, P, desc) {
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
   return success;
 }
@@ -119,8 +117,7 @@ export function DeletePropertyOrThrow(O, P) {
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
   if (success === Value.false) {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
   }
   return success;
 }
@@ -133,7 +130,7 @@ export function GetMethod(V, P) {
     return Value.undefined;
   }
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   return func;
 }
@@ -164,7 +161,7 @@ export function Call(F, V, argumentsList) {
   Assert(argumentsList.every((a) => a instanceof Value));
 
   if (IsCallable(F) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', F));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
   return Q(F.Call(V, argumentsList));
@@ -264,8 +261,7 @@ export function CreateListFromArrayLike(obj, elementTypes) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
   }
   if (Type(obj) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
   const len = Q(LengthOfArrayLike(obj)).numberValue();
   const list = [];
@@ -274,8 +270,7 @@ export function CreateListFromArrayLike(obj, elementTypes) {
     const indexName = X(ToString(new Value(index)));
     const next = Q(Get(obj, indexName));
     if (!elementTypes.includes(Type(next))) {
-      // TODO: throw with an error message
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotPropertyName', next);
     }
     list.push(next);
     index += 1;
@@ -307,8 +302,7 @@ export function OrdinaryHasInstance(C, O) {
   }
   const P = Q(Get(C, new Value('prototype')));
   if (Type(P) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
   while (true) {
     O = Q(O.GetPrototypeOf());
@@ -329,8 +323,7 @@ export function SpeciesConstructor(O, defaultConstructor) {
     return defaultConstructor;
   }
   if (Type(C) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', C);
   }
   const S = Q(Get(C, wellKnownSymbols.species));
   if (S === Value.undefined || S === Value.null) {
@@ -339,8 +332,7 @@ export function SpeciesConstructor(O, defaultConstructor) {
   if (IsConstructor(S) === Value.true) {
     return S;
   }
-  // TODO: throw with an error message
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
 }
 
 // 7.3.21 #sec-enumerableownpropertynames
@@ -387,7 +379,7 @@ export function GetFunctionRealm(obj) {
 
   if (obj instanceof ProxyExoticObjectValue) {
     if (Type(obj.ProxyHandler) === 'Null') {
-      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'GetFunctionRealm'));
+      return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'GetFunctionRealm');
     }
     const proxyTarget = obj.ProxyTarget;
     return Q(GetFunctionRealm(proxyTarget));

@@ -10,10 +10,10 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 function SetIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
   }
   if (!('IteratedSet' in O && 'SetNextIndex' in O && 'SetIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
   }
   const s = O.IteratedSet;
   let index = O.SetNextIndex;

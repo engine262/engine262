@@ -1,8 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
   const C = surroundingAgent.activeFunctionObject;

@@ -17,11 +17,11 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   BindingInitialization_BindingPattern,
   NamedEvaluation_Expression,
 } from './all.mjs';
-import { OutOfRange } from '../helpers.mjs';
 
 // 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :

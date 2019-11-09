@@ -9,6 +9,8 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { surroundingAgent } from '../engine.mjs';
+import { Q, X } from '../completion.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   Assert,
   Get,
@@ -18,8 +20,6 @@ import {
   ToPrimitive,
   StringToBigInt,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange, msg } from '../helpers.mjs';
 
 // This file covers abstract operations defined in
 // 7.2 #sec-testing-and-comparison-operations
@@ -29,9 +29,9 @@ export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
     case 'Null':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
     case 'Boolean':
     case 'Number':
     case 'String':
@@ -54,7 +54,7 @@ export function IsArray(argument) {
   }
   if (argument instanceof ProxyExoticObjectValue) {
     if (Type(argument.ProxyHandler) === 'Null') {
-      return surroundingAgent.Throw('TypeError', msg('ProxyRevoked', 'IsArray'));
+      return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'IsArray');
     }
     const target = argument.ProxyTarget;
     return IsArray(target);

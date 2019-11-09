@@ -5,6 +5,14 @@ import {
 } from '../engine.mjs';
 import { FunctionValue, Type, Value } from '../value.mjs';
 import {
+  AbruptCompletion,
+  NormalCompletion,
+  Q,
+  X,
+  ThrowCompletion,
+  EnsureCompletion,
+} from '../completion.mjs';
+import {
   Assert,
   Call,
   Construct,
@@ -15,15 +23,7 @@ import {
   SameValue,
   SetFunctionLength,
 } from './all.mjs';
-import {
-  AbruptCompletion,
-  NormalCompletion,
-  Q,
-  X,
-  ThrowCompletion,
-  EnsureCompletion,
-} from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // This file covers abstract operations defined in
 // 25.6 #sec-promise-objects
@@ -96,7 +96,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   }
   alreadyResolved.Value = true;
   if (SameValue(resolution, promise) === Value.true) {
-    const selfResolutionError = surroundingAgent.Throw('TypeError', 'Cannot resolve a promise with itself').Value;
+    const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
     return RejectPromise(promise, selfResolutionError);
   }
   if (Type(resolution) !== 'Object') {
@@ -129,7 +129,7 @@ function FulfillPromise(promise, value) {
 // 25.6.1.5 #sec-newpromisecapability
 export function NewPromiseCapability(C) {
   if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
@@ -138,10 +138,10 @@ export function NewPromiseCapability(C) {
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('PromiseResolveFunction', promiseCapability.Resolve));
+    return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
   if (IsCallable(promiseCapability.Reject) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('PromiseRejectFunction', promiseCapability.Reject));
+    return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
   promiseCapability.Promise = promise;
   return promiseCapability;
@@ -153,10 +153,10 @@ function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = V
 
   const promiseCapability = F.Capability;
   if (Type(promiseCapability.Resolve) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'Promise resolve function already set');
+    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
   }
   if (Type(promiseCapability.Reject) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'Promise reject function already set');
+    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
   }
   promiseCapability.Resolve = resolve;
   promiseCapability.Reject = reject;

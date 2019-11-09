@@ -1,4 +1,3 @@
-import { Assert, Call } from './all.mjs';
 import { isExpressionBody } from '../ast.mjs';
 import { EnsureCompletion, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -8,6 +7,7 @@ import {
 } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
+import { Assert, Call } from './all.mjs';
 
 // This file covers abstract operations defined in
 // 25.7 #sec-async-function-objects

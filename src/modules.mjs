@@ -20,7 +20,6 @@ import {
   Q,
   X,
 } from './completion.mjs';
-import { msg } from './helpers.mjs';
 import {
   isFunctionDeclaration,
   isGeneratorDeclaration,
@@ -282,7 +281,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     for (const e of module.IndirectExportEntries) {
       const resolution = Q(module.ResolveExport(e.ExportName));
       if (resolution === null || resolution === 'ambiguous') {
-        return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, e.ExportName, module));
+        return surroundingAgent.Throw(
+          'SyntaxError',
+          'ResolutionNullOrAmbiguous',
+          resolution,
+          e.ExportName,
+          module,
+        );
       }
       // Assert: resolution is a ResolvedBinding Record.
     }
@@ -301,7 +306,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       } else {
         const resolution = Q(importedModule.ResolveExport(ie.ImportName));
         if (resolution === null || resolution === 'ambiguous') {
-          return surroundingAgent.Throw('SyntaxError', msg('ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule));
+          return surroundingAgent.Throw(
+            'SyntaxError',
+            'ResolutionNullOrAmbiguous',
+            resolution,
+            ie.ImportName,
+            importedModule,
+          );
         }
         envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
       }

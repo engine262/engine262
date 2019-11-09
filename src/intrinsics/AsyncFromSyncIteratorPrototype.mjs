@@ -40,7 +40,7 @@ function AsyncFromSyncIteratorPrototype_return([value = Value.undefined], { this
   IfAbruptRejectPromise(result, promiseCapability);
   if (Type(result) !== 'Object') {
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'iterator result was not an object').Value,
+      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
     ]));
     return promiseCapability.Promise;
   }
@@ -63,7 +63,7 @@ function AsyncFromSyncIteratorPrototype_throw([value = Value.undefined], { thisV
   IfAbruptRejectPromise(result, promiseCapability);
   if (Type(result) !== 'Object') {
     X(Call(promiseCapability.Reject, Value.undefined, [
-      surroundingAgent.Throw('TypeError', 'iterator result was not an object').Value,
+      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
     ]));
     return promiseCapability.Promise;
   }

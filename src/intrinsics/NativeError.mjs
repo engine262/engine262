@@ -12,8 +12,8 @@ import {
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
 import { captureStack } from '../helpers.mjs';
+import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
 
 export function CreateNativeError(realmRec) {
   for (const name of [

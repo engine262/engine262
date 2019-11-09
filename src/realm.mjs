@@ -9,7 +9,6 @@ import {
 } from './abstract-ops/all.mjs';
 import { NewGlobalEnvironment } from './environment.mjs';
 import { Q, X } from './completion.mjs';
-
 import { CreateObjectPrototype } from './intrinsics/ObjectPrototype.mjs';
 import { CreateObject } from './intrinsics/Object.mjs';
 import { CreateArrayPrototype } from './intrinsics/ArrayPrototype.mjs';

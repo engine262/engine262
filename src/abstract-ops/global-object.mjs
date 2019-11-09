@@ -1,8 +1,4 @@
 import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
-import {
-  Assert,
-  // GetThisEnvironment,
-} from './all.mjs';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
 import {
@@ -40,6 +36,10 @@ import {
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
 } from '../environment.mjs';
+import {
+  Assert,
+  // GetThisEnvironment,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 18 #sec-global-object
@@ -76,7 +76,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   */
   const r = ParseScript(x.stringValue(), evalRealm, undefined, strictCaller);
   if (Array.isArray(r)) {
-    return surroundingAgent.Throw('SyntaxError');
+    return surroundingAgent.Throw(r[0]);
   }
   const script = r.ECMAScriptCode;
   // If script Contains ScriptBody is false, return undefined.
@@ -130,7 +130,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
     if (varEnvRec instanceof GlobalEnvironmentRecord) {
       for (const name of varNames) {
         if (varEnvRec.HasLexicalDeclaration(name) === Value.true) {
-          return surroundingAgent.Throw('SyntaxError');
+          return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
         }
         // NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
       }
@@ -142,7 +142,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       if (!(thisEnvRec instanceof ObjectEnvironmentRecord)) {
         for (const name of varNames) {
           if (thisEnvRec.HasBinding(name) === Value.true) {
-            return surroundingAgent.Throw('SyntaxError');
+            return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
             // NOTE: Annex B.3.5 defines alternate semantics for the above step.
           }
           // NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration
@@ -162,7 +162,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
         if (varEnvRec instanceof GlobalEnvironmentRecord) {
           const fnDefinable = Q(varEnvRec.CanDeclareGlobalFunction(fn));
           if (fnDefinable === Value.false) {
-            return surroundingAgent.Throw('TypeError');
+            return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
           }
         }
         declaredFunctionNames.push(fn);
@@ -187,7 +187,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
           if (varEnvRec instanceof GlobalEnvironmentRecord) {
             const vnDefinable = Q(varEnvRec.CanDeclareGlobalVar(vn));
             if (vnDefinable === Value.false) {
-              return surroundingAgent.Throw('TypeError');
+              return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
             }
           }
           if (!declaredVarNames.includes(vn)) {

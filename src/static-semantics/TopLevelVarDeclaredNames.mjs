@@ -5,12 +5,10 @@ import {
   isLabelledStatement,
   isStatement,
 } from '../ast.mjs';
-
 import {
   BoundNames_FunctionDeclaration,
   BoundNames_HoistableDeclaration,
 } from './BoundNames.mjs';
-
 import { VarDeclaredNames_Statement } from './VarDeclaredNames.mjs';
 
 // 13.2.9 #sec-block-static-semantics-toplevelvardeclarednames

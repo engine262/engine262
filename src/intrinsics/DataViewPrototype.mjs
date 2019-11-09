@@ -7,9 +7,8 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
 import { Value } from '../value.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 24.3.4.1 #sec-get-dataview.prototype.buffer
 function DataViewProto_bufferGetter(args, { thisValue }) {
@@ -27,7 +26,7 @@ function DataViewProto_byteLengthGetter(args, { thisValue }) {
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const size = O.ByteLength;
   return size;
@@ -40,7 +39,7 @@ function DataViewProto_byteOffsetGetter(args, { thisValue }) {
   Assert('ViewedArrayBuffer' in O);
   const buffer = O.ViewedArrayBuffer;
   if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const offset = O.ByteOffset;
   return offset;

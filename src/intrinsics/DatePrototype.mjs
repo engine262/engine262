@@ -31,15 +31,15 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
 import { StringPad } from '../runtime-semantics/all.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
+
 
 export function thisTimeValue(value) {
   if (Type(value) === 'Object' && 'DateValue' in value) {
     return value.DateValue;
   }
-  return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', value));
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', value);
 }
 
 // 20.3.4.2 #sec-date.prototype.getdate
@@ -465,7 +465,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
 function DateProto_toDateString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -479,7 +479,7 @@ function DateProto_toDateString(args, { thisValue }) {
 function DateProto_toISOString(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (!Number.isFinite(t.numberValue())) {
-    return surroundingAgent.Throw('RangeError', 'Invalid time value');
+    return surroundingAgent.Throw('RangeError', 'DateInvalidTime');
   }
   const year = YearFromTime(t).numberValue();
   const month = MonthFromTime(t).numberValue() + 1;
@@ -517,19 +517,19 @@ function DateProto_toJSON(args, { thisValue }) {
 // 20.3.4.38 #sec-date.prototype.tolocaledatestring
 function DateProto_toLocaleDateString() {
   // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Date.prototype.toLocaleDateString is not implemented');
+  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleDateString is not implemented');
 }
 
 // 20.3.4.39 #sec-date.prototype.tolocalestring
 function DateProto_toLocaleString() {
   // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Date.prototype.toLocaleString is not implemented');
+  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleString is not implemented');
 }
 
 // 20.3.4.40 #sec-date.prototype.tolocaletimestring
 function DateProto_toLocaleTimeString() {
   // TODO: implement this function.
-  return surroundingAgent.Throw('Error', 'Date.prototype.toLocaleTimeString is not implemented');
+  return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleTimeString is not implemented');
 }
 
 // 20.3.4.41 #sec-date.prototype.tostring
@@ -593,7 +593,7 @@ export function ToDateString(tv) {
 function DateProto_toTimeString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -607,7 +607,7 @@ function DateProto_toTimeString(args, { thisValue }) {
 function DateProto_toUTCString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
@@ -632,7 +632,7 @@ function DateProto_valueOf(args, { thisValue }) {
 function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Date', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   let tryFirst;
   if (Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
@@ -640,7 +640,7 @@ function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   } else if (Type(hint) === 'String' && hint.stringValue() === 'number') {
     tryFirst = new Value('number');
   } else {
-    return surroundingAgent.Throw('TypeError', msg('InvalidHint', hint));
+    return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
   }
   return Q(OrdinaryToPrimitive(O, tryFirst));
 }

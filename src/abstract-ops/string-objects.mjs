@@ -4,6 +4,7 @@ import {
   Type,
   Value,
 } from '../value.mjs';
+import { X } from '../completion.mjs';
 import {
   Assert,
   CanonicalNumericIndexString,
@@ -11,7 +12,6 @@ import {
   IsInteger,
   IsPropertyKey,
 } from './all.mjs';
-import { X } from '../completion.mjs';
 
 // 9.4.3.4 #sec-stringcreate
 export function StringCreate(value, prototype) {

@@ -13,6 +13,8 @@ import {
   isStatementListItem,
 } from '../ast.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { ExportEntryRecord } from '../modules.mjs';
+import { Value } from '../value.mjs';
 import {
   BoundNames_ClassDeclaration,
   BoundNames_Declaration,
@@ -21,8 +23,6 @@ import {
 } from './BoundNames.mjs';
 import { ExportEntriesForModule_ExportClause } from './ExportEntriesForModule.mjs';
 import { ModuleRequests_FromClause } from './ModuleRequests.mjs';
-import { ExportEntryRecord } from '../modules.mjs';
-import { Value } from '../value.mjs';
 
 // 15.2.1.7 #sec-module-semantics-static-semantics-exportentries
 //   ModuleItemList : ModuleItemList ModuleItem

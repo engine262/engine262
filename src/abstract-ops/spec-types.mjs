@@ -5,6 +5,7 @@ import {
   Type,
   Value,
 } from '../value.mjs';
+import { NormalCompletion, Q, X } from '../completion.mjs';
 import {
   Assert,
   CreateDataProperty,
@@ -14,8 +15,7 @@ import {
   ObjectCreate,
   ToBoolean,
 } from './all.mjs';
-import { NormalCompletion, Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
@@ -87,7 +87,7 @@ export function FromPropertyDescriptor(Desc) {
 // 6.2.5.5 #sec-topropertydescriptor
 export function ToPropertyDescriptor(Obj) {
   if (Type(Obj) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAnObject', Obj));
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
 
   const desc = Descriptor({});
@@ -115,7 +115,7 @@ export function ToPropertyDescriptor(Obj) {
   if (hasGet === Value.true) {
     const getter = Q(Get(Obj, new Value('get')));
     if (IsCallable(getter) === Value.false && Type(getter) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', getter));
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc.Get = getter;
   }
@@ -123,13 +123,13 @@ export function ToPropertyDescriptor(Obj) {
   if (hasSet === Value.true) {
     const setter = Q(Get(Obj, new Value('set')));
     if (IsCallable(setter) === Value.false && Type(setter) !== 'Undefined') {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', setter));
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
     desc.Set = setter;
   }
   if (desc.Get !== undefined || desc.Set !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
-      return surroundingAgent.Throw('TypeError', 'invalid descriptor');
+      return surroundingAgent.Throw('TypeError', 'InvalidPropertyDescriptor');
     }
   }
   return desc;
@@ -178,7 +178,7 @@ export function CreateByteDataBlock(size) {
   try {
     db = new DataBlock(size);
   } catch (err) {
-    return surroundingAgent.Throw('RangeError', 'Cannot allocate memory');
+    return surroundingAgent.Throw('RangeError', 'CannotAllocateDataBlock');
   }
   return db;
 }

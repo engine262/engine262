@@ -23,7 +23,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
 import {
   Descriptor, Type, Value, wellKnownSymbols,
 } from '../value.mjs';
@@ -106,7 +105,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     // bit-level encoding of the source data.
     const buffer = O.ViewedArrayBuffer;
     if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     const typedArrayName = O.TypedArrayName.stringValue();
     const elementSize = typedArrayInfo.get(typedArrayName).ElementSize;
@@ -156,7 +155,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   }
   const final = relativeEnd < 0 ? Math.max(len + relativeEnd, 0) : Math.min(relativeEnd, len);
   if (IsDetachedBuffer(O.ViewedArrayBuffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   while (k < final) {
     const Pk = X(ToString(new Value(k)));
@@ -172,7 +171,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisV
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength.numberValue();
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let T;
   if (thisArg !== undefined) {
@@ -229,7 +228,7 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValu
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength;
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let T;
   if (thisArg !== undefined) {
@@ -259,11 +258,11 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     Assert('ViewedArrayBuffer' in target);
     const targetOffset = Q(ToInteger(offset)).numberValue();
     if (targetOffset < 0) {
-      return surroundingAgent.Throw('RangeError', msg('NegativeIndex', 'Offset'));
+      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
     }
     const targetBuffer = target.ViewedArrayBuffer;
     if (IsDetachedBuffer(targetBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     const targetLength = target.ArrayLength.numberValue();
     const targetName = target.TypedArrayName.stringValue();
@@ -274,7 +273,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     const src = Q(ToObject(array));
     const srcLength = Q(LengthOfArrayLike(src)).numberValue();
     if (srcLength + targetOffset > targetLength) {
-      return surroundingAgent.Throw('RangeError', msg('TypedArrayOOB'));
+      return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
     let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
     let k = 0;
@@ -284,7 +283,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       const kProp = Q(Get(src, Pk));
       const kNumber = Q(ToNumber(kProp));
       if (IsDetachedBuffer(targetBuffer)) {
-        return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+        return surroundingAgent.Throw('TypeError', 'BufferDetached');
       }
       SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, kNumber, true, 'Unordered');
       k += 1;
@@ -300,16 +299,16 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     Assert('ViewedArrayBuffer' in target);
     const targetOffset = Q(ToInteger(offset)).numberValue();
     if (targetOffset < 0) {
-      return surroundingAgent.Throw('RangeError', msg('NegativeIndex', 'Offset'));
+      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
     }
     const targetBuffer = target.ViewedArrayBuffer;
     if (IsDetachedBuffer(targetBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     const targetLength = target.ArrayLength.numberValue();
     let srcBuffer = typedArray.ViewedArrayBuffer;
     if (IsDetachedBuffer(srcBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     const targetName = target.TypedArrayName.stringValue();
     const targetInfo = typedArrayInfo.get(targetName);
@@ -323,7 +322,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     const srcLength = typedArray.ArrayLength.numberValue();
     const srcByteOffset = typedArray.ByteOffset;
     if (srcLength + targetOffset > targetLength) {
-      return surroundingAgent.Throw('RangeError', msg('TypedArrayOOB'));
+      return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
     // let same;
     // if (IsSharedArrayBuffer(srcBuffer) && IsSharedArrayBuffer(targetBuffer)) {
@@ -405,7 +404,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   } else if (count > 0) {
     const srcBuffer = O.ViewedArrayBuffer;
     if (IsDetachedBuffer(srcBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     const targetBuffer = A.ViewedArrayBuffer;
     const elementSize = srcInfo.ElementSize;
@@ -426,7 +425,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
 // 22.2.3.26 #sec-%typedarray%.prototype.sort
 function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   const obj = Q(ToObject(thisValue));
   const buffer = Q(ValidateTypedArray(obj));
@@ -442,7 +441,7 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
     const callRes = Q(Call(comparefn, Value.undefined, [x, y]));
     const v = Q(ToNumber(callRes));
     if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     if (v.isNaN()) {
       return new Value(+0);

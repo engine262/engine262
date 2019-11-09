@@ -37,14 +37,14 @@ import {
   X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'Promise'));
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Promise');
   }
   if (IsCallable(executor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', executor));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
   }
   const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', [
     'PromiseState',
@@ -96,7 +96,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   const remainingElementsCount = { Value: 1 };
   const promiseResolve = Q(Get(constructor, new Value('resolve')));
   if (IsCallable(promiseResolve) === Value.alse) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', promiseResolve));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   let index = 0;
   while (true) {
@@ -282,7 +282,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   const promiseResolve = Q(Get(constructor, new Value('resolve')));
   if (IsCallable(promiseResolve) === Value.alse) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', promiseResolve));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   while (true) {
     const next = IteratorStep(iteratorRecord);
@@ -329,7 +329,7 @@ function Promise_reject([r = Value.undefined], { thisValue }) {
 function Promise_resolve([x = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (Type(C) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'Promise.resolve called on non-object');
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.resolve', C);
   }
   return Q(PromiseResolve(C, x));
 }

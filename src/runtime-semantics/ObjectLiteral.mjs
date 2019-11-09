@@ -1,11 +1,11 @@
 import {
   ObjectCreate,
 } from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Q } from '../completion.mjs';
 import {
   PropertyDefinitionEvaluation_PropertyDefinitionList,
 } from './all.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q } from '../completion.mjs';
 
 // 12.2.6.7 #sec-object-initializer-runtime-semantics-evaluation
 //   ObjectLiteral :

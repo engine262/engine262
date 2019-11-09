@@ -20,7 +20,7 @@ function thisNumberValue(value) {
     Assert(Type(n) === 'Number');
     return n;
   }
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
 }
 
 // 20.1.3.2 #sec-number.prototype.toexponential
@@ -40,7 +40,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
     return new Value(`${s}Infinity`);
   }
   if (f < 0 || f > 100) {
-    return surroundingAgent.Throw('RangeError', 'Number.prototype.toExponential argument must be between 0 and 100');
+    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
   let m;
   let e;
@@ -55,7 +55,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
       // TODO: compute e, n and f.
     }
     m = String(n);
-    return surroundingAgent.Throw('Error', 'Number.prototype.toExponential is not fully implemented');
+    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toExponential is not fully implemented');
   }
   if (f !== 0) {
     const a = m[0];
@@ -86,7 +86,7 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
   const f = Q(ToInteger(fractionDigits)).numberValue();
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
-    return surroundingAgent.Throw('RangeError', 'Number.prototype.toFixed argument must be between 0 and 100');
+    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
   }
   if (Number.isNaN(x)) {
     return new Value('NaN');
@@ -117,14 +117,14 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
     //   const b = m.slice(k - f);
     //   m = `${a}.${b}`;
     // }
-    return surroundingAgent.Throw('Error', 'Number.prototype.toFixed is not fully implemented');
+    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toFixed is not fully implemented');
   }
   return new Value(`${s}${m}`);
 }
 
 // 20.1.3.4 #sec-number.prototype.tolocalestring
 function NumberProto_toLocaleString() {
-  return surroundingAgent.Throw('Error', 'Number.prototype.toLocaleString is not implemented');
+  return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toLocaleString is not implemented');
 }
 
 // 20.1.3.5 #sec-number.prototype.toprecision
@@ -146,7 +146,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
     return new Value(`${s}Infinity`);
   }
   if (p < 1 || p > 100) {
-    return surroundingAgent.Throw('RangeError', 'Number.prototype.toPrecision argument must be between 1 and 100');
+    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
   let m;
   let e;
@@ -173,7 +173,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
     //   const d = String(e);
     //   return new Value(`${s}${m}e${c}${d}`);
     // }
-    return surroundingAgent.Throw('Error', 'Number.prototype.toPrecision is not fully implemented');
+    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toPrecision is not fully implemented');
   }
   if (e === p - 1) {
     return new Value(`${s}${m}`);

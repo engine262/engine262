@@ -1,14 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import {
-  Assert,
-  Call,
-  CreateBuiltinFunction,
-  CreateIterResultObject,
-  GetGeneratorKind,
-  NewPromiseCapability,
-  PerformPromiseThen,
-  PromiseResolve,
-} from './all.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import {
   Q, X,
@@ -19,7 +9,17 @@ import {
   AbruptCompletion,
 } from '../completion.mjs';
 import { Value, Type } from '../value.mjs';
-import { resume, handleInResume, msg } from '../helpers.mjs';
+import { resume, handleInResume } from '../helpers.mjs';
+import {
+  Assert,
+  Call,
+  CreateBuiltinFunction,
+  CreateIterResultObject,
+  GetGeneratorKind,
+  NewPromiseCapability,
+  PerformPromiseThen,
+  PromiseResolve,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 25.5 #sec-asyncgenerator-objects
@@ -157,7 +157,7 @@ export function AsyncGeneratorEnqueue(generator, completion) {
   Assert(completion instanceof Completion);
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
-    const badGeneratorError = surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'AsyncGenerator', generator)).Value;
+    const badGeneratorError = surroundingAgent.Throw('TypeError', 'NotATypeObject', 'AsyncGenerator', generator).Value;
     X(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]));
     return promiseCapability.Promise;
   }

@@ -13,7 +13,6 @@ import {
   PrepareForTailCall,
   SameValue,
 } from '../abstract-ops/all.mjs';
-import { ArgumentListEvaluation, ArgumentListEvaluation_Arguments } from './all.mjs';
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import {
   AbruptCompletion,
@@ -21,7 +20,8 @@ import {
   Q,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { msg } from '../helpers.mjs';
+import { ArgumentListEvaluation, ArgumentListEvaluation_Arguments } from './all.mjs';
+
 
 export function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
@@ -37,10 +37,10 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   }
   const argList = Q(yield* ArgumentListEvaluation(args));
   if (Type(func) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   if (tailPosition) {
     PrepareForTailCall();

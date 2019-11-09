@@ -53,17 +53,17 @@ import {
   IsDestructuring_ForDeclaration,
   IsDestructuring_LeftHandSideExpression,
 } from '../static-semantics/all.mjs';
-import {
-  BindingInitialization_ForBinding,
-  BindingInitialization_ForDeclaration,
-  DestructuringAssignmentEvaluation_AssignmentPattern,
-} from './all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
   DeclarativeEnvironmentRecord,
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import { ValueSet, OutOfRange } from '../helpers.mjs';
+import {
+  BindingInitialization_ForBinding,
+  BindingInitialization_ForDeclaration,
+  DestructuringAssignmentEvaluation_AssignmentPattern,
+} from './all.mjs';
 
 // 13.7.1.2 #sec-loopcontinues
 function LoopContinues(completion, labelSet) {

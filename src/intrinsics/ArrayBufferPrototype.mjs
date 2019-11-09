@@ -11,7 +11,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 // 24.1.4.1 #sec-get-arraybuffer.prototype.bytelength
@@ -19,10 +18,10 @@ function ArrayBufferProto_byteLengthGetter(args, { thisValue }) {
   const O = thisValue;
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   if (IsSharedArrayBuffer(O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', O);
   }
   if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const length = O.ArrayBufferByteLength;
   return length;
@@ -33,10 +32,10 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   const O = thisValue;
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   if (IsSharedArrayBuffer(O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', O);
   }
   if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const len = O.ArrayBufferByteLength.numberValue();
   const relativeStart = Q(ToInteger(start)).numberValue();
@@ -62,19 +61,19 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   const neww = Q(Construct(ctor, [new Value(newLen)]));
   if (!('ArrayBufferData' in neww) || IsSharedArrayBuffer(neww) === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'ArrayBuffer', neww));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', neww);
   }
   if (IsDetachedBuffer(neww)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   if (SameValue(neww, O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('SubclassSameValue', neww));
+    return surroundingAgent.Throw('TypeError', 'SubclassSameValue', neww);
   }
   if (neww.ArrayBufferByteLength.numberValue() < newLen) {
-    return surroundingAgent.Throw('TypeError', msg('SubclassLengthTooSmall', neww));
+    return surroundingAgent.Throw('TypeError', 'SubclassLengthTooSmall', neww);
   }
   if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const fromBuf = O.ArrayBufferData;
   const toBuf = neww.ArrayBufferData;

@@ -29,7 +29,6 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { assignProps } from './Bootstrap.mjs';
 import { ArrayProto_sortBody, CreateArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
@@ -46,7 +45,7 @@ function ArrayProto_concat(args, { thisValue }) {
       let k = 0;
       const len = Q(LengthOfArrayLike(E)).numberValue();
       if (n + len > (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+        return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
       }
       while (k < len) {
         const P = X(ToString(new Value(k)));
@@ -61,7 +60,7 @@ function ArrayProto_concat(args, { thisValue }) {
       }
     } else {
       if (n >= (2 ** 53) - 1) {
-        return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+        return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
       }
       const nStr = X(ToString(new Value(n)));
       Q(CreateDataPropertyOrThrow(A, nStr, E));
@@ -170,7 +169,7 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue 
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O)).numberValue();
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', callbackfn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const T = thisArg || Value.undefined;
   const A = Q(ArraySpeciesCreate(O, new Value(0)));
@@ -249,7 +248,7 @@ function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg], { thisV
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O)).numberValue();
   if (X(IsCallable(mapperFunction)) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
   }
   let T;
   if (thisArg) {
@@ -273,7 +272,7 @@ function ArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) 
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const T = thisArg || Value.undefined;
   const A = Q(ArraySpeciesCreate(O, len));
@@ -314,7 +313,7 @@ function ArrayProto_push(items, { thisValue }) {
   let len = Q(LengthOfArrayLike(O)).numberValue();
   const argCount = items.length;
   if (len + argCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
   }
   while (items.length > 0) {
     const E = items.shift();
@@ -396,7 +395,7 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
 // 22.1.3.27 #sec-array.prototype.sort
 function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', comparefn));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   const obj = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(obj));
@@ -430,7 +429,7 @@ function ArrayProto_splice(args, { thisValue }) {
     actualDeleteCount = Math.min(Math.max(dc, 0), len - actualStart);
   }
   if (len + insertCount - actualDeleteCount > (2 ** 53) - 1) {
-    return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
   }
   const A = Q(ArraySpeciesCreate(O, new Value(actualDeleteCount)));
   let k = 0;
@@ -506,7 +505,7 @@ function ArrayProto_unshift(args, { thisValue }) {
   const argCount = args.length;
   if (argCount > 0) {
     if (len + argCount > (2 ** 53) - 1) {
-      return surroundingAgent.Throw('TypeError', msg('ArrayPastSafeLength'));
+      return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
     }
     let k = len;
     while (k > 0) {

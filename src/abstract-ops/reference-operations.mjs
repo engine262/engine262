@@ -1,10 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import {
-  Assert,
-  GetGlobalObject,
-  ToObject,
-  Set,
-} from './all.mjs';
 import { PrimitiveValue, Type, Value } from '../value.mjs';
 import {
   NormalCompletion,
@@ -12,7 +6,13 @@ import {
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+import {
+  Assert,
+  GetGlobalObject,
+  ToObject,
+  Set,
+} from './all.mjs';
+
 
 // 6.2.4.1 #sec-getbase
 export function GetBase(V) {
@@ -73,7 +73,7 @@ export function GetValue(V) {
   }
   let base = GetBase(V);
   if (IsUnresolvableReference(V) === Value.true) {
-    return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
+    return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
   }
   if (IsPropertyReference(V) === Value.true) {
     if (HasPrimitiveBase(V) === Value.true) {
@@ -96,7 +96,7 @@ export function PutValue(V, W) {
   let base = GetBase(V);
   if (IsUnresolvableReference(V) === Value.true) {
     if (IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', msg('NotDefined', GetReferencedName(V)));
+      return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
     }
     const globalObj = GetGlobalObject();
     return Q(Set(globalObj, GetReferencedName(V), W, Value.false));
@@ -107,7 +107,7 @@ export function PutValue(V, W) {
     }
     const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
     if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('TypeError', msg('CannotSetProperty', GetReferencedName(V), base));
+      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', GetReferencedName(V), base);
     }
     return new NormalCompletion(Value.undefined);
   } else {

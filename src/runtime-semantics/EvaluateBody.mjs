@@ -61,13 +61,13 @@ import {
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { Value } from '../value.mjs';
 import {
   Evaluate_ExpressionBody,
   Evaluate_FunctionStatementList,
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
-import { Value } from '../value.mjs';
 
 // 9.2.15 #sec-functiondeclarationinstantiation
 export function* FunctionDeclarationInstantiation(func, argumentsList) {

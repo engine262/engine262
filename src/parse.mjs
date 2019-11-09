@@ -38,7 +38,7 @@ const optionalChainToken = { label: '?.' };
 const nullishCoalescingToken = { label: '??', binop: 0 };
 const skipWhiteSpace = /(?:\s|\/\/.*|\/\*[^]*?\*\/)*/g;
 
-const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
+const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
   constructor(options = {}, source) {
     super({
       ...options,
@@ -304,7 +304,7 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
 
     return body;
   }
-});
+}));
 
 export function ParseAsFunctionBody(sourceText) {
   return Parser.parseFunctionBody(sourceText, false, false);
@@ -364,7 +364,7 @@ function forwardError(fn) {
     return fn();
   } catch (e) {
     if (e.name === 'SyntaxError') {
-      return [surroundingAgent.Throw('SyntaxError', e.message).Value];
+      return [surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value];
     } else {
       throw e;
     }

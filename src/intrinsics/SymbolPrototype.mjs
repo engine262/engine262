@@ -22,7 +22,7 @@ function thisSymbolValue(value) {
     Assert(Type(s) === 'Symbol');
     return s;
   }
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Symbol', value);
 }
 
 function SymbolProto_toString(argList, { thisValue }) {

@@ -9,9 +9,9 @@ import { GetValue, Assert } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
-import { EvaluateCall, EvaluateStaticPropertyAccess, EvaluateDynamicPropertyAccess } from './all.mjs';
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { EvaluateCall, EvaluateStaticPropertyAccess, EvaluateDynamicPropertyAccess } from './all.mjs';
 
 // https://tc39.es/proposal-optional-chaining/#prod-OptionalExpression
 // OptionalExpression :

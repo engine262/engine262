@@ -9,6 +9,7 @@ import { Assert } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
+
 function thisBooleanValue(value) {
   if (Type(value) === 'Boolean') {
     return value;
@@ -20,7 +21,7 @@ function thisBooleanValue(value) {
     return b;
   }
 
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
 }
 
 function BooleanProto_toString(argList, { thisValue }) {

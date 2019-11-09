@@ -6,8 +6,7 @@ import { X } from '../completion.mjs';
 // https://tc39.es/ecma262/#sec-%throwtypeerror%
 export function CreateThrowTypeError(realmRec) {
   const ThrowTypeError = X(CreateBuiltinFunction(
-    () => surroundingAgent.Throw('TypeError', 'The caller, callee, and arguments properties may'
-      + ' not be accessed on strict mode functions or the arguments objects for calls to them'),
+    () => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'),
     [], realmRec, Value.null,
   ));
 

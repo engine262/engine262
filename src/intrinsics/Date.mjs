@@ -12,12 +12,12 @@ import {
   TimeClip,
 } from '../abstract-ops/all.mjs';
 import { Value, Type } from '../value.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
-import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 import {
   AbruptCompletion,
   Q, X,
 } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
+import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 
 function DateConstructor(args, { NewTarget }) {
   const numberOfArgs = args.length;

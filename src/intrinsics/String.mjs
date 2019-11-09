@@ -63,10 +63,10 @@ function String_fromCodePoint(codePoints) {
     const next = codePoints[nextIndex];
     const nextCP = Q(ToNumber(next));
     if (X(IsInteger(nextCP)) === Value.false) {
-      return surroundingAgent.Throw('RangeError');
+      return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
     if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
-      return surroundingAgent.Throw('RangeError');
+      return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
     elements.push(...UTF16Encoding(nextCP.numberValue()));
     nextIndex += 1;

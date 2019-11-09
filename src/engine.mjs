@@ -19,7 +19,8 @@ import {
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
-import { CallSite, msg } from './helpers.mjs';
+import { CallSite } from './helpers.mjs';
+import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
@@ -90,10 +91,25 @@ export class Agent {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
-  Throw(type, message) {
+  Throw(type, template, ...templateArgs) {
+    if (type instanceof Value) {
+      return new ThrowCompletion(type);
+    }
+
+    if (!template) {
+      throw new RangeError('Throw must use a message template');
+    }
+    const tfn = messages[template];
+    if (!tfn) {
+      throw new RangeError(`'${template}' is not a valid message template`);
+    }
+    if (tfn.length !== templateArgs.length) {
+      throw new RangeError(`Template '${template}' was passed the wrong number of arguments`);
+    }
+    const message = tfn(...templateArgs);
+
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    const error = Construct(cons, message ? [new Value(message)] : []);
-    error.hostTrace = new Error().stack;
+    const error = Construct(cons, [new Value(message)]);
     return new ThrowCompletion(error);
   }
 
@@ -320,7 +336,7 @@ export function HostResolveImportedModule(referencingScriptOrModule, specifier) 
     }
     return apiModule.module;
   }
-  return surroundingAgent.Throw('Error', msg('CouldNotResolveModule', specifier));
+  return surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier);
 }
 
 function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {

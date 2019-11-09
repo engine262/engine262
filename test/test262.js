@@ -2,7 +2,7 @@
 
 /* eslint-disable no-inner-declarations */
 
-// require('@snek/source-map-support/register');
+require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
 
@@ -344,7 +344,11 @@ if (!process.send) {
           process.send({ file: test.file, status: 'FAIL', error: e.stack || e });
           process.exit(1);
         })
-        .then((r) => process.send({ file: test.file, ...r }));
+        .then((r) => process.send({ file: test.file, ...r }, (e) => {
+          if (e) {
+            process.exit(1);
+          }
+        }));
     }
   });
 }

@@ -1,7 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, Type } from '../value.mjs';
 import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
-import { msg } from '../helpers.mjs';
 
 export function Assert(invariant, source) {
   if (!invariant) {
@@ -12,10 +11,10 @@ export function Assert(invariant, source) {
 // 9.1.15 #sec-requireinternalslot
 export function RequireInternalSlot(O, internalSlot) {
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAnObject', O));
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   if (!(internalSlot in O)) {
-    return surroundingAgent.Throw('TypeError', msg('InternalSlotMissing', O, internalSlot));
+    return surroundingAgent.Throw('TypeError', 'InternalSlotMissing', O, internalSlot);
   }
 }
 

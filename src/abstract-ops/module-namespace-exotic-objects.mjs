@@ -6,11 +6,11 @@ import {
   ModuleNamespaceExoticObjectValue,
   Descriptor,
 } from '../value.mjs';
+import { ValueSet } from '../helpers.mjs';
 import {
   Assert,
   SortCompare,
 } from './all.mjs';
-import { ValueSet } from '../helpers.mjs';
 
 // 9.4.6.11 #sec-modulenamespacecreate
 export function ModuleNamespaceCreate(module, exports) {

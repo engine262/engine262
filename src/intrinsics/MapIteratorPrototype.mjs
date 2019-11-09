@@ -5,17 +5,17 @@ import {
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
 import { X } from '../completion.mjs';
+import { BootstrapPrototype } from './Bootstrap.mjs';
+
 
 function MapIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
   }
   if (!('Map' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'Map Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
   }
   const m = O.Map;
   let index = O.MapNextIndex;

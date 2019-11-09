@@ -24,10 +24,10 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
-import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { Q, X } from '../completion.mjs';
+import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 function thisStringValue(value) {
   if (Type(value) === 'String') {
@@ -38,7 +38,7 @@ function thisStringValue(value) {
     Assert(Type(s) === 'String');
     return s;
   }
-  return surroundingAgent.Throw('TypeError');
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
 }
 
 // 21.1.3.1 #sec-string.prototype.charat
@@ -97,7 +97,7 @@ function StringProto_endsWith([searchString = Value.undefined, endPosition = Val
   const S = Q(ToString(O)).stringValue();
   const isRegExp = Q(IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.endsWith'));
+    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.endsWith');
   }
   const searchStr = Q(ToString(searchString)).stringValue();
   const len = S.length;
@@ -127,7 +127,7 @@ function StringProto_includes([searchString = Value.undefined, position = Value.
   const S = Q(ToString(O)).stringValue();
   const isRegExp = Q(IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.includes'));
+    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.includes');
   }
   const searchStr = Q(ToString(searchString)).stringValue();
   const pos = Q(ToInteger(position));
@@ -267,7 +267,7 @@ function StringProto_normalize([form], { thisValue }) {
   }
   const f = Q(ToString(form)).stringValue();
   if (!['NFC', 'NFD', 'NFKC', 'NFKD'].includes(f)) {
-    return surroundingAgent.Throw('RangeError');
+    return surroundingAgent.Throw('RangeError', 'NormalizeInvalidForm');
   }
   const ns = S.stringValue().normalize(f);
   return new Value(ns);
@@ -291,10 +291,10 @@ function StringProto_repeat([count = Value.undefined], { thisValue }) {
   const S = Q(ToString(O));
   const n = Q(ToInteger(count));
   if (n.numberValue() < 0) {
-    return surroundingAgent.Throw('RangeError', msg('StringRepeatCount', n));
+    return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
   if (n.isInfinity()) {
-    return surroundingAgent.Throw('RangeError', msg('StringRepeatCount', n));
+    return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
   if (n.numberValue() === 0) {
     return new Value('');
@@ -466,7 +466,7 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
   const S = Q(ToString(O)).stringValue();
   const isRegExp = Q(IsRegExp(searchString));
   if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', msg('RegExpArgumentNotAllowed', 'String.prototype.startsWith'));
+    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
   }
   const searchStr = Q(ToString(searchString)).stringValue();
   const pos = Q(ToInteger(position)).numberValue();

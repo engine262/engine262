@@ -1,5 +1,5 @@
-import { Assert } from './all.mjs';
 import { Type, Value } from '../value.mjs';
+import { Assert } from './all.mjs';
 
 // 19.4.3.3.1 #sec-symboldescriptivestring
 export function SymbolDescriptiveString(sym) {

@@ -1,9 +1,4 @@
 import {
-  Evaluate_PropertyName,
-  KeyedBindingInitialization_BindingElement,
-  KeyedBindingInitialization_SingleNameBinding,
-} from './all.mjs';
-import {
   isBindingPropertyWithColon,
   isBindingPropertyWithSingleNameBinding,
 } from '../ast.mjs';
@@ -13,6 +8,11 @@ import {
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { Value } from '../value.mjs';
+import {
+  Evaluate_PropertyName,
+  KeyedBindingInitialization_BindingElement,
+  KeyedBindingInitialization_SingleNameBinding,
+} from './all.mjs';
 
 // 13.3.3.6 #sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 //   BindingPropertyList : BindingPropertyList `,` BindingProperty

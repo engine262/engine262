@@ -116,14 +116,14 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   try {
     body = bodyParser(bodyText);
   } catch (err) {
-    return surroundingAgent.Throw('SyntaxError', err.message);
+    return surroundingAgent.Throw('SyntaxError', 'Raw', err.message);
   }
   const strict = ContainsUseStrict_FunctionBody(body);
   let parameters;
   try {
     parameters = ParseAsFormalParameters(P, strict, enableAwait, enableYield);
   } catch (err) {
-    return surroundingAgent.Throw('SyntaxError', err.message);
+    return surroundingAgent.Throw('SyntaxError', 'Raw', err.message);
   }
 
   // These steps are included in ParseAsFormalParameters:
@@ -141,7 +141,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 22. If any element of the BoundNames of parameters also occurs in the LexicallyDeclaredNames of body, throw a SyntaxError exception.
   const intersected = hasIntersection(BoundNames_FormalParameters(parameters), LexicallyDeclaredNames_FunctionBody(body));
   if (intersected !== false) {
-    return surroundingAgent.Throw('SyntaxError', `Identifier '${intersected}' is already declared`);
+    return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', intersected);
   }
 
   const fabricatedFunctionNode = {

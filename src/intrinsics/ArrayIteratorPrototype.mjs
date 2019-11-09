@@ -15,18 +15,17 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function ArrayIteratorPrototype_next(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'Array Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
   }
   if (!('IteratedObject' in O)
       || !('ArrayIteratorNextIndex' in O)
       || !('ArrayIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', msg('NotAnTypeObject', 'Array Iterator', O));
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
   }
   const a = O.IteratedObject;
   if (Type(a) === 'Undefined') {
@@ -37,7 +36,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   let len;
   if ('TypedArrayName' in a) {
     if (IsDetachedBuffer(a.ViewedArrayBuffer)) {
-      return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+      return surroundingAgent.Throw('TypeError', 'BufferDetached');
     }
     len = a.ArrayLength;
   } else {

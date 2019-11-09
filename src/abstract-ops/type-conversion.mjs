@@ -9,6 +9,8 @@ import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
+import { Q, X } from '../completion.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   Assert,
   Call,
@@ -20,8 +22,6 @@ import {
   SameValueZero,
   StringCreate,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange, msg } from '../helpers.mjs';
 
 // 7.1.1 #sec-toprimitive
 export function ToPrimitive(input, PreferredType) {
@@ -42,7 +42,7 @@ export function ToPrimitive(input, PreferredType) {
       if (Type(result) !== 'Object') {
         return result;
       }
-      return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
+      return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
     }
     if (hint.stringValue() === 'default') {
       hint = new Value('number');
@@ -71,7 +71,7 @@ export function OrdinaryToPrimitive(O, hint) {
       }
     }
   }
-  return surroundingAgent.Throw('TypeError', msg('ObjectToPrimitive'));
+  return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 }
 
 // 7.1.2 #sec-toboolean
@@ -138,9 +138,9 @@ export function ToNumber(argument) {
     case 'String':
       return MV_StringNumericLiteral(argument.stringValue());
     case 'BigInt':
-      return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
+      return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'number'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
     case 'Object': {
       const primValue = Q(ToPrimitive(argument, 'Number'));
       return Q(ToNumber(primValue));
@@ -277,10 +277,10 @@ export function ToBigInt(argument) {
   switch (Type(prim)) {
     case 'Undefined':
       // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', prim));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
     case 'Null':
       // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', argument));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', argument);
     case 'Boolean':
       // Return 1n if prim is true and 0n if prim is false.
       if (prim === Value.true) {
@@ -292,19 +292,19 @@ export function ToBigInt(argument) {
       return prim;
     case 'Number':
       // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToBigInt', prim));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
     case 'String': {
       // 1. Let n be ! StringToBigInt(prim).
       const n = X(StringToBigInt(prim));
       // 2. If n is NaN, throw a SyntaxError exception.
       if (Number.isNaN(n)) {
-        return surroundingAgent.Throw('SyntaxError');
+        return surroundingAgent.Throw('SyntaxError', 'CannotConvertToBigInt', prim);
       }
       // 3. Return n.
       return n;
     }
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'bigint'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
     default:
       throw new OutOfRange('ToBigInt', argument);
   }
@@ -362,7 +362,7 @@ export function ToString(argument) {
     case 'String':
       return argument;
     case 'Symbol':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertSymbol', 'string'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
     case 'BigInt':
       // Return ! BigInt::toString(argument).
       return X(BigIntValue.toString(argument));
@@ -380,9 +380,9 @@ export function ToObject(argument) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'undefined'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
     case 'Null':
-      return surroundingAgent.Throw('TypeError', msg('CannotConvertToObject', 'null'));
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
     case 'Boolean': {
       const obj = ObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
       obj.BooleanData = argument;
@@ -451,11 +451,11 @@ export function ToIndex(value) {
   } else {
     const integerIndex = Q(ToInteger(value));
     if (integerIndex.numberValue() < 0) {
-      return surroundingAgent.Throw('RangeError', msg('NegativeIndex'));
+      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     index = X(ToLength(integerIndex));
     if (SameValueZero(integerIndex, index) === Value.false) {
-      return surroundingAgent.Throw('RangeError', msg('OutOfRange', 'Index'));
+      return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
   }
   return index;

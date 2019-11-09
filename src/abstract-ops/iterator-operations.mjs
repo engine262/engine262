@@ -1,16 +1,3 @@
-import {
-  Assert,
-  Call,
-  CreateBuiltinFunction,
-  CreateDataProperty,
-  Get,
-  GetMethod,
-  GetV,
-  PromiseResolve,
-  ObjectCreate,
-  PerformPromiseThen,
-  ToBoolean,
-} from './all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
   Type,
@@ -24,6 +11,19 @@ import {
   Q, X,
   Await,
 } from '../completion.mjs';
+import {
+  Assert,
+  Call,
+  CreateBuiltinFunction,
+  CreateDataProperty,
+  Get,
+  GetMethod,
+  GetV,
+  PromiseResolve,
+  ObjectCreate,
+  PerformPromiseThen,
+  ToBoolean,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 7.4 #sec-operations-on-iterator-objects
@@ -50,8 +50,7 @@ export function GetIterator(obj, hint, method) {
   }
   const iterator = Q(Call(method, obj));
   if (Type(iterator) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
   }
   const nextMethod = Q(GetV(iterator, new Value('next')));
   const iteratorRecord = {
@@ -71,8 +70,7 @@ export function IteratorNext(iteratorRecord, value) {
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
   if (Type(result) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', result);
   }
   return EnsureCompletion(result);
 }
@@ -118,8 +116,7 @@ export function IteratorClose(iteratorRecord, completion) {
     return Completion(innerResult);
   }
   if (Type(innerResult.Value) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   return Completion(completion);
 }
@@ -144,8 +141,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
     return Completion(innerResult);
   }
   if (Type(innerResult.Value) !== 'Object') {
-    // TODO: throw with an error message
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   return Completion(completion);
 }

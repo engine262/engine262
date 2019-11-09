@@ -6,6 +6,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
 import {
   AbstractRelationalComparison,
   Assert,
@@ -25,8 +26,6 @@ import {
   ToString,
   ToUint32,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 
 // This file covers abstract operations defined in
 // 9.4.2 #sec-array-exotic-objects
@@ -40,7 +39,7 @@ export function ArrayCreate(length, proto) {
     length = new Value(0);
   }
   if (length.numberValue() > (2 ** 32) - 1) {
-    return surroundingAgent.Throw('RangeError');
+    return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', length);
   }
   if (proto === undefined) {
     proto = surroundingAgent.intrinsic('%Array.prototype%');
@@ -89,7 +88,7 @@ export function ArraySpeciesCreate(originalArray, length) {
     return Q(ArrayCreate(length));
   }
   if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   return Q(Construct(C, [length]));
 }
@@ -103,7 +102,7 @@ export function ArraySetLength(A, Desc) {
   const newLen = Q(ToUint32(Desc.Value)).numberValue();
   const numberLen = Q(ToNumber(Desc.Value)).numberValue();
   if (newLen !== numberLen) {
-    return surroundingAgent.Throw('RangeError', 'Invalid array length');
+    return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
   newLenDesc.Value = new Value(newLen);
   const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));

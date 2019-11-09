@@ -1,9 +1,4 @@
 import {
-  Assert,
-  CreateIterResultObject,
-  RequireInternalSlot,
-} from './all.mjs';
-import {
   AbruptCompletion, Completion,
   EnsureCompletion,
   NormalCompletion,
@@ -14,6 +9,11 @@ import { surroundingAgent } from '../engine.mjs';
 import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
+import {
+  Assert,
+  CreateIterResultObject,
+  RequireInternalSlot,
+} from './all.mjs';
 
 // This file covers abstract operations defined in
 // 25.4 #sec-generator-objects
@@ -50,7 +50,7 @@ export function GeneratorValidate(generator) {
   Assert('GeneratorContext' in generator);
   const state = generator.GeneratorState;
   if (state === 'executing') {
-    return surroundingAgent.Throw('TypeError', 'Cannot manipulate an executing generator');
+    return surroundingAgent.Throw('TypeError', 'GeneratorRunning');
   }
   return state;
 }

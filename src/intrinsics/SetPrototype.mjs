@@ -77,7 +77,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }
   const S = thisValue;
   Q(RequireInternalSlot(S, 'SetData'));
   if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let T;
   if (thisArg !== undefined) {

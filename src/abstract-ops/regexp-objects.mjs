@@ -5,14 +5,14 @@ import {
   Descriptor,
   Value,
 } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   Set,
   ToString,
 } from './all.mjs';
-import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+
 
 // 21.2.3.2.1 #sec-regexpalloc
 export function RegExpAlloc(newTarget) {
@@ -43,7 +43,7 @@ export function RegExpInitialize(obj, pattern, flags) {
 
   const f = F.stringValue();
   if (/^[gimsuy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
-    return surroundingAgent.Throw('SyntaxError', msg('InvalidRegExpFlags', f));
+    return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
 
   const BMP = !f.includes('u');
@@ -58,7 +58,7 @@ export function RegExpInitialize(obj, pattern, flags) {
     new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
   } catch (e) {
     if (e instanceof SyntaxError) {
-      return surroundingAgent.Throw('SyntaxError', e.message);
+      return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
     }
     throw e;
   }

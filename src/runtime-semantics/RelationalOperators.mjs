@@ -23,14 +23,14 @@ import { OutOfRange } from '../helpers.mjs';
 
 export function InstanceofOperator(V, target) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const instOfHandler = Q(GetMethod(target, wellKnownSymbols.hasInstance));
   if (Type(instOfHandler) !== 'Undefined') {
     return ToBoolean(Q(Call(instOfHandler, target, [V])));
   }
   if (IsCallable(target) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   return Q(OrdinaryHasInstance(target, V));
 }
@@ -84,7 +84,7 @@ export function* Evaluate_RelationalExpression({
 
     case 'in':
       if (Type(rval) !== 'Object') {
-        return surroundingAgent.Throw('TypeError', 'cannot check for property in non-object');
+        return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
       }
       return Q(HasProperty(rval, ToPropertyKey(lval)));
 

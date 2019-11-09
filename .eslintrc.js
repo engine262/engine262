@@ -42,6 +42,7 @@ module.exports = {
     'import/extensions': 'off',
     'import/prefer-default-export': 'off',
     'import/no-mutable-exports': 'off',
+    'import/order': ['error', { 'newlines-between': 'never' }],
     'global-require': 'off',
   },
 };

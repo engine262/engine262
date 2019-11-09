@@ -13,8 +13,8 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
 import { Q } from '../completion.mjs';
+import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 21.2.3 #sec-regexp-constructor
 function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], { NewTarget }) {

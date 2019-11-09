@@ -16,7 +16,7 @@ import {
   TypeNumeric,
   Value,
 } from '../value.mjs';
-import { msg, OutOfRange } from '../helpers.mjs';
+import { OutOfRange } from '../helpers.mjs';
 
 export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   const lprim = Q(ToPrimitive(lval));
@@ -29,7 +29,7 @@ export function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   const lnum = Q(ToNumeric(lprim));
   const rnum = Q(ToNumeric(rprim));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
+    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
   const T = TypeNumeric(lnum);
   return T.add(lnum, rnum);
@@ -49,7 +49,7 @@ export function EvaluateBinopValues_AdditiveExpression_Minus(lval, rval) {
   const lnum = Q(ToNumeric(lval));
   const rnum = Q(ToNumeric(rval));
   if (Type(lnum) !== Type(rnum)) {
-    return surroundingAgent.Throw('TypeError', msg('CannotMixBigInts'));
+    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
   const T = TypeNumeric(lnum);
   return T.subtract(lnum, rnum);

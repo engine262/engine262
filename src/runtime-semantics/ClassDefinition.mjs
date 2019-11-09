@@ -13,11 +13,6 @@ import {
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import {
-  DefineMethod,
-  InitializeBoundName,
-  PropertyDefinitionEvaluation_ClassElement,
-} from './all.mjs';
 import { Type, Value } from '../value.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import {
@@ -31,6 +26,11 @@ import {
   NormalCompletion,
   Q, X,
 } from '../completion.mjs';
+import {
+  DefineMethod,
+  InitializeBoundName,
+  PropertyDefinitionEvaluation_ClassElement,
+} from './all.mjs';
 
 // 14.6.13 #sec-runtime-semantics-classdefinitionevaluation
 //   ClassTail : ClassHeritage `{` ClassBody `}`
@@ -55,11 +55,11 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
       protoParent = Value.null;
       constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
     } else if (IsConstructor(superclass) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else {
       protoParent = Q(Get(superclass, new Value('prototype')));
       if (Type(protoParent) !== 'Object' && Type(protoParent) !== 'Null') {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
       }
       constructorParent = superclass;
     }

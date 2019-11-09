@@ -1,6 +1,5 @@
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
 import { Value, wellKnownSymbols } from '../value.mjs';
 import {
   Assert,
@@ -20,19 +19,19 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 22.2.1 #sec-%typedarray%-intrinsic-object
 function TypedArrayConstructor() {
-  return surroundingAgent.Throw('TypeError', '%TypedArray% is not directly constructable');
+  return surroundingAgent.Throw('TypeError', 'NotAConstructor', surroundingAgent.activeFunctionObject);
 }
 
 // 22.2.2.1 #sec-%typedarray%.from
 function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue }) {
   const C = thisValue;
   if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   let mapping;
   if (mapfn !== undefined && mapfn !== Value.undefined) {
     if (IsCallable(mapfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError', msg('NotAFunction', mapfn));
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     mapping = true;
   } else {
@@ -87,7 +86,7 @@ function TypedArray_of(items, { thisValue }) {
   const len = items.length;
   const C = thisValue;
   if (IsConstructor(C) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', C));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   const newObj = Q(TypedArrayCreate(C, [new Value(len)]));
   let k = 0;

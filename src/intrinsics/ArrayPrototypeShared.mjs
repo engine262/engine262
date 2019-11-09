@@ -136,7 +136,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp));
     if (IsCallable(callbackFn) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
     let T;
     if (thisArg !== undefined) {
@@ -168,7 +168,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(predicate) === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     const T = thisArg || Value.undefined;
     let k = 0;
@@ -192,7 +192,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(predicate) === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'predicate is not callable');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     const T = thisArg || Value.undefined;
     let k = 0;
@@ -216,7 +216,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(callbackfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'callbackfn is not callable');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     const T = thisArg || Value.undefined;
     let k = 0;
@@ -393,10 +393,10 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(callbackfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
-      return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
+      return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = 0;
     let accumulator = Value.undefined;
@@ -413,7 +413,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
         k += 1;
       }
       if (kPresent === false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
       }
     }
     while (k < len) {
@@ -436,10 +436,10 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(callbackfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
-      return surroundingAgent.Throw('TypeError', 'Reduce of empty array with no initial value');
+      return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = len - 1;
     let accumulator = Value.undefined;
@@ -456,7 +456,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
         k -= 1;
       }
       if (kPresent === false) {
-        return surroundingAgent.Throw('TypeError');
+        return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
       }
     }
     while (k >= 0) {
@@ -519,7 +519,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     const lenProp = Q(objectToLength(O));
     const len = Q(ToLength(lenProp)).numberValue();
     if (IsCallable(callbackfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let T;
     if (thisArg !== undefined) {

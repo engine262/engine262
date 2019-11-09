@@ -6,6 +6,9 @@ import {
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
 import {
+  Q, X, NormalCompletion, ThrowCompletion,
+} from '../completion.mjs';
+import {
   Assert,
   ModuleNamespaceCreate,
   NewPromiseCapability,
@@ -13,9 +16,6 @@ import {
   CreateBuiltinFunction,
   Call,
 } from './all.mjs';
-import {
-  Q, X, NormalCompletion, ThrowCompletion,
-} from '../completion.mjs';
 
 // 15.2.1.16.1.1 #sec-InnerModuleLinking
 export function InnerModuleLinking(module, stack, index) {

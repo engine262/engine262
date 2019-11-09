@@ -1,3 +1,6 @@
+import { Q, X, NormalCompletion } from '../completion.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Value, Type } from '../value.mjs';
 import {
   Assert,
   CreateByteDataBlock,
@@ -7,10 +10,6 @@ import {
   SameValue,
   numericTypeInfo,
 } from './all.mjs';
-import { Q, X, NormalCompletion } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { msg } from '../helpers.mjs';
-import { Value, Type } from '../value.mjs';
 
 // This file covers abstract operations defined in
 // 24.1 #sec-arraybuffer-objects
@@ -45,7 +44,7 @@ export function DetachArrayBuffer(arrayBuffer, key) {
     key = Value.undefined;
   }
   if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetachKeyMismatch', key, arrayBuffer));
+    return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
   }
   arrayBuffer.ArrayBufferData = Value.null;
   arrayBuffer.ArrayBufferByteLength = new Value(0);
@@ -58,7 +57,7 @@ export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConst
   Assert(IsConstructor(cloneConstructor) === Value.true);
   const targetBuffer = Q(AllocateArrayBuffer(cloneConstructor, srcLength));
   if (IsDetachedBuffer(srcBuffer)) {
-    return surroundingAgent.Throw('TypeError', msg('BufferDetached'));
+    return surroundingAgent.Throw('TypeError', 'BufferDetached');
   }
   const srcBlock = srcBuffer.ArrayBufferData;
   const targetBlock = targetBuffer.ArrayBufferData;

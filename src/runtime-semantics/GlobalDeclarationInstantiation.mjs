@@ -18,9 +18,6 @@ import {
   VarScopedDeclarations_ScriptBody,
 } from '../static-semantics/all.mjs';
 import {
-  InstantiateFunctionObject,
-} from './all.mjs';
-import {
   isAsyncFunctionDeclaration,
   isAsyncGeneratorDeclaration,
   isBindingIdentifier,
@@ -34,7 +31,10 @@ import {
   NormalCompletion,
   Q,
 } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
+import {
+  InstantiateFunctionObject,
+} from './all.mjs';
+
 
 // 15.1.11 #sec-globaldeclarationinstantiation
 export function GlobalDeclarationInstantiation(script, env) {
@@ -46,20 +46,20 @@ export function GlobalDeclarationInstantiation(script, env) {
 
   for (const name of lexNames) {
     if (envRec.HasVarDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
+      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     if (envRec.HasLexicalDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
+      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     const hasRestrictedGlobal = Q(envRec.HasRestrictedGlobalProperty(name));
     if (hasRestrictedGlobal === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
+      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
 
   for (const name of varNames) {
     if (envRec.HasLexicalDeclaration(name) === Value.true) {
-      return surroundingAgent.Throw('SyntaxError', msg('AlreadyDeclared', name));
+      return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
 
@@ -76,7 +76,7 @@ export function GlobalDeclarationInstantiation(script, env) {
       if (!declaredFunctionNames.includes(fn)) {
         const fnDefinable = Q(envRec.CanDeclareGlobalFunction(new Value(fn)));
         if (fnDefinable === Value.false) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
         }
         declaredFunctionNames.push(fn);
         functionsToInitialize.unshift(d);
@@ -100,7 +100,7 @@ export function GlobalDeclarationInstantiation(script, env) {
         if (!declaredFunctionNames.includes(vn)) {
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           if (vnDefinable === Value.false) {
-            return surroundingAgent.Throw('TypeError');
+            return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
           }
           if (!declaredVarNames.includes(vn)) {
             declaredVarNames.push(vn);

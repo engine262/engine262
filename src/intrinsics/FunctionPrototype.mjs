@@ -26,12 +26,11 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
 function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   if (Type(argArray) === 'Undefined' || Type(argArray) === 'Null') {
     PrepareForTailCall();
@@ -85,7 +84,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
 function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
   const Target = thisValue;
   if (IsCallable(Target) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', Target);
   }
   // Let args be a new (possibly empty) List consisting of all
   // of the argument values provided after thisArg in order.
@@ -114,7 +113,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
 
 function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue: func }) {
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   const argList = [];
   for (const arg of args) {
@@ -138,7 +137,7 @@ function FunctionProto_toString(args, { thisValue: func }) {
   if (Type(func) === 'Object' && IsCallable(func) === Value.true) {
     return new Value('function() { [native code] }');
   }
-  return surroundingAgent.Throw('TypeError', msg('NotAFunction', func));
+  return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 
 function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {

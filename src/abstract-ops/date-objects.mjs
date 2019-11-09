@@ -2,12 +2,12 @@
 // 20.3 #sec-date-objects
 
 import {
-  ToInteger,
-} from './all.mjs';
-import {
   Value,
 } from '../value.mjs';
 import { X } from '../completion.mjs';
+import {
+  ToInteger,
+} from './all.mjs';
 
 const mod = (n, m) => {
   const r = n % m;

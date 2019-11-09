@@ -15,8 +15,8 @@ import {
   IteratorStep,
   IteratorValue,
 } from '../abstract-ops/all.mjs';
-import { GetTemplateObject } from './all.mjs';
 import { Value } from '../value.mjs';
+import { GetTemplateObject } from './all.mjs';
 
 // 12.2.9.5 #sec-runtime-semantics-substitutionevaluation
 //   TemplateSpans :

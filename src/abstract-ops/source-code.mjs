@@ -1,10 +1,10 @@
+import { X } from '../completion.mjs';
+import { Value } from '../value.mjs';
 import {
   Assert,
   isLeadingSurrogate,
   isTrailingSurrogate,
 } from './all.mjs';
-import { X } from '../completion.mjs';
-import { Value } from '../value.mjs';
 
 // This file covers abstract operations defined in
 // 10 #sec-ecmascript-language-source-code

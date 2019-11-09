@@ -3,7 +3,6 @@ import { Type, Value } from '../value.mjs';
 import { Assert, ToInteger, ToString } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
 
 // #sec-thisbigintvalue
 function thisBigIntValue(value) {
@@ -19,7 +18,7 @@ function thisBigIntValue(value) {
     return value.BigIntData;
   }
   // 3. Throw a TypeError exception.
-  return surroundingAgent.Throw('TypeError', msg('NotATypeObject', 'BigInt', value));
+  return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'BigInt', value);
 }
 
 // #sec-bigint.prototype.tolocalestring
@@ -44,7 +43,7 @@ function BigIntProto_toString([radix], { thisValue }) {
   }
   // 5. If radixNumber < 2 or radixNumber > 36, throw a RangeError exception.
   if (radixNumber < 2 || radixNumber > 36) {
-    return surroundingAgent.Throw('RangeError');
+    return surroundingAgent.Throw('RangeError', 'InvalidRadix');
   }
   // 6. If radixNumber = 10, return ! ToString(x).
   if (radixNumber === 10) {

@@ -8,12 +8,12 @@ import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
+import { isAssignmentPattern } from '../ast.mjs';
+import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
 import {
   DestructuringAssignmentEvaluation_AssignmentPattern,
   NamedEvaluation_Expression,
 } from './all.mjs';
-import { isAssignmentPattern } from '../ast.mjs';
-import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
 
 // 12.15.4 #sec-assignment-operators-runtime-semantics-evaluation
 //   AssignmentExpression :

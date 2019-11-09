@@ -13,12 +13,11 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { msg } from '../helpers.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
   if (IsCallable(target) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'target is not callable');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   const args = Q(CreateListFromArrayLike(argumentsList));
   PrepareForTailCall();
@@ -27,12 +26,12 @@ function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined
 
 function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
   if (IsConstructor(target) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', target));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
   }
   if (newTarget === undefined) {
     newTarget = target;
   } else if (IsConstructor(newTarget) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAConstructor', newTarget));
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', newTarget);
   }
   const args = Q(CreateListFromArrayLike(argumentsList));
   return Q(Construct(target, args, newTarget));
@@ -40,7 +39,7 @@ function Reflect_construct([target = Value.undefined, argumentsList = Value.unde
 
 function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   const desc = Q(ToPropertyDescriptor(attributes));
@@ -49,7 +48,7 @@ function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.u
 
 function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   return Q(target.Delete(key));
@@ -57,7 +56,7 @@ function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.u
 
 function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   if (receiver === undefined) {
@@ -68,7 +67,7 @@ function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, r
 
 function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   const desc = Q(target.GetOwnProperty(key));
@@ -77,14 +76,14 @@ function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey
 
 function Reflect_getPrototypeOf([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   return Q(target.GetPrototypeOf());
 }
 
 function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   return Q(target.HasProperty(key));
@@ -92,14 +91,14 @@ function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) 
 
 function Reflect_isExtensible([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   return Q(target.IsExtensible());
 }
 
 function Reflect_ownKeys([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const keys = Q(target.OwnPropertyKeys());
   return CreateArrayFromList(keys);
@@ -107,14 +106,14 @@ function Reflect_ownKeys([target = Value.undefined]) {
 
 function Reflect_preventExtensions([target = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   return Q(target.PreventExtensions());
 }
 
 function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   const key = Q(ToPropertyKey(propertyKey));
   if (receiver === undefined) {
@@ -125,10 +124,10 @@ function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V
 
 function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
   if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'target is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
-    return surroundingAgent.Throw('TypeError', 'proto is not an object or null');
+    return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   return Q(target.SetPrototypeOf(proto));
 }

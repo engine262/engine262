@@ -13,15 +13,15 @@ import {
 import { Value, Type } from '../value.mjs';
 import { AbruptCompletion, Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-import { msg } from '../helpers.mjs';
+
 
 class FakeWeakRef {
   constructor(target) {
     if (new.target === undefined) {
-      throw new TypeError(msg('ConstructorRequiresNew', 'WeakRef'));
+      throw new TypeError('ConstructorRequiresNew', 'WeakRef');
     }
     if (target === null || (typeof target !== 'object' && typeof target !== 'function')) {
-      throw new TypeError(msg('NotAnObject'));
+      throw new TypeError('NotAnObject');
     }
     this.target = target;
   }
@@ -70,7 +70,7 @@ class WeakSetData {
 // 23.4.1.1 #sec-weakset-iterable
 function WeakSetConstructor([iterable], { NewTarget }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', msg('ConstructorRequiresNew', 'WeakSet'));
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakSet');
   }
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']));
   set.WeakSetData = new WeakSetData();
@@ -79,7 +79,7 @@ function WeakSetConstructor([iterable], { NewTarget }) {
   }
   const adder = Q(Get(set, new Value('add')));
   if (IsCallable(adder) === Value.false) {
-    return surroundingAgent.Throw('TypeError', msg('NotAFunction', adder));
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   const iteratorRecord = Q(GetIterator(iterable));
 

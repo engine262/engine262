@@ -16,9 +16,6 @@ import {
   Assert,
 } from '../abstract-ops/all.mjs';
 import {
-  InstantiateFunctionObject,
-} from './all.mjs';
-import {
   DeclarativeEnvironmentRecord,
   NewDeclarativeEnvironment,
 } from '../environment.mjs';
@@ -30,6 +27,9 @@ import {
   X,
 } from '../completion.mjs';
 import { Evaluate_StatementList } from '../evaluator.mjs';
+import {
+  InstantiateFunctionObject,
+} from './all.mjs';
 
 // 13.2.14 #sec-blockdeclarationinstantiation
 export function BlockDeclarationInstantiation(code, env) {
