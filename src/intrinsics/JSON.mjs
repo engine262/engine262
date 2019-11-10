@@ -155,13 +155,16 @@ class JSONValidator {
   }
 
   parseNumber() {
+    this.eat('-');
     Q(this.expect(NUMERIC_START));
     while (this.eat(NUMERIC));
     if (this.eat('.')) {
+      Q(this.expect(NUMERIC));
       while (this.eat(NUMERIC));
     }
     if (this.eat(['e', 'E'])) {
       this.eat(['-', '+']);
+      Q(this.expect(NUMERIC));
       while (this.eat(NUMERIC));
     }
     X(this.eatWhitespace());
