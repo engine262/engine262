@@ -6,86 +6,39 @@ require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
 
-const CI = !!process.env.CONTINUOUS_INTEGRATION;
 const override = process.argv[2];
-
-const ANSI = CI ? {
-  reset: '',
-  red: '',
-  green: '',
-  yellow: '',
-  blue: '',
-} : {
-  reset: '\u001b[0m',
-  red: '\u001b[31m',
-  green: '\u001b[32m',
-  yellow: '\u001b[33m',
-  blue: '\u001b[34m',
-};
-
-process.on('unhandledRejection', (reason) => {
-  require('fs').writeSync(0, `\n${require('util').inspect(reason)}\n`);
-  process.exit(1);
-});
 
 if (!process.send) {
   // supervisor
 
   const os = require('os');
   const childProcess = require('child_process');
-  const readline = require('readline');
   const TestStream = require('test262-stream');
   const minimatch = require('minimatch');
+
+  const {
+    pass,
+    fail,
+    skip,
+    total,
+  } = require('./base.js');
 
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(os.cpus().length * 0.75);
 
-  let skipped = 0;
-  let passed = 0;
-  let failed = 0;
-  let total = 0;
-
-  const start = Date.now();
-  const handledPerSecLast5 = [];
-  const pad = (n, l, c = '0') => n.toString().padStart(l, c);
-  const average = (array) => (array.reduce((a, b) => a + b, 0) / array.length) || 0;
-  const printStatusLine = () => {
-    const elapsed = Math.floor((Date.now() - start) / 1000);
-    const min = Math.floor(elapsed / 60);
-    const sec = elapsed % 60;
-
-    const time = `${pad(min, 2)}:${pad(sec, 2)}`;
-    const found = `${ANSI.blue}:${pad(total, 5, ' ')}${ANSI.reset}`;
-    const p = `${ANSI.green}+${pad(passed, 5, ' ')}${ANSI.reset}`;
-    const f = `${ANSI.red}-${pad(failed, 5, ' ')}${ANSI.reset}`;
-    const s = `${ANSI.yellow}»${pad(skipped, 5, ' ')}${ANSI.reset}`;
-    const testsPerSec = average(handledPerSecLast5);
-
-    const line = `[${time}|${found}|${p}|${f}|${s}] (${testsPerSec.toFixed(2)}/s)`;
-
-    if (!CI) {
-      readline.clearLine(process.stdout, 0);
-      readline.cursorTo(process.stdout, 0);
-    }
-    process.stdout.write(`${line}${CI ? '\n' : ''}`);
-  };
-
-  let handledPerSecCounter = 0;
   const workers = Array.from({ length: NUM_WORKERS }, (_, i) => {
     const c = childProcess.fork(__filename);
     c.on('message', ({ file, status, error }) => {
-      handledPerSecCounter += 1;
       switch (status) {
         case 'PASS':
-          passed += 1;
+          pass();
           break;
         case 'FAIL':
-          failed += 1;
-          process.stderr.write(`\nFAILURE! ${file}\n${error}\n`);
+          fail(file, error);
           break;
         case 'SKIP':
-          skipped += 1;
+          skip();
           break;
         default:
           break;
@@ -93,12 +46,10 @@ if (!process.send) {
     });
     c.on('exit', (code) => {
       if (code !== 0) {
-        printStatusLine();
         process.exit(1);
       }
       workers[i] = undefined;
       if (workers.every((w) => w === undefined)) {
-        printStatusLine();
         process.exit(0);
       }
     });
@@ -119,14 +70,14 @@ if (!process.send) {
 
   let workerIndex = 0;
   stream.on('data', (test) => {
-    total += 1;
+    total();
 
     if (/annexB|intl402/.test(test.file)
       || (test.attrs.features && test.attrs.features.some((feature) => features.includes(feature)))
       || /\b(reg ?exp?)\b/i.test(test.attrs.description) || /\b(reg ?exp?)\b/.test(test.contents)
       || test.attrs.includes.includes('nativeFunctionMatcher.js')
       || skiplist.find((t) => minimatch(test.file, t))) {
-      skipped += 1;
+      skip();
       return;
     }
 
@@ -142,19 +93,6 @@ if (!process.send) {
       w.send('DONE');
     });
   });
-
-  setInterval(() => {
-    handledPerSecLast5.unshift(handledPerSecCounter);
-    handledPerSecCounter = 0;
-    if (handledPerSecLast5.length > 5) {
-      handledPerSecLast5.length = 5;
-    }
-  }, 1000).unref();
-
-  printStatusLine();
-  setInterval(() => {
-    printStatusLine();
-  }, CI ? 5000 : 500).unref();
 } else {
   // worker
 

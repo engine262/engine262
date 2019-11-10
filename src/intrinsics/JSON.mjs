@@ -161,6 +161,7 @@ class JSONValidator {
       while (this.eat(NUMERIC));
     }
     if (this.eat(['e', 'E'])) {
+      this.eat(['-', '+']);
       while (this.eat(NUMERIC));
     }
     X(this.eatWhitespace());

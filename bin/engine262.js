@@ -24,6 +24,24 @@ const {
   FEATURES,
 } = require('..');
 
+const execArgv = [];
+let entry;
+const programArgv = [];
+
+{
+  let target = execArgv;
+  process.argv.slice(2).forEach((a) => {
+    if (a.startsWith('--')) {
+      target.push(a);
+    } else if (!entry) {
+      entry = a;
+      target = programArgv;
+    } else {
+      target.push(a);
+    }
+  });
+}
+
 function createRealm() {
   const moduleCache = new Map();
   const realm = new Realm({
@@ -131,7 +149,7 @@ Options:
 
 `;
 
-const argv = snekparse(process.argv.slice(2));
+const argv = snekparse(execArgv);
 
 if (argv.h || argv.help) {
   process.stdout.write(help);
@@ -157,7 +175,21 @@ agent.enter();
 
 const realm = createRealm();
 
-if (argv.length === 0) {
+{
+  const api = new APIObject(realm);
+
+  Abstract.CreateDataProperty(api, new Value(realm, 'readFile'), new Value(realm, ([filename]) => {
+    const contents = fs.readFileSync(filename.stringValue(), 'utf8');
+    return new Value(realm, contents);
+  }));
+
+  const list = realm.scope(() => Abstract.CreateArrayFromList(programArgv.map((a) => new Value(realm, a))));
+  Abstract.CreateDataProperty(api, new Value(realm, 'argv'), list);
+
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'api'), api);
+}
+
+if (!entry) {
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
@@ -173,11 +205,10 @@ if (argv.length === 0) {
     },
   });
 } else {
-  const lastArg = argv[argv.length - 1];
-  const source = fs.readFileSync(lastArg, 'utf8');
+  const source = fs.readFileSync(entry, 'utf8');
   let result;
-  if (argv.m || argv.module || lastArg.endsWith('.mjs')) {
-    result = realm.createSourceTextModule(path.resolve(lastArg), source);
+  if (argv.m || argv.module || entry.endsWith('.mjs')) {
+    result = realm.createSourceTextModule(path.resolve(entry), source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
       realm.moduleEntry = module;
@@ -192,7 +223,7 @@ if (argv.length === 0) {
       }
     }
   } else {
-    result = realm.evaluateScript(source, { specifier: path.resolve(lastArg) });
+    result = realm.evaluateScript(source, { specifier: path.resolve(entry) });
   }
   if (result instanceof AbruptCompletion) {
     let inspected;

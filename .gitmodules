@@ -1,3 +1,6 @@
 [submodule "test/test262"]
 	path = test/test262
 	url = https://github.com/tc39/test262
+[submodule "test/JSONTestSuite"]
+	path = test/JSONTestSuite
+	url = https://github.com/nst/JSONTestSuite
