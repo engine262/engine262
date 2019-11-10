@@ -25,11 +25,12 @@
     "test262-stream": "^1.3.0"
   },
   "scripts": {
-    "test": "node test/test262.js",
+    "test:test262": "node test/test262.js",
+    "test:json": "node test/json.js",
+    "build:grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
     "lint": "eslint transform.js rollup.config.js test/base.js test/test262.js test/stepped.js test/json.js test/json_runner.js bin/engine262.js src/ --ext=js,mjs --cache",
-    "build-grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
     "build": "rollup -c",
-    "build-do": "rollup -c --environment USE_DO_EXPRESSIONS"
+    "test": "npm run test:test262"
   },
   "repository": {
     "type": "git",
