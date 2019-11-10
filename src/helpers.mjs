@@ -152,15 +152,13 @@ export function resume(context, completion) {
 export class CallSite {
   constructor(context) {
     this.context = context;
-    this.lineNumber = null;
-    this.columnNumber = null;
+    this.lastNode = null;
     this.constructCall = false;
   }
 
   clone(context = this.context) {
     const c = new CallSite(context);
-    c.lineNumber = this.lineNumber;
-    c.columnNumber = this.columnNumber;
+    c.lastNode = this.lastNode;
     c.constructCall = this.constructCall;
     return c;
   }
@@ -202,9 +200,21 @@ export class CallSite {
   }
 
   setLocation(node) {
-    const { line, column } = node.loc.start;
-    this.lineNumber = line;
-    this.columnNumber = column;
+    this.lastNode = node;
+  }
+
+  get lineNumber() {
+    if (this.lastNode) {
+      return this.lastNode.loc.start.line;
+    }
+    return null;
+  }
+
+  get columnNumber() {
+    if (this.lastNode) {
+      return this.lastNode.loc.start.column;
+    }
+    return null;
   }
 
   loc() {
