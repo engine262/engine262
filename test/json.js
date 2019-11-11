@@ -11,7 +11,6 @@ const {
 } = require('./base');
 
 const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
-const TEST_CASES_DIR_PATH = path.resolve(BASE_DIR, 'test_parsing');
 const ENGINE262 = path.resolve(__dirname, '../bin/engine262.js');
 const RUNNER = path.resolve(__dirname, 'json_runner.js');
 const CONCURRENCY = os.cpus().length;
@@ -65,7 +64,8 @@ async function test(filename) {
   }
 }
 
-const tests = glob.sync(`${TEST_CASES_DIR_PATH}/**/*.json`);
+const tests = glob.sync(`${path.resolve(BASE_DIR, 'test_parsing')}/**/*.json`)
+  .concat(glob.sync(`${path.resolve(BASE_DIR, 'test_transform')}/**/*.json`));
 
 let running = 0;
 (function queue() {
