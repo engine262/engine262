@@ -33,3 +33,5 @@ hashbang
 numeric-separator-literal
 
 proxy-missing-checks
+
+AggregateError
