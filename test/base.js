@@ -68,7 +68,6 @@ setInterval(() => {
 module.exports = {
   total() {
     total += 1;
-    handledPerSecCounter += 1;
   },
   pass() {
     passed += 1;

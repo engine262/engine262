@@ -14,7 +14,7 @@ if (!process.send) {
   const os = require('os');
   const childProcess = require('child_process');
   const TestStream = require('test262-stream');
-  const minimatch = require('minimatch');
+  const glob = require('glob');
 
   const {
     pass,
@@ -60,7 +60,9 @@ if (!process.send) {
     const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
     return source.split('\n').filter((l) => l && !l.startsWith('//'));
   };
-  const skiplist = readList('skiplist').map((t) => `test/${t}`);
+  const skiplist = readList('skiplist')
+    .flatMap((t) => glob.sync(path.resolve(__dirname, 'test262', 'test', t)))
+    .map((f) => path.relative(path.resolve(__dirname, 'test262'), f));
   const features = readList('features');
 
   const stream = new TestStream(path.resolve(__dirname, 'test262'), {
@@ -76,7 +78,7 @@ if (!process.send) {
       || (test.attrs.features && test.attrs.features.some((feature) => features.includes(feature)))
       || /\b(reg ?exp?)\b/i.test(test.attrs.description) || /\b(reg ?exp?)\b/.test(test.contents)
       || test.attrs.includes.includes('nativeFunctionMatcher.js')
-      || skiplist.find((t) => minimatch(test.file, t))) {
+      || skiplist.includes(test.file)) {
       skip();
       return;
     }

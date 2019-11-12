@@ -72,8 +72,6 @@ import { CreateTypedArrayConstructors } from './intrinsics/TypedArrayConstructor
 import { CreateTypedArrayPrototypes } from './intrinsics/TypedArrayPrototypes.mjs';
 import { CreateDataView } from './intrinsics/DataView.mjs';
 import { CreateDataViewPrototype } from './intrinsics/DataViewPrototype.mjs';
-import { CreateWeakSet } from './intrinsics/WeakSet.mjs';
-import { CreateWeakSetPrototype } from './intrinsics/WeakSetPrototype.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -209,9 +207,6 @@ export function CreateIntrinsics(realmRec) {
   CreateDataViewPrototype(realmRec);
   CreateDataView(realmRec);
 
-  CreateWeakSetPrototype(realmRec);
-  CreateWeakSet(realmRec);
-
   CreateJSON(realmRec);
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
@@ -306,7 +301,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Uint32Array',
     'URIError',
     // 'WeakMap',
-    'WeakSet',
+    // 'WeakSet',
 
     // Other Properties of the Global Object
     // 'Atomics',

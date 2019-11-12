@@ -65,10 +65,6 @@ built-ins/global/S10.2.3_A1.1_T2.js
 built-ins/global/S10.2.3_A1.2_T2.js
 built-ins/global/S10.2.3_A1.3_T2.js
 
-// TODO: Missing weak collections
-built-ins/WeakMap/**/*.js
-language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
-
 // TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
@@ -574,3 +570,8 @@ language/expressions/assignment/dstr/ident-name-prop-name-literal-finally-escape
 language/expressions/assignment/dstr/ident-name-prop-name-literal-in-escaped.js
 language/expressions/assignment/dstr/ident-name-prop-name-literal-switch-escaped.js
 language/expressions/assignment/dstr/ident-name-prop-name-literal-void-escaped.js
+
+built-ins/WeakMap/**/*.js
+built-ins/WeakSet/**/*.js
+language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
+language/statements/class/subclass/builtin-objects/WeakSet/**/*.js

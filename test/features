@@ -16,6 +16,7 @@ u180e
 
 host-gc-required
 WeakMap
+WeakSet
 WeakRef
 FinalizationGroup
 
