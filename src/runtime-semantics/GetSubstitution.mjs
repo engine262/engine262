@@ -1,7 +1,6 @@
 import {
   Assert,
   Get,
-  ToObject,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -22,9 +21,6 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
   Assert(Type(replacement) === 'String');
   const tailPos = position.numberValue() + matchLength;
   const m = captures.length;
-  if (namedCaptures !== Value.undefined) {
-    namedCaptures = Q(ToObject(namedCaptures));
-  }
   const replacementStr = replacement.stringValue();
   let result = '';
   let i = 0;
@@ -80,6 +76,7 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
           result += '$<';
           i += 2;
         } else {
+          Assert(Type(namedCaptures) === 'Object');
           const nextSign = replacementStr.indexOf('>', i);
           if (nextSign === -1) {
             result += '$<';

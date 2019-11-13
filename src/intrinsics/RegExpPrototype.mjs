@@ -17,6 +17,7 @@ import {
   ToInteger,
   ToLength,
   ToString,
+  ToObject,
   ToUint32,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
@@ -396,7 +397,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       n += 1;
     }
 
-    const namedCaptures = Q(Get(result, new Value('groups')));
+    let namedCaptures = Q(Get(result, new Value('groups')));
 
     let replacement;
     if (functionalReplace === Value.true) {
@@ -409,7 +410,10 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       const replValue = Q(Call(replaceValue, Value.undefined, replacerArgs));
       replacement = Q(ToString(replValue));
     } else {
-      replacement = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+      if (namedCaptures !== Value.undefined) {
+        namedCaptures = Q(ToObject(namedCaptures));
+      }
+      replacement = Q(GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue));
     }
 
     if (position.numberValue() >= nextSourcePosition) {

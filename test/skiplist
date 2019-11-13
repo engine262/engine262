@@ -573,5 +573,3 @@ language/expressions/assignment/dstr/ident-name-prop-name-literal-void-escaped.j
 
 built-ins/WeakMap/**/*.js
 built-ins/WeakSet/**/*.js
-language/statements/class/subclass/builtin-objects/WeakMap/**/*.js
-language/statements/class/subclass/builtin-objects/WeakSet/**/*.js

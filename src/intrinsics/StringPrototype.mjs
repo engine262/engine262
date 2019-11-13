@@ -332,7 +332,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
     replStr = Q(ToString(replValue));
   } else {
     const captures = [];
-    replStr = GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue);
+    replStr = X(GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue));
   }
   const tailPos = pos.numberValue() + matched.stringValue().length;
   const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
