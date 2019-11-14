@@ -23,7 +23,7 @@ function TypedArrayConstructor() {
 }
 
 // 22.2.2.1 #sec-%typedarray%.from
-function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue }) {
+function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undefined], { thisValue }) {
   const C = thisValue;
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
@@ -37,7 +37,6 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue
   } else {
     mapping = false;
   }
-  const T = thisArg !== undefined ? thisArg : Value.undefined;
   const usingIterator = Q(GetMethod(source, wellKnownSymbols.iterator));
   if (usingIterator !== Value.undefined) {
     const values = Q(IterableToList(source, usingIterator));
@@ -49,7 +48,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue
       const kValue = values.shift();
       let mappedValue;
       if (mapping) {
-        mappedValue = Q(Call(mapfn, T, [kValue, new Value(k)]));
+        mappedValue = Q(Call(mapfn, thisArg, [kValue, new Value(k)]));
       } else {
         mappedValue = kValue;
       }
@@ -71,7 +70,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg], { thisValue
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     if (mapping) {
-      mappedValue = Q(Call(mapfn, T, [kValue, new Value(k)]));
+      mappedValue = Q(Call(mapfn, thisArg, [kValue, new Value(k)]));
     } else {
       mappedValue = kValue;
     }

@@ -259,13 +259,15 @@ function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
 }
 
 // 21.1.3.13 #sec-string.prototype.normalize
-function StringProto_normalize([form], { thisValue }) {
+function StringProto_normalize([form = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  if (form === undefined || form === Value.undefined) {
+  if (form === Value.undefined) {
     form = new Value('NFC');
+  } else {
+    form = Q(ToString(form));
   }
-  const f = Q(ToString(form)).stringValue();
+  const f = form.stringValue();
   if (!['NFC', 'NFD', 'NFKC', 'NFKD'].includes(f)) {
     return surroundingAgent.Throw('RangeError', 'NormalizeInvalidForm');
   }

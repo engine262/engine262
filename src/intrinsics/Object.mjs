@@ -31,11 +31,11 @@ import { Q, X } from '../completion.mjs';
 import { AddEntriesFromIterable } from './Map.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-function ObjectConstructor([value], { NewTarget }) {
+function ObjectConstructor([value = Value.undefined], { NewTarget }) {
   if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
     return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
   }
-  if (value === Value.null || value === Value.undefined || value === undefined) {
+  if (value === Value.null || value === Value.undefined) {
     return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%Object.prototype%']);
   }
   return X(ToObject(value));

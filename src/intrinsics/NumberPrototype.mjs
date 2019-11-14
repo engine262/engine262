@@ -187,11 +187,10 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
 }
 
 // 20.1.3.6 #sec-number.prototype.tostring
-function NumberProto_toString(args, { thisValue }) {
-  const [radix] = args;
+function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
-  if (args.length === 0 || Type(radix) === 'Undefined') {
+  if (radix === Value.undefined) {
     radixNumber = 10;
   } else {
     radixNumber = Q(ToInteger(radix)).numberValue();

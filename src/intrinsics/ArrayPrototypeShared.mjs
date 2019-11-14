@@ -130,7 +130,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
 export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   // 22.1.3.5 #sec-array.prototype.every
   // 22.2.3.7 #sec-%typedarray%.prototype.every
-  function ArrayProto_every([callbackFn = Value.undefined, thisArg], { thisValue }) {
+  function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -138,19 +138,13 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (IsCallable(callbackFn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
-    let T;
-    if (thisArg !== undefined) {
-      T = thisArg;
-    } else {
-      T = Value.undefined;
-    }
     let k = 0;
     while (k < len.numberValue()) {
       const Pk = X(ToString(new Value(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackFn, T, [kValue, new Value(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackFn, thisArg, [kValue, new Value(k), O])));
         if (testResult === Value.false) {
           return Value.false;
         }
@@ -162,7 +156,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.8 #sec-array.prototype.find
   // 22.2.3.10 #sec-%typedarray%.prototype.find
-  function ArrayProto_find([predicate = Value.undefined, thisArg], { thisValue }) {
+  function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -170,12 +164,11 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
-    const T = thisArg || Value.undefined;
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(new Value(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, new Value(k), O])));
       if (testResult === Value.true) {
         return kValue;
       }
@@ -186,7 +179,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.9 #sec-array.prototype.findindex
   // 22.2.3.11 #sec-%typedarray%.prototype.findindex
-  function ArrayProto_findIndex([predicate = Value.undefined, thisArg], { thisValue }) {
+  function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -194,12 +187,11 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
-    const T = thisArg || Value.undefined;
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(new Value(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, T, [kValue, new Value(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, new Value(k), O])));
       if (testResult === Value.true) {
         return new Value(k);
       }
@@ -210,7 +202,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.12 #sec-array.prototype.foreach
   // 22.2.3.12 #sec-%typedarray%.prototype.foreach
-  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
+  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -218,14 +210,13 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
-    const T = thisArg || Value.undefined;
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(new Value(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        Q(Call(callbackfn, T, [kValue, new Value(k), O]));
+        Q(Call(callbackfn, thisArg, [kValue, new Value(k), O]));
       }
       k += 1;
     }
@@ -513,7 +504,7 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
 
   // 22.1.3.26 #sec-array.prototype.some
   // 22.2.3.25 #sec-%typedarray%.prototype.some
-  function ArrayProto_some([callbackfn = Value.undefined, thisArg], { thisValue }) {
+  function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const lenProp = Q(objectToLength(O));
@@ -521,19 +512,13 @@ export function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlg
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
-    let T;
-    if (thisArg !== undefined) {
-      T = thisArg;
-    } else {
-      T = Value.undefined;
-    }
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(new Value(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackfn, T, [kValue, new Value(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, new Value(k), O])));
         if (testResult === Value.true) {
           return Value.true;
         }

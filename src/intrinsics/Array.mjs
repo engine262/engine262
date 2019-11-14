@@ -95,21 +95,15 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
 }
 
 // 22.1.2.1 #sec-array.from
-function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg], { thisValue }) {
+function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const C = thisValue;
   let mapping;
-  let T;
   let A;
   if (mapfn === Value.undefined) {
     mapping = false;
   } else {
     if (IsCallable(mapfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
-    }
-    if (thisArg !== undefined) {
-      T = thisArg;
-    } else {
-      T = Value.undefined;
     }
     mapping = true;
   }
@@ -136,7 +130,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg],
       const nextValue = Q(IteratorValue(next));
       let mappedValue;
       if (mapping) {
-        mappedValue = Call(mapfn, T, [nextValue, new Value(k)]);
+        mappedValue = Call(mapfn, thisArg, [nextValue, new Value(k)]);
         if (mappedValue instanceof AbruptCompletion) {
           return Q(IteratorClose(iteratorRecord, mappedValue));
         }
@@ -164,7 +158,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg],
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     if (mapping === true) {
-      mappedValue = Q(Call(mapfn, T, [kValue, new Value(k)]));
+      mappedValue = Q(Call(mapfn, thisArg, [kValue, new Value(k)]));
     } else {
       mappedValue = kValue;
     }

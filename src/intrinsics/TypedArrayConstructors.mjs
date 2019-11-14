@@ -151,7 +151,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
         return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
       }
       let newLength;
-      if (length !== undefined && length !== Value.undefined) {
+      if (length !== Value.undefined) {
         newLength = Q(ToIndex(length)).numberValue();
       }
       if (IsDetachedBuffer(buffer)) {
@@ -159,7 +159,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       }
       const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
       let newByteLength;
-      if (length === undefined || length === Value.undefined) {
+      if (length === Value.undefined) {
         if (bufferByteLength % elementSize !== 0) {
           return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
         }

@@ -65,22 +65,16 @@ function MapProto_entries(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'key+value'));
 }
 
-function MapProto_forEach([callbackfn, thisArg], { thisValue }) {
+function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const M = thisValue;
   Q(RequireInternalSlot(M, 'MapData'));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
-  let T;
-  if (thisArg !== undefined) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
-  }
   const entries = M.MapData;
   for (const e of entries) {
     if (e.Key !== undefined) {
-      Q(Call(callbackfn, T, [e.Value, e.Key, M]));
+      Q(Call(callbackfn, thisArg, [e.Value, e.Key, M]));
     }
   }
   return Value.undefined;

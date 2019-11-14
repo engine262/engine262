@@ -73,22 +73,16 @@ function SetProto_entries(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'key+value'));
 }
 
-function SetProto_forEach([callbackfn = Value.undefined, thisArg], { thisValue }) {
+function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const S = thisValue;
   Q(RequireInternalSlot(S, 'SetData'));
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
-  let T;
-  if (thisArg !== undefined) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
-  }
   const entries = S.SetData;
   for (const e of entries) {
     if (e !== undefined) {
-      Q(Call(callbackfn, T, [e, e, S]));
+      Q(Call(callbackfn, thisArg, [e, e, S]));
     }
   }
   return Value.undefined;

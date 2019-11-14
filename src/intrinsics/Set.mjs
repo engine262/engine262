@@ -9,22 +9,18 @@ import {
   IteratorValue,
   OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { Value, wellKnownSymbols } from '../value.mjs';
 import { AbruptCompletion, Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 
-function SetConstructor([iterable], { NewTarget }) {
+function SetConstructor([iterable = Value.undefined], { NewTarget }) {
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Set');
   }
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']));
   set.SetData = [];
-  if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return set;
   }
   const adder = Q(Get(set, new Value('add')));
@@ -32,7 +28,6 @@ function SetConstructor([iterable], { NewTarget }) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   const iteratorRecord = Q(GetIterator(iterable));
-
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
     if (next === Value.false) {

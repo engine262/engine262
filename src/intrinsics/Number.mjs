@@ -15,10 +15,10 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 function NumberConstructor(args, { NewTarget }) {
   const [value] = args;
   let n;
-  if (args.length === 0) {
-    n = new Value(0);
-  } else {
+  if (args.length !== 0) {
     n = Q(ToNumber(value));
+  } else {
+    n = new Value(0);
   }
   if (NewTarget === Value.undefined) {
     return n;

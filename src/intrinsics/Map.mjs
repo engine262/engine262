@@ -54,13 +54,13 @@ export function AddEntriesFromIterable(target, iterable, adder) {
   }
 }
 
-function MapConstructor([iterable], { NewTarget }) {
-  if (Type(NewTarget) === 'Undefined') {
+function MapConstructor([iterable = Value.undefined], { NewTarget }) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Map');
   }
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']));
   map.MapData = [];
-  if (iterable === undefined || Type(iterable) === 'Undefined' || Type(iterable) === 'Null') {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return map;
   }
   const adder = Q(Get(map, new Value('set')));

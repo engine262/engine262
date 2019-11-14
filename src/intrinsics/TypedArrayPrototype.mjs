@@ -166,18 +166,12 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
 }
 
 // 22.2.3.9 #sec-%typedarray%.prototype.filter
-function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisValue }) {
+function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength.numberValue();
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
-  }
-  let T;
-  if (thisArg !== undefined) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
   }
   const kept = [];
   let k = 0;
@@ -185,7 +179,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg], { thisV
   while (k < len) {
     const Pk = X(ToString(new Value(k)));
     const kValue = Q(Get(O, Pk));
-    const selected = ToBoolean(Q(Call(callbackfn, T, [kValue, new Value(k), O])));
+    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, new Value(k), O])));
     if (selected === Value.true) {
       kept.push(kValue);
       captured += 1;
@@ -223,25 +217,19 @@ function TypedArrayProto_lengthGetter(args, { thisValue }) {
 }
 
 // 22.2.3.19 #sec-%typedarray%.prototype.map
-function TypedArrayProto_map([callbackfn = Value.undefined, thisArg], { thisValue }) {
+function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = thisValue;
   Q(ValidateTypedArray(O));
   const len = O.ArrayLength;
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
-  let T;
-  if (thisArg !== undefined) {
-    T = thisArg;
-  } else {
-    T = Value.undefined;
-  }
   const A = Q(TypedArraySpeciesCreate(O, [len]));
   let k = 0;
   while (k < len.numberValue()) {
     const Pk = X(ToString(new Value(k)));
     const kValue = Q(Get(O, Pk));
-    const mappedValue = Q(Call(callbackfn, T, [kValue, new Value(k), O]));
+    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, new Value(k), O]));
     Q(Set(A, Pk, mappedValue, Value.true));
     k += 1;
   }

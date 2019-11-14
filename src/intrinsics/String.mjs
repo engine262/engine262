@@ -20,14 +20,11 @@ import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 21.1.1.1 #sec-string-constructor-string-value
-function StringConstructor(args, { NewTarget }) {
+function StringConstructor([value], { NewTarget }) {
   let s;
-  if (args.length === 0) {
-    // String ( )
+  if (value === undefined) {
     s = new Value('');
   } else {
-    // String ( value )
-    const [value] = args;
     if (NewTarget === Value.undefined && Type(value) === 'Symbol') {
       return X(SymbolDescriptiveString(value));
     }
