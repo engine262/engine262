@@ -3,13 +3,14 @@ import {
   isFunctionExpressionWithBindingIdentifier,
 } from '../ast.mjs';
 import {
-  FunctionCreate,
+  OrdinaryFunctionCreate,
   MakeConstructor,
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
+import { X } from '../completion.mjs';
 
 function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const {
@@ -21,7 +22,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const envRec = funcEnv.EnvironmentRecord;
   const name = new Value(BindingIdentifier.name);
   envRec.CreateImmutableBinding(name, Value.false);
-  const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, funcEnv);
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv));
   MakeConstructor(closure);
   SetFunctionName(closure, name);
   closure.SourceText = sourceTextMatchedBy(FunctionExpression);
@@ -37,7 +38,7 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
   const FormalParameters = FunctionExpression.params;
 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = FunctionCreate('Normal', FormalParameters, FunctionExpression, scope);
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', scope));
   MakeConstructor(closure);
   closure.SourceText = sourceTextMatchedBy(FunctionExpression);
   return closure;

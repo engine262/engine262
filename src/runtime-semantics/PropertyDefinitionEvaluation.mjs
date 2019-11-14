@@ -18,10 +18,7 @@ import {
   CopyDataProperties,
   CreateDataPropertyOrThrow,
   DefinePropertyOrThrow,
-  FunctionCreate,
-  GeneratorFunctionCreate,
-  AsyncGeneratorFunctionCreate,
-  AsyncFunctionCreate,
+  OrdinaryFunctionCreate,
   GetValue,
   MakeMethod,
   ObjectCreate,
@@ -155,7 +152,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       ReturnIfAbrupt(propKey);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       const formalParameterList = [];
-      const closure = FunctionCreate('Method', formalParameterList, MethodDefinition.value, scope);
+      const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), formalParameterList, MethodDefinition.value, 'non-lexical-this', scope));
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('get')));
       closure.SourceText = sourceTextMatchedBy(MethodDefinition);
@@ -174,7 +171,7 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
       const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
       ReturnIfAbrupt(propKey);
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      const closure = FunctionCreate('Method', PropertySetParameterList, MethodDefinition.value, scope);
+      const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), PropertySetParameterList, MethodDefinition.value, 'non-lexical-this', scope));
       X(MakeMethod(closure, object));
       X(SetFunctionName(closure, propKey, new Value('set')));
       closure.SourceText = sourceTextMatchedBy(MethodDefinition);
@@ -208,7 +205,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(GeneratorFunctionCreate('Method', UniqueFormalParameters, GeneratorExpression, scope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), UniqueFormalParameters, GeneratorExpression, 'non-lexical-this', scope));
   MakeMethod(closure, object);
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
@@ -243,7 +240,7 @@ function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerab
   const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncMethod.computed);
   ReturnIfAbrupt(propKey);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncFunctionCreate('Method', UniqueFormalParameters, AsyncExpression, scope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), UniqueFormalParameters, AsyncExpression, 'non-lexical-this', scope));
   X(MakeMethod(closure, object));
   X(SetFunctionName(closure, propKey));
   closure.SourceText = sourceTextMatchedBy(AsyncMethod);
@@ -267,7 +264,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncGeneratorMethod.computed);
   ReturnIfAbrupt(propKey);
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncGeneratorFunctionCreate('Method', UniqueFormalParameters, AsyncGeneratorExpression, scope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), UniqueFormalParameters, AsyncGeneratorExpression, 'non-lexical-this', scope));
   X(MakeMethod(closure, object));
   const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({

@@ -1,6 +1,6 @@
 import {
   DefinePropertyOrThrow,
-  GeneratorFunctionCreate,
+  OrdinaryFunctionCreate,
   ObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
@@ -29,7 +29,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     name = new Value(BindingIdentifier.name);
     envRec.CreateImmutableBinding(name, Value.false);
   }
-  const closure = X(GeneratorFunctionCreate('Normal', FormalParameters, GeneratorExpression, funcEnv));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv));
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,

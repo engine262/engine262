@@ -1,10 +1,9 @@
 import {
   Assert,
   DefinePropertyOrThrow,
-  FunctionAllocate,
-  FunctionInitialize,
   GetPrototypeFromConstructor,
   MakeConstructor,
+  OrdinaryFunctionCreate,
   ObjectCreate,
   SetFunctionName,
   ToString,
@@ -160,10 +159,9 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   };
 
   const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
-  const F = FunctionAllocate(proto);
-  const realmF = F.Realm;
+  const realmF = surroundingAgent.currentRealmRecord;
   const scope = realmF.GlobalEnv;
-  FunctionInitialize(F, 'Normal', parameters, fabricatedFunctionNode, scope);
+  const F = X(OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope));
   if (kind === 'generator') {
     const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({

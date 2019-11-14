@@ -3,7 +3,7 @@ import {
 } from '../engine.mjs';
 import { X } from '../completion.mjs';
 // import { CoveredFormalsList } from '../static-semantics/all.mjs';
-import { AsyncFunctionCreate, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
+import { OrdinaryFunctionCreate, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 
 // 14.8.16 #sec-async-arrow-function-definitions-runtime-semantics-evaluation
 //   AsyncArrowFunction :
@@ -13,7 +13,7 @@ export function Evaluate_AsyncArrowFunction(AsyncArrowFunction) {
   const { params: ArrowFormalParameters } = AsyncArrowFunction;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const parameters = ArrowFormalParameters;
-  const closure = X(AsyncFunctionCreate('Arrow', parameters, AsyncArrowFunction, scope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope));
   closure.SourceText = sourceTextMatchedBy(AsyncArrowFunction);
   return closure;
 }

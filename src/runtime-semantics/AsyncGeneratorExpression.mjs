@@ -1,6 +1,6 @@
 import {
   DefinePropertyOrThrow,
-  AsyncGeneratorFunctionCreate,
+  OrdinaryFunctionCreate,
   ObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
@@ -29,7 +29,7 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     name = new Value(BindingIdentifier.name);
     envRec.CreateImmutableBinding(name, Value.false);
   }
-  const closure = X(AsyncGeneratorFunctionCreate('Normal', FormalParameters, AsyncGeneratorExpression, funcEnv));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv));
   const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,

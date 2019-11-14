@@ -1,9 +1,8 @@
 import {
   surroundingAgent,
 } from '../engine.mjs';
-// import { CoveredFormalsList } from '../static-semantics/all.mjs';
-import { FunctionCreate, GetValue, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
-import { Q, ReturnCompletion } from '../completion.mjs';
+import { OrdinaryFunctionCreate, GetValue, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
+import { Q, X, ReturnCompletion } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
 // 14.2.17 #sec-arrow-function-definitions-runtime-semantics-evaluation
@@ -12,7 +11,7 @@ export function Evaluate_ArrowFunction(ArrowFunction) {
   const { params: ArrowParameters } = ArrowFunction;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const parameters = ArrowParameters;
-  const closure = FunctionCreate('Arrow', parameters, ArrowFunction, scope);
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope));
   closure.SourceText = sourceTextMatchedBy(ArrowFunction);
   return closure;
 }

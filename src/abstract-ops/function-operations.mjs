@@ -16,10 +16,7 @@ import {
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
-import {
-  ExpectedArgumentCount_ArrowParameters,
-  ExpectedArgumentCount_FormalParameters,
-} from '../static-semantics/all.mjs';
+import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
 import {
   EvaluateBody_AsyncConciseBody_ExpressionBody,
   EvaluateBody_AsyncFunctionBody,
@@ -208,84 +205,34 @@ const esFunctionInternalSlots = Object.freeze([
 ]);
 
 // 9.2.3 #sec-functionallocate
-export function FunctionAllocate(functionPrototype) {
+export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, thisMode, Scope) {
   Assert(Type(functionPrototype) === 'Object');
   const F = new FunctionValue(functionPrototype);
   for (const internalSlot of esFunctionInternalSlots) {
     F[internalSlot] = Value.undefined;
   }
   F.Call = FunctionCallSlot;
-  F.IsClassConstructor = Value.false;
   F.Prototype = functionPrototype;
   F.Extensible = Value.true;
-  F.Realm = surroundingAgent.currentRealmRecord;
-  return F;
-}
-
-// 9.2.4 #sec-functioninitialize
-export function FunctionInitialize(F, kind, ParameterList, Body, Scope) {
-  let len;
-  switch (kind) {
-    case 'Normal':
-    case 'Method':
-      len = ExpectedArgumentCount_FormalParameters(ParameterList);
-      break;
-
-    case 'Arrow':
-      len = ExpectedArgumentCount_ArrowParameters(ParameterList);
-      break;
-
-    default:
-      throw new OutOfRange('FunctionInitialize kind', kind);
-  }
-  X(SetFunctionLength(F, new Value(len)));
-  const Strict = isStrictModeCode(Body);
-  F.Strict = Strict;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;
-  F.ScriptOrModule = GetActiveScriptOrModule();
-  if (kind === 'Arrow') {
+  const Strict = isStrictModeCode(Body);
+  F.Strict = Strict;
+  if (thisMode === 'lexical-this') {
     F.ThisMode = 'lexical';
   } else if (Strict) {
     F.ThisMode = 'strict';
   } else {
     F.ThisMode = 'global';
   }
+  F.IsClassConstructor = Value.false;
+  F.Environment = Scope;
+  F.ScriptOrModule = GetActiveScriptOrModule();
+  F.Realm = surroundingAgent.currentRealmRecord;
+  const len = ExpectedArgumentCount(ParameterList);
+  X(SetFunctionLength(F, new Value(len)));
   return F;
-}
-
-// 9.2.5 #sec-functioncreate
-// Instead of taking in a {Async}Function/Concise/GeneratorBody for Body, we
-// instead take in the entire function node as Body and save it in
-// ECMAScriptCode as such.
-export function FunctionCreate(kind, ParameterList, Body, Scope, prototype) {
-  if (prototype === undefined) {
-    prototype = surroundingAgent.intrinsic('%Function.prototype%');
-  }
-  const F = FunctionAllocate(prototype);
-  return FunctionInitialize(F, kind, ParameterList, Body, Scope);
-}
-
-// 9.2.6 #sec-generatorfunctioncreate
-export function GeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
-  const functionPrototype = surroundingAgent.intrinsic('%Generator%');
-  const F = FunctionAllocate(functionPrototype);
-  return FunctionInitialize(F, kind, ParameterList, Body, Scope);
-}
-
-// 9.2.7 #sec-asyncgeneratorfunctioncreate
-export function AsyncGeneratorFunctionCreate(kind, ParameterList, Body, Scope) {
-  const functionPrototype = surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%');
-  const F = X(FunctionAllocate(functionPrototype));
-  return X(FunctionInitialize(F, kind, ParameterList, Body, Scope));
-}
-
-// 9.2.8 #sec-async-functions-abstract-operations-async-function-create
-export function AsyncFunctionCreate(kind, parameters, body, Scope) {
-  const functionPrototype = surroundingAgent.intrinsic('%AsyncFunction.prototype%');
-  const F = X(FunctionAllocate(functionPrototype));
-  return X(FunctionInitialize(F, kind, parameters, body, Scope));
 }
 
 // 9.2.10 #sec-makeconstructor

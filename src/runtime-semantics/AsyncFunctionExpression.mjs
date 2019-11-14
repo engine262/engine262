@@ -3,7 +3,7 @@ import {
   isAsyncFunctionExpressionWithBindingIdentifier,
 } from '../ast.mjs';
 import {
-  AsyncFunctionCreate,
+  OrdinaryFunctionCreate,
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
@@ -21,7 +21,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
   const envRec = funcEnv.EnvironmentRecord;
   const name = new Value(BindingIdentifier.name);
   X(envRec.CreateImmutableBinding(name, Value.false));
-  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, funcEnv));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', funcEnv));
   X(SetFunctionName(closure, name));
   X(envRec.InitializeBinding(name, closure));
   closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
@@ -36,7 +36,7 @@ export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
     params: FormalParameters,
   } = AsyncFunctionExpression;
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(AsyncFunctionCreate('Normal', FormalParameters, AsyncFunctionExpression, scope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', scope));
   closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
   return closure;
 }

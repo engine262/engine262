@@ -63,3 +63,5 @@ export const ExpectedArgumentCount_ArrowParameters = ExpectedArgumentCount_Forma
 //   AsyncArrowBindingIdentifier : BindingIdentifier
 //
 // Not implemented. Use ExpectedArgumentCount_ArrowParameters instead.
+
+export const ExpectedArgumentCount = ExpectedArgumentCount_FormalParameters;
