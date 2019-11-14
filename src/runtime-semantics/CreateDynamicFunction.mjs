@@ -110,7 +110,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     }
     bodyText = args[k];
   }
-  bodyText = Q(ToString(bodyText)).stringValue();
+  bodyText = `\u000A${Q(ToString(bodyText)).stringValue()}\u000A`;
 
   let body;
   try {
@@ -185,7 +185,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   }
   SetFunctionName(F, new Value('anonymous'));
   const prefix = DynamicFunctionSourceTextPrefixes[kind];
-  const sourceText = `${prefix} anonymous(${P}\u000A) {\u000A${bodyText}\u000A}`;
+  const sourceText = `${prefix} anonymous(${P}\u000A) {${bodyText}}`;
   F.SourceText = new Value(sourceText);
   return F;
 }
