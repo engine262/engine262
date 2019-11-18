@@ -159,10 +159,10 @@ export function CreateIterResultObject(value, done) {
 export function CreateListIteratorRecord(list) {
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
     'IteratedList',
-    'ListIteratorNextIndex',
+    'ListNextIndex',
   ]);
   iterator.IteratedList = list;
-  iterator.ListIteratorNextIndex = 0;
+  iterator.ListNextIndex = 0;
   const steps = ListIteratorNextSteps;
   const next = X(CreateBuiltinFunction(steps, []));
   return {
@@ -178,12 +178,12 @@ function ListIteratorNextSteps(args, { thisValue }) {
   Assert(Type(O) === 'Object');
   Assert('IteratedList' in O);
   const list = O.IteratedList;
-  const index = O.ListIteratorNextIndex;
+  const index = O.ListNextIndex;
   const len = list.length;
   if (index >= len) {
     return CreateIterResultObject(Value.undefined, Value.true);
   }
-  O.ListIteratorNextIndex += 1;
+  O.ListNextIndex += 1;
   return CreateIterResultObject(list[index], Value.false);
 }
 

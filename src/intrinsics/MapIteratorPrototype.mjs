@@ -14,10 +14,10 @@ function MapIteratorPrototype_next(args, { thisValue }) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
   }
-  if (!('Map' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
+  if (!('IteratedMap' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
   }
-  const m = O.Map;
+  const m = O.IteratedMap;
   let index = O.MapNextIndex;
   const itemKind = O.MapIterationKind;
   if (m === Value.undefined) {
@@ -43,7 +43,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
       return CreateIterResultObject(result, Value.false);
     }
   }
-  O.Map = Value.undefined;
+  O.IteratedMap = Value.undefined;
   return CreateIterResultObject(Value.undefined, Value.true);
 }
 

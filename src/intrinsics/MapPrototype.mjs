@@ -18,11 +18,11 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 function CreateMapIterator(map, kind) {
   Q(RequireInternalSlot(map, 'MapData'));
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
-    'Map',
+    'IteratedMap',
     'MapNextIndex',
     'MapIterationKind',
   ]);
-  iterator.Map = map;
+  iterator.IteratedMap = map;
   iterator.MapNextIndex = 0;
   iterator.MapIterationKind = kind;
   return iterator;

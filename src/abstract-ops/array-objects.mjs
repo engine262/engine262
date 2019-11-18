@@ -192,12 +192,12 @@ export function SortCompare(x, y, comparefn) {
 export function CreateArrayIterator(array, kind) {
   Assert(Type(array) === 'Object');
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
-    'IteratedObject',
-    'ArrayIteratorNextIndex',
-    'ArrayIterationKind',
+    'IteratedArrayLike',
+    'ArrayLikeNextIndex',
+    'ArrayLikeIterationKind',
   ]);
-  iterator.IteratedObject = array;
-  iterator.ArrayIteratorNextIndex = 0;
-  iterator.ArrayIterationKind = kind;
+  iterator.IteratedArrayLike = array;
+  iterator.ArrayLikeNextIndex = 0;
+  iterator.ArrayLikeIterationKind = kind;
   return iterator;
 }

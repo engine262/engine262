@@ -22,17 +22,17 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
   }
-  if (!('IteratedObject' in O)
-      || !('ArrayIteratorNextIndex' in O)
-      || !('ArrayIterationKind' in O)) {
+  if (!('IteratedArrayLike' in O)
+      || !('ArrayLikeNextIndex' in O)
+      || !('ArrayLikeIterationKind' in O)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
   }
-  const a = O.IteratedObject;
+  const a = O.IteratedArrayLike;
   if (Type(a) === 'Undefined') {
     return CreateIterResultObject(Value.undefined, Value.true);
   }
-  const index = O.ArrayIteratorNextIndex;
-  const itemKind = O.ArrayIterationKind;
+  const index = O.ArrayLikeNextIndex;
+  const itemKind = O.ArrayLikeIterationKind;
   let len;
   if ('TypedArrayName' in a) {
     if (IsDetachedBuffer(a.ViewedArrayBuffer)) {
@@ -43,10 +43,10 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     len = Q(LengthOfArrayLike(a));
   }
   if (index >= len.numberValue()) {
-    O.IteratedObject = Value.undefined;
+    O.IteratedArrayLike = Value.undefined;
     return CreateIterResultObject(Value.undefined, Value.true);
   }
-  O.ArrayIteratorNextIndex = index + 1;
+  O.ArrayLikeNextIndex = index + 1;
   if (itemKind === 'key') {
     return CreateIterResultObject(new Value(index), Value.false);
   }
