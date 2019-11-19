@@ -1,7 +1,7 @@
 import {
   IsInteger,
   OrdinaryCreateFromConstructor,
-  ToNumber,
+  ToNumeric,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -12,18 +12,21 @@ import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 // 20.1.1.1 #sec-number-constructor-number-value
-function NumberConstructor(args, { NewTarget }) {
-  const [value] = args;
+function NumberConstructor([value], { NewTarget }) {
   let n;
-  if (args.length !== 0) {
-    n = Q(ToNumber(value));
+  if (value !== undefined) {
+    const prim = Q(ToNumeric(value));
+    if (Type(prim) === 'BigInt') {
+      n = new Value(Number(prim.bigintValue()));
+    } else {
+      n = prim;
+    }
   } else {
     n = new Value(0);
   }
   if (NewTarget === Value.undefined) {
     return n;
   }
-
   const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']);
   O.NumberData = n;
   return O;
