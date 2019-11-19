@@ -1,5 +1,4 @@
 // these tests pass but take a long time
-built-ins/Array/length/S15.4.5.2_A3_T4.js
 built-ins/parseFloat/S15.1.2.3_A6.js
 built-ins/parseInt/S15.1.2.2_A8.js
 built-ins/RegExp/character-class-escape-non-whitespace.js

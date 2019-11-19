@@ -59,6 +59,12 @@ export class ValueMap extends Map {
     return this[Symbol.iterator]();
   }
 
+  forEach(cb) {
+    for (const [key, value] of this) {
+      cb(value, key, this);
+    }
+  }
+
   * [Symbol.iterator]() {
     for (const [key, value] of super.entries()) {
       if (typeof key === 'string' || typeof key === 'number') {

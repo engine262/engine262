@@ -25,6 +25,7 @@ import {
   ToNumber,
   ToString,
   ToUint32,
+  isArrayIndex,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -107,7 +108,7 @@ export function ArraySetLength(A, Desc) {
   newLenDesc.Value = new Value(newLen);
   const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
   Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
-  let oldLen = oldLenDesc.Value.numberValue();
+  const oldLen = oldLenDesc.Value.numberValue();
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
   }
@@ -125,12 +126,17 @@ export function ArraySetLength(A, Desc) {
   if (succeeded === Value.false) {
     return Value.false;
   }
-  while (newLen < oldLen) {
-    oldLen -= 1;
-    const idxToDelete = X(ToString(new Value(oldLen)));
-    const deleteSucceeded = X(A.Delete(idxToDelete));
+  const keys = [];
+  A.properties.forEach((value, key) => {
+    if (isArrayIndex(key) && Number(key.stringValue()) >= newLen) {
+      keys.push(key);
+    }
+  });
+  keys.sort((a, b) => Number(b.stringValue()) - Number(a.stringValue()));
+  for (const P of keys) {
+    const deleteSucceeded = X(A.Delete(P));
     if (deleteSucceeded === Value.false) {
-      newLenDesc.Value = new Value(oldLen + 1);
+      newLenDesc.Value = new Value(X(ToUint32(P)).numberValue() + 1);
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }
