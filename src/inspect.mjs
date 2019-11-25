@@ -47,7 +47,7 @@ const INSPECTORS = {
   Completion: (v, ctx, i) => i(v.Value),
   Null: () => 'null',
   Undefined: () => 'undefined',
-  Boolean: (v) => v.value.toString(),
+  Boolean: (v) => v.boolean.toString(),
   Number: (v) => {
     const n = v.numberValue();
     if (n === 0 && Object.is(n, -0)) {

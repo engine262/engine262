@@ -79,11 +79,15 @@ export class NullValue extends PrimitiveValue {}
 export class BooleanValue extends PrimitiveValue {
   constructor(v) {
     super();
-    this.value = v;
+    this.boolean = v;
+  }
+
+  booleanValue() {
+    return this.boolean;
   }
 
   [Symbol.for('nodejs.util.inspect.custom')]() {
-    return `Boolean { ${this.value} }`;
+    return `Boolean { ${this.boolean} }`;
   }
 }
 

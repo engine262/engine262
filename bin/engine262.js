@@ -175,6 +175,11 @@ agent.enter();
 
 const realm = createRealm();
 
+if (argv.inspector) {
+  const inspector = require('../inspector');
+  inspector.attachRealm(realm);
+}
+
 {
   const api = new APIObject(realm);
 

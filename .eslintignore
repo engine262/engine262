@@ -1,2 +1,4 @@
 !.eslintrc.js
 *-gen.mjs
+test/test262
+test/JSONTestSuite
