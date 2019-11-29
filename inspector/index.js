@@ -96,11 +96,11 @@ const methods = {
       contextId,
       returnByValue,
       generatePreview,
-      // awaitPromise,
+      awaitPromise,
       throwOnSideEffect,
       objectGroup,
     }) {
-      if (throwOnSideEffect) {
+      if (throwOnSideEffect || awaitPromise) {
         return {
           exceptionDetails: {
             text: 'unsupported',
@@ -111,7 +111,6 @@ const methods = {
       }
 
       const context = getContext(contextId);
-
       const r = context.realm.evaluateScript(expression);
       return context.createEvaluationResult(r, { returnByValue, generatePreview, objectGroup });
     },
@@ -122,41 +121,18 @@ const methods = {
       return { id: 'isolate.0' };
     },
     getProperties({ // eslint-disable-line no-empty-pattern
-      // objectId,
+      objectId,
       // ownProperties,
       // accessorPropertiesOnly,
-      // generatePreview,
+      generatePreview,
     }) {
-      // const context = getContext();
-      // const object = context.getObject(objectId);
+      const context = getContext();
+      const object = context.getObject(objectId);
 
-      const properties = [];
-
-      /*
-      const keys = object.OwnPropertyKeys();
-      if (keys instanceof engine262.AbruptCompletion) {
-        return context.createEvaluationResult(keys);
+      const properties = context.getProperties(object, { generatePreview });
+      if (properties instanceof engine262.AbruptCompletion) {
+        return context.createEvaluationResult(properties);
       }
-      for (const key of keys) {
-        const desc = object.GetOwnProperty(key);
-        if (desc instanceof engine262.AbruptCompletion) {
-          return context.createEvaluationResult(keys);
-        }
-        const descriptor = {
-          name: '',
-          value: '',
-          writable: '',
-          get: '',
-          set: '',
-          configurable: '',
-          enumerable: '',
-          wasThrown: false,
-          isOwn: true,
-          symbol: '',
-        };
-        properties.push(descriptor);
-      }
-      */
 
       return { result: properties };
     },
@@ -195,6 +171,8 @@ wss.on('connection', (ws) => {
     ws.send(s);
   };
 
+  ws._socket.unref(); // eslint-disable-line no-underscore-dangle
+
   const context = {
     sendEvent(event, params) {
       send({ method: event, params });
@@ -219,84 +197,160 @@ server.unref();
 
 class InspectorContext {
   constructor(realm) {
-    this.objectGroups = new Map();
+    this.objects = new Map();
+    this.objectCounter = 0;
     this.realm = realm;
   }
 
   internObject(value, group = 'default') {
-    if (!this.objectGroups.has(group)) {
-      this.objectGroups.set(group, []);
-    }
-    return this.objectGroups.get(group).push(value) - 1;
+    const id = `${group}:${this.objectCounter}`;
+    this.objectCounter += 1;
+    this.objects.set(id, value);
+    return id;
   }
 
   releaseObjectGroup(group) {
-    this.objectGroups.delete(group);
+    Object.keys(this.objects)
+      .forEach((key) => {
+        if (key.startsWith(group)) {
+          this.objects.delete(key);
+        }
+      });
   }
 
   getObject(objectId) {
-    for (const group of this.objectGroups.values()) {
-      if (group.has(objectId)) {
-        return group.get(objectId);
-      }
-    }
-    throw new RangeError();
+    return this.objects.get(objectId);
   }
 
-  createEvaluationResult(completion, {
-    // returnByValue,
-    // generatePreview,
-    objectGroup,
-  }) {
+  toRemoteObject(object, options) {
+    let type;
+    let subtype;
+    let value;
+    let objectId;
+    let unserializableValue;
+    switch (engine262.Abstract.Type(object)) {
+      case 'Object':
+        type = 'object';
+        objectId = this.internObject(object, options.objectGroup);
+        if ('PromiseState' in object) {
+          subtype = 'promise';
+        } else if ('MapData' in object) {
+          subtype = 'map';
+        } else if ('SetData' in object) {
+          subtype = 'set';
+        } else if ('ErrorData' in object) {
+          subtype = 'error';
+        } else if ('TypedArrayName' in object) {
+          subtype = 'typedarray';
+        } else if ('DataView' in object) {
+          subtype = 'dataview';
+        } else if ('ProxyTarget' in object) {
+          subtype = 'proxy';
+        } else if ('DateValue' in object) {
+          subtype = 'date';
+        } else if ('GeneratorState' in object) {
+          subtype = 'generator';
+        }
+        break;
+      case 'Null':
+        type = 'object';
+        subtype = 'null';
+        value = null;
+        break;
+      case 'Undefined':
+        type = 'undefined';
+        break;
+      case 'String':
+        type = 'string';
+        value = object.stringValue();
+        break;
+      case 'Number': {
+        type = 'number';
+        const v = object.numberValue();
+        if (!Number.isFinite(v)) {
+          unserializableValue = v.toString();
+        } else {
+          value = v;
+        }
+        break;
+      }
+      case 'Boolean':
+        type = 'boolean';
+        value = object.booleanValue();
+        break;
+      case 'BigInt':
+        type = 'bigint';
+        unserializableValue = object.bigintValue().toString();
+        break;
+      default:
+        throw new RangeError();
+    }
+    let preview;
+    if (options.generatePreview && type === 'object' && subtype !== 'null') {
+      preview = {
+        type,
+        subtype,
+        overflow: false,
+        properties: this.getProperties(object, options),
+      };
+    }
+    return {
+      type,
+      subtype,
+      value,
+      objectId,
+      unserializableValue,
+      preview,
+    };
+  }
+
+  getProperties(object, options) {
+    const wrap = (v) => this.toRemoteObject(v, options);
+
+    const keys = object.OwnPropertyKeys();
+    if (keys instanceof engine262.AbruptCompletion) {
+      return keys;
+    }
+
+    const properties = [];
+    for (const key of keys) {
+      const desc = object.GetOwnProperty(key);
+      if (desc instanceof engine262.AbruptCompletion) {
+        return desc;
+      }
+      const descriptor = {
+        name: key.stringValue
+          ? key.stringValue()
+          : undefined,
+        value: desc.Value ? wrap(desc.Value) : undefined,
+        writable: desc.Writable === engine262.Value.true,
+        get: desc.Get ? wrap(desc.Get) : undefined,
+        set: desc.Set ? wrap(desc.Set) : undefined,
+        configurable: desc.Configurable === engine262.Value.true,
+        enumerable: desc.Enumerable === engine262.Value.true,
+        wasThrown: false,
+        isOwn: true,
+        symbol: key.stringValue ? undefined : wrap(key),
+      };
+      properties.push(descriptor);
+    }
+
+    return properties;
+  }
+
+  createEvaluationResult(completion, options) {
     if (completion instanceof engine262.AbruptCompletion) {
       return {
         exceptionDetails: {
           text: 'uh oh',
           lineNumber: 0,
           columnNumber: 0,
+          exception: this.toRemoteObject(completion.Value, options),
         },
       };
     } else {
-      const result = completion.Value;
-      let type;
-      let subtype;
-      let value;
-      let objectId;
-      switch (engine262.Abstract.Type(result)) {
-        case 'Object':
-          type = 'object';
-          objectId = this.internObject(result, objectGroup);
-          break;
-        case 'Null':
-          type = 'object';
-          subtype = 'null';
-          value = null;
-          break;
-        case 'Undefined':
-          type = 'undefined';
-          break;
-        case 'String':
-          type = 'string';
-          value = result.stringValue();
-          break;
-        case 'Number':
-          type = 'number';
-          value = result.numberValue();
-          break;
-        case 'Boolean':
-          type = 'boolean';
-          value = result.booleanValue();
-          break;
-        default:
-          throw new RangeError();
-      }
       return {
-        result: {
-          type,
-          subtype,
-          value,
-          objectId,
-        },
+        result: this.toRemoteObject(completion.Value, options),
       };
     }
   }

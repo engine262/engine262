@@ -38,7 +38,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
   let holes = 0;
   for (let k = 0; k < len; k += 1) {
     const curProp = X(ToString(new Value(k)));
-    const prop = Q(obj.Get(curProp, obj));
+    const prop = Q(Get(obj, curProp));
     if (prop === Value.undefined) {
       Assert(!internalMethodsRestricted);
       const hasOwn = Q(HasOwnProperty(obj, curProp));
@@ -119,9 +119,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
   // Copy the sorted results back to the array.
   for (let k = 0; k < collected.length; k += 1) {
     const curProp = X(ToString(new Value(k)));
-    if (Q(obj.Set(curProp, collected[k], obj)) !== Value.true) {
-      return surroundingAgent.Throw('CannotSetProperty', curProp, obj);
-    }
+    Q(Set(obj, curProp, collected[k], Value.true));
   }
 
   return obj;

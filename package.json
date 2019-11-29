@@ -29,7 +29,7 @@
     "test:test262": "node test/test262.js",
     "test:json": "node test/json.js",
     "build:grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
-    "lint": "eslint transform.js rollup.config.js test src bin inspector --cache --ext=js,mjs",
+    "lint": "eslint transform.js rollup.config.js test/ src/ bin/ inspector/ --cache --ext=js,mjs",
     "build": "rollup -c",
     "test": "npm run test:test262"
   },
