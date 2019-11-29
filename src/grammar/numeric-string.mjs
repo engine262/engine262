@@ -1,4 +1,4 @@
-import acorn from 'acorn';
+import * as acorn from 'acorn';
 
 const { isNewLine, nonASCIIwhitespace } = acorn;
 

@@ -1,11 +1,6 @@
 #!/bin/sh
 set -e
 
-if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
-  node $(dirname $0)/ecma262_update.js
-  exit
-fi
-
 # For PRs
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
   echo -e "\e[36m\e[1mTest triggered for PR #${TRAVIS_PULL_REQUEST}."
@@ -27,11 +22,12 @@ npm run test
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   git remote set-branches --add origin gh-pages # wtf
   git fetch origin
+  git remote add ugh https://devsnek:$GH_TOKEN@github.com/engine262/engine262.git
+
   git checkout gh-pages
   cp dist/engine262.js engine262.js
   cp dist/engine262.js.map engine262.js.map
   git add engine262.js engine262.js.map
   git commit -m "autobuild" || exit 0
-  git remote add ugh https://devsnek:$GH_TOKEN@github.com/engine262/engine262.git
   git push -u ugh gh-pages
 fi

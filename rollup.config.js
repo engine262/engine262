@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 const babel = require('rollup-plugin-babel');
+const commonjs = require('rollup-plugin-commonjs');
+const nodeResolve = require('rollup-plugin-node-resolve');
 const { name, version } = require('./package.json');
 
 const banner = `/*
@@ -12,14 +14,15 @@ const banner = `/*
 `;
 
 module.exports = () => ({
-  external: ['acorn', 'nearley'],
   input: './src/api.mjs',
   plugins: [
+    commonjs(),
+    nodeResolve(),
     babel({
       exclude: 'node_modules/**',
       plugins: [
         '@babel/plugin-syntax-bigint',
-        './transform.js',
+        './scripts/transform.js',
       ],
     }),
   ],

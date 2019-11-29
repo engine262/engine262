@@ -1,0 +1,7 @@
+test
+src
+scripts
+.eslintcache
+.eslintrc.js
+.eslintignore
+.travis.yml

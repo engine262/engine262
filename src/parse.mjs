@@ -1,4 +1,4 @@
-import acorn from 'acorn';
+import * as acorn from 'acorn';
 import { surroundingAgent } from './engine.mjs';
 import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';

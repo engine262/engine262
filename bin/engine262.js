@@ -4,7 +4,12 @@
 
 /* eslint-disable import/order */
 
-require('@snek/source-map-support/register');
+try {
+  require('@snek/source-map-support/register');
+} catch {
+  // empty
+}
+
 const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
