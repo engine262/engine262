@@ -1,4 +1,4 @@
-# engine262 [![Build Status](https://travis-ci.com/engine262/engine262.svg?branch=master)](https://travis-ci.com/engine262/engine262)
+# engine262
 
 An implementation of ECMA-262 in JavaScript
 
@@ -73,15 +73,13 @@ is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
 
 ## Using engine262
 
-First, install the required dependencies through `$ npm install` or `$ yarn`.
+You can install the latest engine262 build from [GitHub Packages][].
 
-Then, build engine262 by running `$ npm run build` or `$ yarn build`.
+If you install it globally, you can use the CLI like so:
 
-After that, you can use the attached CLI program that functions as a REPL:
+`$ engine262`
 
-`$ bin/engine262.js`
-
-Or, use the API:
+Or, you can install it locally and use the API:
 
 ```js
 'use strict';
@@ -148,3 +146,4 @@ included here for reference, though engine262 is not based on any of them.
 [optional chaining]: https://github.com/tc39/proposal-optional-chaining
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
+[GitHub Packages]: https://github.com/engine262/engine262/packages

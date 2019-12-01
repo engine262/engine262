@@ -27,7 +27,7 @@
     "url": "git+https://github.com/engine262/engine262.git"
   },
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com/@engine262"
+    "registry": "https://npm.pkg.github.com/@engine262"
   },
   "dependencies": {},
   "devDependencies": {
