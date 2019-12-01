@@ -4,16 +4,15 @@
 
 const childProcess = require('child_process');
 const path = require('path');
-const os = require('os');
 const glob = require('glob');
 const {
   pass, fail, skip, total,
+  CPU_COUNT,
 } = require('./base');
 
 const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
 const ENGINE262 = path.resolve(__dirname, '../bin/engine262.js');
 const RUNNER = path.resolve(__dirname, 'json_runner.js');
-const CONCURRENCY = os.cpus().length;
 
 async function test(filename) {
   const r = await new Promise((resolve) => {
@@ -69,7 +68,7 @@ const tests = glob.sync(`${path.resolve(BASE_DIR, 'test_parsing')}/**/*.json`)
 
 let running = 0;
 (function queue() {
-  while (running < CONCURRENCY && tests.length > 0) {
+  while (running < CPU_COUNT && tests.length > 0) {
     running += 1;
     total();
     test(tests.shift())

@@ -1,6 +1,7 @@
 'use strict';
 
 const readline = require('readline');
+const os = require('os');
 
 process.on('unhandledRejection', (reason) => {
   require('fs').writeSync(0, `\n${require('util').inspect(reason)}\n`);
@@ -22,6 +23,8 @@ const ANSI = CI ? {
   yellow: '\u001b[33m',
   blue: '\u001b[34m',
 };
+
+const CPU_COUNT = os.cpus().length;
 
 let skipped = 0;
 let passed = 0;
@@ -82,7 +85,18 @@ module.exports = {
     skipped += 1;
     handledPerSecCounter += 1;
   },
+  CPU_COUNT,
+  CI,
 };
+
+process.stdout.write(`
+#######################
+ engine262 Test Runner
+ Detected ${CPU_COUNT} CPUs
+ ${CI ? 'Running' : 'Not running'} on CI
+#######################
+
+`);
 
 printStatusLine();
 setInterval(() => {

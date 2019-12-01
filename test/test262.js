@@ -11,7 +11,6 @@ const override = process.argv[2];
 if (!process.send) {
   // supervisor
 
-  const os = require('os');
   const childProcess = require('child_process');
   const TestStream = require('test262-stream');
   const glob = require('glob');
@@ -21,11 +20,12 @@ if (!process.send) {
     fail,
     skip,
     total,
+    CPU_COUNT,
   } = require('./base.js');
 
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
-    : Math.round(os.cpus().length * 0.75);
+    : Math.round(CPU_COUNT * 0.75);
 
   const workers = Array.from({ length: NUM_WORKERS }, (_, i) => {
     const c = childProcess.fork(__filename);

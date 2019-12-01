@@ -2,11 +2,34 @@
   "name": "engine262",
   "version": "0.0.1",
   "description": "Implementation of ECMA-262 in JavaScript",
+  "author": "engine262 Contributors",
+  "license": "MIT",
+  "homepage": "https://github.com/engine262/engine262#readme",
+  "bugs": {
+    "url": "https://github.com/engine262/engine262/issues"
+  },
   "main": "dist/engine262",
-  "dependencies": {},
+  "scripts": {
+    "test:test262": "node test/test262.js",
+    "test:json": "node test/json.js",
+    "build:grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
+    "build:engine": "rollup -c",
+    "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
+    "build": "npm run build:engine",
+    "test": "npm run test:test262",
+    "prepublishOnly": "node scripts/tag_version_with_git_hash.js"
+  },
   "bin": {
     "engine262": "bin/engine262.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/engine262/engine262.git"
+  },
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/@engine262"
+  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/plugin-syntax-bigint": "^7.4.4",
@@ -25,24 +48,5 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "test262-stream": "^1.3.0",
     "ws": "^7.2.0"
-  },
-  "scripts": {
-    "test:test262": "node test/test262.js",
-    "test:json": "node test/json.js",
-    "build:grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
-    "build:engine": "rollup -c",
-    "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
-    "build": "npm run build:engine",
-    "test": "npm run test:test262"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/engine262/engine262.git"
-  },
-  "author": "engine262 Contributors",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/engine262/engine262/issues"
-  },
-  "homepage": "https://github.com/engine262/engine262#readme"
+  }
 }
