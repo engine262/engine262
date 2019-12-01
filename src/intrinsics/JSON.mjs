@@ -34,7 +34,6 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const NUMERIC_START = [...NUMERIC, '-'];
 const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f'];
 const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
 
@@ -156,8 +155,10 @@ class JSONValidator {
 
   parseNumber() {
     this.eat('-');
-    Q(this.expect(NUMERIC_START));
-    while (this.eat(NUMERIC));
+    if (!this.eat('0')) {
+      Q(this.expect(NUMERIC));
+      while (this.eat(NUMERIC));
+    }
     if (this.eat('.')) {
       Q(this.expect(NUMERIC));
       while (this.eat(NUMERIC));
