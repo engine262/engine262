@@ -173,9 +173,6 @@ module.exports = ({ types: t, template }) => {
             `);
             path.replaceWith(argument);
           } else {
-            const id = statementPath.scope.generateUidIdentifier();
-
-            let expansion;
             if (macro === MACROS.IfAbruptRejectPromise) {
               const [, capability] = path.node.arguments;
               if (!t.isIdentifier(argument)) {
@@ -186,13 +183,13 @@ module.exports = ({ types: t, template }) => {
               }
               const binding = path.scope.getBinding(argument.name);
               binding.path.parent.kind = 'let';
-              expansion = macro.template({ ID: argument, CAPABILITY: capability });
+              statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
+              path.remove();
             } else {
-              expansion = macro.template({ ARGUMENT: argument, ID: id });
+              const id = statementPath.scope.generateUidIdentifier();
+              statementPath.insertBefore(macro.template({ ARGUMENT: argument, ID: id }));
+              path.replaceWith(id);
             }
-            statementPath.insertBefore(expansion);
-
-            path.replaceWith(id);
           }
         } else if (macroName === 'Assert') {
           path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
