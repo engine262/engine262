@@ -23,6 +23,18 @@ jobs:
       - run: npm run test
         env:
           CONTINUOUS_INTEGRATION: 1
-      - run: npm publish
+      - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{github.token}}
+      - run: |
+          git config --global user.email "gha@example.com"
+          git config --global user.name "GHA"
+          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git checkout gh-pages
+          cp dist/engine262.js engine262.js
+          cp dist/engine262.js.map engine262.js.map
+          git add engine262.js engine262.js.map
+          git commit -m "autobuild" || exit 0 # exit silently if nothing changed
+          git push -u github gh-pages
+        env:
+          GITHUB_TOKEN: ${{github.token}}

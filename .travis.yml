@@ -1,5 +1,0 @@
-dist: xenial
-language: node_js
-node_js: node
-install: npm install
-script: bash ./scripts/travis.sh
