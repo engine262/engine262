@@ -81,7 +81,7 @@ module.exports = ({ types: t, template }) => {
     X: {
       template: template`
       let ID = ARGUMENT;
-      Assert(!(ID instanceof AbruptCompletion));
+      Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
@@ -187,7 +187,14 @@ module.exports = ({ types: t, template }) => {
               path.remove();
             } else {
               const id = statementPath.scope.generateUidIdentifier();
-              statementPath.insertBefore(macro.template({ ARGUMENT: argument, ID: id }));
+              const replacement = {
+                ARGUMENT: argument,
+                ID: id,
+              };
+              if (macro === MACROS.X) {
+                replacement.SOURCE = t.stringLiteral(path.get('arguments.0').getSource());
+              }
+              statementPath.insertBefore(macro.template(replacement));
               path.replaceWith(id);
             }
           }

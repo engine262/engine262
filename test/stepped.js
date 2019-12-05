@@ -16,8 +16,10 @@ if (isMainThread) {
     workerData: { shared, source },
   });
   process.stdin.on('data', () => {
-    Atomics.store(shared32, 0, 1);
-    Atomics.notify(shared32, 0, 1);
+    const old = Atomics.compareExchange(shared32, 0, 0, 1);
+    if (old === 0) {
+      Atomics.notify(shared32, 0, 1);
+    }
   });
   worker.on('message', (data) => {
     const node = JSON.parse(data);

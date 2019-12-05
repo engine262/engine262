@@ -30,6 +30,7 @@ jobs:
           git config --global user.email "gha@example.com"
           git config --global user.name "GHA"
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git fetch github
           git checkout gh-pages
           cp dist/engine262.js engine262.js
           cp dist/engine262.js.map engine262.js.map
