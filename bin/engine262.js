@@ -199,26 +199,10 @@ if (argv.inspector) {
   Abstract.CreateDataProperty(realm.global, new Value(realm, 'api'), api);
 }
 
-if (!entry) {
-  repl.start({
-    prompt: '> ',
-    eval: (cmd, context, filename, callback) => {
-      const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
-      callback(null, result);
-    },
-    completer: () => [],
-    writer: (o) => {
-      if (o instanceof Value || o instanceof Completion) {
-        return inspect(o, realm);
-      }
-      return util.inspect(o);
-    },
-  });
-} else {
-  const source = fs.readFileSync(entry, 'utf8');
+function oneShotEval(source, filename) {
   let result;
-  if (argv.m || argv.module || entry.endsWith('.mjs')) {
-    result = realm.createSourceTextModule(path.resolve(entry), source);
+  if (argv.m || argv.module || filename.endsWith('.mjs')) {
+    result = realm.createSourceTextModule(filename, source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
       realm.moduleEntry = module;
@@ -233,7 +217,7 @@ if (!entry) {
       }
     }
   } else {
-    result = realm.evaluateScript(source, { specifier: path.resolve(entry) });
+    result = realm.evaluateScript(source, { specifier: filename });
   }
   if (result instanceof AbruptCompletion) {
     let inspected;
@@ -248,4 +232,33 @@ if (!entry) {
   } else {
     process.exit(0);
   }
+}
+
+if (entry) {
+  const source = fs.readFileSync(entry, 'utf8');
+  oneShotEval(source, path.resolve(entry));
+} else if (!process.stdin.isTTY) {
+  process.stdin.setEncoding('utf8');
+  let source = '';
+  process.stdin.on('data', (data) => {
+    source += data;
+  });
+  process.stdin.once('end', () => {
+    oneShotEval(source, process.cwd());
+  });
+} else {
+  repl.start({
+    prompt: '> ',
+    eval: (cmd, context, filename, callback) => {
+      const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
+      callback(null, result);
+    },
+    completer: () => [],
+    writer: (o) => {
+      if (o instanceof Value || o instanceof Completion) {
+        return inspect(o, realm);
+      }
+      return util.inspect(o);
+    },
+  });
 }
