@@ -73,6 +73,8 @@ is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
 
 ## Using engine262
 
+Use it online: https://engine262.js.org
+
 You can install the latest engine262 build from [GitHub Packages][].
 
 If you install it globally, you can use the CLI like so:
@@ -122,8 +124,6 @@ async function* numbers() {
 
 // a stream of numbers fills your console. it fills you with determination.
 ```
-
-Documentation is available in [doc/api.md](doc/api.md)
 
 ## Related Projects
 
