@@ -14,7 +14,7 @@ export function* Evaluate_ConditionalExpression({
   const lref = yield* Evaluate(ShortCircuitExpression);
   // 2. Let lval be ! ToBoolean(? GetValue(lref)).
   const lval = ToBoolean(Q(GetValue(lref)));
-  // 4. If lval is true, then
+  // 3. If lval is true, then
   if (lval === Value.true) {
     // a. Let trueRef be the result of evaluating the first AssignmentExpression.
     const trueRef = yield* Evaluate(FirstAssignmentExpression);

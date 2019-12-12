@@ -1,13 +1,16 @@
 'use strict';
 
 const fs = require('fs');
+const { execSync } = require('child_process');
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const { name, version } = require('./package.json');
 
+const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+
 const banner = `/*
- * engine262 ${version}
+ * engine262 ${version} ${hash}
  *
  * ${fs.readFileSync('./LICENSE', 'utf8').trim().split('\n').join('\n * ')}
  */
