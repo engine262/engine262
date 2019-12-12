@@ -26,6 +26,7 @@ jobs:
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{github.token}}
+          BETTER_GH_TOKEN: ${{secrets.BETTER_GH_TOKEN}}
       - run: |
           git config --global user.email "gha@example.com"
           git config --global user.name "GHA"
