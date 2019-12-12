@@ -4,13 +4,13 @@ import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
 // 12.14.3 #sec-conditional-operator-runtime-semantics-evaluation
-// ConditionalExpression : LogicalORExpression `?` AssignmentExpression `:` AssignmentExpression
+// ConditionalExpression : ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
 export function* Evaluate_ConditionalExpression({
-  test: LogicalORExpression,
+  test: ShortCircuitExpression,
   consequent: FirstAssignmentExpression,
   alternate: SecondAssignmentExpression,
 }) {
-  const lref = yield* Evaluate(LogicalORExpression);
+  const lref = yield* Evaluate(ShortCircuitExpression);
   const lval = ToBoolean(Q(GetValue(lref)));
   if (lval === Value.true) {
     const trueRef = yield* Evaluate(FirstAssignmentExpression);

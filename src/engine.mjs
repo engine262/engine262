@@ -24,10 +24,6 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'NullishCoalescing',
-    url: 'https://github.com/tc39/proposal-nullish-coalescing',
-  },
-  {
     name: 'TopLevelAwait',
     url: 'https://github.com/tc39/proposal-top-level-await',
   },

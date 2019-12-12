@@ -86,11 +86,9 @@ const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
           return this.finishToken(optionalChainToken);
         }
       }
-      if (surroundingAgent.feature('NullishCoalescing')) {
-        if (next === 63) {
-          this.pos += 1;
-          return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
-        }
+      if (next === 63) {
+        this.pos += 1;
+        return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
       }
       return this.finishToken(acorn.tokTypes.question);
     }
