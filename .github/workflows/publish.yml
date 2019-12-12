@@ -26,11 +26,10 @@ jobs:
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{github.token}}
-          BETTER_GH_TOKEN: ${{secrets.BETTER_GH_TOKEN}}
       - run: |
           git config --global user.email "gha@example.com"
           git config --global user.name "GHA"
-          git remote add github "https://$GITHUB_ACTOR:$BETTER_GH_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git fetch github
           git checkout gh-pages
           cp dist/engine262.js engine262.js
