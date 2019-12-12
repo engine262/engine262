@@ -78,18 +78,15 @@ const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
   getTokenFromCode(code) {
     if (code === 63) {
       this.pos += 1;
-      if (surroundingAgent.feature('OptionalChaining')) {
-        const next = this.input.charCodeAt(this.pos);
-        if (next === 46) {
-          const nextNext = this.input.charCodeAt(this.pos + 1);
-          if (nextNext < 48 || nextNext > 57) {
-            this.pos += 1;
-            return this.finishToken(optionalChainToken);
-          }
+      const next = this.input.charCodeAt(this.pos);
+      if (next === 46) {
+        const nextNext = this.input.charCodeAt(this.pos + 1);
+        if (nextNext < 48 || nextNext > 57) {
+          this.pos += 1;
+          return this.finishToken(optionalChainToken);
         }
       }
       if (surroundingAgent.feature('NullishCoalescing')) {
-        const next = this.input.charCodeAt(this.pos);
         if (next === 63) {
           this.pos += 1;
           return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);

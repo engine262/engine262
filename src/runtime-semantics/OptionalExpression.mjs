@@ -11,24 +11,32 @@ import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { EvaluateCall, EvaluateStaticPropertyAccess, EvaluateDynamicPropertyAccess } from './all.mjs';
+import {
+  EvaluateCall,
+  EvaluatePropertyAccessWithIdentifierKey,
+  EvaluatePropertyAccessWithExpressionKey,
+} from './all.mjs';
 
-// https://tc39.es/proposal-optional-chaining/#prod-OptionalExpression
+// #prod-OptionalExpression
 // OptionalExpression :
 //   MemberExpression OptionalChain
 //   CallExpression OptionalChain
 //   OptionalExpression OptionalChain
-export function* Evaluate_OptionalExpression(OptionalExpression) {
-  const baseReference = yield* Evaluate(OptionalExpression.object);
+export function* Evaluate_OptionalExpression({ object: MemberExpression, chain: OptionalChain }) {
+  // 1. Let baseReference be the result of evaluating MemberExpression.
+  const baseReference = yield* Evaluate(MemberExpression);
+  // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(GetValue(baseReference));
+  // 3. If baseValue is undefined or null, then
   if (baseValue === Value.undefined || baseValue === Value.null) {
+    // a. Return undefined.
     return Value.undefined;
   }
-  Assert(isOptionalChain(OptionalExpression.chain));
-  return Q(yield* ChainEvaluation(OptionalExpression.chain, baseValue, baseReference));
+  // Return the result of performing ChainEvaluation of OptionalChain with arguments baseValue and baseReference.
+  return Q(yield* ChainEvaluation(OptionalChain, baseValue, baseReference));
 }
 
-// https://tc39.es/proposal-optional-chaining/#sec-optional-chaining-chain-evaluation
+// #sec-optional-chaining-chain-evaluation
 // OptionalChain :
 //   `?.` `[` Expression `]`
 //   `?.` IdentifierName
@@ -46,10 +54,10 @@ function* ChainEvaluation(OptionalChain, baseValue, baseReference) {
     switch (true) {
       // OptionalChain : OptionalChain `?.` `[` Expression `]`
       case isOptionalChainWithExpression(OptionalChain):
-        return Q(yield* EvaluateDynamicPropertyAccess(newValue, OptionalChain.property, strict));
+        return Q(yield* EvaluatePropertyAccessWithExpressionKey(newValue, OptionalChain.property, strict));
       // OptionalChain : OptionalChain `?.` IdentifierName
       case isOptionalChainWithIdentifierName(OptionalChain):
-        return Q(EvaluateStaticPropertyAccess(newValue, OptionalChain.property, strict));
+        return Q(EvaluatePropertyAccessWithIdentifierKey(newValue, OptionalChain.property, strict));
       // OptionalChain : OptionalChain `?.` Arguments
       case isOptionalChainWithArguments(OptionalChain): {
         const tailCall = IsInTailPosition(OptionalChain);
@@ -63,10 +71,10 @@ function* ChainEvaluation(OptionalChain, baseValue, baseReference) {
   switch (true) {
     // OptionalChain : `?.` `[` Expression `]`
     case isOptionalChainWithExpression(OptionalChain):
-      return Q(yield* EvaluateDynamicPropertyAccess(baseValue, OptionalChain.property, strict));
+      return Q(yield* EvaluatePropertyAccessWithExpressionKey(baseValue, OptionalChain.property, strict));
     // OptionalChain : `?.` IdentifierName
     case isOptionalChainWithIdentifierName(OptionalChain):
-      return Q(EvaluateStaticPropertyAccess(baseValue, OptionalChain.property, strict));
+      return Q(EvaluatePropertyAccessWithIdentifierKey(baseValue, OptionalChain.property, strict));
     // OptionalChain : `?.` Arguments
     case isOptionalChainWithArguments(OptionalChain): {
       const tailCall = IsInTailPosition(OptionalChain);

@@ -1,14 +1,23 @@
-import { RequireObjectCoercible, GetValue, ToPropertyKey } from '../abstract-ops/all.mjs';
+import {
+  RequireObjectCoercible, GetValue, ToPropertyKey, Assert,
+} from '../abstract-ops/all.mjs';
 import { Value, Reference } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
+import { isIdentifier } from '../ast.mjs';
 
-// https://tc39.es/proposal-optional-chaining
-export function* EvaluateDynamicPropertyAccess(baseValue, expression, strict) {
+// #sec-evaluate-expression-key-property-access
+export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
+  // 1. Let propertyNameReference be the result of evaluating expression.
   const propertyNameReference = yield* Evaluate(expression);
+  // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
   const propertyNameValue = Q(GetValue(propertyNameReference));
+  // 3. Let bv be ? RequireObjectCoercible(baseValue).
   const bv = Q(RequireObjectCoercible(baseValue));
+  // 4. Let propertyKey be ? ToPropertyKey(propertyNameValue).
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
+  // 5. Return a value of type Reference whose base value component is bv, whose
+  //    referenced name component is propertyKey, and whose strict reference flag is strict.
   return new Reference({
     BaseValue: bv,
     ReferencedName: propertyKey,
@@ -16,10 +25,16 @@ export function* EvaluateDynamicPropertyAccess(baseValue, expression, strict) {
   });
 }
 
-// https://tc39.es/proposal-optional-chaining
-export function EvaluateStaticPropertyAccess(baseValue, identifierName, strict) {
+// #sec-evaluate-identifier-key-property-access
+export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
+  // 1. Assert: identifierName is an IdentifierName.
+  Assert(isIdentifier(identifierName));
+  // 2. Let bv be ? RequireObjectCoercible(baseValue).
   const bv = Q(RequireObjectCoercible(baseValue));
+  // 3. Let propertyNameString be StringValue of IdentifierName
   const propertyNameString = new Value(identifierName.name);
+  // 4. Return a value of type Reference whose base value component is bv, whose
+  //    referenced name component is propertyNameString, and whose strict reference flag is strict.
   return new Reference({
     BaseValue: bv,
     ReferencedName: propertyNameString,

@@ -6,26 +6,37 @@ import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { EvaluateDynamicPropertyAccess, EvaluateStaticPropertyAccess } from './all.mjs';
+import {
+  EvaluatePropertyAccessWithExpressionKey,
+  EvaluatePropertyAccessWithIdentifierKey,
+} from './all.mjs';
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
 function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
+  // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
+  // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(GetValue(baseReference));
+  // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
   const strict = MemberExpression.strict;
-  return Q(yield* EvaluateDynamicPropertyAccess(baseValue, Expression, strict));
+  // 4. Return ? EvaluatePropertyAccessWithExpressionKey(baseValue, |Expression|, strict).
+  return Q(yield* EvaluatePropertyAccessWithExpressionKey(baseValue, Expression, strict));
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
 function* Evaluate_MemberExpression_IdentifierName(MemberExpression, IdentifierName) {
+  // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
+  // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(GetValue(baseReference));
+  // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
   const strict = MemberExpression.strict;
-  return Q(EvaluateStaticPropertyAccess(baseValue, IdentifierName, strict));
+  // 4. Return ? EvaluatePropertyAccessWithIdentifierKey(baseValue, |IdentifierName|, strict).
+  return Q(EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict));
 }
 
 // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
