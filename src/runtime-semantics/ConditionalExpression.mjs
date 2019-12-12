@@ -10,13 +10,20 @@ export function* Evaluate_ConditionalExpression({
   consequent: FirstAssignmentExpression,
   alternate: SecondAssignmentExpression,
 }) {
+  // 1. Let lref be the result of evaluating ShortCircuitExpression.
   const lref = yield* Evaluate(ShortCircuitExpression);
+  // 2. Let lval be ! ToBoolean(? GetValue(lref)).
   const lval = ToBoolean(Q(GetValue(lref)));
+  // 4. If lval is true, then
   if (lval === Value.true) {
+    // a. Let trueRef be the result of evaluating the first AssignmentExpression.
     const trueRef = yield* Evaluate(FirstAssignmentExpression);
+    // b. Return ? GetValue(trueRef).
     return Q(GetValue(trueRef));
   } else {
+    // a. Let falseRef be the result of evaluating the second AssignmentExpression.
     const falseRef = yield* Evaluate(SecondAssignmentExpression);
+    // b. Return ? GetValue(falseRef).
     return Q(GetValue(falseRef));
   }
 }
