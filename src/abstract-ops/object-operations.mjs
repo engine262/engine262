@@ -359,9 +359,6 @@ export function EnumerableOwnPropertyNames(O, kind) {
       }
     }
   }
-  // Order the elements of properties so they are in the same relative
-  // order as would be produced by the Iterator that would be returned
-  // if the EnumerateObjectProperties internal method were invoked with O.
   return properties;
 }
 
