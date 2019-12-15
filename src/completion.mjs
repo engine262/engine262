@@ -22,16 +22,19 @@ export function Completion(type, value, target) {
   return type;
 }
 
-// 6.2.3.2 #sec-normalcompletion
-export class NormalCompletion {
-  constructor(value) {
-    return new Completion('normal', value);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'normal';
-  }
+// #sec-normalcompletion
+export function NormalCompletion(value) {
+  return new Completion('normal', value);
 }
+
+Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
+  value: function hasInstance(v) {
+    return v instanceof Completion && v.Type === 'normal';
+  },
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 export class AbruptCompletion {
   static [Symbol.hasInstance](v) {

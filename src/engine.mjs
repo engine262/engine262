@@ -33,6 +33,7 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
+// #sec-agents
 export class Agent {
   constructor(options = {}) {
     this.LittleEndian = Value.true;
@@ -67,22 +68,27 @@ export class Agent {
     };
   }
 
+  // #sec-running-execution-context
   get runningExecutionContext() {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
 
+  // #current-realm
   get currentRealmRecord() {
     return this.runningExecutionContext.Realm;
   }
 
+  // #active-function-object
   get activeFunctionObject() {
     return this.runningExecutionContext.Function;
   }
 
+  // Get an intrinsic by name for the current realm
   intrinsic(name) {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
+  // Generate a throw completion using message templates
   Throw(type, template, ...templateArgs) {
     if (type instanceof Value) {
       return new ThrowCompletion(type);
@@ -105,6 +111,7 @@ export class Agent {
     return new ThrowCompletion(error);
   }
 
+  // NON-SPEC: Check if a feature is enabled in this agent.
   feature(name) {
     return this.hostDefinedOptions.features[name];
   }
@@ -112,11 +119,11 @@ export class Agent {
 Agent.Increment = 0;
 
 export let surroundingAgent;
-
 export function setSurroundingAgent(a) {
   surroundingAgent = a;
 }
 
+// #sec-execution-contexts
 export class ExecutionContext {
   constructor() {
     this.codeEvaluationState = undefined;
@@ -126,6 +133,7 @@ export class ExecutionContext {
     this.VariableEnvironment = undefined;
     this.LexicalEnvironment = undefined;
 
+    // NON-SPEC
     this.callSite = new CallSite(this);
     this.promiseCapability = undefined;
   }
