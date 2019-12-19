@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 0c5e39adaddaec2aa632be2ff55688504713bf26
+ * engine262 0.0.1 be52e39207cbb33beb36352fdf31d9c1262e1d71
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -3086,7 +3086,7 @@
     } // 8. Let home be F.[[HomeObject]].
 
 
-    const home = F.HomeObject; // 9. Let home be F.[[HomeObject]].
+    const home = F.HomeObject; // 9. Set envRec.[[HomeObject]] to home.
 
     envRec.HomeObject = home; // 10. Set envRec.[[NewTarget]] to newTarget.
 
@@ -27828,8 +27828,10 @@
   } // 6.2.4.7 #sec-issuperreference
 
   function IsSuperReference(V) {
-    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-    return 'ThisValue' in V ? Value.true : Value.false;
+    // 1. Assert: Type(V) is Reference.
+    Assert(Type(V) === 'Reference', "Type(V) === 'Reference'"); // 2. If V has a thisValue component, return true; otherwise return false.
+
+    return 'thisValue' in V ? Value.true : Value.false;
   } // 6.2.4.8 #sec-getvalue
 
   function GetValue(V) {
@@ -27940,11 +27942,14 @@
   } // 6.2.4.10 #sec-getthisvalue
 
   function GetThisValue(V) {
-    Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true");
+    // 1. Assert: IsPropertyReference(V) is true.
+    Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true"); // 2. If IsSuperReference(V) is true, then
 
     if (IsSuperReference(V) === Value.true) {
-      return V.ThisValue;
-    }
+      // a. Return the value of the thisValue component of the reference V.
+      return V.thisValue;
+    } // 3. Return GetBase(V).
+
 
     return GetBase(V);
   } // 6.2.4.11 #sec-initializereferencedbinding
