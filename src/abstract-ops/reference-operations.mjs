@@ -61,8 +61,10 @@ export function IsUnresolvableReference(V) {
 
 // 6.2.4.7 #sec-issuperreference
 export function IsSuperReference(V) {
+  // 1. Assert: Type(V) is Reference.
   Assert(Type(V) === 'Reference');
-  return 'ThisValue' in V ? Value.true : Value.false;
+  // 2. If V has a thisValue component, return true; otherwise return false.
+  return 'thisValue' in V ? Value.true : Value.false;
 }
 
 // 6.2.4.8 #sec-getvalue
@@ -117,10 +119,14 @@ export function PutValue(V, W) {
 
 // 6.2.4.10 #sec-getthisvalue
 export function GetThisValue(V) {
+  // 1. Assert: IsPropertyReference(V) is true.
   Assert(IsPropertyReference(V) === Value.true);
+  // 2. If IsSuperReference(V) is true, then
   if (IsSuperReference(V) === Value.true) {
-    return V.ThisValue;
+    // a. Return the value of the thisValue component of the reference V.
+    return V.thisValue;
   }
+  // 3. Return GetBase(V).
   return GetBase(V);
 }
 

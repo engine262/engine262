@@ -912,7 +912,7 @@ export function NewFunctionEnvironment(F, newTarget) {
   }
   // 8. Let home be F.[[HomeObject]].
   const home = F.HomeObject;
-  // 9. Let home be F.[[HomeObject]].
+  // 9. Set envRec.[[HomeObject]] to home.
   envRec.HomeObject = home;
   // 10. Set envRec.[[NewTarget]] to newTarget.
   envRec.NewTarget = newTarget;
