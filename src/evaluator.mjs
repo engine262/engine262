@@ -176,10 +176,6 @@ export function* Evaluate_StatementList(StatementList) {
 //     ModuleItem
 //     ModuleItemList ModuleItem
 export function* Evaluate_ModuleItemList(ModuleItemList) {
-  if (ModuleItemList.length === 0) {
-    return new NormalCompletion(undefined);
-  }
-
   let sl = yield* Evaluate(ModuleItemList[0]);
   if (ModuleItemList.length === 1) {
     return sl;

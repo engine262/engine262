@@ -209,6 +209,13 @@ module.exports = ({ types: t, template }) => {
           path.node.arguments.push(t.stringLiteral(path.get('arguments.0').getSource()));
         }
       },
+      SwitchCase(path) {
+        const n = path.node.consequent[0];
+        if (t.isThrowStatement(n) && t.isNewExpression(n.argument) && n.argument.callee.name === 'OutOfRange') {
+          path.node.leadingComments = path.node.leadingComments || [];
+          path.node.leadingComments.push({ type: 'CommentBlock', value: 'istanbul ignore next' });
+        }
+      },
     },
   };
 };
