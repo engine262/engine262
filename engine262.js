@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 be52e39207cbb33beb36352fdf31d9c1262e1d71
+ * engine262 0.0.1 08d64ff3053707b1a32222249cee80b31bdc8d5e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -948,6 +948,7 @@
       let _temp = value();
 
       Assert(!(_temp instanceof AbruptCompletion), "value()" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -2193,10 +2194,14 @@
       const bindings = envRec.bindingObject; // 3. Let foundBinding be ? HasProperty(bindings, N).
 
       let _temp = HasProperty(bindings, N);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -2240,6 +2245,7 @@
         let _temp3 = ToBoolean(_temp4);
 
         Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(Q(Get(unscopables, N)))" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp3 instanceof Completion) {
           _temp3 = _temp3.Value;
@@ -3139,10 +3145,14 @@
 
   function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
     let _temp = ToPrimitive(lval);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3344,10 +3354,14 @@
       const nextRef = yield* Evaluate(Expression);
 
       let _temp = GetValue(nextRef);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -3531,10 +3545,14 @@
     const spreadRef = yield* Evaluate(SpreadElement.argument);
 
     let _temp = GetValue(spreadRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3586,6 +3604,7 @@
       let _temp5 = ToString(new Value(nextIndex));
 
       Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(nextIndex))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -3736,6 +3755,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3752,10 +3772,14 @@
     const exprRef = yield* Evaluate(AssignmentExpression);
 
     let _temp2 = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -3792,10 +3816,14 @@
           const rref = yield* Evaluate(AssignmentExpression);
 
           let _temp = GetValue(rref);
+          /* istanbul ignore if */
+
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
+          /* istanbul ignore if */
+
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -3902,6 +3930,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3925,6 +3954,7 @@
     let _temp = envRec.CreateImmutableBinding(name, Value.false);
 
     Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateImmutableBinding(name, Value.false)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -4006,6 +4036,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -4050,10 +4081,14 @@
     const exprRef = yield* Evaluate(UnaryExpression);
 
     let _temp = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -4092,10 +4127,14 @@
     switch (true) {
       case isObjectBindingPattern(BindingPattern):
         let _temp = RequireObjectCoercible(value);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -4206,10 +4245,14 @@
 
   function EvaluateBinopValues_BitwiseANDExpression(lval, rval) {
     let _temp = ToNumeric(lval);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -4359,6 +4402,7 @@
           let _temp = envRec.CreateImmutableBinding(dn, Value.true);
 
           Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -4483,10 +4527,14 @@
     }
 
     let _temp = yield* ArgumentListEvaluation(args);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10043,10 +10091,14 @@
       surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
 
       let _temp = GetValue(superclassRef);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -10115,6 +10167,7 @@
       let _temp3 = SetFunctionName(F, className);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(F, className)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -10266,10 +10319,14 @@
     const lref = yield* Evaluate(CoalesceExpressionHead); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10299,10 +10356,14 @@
     const lref = yield* Evaluate(ShortCircuitExpression); // 2. Let lval be ! ToBoolean(? GetValue(lref)).
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10369,10 +10430,14 @@
     const calleeRealm = surroundingAgent.currentRealmRecord;
 
     let _temp = HostEnsureCanCompileStrings(callerRealm, calleeRealm);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10532,6 +10597,7 @@
     let _temp6 = OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope);
 
     Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
@@ -10585,10 +10651,14 @@
   function Evaluate_DebuggerStatement() {
     if (surroundingAgent.hostDefinedOptions.onDebugger) {
       let _temp = surroundingAgent.hostDefinedOptions.onDebugger();
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -10622,6 +10692,7 @@
     let _temp = OrdinaryFunctionCreate(prototype, UniqueFormalParameters, MethodDefinition.value, 'non-lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(prototype, UniqueFormalParameters, MethodDefinition.value, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10676,10 +10747,14 @@
     }
 
     let _temp = RequireObjectCoercible(value);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11132,6 +11207,7 @@
     let _temp13 = ArrayCreate(new Value(0));
 
     Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
@@ -11284,10 +11360,14 @@
     const lref = yield* Evaluate(EqualityExpression);
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11341,6 +11421,7 @@
           let _temp4 = StrictEqualityComparison(rval, lval);
 
           Assert(!(_temp4 instanceof AbruptCompletion), "StrictEqualityComparison(rval, lval)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp4 instanceof Completion) {
             _temp4 = _temp4.Value;
@@ -11442,6 +11523,7 @@
         let _temp = envRec.CreateMutableBinding(new Value(paramName), false);
 
         Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateMutableBinding(new Value(paramName), false)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -11498,10 +11580,14 @@
 
     if (hasDuplicates) {
       let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
+      /* istanbul ignore if */
+
 
       if (_temp5 instanceof AbruptCompletion) {
         return _temp5;
       }
+      /* istanbul ignore if */
+
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -11854,10 +11940,14 @@
     const propertyNameReference = yield* Evaluate(expression); // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
 
     let _temp = GetValue(propertyNameReference);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11925,10 +12015,14 @@
 
   function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
     let _temp = ToNumeric(lval);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11999,10 +12093,14 @@
       const lref = yield* Evaluate(Expression);
 
       let _temp = GetValue(lref);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -12030,10 +12128,14 @@
           const ClassDeclaration = ExportDeclaration.declaration;
 
           let _temp = yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration);
+          /* istanbul ignore if */
+
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
+          /* istanbul ignore if */
+
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -12134,10 +12236,14 @@
     let V = Value.undefined;
 
     let _temp = CreatePerIterationEnvironment(perIterationBindings);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -12214,6 +12320,7 @@
         let _temp5 = thisIterationEnvRec.CreateMutableBinding(bn, false);
 
         Assert(!(_temp5 instanceof AbruptCompletion), "thisIterationEnvRec.CreateMutableBinding(bn, false)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp5 instanceof Completion) {
           _temp5 = _temp5.Value;
@@ -12969,6 +13076,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13038,6 +13146,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13157,10 +13266,14 @@
               const groupName = new Value(replacementStr.substring(i + 1, nextSign));
 
               let _temp = Get(namedCaptures, groupName);
+              /* istanbul ignore if */
+
 
               if (_temp instanceof AbruptCompletion) {
                 return _temp;
               }
+              /* istanbul ignore if */
+
 
               if (_temp instanceof Completion) {
                 _temp = _temp.Value;
@@ -13214,10 +13327,14 @@
       }
 
       let _temp = envRec.HasRestrictedGlobalProperty(name);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -13410,10 +13527,14 @@
     const exprRef = yield* Evaluate(Expression);
 
     let _temp = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13449,6 +13570,7 @@
     let _temp = GetActiveScriptOrModule();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13458,10 +13580,14 @@
     const argRef = yield* Evaluate(AssignmentExpression);
 
     let _temp2 = GetValue(argRef);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -13480,6 +13606,7 @@
     const promiseCapability = _temp3;
     let specifierString = ToString(specifier);
 
+    /* istanbul ignore if */
     if (specifierString instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
 
@@ -13489,6 +13616,8 @@
 
       return promiseCapability.Promise;
     }
+    /* istanbul ignore if */
+
 
     if (specifierString instanceof Completion) {
       specifierString = specifierString.Value;
@@ -13518,6 +13647,7 @@
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13696,10 +13826,14 @@
 
     if (BindingElementList.length > 0) {
       let _temp = yield* IteratorBindingInitialization_BindingElementList(BindingElementList, iteratorRecord, environment);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -13993,6 +14127,7 @@
     let _temp9 = ArrayCreate(new Value(0));
 
     Assert(!(_temp9 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
@@ -14286,10 +14421,14 @@
     }
 
     let _temp = GetV(value, propertyName);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14444,6 +14583,7 @@
     let _temp = ResolveBinding(bindingId, undefined, strict);
 
     Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14460,10 +14600,14 @@
         const rhs = yield* Evaluate(Initializer);
 
         let _temp2 = GetValue(rhs);
+        /* istanbul ignore if */
+
 
         if (_temp2 instanceof AbruptCompletion) {
           return _temp2;
         }
+        /* istanbul ignore if */
+
 
         if (_temp2 instanceof Completion) {
           _temp2 = _temp2.Value;
@@ -14592,10 +14736,14 @@
     const lref = yield* Evaluate(LogicalANDExpression);
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14621,10 +14769,14 @@
     const lref = yield* Evaluate(LogicalORExpression);
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14649,10 +14801,14 @@
     const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
     let _temp = GetValue(baseReference);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14728,6 +14884,7 @@
       let _temp = HostGetImportMetaProperties(module);
 
       Assert(!(_temp instanceof AbruptCompletion), "HostGetImportMetaProperties(module)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -16145,10 +16302,14 @@
 
   function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
     let _temp = ToNumeric(lval);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16240,6 +16401,7 @@
     let _temp = SetFunctionName(closure, name);
 
     Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16388,10 +16550,14 @@
     const ref = yield* Evaluate(constructExpr.callee);
 
     let _temp = GetValue(ref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16450,10 +16616,14 @@
     const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
 
     let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16474,10 +16644,14 @@
     const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
     let _temp = GetValue(baseReference);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16570,10 +16744,14 @@
 
     for (const BindingProperty of BindingPropertyList) {
       let _temp = yield* PropertyBindingInitialization_BindingProperty(BindingProperty, value, environment);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -16661,10 +16839,14 @@
 
     for (const PropertyDefinition of PropertyDefinitionList) {
       let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -16722,6 +16904,7 @@
     let _temp4 = CreateDataPropertyOrThrow(object, propName, propValue);
 
     Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propName, propValue)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -17179,6 +17362,7 @@
           let _temp = ToString(nbr);
 
           Assert(!(_temp instanceof AbruptCompletion), "ToString(nbr)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -17199,10 +17383,14 @@
     const exprValue = yield* Evaluate(AssignmentExpression);
 
     let _temp2 = GetValue(exprValue);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -17238,10 +17426,14 @@
     }
 
     let _temp = GetMethod(target, wellKnownSymbols.hasInstance);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17399,10 +17591,14 @@
     const BindingIdentifier = BindingRestProperty.argument;
 
     let _temp = ResolveBinding(new Value(BindingIdentifier.name), environment, BindingIdentifier.strict);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17439,10 +17635,14 @@
       const exprRef = yield* Evaluate(Expression);
 
       let _temp = GetValue(exprRef);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -17453,6 +17653,7 @@
       let _temp2 = GetGeneratorKind();
 
       Assert(!(_temp2 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -17480,10 +17681,14 @@
 
   function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
     let _temp = ToNumeric(lval);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17565,10 +17770,14 @@
     Assert(placement === 'start' || placement === 'end', "placement === 'start' || placement === 'end'");
 
     let _temp = ToString(O);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17636,6 +17845,7 @@
     let _temp = activeFunction.GetPrototypeOf();
 
     Assert(!(_temp instanceof AbruptCompletion), "activeFunction.GetPrototypeOf()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17659,10 +17869,14 @@
     Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'");
 
     let _temp2 = GetSuperConstructor();
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -17702,10 +17916,14 @@
     Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true");
 
     let _temp = env.GetSuperBase();
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17805,10 +18023,14 @@
     const exprRef = yield* Evaluate(C.test);
 
     let _temp = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18025,6 +18247,7 @@
     let _temp = ArrayCreate(new Value(count));
 
     Assert(!(_temp instanceof AbruptCompletion), "ArrayCreate(new Value(count))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18126,10 +18349,14 @@
     const tagRef = yield* Evaluate(Expression);
 
     let _temp9 = GetValue(tagRef);
+    /* istanbul ignore if */
+
 
     if (_temp9 instanceof AbruptCompletion) {
       return _temp9;
     }
+    /* istanbul ignore if */
+
 
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
@@ -18159,10 +18386,14 @@
       const subRef = yield* Evaluate(Expression);
 
       let _temp = GetValue(subRef);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -18200,10 +18431,14 @@
     const exprRef = yield* Evaluate(Expression);
 
     let _temp = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18215,10 +18450,14 @@
 
   function TrimString(string, where) {
     let _temp = RequireObjectCoercible(string);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18274,6 +18513,7 @@
       let _temp = catchEnvRec.CreateMutableBinding(new Value(argName), false);
 
       Assert(!(_temp instanceof AbruptCompletion), "catchEnvRec.CreateMutableBinding(new Value(argName), false)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -18392,6 +18632,7 @@
       let _temp = ToObject(GetBase(ref));
 
       Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -18400,10 +18641,14 @@
       const baseObj = _temp;
 
       let _temp2 = baseObj.Delete(GetReferencedName(ref));
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -18663,10 +18908,14 @@
           const lhs = yield* Evaluate(LeftHandSideExpression);
 
           let _temp4 = GetValue(lhs);
+          /* istanbul ignore if */
+
 
           if (_temp4 instanceof AbruptCompletion) {
             return _temp4;
           }
+          /* istanbul ignore if */
+
 
           if (_temp4 instanceof Completion) {
             _temp4 = _temp4.Value;
@@ -18687,6 +18936,7 @@
           let _temp2 = TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit);
 
           Assert(!(_temp2 instanceof AbruptCompletion), "TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp2 instanceof Completion) {
             _temp2 = _temp2.Value;
@@ -18880,10 +19130,14 @@
           const bindingId = new Value(BindingIdentifier.name);
 
           let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
+          /* istanbul ignore if */
+
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
+          /* istanbul ignore if */
+
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -18985,10 +19239,14 @@
     const val = yield* Evaluate(Expression);
 
     let _temp2 = GetValue(val);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -19022,6 +19280,7 @@
     let _temp = GetGeneratorKind();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -19035,10 +19294,14 @@
       const exprRef = yield* Evaluate(AssignmentExpression);
 
       let _temp2 = GetValue(exprRef);
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -19892,6 +20155,7 @@
       let _temp = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
       Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -19982,10 +20246,14 @@
 
       for (const e of module.StarExportEntries) {
         let _temp4 = HostResolveImportedModule(module, e.ModuleRequest);
+        /* istanbul ignore if */
+
 
         if (_temp4 instanceof AbruptCompletion) {
           return _temp4;
         }
+        /* istanbul ignore if */
+
 
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -22330,6 +22598,7 @@
       let _temp = ToString(new Value(index));
 
       Assert(!(_temp instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -22575,6 +22844,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -22590,10 +22860,14 @@
     }
 
     let _temp2 = IsArray(originalArray);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -22917,10 +23191,14 @@
 
   function AllocateArrayBuffer(constructor, byteLength) {
     let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -23066,6 +23344,7 @@
       let _temp4 = convOp(value);
 
       Assert(!(_temp4 instanceof AbruptCompletion), "convOp(value)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp4 instanceof Completion) {
         _temp4 = _temp4.Value;
@@ -23140,6 +23419,7 @@
         let _temp = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
 
         Assert(!(_temp instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -23221,6 +23501,7 @@
           let _temp = AsyncGeneratorReject(generator, resultValue);
 
           Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorReject(generator, resultValue)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -23371,10 +23652,14 @@
           generator.AsyncGeneratorState = 'awaiting-return';
 
           let _temp10 = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+          /* istanbul ignore if */
+
 
           if (_temp10 instanceof AbruptCompletion) {
             return _temp10;
           }
+          /* istanbul ignore if */
+
 
           if (_temp10 instanceof Completion) {
             _temp10 = _temp10.Value;
@@ -23550,6 +23835,7 @@
     let _temp = CanonicalNumericIndexString(V);
 
     Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(V)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -23603,10 +23889,14 @@
 
   function GetViewValue(view, requestIndex, isLittleEndian, type) {
     let _temp = RequireInternalSlot(view, 'DataView');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -23628,6 +23918,7 @@
     let _temp3 = ToBoolean(isLittleEndian);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -23923,6 +24214,7 @@
     let _temp = ToInteger(hour);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToInteger(hour)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -24149,6 +24441,7 @@
         let _temp = ToObject(thisArgument);
 
         Assert(!(_temp instanceof AbruptCompletion), "ToObject(thisArgument)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -24237,10 +24530,14 @@
 
     if (kind === 'base') {
       let _temp2 = OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -24531,6 +24828,7 @@
       let _temp = CreateIterResultObject(resultValue, Value.true);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(resultValue, Value.true)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -24546,10 +24844,14 @@
 
   function GeneratorValidate(generator) {
     let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -24693,10 +24995,14 @@
     const evalRealm = surroundingAgent.currentRealmRecord;
 
     let _temp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -24939,6 +25245,7 @@
           let _temp7 = varEnvRec.CreateMutableBinding(fn, Value.true);
 
           Assert(!(_temp7 instanceof AbruptCompletion), "varEnvRec.CreateMutableBinding(fn, Value.true)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp7 instanceof Completion) {
             _temp7 = _temp7.Value;
@@ -25023,10 +25330,14 @@
     if (!method) {
       if (hint === 'async') {
         let _temp = GetMethod(obj, wellKnownSymbols.asyncIterator);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -25299,6 +25610,7 @@
     let _temp15 = CreateDataProperty(obj, new Value('value'), value);
 
     Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), value)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp15 instanceof Completion) {
       _temp15 = _temp15.Value;
@@ -25401,6 +25713,7 @@
   function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
     let done = IteratorComplete(result);
 
+    /* istanbul ignore if */
     if (done instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
 
@@ -25410,6 +25723,8 @@
 
       return promiseCapability.Promise;
     }
+    /* istanbul ignore if */
+
 
     if (done instanceof Completion) {
       done = done.Value;
@@ -25486,6 +25801,7 @@
       let _temp = SortCompare(x, y, Value.undefined);
 
       Assert(!(_temp instanceof AbruptCompletion), "SortCompare(x, y, Value.undefined)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -25502,10 +25818,14 @@
   function InnerModuleLinking(module, stack, index) {
     if (!(module instanceof CyclicModuleRecord)) {
       let _temp = module.Link();
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -25627,6 +25947,7 @@
       let _temp6 = HostResolveImportedModule(module, required);
 
       Assert(!(_temp6 instanceof AbruptCompletion), "HostResolveImportedModule(module, required)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -25981,10 +26302,14 @@
     Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // TODO: This should just return Q(O.Get(P, O))
 
     let _temp = O.Get(P, O);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -26367,6 +26692,7 @@
     let _temp17 = ArrayCreate(new Value(0));
 
     Assert(!(_temp17 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp17 instanceof Completion) {
       _temp17 = _temp17.Value;
@@ -26848,10 +27174,14 @@
 
   function OrdinaryDefineOwnProperty(O, P, Desc) {
     let _temp = O.GetOwnProperty(P);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -27405,6 +27735,7 @@
     let _temp16 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
 
     Assert(!(_temp16 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, 'Unordered')" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
@@ -27445,6 +27776,7 @@
     let _temp = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved'])" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -27559,10 +27891,14 @@
     executor.Capability = promiseCapability;
 
     let _temp4 = Construct(C, [executor]);
+    /* istanbul ignore if */
+
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
     }
+    /* istanbul ignore if */
+
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -27860,6 +28196,7 @@
         let _temp = ToObject(base);
 
         Assert(!(_temp instanceof AbruptCompletion), "ToObject(base)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -27920,10 +28257,14 @@
       }
 
       let _temp3 = base.Set(GetReferencedName(V), W, GetThisValue(V));
+      /* istanbul ignore if */
+
 
       if (_temp3 instanceof AbruptCompletion) {
         return _temp3;
       }
+      /* istanbul ignore if */
+
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -27979,10 +28320,14 @@
 
   function RegExpAlloc(newTarget) {
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -27997,6 +28342,7 @@
     }));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -28189,6 +28535,7 @@
     let _temp = UTF16Decode(first, second);
 
     Assert(!(_temp instanceof AbruptCompletion), "UTF16Decode(first, second)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -28249,6 +28596,7 @@
       let _temp = CreateDataProperty(obj, new Value('value'), Desc.Value);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), Desc.Value)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -28317,10 +28665,14 @@
     const desc = Descriptor({});
 
     let _temp7 = HasProperty(Obj, new Value('enumerable'));
+    /* istanbul ignore if */
+
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
     }
+    /* istanbul ignore if */
+
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
@@ -28604,6 +28956,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(S, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -28782,10 +29135,14 @@
     }
 
     let _temp = Get(argument, wellKnownSymbols.match);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -28826,6 +29183,7 @@
     let _temp2 = SameValueNonNumber(x, y);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SameValueNonNumber(x, y)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -29276,10 +29634,14 @@
       }
 
       let _temp = GetMethod(input, wellKnownSymbols.toPrimitive);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -29752,6 +30114,7 @@
           let _temp16 = StringToBigInt(prim);
 
           Assert(!(_temp16 instanceof AbruptCompletion), "StringToBigInt(prim)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp16 instanceof Completion) {
             _temp16 = _temp16.Value;
@@ -30117,10 +30480,14 @@
 
   function IterableToList(items, method) {
     let _temp = GetIterator(items, 'sync', method);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -30626,6 +30993,7 @@
       let _temp = ToInt32(x);
 
       Assert(!(_temp instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -31640,10 +32008,14 @@
       }
 
       let _temp22 = OrdinaryDefineOwnProperty(args, P, newArgDesc);
+      /* istanbul ignore if */
+
 
       if (_temp22 instanceof AbruptCompletion) {
         return _temp22;
       }
+      /* istanbul ignore if */
+
 
       if (_temp22 instanceof Completion) {
         _temp22 = _temp22.Value;
@@ -33665,10 +34037,14 @@
   function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
     if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
       let _temp2 = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -34024,10 +34400,14 @@
     const asyncContext = surroundingAgent.runningExecutionContext;
 
     let _temp = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -34039,6 +34419,7 @@
     let _temp2 = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, ['AsyncContext'])" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -34111,6 +34492,7 @@
           let _temp = SetFunctionName(getter, name, new Value('get'));
 
           Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -34257,10 +34639,14 @@
     thisValue
   }) {
     let _temp = ToPropertyKey(V);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -34391,6 +34777,7 @@
     let _temp8 = ToObject(thisValue);
 
     Assert(!(_temp8 instanceof AbruptCompletion), "ToObject(thisValue)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
@@ -34491,10 +34878,14 @@
     Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null', "iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null'");
 
     let _temp = GetIterator(iterable);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -34619,6 +35010,7 @@
     let _temp = ToObject(value);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToObject(value)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -34629,10 +35021,14 @@
 
   function Object_assign([target = Value.undefined, ...sources]) {
     let _temp2 = ToObject(target);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -35326,6 +35722,7 @@
       let _temp = ToString(new Value(k));
 
       Assert(!(_temp instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -35334,10 +35731,14 @@
       const curProp = _temp;
 
       let _temp2 = Get(obj, curProp);
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -37206,10 +37607,14 @@
     thisValue
   }) {
     let _temp = ToObject(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -37269,6 +37674,7 @@
           let _temp5 = ToString(new Value(k));
 
           Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp5 instanceof Completion) {
             _temp5 = _temp5.Value;
@@ -39415,6 +39821,7 @@
         let _temp = CreateDataProperty(array, new Value('0'), len);
 
         Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(array, new Value('0'), len)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -39497,10 +39904,14 @@
     }
 
     let _temp4 = GetMethod(items, wellKnownSymbols.iterator);
+    /* istanbul ignore if */
+
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
     }
+    /* istanbul ignore if */
+
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -39839,10 +40250,14 @@
 
 
     let _temp = ToPrimitive(value, 'Number');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -39956,10 +40371,14 @@
     thisValue
   }) {
     let _temp = thisBigIntValue(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40000,6 +40419,7 @@
       let _temp3 = ToString(x);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "ToString(x)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -40047,10 +40467,14 @@
     thisValue
   }) {
     let _temp = thisBooleanValue(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40087,10 +40511,14 @@
     }
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40125,10 +40553,14 @@
     thisValue
   }) {
     let _temp = thisNumberValue(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40260,6 +40692,7 @@
       let _temp5 = ToString(new Value(x));
 
       Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(x))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -40473,10 +40906,14 @@
 
     if (value !== undefined) {
       let _temp = ToNumeric(value);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -40520,6 +40957,7 @@
     let _temp2 = IsInteger(number);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "IsInteger(number)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -40614,10 +41052,14 @@
     }
 
     let _temp = CreateListFromArrayLike(argArray);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40752,6 +41194,7 @@
     let _temp7 = SetFunctionLength(F, new Value(L));
 
     Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionLength(F, new Value(L))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
@@ -40873,10 +41316,14 @@
     thisValue
   }) {
     let _temp = thisSymbolValue(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40942,10 +41389,14 @@
       descString = Value.undefined;
     } else {
       let _temp = ToString(description);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -41022,10 +41473,14 @@
 
   function Math_abs([x = Value.undefined]) {
     let _temp = ToNumber(x);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -41105,6 +41560,7 @@
     let _temp5 = NumberValue.exponentiate(base, exponent);
 
     Assert(!(_temp5 instanceof AbruptCompletion), "NumberValue.exponentiate(base, exponent)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -41181,10 +41637,14 @@
     thisValue
   }) {
     let _temp = thisTimeValue(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -42564,6 +43024,7 @@
     let _temp71 = StringPad(year, new Value(4), new Value('0'), 'start');
 
     Assert(!(_temp71 instanceof AbruptCompletion), "StringPad(year, new Value(4), new Value('0'), 'start')" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp71 instanceof Completion) {
       _temp71 = _temp71.Value;
@@ -42730,10 +43191,14 @@
         return ToDateString(new Value(now));
       } else {
         let _temp = ToNumber(year);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -42850,6 +43315,7 @@
           let _temp8 = ToInteger(y);
 
           Assert(!(_temp8 instanceof AbruptCompletion), "ToInteger(y)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp8 instanceof Completion) {
             _temp8 = _temp8.Value;
@@ -43168,6 +43634,7 @@
       let _temp = CreateIterResultObject(Value.undefined, Value.true);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -43182,10 +43649,14 @@
     const fullUnicode = O.Unicode;
 
     let _temp2 = RegExpExec(R, S);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -43300,10 +43771,14 @@
     const R = thisValue;
 
     let _temp = RequireInternalSlot(R, 'RegExpMatcher');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -43471,6 +43946,7 @@
     let _temp10 = ArrayCreate(new Value(n + 1));
 
     Assert(!(_temp10 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
@@ -45013,10 +45489,14 @@
     NewTarget
   }) {
     let _temp = IsRegExp(pattern);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -45133,10 +45613,14 @@
     Assert(IsCallable(onFinally) === Value.true, "IsCallable(onFinally) === Value.true");
 
     let _temp = Call(onFinally, Value.undefined);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -45220,6 +45704,7 @@
       let _temp5 = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
 
       Assert(!(_temp5 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally'])" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -45310,10 +45795,14 @@
     }
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', ['PromiseState', 'PromiseResult', 'PromiseFulfillReactions', 'PromiseRejectReactions', 'PromiseIsHandled']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -45461,6 +45950,7 @@
       let _temp6 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
 
       Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -45515,6 +46005,7 @@
     const promiseCapability = _temp9;
     let iteratorRecord = GetIterator(iterable);
 
+    /* istanbul ignore if */
     if (iteratorRecord instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
 
@@ -45524,6 +46015,8 @@
 
       return promiseCapability.Promise;
     }
+    /* istanbul ignore if */
+
 
     if (iteratorRecord instanceof Completion) {
       iteratorRecord = iteratorRecord.Value;
@@ -46126,10 +46619,14 @@
     const target = O.ProxyTarget;
 
     let _temp = GetMethod(handler, new Value('apply'));
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -46144,6 +46641,7 @@
     let _temp2 = CreateArrayFromList(argumentsList);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateArrayFromList(argumentsList)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -46326,10 +46824,14 @@
     }
 
     let _temp = CreateListFromArrayLike(argumentsList);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -46610,6 +47112,7 @@
     let _temp = CodePointAt(s, position);
 
     Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(s, position)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -46645,10 +47148,14 @@
     thisValue
   }) {
     let _temp = RequireObjectCoercible(thisValue);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -46787,6 +47294,7 @@
     let _temp10 = CodePointAt(S, position);
 
     Assert(!(_temp10 instanceof AbruptCompletion), "CodePointAt(S, position)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
@@ -48359,6 +48867,7 @@
         let _temp = SymbolDescriptiveString(value);
 
         Assert(!(_temp instanceof AbruptCompletion), "SymbolDescriptiveString(value)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -48368,10 +48877,14 @@
       }
 
       let _temp2 = ToString(value);
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -48613,10 +49126,14 @@
     }
 
     let _temp = Get(O, new Value('name'));
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -48696,10 +49213,14 @@
     }
 
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -48729,6 +49250,7 @@
       let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -48767,10 +49289,14 @@
         }
 
         let _temp = OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -48800,6 +49326,7 @@
           let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
           Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp3 instanceof Completion) {
             _temp3 = _temp3.Value;
@@ -48881,10 +49408,14 @@
       len = a.ArrayLength;
     } else {
       let _temp = LengthOfArrayLike(a);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -48907,6 +49438,7 @@
     let _temp2 = ToString(new Value(index));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -48994,6 +49526,7 @@
           let _temp = CreateArrayFromList([e.Key, e.Value]);
 
           Assert(!(_temp instanceof AbruptCompletion), "CreateArrayFromList([e.Key, e.Value])" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -49065,10 +49598,14 @@
 
   function CreateMapIterator(map, kind) {
     let _temp = RequireInternalSlot(map, 'MapData');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49313,6 +49850,7 @@
     let _temp10 = proto.GetOwnProperty(new Value('entries'));
 
     Assert(!(_temp10 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('entries'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
@@ -49332,10 +49870,14 @@
 
   function CreateSetIterator(set, kind) {
     let _temp = RequireInternalSlot(set, 'SetData');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49537,6 +50079,7 @@
     let _temp9 = proto.GetOwnProperty(new Value('values'));
 
     Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('values'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
@@ -49570,10 +50113,14 @@
     }
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49675,6 +50222,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49699,6 +50247,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49782,6 +50331,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGenerator.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49806,6 +50356,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49835,6 +50386,7 @@
     let _temp = AsyncGeneratorEnqueue(generator, completion);
 
     Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49891,6 +50443,7 @@
     let _temp = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
     Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -49900,6 +50453,7 @@
     const syncIteratorRecord = O.SyncIteratorRecord;
     let result = IteratorNext(syncIteratorRecord, value);
 
+    /* istanbul ignore if */
     if (result instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
 
@@ -49909,6 +50463,8 @@
 
       return promiseCapability.Promise;
     }
+    /* istanbul ignore if */
+
 
     if (result instanceof Completion) {
       result = result.Value;
@@ -50112,10 +50668,14 @@
     }
 
     let _temp = ToIndex(length);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -50156,10 +50716,14 @@
     const O = thisValue;
 
     let _temp = RequireInternalSlot(O, 'ArrayBufferData');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -50322,16 +50886,21 @@
       let _temp = this.eatWhitespace();
 
       Assert(!(_temp instanceof AbruptCompletion), "this.eatWhitespace()" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
 
       let _temp2 = this.parseValue();
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -51639,10 +52208,14 @@
 
   function IsFinite([number = Value.undefined]) {
     let _temp = ToNumber(number);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -51663,6 +52236,7 @@
     let _temp2 = SetFunctionName(fn, new Value('isFinite'));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isFinite'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -51680,10 +52254,14 @@
 
   function IsNaN([number = Value.undefined]) {
     let _temp = ToNumber(number);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -51704,6 +52282,7 @@
     let _temp2 = SetFunctionName(fn, new Value('isNaN'));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isNaN'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -51721,10 +52300,14 @@
 
   function ParseFloat([string = Value.undefined]) {
     let _temp = ToString(string);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -51735,6 +52318,7 @@
     let _temp2 = TrimString(inputString, 'start');
 
     Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -51831,10 +52415,14 @@
 
   function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     let _temp = ToString(string);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -51845,6 +52433,7 @@
     let _temp2 = TrimString(inputString, 'start');
 
     Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -51940,6 +52529,7 @@
     let _temp = CreateBuiltinFunction(() => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'), [], realmRec, Value.null);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(\n    () => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'),\n    [], realmRec, Value.null,\n  )" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -51984,10 +52574,14 @@
     }
 
     let _temp = GetMethod(source, wellKnownSymbols.iterator);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -52026,6 +52620,7 @@
         let _temp4 = ToString(new Value(k));
 
         Assert(!(_temp4 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -52229,10 +52824,14 @@
     const O = thisValue;
 
     let _temp = RequireInternalSlot(O, 'TypedArrayName');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -52504,6 +53103,7 @@
       let _temp13 = ToString(new Value(k));
 
       Assert(!(_temp13 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp13 instanceof Completion) {
         _temp13 = _temp13.Value;
@@ -53440,10 +54040,14 @@
         }
 
         let _temp = ToIndex(length);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -53618,6 +54222,7 @@
             let _temp10 = ToString(new Value(k));
 
             Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+            /* istanbul ignore if */
 
             if (_temp10 instanceof Completion) {
               _temp10 = _temp10.Value;
@@ -53840,10 +54445,14 @@
     }
 
     let _temp = RequireInternalSlot(buffer, 'ArrayBufferData');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -53926,10 +54535,14 @@
     const O = thisValue;
 
     let _temp = RequireInternalSlot(O, 'DataView');
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -54216,6 +54829,7 @@
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('caller'), Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -54334,10 +54948,14 @@
         Enumerable: Value.false,
         Configurable: Value.false
       }));
+      /* istanbul ignore if */
+
 
       if (_temp3 instanceof AbruptCompletion) {
         return _temp3;
       }
+      /* istanbul ignore if */
+
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -54395,6 +55013,7 @@
       let _temp = Get(value, wellKnownSymbols.toStringTag);
 
       Assert(!(_temp instanceof AbruptCompletion), "Get(value, wellKnownSymbols.toStringTag)" + ' returned an abrupt completion', "");
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -54517,10 +55136,14 @@
 
       if ('ErrorData' in v) {
         let _temp6 = Get(v, new Value('stack'));
+        /* istanbul ignore if */
+
 
         if (_temp6 instanceof AbruptCompletion) {
           return _temp6;
         }
+        /* istanbul ignore if */
+
 
         if (_temp6 instanceof Completion) {
           _temp6 = _temp6.Value;
@@ -54813,10 +55436,14 @@
 
 
         let _temp = ScriptEvaluation(s);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
