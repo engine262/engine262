@@ -27,6 +27,12 @@ jobs:
         env:
           CONTINUOUS_INTEGRATION: 1
 
+      # Upload coverage data
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{github.token}}
+
       # Publish built package
       - run: npm publish --access=public
         env:
@@ -46,9 +52,3 @@ jobs:
           git push -u github gh-pages
         env:
           GITHUB_TOKEN: ${{github.token}}
-
-      # Upload coverage data
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{github.token}}
