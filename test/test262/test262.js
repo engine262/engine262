@@ -151,6 +151,14 @@ if (!process.send) {
     Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
       if ($262.handlePrint) {
         $262.handlePrint(...args);
+      } else {
+        const formatted = args.map((a, i) => {
+          if (i === 0 && Abstract.Type(a) === 'String') {
+            return a.stringValue();
+          }
+          return inspect(a, realm);
+        }).join(' ');
+        console.log(formatted); // eslint-disable-line no-console
       }
       return Value.undefined;
     }));

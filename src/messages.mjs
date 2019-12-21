@@ -29,6 +29,7 @@ export const CannotConvertToBigInt = (v) => `Cannot convert ${i(v)} to a BigInt`
 export const CannotConvertToObject = (t) => `Cannot convert ${t} to object`;
 export const CannotDefineProperty = (p) => `Cannot define property ${i(p)}`;
 export const CannotDeleteProperty = (p) => `Cannot delete property ${i(p)}`;
+export const CannotDeleteSuper = () => 'Cannot delete a super property';
 export const CannotJSONSerializeBigInt = () => 'Cannot serialize a BigInt to JSON';
 export const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use explicit conversions';
 export const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';

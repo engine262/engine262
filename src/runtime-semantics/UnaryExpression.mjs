@@ -42,7 +42,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   }
   if (IsPropertyReference(ref) === Value.true) {
     if (IsSuperReference(ref) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
     }
     const baseObj = X(ToObject(GetBase(ref)));
     const deleteStatus = Q(baseObj.Delete(GetReferencedName(ref)));

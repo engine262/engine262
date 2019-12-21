@@ -15,7 +15,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 function ErrorProto_toString(args, { thisValue }) {
   const O = thisValue;
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   let name = Q(Get(O, new Value('name')));
   if (Type(name) === 'Undefined') {
