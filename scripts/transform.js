@@ -67,29 +67,33 @@ module.exports = ({ types: t, template }) => {
 
   const MACROS = {
     Q: {
-      template: template`
+      template: template(`
       let ID = ARGUMENT;
+      /* istanbul ignore if */
       if (ID instanceof AbruptCompletion) {
         return ID;
       }
+      /* istanbul ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
-      `,
+      `, { preserveComments: true }),
       imports: ['AbruptCompletion', 'Completion'],
     },
     X: {
-      template: template`
+      template: template(`
       let ID = ARGUMENT;
       Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
+      /* istanbul ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
-      `,
+      `, { preserveComments: true }),
       imports: ['Assert', 'Completion', 'AbruptCompletion'],
     },
     IfAbruptRejectPromise: {
-      template: template`
+      template: template(`
+      /* istanbul ignore if */
       if (ID instanceof AbruptCompletion) {
         const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
         if (hygenicTemp2 instanceof AbruptCompletion) {
@@ -97,10 +101,11 @@ module.exports = ({ types: t, template }) => {
         }
         return CAPABILITY.Promise;
       }
+      /* istanbul ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
-      `,
+      `, { preserveComments: true }),
       imports: ['Call', 'Value', 'AbruptCompletion', 'Completion'],
     },
   };
@@ -164,9 +169,11 @@ module.exports = ({ types: t, template }) => {
             const binding = path.scope.getBinding(argument.name);
             binding.path.parent.kind = 'let';
             statementPath.insertBefore(template.ast`
+              /* istanbul ignore if */
               if (${argument} instanceof AbruptCompletion) {
                 return ${argument};
               }
+              /* istanbul ignore if */
               if (${argument} instanceof Completion) {
                 ${argument} = ${argument}.Value;
               }

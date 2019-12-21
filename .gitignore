@@ -2,3 +2,5 @@ node_modules
 dist
 test.mjs
 .eslintcache
+coverage
+.nyc_output

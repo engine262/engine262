@@ -17,6 +17,7 @@
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
     "build": "npm run build:engine",
     "test": "npm run test:test262",
+    "coverage": "nyc --reporter=lcov npm run test",
     "prepublishOnly": "node scripts/tag_version_with_git_hash.js",
     "postpublish": "git reset --hard HEAD"
   },
