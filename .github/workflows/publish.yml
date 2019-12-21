@@ -9,6 +9,7 @@ jobs:
   publish-gpr:
     runs-on: ubuntu-latest
     steps:
+      # Set everything up
       - uses: actions/checkout@master
       - uses: actions/setup-node@master
         with:
@@ -17,15 +18,21 @@ jobs:
           scope: '@engine262'
           always-auth: true # required if using yarn
       - run: git submodule update --init --recursive
+
+      # Run tests and whatnot
       - run: npm install
       - run: npm run build
       - run: npm run lint
-      - run: npm run test
+      - run: npm run coverage
         env:
           CONTINUOUS_INTEGRATION: 1
+
+      # Publish built package
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{github.token}}
+
+      # Push build to to gh-pages
       - run: |
           git config --global user.email "gha@example.com"
           git config --global user.name "GHA"
@@ -39,3 +46,9 @@ jobs:
           git push -u github gh-pages
         env:
           GITHUB_TOKEN: ${{github.token}}
+
+      # Upload coverage data
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{github.token}}
