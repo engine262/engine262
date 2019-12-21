@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 ddf911d876620237de88126c7950518caed4e156
+ * engine262 0.0.1 92c3895255a46b8124ba94fbdd035c48934cad1f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -10674,21 +10674,19 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
 // DebuggerStatement : `debugger` `;`
 
 function Evaluate_DebuggerStatement() {
+  let result; // 1. If an implementation-defined debugging facility is available and enabled, then
+
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
-    let _temp = surroundingAgent.hostDefinedOptions.onDebugger();
-    /* istanbul ignore if */
+    // a. Perform an implementation-defined debugging action.
+    // b. Let result be an implementation-defined Completion value.
+    result = EnsureCompletion(surroundingAgent.hostDefinedOptions.onDebugger());
+  } else {
+    // a. Let result be NormalCompletion(empty).
+    result = NormalCompletion(undefined);
+  } // 2. Return result.
 
 
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* istanbul ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-  }
+  return result;
 }
 
 // MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
@@ -18715,7 +18713,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
 
   if (IsPropertyReference(ref) === Value.true) {
     if (IsSuperReference(ref) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError');
+      return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
     }
 
     let _temp = ToObject(GetBase(ref));
@@ -33784,6 +33782,7 @@ const CannotConvertToBigInt = v => `Cannot convert ${i(v)} to a BigInt`;
 const CannotConvertToObject = t => `Cannot convert ${t} to object`;
 const CannotDefineProperty = p => `Cannot define property ${i(p)}`;
 const CannotDeleteProperty = p => `Cannot delete property ${i(p)}`;
+const CannotDeleteSuper = () => 'Cannot delete a super property';
 const CannotJSONSerializeBigInt = () => 'Cannot serialize a BigInt to JSON';
 const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use explicit conversions';
 const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';
@@ -33889,6 +33888,7 @@ var messages = /*#__PURE__*/Object.freeze({
   CannotConvertToObject: CannotConvertToObject,
   CannotDefineProperty: CannotDefineProperty,
   CannotDeleteProperty: CannotDeleteProperty,
+  CannotDeleteSuper: CannotDeleteSuper,
   CannotJSONSerializeBigInt: CannotJSONSerializeBigInt,
   CannotMixBigInts: CannotMixBigInts,
   CannotResolvePromiseWithItself: CannotResolvePromiseWithItself,
@@ -49257,7 +49257,7 @@ function ErrorProto_toString(args, {
   const O = thisValue;
 
   if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
 
   let _temp = Get(O, new Value('name'));
