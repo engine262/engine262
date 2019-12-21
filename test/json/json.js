@@ -8,10 +8,10 @@ const glob = require('glob');
 const {
   pass, fail, skip, total,
   CPU_COUNT,
-} = require('./base');
+} = require('../base');
 
 const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
-const ENGINE262 = path.resolve(__dirname, '../bin/engine262.js');
+const ENGINE262 = path.resolve(__dirname, '../../bin/engine262.js');
 const RUNNER = path.resolve(__dirname, 'json_runner.js');
 
 async function test(filename) {

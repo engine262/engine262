@@ -21,7 +21,7 @@ if (!process.send) {
     skip,
     total,
     CPU_COUNT,
-  } = require('./base.js');
+  } = require('../base.js');
 
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
@@ -105,7 +105,7 @@ if (!process.send) {
     Throw,
     AbruptCompletion,
     inspect,
-  } = require('..');
+  } = require('../..');
 
   const agent = new Agent({
     features: FEATURES.map((f) => f.name),

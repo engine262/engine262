@@ -10,8 +10,8 @@
   },
   "main": "dist/engine262",
   "scripts": {
-    "test:test262": "node test/test262.js",
-    "test:json": "node test/json.js",
+    "test:test262": "node test/test262/test262.js",
+    "test:json": "node test/json/json.js",
     "build:grammar": "nearleyc src/grammar/StrNumericLiteral.ne -o src/grammar/StrNumericLiteral-gen.mjs",
     "build:engine": "rollup -c",
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
