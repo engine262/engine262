@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 823db5cf850d219ed3248ef9a3e3401a1809a9d6
+ * engine262 0.0.1 7e2bb37e95bbfe6511a662e3d8ce0b5d0155b13f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -74,10 +74,6 @@
 
     if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
       return isStrictModeCode(node.body);
-    }
-
-    if (Array.isArray(node)) {
-      return directivePrologueContainsUseStrictDirective(node);
     }
 
     return false;
@@ -3801,9 +3797,12 @@
       if (!isAssignmentPattern(LeftHandSideExpression)) {
         let lref = yield* Evaluate(LeftHandSideExpression);
 
+        /* istanbul ignore if */
         if (lref instanceof AbruptCompletion) {
           return lref;
         }
+        /* istanbul ignore if */
+
 
         if (lref instanceof Completion) {
           lref = lref.Value;
@@ -10673,9 +10672,12 @@
     const UniqueFormalParameters = MethodDefinition.value.params;
     let propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
 
+    /* istanbul ignore if */
     if (propKey instanceof AbruptCompletion) {
       return propKey;
     }
+    /* istanbul ignore if */
+
 
     if (propKey instanceof Completion) {
       propKey = propKey.Value;
@@ -10973,9 +10975,12 @@
     } = AssignmentProperty;
     let name = yield* Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
 
+    /* istanbul ignore if */
     if (name instanceof AbruptCompletion) {
       return name;
     }
+    /* istanbul ignore if */
+
 
     if (name instanceof Completion) {
       name = name.Value;
@@ -12169,9 +12174,12 @@
           if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
             value = yield* NamedEvaluation_Expression(AssignmentExpression, new Value('default'));
 
+            /* istanbul ignore if */
             if (value instanceof AbruptCompletion) {
               return value;
             }
+            /* istanbul ignore if */
+
 
             if (value instanceof Completion) {
               value = value.Value;
@@ -12715,9 +12723,12 @@
         {
           let varDcl = yield* Evaluate(IterationStatement.init);
 
+          /* istanbul ignore if */
           if (varDcl instanceof AbruptCompletion) {
             return varDcl;
           }
+          /* istanbul ignore if */
+
 
           if (varDcl instanceof Completion) {
             varDcl = varDcl.Value;
@@ -13902,9 +13913,12 @@
         iteratorRecord.Done = Value.true;
       }
 
+      /* istanbul ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
+      /* istanbul ignore if */
+
 
       if (next instanceof Completion) {
         next = next.Value;
@@ -14669,9 +14683,12 @@
     for (const LexicalBinding of BindingList) {
       last = yield* Evaluate_LexicalBinding(LexicalBinding);
 
+      /* istanbul ignore if */
       if (last instanceof AbruptCompletion) {
         return last;
       }
+      /* istanbul ignore if */
+
 
       if (last instanceof Completion) {
         last = last.Value;
@@ -16468,9 +16485,12 @@
     };
     let value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, Value.undefined, name);
 
+    /* istanbul ignore if */
     if (value instanceof AbruptCompletion) {
       return value;
     }
+    /* istanbul ignore if */
+
 
     if (value instanceof Completion) {
       value = value.Value;
@@ -16793,9 +16813,12 @@
           } = BindingProperty;
           let P = yield* Evaluate_PropertyName(PropertyName, BindingProperty.computed);
 
+          /* istanbul ignore if */
           if (P instanceof AbruptCompletion) {
             return P;
           }
+          /* istanbul ignore if */
+
 
           if (P instanceof Completion) {
             P = P.Value;
@@ -16922,9 +16945,12 @@
     } = PropertyDefinition;
     let propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
 
+    /* istanbul ignore if */
     if (propKey instanceof AbruptCompletion) {
       return propKey;
     }
+    /* istanbul ignore if */
+
 
     if (propKey instanceof Completion) {
       propKey = propKey.Value;
@@ -17498,9 +17524,12 @@
         {
           let r = AbstractRelationalComparison(lval, rval);
 
+          /* istanbul ignore if */
           if (r instanceof AbruptCompletion) {
             return r;
           }
+          /* istanbul ignore if */
+
 
           if (r instanceof Completion) {
             r = r.Value;
@@ -18607,9 +18636,12 @@
   function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
     let ref = yield* Evaluate(UnaryExpression);
 
+    /* istanbul ignore if */
     if (ref instanceof AbruptCompletion) {
       return ref;
     }
+    /* istanbul ignore if */
+
 
     if (ref instanceof Completion) {
       ref = ref.Value;
@@ -19204,9 +19236,12 @@
     for (const VariableDeclaration of VariableDeclarationList) {
       next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
 
+      /* istanbul ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
+      /* istanbul ignore if */
+
 
       if (next instanceof Completion) {
         next = next.Value;
@@ -19660,9 +19695,12 @@
     }
 
     for (const StatementListItem of StatementList.slice(1)) {
+      /* istanbul ignore if */
       if (sl instanceof AbruptCompletion) {
         return sl;
       }
+      /* istanbul ignore if */
+
 
       if (sl instanceof Completion) {
         sl = sl.Value;
@@ -24509,9 +24547,12 @@
       return new NormalCompletion(result.Value);
     }
 
+    /* istanbul ignore if */
     if (result instanceof AbruptCompletion) {
       return result;
     }
+    /* istanbul ignore if */
+
 
     if (result instanceof Completion) {
       result = result.Value;
@@ -28171,9 +28212,12 @@
   } // 6.2.4.8 #sec-getvalue
 
   function GetValue(V) {
+    /* istanbul ignore if */
     if (V instanceof AbruptCompletion) {
       return V;
     }
+    /* istanbul ignore if */
+
 
     if (V instanceof Completion) {
       V = V.Value;
@@ -45890,9 +45934,12 @@
         iteratorRecord.Done = Value.true;
       }
 
+      /* istanbul ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
+      /* istanbul ignore if */
+
 
       if (next instanceof Completion) {
         next = next.Value;

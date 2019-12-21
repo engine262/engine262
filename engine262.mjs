@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 7791fa1ec6e06e5cb5be9500d12998d1a295134b
+ * engine262 0.0.1 7e2bb37e95bbfe6511a662e3d8ce0b5d0155b13f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -68,10 +68,6 @@ function isStrictModeCode(node) {
 
   if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
     return isStrictModeCode(node.body);
-  }
-
-  if (Array.isArray(node)) {
-    return directivePrologueContainsUseStrictDirective(node);
   }
 
   return false;
@@ -942,6 +938,7 @@ function resume(context, completion) {
     let _temp = value();
 
     Assert(!(_temp instanceof AbruptCompletion), "value()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -1993,27 +1990,38 @@ class LexicalEnvironment {
     this.outerEnvironmentReference = undefined;
   }
 
-}
-class EnvironmentRecord {} // https://tc39.github.io/ecma262/#sec-lexical-environments
+} // #sec-environment-records
+
+class EnvironmentRecord {} // #sec-declarative-environment-records
 
 class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   constructor() {
     super();
     this.bindings = new ValueMap();
-  }
+  } // #sec-declarative-environment-records-hasbinding-n
+
 
   HasBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. If envRec has a binding for the name that is the value of N, return true.
 
-    if (this.bindings.has(N)) {
+    if (envRec.bindings.has(N)) {
       return Value.true;
-    }
+    } // 3. Return false.
+
 
     return Value.false;
-  }
+  } // #sec-declarative-environment-records-createmutablebinding-n-d
+
 
   CreateMutableBinding(N, D) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec does not already have a binding for N.
+
+    Assert(!envRec.bindings.has(N), "!envRec.bindings.has(N)"); // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
+    //    is true, record that the newly created binding may be delted by a subsequent
+    //    DeleteBinding call.
+
     this.bindings.set(N, {
       indirect: false,
       initialized: false,
@@ -2021,11 +2029,19 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: undefined,
       deletable: D === Value.true,
       value: undefined
-    });
-  }
+    }); //  4. Return NormalCompletion(empty).
+
+    return NormalCompletion(undefined);
+  } // #sec-declarative-environment-records-createimmutablebinding-n-s
+
 
   CreateImmutableBinding(N, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec does not already have a binding for N.
+
+    Assert(!envRec.bindings.has(N), "!envRec.bindings.has(N)"); // 3. Create an immutable binding in envRec for N and record that it is uninitialized. If
+    //    S is true, record that the newly created binding is a strict binding.
+
     this.bindings.set(N, {
       indirect: false,
       initialized: false,
@@ -2033,117 +2049,165 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: S === Value.true,
       deletable: false,
       value: undefined
-    });
-  }
+    }); // 4. Return NormalCompletion(empty).
+
+    return NormalCompletion(undefined);
+  } // #sec-declarative-environment-records-initializebinding-n-v
+
 
   InitializeBinding(N, V) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const binding = this.bindings.get(N);
-    Assert(binding !== undefined, "binding !== undefined");
-    binding.value = V;
-    binding.initialized = true;
-  }
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec must have an uninitialized binding for N.
+
+    const binding = envRec.bindings.get(N);
+    Assert(binding !== undefined && binding.initialized === false, "binding !== undefined && binding.initialized === false"); // 3. Set the bound value for N in envRec to V.
+
+    binding.value = V; // 4. Record that the binding for N in envRec has been initialized.
+
+    binding.initialized = true; // 5. Return NormalCompletion(empty).
+
+    return NormalCompletion(undefined);
+  } // #sec-declarative-environment-records-setmutablebinding-n-v-s
+
 
   SetMutableBinding(N, V, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
+    Assert(IsPropertyKey(N), "IsPropertyKey(N)"); // 1. Let envRec be the declarative Environment Record for which the method was invoked.
 
-    if (!this.bindings.has(N)) {
+    const envRec = this; // 2. If envRec does not have a binding for N, then
+
+    if (!envRec.bindings.has(N)) {
+      // a. If S is true, throw a ReferenceError exception.
       if (S === Value.true) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-      }
+      } // b. Perform envRec.CreateMutableBinding(N, true).
 
-      envRec.CreateMutableBinding(N, true);
-      envRec.InitializeBinding(N, V);
-      return new NormalCompletion(undefined);
+
+      envRec.CreateMutableBinding(N, true); // c. Perform envRec.InitializeBinding(N, V).
+
+      envRec.InitializeBinding(N, V); // d. Return NormalCompletion(empty).
+
+      return NormalCompletion(undefined);
     }
 
-    const binding = this.bindings.get(N);
+    const binding = this.bindings.get(N); // 3. If the binding for N in envRec is a strict binding, set S to true.
 
     if (binding.strict === true) {
       S = Value.true;
-    }
+    } // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
+
 
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-    } else if (binding.mutable === true) {
-      binding.value = V;
-    } else if (S === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'AssignmentToConstant', N);
-    }
+    } // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
 
-    return new NormalCompletion(undefined);
-  }
+
+    if (binding.mutable === true) {
+      binding.value = V;
+    } else {
+      // a. Assert: This is an attempt to change the value of an immutable binding.
+      // b. If S is true, throw a TypeError exception.
+      if (S === Value.true) {
+        return surroundingAgent.Throw('TypeError', 'AssignmentToConstant', N);
+      }
+    } // 7. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
+  } // #sec-declarative-environment-records-getbindingvalue-n-s
+
 
   GetBindingValue(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const binding = this.bindings.get(N);
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec has a binding for N.
+
+    const binding = envRec.bindings.get(N);
+    Assert(binding !== undefined, "binding !== undefined"); // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
 
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-    }
+    } // 4. Return the value currently bound to N in envRec.
+
 
     return binding.value;
-  }
+  } // #sec-declarative-environment-records-deletebinding-n
+
 
   DeleteBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const binding = this.bindings.get(N);
+    // 1. Let envRec be the declarative Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec has a binding for the name that is the value of N.
+
+    const binding = envRec.bindings.get(N);
+    Assert(binding !== undefined, "binding !== undefined"); // 3. If the binding for N in envRec cannot be deleted, return false.
 
     if (binding.deletable === false) {
       return Value.false;
-    }
+    } // 4. Remove the binding for N from envRec.
 
-    this.bindings.delete(N);
+
+    envRec.bindings.delete(N); // 5. Return true.
+
     return Value.true;
-  }
+  } // #sec-declarative-environment-records-hasthisbinding
+
 
   HasThisBinding() {
+    // 1. Return false.
     return Value.false;
-  }
+  } // #sec-declarative-environment-records-hassuperbinding
+
 
   HasSuperBinding() {
+    // 1. Return false.
     return Value.false;
-  }
+  } // #sec-declarative-environment-records-withbaseobject
+
 
   WithBaseObject() {
+    // 1. Return undefined.
     return Value.undefined;
   }
 
-} // 8.1.1.2 #sec-object-environment-records
+} // #sec-object-environment-records
 
 class ObjectEnvironmentRecord extends EnvironmentRecord {
   constructor(BindingObject) {
     super();
     this.bindingObject = BindingObject;
     this.withEnvironment = false;
-  } // 8.1.1.2.1 #sec-object-environment-records-hasbinding-n
+  } // #sec-object-environment-records-hasbinding-n
 
 
   HasBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const bindings = envRec.bindingObject;
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let bindings be the binding object for envRec.
+
+    const bindings = envRec.bindingObject; // 3. Let foundBinding be ? HasProperty(bindings, N).
 
     let _temp = HasProperty(bindings, N);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
 
-    const foundBinding = _temp;
+    const foundBinding = _temp; // 4. If foundBinding is false, return false.
 
     if (foundBinding === Value.false) {
       return Value.false;
-    }
+    } // 5. If the withEnvironment flag of envRec i s false, return true.
+
 
     if (envRec.withEnvironment === false) {
       return Value.true;
-    }
+    } // 6. Let unscopables be ? Get(bindings, @@unscopables).
+
 
     let _temp2 = Get(bindings, wellKnownSymbols.unscopables);
 
@@ -2155,294 +2219,88 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
       _temp2 = _temp2.Value;
     }
 
-    const unscopables = _temp2;
+    const unscopables = _temp2; // 7. If Type(unscopables) is Object, then
 
     if (Type(unscopables) === 'Object') {
-      let _temp3 = Get(unscopables, N);
+      let _temp4 = Get(unscopables, N);
 
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
       }
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      let _temp3 = ToBoolean(_temp4);
+
+      Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(Q(Get(unscopables, N)))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
       }
 
-      const blocked = ToBoolean(_temp3);
+      // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
+      const blocked = _temp3; // b. If blocked is true, return false.
 
       if (blocked === Value.true) {
         return Value.false;
       }
-    }
+    } // 8. Return true.
+
 
     return Value.true;
-  } // 8.1.1.2.2 #sec-object-environment-records-createmutablebinding-n-d
+  } // #sec-object-environment-records-createmutablebinding-n-d
 
 
   CreateMutableBinding(N, D) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const bindings = envRec.bindingObject;
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let envRec be the object Environment Record for which the method was invoked.
+
+    const bindings = envRec.bindingObject; // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
+
     return DefinePropertyOrThrow(bindings, N, Descriptor({
       Value: Value.undefined,
       Writable: Value.true,
       Enumerable: Value.true,
       Configurable: D
     }));
-  } // 8.1.1.2.3 #sec-object-environment-records-createimmutablebinding-n-s
+  } // #sec-object-environment-records-createimmutablebinding-n-s
 
 
-  CreateImmutableBinding()
-  /* N, S */
-  {
-    throw new Error('CreateImmutableBinding got called on an object Environment Record');
-  } // 8.1.1.2.4 #sec-object-environment-records-initializebinding-n-v
+  CreateImmutableBinding(_N, _S) {
+    Assert(false, 'CreateImmutableBinding called on an Object Environment Record');
+  } // #sec-object-environment-records-initializebinding-n-v
 
 
   InitializeBinding(N, V) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this; // Record that the binding for N in envRec has been initialized.
-    // According to the spec this is an unnecessary step for object Environment Records.
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec must have an uninitialized binding for N.
+    // 3. Record that the binding for N in envRec has been initialized.
+    // 4. Return ? envRec.SetMutableBinding(N, V, false).
 
     return envRec.SetMutableBinding(N, V, Value.false);
-  } // 8.1.1.2.5 #sec-object-environment-records-setmutablebinding-n-v-s
+  } // #sec-object-environment-records-setmutablebinding-n-v-s
 
 
   SetMutableBinding(N, V, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const bindings = envRec.bindingObject;
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let bindings be the binding object for envRec.
+
+    const bindings = envRec.bindingObject; // 3. Return ? Set(bindings, N, V, S).
+
     return Set$1(bindings, N, V, S);
-  } // 8.1.1.2.6 #sec-object-environment-records-getbindingvalue-n-s
+  } // #sec-object-environment-records-getbindingvalue-n-s
 
 
   GetBindingValue(N, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const bindings = envRec.bindingObject;
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let bindings be the binding object for envRec.
 
-    let _temp4 = HasProperty(bindings, N);
+    const bindings = envRec.bindingObject; // 3. Let value be ? HasProperty(bindings, N).
 
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    const value = _temp4;
-
-    if (value === Value.false) {
-      if (S === Value.false) {
-        return Value.undefined;
-      } else {
-        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-      }
-    }
-
-    return Get(bindings, N);
-  } // 8.1.1.2.7 #sec-object-environment-records-deletebinding-n
-
-
-  DeleteBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const bindings = envRec.bindingObject;
-    return bindings.Delete(N);
-  } // 8.1.1.2.8 #sec-object-environment-records-hasthisbinding
-
-
-  HasThisBinding() {
-    return Value.false;
-  } // 8.1.1.2.9 #sec-object-environment-records-hassuperbinding
-
-
-  HasSuperBinding() {
-    return Value.false;
-  } // 8.1.1.2.10 #sec-object-environment-records-withbaseobject
-
-
-  WithBaseObject() {
-    const envRec = this;
-
-    if (envRec.withEnvironment) {
-      return envRec.bindingObject;
-    }
-
-    return Value.undefined;
-  }
-
-}
-class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  constructor() {
-    super();
-    this.ThisValue = undefined;
-    this.ThisBindingValue = undefined;
-    this.FunctionObject = undefined;
-    this.HomeObject = Value.undefined;
-    this.NewTarget = undefined;
-  }
-
-  BindThisValue(V) {
-    const envRec = this;
-    Assert(envRec.ThisBindingStatus !== 'lexical', "envRec.ThisBindingStatus !== 'lexical'");
-
-    if (envRec.ThisBindingStatus === 'initialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
-    }
-
-    envRec.ThisValue = V;
-    envRec.ThisBindingStatus = 'initialized';
-    return V;
-  }
-
-  HasThisBinding() {
-    const envRec = this;
-
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    } else {
-      return Value.true;
-    }
-  }
-
-  HasSuperBinding() {
-    const envRec = this;
-
-    if (envRec.ThisBindingStatus === 'lexical') {
-      return Value.false;
-    }
-
-    if (Type(envRec.HomeObject) === 'Undefined') {
-      return Value.false;
-    }
-
-    return Value.true;
-  }
-
-  GetThisBinding() {
-    const envRec = this;
-    Assert(envRec.ThisBindingStatus !== 'lexical', "envRec.ThisBindingStatus !== 'lexical'");
-
-    if (envRec.ThisBindingStatus === 'uninitialized') {
-      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
-    }
-
-    return envRec.ThisValue;
-  }
-
-  GetSuperBase() {
-    const envRec = this;
-    const home = envRec.HomeObject;
-
-    if (Type(home) === 'Undefined') {
-      return Value.undefined;
-    }
-
-    Assert(Type(home) === 'Object', "Type(home) === 'Object'");
-    return home.GetPrototypeOf();
-  }
-
-}
-class GlobalEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.ObjectRecord = undefined;
-    this.GlobalThisValue = undefined;
-    this.DeclarativeRecord = undefined;
-    this.VarNames = undefined;
-  }
-
-  HasBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return Value.true;
-    }
-
-    const ObjRec = envRec.ObjectRecord;
-    return ObjRec.HasBinding(N);
-  }
-
-  CreateMutableBinding(N, D) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
-    }
-
-    return DclRec.CreateMutableBinding(N, D);
-  }
-
-  CreateImmutableBinding(N, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
-    }
-
-    return DclRec.CreateImmutableBinding(N, S);
-  }
-
-  InitializeBinding(N, V) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return DclRec.InitializeBinding(N, V);
-    }
-
-    const ObjRec = envRec.ObjectRecord;
-    return ObjRec.InitializeBinding(N, V);
-  }
-
-  SetMutableBinding(N, V, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return DclRec.SetMutableBinding(N, V, S);
-    }
-
-    const ObjRec = envRec.ObjectRecord;
-    return ObjRec.SetMutableBinding(N, V, S);
-  }
-
-  GetBindingValue(N, S) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return DclRec.GetBindingValue(N, S);
-    }
-
-    const ObjRec = envRec.ObjectRecord;
-    return ObjRec.GetBindingValue(N, S);
-  }
-
-  DeleteBinding(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = this.DeclarativeRecord;
-
-    if (DclRec.HasBinding(N) === Value.true) {
-      return DclRec.DeleteBinding(N);
-    }
-
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
-
-    let _temp5 = HasOwnProperty$1(globalObject, N);
+    let _temp5 = HasProperty(bindings, N);
 
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -2452,107 +2310,382 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp5 = _temp5.Value;
     }
 
-    const existingProp = _temp5;
+    const value = _temp5; // 4. If value is false, then
+
+    if (value === Value.false) {
+      // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
+      if (S === Value.false) {
+        return Value.undefined;
+      } else {
+        return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      }
+    } // 5. Return ? Get(bindings, N).
+
+
+    return Get(bindings, N);
+  } // #sec-object-environment-records-deletebinding-n
+
+
+  DeleteBinding(N) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let bindings be the binding object for envRec.
+
+    const bindings = envRec.bindingObject; // 3. Return ? bindings.[[Delete]](N).
+
+    return bindings.Delete(N);
+  } // #sec-object-environment-records-hasthisbinding
+
+
+  HasThisBinding() {
+    // 1. Return false.
+    return Value.false;
+  } // #sec-object-environment-records-hassuperbinding
+
+
+  HasSuperBinding() {
+    // 1. Return falase.
+    return Value.false;
+  } // #sec-object-environment-records-withbaseobject
+
+
+  WithBaseObject() {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. If the withEnvironment flag of envRec is true, return the binding object for envRec.
+
+    if (envRec.withEnvironment === true) {
+      return envRec.bindingObject;
+    } // 3. Otherwise, return undefined.
+
+
+    return Value.undefined;
+  }
+
+} // #sec-function-environment-records
+
+class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  constructor() {
+    super();
+    this.ThisValue = undefined;
+    this.ThisBindingValue = undefined;
+    this.FunctionObject = undefined;
+    this.HomeObject = Value.undefined;
+    this.NewTarget = undefined;
+  } // #sec-bindthisvalue
+
+
+  BindThisValue(V) {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+
+    Assert(envRec.ThisBindingStatus !== 'lexical', "envRec.ThisBindingStatus !== 'lexical'"); // 3. If envRec.[[ThisBindingStatus]] is initialized, throw a ReferenceError exception.
+
+    if (envRec.ThisBindingStatus === 'initialized') {
+      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+    } // 4. Set envRec.[[ThisValue]] to V.
+
+
+    envRec.ThisValue = V; // 5. Set envRec.[[ThisBindingStatus]] to initialized.
+
+    envRec.ThisBindingStatus = 'initialized'; // 6. Return V.
+
+    return V;
+  } // #sec-function-environment-records-hasthisbinding
+
+
+  HasThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this; // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
+
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  } // #sec-function-environment-records-hassuperbinding
+
+
+  HasSuperBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this; // 2. If envRec.[[ThisBindingStatus]] is lexical, return false.
+
+    if (envRec.ThisBindingStatus === 'lexical') {
+      return Value.false;
+    } // 3. If envRec.[[HomeObject]] has the value undefined, return false; otherwise, return true.
+
+
+    if (Type(envRec.HomeObject) === 'Undefined') {
+      return Value.false;
+    } else {
+      return Value.true;
+    }
+  } // #sec-function-environment-records-getthisbinding
+
+
+  GetThisBinding() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec.[[ThisBindingStatus]] is not lexical.
+
+    Assert(envRec.ThisBindingStatus !== 'lexical', "envRec.ThisBindingStatus !== 'lexical'"); // 3. If envRec.[[ThisBindingStatus]] is uninitialized, throw a ReferenceError exception.
+
+    if (envRec.ThisBindingStatus === 'uninitialized') {
+      return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
+    } // 4. Return envRec.[[ThisValue]].
+
+
+    return envRec.ThisValue;
+  } // #sec-getsuperbase
+
+
+  GetSuperBase() {
+    // 1. Let envRec be the function Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let home be envRec.[[HomeObject]].
+
+    const home = envRec.HomeObject; // 3. If home has the value undefined, return undefined.
+
+    if (Type(home) === 'Undefined') {
+      return Value.undefined;
+    } // 4. Assert: Type(home) is Object.
+
+
+    Assert(Type(home) === 'Object', "Type(home) === 'Object'"); // 5. Return ? home.[[GetPrototypeOf]]().
+
+    return home.GetPrototypeOf();
+  }
+
+} // #sec-global-environment-records
+
+class GlobalEnvironmentRecord extends EnvironmentRecord {
+  constructor() {
+    super();
+    this.ObjectRecord = undefined;
+    this.GlobalThisValue = undefined;
+    this.DeclarativeRecord = undefined;
+    this.VarNames = undefined;
+  } // #sec-global-environment-records-hasbinding-n
+
+
+  HasBinding(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, return true.
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      return Value.true;
+    } // 4. If DclRec.HasBinding(N) is true, return true.
+
+
+    const ObjRec = envRec.ObjectRecord; // 5. Let ObjRec be envRec.[[ObjectRecord]].
+
+    return ObjRec.HasBinding(N);
+  } // #sec-global-environment-records-createmutablebinding-n-d
+
+
+  CreateMutableBinding(N, D) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
+    } // 4. Return DclRec.CreateMutableBinding(N, D).
+
+
+    return DclRec.CreateMutableBinding(N, D);
+  } // #sec-global-environment-records-createimmutablebinding-n-s
+
+
+  CreateImmutableBinding(N, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
+    } // Return DclRec.CreateImmutableBinding(N, S).
+
+
+    return DclRec.CreateImmutableBinding(N, S);
+  } // #sec-global-environment-records-initializebinding-n-v
+
+
+  InitializeBinding(N, V) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, then
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      // a. Return DclRec.InitializeBinding(N, V).
+      return DclRec.InitializeBinding(N, V);
+    } // 4. Assert: If the binding exists, it must be in the object Environment Record.
+    // 5. Let ObjRec be envRec.[[ObjectRecord]].
+
+
+    const ObjRec = envRec.ObjectRecord; // 6. Return ? ObjRec.InitializeBinding(N, V).
+
+    return ObjRec.InitializeBinding(N, V);
+  } // #sec-global-environment-records-setmutablebinding-n-v-s
+
+
+  SetMutableBinding(N, V, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, then
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      // a. Return DclRec.SetMutableBinding(N, V, S).
+      return DclRec.SetMutableBinding(N, V, S);
+    } // 4. Let ObjRec be envRec.[[ObjectRecord]].
+
+
+    const ObjRec = envRec.ObjectRecord; // 5. Return ? ObjRec.SetMutableBinding(N, V, S).
+
+    return ObjRec.SetMutableBinding(N, V, S);
+  } // #sec-global-environment-records-getbindingvalue-n-s
+
+
+  GetBindingValue(N, S) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = envRec.DeclarativeRecord; // 3. If DclRec.HasBinding(N) is true, then
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      // a. Return DclRec.GetBindingValue(N, S).
+      return DclRec.GetBindingValue(N, S);
+    } // 4. Let ObjRec be envRec.[[ObjectRecord]].
+
+
+    const ObjRec = envRec.ObjectRecord; // 5. Return ? ObjRec.GetBindingValue(N, S).
+
+    return ObjRec.GetBindingValue(N, S);
+  } // #sec-global-environment-records-deletebinding-n
+
+
+  DeleteBinding(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    const DclRec = this.DeclarativeRecord; // 3. Let DclRec be envRec.[[DeclarativeRecord]].
+
+    if (DclRec.HasBinding(N) === Value.true) {
+      // a. Return DclRec.DeleteBinding(N).
+      return DclRec.DeleteBinding(N);
+    } // 4. Let ObjRec be envRec.[[ObjectRecord]].
+
+
+    const ObjRec = envRec.ObjectRecord; // 5. Let globalObject be the binding object for ObjRec.
+
+    const globalObject = ObjRec.bindingObject; // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
+
+    let _temp6 = HasOwnProperty$1(globalObject, N);
+
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
+    }
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    const existingProp = _temp6; // 7. If existingProp is true, then
 
     if (existingProp === Value.true) {
-      let _temp6 = ObjRec.DeleteBinding(N);
+      let _temp7 = ObjRec.DeleteBinding(N);
 
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
       }
 
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
 
-      const status = _temp6;
+      // a. Let status be ? ObjRec.DeleteBinding(N).
+      const status = _temp7; // b. If status is true, then
 
       if (status === Value.true) {
-        const varNames = envRec.VarNames;
+        // i. Let varNames be envRec.[[VarNames]].
+        const varNames = envRec.VarNames; // ii. If N is an element of varNames, remove that element from the varNames.
 
         if (varNames.includes(N)) {
           varNames.splice(varNames.indexOf(N), 1);
         }
-      }
+      } // c. Return status.
+
 
       return status;
-    }
+    } // 8. Return true.
+
 
     return Value.true;
-  }
+  } // #sec-global-environment-records-hasthisbinding
+
 
   HasThisBinding() {
+    // Return true.
     return Value.true;
-  }
+  } // #sec-global-environment-records-hassuperbinding
+
 
   HasSuperBinding() {
+    // 1. Return false.
     return Value.false;
-  }
+  } // #sec-global-environment-records-withbaseobject
+
 
   WithBaseObject() {
+    // 1. Return undefined.
     return Value.undefined;
-  }
+  } // #sec-global-environment-records-getthisbinding
+
 
   GetThisBinding() {
-    const envRec = this;
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Return envRec.[[GlobalThisValue]].
+
     return envRec.GlobalThisValue;
-  }
+  } // #sec-hasvardeclaration
+
 
   HasVarDeclaration(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const varDeclaredNames = envRec.VarNames;
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let varDeclaredNames be envRec.[[VarNames]].
+
+    const varDeclaredNames = envRec.VarNames; // 3. If varDeclaredNames contains N, return true.
 
     if (varDeclaredNames.includes(N)) {
       return Value.true;
-    }
+    } // 4. Return false.
+
 
     return Value.false;
-  }
+  } // #sec-haslexicaldeclaration
+
 
   HasLexicalDeclaration(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const DclRec = envRec.DeclarativeRecord;
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let envRec be the global Environment Record for which the method was invoked.
+
+    const DclRec = envRec.DeclarativeRecord; // 3. Let DclRec be envRec.[[DeclarativeRecord]].
+
     return DclRec.HasBinding(N);
-  }
+  } // #sec-hasrestrictedglobalproperty
+
 
   HasRestrictedGlobalProperty(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let ObjRec be envRec.[[ObjectRecord]].
 
-    let _temp7 = globalObject.GetOwnProperty(N);
+    const ObjRec = envRec.ObjectRecord; // 3. Let globalObject be the binding object for ObjRec.
 
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
-    }
+    const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
 
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-
-    const existingProp = _temp7;
-
-    if (existingProp === Value.undefined) {
-      return Value.false;
-    }
-
-    if (existingProp.Configurable === Value.true) {
-      return Value.false;
-    }
-
-    return Value.true;
-  }
-
-  CanDeclareGlobalVar(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
-
-    let _temp8 = HasOwnProperty$1(globalObject, N);
+    let _temp8 = globalObject.GetOwnProperty(N);
 
     if (_temp8 instanceof AbruptCompletion) {
       return _temp8;
@@ -2562,22 +2695,31 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp8 = _temp8.Value;
     }
 
-    const hasProperty = _temp8;
+    const existingProp = _temp8; // 5. If existingProp is undefined, return false.
 
-    if (hasProperty === Value.true) {
-      return Value.true;
-    }
+    if (existingProp === Value.undefined) {
+      return Value.false;
+    } // 6. If existingProp.[[Configurable]] is true, return false.
 
-    return IsExtensible(globalObject);
-  }
 
-  CanDeclareGlobalFunction(N) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
+    if (existingProp.Configurable === Value.true) {
+      return Value.false;
+    } // Return true.
 
-    let _temp9 = globalObject.GetOwnProperty(N);
+
+    return Value.true;
+  } // #sec-candeclareglobalvar
+
+
+  CanDeclareGlobalVar(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let ObjRec be envRec.[[ObjectRecord]].
+
+    const ObjRec = envRec.ObjectRecord; // 3. Let globalObject be the binding object for ObjRec.
+
+    const globalObject = ObjRec.bindingObject; // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
+
+    let _temp9 = HasOwnProperty$1(globalObject, N);
 
     if (_temp9 instanceof AbruptCompletion) {
       return _temp9;
@@ -2587,30 +2729,26 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp9 = _temp9.Value;
     }
 
-    const existingProp = _temp9;
+    const hasProperty = _temp9; // 5. If hasProperty is true, return true.
 
-    if (Type(existingProp) === 'Undefined') {
-      return IsExtensible(globalObject);
-    }
-
-    if (existingProp.Configurable === Value.true) {
+    if (hasProperty === Value.true) {
       return Value.true;
-    }
+    } // 6. Return ? IsExtensible(globalObject).
 
-    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
-      return Value.true;
-    }
 
-    return Value.false;
-  }
+    return IsExtensible(globalObject);
+  } // #sec-candeclareglobalfunction
 
-  CreateGlobalVarBinding(N, D) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
 
-    let _temp10 = HasOwnProperty$1(globalObject, N);
+  CanDeclareGlobalFunction(N) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let ObjRec be envRec.[[ObjectRecord]].
+
+    const ObjRec = envRec.ObjectRecord; // 3. Let globalObject be the binding object for ObjRec.
+
+    const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
+
+    let _temp10 = globalObject.GetOwnProperty(N);
 
     if (_temp10 instanceof AbruptCompletion) {
       return _temp10;
@@ -2620,9 +2758,37 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp10 = _temp10.Value;
     }
 
-    const hasProperty = _temp10;
+    const existingProp = _temp10; // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
 
-    let _temp11 = IsExtensible(globalObject);
+    if (existingProp === Value.undefined) {
+      return IsExtensible(globalObject);
+    } // 6. If existingProp.[[Configurable]] is true, return true.
+
+
+    if (existingProp.Configurable === Value.true) {
+      return Value.true;
+    } // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
+    //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
+
+
+    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
+      return Value.true;
+    } // 8. Return false.
+
+
+    return Value.false;
+  } // #sec-createglobalvarbinding
+
+
+  CreateGlobalVarBinding(N, D) {
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let ObjRec be envRec.[[ObjectRecord]].
+
+    const ObjRec = envRec.ObjectRecord; // 3. Let globalObject be the binding object for ObjRec.
+
+    const globalObject = ObjRec.bindingObject; // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
+
+    let _temp11 = HasOwnProperty$1(globalObject, N);
 
     if (_temp11 instanceof AbruptCompletion) {
       return _temp11;
@@ -2632,20 +2798,22 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp11 = _temp11.Value;
     }
 
-    const extensible = _temp11;
+    const hasProperty = _temp11; // 5. Let extensible be ? IsExtensible(globalObject).
+
+    let _temp12 = IsExtensible(globalObject);
+
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    const extensible = _temp12; // 6. If hasProperty is false and extensible is true, then
 
     if (hasProperty === Value.false && extensible === Value.true) {
-      let _temp12 = ObjRec.CreateMutableBinding(N, D);
-
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
-      }
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-
-      let _temp13 = ObjRec.InitializeBinding(N, Value.undefined);
+      let _temp13 = ObjRec.CreateMutableBinding(N, D);
 
       if (_temp13 instanceof AbruptCompletion) {
         return _temp13;
@@ -2654,50 +2822,40 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       if (_temp13 instanceof Completion) {
         _temp13 = _temp13.Value;
       }
-    }
 
-    const varDeclaredNames = envRec.VarNames;
+      let _temp14 = ObjRec.InitializeBinding(N, Value.undefined);
+
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
+      }
+
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+    } // 7. Let varDeclaredNames be envRec.[[VarNames]].
+
+
+    const varDeclaredNames = envRec.VarNames; // 8. If varDeclaredNames does not contain N, then
 
     if (!varDeclaredNames.includes(N)) {
+      // a. Append N to varDeclaredNames.
       varDeclaredNames.push(N);
-    }
+    } // return NormalCompletion(empty).
 
-    return new NormalCompletion(undefined);
-  }
+
+    return NormalCompletion(undefined);
+  } // #sec-createglobalfunctionbinding
+
 
   CreateGlobalFunctionBinding(N, V, D) {
-    Assert(IsPropertyKey(N), "IsPropertyKey(N)");
-    const envRec = this;
-    const ObjRec = envRec.ObjectRecord;
-    const globalObject = ObjRec.bindingObject;
+    // 1. Let envRec be the global Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let ObjRec be envRec.[[ObjectRecord]].
 
-    let _temp14 = globalObject.GetOwnProperty(N);
+    const ObjRec = envRec.ObjectRecord; // 3. Let globalObject be the binding object for ObjRec.
 
-    if (_temp14 instanceof AbruptCompletion) {
-      return _temp14;
-    }
+    const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
 
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-
-    const existingProp = _temp14;
-    let desc;
-
-    if (Type(existingProp) === 'Undefined' || existingProp.Configurable === Value.true) {
-      desc = Descriptor({
-        Value: V,
-        Writable: Value.true,
-        Enumerable: Value.true,
-        Configurable: D
-      });
-    } else {
-      desc = Descriptor({
-        Value: V
-      });
-    }
-
-    let _temp15 = DefinePropertyOrThrow(globalObject, N, desc);
+    let _temp15 = globalObject.GetOwnProperty(N);
 
     if (_temp15 instanceof AbruptCompletion) {
       return _temp15;
@@ -2707,7 +2865,27 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp15 = _temp15.Value;
     }
 
-    let _temp16 = Set$1(globalObject, N, V, Value.false);
+    const existingProp = _temp15; // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
+
+    let desc;
+
+    if (existingProp === Value.undefined || existingProp.Configurable === Value.true) {
+      // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
+      desc = Descriptor({
+        Value: V,
+        Writable: Value.true,
+        Enumerable: Value.true,
+        Configurable: D
+      });
+    } else {
+      // a. Let desc be the PropertyDescriptor { [[Value]]: V }.
+      desc = Descriptor({
+        Value: V
+      });
+    } // 7. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
+
+
+    let _temp16 = DefinePropertyOrThrow(globalObject, N, desc);
 
     if (_temp16 instanceof AbruptCompletion) {
       return _temp16;
@@ -2716,169 +2894,255 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
-    const varDeclaredNames = envRec.VarNames;
+    // 9. Perform ? Set(globalObject, N, V, false).
 
-    if (!varDeclaredNames.includes(N)) {
-      varDeclaredNames.push(N);
+    let _temp17 = Set$1(globalObject, N, V, Value.false);
+
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
     }
 
-    return new NormalCompletion(undefined);
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+
+    const varDeclaredNames = envRec.VarNames; // 11. If varDeclaredNames does not contain N, then
+
+    if (!varDeclaredNames.includes(N)) {
+      // a. Append N to varDeclaredNames.
+      varDeclaredNames.push(N);
+    } // 1. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
   }
 
-}
+} // #sec-module-environment-records
+
 class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  // #sec-module-environment-records-getbindingvalue-n-s
   GetBindingValue(N, S) {
-    Assert(S === Value.true, "S === Value.true");
-    const envRec = this;
-    Assert(envRec.bindings.has(N), "envRec.bindings.has(N)");
+    // 1. Assert: S is true.
+    Assert(S === Value.true, "S === Value.true"); // 2. Let envRec be the module Environment Record for which the method was invoked.
+
+    const envRec = this; // 3. Assert: envRec has a binding for N.
+
     const binding = envRec.bindings.get(N);
+    Assert(binding !== undefined, "binding !== undefined"); // 4. If the binding for N is an indirect binding, then
 
     if (binding.indirect === true) {
-      const [M, N2] = binding.target;
-      const targetEnv = M.Environment;
+      // a. Let M and N2 be the indirection values provided when this binding for N was created.
+      const [M, N2] = binding.target; // b.Let targetEnv be M.[[Environment]].
+
+      const targetEnv = M.Environment; // c. If targetEnv is undefined, throw a ReferenceError exception.
 
       if (targetEnv === Value.undefined) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-      }
+      } // d. Let targetER be targetEnv's EnvironmentRecord.
 
-      const targetER = targetEnv.EnvironmentRecord;
+
+      const targetER = targetEnv.EnvironmentRecord; // e. Return ? targetER.GetBindingValue(N2, true).
+
       return targetER.GetBindingValue(N2, Value.true);
-    }
+    } // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
+
 
     if (binding.initialized === false) {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
-    }
+    } // 6. Return the value currently bound to N in envRec.
+
 
     return binding.value;
-  }
+  } // #sec-module-environment-records-deletebinding-n
+
 
   DeleteBinding() {
     Assert(false, 'This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
-  }
+  } // #sec-module-environment-records-hasthisbinding
+
 
   HasThisBinding() {
+    // Return true.
     return Value.true;
-  }
+  } // #sec-module-environment-records-getthisbinding
+
 
   GetThisBinding() {
+    // Return undefined.
     return Value.undefined;
-  }
+  } // #sec-createimportbinding
+
 
   CreateImportBinding(N, M, N2) {
-    const envRec = this;
-    Assert(envRec.HasBinding(N) === Value.false, "envRec.HasBinding(N) === Value.false");
-    Assert(M instanceof AbstractModuleRecord, "M instanceof AbstractModuleRecord"); // Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
+    // 1. Let envRec be the module Environment Record for which the method was invoked.
+    const envRec = this; // 2. Assert: envRec does not already have a binding for N.
+
+    Assert(envRec.HasBinding(N) === Value.false, "envRec.HasBinding(N) === Value.false"); // 3. Assert: M is a Module Record.
+
+    Assert(M instanceof AbstractModuleRecord, "M instanceof AbstractModuleRecord"); // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
+    // 5. Create an immutable indirect binding in envRec for N that references M and N2 as its target binding and record that the binding is initialized.
 
     envRec.bindings.set(N, {
       indirect: true,
       target: [M, N2],
       initialized: true
-    });
-    return new NormalCompletion(undefined);
+    }); // 6. Return NormalCompletion(empty).
+
+    return NormalCompletion(undefined);
   }
 
 } // 8.1.2.1 #sec-getidentifierreference
 
 function GetIdentifierReference(lex, name, strict) {
-  if (Type(lex) === 'Null') {
+  // 1. If lex is the value null, then
+  if (lex === Value.null) {
+    // a. Return a value of type Reference whose base value component is undefined, whose
+    //    referenced name component is name, and whose strict reference flag is strict.
     return new Reference({
       BaseValue: Value.undefined,
       ReferencedName: name,
       StrictReference: strict
     });
+  } // 2. Let envRec be lex's EnvironmentRecord.
+
+
+  const envRec = lex.EnvironmentRecord; // 3. Let exists be ? envRec.HasBinding(name).
+
+  let _temp18 = envRec.HasBinding(name);
+
+  if (_temp18 instanceof AbruptCompletion) {
+    return _temp18;
   }
 
-  const envRec = lex.EnvironmentRecord;
-
-  let _temp17 = envRec.HasBinding(name);
-
-  if (_temp17 instanceof AbruptCompletion) {
-    return _temp17;
+  if (_temp18 instanceof Completion) {
+    _temp18 = _temp18.Value;
   }
 
-  if (_temp17 instanceof Completion) {
-    _temp17 = _temp17.Value;
-  }
-
-  const exists = _temp17;
+  const exists = _temp18; // 4. If exists is true, then
 
   if (exists === Value.true) {
+    // a. Return a value of type Reference whose base value component is envRec, whose
+    //    referenced name component is name, and whose strict reference flag is strict.
     return new Reference({
       BaseValue: envRec,
       ReferencedName: name,
       StrictReference: strict
     });
   } else {
-    const outer = lex.outerEnvironmentReference;
+    // a. Let outer be the value of lex's outer environment reference.
+    const outer = lex.outerEnvironmentReference; // b. Return ? GetIdentifierReference(outer, name, strict).
+
     return GetIdentifierReference(outer, name, strict);
   }
 } // 8.1.2.2 #sec-newdeclarativeenvironment
 
 function NewDeclarativeEnvironment(E) {
-  const env = new LexicalEnvironment();
-  const envRec = new DeclarativeEnvironmentRecord();
-  env.EnvironmentRecord = envRec;
-  env.outerEnvironmentReference = E;
+  // 1. Let env be a new Lexical Environment.
+  const env = new LexicalEnvironment(); // 2. Let envRec be a new declarative Environment Record containing no bindings.
+
+  const envRec = new DeclarativeEnvironmentRecord(); // 3. Set env's EnvironmentRecord to envRec.
+
+  env.EnvironmentRecord = envRec; // 4. Set env's EnvironmentRecord to envRec.
+
+  env.outerEnvironmentReference = E; // 5. Return env.
+
   return env;
 } // 8.1.2.3 #sec-newobjectenvironment
 
 function NewObjectEnvironment(O, E) {
-  const env = new LexicalEnvironment();
-  const envRec = new ObjectEnvironmentRecord(O);
-  env.EnvironmentRecord = envRec;
-  env.outerEnvironmentReference = E;
+  // 1. Let env be a new Lexical Environment.
+  const env = new LexicalEnvironment(); // 2. Let envRec be a new object Environment Record containing O as the binding object.
+
+  const envRec = new ObjectEnvironmentRecord(O); // 3. Set env's EnvironmentRecord to envRec.
+
+  env.EnvironmentRecord = envRec; // 4. Set env's EnvironmentRecord to envRec.
+
+  env.outerEnvironmentReference = E; // 5. Return env.
+
   return env;
 } // 8.1.2.4 #sec-newfunctionenvironment
 
 function NewFunctionEnvironment(F, newTarget) {
-  Assert(F instanceof FunctionValue, "F instanceof FunctionValue");
-  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object', "Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object'");
-  const env = new LexicalEnvironment();
-  const envRec = new FunctionEnvironmentRecord();
-  envRec.FunctionObject = F;
+  // 1. Assert: F is an ECMAScript function.
+  Assert(F instanceof FunctionValue, "F instanceof FunctionValue"); // 2. Assert: Type(newTarget) is Undefined or Object.
+
+  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object', "Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object'"); // 3. Let env be a new Lexical Environment.
+
+  const env = new LexicalEnvironment(); // 4. Let envRec be a new function Environment Record containing no bindings.
+
+  const envRec = new FunctionEnvironmentRecord(); // 5. Set envRec.[[FunctionObject]] to F.
+
+  envRec.FunctionObject = F; // 6. If F.[[ThisMode]] is lexical, set envRec.[[ThisBindingStatus]] to lexical.
+  // 7. Else, set envRec.[[ThisBindingStatus]] to uninitialized.
 
   if (F.ThisMode === 'lexical') {
     envRec.ThisBindingStatus = 'lexical';
   } else {
     envRec.ThisBindingStatus = 'uninitialized';
-  }
+  } // 8. Let home be F.[[HomeObject]].
 
-  const home = F.HomeObject;
-  envRec.HomeObject = home;
-  envRec.NewTarget = newTarget;
-  env.EnvironmentRecord = envRec;
-  env.outerEnvironmentReference = F.Environment;
+
+  const home = F.HomeObject; // 9. Set envRec.[[HomeObject]] to home.
+
+  envRec.HomeObject = home; // 10. Set envRec.[[NewTarget]] to newTarget.
+
+  envRec.NewTarget = newTarget; // 11. Set env's EnvironmentRecord to envRec.
+
+  env.EnvironmentRecord = envRec; // 12. Set the outer lexical environment reference of env to F.[[Environment]].
+
+  env.outerEnvironmentReference = F.Environment; // 13. Return env.
+
   return env;
-} // 8.1.2.5 NewGlobalEnvironment
+} // #sec-newglobalenvironment
 
 function NewGlobalEnvironment(G, thisValue) {
-  const env = new LexicalEnvironment();
-  const objRec = new ObjectEnvironmentRecord(G);
-  const dclRec = new DeclarativeEnvironmentRecord();
-  const globalRec = new GlobalEnvironmentRecord();
-  globalRec.ObjectRecord = objRec;
-  globalRec.GlobalThisValue = thisValue;
-  globalRec.DeclarativeRecord = dclRec;
-  globalRec.VarNames = [];
-  env.EnvironmentRecord = globalRec;
-  env.outerEnvironmentReference = Value.null;
+  // 1. Let env be a new Lexical Environment.
+  const env = new LexicalEnvironment(); // 2. Let objRec be a new object Environment Record containing G as the binding object.
+
+  const objRec = new ObjectEnvironmentRecord(G); // 3. Let dclRec be a new declarative Environment Record containing no bindings.
+
+  const dclRec = new DeclarativeEnvironmentRecord(); // 4. Let dclRec be a new declarative Environment Record containing no bindings.
+
+  const globalRec = new GlobalEnvironmentRecord(); // 5. Set globalRec.[[ObjectRecord]] to objRec.
+
+  globalRec.ObjectRecord = objRec; // 6. Set globalRec.[[GlobalThisValue]] to thisValue.
+
+  globalRec.GlobalThisValue = thisValue; // 7. Set globalRec.[[DeclarativeRecord]] to dclRec.
+
+  globalRec.DeclarativeRecord = dclRec; // 8. Set globalRec.[[VarNames]] to a new empty List.
+
+  globalRec.VarNames = []; // 9. Set env's EnvironmentRecord to globalRec.
+
+  env.EnvironmentRecord = globalRec; // 10. Set the outer lexical environment reference of env to null.
+
+  env.outerEnvironmentReference = Value.null; // 11. Return env.
+
   return env;
-} // 8.1.2.6 #sec-newmoduleenvironment
+} // #sec-newmoduleenvironment
 
 function NewModuleEnvironment(E) {
-  const env = new LexicalEnvironment();
-  const envRec = new ModuleEnvironmentRecord();
-  env.EnvironmentRecord = envRec;
-  env.outerEnvironmentReference = E;
+  // 1. Let env be a new Lexical Environment.
+  const env = new LexicalEnvironment(); // 2. Let envRec be a new module Environment Record containing no bindings.
+
+  const envRec = new ModuleEnvironmentRecord(); // 3. Set env's EnvironmentRecord to envRec.
+
+  env.EnvironmentRecord = envRec; // 4. Set the outer lexical environment reference of env to E.
+
+  env.outerEnvironmentReference = E; // 5. Return env.
+
   return env;
 }
 
 function EvaluateBinopValues_AdditiveExpression_Plus(lval, rval) {
   let _temp = ToPrimitive(lval);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3080,10 +3344,14 @@ function* SubstitutionEvaluation_TemplateSpans(TemplateSpans) {
     const nextRef = yield* Evaluate(Expression);
 
     let _temp = GetValue(nextRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3267,10 +3535,14 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
   const spreadRef = yield* Evaluate(SpreadElement.argument);
 
   let _temp = GetValue(spreadRef);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3322,6 +3594,7 @@ function* ArrayAccumulation_SpreadElement(SpreadElement, array, nextIndex) {
     let _temp5 = ToString(new Value(nextIndex));
 
     Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(nextIndex))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -3472,6 +3745,7 @@ function Evaluate_ArrowFunction(ArrowFunction) {
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3488,10 +3762,14 @@ function* Evaluate_ExpressionBody(ExpressionBody) {
   const exprRef = yield* Evaluate(AssignmentExpression);
 
   let _temp2 = GetValue(exprRef);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -3513,9 +3791,12 @@ function* Evaluate_AssignmentExpression(node) {
     if (!isAssignmentPattern(LeftHandSideExpression)) {
       let lref = yield* Evaluate(LeftHandSideExpression);
 
+      /* istanbul ignore if */
       if (lref instanceof AbruptCompletion) {
         return lref;
       }
+      /* istanbul ignore if */
+
 
       if (lref instanceof Completion) {
         lref = lref.Value;
@@ -3528,10 +3809,14 @@ function* Evaluate_AssignmentExpression(node) {
         const rref = yield* Evaluate(AssignmentExpression);
 
         let _temp = GetValue(rref);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -3638,6 +3923,7 @@ function Evaluate_AsyncArrowFunction(AsyncArrowFunction) {
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3661,6 +3947,7 @@ function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpress
   let _temp = envRec.CreateImmutableBinding(name, Value.false);
 
   Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateImmutableBinding(name, Value.false)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3742,6 +4029,7 @@ function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3786,10 +4074,14 @@ function* Evaluate_AwaitExpression({
   const exprRef = yield* Evaluate(UnaryExpression);
 
   let _temp = GetValue(exprRef);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -3828,10 +4120,14 @@ function* BindingInitialization_BindingPattern(BindingPattern, value, environmen
   switch (true) {
     case isObjectBindingPattern(BindingPattern):
       let _temp = RequireObjectCoercible(value);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -3942,10 +4238,14 @@ function* BindingInitialization_ForDeclaration(ForDeclaration, value, environmen
 
 function EvaluateBinopValues_BitwiseANDExpression(lval, rval) {
   let _temp = ToNumeric(lval);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -4095,6 +4395,7 @@ function BlockDeclarationInstantiation(code, env) {
         let _temp = envRec.CreateImmutableBinding(dn, Value.true);
 
         Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -4219,10 +4520,14 @@ function* EvaluateCall(func, ref, args, tailPosition) {
   }
 
   let _temp = yield* ArgumentListEvaluation(args);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -9779,10 +10084,14 @@ function* ClassDefinitionEvaluation_ClassTail({
     surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
 
     let _temp = GetValue(superclassRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -9851,6 +10160,7 @@ function* ClassDefinitionEvaluation_ClassTail({
     let _temp3 = SetFunctionName(F, className);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(F, className)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -10002,10 +10312,14 @@ function* Evaluate_CoalesceExpression({
   const lref = yield* Evaluate(CoalesceExpressionHead); // 2. Let lval be ? GetValue(lref).
 
   let _temp = GetValue(lref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -10035,10 +10349,14 @@ function* Evaluate_ConditionalExpression({
   const lref = yield* Evaluate(ShortCircuitExpression); // 2. Let lval be ! ToBoolean(? GetValue(lref)).
 
   let _temp = GetValue(lref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -10105,10 +10423,14 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   const calleeRealm = surroundingAgent.currentRealmRecord;
 
   let _temp = HostEnsureCanCompileStrings(callerRealm, calleeRealm);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -10268,6 +10590,7 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   let _temp6 = OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope);
 
   Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp6 instanceof Completion) {
     _temp6 = _temp6.Value;
@@ -10321,10 +10644,14 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
 function Evaluate_DebuggerStatement() {
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
     let _temp = surroundingAgent.hostDefinedOptions.onDebugger();
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10339,9 +10666,12 @@ function* DefineMethod(MethodDefinition, object, functionPrototype) {
   const UniqueFormalParameters = MethodDefinition.value.params;
   let propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
 
+  /* istanbul ignore if */
   if (propKey instanceof AbruptCompletion) {
     return propKey;
   }
+  /* istanbul ignore if */
+
 
   if (propKey instanceof Completion) {
     propKey = propKey.Value;
@@ -10358,6 +10688,7 @@ function* DefineMethod(MethodDefinition, object, functionPrototype) {
   let _temp = OrdinaryFunctionCreate(prototype, UniqueFormalParameters, MethodDefinition.value, 'non-lexical-this', scope);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(prototype, UniqueFormalParameters, MethodDefinition.value, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -10412,10 +10743,14 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssign
   }
 
   let _temp = RequireObjectCoercible(value);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -10634,9 +10969,12 @@ function* PropertyDestructuringAssignmentEvaluation_AssignmentProperty(Assignmen
   } = AssignmentProperty;
   let name = yield* Evaluate_PropertyName(PropertyName, AssignmentProperty.computed);
 
+  /* istanbul ignore if */
   if (name instanceof AbruptCompletion) {
     return name;
   }
+  /* istanbul ignore if */
+
 
   if (name instanceof Completion) {
     name = name.Value;
@@ -10868,6 +11206,7 @@ function* IteratorDestructuringAssignmentEvaluation_AssignmentRestProperty(Assig
   let _temp13 = ArrayCreate(new Value(0));
 
   Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
@@ -11020,10 +11359,14 @@ function* Evaluate_EqualityExpression({
   const lref = yield* Evaluate(EqualityExpression);
 
   let _temp = GetValue(lref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -11077,6 +11420,7 @@ function* Evaluate_EqualityExpression({
         let _temp4 = StrictEqualityComparison(rval, lval);
 
         Assert(!(_temp4 instanceof AbruptCompletion), "StrictEqualityComparison(rval, lval)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -11178,6 +11522,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
       let _temp = envRec.CreateMutableBinding(new Value(paramName), false);
 
       Assert(!(_temp instanceof AbruptCompletion), "envRec.CreateMutableBinding(new Value(paramName), false)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -11234,10 +11579,14 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   if (hasDuplicates) {
     let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
+    /* istanbul ignore if */
+
 
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
     }
+    /* istanbul ignore if */
+
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -11590,10 +11939,14 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
   const propertyNameReference = yield* Evaluate(expression); // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
 
   let _temp = GetValue(propertyNameReference);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -11661,10 +12014,14 @@ function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, stri
 
 function EvaluateBinopValues_ExponentiationExpression(lval, rval) {
   let _temp = ToNumeric(lval);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -11735,10 +12092,14 @@ function* Evaluate_ExpressionWithComma(ExpressionWithComma) {
     const lref = yield* Evaluate(Expression);
 
     let _temp = GetValue(lref);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11766,10 +12127,14 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
         const ClassDeclaration = ExportDeclaration.declaration;
 
         let _temp = yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -11803,9 +12168,12 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
         if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
           value = yield* NamedEvaluation_Expression(AssignmentExpression, new Value('default'));
 
+          /* istanbul ignore if */
           if (value instanceof AbruptCompletion) {
             return value;
           }
+          /* istanbul ignore if */
+
 
           if (value instanceof Completion) {
             value = value.Value;
@@ -11870,10 +12238,14 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   let V = Value.undefined;
 
   let _temp = CreatePerIterationEnvironment(perIterationBindings);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -11950,6 +12322,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
       let _temp5 = thisIterationEnvRec.CreateMutableBinding(bn, false);
 
       Assert(!(_temp5 instanceof AbruptCompletion), "thisIterationEnvRec.CreateMutableBinding(bn, false)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -12344,9 +12717,12 @@ function* LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
       {
         let varDcl = yield* Evaluate(IterationStatement.init);
 
+        /* istanbul ignore if */
         if (varDcl instanceof AbruptCompletion) {
           return varDcl;
         }
+        /* istanbul ignore if */
+
 
         if (varDcl instanceof Completion) {
           varDcl = varDcl.Value;
@@ -12705,6 +13081,7 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -12774,6 +13151,7 @@ function Evaluate_GeneratorExpression(GeneratorExpression) {
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -12893,10 +13271,14 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
             const groupName = new Value(replacementStr.substring(i + 1, nextSign));
 
             let _temp = Get(namedCaptures, groupName);
+            /* istanbul ignore if */
+
 
             if (_temp instanceof AbruptCompletion) {
               return _temp;
             }
+            /* istanbul ignore if */
+
 
             if (_temp instanceof Completion) {
               _temp = _temp.Value;
@@ -12950,10 +13332,14 @@ function GlobalDeclarationInstantiation(script, env) {
     }
 
     let _temp = envRec.HasRestrictedGlobalProperty(name);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13146,10 +13532,14 @@ function* Evaluate_IfStatement({
   const exprRef = yield* Evaluate(Expression);
 
   let _temp = GetValue(exprRef);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -13185,6 +13575,7 @@ function* Evaluate_ImportCall({
   let _temp = GetActiveScriptOrModule();
 
   Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -13194,10 +13585,14 @@ function* Evaluate_ImportCall({
   const argRef = yield* Evaluate(AssignmentExpression);
 
   let _temp2 = GetValue(argRef);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -13216,6 +13611,7 @@ function* Evaluate_ImportCall({
   const promiseCapability = _temp3;
   let specifierString = ToString(specifier);
 
+  /* istanbul ignore if */
   if (specifierString instanceof AbruptCompletion) {
     const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
 
@@ -13225,6 +13621,8 @@ function* Evaluate_ImportCall({
 
     return promiseCapability.Promise;
   }
+  /* istanbul ignore if */
+
 
   if (specifierString instanceof Completion) {
     specifierString = specifierString.Value;
@@ -13254,6 +13652,7 @@ function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scop
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope);
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -13432,10 +13831,14 @@ function* IteratorBindingInitialization_ArrayBindingPattern(ArrayBindingPattern,
 
   if (BindingElementList.length > 0) {
     let _temp = yield* IteratorBindingInitialization_BindingElementList(BindingElementList, iteratorRecord, environment);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13504,9 +13907,12 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
       iteratorRecord.Done = Value.true;
     }
 
+    /* istanbul ignore if */
     if (next instanceof AbruptCompletion) {
       return next;
     }
+    /* istanbul ignore if */
+
 
     if (next instanceof Completion) {
       next = next.Value;
@@ -13729,6 +14135,7 @@ function IteratorBindingInitialization_BindingRestElement_Identifier(BindingRest
   let _temp9 = ArrayCreate(new Value(0));
 
   Assert(!(_temp9 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp9 instanceof Completion) {
     _temp9 = _temp9.Value;
@@ -14022,10 +14429,14 @@ function* KeyedBindingInitialization_BindingElement(BindingElement, value, envir
   }
 
   let _temp = GetV(value, propertyName);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -14180,6 +14591,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
   let _temp = ResolveBinding(bindingId, undefined, strict);
 
   Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -14196,10 +14608,14 @@ function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
       const rhs = yield* Evaluate(Initializer);
 
       let _temp2 = GetValue(rhs);
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
+      /* istanbul ignore if */
+
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -14261,9 +14677,12 @@ function* Evaluate_BindingList(BindingList) {
   for (const LexicalBinding of BindingList) {
     last = yield* Evaluate_LexicalBinding(LexicalBinding);
 
+    /* istanbul ignore if */
     if (last instanceof AbruptCompletion) {
       return last;
     }
+    /* istanbul ignore if */
+
 
     if (last instanceof Completion) {
       last = last.Value;
@@ -14328,10 +14747,14 @@ function* Evaluate_LogicalANDExpression({
   const lref = yield* Evaluate(LogicalANDExpression);
 
   let _temp = GetValue(lref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -14357,10 +14780,14 @@ function* Evaluate_LogicalORExpression({
   const lref = yield* Evaluate(LogicalORExpression);
 
   let _temp = GetValue(lref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -14385,10 +14812,14 @@ function* Evaluate_MemberExpression_Expression(MemberExpression, Expression) {
   const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
   let _temp = GetValue(baseReference);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -14464,6 +14895,7 @@ function Evaluate_ImportMeta() {
     let _temp = HostGetImportMetaProperties(module);
 
     Assert(!(_temp instanceof AbruptCompletion), "HostGetImportMetaProperties(module)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -15881,10 +16313,14 @@ function MV_StrDecimalLiteral(StrDecimalLiteral, prefixOk = false) {
 
 function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lval, rval) {
   let _temp = ToNumeric(lval);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -15976,6 +16412,7 @@ function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
   let _temp = SetFunctionName(closure, name);
 
   Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -16042,9 +16479,12 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
   };
   let value = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, Value.undefined, name);
 
+  /* istanbul ignore if */
   if (value instanceof AbruptCompletion) {
     return value;
   }
+  /* istanbul ignore if */
+
 
   if (value instanceof Completion) {
     value = value.Value;
@@ -16124,10 +16564,14 @@ function* EvaluateNew(constructExpr, args = []) {
   const ref = yield* Evaluate(constructExpr.callee);
 
   let _temp = GetValue(ref);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -16186,10 +16630,14 @@ function* Evaluate_ObjectLiteral(ObjectLiteral) {
   const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
 
   let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -16210,10 +16658,14 @@ function* Evaluate_OptionalExpression({
   const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
   let _temp = GetValue(baseReference);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -16306,10 +16758,14 @@ function* PropertyBindingInitialization_BindingPropertyList(BindingPropertyList,
 
   for (const BindingProperty of BindingPropertyList) {
     let _temp = yield* PropertyBindingInitialization_BindingProperty(BindingProperty, value, environment);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16351,9 +16807,12 @@ function* PropertyBindingInitialization_BindingProperty(BindingProperty, value, 
         } = BindingProperty;
         let P = yield* Evaluate_PropertyName(PropertyName, BindingProperty.computed);
 
+        /* istanbul ignore if */
         if (P instanceof AbruptCompletion) {
           return P;
         }
+        /* istanbul ignore if */
+
 
         if (P instanceof Completion) {
           P = P.Value;
@@ -16397,10 +16856,14 @@ function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinition
 
   for (const PropertyDefinition of PropertyDefinitionList) {
     let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -16458,6 +16921,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Pr
   let _temp4 = CreateDataPropertyOrThrow(object, propName, propValue);
 
   Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propName, propValue)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
@@ -16475,9 +16939,12 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefin
   } = PropertyDefinition;
   let propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
 
+  /* istanbul ignore if */
   if (propKey instanceof AbruptCompletion) {
     return propKey;
   }
+  /* istanbul ignore if */
+
 
   if (propKey instanceof Completion) {
     propKey = propKey.Value;
@@ -16915,6 +17382,7 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
         let _temp = ToString(nbr);
 
         Assert(!(_temp instanceof AbruptCompletion), "ToString(nbr)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -16935,10 +17403,14 @@ function* Evaluate_ComputedPropertyName(ComputedPropertyName) {
   const exprValue = yield* Evaluate(AssignmentExpression);
 
   let _temp2 = GetValue(exprValue);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -16974,10 +17446,14 @@ function InstanceofOperator(V, target) {
   }
 
   let _temp = GetMethod(target, wellKnownSymbols.hasInstance);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17042,9 +17518,12 @@ function* Evaluate_RelationalExpression({
       {
         let r = AbstractRelationalComparison(lval, rval);
 
+        /* istanbul ignore if */
         if (r instanceof AbruptCompletion) {
           return r;
         }
+        /* istanbul ignore if */
+
 
         if (r instanceof Completion) {
           r = r.Value;
@@ -17135,10 +17614,14 @@ function RestBindingInitialization_BindingRestProperty(BindingRestProperty, valu
   const BindingIdentifier = BindingRestProperty.argument;
 
   let _temp = ResolveBinding(new Value(BindingIdentifier.name), environment, BindingIdentifier.strict);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17175,10 +17658,14 @@ function* Evaluate_ReturnStatement({
     const exprRef = yield* Evaluate(Expression);
 
     let _temp = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17189,6 +17676,7 @@ function* Evaluate_ReturnStatement({
     let _temp2 = GetGeneratorKind();
 
     Assert(!(_temp2 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -17216,10 +17704,14 @@ function* Evaluate_ReturnStatement({
 
 function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
   let _temp = ToNumeric(lval);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17301,10 +17793,14 @@ function StringPad(O, maxLength, fillString, placement) {
   Assert(placement === 'start' || placement === 'end', "placement === 'start' || placement === 'end'");
 
   let _temp = ToString(O);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17372,6 +17868,7 @@ function GetSuperConstructor() {
   let _temp = activeFunction.GetPrototypeOf();
 
   Assert(!(_temp instanceof AbruptCompletion), "activeFunction.GetPrototypeOf()" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17395,10 +17892,14 @@ function* Evaluate_SuperCall({
   Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'");
 
   let _temp2 = GetSuperConstructor();
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -17438,10 +17939,14 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true");
 
   let _temp = env.GetSuperBase();
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17541,10 +18046,14 @@ function* CaseClauseIsSelected(C, input) {
   const exprRef = yield* Evaluate(C.test);
 
   let _temp = GetValue(exprRef);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17761,6 +18270,7 @@ function GetTemplateObject(templateLiteral) {
   let _temp = ArrayCreate(new Value(count));
 
   Assert(!(_temp instanceof AbruptCompletion), "ArrayCreate(new Value(count))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17862,10 +18372,14 @@ function* Evaluate_TaggedTemplate({
   const tagRef = yield* Evaluate(Expression);
 
   let _temp9 = GetValue(tagRef);
+  /* istanbul ignore if */
+
 
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
   }
+  /* istanbul ignore if */
+
 
   if (_temp9 instanceof Completion) {
     _temp9 = _temp9.Value;
@@ -17895,10 +18409,14 @@ function* Evaluate_TemplateLiteral(TemplateLiteral) {
     const subRef = yield* Evaluate(Expression);
 
     let _temp = GetValue(subRef);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17936,10 +18454,14 @@ function* Evaluate_ThrowStatement(Expression) {
   const exprRef = yield* Evaluate(Expression);
 
   let _temp = GetValue(exprRef);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -17951,10 +18473,14 @@ function* Evaluate_ThrowStatement(Expression) {
 
 function TrimString(string, where) {
   let _temp = RequireObjectCoercible(string);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -18010,6 +18536,7 @@ function* CatchClauseEvaluation({
     let _temp = catchEnvRec.CreateMutableBinding(new Value(argName), false);
 
     Assert(!(_temp instanceof AbruptCompletion), "catchEnvRec.CreateMutableBinding(new Value(argName), false)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18103,9 +18630,12 @@ function* Evaluate_TryStatement(Expression) {
 function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
   let ref = yield* Evaluate(UnaryExpression);
 
+  /* istanbul ignore if */
   if (ref instanceof AbruptCompletion) {
     return ref;
   }
+  /* istanbul ignore if */
+
 
   if (ref instanceof Completion) {
     ref = ref.Value;
@@ -18128,6 +18658,7 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
     let _temp = ToObject(GetBase(ref));
 
     Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18136,10 +18667,14 @@ function* Evaluate_UnaryExpression_Delete(UnaryExpression) {
     const baseObj = _temp;
 
     let _temp2 = baseObj.Delete(GetReferencedName(ref));
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -18399,10 +18934,14 @@ function* Evaluate_UpdateExpression({
         const lhs = yield* Evaluate(LeftHandSideExpression);
 
         let _temp4 = GetValue(lhs);
+        /* istanbul ignore if */
+
 
         if (_temp4 instanceof AbruptCompletion) {
           return _temp4;
         }
+        /* istanbul ignore if */
+
 
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -18423,6 +18962,7 @@ function* Evaluate_UpdateExpression({
         let _temp2 = TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit);
 
         Assert(!(_temp2 instanceof AbruptCompletion), "TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp2 instanceof Completion) {
           _temp2 = _temp2.Value;
@@ -18616,10 +19156,14 @@ function* Evaluate_VariableDeclaration(VariableDeclaration) {
         const bindingId = new Value(BindingIdentifier.name);
 
         let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
+        /* istanbul ignore if */
+
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
+        /* istanbul ignore if */
+
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -18686,9 +19230,12 @@ function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
   for (const VariableDeclaration of VariableDeclarationList) {
     next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
 
+    /* istanbul ignore if */
     if (next instanceof AbruptCompletion) {
       return next;
     }
+    /* istanbul ignore if */
+
 
     if (next instanceof Completion) {
       next = next.Value;
@@ -18721,10 +19268,14 @@ function* Evaluate_WithStatement({
   const val = yield* Evaluate(Expression);
 
   let _temp2 = GetValue(val);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -18758,6 +19309,7 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
   let _temp = GetGeneratorKind();
 
   Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -18771,10 +19323,14 @@ function* Evaluate_YieldExpression_WithoutStar(YieldExpression) {
     const exprRef = yield* Evaluate(AssignmentExpression);
 
     let _temp2 = GetValue(exprRef);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -19133,9 +19689,12 @@ function* Evaluate_StatementList(StatementList) {
   }
 
   for (const StatementListItem of StatementList.slice(1)) {
+    /* istanbul ignore if */
     if (sl instanceof AbruptCompletion) {
       return sl;
     }
+    /* istanbul ignore if */
+
 
     if (sl instanceof Completion) {
       sl = sl.Value;
@@ -19628,6 +20187,7 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     let _temp = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
     Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -19718,10 +20278,14 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
 
     for (const e of module.StarExportEntries) {
       let _temp4 = HostResolveImportedModule(module, e.ModuleRequest);
+      /* istanbul ignore if */
+
 
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
       }
+      /* istanbul ignore if */
+
 
       if (_temp4 instanceof Completion) {
         _temp4 = _temp4.Value;
@@ -22066,6 +22630,7 @@ function CreateUnmappedArgumentsObject(argumentsList) {
     let _temp = ToString(new Value(index));
 
     Assert(!(_temp instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -22311,6 +22876,7 @@ function ArrayCreate(length, proto) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -22326,10 +22892,14 @@ function ArraySpeciesCreate(originalArray, length) {
   }
 
   let _temp2 = IsArray(originalArray);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -22653,10 +23223,14 @@ function CreateArrayIterator(array, kind) {
 
 function AllocateArrayBuffer(constructor, byteLength) {
   let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -22802,6 +23376,7 @@ function NumberToRawBytes(type, value, isLittleEndian) {
     let _temp4 = convOp(value);
 
     Assert(!(_temp4 instanceof AbruptCompletion), "convOp(value)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -22876,6 +23451,7 @@ function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
       let _temp = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
 
       Assert(!(_temp instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -22957,6 +23533,7 @@ function AsyncGeneratorStart(generator, generatorBody) {
         let _temp = AsyncGeneratorReject(generator, resultValue);
 
         Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorReject(generator, resultValue)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -23107,10 +23684,14 @@ function AsyncGeneratorResumeNext(generator) {
         generator.AsyncGeneratorState = 'awaiting-return';
 
         let _temp10 = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+        /* istanbul ignore if */
+
 
         if (_temp10 instanceof AbruptCompletion) {
           return _temp10;
         }
+        /* istanbul ignore if */
+
 
         if (_temp10 instanceof Completion) {
           _temp10 = _temp10.Value;
@@ -23286,6 +23867,7 @@ function isIntegerIndex(V) {
   let _temp = CanonicalNumericIndexString(V);
 
   Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(V)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -23339,10 +23921,14 @@ function isArrayIndex(V) {
 
 function GetViewValue(view, requestIndex, isLittleEndian, type) {
   let _temp = RequireInternalSlot(view, 'DataView');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -23364,6 +23950,7 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
   let _temp3 = ToBoolean(isLittleEndian);
 
   Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
@@ -23659,6 +24246,7 @@ function MakeTime(hour, min, sec, ms) {
   let _temp = ToInteger(hour);
 
   Assert(!(_temp instanceof AbruptCompletion), "ToInteger(hour)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -23885,6 +24473,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
       let _temp = ToObject(thisArgument);
 
       Assert(!(_temp instanceof AbruptCompletion), "ToObject(thisArgument)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -23952,9 +24541,12 @@ function FunctionCallSlot(thisArgument, argumentsList) {
     return new NormalCompletion(result.Value);
   }
 
+  /* istanbul ignore if */
   if (result instanceof AbruptCompletion) {
     return result;
   }
+  /* istanbul ignore if */
+
 
   if (result instanceof Completion) {
     result = result.Value;
@@ -23973,10 +24565,14 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 
   if (kind === 'base') {
     let _temp2 = OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -24267,6 +24863,7 @@ function GeneratorStart(generator, generatorBody) {
     let _temp = CreateIterResultObject(resultValue, Value.true);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(resultValue, Value.true)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -24282,10 +24879,14 @@ function GeneratorStart(generator, generatorBody) {
 
 function GeneratorValidate(generator) {
   let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -24429,10 +25030,14 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   const evalRealm = surroundingAgent.currentRealmRecord;
 
   let _temp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -24675,6 +25280,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
         let _temp7 = varEnvRec.CreateMutableBinding(fn, Value.true);
 
         Assert(!(_temp7 instanceof AbruptCompletion), "varEnvRec.CreateMutableBinding(fn, Value.true)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp7 instanceof Completion) {
           _temp7 = _temp7.Value;
@@ -24759,10 +25365,14 @@ function GetIterator(obj, hint, method) {
   if (!method) {
     if (hint === 'async') {
       let _temp = GetMethod(obj, wellKnownSymbols.asyncIterator);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -25035,6 +25645,7 @@ function CreateIterResultObject(value, done) {
   let _temp15 = CreateDataProperty(obj, new Value('value'), value);
 
   Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), value)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp15 instanceof Completion) {
     _temp15 = _temp15.Value;
@@ -25137,6 +25748,7 @@ function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
 function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   let done = IteratorComplete(result);
 
+  /* istanbul ignore if */
   if (done instanceof AbruptCompletion) {
     const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
 
@@ -25146,6 +25758,8 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
 
     return promiseCapability.Promise;
   }
+  /* istanbul ignore if */
+
 
   if (done instanceof Completion) {
     done = done.Value;
@@ -25222,6 +25836,7 @@ function ModuleNamespaceCreate(module, exports) {
     let _temp = SortCompare(x, y, Value.undefined);
 
     Assert(!(_temp instanceof AbruptCompletion), "SortCompare(x, y, Value.undefined)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -25238,10 +25853,14 @@ function ModuleNamespaceCreate(module, exports) {
 function InnerModuleLinking(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
     let _temp = module.Link();
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -25363,6 +25982,7 @@ function InnerModuleEvaluation(module, stack, index) {
     let _temp6 = HostResolveImportedModule(module, required);
 
     Assert(!(_temp6 instanceof AbruptCompletion), "HostResolveImportedModule(module, required)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
@@ -25717,10 +26337,14 @@ function Get(O, P) {
   Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // TODO: This should just return Q(O.Get(P, O))
 
   let _temp = O.Get(P, O);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -26103,6 +26727,7 @@ function CreateArrayFromList(elements) {
   let _temp17 = ArrayCreate(new Value(0));
 
   Assert(!(_temp17 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp17 instanceof Completion) {
     _temp17 = _temp17.Value;
@@ -26584,10 +27209,14 @@ function OrdinaryGetOwnProperty(O, P) {
 
 function OrdinaryDefineOwnProperty(O, P, Desc) {
   let _temp = O.GetOwnProperty(P);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -27141,6 +27770,7 @@ function IntegerIndexedElementSet(O, index, value) {
   let _temp16 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
 
   Assert(!(_temp16 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, 'Unordered')" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp16 instanceof Completion) {
     _temp16 = _temp16.Value;
@@ -27181,6 +27811,7 @@ function CreateResolvingFunctions(promise) {
   let _temp = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
 
   Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved'])" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -27295,10 +27926,14 @@ function NewPromiseCapability(C) {
   executor.Capability = promiseCapability;
 
   let _temp4 = Construct(C, [executor]);
+  /* istanbul ignore if */
+
 
   if (_temp4 instanceof AbruptCompletion) {
     return _temp4;
   }
+  /* istanbul ignore if */
+
 
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
@@ -27564,14 +28199,19 @@ function IsUnresolvableReference(V) {
 } // 6.2.4.7 #sec-issuperreference
 
 function IsSuperReference(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-  return 'ThisValue' in V ? Value.true : Value.false;
+  // 1. Assert: Type(V) is Reference.
+  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'"); // 2. If V has a thisValue component, return true; otherwise return false.
+
+  return 'thisValue' in V ? Value.true : Value.false;
 } // 6.2.4.8 #sec-getvalue
 
 function GetValue(V) {
+  /* istanbul ignore if */
   if (V instanceof AbruptCompletion) {
     return V;
   }
+  /* istanbul ignore if */
+
 
   if (V instanceof Completion) {
     V = V.Value;
@@ -27594,6 +28234,7 @@ function GetValue(V) {
       let _temp = ToObject(base);
 
       Assert(!(_temp instanceof AbruptCompletion), "ToObject(base)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -27654,10 +28295,14 @@ function PutValue(V, W) {
     }
 
     let _temp3 = base.Set(GetReferencedName(V), W, GetThisValue(V));
+    /* istanbul ignore if */
+
 
     if (_temp3 instanceof AbruptCompletion) {
       return _temp3;
     }
+    /* istanbul ignore if */
+
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -27676,11 +28321,14 @@ function PutValue(V, W) {
 } // 6.2.4.10 #sec-getthisvalue
 
 function GetThisValue(V) {
-  Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true");
+  // 1. Assert: IsPropertyReference(V) is true.
+  Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true"); // 2. If IsSuperReference(V) is true, then
 
   if (IsSuperReference(V) === Value.true) {
-    return V.ThisValue;
-  }
+    // a. Return the value of the thisValue component of the reference V.
+    return V.thisValue;
+  } // 3. Return GetBase(V).
+
 
   return GetBase(V);
 } // 6.2.4.11 #sec-initializereferencedbinding
@@ -27710,10 +28358,14 @@ function InitializeReferencedBinding(V, W) {
 
 function RegExpAlloc(newTarget) {
   let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -27728,6 +28380,7 @@ function RegExpAlloc(newTarget) {
   }));
 
   Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -27920,6 +28573,7 @@ function CodePointAt(string, position) {
   let _temp = UTF16Decode(first, second);
 
   Assert(!(_temp instanceof AbruptCompletion), "UTF16Decode(first, second)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -27980,6 +28634,7 @@ function FromPropertyDescriptor(Desc) {
     let _temp = CreateDataProperty(obj, new Value('value'), Desc.Value);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), Desc.Value)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -28048,10 +28703,14 @@ function ToPropertyDescriptor(Obj) {
   const desc = Descriptor({});
 
   let _temp7 = HasProperty(Obj, new Value('enumerable'));
+  /* istanbul ignore if */
+
 
   if (_temp7 instanceof AbruptCompletion) {
     return _temp7;
   }
+  /* istanbul ignore if */
+
 
   if (_temp7 instanceof Completion) {
     _temp7 = _temp7.Value;
@@ -28335,6 +28994,7 @@ function StringCreate(value, prototype) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(S, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -28513,10 +29173,14 @@ function IsRegExp(argument) {
   }
 
   let _temp = Get(argument, wellKnownSymbols.match);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -28557,6 +29221,7 @@ function SameValue(x, y) {
   let _temp2 = SameValueNonNumber(x, y);
 
   Assert(!(_temp2 instanceof AbruptCompletion), "SameValueNonNumber(x, y)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -29007,10 +29672,14 @@ function ToPrimitive(input, PreferredType) {
     }
 
     let _temp = GetMethod(input, wellKnownSymbols.toPrimitive);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -29483,6 +30152,7 @@ function ToBigInt(argument) {
         let _temp16 = StringToBigInt(prim);
 
         Assert(!(_temp16 instanceof AbruptCompletion), "StringToBigInt(prim)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp16 instanceof Completion) {
           _temp16 = _temp16.Value;
@@ -29848,10 +30518,14 @@ const numericTypeInfo = new Map([...typedArrayInfo.values()].map(info => [info.E
 
 function IterableToList(items, method) {
   let _temp = GetIterator(items, 'sync', method);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -30357,6 +31031,7 @@ class NumberValue extends PrimitiveValue {
     let _temp = ToInt32(x);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -31371,10 +32046,14 @@ class ArgumentsExoticObjectValue extends ObjectValue {
     }
 
     let _temp22 = OrdinaryDefineOwnProperty(args, P, newArgDesc);
+    /* istanbul ignore if */
+
 
     if (_temp22 instanceof AbruptCompletion) {
       return _temp22;
     }
+    /* istanbul ignore if */
+
 
     if (_temp22 instanceof Completion) {
       _temp22 = _temp22.Value;
@@ -33207,7 +33886,8 @@ const FEATURES = Object.freeze([{
 }, {
   name: 'import.meta',
   url: 'https://github.com/tc39/proposal-import-meta'
-}].map(Object.freeze));
+}].map(Object.freeze)); // #sec-agents
+
 class Agent {
   constructor(options = {}) {
     this.LittleEndian = Value.true;
@@ -33242,23 +33922,28 @@ class Agent {
         return acc;
       }, {})
     };
-  }
+  } // #sec-running-execution-context
+
 
   get runningExecutionContext() {
     return this.executionContextStack[this.executionContextStack.length - 1];
-  }
+  } // #current-realm
+
 
   get currentRealmRecord() {
     return this.runningExecutionContext.Realm;
-  }
+  } // #active-function-object
+
 
   get activeFunctionObject() {
     return this.runningExecutionContext.Function;
-  }
+  } // Get an intrinsic by name for the current realm
+
 
   intrinsic(name) {
     return this.currentRealmRecord.Intrinsics[name];
-  }
+  } // Generate a throw completion using message templates
+
 
   Throw(type, template, ...templateArgs) {
     if (type instanceof Value) {
@@ -33283,7 +33968,8 @@ class Agent {
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, [new Value(message)]);
     return new ThrowCompletion(error);
-  }
+  } // NON-SPEC: Check if a feature is enabled in this agent.
+
 
   feature(name) {
     return this.hostDefinedOptions.features[name];
@@ -33294,7 +33980,8 @@ Agent.Increment = 0;
 let surroundingAgent;
 function setSurroundingAgent(a) {
   surroundingAgent = a;
-}
+} // #sec-execution-contexts
+
 class ExecutionContext {
   constructor() {
     this.codeEvaluationState = undefined;
@@ -33302,7 +33989,8 @@ class ExecutionContext {
     this.Realm = undefined;
     this.ScriptOrModule = undefined;
     this.VariableEnvironment = undefined;
-    this.LexicalEnvironment = undefined;
+    this.LexicalEnvironment = undefined; // NON-SPEC
+
     this.callSite = new CallSite(this);
     this.promiseCapability = undefined;
   }
@@ -33387,10 +34075,14 @@ function HostReportErrors(errorList) {
 function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
     let _temp2 = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -33634,18 +34326,19 @@ function Completion(type, value, target) {
   }
 
   return type;
-} // 6.2.3.2 #sec-normalcompletion
+} // #sec-normalcompletion
 
-class NormalCompletion {
-  constructor(value) {
-    return new Completion('normal', value);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'normal';
-  }
-
+function NormalCompletion(value) {
+  return new Completion('normal', value);
 }
+Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
+  value: function hasInstance(v) {
+    return v instanceof Completion && v.Type === 'normal';
+  },
+  writable: true,
+  enumerable: false,
+  configurable: true
+});
 class AbruptCompletion {
   static [Symbol.hasInstance](v) {
     return v instanceof Completion && v.Type !== 'normal';
@@ -33745,10 +34438,14 @@ function* Await(value) {
   const asyncContext = surroundingAgent.runningExecutionContext;
 
   let _temp = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -33760,6 +34457,7 @@ function* Await(value) {
   let _temp2 = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
 
   Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, ['AsyncContext'])" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -33832,6 +34530,7 @@ function assignProps(realmRec, obj, props) {
         let _temp = SetFunctionName(getter, name, new Value('get'));
 
         Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -33978,10 +34677,14 @@ function ObjectProto_hasOwnProperty([V = Value.undefined], {
   thisValue
 }) {
   let _temp = ToPropertyKey(V);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -34112,6 +34815,7 @@ function ObjectProto_toString(argList, {
   let _temp8 = ToObject(thisValue);
 
   Assert(!(_temp8 instanceof AbruptCompletion), "ToObject(thisValue)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
@@ -34212,10 +34916,14 @@ function AddEntriesFromIterable(target, iterable, adder) {
   Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null', "iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null'");
 
   let _temp = GetIterator(iterable);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -34340,6 +35048,7 @@ function ObjectConstructor([value = Value.undefined], {
   let _temp = ToObject(value);
 
   Assert(!(_temp instanceof AbruptCompletion), "ToObject(value)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -34350,10 +35059,14 @@ function ObjectConstructor([value = Value.undefined], {
 
 function Object_assign([target = Value.undefined, ...sources]) {
   let _temp2 = ToObject(target);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -35047,6 +35760,7 @@ function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = 
     let _temp = ToString(new Value(k));
 
     Assert(!(_temp instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -35055,10 +35769,14 @@ function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = 
     const curProp = _temp;
 
     let _temp2 = Get(obj, curProp);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -36927,10 +37645,14 @@ function ArrayProto_concat(args, {
   thisValue
 }) {
   let _temp = ToObject(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -36990,6 +37712,7 @@ function ArrayProto_concat(args, {
         let _temp5 = ToString(new Value(k));
 
         Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp5 instanceof Completion) {
           _temp5 = _temp5.Value;
@@ -39136,6 +39859,7 @@ function ArrayConstructor(argumentsList, {
       let _temp = CreateDataProperty(array, new Value('0'), len);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(array, new Value('0'), len)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -39218,10 +39942,14 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   }
 
   let _temp4 = GetMethod(items, wellKnownSymbols.iterator);
+  /* istanbul ignore if */
+
 
   if (_temp4 instanceof AbruptCompletion) {
     return _temp4;
   }
+  /* istanbul ignore if */
+
 
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
@@ -39560,10 +40288,14 @@ function BigIntConstructor([value], {
 
 
   let _temp = ToPrimitive(value, 'Number');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -39677,10 +40409,14 @@ function BigIntProto_toString([radix], {
   thisValue
 }) {
   let _temp = thisBigIntValue(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -39721,6 +40457,7 @@ function BigIntProto_toString([radix], {
     let _temp3 = ToString(x);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "ToString(x)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -39768,10 +40505,14 @@ function BooleanProto_toString(argList, {
   thisValue
 }) {
   let _temp = thisBooleanValue(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -39808,10 +40549,14 @@ function BooleanConstructor([value = Value.undefined], {
   }
 
   let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -39846,10 +40591,14 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], {
   thisValue
 }) {
   let _temp = thisNumberValue(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -39981,6 +40730,7 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], {
     let _temp5 = ToString(new Value(x));
 
     Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(x))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -40194,10 +40944,14 @@ function NumberConstructor([value], {
 
   if (value !== undefined) {
     let _temp = ToNumeric(value);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40241,6 +40995,7 @@ function Number_isInteger([number = Value.undefined]) {
   let _temp2 = IsInteger(number);
 
   Assert(!(_temp2 instanceof AbruptCompletion), "IsInteger(number)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -40335,10 +41090,14 @@ function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefi
   }
 
   let _temp = CreateListFromArrayLike(argArray);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -40473,6 +41232,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], {
   let _temp7 = SetFunctionLength(F, new Value(L));
 
   Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionLength(F, new Value(L))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp7 instanceof Completion) {
     _temp7 = _temp7.Value;
@@ -40594,10 +41354,14 @@ function SymbolProto_toString(argList, {
   thisValue
 }) {
   let _temp = thisSymbolValue(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -40663,10 +41427,14 @@ function SymbolConstructor([description = Value.undefined], {
     descString = Value.undefined;
   } else {
     let _temp = ToString(description);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -40743,10 +41511,14 @@ function CreateSymbol(realmRec) {
 
 function Math_abs([x = Value.undefined]) {
   let _temp = ToNumber(x);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -40826,6 +41598,7 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   let _temp5 = NumberValue.exponentiate(base, exponent);
 
   Assert(!(_temp5 instanceof AbruptCompletion), "NumberValue.exponentiate(base, exponent)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp5 instanceof Completion) {
     _temp5 = _temp5.Value;
@@ -40902,10 +41675,14 @@ function DateProto_getDate(args, {
   thisValue
 }) {
   let _temp = thisTimeValue(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -42285,6 +43062,7 @@ function DateString(tv) {
   let _temp71 = StringPad(year, new Value(4), new Value('0'), 'start');
 
   Assert(!(_temp71 instanceof AbruptCompletion), "StringPad(year, new Value(4), new Value('0'), 'start')" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp71 instanceof Completion) {
     _temp71 = _temp71.Value;
@@ -42451,10 +43229,14 @@ function DateConstructor(args, {
       return ToDateString(new Value(now));
     } else {
       let _temp = ToNumber(year);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -42571,6 +43353,7 @@ function DateConstructor(args, {
         let _temp8 = ToInteger(y);
 
         Assert(!(_temp8 instanceof AbruptCompletion), "ToInteger(y)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp8 instanceof Completion) {
           _temp8 = _temp8.Value;
@@ -42889,6 +43672,7 @@ function RegExpStringIteratorPrototype_next(args, {
     let _temp = CreateIterResultObject(Value.undefined, Value.true);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -42903,10 +43687,14 @@ function RegExpStringIteratorPrototype_next(args, {
   const fullUnicode = O.Unicode;
 
   let _temp2 = RegExpExec(R, S);
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
   }
+  /* istanbul ignore if */
+
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -43021,10 +43809,14 @@ function RegExpProto_exec([string = Value.undefined], {
   const R = thisValue;
 
   let _temp = RequireInternalSlot(R, 'RegExpMatcher');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -43192,6 +43984,7 @@ function RegExpBuiltinExec(R, S) {
   let _temp10 = ArrayCreate(new Value(n + 1));
 
   Assert(!(_temp10 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
@@ -44734,10 +45527,14 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
   NewTarget
 }) {
   let _temp = IsRegExp(pattern);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -44854,10 +45651,14 @@ function ThenFinallyFunctions([value = Value.undefined]) {
   Assert(IsCallable(onFinally) === Value.true, "IsCallable(onFinally) === Value.true");
 
   let _temp = Call(onFinally, Value.undefined);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -44941,6 +45742,7 @@ function PromiseProto_finally([onFinally = Value.undefined], {
     let _temp5 = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
 
     Assert(!(_temp5 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally'])" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -45031,10 +45833,14 @@ function PromiseConstructor([executor = Value.undefined], {
   }
 
   let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', ['PromiseState', 'PromiseResult', 'PromiseFulfillReactions', 'PromiseRejectReactions', 'PromiseIsHandled']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -45122,9 +45928,12 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
       iteratorRecord.Done = Value.true;
     }
 
+    /* istanbul ignore if */
     if (next instanceof AbruptCompletion) {
       return next;
     }
+    /* istanbul ignore if */
+
 
     if (next instanceof Completion) {
       next = next.Value;
@@ -45182,6 +45991,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
     let _temp6 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
 
     Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
@@ -45236,6 +46046,7 @@ function Promise_all([iterable = Value.undefined], {
   const promiseCapability = _temp9;
   let iteratorRecord = GetIterator(iterable);
 
+  /* istanbul ignore if */
   if (iteratorRecord instanceof AbruptCompletion) {
     const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
 
@@ -45245,6 +46056,8 @@ function Promise_all([iterable = Value.undefined], {
 
     return promiseCapability.Promise;
   }
+  /* istanbul ignore if */
+
 
   if (iteratorRecord instanceof Completion) {
     iteratorRecord = iteratorRecord.Value;
@@ -45847,10 +46660,14 @@ function ProxyCallSlot(thisArgument, argumentsList) {
   const target = O.ProxyTarget;
 
   let _temp = GetMethod(handler, new Value('apply'));
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -45865,6 +46682,7 @@ function ProxyCallSlot(thisArgument, argumentsList) {
   let _temp2 = CreateArrayFromList(argumentsList);
 
   Assert(!(_temp2 instanceof AbruptCompletion), "CreateArrayFromList(argumentsList)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -46047,10 +46865,14 @@ function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined
   }
 
   let _temp = CreateListFromArrayLike(argumentsList);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -46331,6 +47153,7 @@ function StringIteratorPrototype_next(args, {
   let _temp = CodePointAt(s, position);
 
   Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(s, position)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -46366,10 +47189,14 @@ function StringProto_charAt([pos = Value.undefined], {
   thisValue
 }) {
   let _temp = RequireObjectCoercible(thisValue);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -46508,6 +47335,7 @@ function StringProto_codePointAt([pos = Value.undefined], {
   let _temp10 = CodePointAt(S, position);
 
   Assert(!(_temp10 instanceof AbruptCompletion), "CodePointAt(S, position)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
@@ -48080,6 +48908,7 @@ function StringConstructor([value], {
       let _temp = SymbolDescriptiveString(value);
 
       Assert(!(_temp instanceof AbruptCompletion), "SymbolDescriptiveString(value)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -48089,10 +48918,14 @@ function StringConstructor([value], {
     }
 
     let _temp2 = ToString(value);
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -48334,10 +49167,14 @@ function ErrorProto_toString(args, {
   }
 
   let _temp = Get(O, new Value('name'));
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -48417,10 +49254,14 @@ function ErrorConstructor([message = Value.undefined], {
   }
 
   let _temp = OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -48450,6 +49291,7 @@ function ErrorConstructor([message = Value.undefined], {
     let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -48488,10 +49330,14 @@ function CreateNativeError(realmRec) {
       }
 
       let _temp = OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -48521,6 +49367,7 @@ function CreateNativeError(realmRec) {
         let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
         Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp3 instanceof Completion) {
           _temp3 = _temp3.Value;
@@ -48602,10 +49449,14 @@ function ArrayIteratorPrototype_next(args, {
     len = a.ArrayLength;
   } else {
     let _temp = LengthOfArrayLike(a);
+    /* istanbul ignore if */
+
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
+    /* istanbul ignore if */
+
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -48628,6 +49479,7 @@ function ArrayIteratorPrototype_next(args, {
   let _temp2 = ToString(new Value(index));
 
   Assert(!(_temp2 instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -48715,6 +49567,7 @@ function MapIteratorPrototype_next(args, {
         let _temp = CreateArrayFromList([e.Key, e.Value]);
 
         Assert(!(_temp instanceof AbruptCompletion), "CreateArrayFromList([e.Key, e.Value])" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -48786,10 +49639,14 @@ function CreateSetIteratorPrototype(realmRec) {
 
 function CreateMapIterator(map, kind) {
   let _temp = RequireInternalSlot(map, 'MapData');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49034,6 +49891,7 @@ function CreateMapPrototype(realmRec) {
   let _temp10 = proto.GetOwnProperty(new Value('entries'));
 
   Assert(!(_temp10 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('entries'))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
@@ -49053,10 +49911,14 @@ function CreateMapPrototype(realmRec) {
 
 function CreateSetIterator(set, kind) {
   let _temp = RequireInternalSlot(set, 'SetData');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49258,6 +50120,7 @@ function CreateSetPrototype(realmRec) {
   let _temp9 = proto.GetOwnProperty(new Value('values'));
 
   Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('values'))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp9 instanceof Completion) {
     _temp9 = _temp9.Value;
@@ -49291,10 +50154,14 @@ function SetConstructor([iterable = Value.undefined], {
   }
 
   let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49396,6 +50263,7 @@ function CreateGenerator(realmRec) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49420,6 +50288,7 @@ function CreateGeneratorFunction(realmRec) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49503,6 +50372,7 @@ function CreateAsyncGenerator(realmRec) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGenerator.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49527,6 +50397,7 @@ function CreateAsyncGeneratorFunction(realmRec) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49556,6 +50427,7 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], {
   let _temp = AsyncGeneratorEnqueue(generator, completion);
 
   Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49612,6 +50484,7 @@ function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], {
   let _temp = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
   Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49621,6 +50494,7 @@ function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], {
   const syncIteratorRecord = O.SyncIteratorRecord;
   let result = IteratorNext(syncIteratorRecord, value);
 
+  /* istanbul ignore if */
   if (result instanceof AbruptCompletion) {
     const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
 
@@ -49630,6 +50504,8 @@ function AsyncFromSyncIteratorPrototype_next([value = Value.undefined], {
 
     return promiseCapability.Promise;
   }
+  /* istanbul ignore if */
+
 
   if (result instanceof Completion) {
     result = result.Value;
@@ -49833,10 +50709,14 @@ function ArrayBufferConstructor([length = Value.undefined], {
   }
 
   let _temp = ToIndex(length);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -49877,10 +50757,14 @@ function ArrayBufferProto_byteLengthGetter(args, {
   const O = thisValue;
 
   let _temp = RequireInternalSlot(O, 'ArrayBufferData');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -50043,16 +50927,21 @@ class JSONValidator {
     let _temp = this.eatWhitespace();
 
     Assert(!(_temp instanceof AbruptCompletion), "this.eatWhitespace()" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
 
     let _temp2 = this.parseValue();
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
+    /* istanbul ignore if */
+
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -51360,10 +52249,14 @@ function CreateEval(realmRec) {
 
 function IsFinite([number = Value.undefined]) {
   let _temp = ToNumber(number);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51384,6 +52277,7 @@ function CreateIsFinite(realmRec) {
   let _temp2 = SetFunctionName(fn, new Value('isFinite'));
 
   Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isFinite'))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -51401,10 +52295,14 @@ function CreateIsFinite(realmRec) {
 
 function IsNaN([number = Value.undefined]) {
   let _temp = ToNumber(number);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51425,6 +52323,7 @@ function CreateIsNaN(realmRec) {
   let _temp2 = SetFunctionName(fn, new Value('isNaN'));
 
   Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isNaN'))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -51442,10 +52341,14 @@ function CreateIsNaN(realmRec) {
 
 function ParseFloat([string = Value.undefined]) {
   let _temp = ToString(string);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51456,6 +52359,7 @@ function ParseFloat([string = Value.undefined]) {
   let _temp2 = TrimString(inputString, 'start');
 
   Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -51552,10 +52456,14 @@ function searchNotRadixDigit(str, R) {
 
 function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   let _temp = ToString(string);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51566,6 +52474,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   let _temp2 = TrimString(inputString, 'start');
 
   Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -51661,6 +52570,7 @@ function CreateThrowTypeError(realmRec) {
   let _temp = CreateBuiltinFunction(() => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'), [], realmRec, Value.null);
 
   Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(\n    () => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'),\n    [], realmRec, Value.null,\n  )" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51705,10 +52615,14 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
   }
 
   let _temp = GetMethod(source, wellKnownSymbols.iterator);
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -51747,6 +52661,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
       let _temp4 = ToString(new Value(k));
 
       Assert(!(_temp4 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
       if (_temp4 instanceof Completion) {
         _temp4 = _temp4.Value;
@@ -51950,10 +52865,14 @@ function TypedArrayProto_bufferGetter(args, {
   const O = thisValue;
 
   let _temp = RequireInternalSlot(O, 'TypedArrayName');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -52225,6 +53144,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
     let _temp13 = ToString(new Value(k));
 
     Assert(!(_temp13 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
@@ -53161,10 +54081,14 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
       }
 
       let _temp = ToIndex(length);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -53339,6 +54263,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
           let _temp10 = ToString(new Value(k));
 
           Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+          /* istanbul ignore if */
 
           if (_temp10 instanceof Completion) {
             _temp10 = _temp10.Value;
@@ -53561,10 +54486,14 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   }
 
   let _temp = RequireInternalSlot(buffer, 'ArrayBufferData');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -53647,10 +54576,14 @@ function DataViewProto_bufferGetter(args, {
   const O = thisValue;
 
   let _temp = RequireInternalSlot(O, 'DataView');
+  /* istanbul ignore if */
+
 
   if (_temp instanceof AbruptCompletion) {
     return _temp;
   }
+  /* istanbul ignore if */
+
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -53937,6 +54870,7 @@ function AddRestrictedFunctionProperties(F, realm) {
   }));
 
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('caller'), Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
@@ -54055,10 +54989,14 @@ function SetDefaultGlobalBindings(realmRec) {
       Enumerable: Value.false,
       Configurable: Value.false
     }));
+    /* istanbul ignore if */
+
 
     if (_temp3 instanceof AbruptCompletion) {
       return _temp3;
     }
+    /* istanbul ignore if */
+
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -54116,6 +55054,7 @@ const getObjectTag = (value, wrap) => {
     let _temp = Get(value, wellKnownSymbols.toStringTag);
 
     Assert(!(_temp instanceof AbruptCompletion), "Get(value, wellKnownSymbols.toStringTag)" + ' returned an abrupt completion', "");
+    /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -54238,10 +55177,14 @@ const INSPECTORS = {
 
     if ('ErrorData' in v) {
       let _temp6 = Get(v, new Value('stack'));
+      /* istanbul ignore if */
+
 
       if (_temp6 instanceof AbruptCompletion) {
         return _temp6;
       }
+      /* istanbul ignore if */
+
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -54534,10 +55477,14 @@ class APIRealm {
 
 
       let _temp = ScriptEvaluation(s);
+      /* istanbul ignore if */
+
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
+      /* istanbul ignore if */
+
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
