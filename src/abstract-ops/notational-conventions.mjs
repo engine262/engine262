@@ -1,6 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, Type } from '../value.mjs';
-import { directivePrologueContainsUseStrictDirective } from '../ast.mjs';
 
 export function Assert(invariant, source) {
   if (!invariant) {
@@ -50,10 +49,6 @@ export function isStrictModeCode(node) {
 
   if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
     return isStrictModeCode(node.body);
-  }
-
-  if (Array.isArray(node)) {
-    return directivePrologueContainsUseStrictDirective(node);
   }
 
   return false;

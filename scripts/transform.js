@@ -168,16 +168,16 @@ module.exports = ({ types: t, template }) => {
           if (macro === MACROS.Q && t.isIdentifier(argument)) {
             const binding = path.scope.getBinding(argument.name);
             binding.path.parent.kind = 'let';
-            statementPath.insertBefore(template.ast`
+            statementPath.insertBefore(template(`
               /* istanbul ignore if */
-              if (${argument} instanceof AbruptCompletion) {
-                return ${argument};
+              if (ID instanceof AbruptCompletion) {
+                return ID;
               }
               /* istanbul ignore if */
-              if (${argument} instanceof Completion) {
-                ${argument} = ${argument}.Value;
+              if (ID instanceof Completion) {
+                ID = ID.Value;
               }
-            `);
+            `, { preserveComments: true })({ ID: argument }));
             path.replaceWith(argument);
           } else {
             if (macro === MACROS.IfAbruptRejectPromise) {
