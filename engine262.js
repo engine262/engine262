@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 7e2bb37e95bbfe6511a662e3d8ce0b5d0155b13f
+ * engine262 0.0.1 e52c67dd6634b15274bd1d72f027eb303098f6ac
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1211,6 +1211,7 @@
           names.push(...BoundNames_BindingPattern(declarator.id));
           break;
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('BoundNames_LexicalDeclaration', LexicalDeclaration);
       }
@@ -1248,6 +1249,7 @@
       case isBindingPattern(VariableDeclaration.id):
         return BoundNames_BindingPattern(VariableDeclaration.id);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_VariableDeclaration', VariableDeclaration);
     }
@@ -1270,6 +1272,7 @@
       case isBindingIdentifierAndInitializer(SingleNameBinding):
         return BoundNames_BindingIdentifier(SingleNameBinding.left);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_SingleNameBinding', SingleNameBinding);
     }
@@ -1292,6 +1295,7 @@
       case isBindingPatternAndInitializer(BindingElement):
         return BoundNames_BindingPattern(BindingElement.left);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_BindingElement', BindingElement);
     }
@@ -1308,6 +1312,7 @@
       case isBindingPattern(BindingRestElement.argument):
         return BoundNames_BindingPattern(BindingRestElement.argument);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_BindingRestElement argument', BindingRestElement.argument);
     }
@@ -1343,6 +1348,7 @@
             break;
           }
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('BoundNames_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
       }
@@ -1363,6 +1369,7 @@
       case isBindingPropertyWithColon(BindingProperty):
         return BoundNames_BindingElement(BindingProperty.value);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_BindingProperty', BindingProperty);
     }
@@ -1406,6 +1413,7 @@
             break;
           }
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('BoundNames_ObjectBindingPattern property', BindingPropertyOrBindingRestProperty);
       }
@@ -1426,6 +1434,7 @@
       case isArrayBindingPattern(BindingPattern):
         return BoundNames_ArrayBindingPattern(BindingPattern);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_BindingPattern', BindingPattern);
     }
@@ -1446,6 +1455,7 @@
       case isBindingPattern(BindingIdentifierOrBindingPattern):
         return BoundNames_BindingPattern(BindingIdentifierOrBindingPattern);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange(`BoundNames_BindingIdentifierOrBindingPattern ${targetTypeForErrorMessage}`, BindingIdentifierOrBindingPattern);
     }
@@ -1499,6 +1509,7 @@
           names.push(...BoundNames_FunctionRestParameter(FormalParameterOrFunctionRestParameter));
           break;
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('BoundNames_FormalParameters element', FormalParameterOrFunctionRestParameter);
       }
@@ -1569,6 +1580,7 @@
       case isLexicalDeclaration(Declaration):
         return BoundNames_LexicalDeclaration(Declaration);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_Declaration', Declaration);
     }
@@ -1589,6 +1601,7 @@
       case isImportDeclarationWithSpecifierOnly(ImportDeclaration):
         return [];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_ImportDeclaration', ImportDeclaration);
     }
@@ -1641,6 +1654,7 @@
       case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
         return ['*default*'];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_ExportDeclaration', ExportDeclaration);
     }
@@ -1663,6 +1677,7 @@
       case isDeclaration(ModuleItem):
         return BoundNames_Declaration(ModuleItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_ModuleItem', ModuleItem);
     }
@@ -1692,6 +1707,7 @@
       case isBindingIdentifierAndInitializer(SingleNameBinding):
         return true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_SingleNameBinding', SingleNameBinding);
     }
@@ -1714,6 +1730,7 @@
       case isBindingPatternAndInitializer(BindingElement):
         return true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_BindingElement', BindingElement);
     }
@@ -1730,6 +1747,7 @@
       case isBindingPattern(BindingRestElement.argument):
         return ContainsExpression_BindingPattern(BindingRestElement.argument);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_BindingRestElement', BindingRestElement);
     }
@@ -1769,6 +1787,7 @@
             break;
           }
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ContainsExpression_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
       }
@@ -1793,6 +1812,7 @@
       case isBindingPropertyWithSingleNameBinding(BindingProperty):
         return ContainsExpression_SingleNameBinding(BindingProperty.value);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_BindingProperty', BindingProperty);
     }
@@ -1839,6 +1859,7 @@
             break;
           }
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ContainsExpression_ObjectBindingPattern property', prop);
       }
@@ -1858,6 +1879,7 @@
       case isArrayBindingPattern(BindingPattern):
         return ContainsExpression_ArrayBindingPattern(BindingPattern);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_BindingPattern', BindingPattern);
     }
@@ -1901,6 +1923,7 @@
 
           break;
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ContainsExpression_FormalParameters element', FormalParameterOrFunctionRestParameter);
       }
@@ -3329,6 +3352,7 @@
       case isAdditiveExpressionWithMinus(AdditiveExpression):
         return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression.left, AdditiveExpression.right);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
     }
@@ -3424,6 +3448,7 @@
           return [siteObj, firstSub, ...restSub];
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
     }
@@ -3532,6 +3557,7 @@
       case Array.isArray(ArgumentsOrTemplateLiteral):
         return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
     }
@@ -3692,6 +3718,7 @@
           postIndex = _temp11;
           break;
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ArrayAccumulation', element);
       }
@@ -4162,6 +4189,7 @@
           return result;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BindingInitialization_BindingPattern', BindingPattern);
     }
@@ -4178,6 +4206,7 @@
       case isBindingPattern(ForBinding):
         return yield* BindingInitialization_BindingPattern(ForBinding, value, environment);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BindingInitialization_ForBinding', ForBinding);
     }
@@ -4230,6 +4259,7 @@
       case isBindingPattern(CatchParameter):
         return yield* BindingInitialization_BindingPattern(CatchParameter, value, environment);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BindingInitialization_CatchParameter', CatchParameter);
     }
@@ -4385,6 +4415,7 @@
       case '|':
         return EvaluateBinopValues_BitwiseORExpression(lval, rval);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_BinaryBiwise', operator);
     }
@@ -4506,6 +4537,7 @@
           return Completion(stmtResult);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
     }
@@ -10728,6 +10760,7 @@
       case isArrayAssignmentPattern(AssignmentPattern):
         return yield* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(AssignmentPattern, value);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('DestructuringAssignmentEvaluation_AssignmentPattern', AssignmentPattern);
     }
@@ -11441,6 +11474,7 @@
           }
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_EqualityExpression', operator);
     }
@@ -11490,6 +11524,7 @@
         lexicalNames = LexicallyDeclaredNames_AsyncFunctionBody(code.body.body);
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('FunctionDeclarationInstantiation', code);
     }
@@ -11705,6 +11740,7 @@
         lexDeclarations = LexicallyScopedDeclarations_AsyncFunctionBody(code.body.body);
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('FunctionDeclarationInstantiation', code);
     }
@@ -11780,6 +11816,7 @@
       case isAsyncGeneratorDeclaration(ECMAScriptCode) || isAsyncGeneratorExpression(ECMAScriptCode):
         return 'AsyncGeneratorBody';
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('getFunctionBodyType', ECMAScriptCode);
     }
@@ -12214,6 +12251,7 @@
           return new NormalCompletion(undefined);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
     }
@@ -12927,6 +12965,7 @@
           return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, isAwait ? 'async' : 'sync', strict);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
     }
@@ -13512,6 +13551,7 @@
       case isFunctionDeclaration(HoistableDeclaration):
         return Evaluate_FunctionDeclaration();
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_HoistableDeclaration', HoistableDeclaration);
     }
@@ -13794,6 +13834,7 @@
       case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
         return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
     }
@@ -13900,6 +13941,7 @@
         Initializer = BindingElement.right;
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IteratorBindingInitialization_BindingElement_BindingPattern', BindingElement);
     }
@@ -13983,6 +14025,7 @@
         Initializer = SingleNameBinding.right;
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
     }
@@ -14116,6 +14159,7 @@
       case isBindingPattern(BindingElement) || isBindingPatternAndInitializer(BindingElement):
         return yield* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IteratorBindingInitialization_BindingElement', BindingElement);
     }
@@ -14309,6 +14353,7 @@
       case isBindingPattern(BindingRestElement.argument):
         return yield* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);
     }
@@ -14430,6 +14475,7 @@
         Initializer = BindingElement.right;
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('KeyedBindingInitialization_BindingElement', BindingElement);
     }
@@ -14485,6 +14531,7 @@
         Initializer = SingleNameBinding.right;
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
     }
@@ -14563,6 +14610,7 @@
         stmtResult = yield* Evaluate(LabelledItem);
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation', LabelledItem);
     }
@@ -14668,6 +14716,7 @@
       case isBindingPattern(LexicalBinding.id):
         return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
     }
@@ -14739,6 +14788,7 @@
       case typeof Literal.value === 'string':
         return new Value(Literal.value);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_Literal', Literal);
     }
@@ -14877,6 +14927,7 @@
       case isActualMemberExpressionWithDot(MemberExpression):
         return yield* Evaluate_MemberExpression_IdentifierName(MemberExpression.object, MemberExpression.property);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
     }
@@ -14945,6 +14996,7 @@
       case isImportMeta(MetaProperty):
         return Evaluate_ImportMeta();
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_MetaProperty', MetaProperty);
     }
@@ -16362,6 +16414,7 @@
       case '%':
         return T.remainder(lnum, rnum);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('EvaluateBinopValues_MultiplicativeExpression', MultiplicativeOperator);
     }
@@ -16559,6 +16612,7 @@
       case isParenthesizedExpression(Expression):
         return yield* NamedEvaluation_ParenthesizedExpression(Expression, name);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('NamedEvaluation_Expression', Expression);
     }
@@ -16729,6 +16783,7 @@
             return yield* EvaluateCall(newValue, newReference, OptionalChain.arguments);
           }
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ChainEvaluation', OptionalChain);
       }
@@ -16749,6 +16804,7 @@
           return yield* EvaluateCall(baseValue, baseReference, OptionalChain.arguments);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ChainEvaluation', OptionalChain);
     }
@@ -16836,6 +16892,7 @@
           return [P];
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('PropertyBindingInitialization_BindingProperty', BindingProperty);
     }
@@ -17146,6 +17203,7 @@
           return DefinePropertyOrThrow(object, propKey, desc);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
     }
@@ -17363,6 +17421,7 @@
       case isPropertyDefinitionSpread(PropertyDefinition):
         return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
     }
@@ -17397,6 +17456,7 @@
           return _temp;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_LiteralPropertyName', LiteralPropertyName);
     }
@@ -17609,6 +17669,7 @@
 
         return HasProperty(rval, ToPropertyKey(lval));
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_RelationalExpression', operator);
     }
@@ -17753,6 +17814,7 @@
       case '>>>':
         return T.unsignedRightShift(lnum, rnum);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('EvaluateBinopValues_ShiftExpression', operator);
     }
@@ -18626,6 +18688,7 @@
       case isTryStatementWithFinally(Expression):
         return yield* Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_TryStatement', Expression);
     }
@@ -18770,6 +18833,7 @@
 
         return new Value('object');
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
     }
@@ -18922,6 +18986,7 @@
       case isUnaryExpressionWithBang(UnaryExpression):
         return yield* Evaluate_UnaryExpression_Bang(UnaryExpression.argument);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
     }
@@ -19138,6 +19203,7 @@
           return newValue;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_UpdateExpression', operator, prefix);
     }
@@ -19221,6 +19287,7 @@
           return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_VariableDeclaration', VariableDeclaration);
     }
@@ -19719,10 +19786,6 @@
   //     ModuleItemList ModuleItem
 
   function* Evaluate_ModuleItemList(ModuleItemList) {
-    if (ModuleItemList.length === 0) {
-      return new NormalCompletion(undefined);
-    }
-
     let sl = yield* Evaluate(ModuleItemList[0]);
 
     if (ModuleItemList.length === 1) {
@@ -19825,6 +19888,7 @@
       case isLexicalDeclaration(StatementListItem):
         return yield* Evaluate_LexicalDeclaration(StatementListItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_StatementListItem', StatementListItem);
     }
@@ -19868,6 +19932,7 @@
       case '**':
         return EvaluateBinopValues_ExponentiationExpression(lval, rval);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('EvaluateBinopValues', operator);
     }
@@ -20004,6 +20069,7 @@
       case isParenthesizedExpression(Expression):
         return yield* Evaluate(Expression.expression);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate_Expression', Expression);
     }
@@ -20067,6 +20133,7 @@
       case isExpression(Production):
         return yield* Evaluate_Expression(Production);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('Evaluate', Production);
     }
@@ -20684,6 +20751,7 @@
       case isExportDeclaration(ModuleItem):
         return ModuleRequests_ExportDeclaration(ModuleItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ModuleRequests_ModuleItem', ModuleItem);
     }
@@ -20728,6 +20796,7 @@
       case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
         return [];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ModuleRequests_ExportDeclaration', ExportDeclaration);
     }
@@ -20763,6 +20832,7 @@
       case isExportDeclaration(ModuleItem):
         return ExportEntries_ExportDeclaration(ModuleItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ExportEntries_ModuleItem', ModuleItem);
     }
@@ -20884,6 +20954,7 @@
           ExportName: new Value('default')
         })];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ExportEntries_ExportDeclaration', ExportDeclaration);
     }
@@ -20901,6 +20972,7 @@
       case isBindingIdentifierAndInitializer(SingleNameBinding):
         return true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('HasInitializer_SingleNameBinding', SingleNameBinding);
     }
@@ -20923,6 +20995,7 @@
       case isSingleNameBinding(BindingElement):
         return HasInitializer_SingleNameBinding(BindingElement);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('HasInitializer_BindingElement', BindingElement);
     }
@@ -21014,6 +21087,7 @@
           return HasName_Expression(expr);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('HasName_Expression', Expression);
     }
@@ -21056,6 +21130,7 @@
           entries.push(...ImportEntriesForModule_ImportSpecifier(binding, module));
           break;
 
+        /*istanbul ignore next*/
         default:
           throw new OutOfRange('ImportEntriesForModule_ImportClause binding', binding);
       }
@@ -21140,6 +21215,7 @@
       case isImportDeclaration(ModuleItem):
         return ImportEntries_ImportDeclaration(ModuleItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ImportEntries_ModuleItem', ModuleItem);
     }
@@ -21165,6 +21241,7 @@
       case isImportDeclarationWithSpecifierOnly(ImportDeclaration):
         return [];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ImportEntries_ImportDeclaration', ImportDeclaration);
     }
@@ -21226,6 +21303,7 @@
       case isBindingPattern(LeftHandSideExpression):
         return true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IsDestructuring_LeftHandSideExpression', LeftHandSideExpression);
     }
@@ -21247,6 +21325,7 @@
       case isBindingPattern(ForBinding):
         return true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IsDestructuring_ForBinding', ForBinding);
     }
@@ -21345,6 +21424,7 @@
       case isBindingPatternAndInitializer(BindingElement):
         return false;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IsSimpleParameterList_BindingElement', BindingElement);
     }
@@ -21361,6 +21441,7 @@
       case isBindingIdentifierAndInitializer(SingleNameBinding):
         return false;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('IsSimpleParameterList_SingleNameBinding', SingleNameBinding);
     }
@@ -21946,6 +22027,7 @@
       case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
         return [ExportDeclaration];
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('LexicallyScopedDeclarations_ExportDeclaration', ExportDeclaration);
     }
@@ -21968,6 +22050,7 @@
       case isStatementListItem(ModuleItem):
         return LexicallyScopedDeclarations_StatementListItem(ModuleItem);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('LexicallyScopedDeclarations_ModuleItem', ModuleItem);
     }
@@ -22130,6 +22213,7 @@
       case isSubstitutionTemplate(TemplateLiteral):
         return TemplateStrings_SubstitutionTemplate(TemplateLiteral, raw);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('TemplateStrings_TemplateLiteral', TemplateLiteral);
     }
@@ -24521,6 +24605,7 @@
       case 'AsyncGeneratorBody':
         return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
     }
@@ -29087,6 +29172,7 @@
       case 'Object':
         return argument;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('RequireObjectCoercible', {
           type,
@@ -29809,6 +29895,7 @@
       case 'Object':
         return Value.true;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ToBoolean', {
           type,
@@ -29884,6 +29971,7 @@
           return ToNumber(primValue);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ToNumber', {
           type,
@@ -30178,6 +30266,7 @@
       case 'Symbol':
         return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ToBigInt', argument);
     }
@@ -30296,6 +30385,7 @@
           return ToString(primValue);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ToString', {
           type,
@@ -30348,6 +30438,7 @@
       case 'Object':
         return argument;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ToObject', {
           type,
@@ -30957,6 +31048,7 @@
       case 'function':
         return new BuiltinFunctionValue(value);
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('new Value', value);
     }
@@ -31368,6 +31460,7 @@
         return new Value(lnum.numberValue() ^ rnum.numberValue());
       // eslint-disable-line no-bitwise
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('NumberBitwiseOp', op);
     }
@@ -31662,6 +31755,7 @@
         return new Value(x ^ y);
       // eslint-disable-line no-bitwise
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BigIntBitwiseOp', op);
     }

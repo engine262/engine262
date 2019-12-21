@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 7e2bb37e95bbfe6511a662e3d8ce0b5d0155b13f
+ * engine262 0.0.1 e52c67dd6634b15274bd1d72f027eb303098f6ac
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1205,6 +1205,7 @@ function BoundNames_LexicalDeclaration(LexicalDeclaration) {
         names.push(...BoundNames_BindingPattern(declarator.id));
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_LexicalDeclaration', LexicalDeclaration);
     }
@@ -1242,6 +1243,7 @@ function BoundNames_VariableDeclaration(VariableDeclaration) {
     case isBindingPattern(VariableDeclaration.id):
       return BoundNames_BindingPattern(VariableDeclaration.id);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_VariableDeclaration', VariableDeclaration);
   }
@@ -1264,6 +1266,7 @@ function BoundNames_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return BoundNames_BindingIdentifier(SingleNameBinding.left);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_SingleNameBinding', SingleNameBinding);
   }
@@ -1286,6 +1289,7 @@ function BoundNames_BindingElement(BindingElement) {
     case isBindingPatternAndInitializer(BindingElement):
       return BoundNames_BindingPattern(BindingElement.left);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_BindingElement', BindingElement);
   }
@@ -1302,6 +1306,7 @@ function BoundNames_BindingRestElement(BindingRestElement) {
     case isBindingPattern(BindingRestElement.argument):
       return BoundNames_BindingPattern(BindingRestElement.argument);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_BindingRestElement argument', BindingRestElement.argument);
   }
@@ -1337,6 +1342,7 @@ function BoundNames_ArrayBindingPattern(ArrayBindingPattern) {
           break;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
     }
@@ -1357,6 +1363,7 @@ function BoundNames_BindingProperty(BindingProperty) {
     case isBindingPropertyWithColon(BindingProperty):
       return BoundNames_BindingElement(BindingProperty.value);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_BindingProperty', BindingProperty);
   }
@@ -1400,6 +1407,7 @@ function BoundNames_ObjectBindingPattern(ObjectBindingPattern) {
           break;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_ObjectBindingPattern property', BindingPropertyOrBindingRestProperty);
     }
@@ -1420,6 +1428,7 @@ function BoundNames_BindingPattern(BindingPattern) {
     case isArrayBindingPattern(BindingPattern):
       return BoundNames_ArrayBindingPattern(BindingPattern);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_BindingPattern', BindingPattern);
   }
@@ -1440,6 +1449,7 @@ function BoundNames_BindingIdentifierOrBindingPattern(targetTypeForErrorMessage,
     case isBindingPattern(BindingIdentifierOrBindingPattern):
       return BoundNames_BindingPattern(BindingIdentifierOrBindingPattern);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange(`BoundNames_BindingIdentifierOrBindingPattern ${targetTypeForErrorMessage}`, BindingIdentifierOrBindingPattern);
   }
@@ -1493,6 +1503,7 @@ function BoundNames_FormalParameters(FormalParameters) {
         names.push(...BoundNames_FunctionRestParameter(FormalParameterOrFunctionRestParameter));
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('BoundNames_FormalParameters element', FormalParameterOrFunctionRestParameter);
     }
@@ -1563,6 +1574,7 @@ function BoundNames_Declaration(Declaration) {
     case isLexicalDeclaration(Declaration):
       return BoundNames_LexicalDeclaration(Declaration);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_Declaration', Declaration);
   }
@@ -1583,6 +1595,7 @@ function BoundNames_ImportDeclaration(ImportDeclaration) {
     case isImportDeclarationWithSpecifierOnly(ImportDeclaration):
       return [];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_ImportDeclaration', ImportDeclaration);
   }
@@ -1635,6 +1648,7 @@ function BoundNames_ExportDeclaration(ExportDeclaration) {
     case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
       return ['*default*'];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_ExportDeclaration', ExportDeclaration);
   }
@@ -1657,6 +1671,7 @@ function BoundNames_ModuleItem(ModuleItem) {
     case isDeclaration(ModuleItem):
       return BoundNames_Declaration(ModuleItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BoundNames_ModuleItem', ModuleItem);
   }
@@ -1686,6 +1701,7 @@ function ContainsExpression_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ContainsExpression_SingleNameBinding', SingleNameBinding);
   }
@@ -1708,6 +1724,7 @@ function ContainsExpression_BindingElement(BindingElement) {
     case isBindingPatternAndInitializer(BindingElement):
       return true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ContainsExpression_BindingElement', BindingElement);
   }
@@ -1724,6 +1741,7 @@ function ContainsExpression_BindingRestElement(BindingRestElement) {
     case isBindingPattern(BindingRestElement.argument):
       return ContainsExpression_BindingPattern(BindingRestElement.argument);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ContainsExpression_BindingRestElement', BindingRestElement);
   }
@@ -1763,6 +1781,7 @@ function ContainsExpression_ArrayBindingPattern(ArrayBindingPattern) {
           break;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_ArrayBindingPattern element', BindingElisionElementOrBindingRestElement);
     }
@@ -1787,6 +1806,7 @@ function ContainsExpression_BindingProperty(BindingProperty) {
     case isBindingPropertyWithSingleNameBinding(BindingProperty):
       return ContainsExpression_SingleNameBinding(BindingProperty.value);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ContainsExpression_BindingProperty', BindingProperty);
   }
@@ -1833,6 +1853,7 @@ function ContainsExpression_ObjectBindingPattern(ObjectBindingPattern) {
           break;
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_ObjectBindingPattern property', prop);
     }
@@ -1852,6 +1873,7 @@ function ContainsExpression_BindingPattern(BindingPattern) {
     case isArrayBindingPattern(BindingPattern):
       return ContainsExpression_ArrayBindingPattern(BindingPattern);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ContainsExpression_BindingPattern', BindingPattern);
   }
@@ -1895,6 +1917,7 @@ function ContainsExpression_FormalParameters(FormalParameters) {
 
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ContainsExpression_FormalParameters element', FormalParameterOrFunctionRestParameter);
     }
@@ -3323,6 +3346,7 @@ function* Evaluate_AdditiveExpression(AdditiveExpression) {
     case isAdditiveExpressionWithMinus(AdditiveExpression):
       return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression.left, AdditiveExpression.right);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
   }
@@ -3418,6 +3442,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
         return [siteObj, firstSub, ...restSub];
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
   }
@@ -3526,6 +3551,7 @@ function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
     case Array.isArray(ArgumentsOrTemplateLiteral):
       return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
   }
@@ -3686,6 +3712,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         postIndex = _temp11;
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ArrayAccumulation', element);
     }
@@ -4156,6 +4183,7 @@ function* BindingInitialization_BindingPattern(BindingPattern, value, environmen
         return result;
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BindingInitialization_BindingPattern', BindingPattern);
   }
@@ -4172,6 +4200,7 @@ function* BindingInitialization_ForBinding(ForBinding, value, environment) {
     case isBindingPattern(ForBinding):
       return yield* BindingInitialization_BindingPattern(ForBinding, value, environment);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BindingInitialization_ForBinding', ForBinding);
   }
@@ -4224,6 +4253,7 @@ function* BindingInitialization_CatchParameter(CatchParameter, value, environmen
     case isBindingPattern(CatchParameter):
       return yield* BindingInitialization_BindingPattern(CatchParameter, value, environment);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BindingInitialization_CatchParameter', CatchParameter);
   }
@@ -4379,6 +4409,7 @@ function* Evaluate_BinaryBitwiseExpression({
     case '|':
       return EvaluateBinopValues_BitwiseORExpression(lval, rval);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_BinaryBiwise', operator);
   }
@@ -4500,6 +4531,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
         return Completion(stmtResult);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
   }
@@ -10722,6 +10754,7 @@ function* DestructuringAssignmentEvaluation_AssignmentPattern(AssignmentPattern,
     case isArrayAssignmentPattern(AssignmentPattern):
       return yield* DestructuringAssignmentEvaluation_ArrayAssignmentPattern(AssignmentPattern, value);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('DestructuringAssignmentEvaluation_AssignmentPattern', AssignmentPattern);
   }
@@ -11435,6 +11468,7 @@ function* Evaluate_EqualityExpression({
         }
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_EqualityExpression', operator);
   }
@@ -11484,6 +11518,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexicalNames = LexicallyDeclaredNames_AsyncFunctionBody(code.body.body);
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('FunctionDeclarationInstantiation', code);
   }
@@ -11699,6 +11734,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
       lexDeclarations = LexicallyScopedDeclarations_AsyncFunctionBody(code.body.body);
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('FunctionDeclarationInstantiation', code);
   }
@@ -11774,6 +11810,7 @@ function getFunctionBodyType(ECMAScriptCode) {
     case isAsyncGeneratorDeclaration(ECMAScriptCode) || isAsyncGeneratorExpression(ECMAScriptCode):
       return 'AsyncGeneratorBody';
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('getFunctionBodyType', ECMAScriptCode);
   }
@@ -12208,6 +12245,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
         return new NormalCompletion(undefined);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
   }
@@ -12921,6 +12959,7 @@ function* LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
         return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, isAwait ? 'async' : 'sync', strict);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
   }
@@ -13506,6 +13545,7 @@ function Evaluate_HoistableDeclaration(HoistableDeclaration) {
     case isFunctionDeclaration(HoistableDeclaration):
       return Evaluate_FunctionDeclaration();
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_HoistableDeclaration', HoistableDeclaration);
   }
@@ -13788,6 +13828,7 @@ function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
     case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
       return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
   }
@@ -13894,6 +13935,7 @@ function* IteratorBindingInitialization_BindingElement_BindingPattern(BindingEle
       Initializer = BindingElement.right;
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IteratorBindingInitialization_BindingElement_BindingPattern', BindingElement);
   }
@@ -13977,6 +14019,7 @@ function* IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, ite
       Initializer = SingleNameBinding.right;
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IteratorBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
@@ -14110,6 +14153,7 @@ function* IteratorBindingInitialization_BindingElement(BindingElement, iteratorR
     case isBindingPattern(BindingElement) || isBindingPatternAndInitializer(BindingElement):
       return yield* IteratorBindingInitialization_BindingElement_BindingPattern(BindingElement, iteratorRecord, environment);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IteratorBindingInitialization_BindingElement', BindingElement);
   }
@@ -14303,6 +14347,7 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
     case isBindingPattern(BindingRestElement.argument):
       return yield* IteratorBindingInitialization_BindingRestElement_Pattern(BindingRestElement, iteratorRecord, environment);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IteratorBindingInitialization_BindingRestElement', BindingRestElement);
   }
@@ -14424,6 +14469,7 @@ function* KeyedBindingInitialization_BindingElement(BindingElement, value, envir
       Initializer = BindingElement.right;
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('KeyedBindingInitialization_BindingElement', BindingElement);
   }
@@ -14479,6 +14525,7 @@ function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, value,
       Initializer = SingleNameBinding.right;
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
   }
@@ -14557,6 +14604,7 @@ function* LabelledEvaluation({
       stmtResult = yield* Evaluate(LabelledItem);
       break;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('LabelledEvaluation', LabelledItem);
   }
@@ -14662,6 +14710,7 @@ function* Evaluate_LexicalBinding(LexicalBinding) {
     case isBindingPattern(LexicalBinding.id):
       return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
   }
@@ -14733,6 +14782,7 @@ function Evaluate_Literal(Literal) {
     case typeof Literal.value === 'string':
       return new Value(Literal.value);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_Literal', Literal);
   }
@@ -14871,6 +14921,7 @@ function* Evaluate_MemberExpression(MemberExpression) {
     case isActualMemberExpressionWithDot(MemberExpression):
       return yield* Evaluate_MemberExpression_IdentifierName(MemberExpression.object, MemberExpression.property);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
   }
@@ -14939,6 +14990,7 @@ function* Evaluate_MetaProperty(MetaProperty) {
     case isImportMeta(MetaProperty):
       return Evaluate_ImportMeta();
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_MetaProperty', MetaProperty);
   }
@@ -16356,6 +16408,7 @@ function EvaluateBinopValues_MultiplicativeExpression(MultiplicativeOperator, lv
     case '%':
       return T.remainder(lnum, rnum);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('EvaluateBinopValues_MultiplicativeExpression', MultiplicativeOperator);
   }
@@ -16553,6 +16606,7 @@ function* NamedEvaluation_Expression(Expression, name) {
     case isParenthesizedExpression(Expression):
       return yield* NamedEvaluation_ParenthesizedExpression(Expression, name);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('NamedEvaluation_Expression', Expression);
   }
@@ -16723,6 +16777,7 @@ function* ChainEvaluation(OptionalChain, baseValue, baseReference) {
           return yield* EvaluateCall(newValue, newReference, OptionalChain.arguments);
         }
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ChainEvaluation', OptionalChain);
     }
@@ -16743,6 +16798,7 @@ function* ChainEvaluation(OptionalChain, baseValue, baseReference) {
         return yield* EvaluateCall(baseValue, baseReference, OptionalChain.arguments);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ChainEvaluation', OptionalChain);
   }
@@ -16830,6 +16886,7 @@ function* PropertyBindingInitialization_BindingProperty(BindingProperty, value, 
         return [P];
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('PropertyBindingInitialization_BindingProperty', BindingProperty);
   }
@@ -17140,6 +17197,7 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
         return DefinePropertyOrThrow(object, propKey, desc);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
   }
@@ -17357,6 +17415,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     case isPropertyDefinitionSpread(PropertyDefinition):
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
   }
@@ -17391,6 +17450,7 @@ function Evaluate_LiteralPropertyName(LiteralPropertyName) {
         return _temp;
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_LiteralPropertyName', LiteralPropertyName);
   }
@@ -17603,6 +17663,7 @@ function* Evaluate_RelationalExpression({
 
       return HasProperty(rval, ToPropertyKey(lval));
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_RelationalExpression', operator);
   }
@@ -17747,6 +17808,7 @@ function EvaluateBinopValues_ShiftExpression(operator, lval, rval) {
     case '>>>':
       return T.unsignedRightShift(lnum, rnum);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('EvaluateBinopValues_ShiftExpression', operator);
   }
@@ -18620,6 +18682,7 @@ function* Evaluate_TryStatement(Expression) {
     case isTryStatementWithFinally(Expression):
       return yield* Evaluate_TryStatement_Finally(Expression.block, Expression.finalizer);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_TryStatement', Expression);
   }
@@ -18764,6 +18827,7 @@ function* Evaluate_UnaryExpression_Typeof(UnaryExpression) {
 
       return new Value('object');
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
   }
@@ -18916,6 +18980,7 @@ function* Evaluate_UnaryExpression(UnaryExpression) {
     case isUnaryExpressionWithBang(UnaryExpression):
       return yield* Evaluate_UnaryExpression_Bang(UnaryExpression.argument);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
   }
@@ -19132,6 +19197,7 @@ function* Evaluate_UpdateExpression({
         return newValue;
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_UpdateExpression', operator, prefix);
   }
@@ -19215,6 +19281,7 @@ function* Evaluate_VariableDeclaration(VariableDeclaration) {
         return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_VariableDeclaration', VariableDeclaration);
   }
@@ -19713,10 +19780,6 @@ function* Evaluate_StatementList(StatementList) {
 //     ModuleItemList ModuleItem
 
 function* Evaluate_ModuleItemList(ModuleItemList) {
-  if (ModuleItemList.length === 0) {
-    return new NormalCompletion(undefined);
-  }
-
   let sl = yield* Evaluate(ModuleItemList[0]);
 
   if (ModuleItemList.length === 1) {
@@ -19819,6 +19882,7 @@ function* Evaluate_StatementListItem(StatementListItem) {
     case isLexicalDeclaration(StatementListItem):
       return yield* Evaluate_LexicalDeclaration(StatementListItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_StatementListItem', StatementListItem);
   }
@@ -19862,6 +19926,7 @@ function EvaluateBinopValues(operator, lval, rval) {
     case '**':
       return EvaluateBinopValues_ExponentiationExpression(lval, rval);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('EvaluateBinopValues', operator);
   }
@@ -19998,6 +20063,7 @@ function* Inner_Evaluate_Expression(Expression) {
     case isParenthesizedExpression(Expression):
       return yield* Evaluate(Expression.expression);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate_Expression', Expression);
   }
@@ -20061,6 +20127,7 @@ function* Evaluate(Production) {
     case isExpression(Production):
       return yield* Evaluate_Expression(Production);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('Evaluate', Production);
   }
@@ -20678,6 +20745,7 @@ function ModuleRequests_ModuleItem(ModuleItem) {
     case isExportDeclaration(ModuleItem):
       return ModuleRequests_ExportDeclaration(ModuleItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ModuleRequests_ModuleItem', ModuleItem);
   }
@@ -20722,6 +20790,7 @@ function ModuleRequests_ExportDeclaration(ExportDeclaration) {
     case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
       return [];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ModuleRequests_ExportDeclaration', ExportDeclaration);
   }
@@ -20757,6 +20826,7 @@ function ExportEntries_ModuleItem(ModuleItem) {
     case isExportDeclaration(ModuleItem):
       return ExportEntries_ExportDeclaration(ModuleItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ExportEntries_ModuleItem', ModuleItem);
   }
@@ -20878,6 +20948,7 @@ function ExportEntries_ExportDeclaration(ExportDeclaration) {
         ExportName: new Value('default')
       })];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ExportEntries_ExportDeclaration', ExportDeclaration);
   }
@@ -20895,6 +20966,7 @@ function HasInitializer_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('HasInitializer_SingleNameBinding', SingleNameBinding);
   }
@@ -20917,6 +20989,7 @@ function HasInitializer_BindingElement(BindingElement) {
     case isSingleNameBinding(BindingElement):
       return HasInitializer_SingleNameBinding(BindingElement);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('HasInitializer_BindingElement', BindingElement);
   }
@@ -21008,6 +21081,7 @@ function HasName_Expression(Expression) {
         return HasName_Expression(expr);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('HasName_Expression', Expression);
   }
@@ -21050,6 +21124,7 @@ function ImportEntriesForModule_ImportClause(ImportClause, module) {
         entries.push(...ImportEntriesForModule_ImportSpecifier(binding, module));
         break;
 
+      /*istanbul ignore next*/
       default:
         throw new OutOfRange('ImportEntriesForModule_ImportClause binding', binding);
     }
@@ -21134,6 +21209,7 @@ function ImportEntries_ModuleItem(ModuleItem) {
     case isImportDeclaration(ModuleItem):
       return ImportEntries_ImportDeclaration(ModuleItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ImportEntries_ModuleItem', ModuleItem);
   }
@@ -21159,6 +21235,7 @@ function ImportEntries_ImportDeclaration(ImportDeclaration) {
     case isImportDeclarationWithSpecifierOnly(ImportDeclaration):
       return [];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ImportEntries_ImportDeclaration', ImportDeclaration);
   }
@@ -21220,6 +21297,7 @@ function IsDestructuring_LeftHandSideExpression(LeftHandSideExpression) {
     case isBindingPattern(LeftHandSideExpression):
       return true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IsDestructuring_LeftHandSideExpression', LeftHandSideExpression);
   }
@@ -21241,6 +21319,7 @@ function IsDestructuring_ForBinding(ForBinding) {
     case isBindingPattern(ForBinding):
       return true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IsDestructuring_ForBinding', ForBinding);
   }
@@ -21339,6 +21418,7 @@ function IsSimpleParameterList_BindingElement(BindingElement) {
     case isBindingPatternAndInitializer(BindingElement):
       return false;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IsSimpleParameterList_BindingElement', BindingElement);
   }
@@ -21355,6 +21435,7 @@ function IsSimpleParameterList_SingleNameBinding(SingleNameBinding) {
     case isBindingIdentifierAndInitializer(SingleNameBinding):
       return false;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('IsSimpleParameterList_SingleNameBinding', SingleNameBinding);
   }
@@ -21940,6 +22021,7 @@ function LexicallyScopedDeclarations_ExportDeclaration(ExportDeclaration) {
     case isExportDeclarationWithDefaultAndExpression(ExportDeclaration):
       return [ExportDeclaration];
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('LexicallyScopedDeclarations_ExportDeclaration', ExportDeclaration);
   }
@@ -21962,6 +22044,7 @@ function LexicallyScopedDeclarations_ModuleItem(ModuleItem) {
     case isStatementListItem(ModuleItem):
       return LexicallyScopedDeclarations_StatementListItem(ModuleItem);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('LexicallyScopedDeclarations_ModuleItem', ModuleItem);
   }
@@ -22124,6 +22207,7 @@ function TemplateStrings_TemplateLiteral(TemplateLiteral, raw) {
     case isSubstitutionTemplate(TemplateLiteral):
       return TemplateStrings_SubstitutionTemplate(TemplateLiteral, raw);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('TemplateStrings_TemplateLiteral', TemplateLiteral);
   }
@@ -24515,6 +24599,7 @@ function* OrdinaryCallEvaluateBody(F, argumentsList) {
     case 'AsyncGeneratorBody':
       return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
   }
@@ -29081,6 +29166,7 @@ function RequireObjectCoercible(argument) {
     case 'Object':
       return argument;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('RequireObjectCoercible', {
         type,
@@ -29803,6 +29889,7 @@ function ToBoolean(argument) {
     case 'Object':
       return Value.true;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ToBoolean', {
         type,
@@ -29878,6 +29965,7 @@ function ToNumber(argument) {
         return ToNumber(primValue);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ToNumber', {
         type,
@@ -30172,6 +30260,7 @@ function ToBigInt(argument) {
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ToBigInt', argument);
   }
@@ -30290,6 +30379,7 @@ function ToString(argument) {
         return ToString(primValue);
       }
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ToString', {
         type,
@@ -30342,6 +30432,7 @@ function ToObject(argument) {
     case 'Object':
       return argument;
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('ToObject', {
         type,
@@ -30951,6 +31042,7 @@ function Value(value) {
     case 'function':
       return new BuiltinFunctionValue(value);
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('new Value', value);
   }
@@ -31362,6 +31454,7 @@ function NumberBitwiseOp(op, x, y) {
       return new Value(lnum.numberValue() ^ rnum.numberValue());
     // eslint-disable-line no-bitwise
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('NumberBitwiseOp', op);
   }
@@ -31656,6 +31749,7 @@ function BigIntBitwiseOp(op, x, y) {
       return new Value(x ^ y);
     // eslint-disable-line no-bitwise
 
+    /*istanbul ignore next*/
     default:
       throw new OutOfRange('BigIntBitwiseOp', op);
   }
