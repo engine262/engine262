@@ -185,20 +185,6 @@ if (argv.inspector) {
   inspector.attachRealm(realm);
 }
 
-{
-  const api = new APIObject(realm);
-
-  Abstract.CreateDataProperty(api, new Value(realm, 'readFile'), new Value(realm, ([filename]) => {
-    const contents = fs.readFileSync(filename.stringValue(), 'utf8');
-    return new Value(realm, contents);
-  }));
-
-  const list = realm.scope(() => Abstract.CreateArrayFromList(programArgv.map((a) => new Value(realm, a))));
-  Abstract.CreateDataProperty(api, new Value(realm, 'argv'), list);
-
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'api'), api);
-}
-
 function oneShotEval(source, filename) {
   let result;
   if (argv.m || argv.module || filename.endsWith('.mjs')) {
