@@ -239,6 +239,7 @@ if (entry) {
       const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
       callback(null, result);
     },
+    preview: false,
     completer: () => [],
     writer: (o) => {
       if (o instanceof Value || o instanceof Completion) {
