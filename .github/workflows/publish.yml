@@ -50,11 +50,8 @@ jobs:
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git fetch github
           git checkout gh-pages
-          cp dist/engine262.js engine262.js
-          cp dist/engine262.js.map engine262.js.map
-          cp dist/engine262.mjs engine262.mjs
-          cp dist/engine262.mjs.map engine262.mjs.map
-          git add engine262.js engine262.js.map engine262.mjs engine262.mjs.map
+          cp dist/* .
+          git add engine262.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
         env:
