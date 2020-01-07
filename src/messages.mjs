@@ -76,6 +76,7 @@ export const ProxyDefinePropertyNonConfigurableWritable = (p) => `'definePropert
 export const ProxyDefinePropertyNonExtensible = (p) => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} to the non-extensible proxy target`;
 export const ProxyDefinePropertyIncompatible = (p) => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} that is incompatible with the existing property in the proxy target`;
 export const ProxyDeletePropertyNonConfigurable = (p) => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} which is non-configurable in the proxy target`;
+export const ProxyDeletePropertyNonExtensible = (p) => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} but the proxy target is non-extensible`;
 export const ProxyGetNonConfigurableData = (p) => `'get' on proxy: property ${i(p)} is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value`;
 export const ProxyGetNonConfigurableAccessor = (p) => `'get' on proxy: property ${i(p)} is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return 'undefined'`;
 export const ProxyGetPrototypeOfInvalid = () => '\'getPrototypeOf\' on proxy: trap returned neither object nor null';

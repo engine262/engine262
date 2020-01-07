@@ -1381,90 +1381,153 @@ export class ProxyExoticObjectValue extends ObjectValue {
   GetOwnProperty(P) {
     const O = this;
 
+    // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
+    // 2. Let handler be O.[[ProxyHandler]].
     const handler = O.ProxyHandler;
+    // 3. If handler is null, throw a TypeError exception.
     if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getOwnPropertyDescriptor');
     }
+    // 4. Assert: Type(Handler) is Object.
     Assert(Type(handler) === 'Object');
+    // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget;
+    // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
     const trap = Q(GetMethod(handler, new Value('getOwnPropertyDescriptor')));
+    // 7. If trap is undefined, then
     if (trap === Value.undefined) {
+      // a. Return ? target.[[GetOwnProperty]](P).
       return Q(target.GetOwnProperty(P));
     }
+    // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
     const trapResultObj = Q(Call(trap, handler, [target, P]));
+    // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (Type(trapResultObj) !== 'Object' && Type(trapResultObj) !== 'Undefined') {
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorInvalid', P);
     }
+    // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
     const targetDesc = Q(target.GetOwnProperty(P));
+    // 11. If trapResultObj is undefined, then
     if (trapResultObj === Value.undefined) {
+      // a. If targetDesc is undefined, return undefined.
       if (targetDesc === Value.undefined) {
         return Value.undefined;
       }
+      // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
       if (targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorUndefined', P);
       }
+      // c. Let extensibleTarget be ? IsExtensible(target).
       const extensibleTarget = Q(IsExtensible(target));
+      // d. If extensibleTarget is false, throw a TypeError exception.
       if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonExtensible', P);
       }
+      // e. Return undefined.
       return Value.undefined;
     }
+    // 12. Let extensibleTarget be ? IsExtensible(target).
     const extensibleTarget = Q(IsExtensible(target));
+    // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
     const resultDesc = Q(ToPropertyDescriptor(trapResultObj));
+    // 14. Call CompletePropertyDescriptor(resultDesc).
     CompletePropertyDescriptor(resultDesc);
+    // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
     const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
+    // 16. If valid is false, throw a TypeError exception.
     if (valid === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorIncompatible', P);
     }
+    // 17. If resultDesc.[[Configurable]] is false, then
     if (resultDesc.Configurable === Value.false) {
+      // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
       if (targetDesc === Value.undefined || targetDesc.Configurable === Value.true) {
+        // i. Throw a TypeError exception.
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurable', P);
       }
+      // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
+      if ('Writable' in resultDesc && resultDesc.Writable === Value.false) {
+        // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
+        if (targetDesc.Writable === Value.true) {
+          return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurableWritable', P);
+        }
+      }
     }
+    // 18. Return resultDesc.
     return resultDesc;
   }
 
   DefineOwnProperty(P, Desc) {
     const O = this;
 
+    // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
+    // 2. Let handler be O.[[ProxyHandler]].
     const handler = O.ProxyHandler;
+    // 3. If handler is null, throw a TypeError exception.
     if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'defineProperty');
     }
+    // 4. Assert: Type(handler) is Object.
     Assert(Type(handler) === 'Object');
+    // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget;
+    // 6. Let trap be ? GetMethod(handler, "defineProperty").
     const trap = Q(GetMethod(handler, new Value('defineProperty')));
+    // 7. If trap is undefined, then
     if (trap === Value.undefined) {
+      // a. Return ? target.[[DefineOwnProperty]](P, Desc).
       return Q(target.DefineOwnProperty(P, Desc));
     }
+    // 8. Let descObj be FromPropertyDescriptor(Desc).
     const descObj = FromPropertyDescriptor(Desc);
+    // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, descObj])));
+    // 10. If booleanTrapResult is false, return false.
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
+    // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
     const targetDesc = Q(target.GetOwnProperty(P));
+    // 12. Let extensibleTarget be ? IsExtensible(target).
     const extensibleTarget = Q(IsExtensible(target));
     let settingConfigFalse;
+    // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
     if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
+      // a. Let settingConfigFalse be true.
       settingConfigFalse = true;
     } else {
+      // Else, let settingConfigFalse be false.
       settingConfigFalse = false;
     }
+    // 15. If targetDesc is undefined, then
     if (targetDesc === Value.undefined) {
+      // a. If extensibleTarget is false, throw a TypeError exception.
       if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonExtensible', P);
       }
+      // b. If settingConfigFalse is true, throw a TypeError exception.
       if (settingConfigFalse === true) {
         return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurable', P);
       }
     } else {
+      // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
       if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyIncompatible', P);
       }
+      // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
       if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
-        return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurableWritable', P);
+        return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurable', P);
+      }
+      // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
+      if (IsDataDescriptor(targetDesc)
+          && targetDesc.Configurable === Value.false
+          && targetDesc.Writable === Value.true) {
+        // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
+        if ('Writable' in Desc && Desc.Writable === Value.false) {
+          return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurableWritable', P);
+        }
       }
     }
     return Value.true;
@@ -1568,28 +1631,48 @@ export class ProxyExoticObjectValue extends ObjectValue {
   Delete(P) {
     const O = this;
 
+    // 1. Assert: IsPropertyKey(P) is true.
     Assert(IsPropertyKey(P));
+    // 2. Let handler be O.[[ProxyHandler]].
     const handler = O.ProxyHandler;
+    // 3. If handler is null, throw a TypeError exception.
     if (handler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'deleteProperty');
     }
+    // 4. Assert: Type(handler) is Object.
     Assert(Type(handler) === 'Object');
+    // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget;
+    // 6. Let trap be ? GetMethod(handler, "deleteProperty").
     const trap = Q(GetMethod(handler, new Value('deleteProperty')));
+    // 7. If trap is undefined, then
     if (trap === Value.undefined) {
+      // a. Return ? target.[[Delete]](P).
       return Q(target.Delete(P));
     }
+    // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
     const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
+    // 9. If booleanTrapResult is false, return false.
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
+    // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
     const targetDesc = Q(target.GetOwnProperty(P));
+    // 11. If targetDesc is undefined, return true.
     if (targetDesc === Value.undefined) {
       return Value.true;
     }
+    // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
     if (targetDesc.Configurable === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonConfigurable', P);
     }
+    // 13. Let extensibleTarget be ? IsExtensible(target).
+    const extensibleTarget = Q(IsExtensible(target));
+    // 14. If extensibleTarget is false, throw a TypeError exception.
+    if (extensibleTarget === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonExtensible', P);
+    }
+    // 15. Return true.
     return Value.true;
   }
 
