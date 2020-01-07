@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d0a1591f05256810ec7440bbb0fa46d3dc67c2d0
+ * engine262 0.0.1 3828db0e0c24d039e72253fdbf6cce2ff29f1ae8
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -12371,6 +12371,296 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
   }
 }
 
+function assignProps(realmRec, obj, props) {
+  for (const item of props) {
+    if (item === undefined) {
+      continue;
+    }
+
+    const [n, v, len, descriptor] = item;
+    const name = n instanceof Value ? n : new Value(n);
+
+    if (Array.isArray(v)) {
+      // Every accessor property described in clauses 18 through 26 and in
+      // Annex B.2 has the attributes { [[Enumerable]]: false,
+      // [[Configurable]]: true } unless otherwise specified. If only a get
+      // accessor function is described, the set accessor function is the
+      // default value, undefined. If only a set accessor is described the get
+      // accessor is the default value, undefined.
+      let [getter = Value.undefined, setter = Value.undefined] = v;
+
+      if (typeof getter === 'function') {
+        getter = CreateBuiltinFunction(getter, [], realmRec);
+
+        let _temp = SetFunctionName(getter, name, new Value('get'));
+
+        Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
+        /* istanbul ignore if */
+
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
+        }
+
+        let _temp2 = SetFunctionLength(getter, new Value(0));
+
+        Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionLength(getter, new Value(0))" + ' returned an abrupt completion');
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+      }
+
+      if (typeof setter === 'function') {
+        setter = CreateBuiltinFunction(setter, [], realmRec);
+
+        let _temp3 = SetFunctionName(setter, name, new Value('set'));
+
+        Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(setter, name, new Value('set'))" + ' returned an abrupt completion');
+
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
+        }
+
+        let _temp4 = SetFunctionLength(setter, new Value(1));
+
+        Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionLength(setter, new Value(1))" + ' returned an abrupt completion');
+
+        if (_temp4 instanceof Completion) {
+          _temp4 = _temp4.Value;
+        }
+      }
+
+      let _temp5 = obj.DefineOwnProperty(name, Descriptor({
+        Get: getter,
+        Set: setter,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+        ...descriptor
+      }));
+
+      Assert(!(_temp5 instanceof AbruptCompletion), "obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      }))" + ' returned an abrupt completion');
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+    } else {
+      // Every other data property described in clauses 18 through 26 and in
+      // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
+      // false, [[Configurable]]: true } unless otherwise specified.
+      let value;
+
+      if (typeof v === 'function') {
+        Assert(typeof len === 'number', "typeof len === 'number'");
+        value = CreateBuiltinFunction(v, [], realmRec);
+
+        let _temp6 = SetFunctionName(value, name);
+
+        Assert(!(_temp6 instanceof AbruptCompletion), "SetFunctionName(value, name)" + ' returned an abrupt completion');
+
+        if (_temp6 instanceof Completion) {
+          _temp6 = _temp6.Value;
+        }
+
+        let _temp7 = SetFunctionLength(value, new Value(len));
+
+        Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionLength(value, new Value(len))" + ' returned an abrupt completion');
+
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
+        }
+      } else {
+        value = v;
+      }
+
+      obj.properties.set(name, Descriptor({
+        Value: value,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+        ...descriptor
+      }));
+    }
+  }
+}
+function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
+  Assert(Prototype !== undefined, "Prototype !== undefined");
+  const proto = ObjectCreate(Prototype);
+  assignProps(realmRec, proto, props);
+
+  if (stringTag !== undefined) {
+    let _temp8 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
+      Value: new Value(stringTag),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: new Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+  }
+
+  return proto;
+}
+function BootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
+  const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
+  SetFunctionName(cons, new Value(name));
+  SetFunctionLength(cons, new Value(length));
+
+  let _temp9 = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+    Value: Prototype,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
+  }));
+
+  Assert(!(_temp9 instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+  if (_temp9 instanceof Completion) {
+    _temp9 = _temp9.Value;
+  }
+
+  let _temp10 = Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
+    Value: cons,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
+  }));
+
+  Assert(!(_temp10 instanceof AbruptCompletion), "Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
+  }
+  assignProps(realmRec, cons, props);
+  return cons;
+}
+
+function CreateForInIterator(object) {
+  // 1. Assert: Type(object) is Object.
+  Assert(Type(object) === 'Object', "Type(object) === 'Object'"); // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
+
+  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ForInIteratorPrototype%'), ['Object', 'ObjectWasVisited', 'VisitedKeys', 'RemainingKeys']); // 3. Set iterator.[[Object]] to object.
+
+  iterator.Object = object; // 4. Set iterator.[[ObjectWasVisited]] to false.
+
+  iterator.ObjectWasVisited = Value.false; // 5. Set iterator.[[VisitedKeys]] to a new empty List.
+
+  iterator.VisitedKeys = []; // 6. Set iterator.[[RemainingKeys]] to a new empty List.
+
+  iterator.RemainingKeys = []; // 7. Return iterator.
+
+  return iterator;
+} // #sec-%foriniteratorprototype%.next
+
+function ForInIteratorPrototype_next(args, {
+  thisValue
+}) {
+  // 1. Let O be this value.
+  const O = thisValue; // 2. Assert: Type(O) is Object.
+
+  Assert(Type(O) === 'Object', "Type(O) === 'Object'"); // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
+
+  Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O', "'Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O'"); // 4. Let object be O.[[Object]].
+
+  let object = O.Object; // 5. Let visited be O.[[VisitedKeys]].
+
+  const visited = O.VisitedKeys; // 6. Let remaining be O.[[RemainingKeys]].
+
+  const remaining = O.RemainingKeys; // 7. Repeat,
+
+  while (true) {
+    // a. If O.[[ObjectWasVisited]] is false, then
+    if (O.ObjectWasVisited === Value.false) {
+      let _temp = object.OwnPropertyKeys();
+      /* istanbul ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* istanbul ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      // i. Let keys be ? object.[[OwnPropertyKeys]]().
+      const keys = _temp; // ii. for each key of keys in List order, do
+
+      for (const key of keys) {
+        // 1. If Type(key) is String, then
+        if (Type(key) === 'String') {
+          // a. Append key to remaining.
+          remaining.push(key);
+        }
+      } // iii. Set O.ObjectWasVisited to true.
+
+
+      O.ObjectWasVisited = Value.true;
+    } // b. Repeat, while remaining is not empty,
+
+
+    while (remaining.length > 0) {
+      // i. Remove the first element from remaining and let r be the value of the element.
+      const r = remaining.shift(); // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
+
+      if (!visited.find(v => SameValue(r, v) === Value.true)) {
+        let _temp2 = object.GetOwnProperty(r);
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        // 1. Let desc be ? object.[[GetOwnProperty]](r).
+        const desc = _temp2; // 2. If desc is not undefined, then,
+
+        if (desc !== Value.undefined) {
+          // a. Append r to visited.
+          visited.push(r); // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
+
+          if (desc.Enumerable === Value.true) {
+            return CreateIterResultObject(r, Value.false);
+          }
+        }
+      }
+    } // c. Set object to ? object.[[GetPrototypeOf]]().
+
+
+    let _temp3 = object.GetPrototypeOf();
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    object = _temp3; // d. Set O.Object to object.
+
+    O.Object = object; // e. Set O.ObjectWasVisited to false.
+
+    O.ObjectWasVisited = Value.false; // f. If object is null, return CreateIterResultObject(undefined, true).
+
+    if (object === Value.null) {
+      return CreateIterResultObject(Value.undefined, Value.true);
+    }
+  }
+}
+
+function CreateForInIteratorPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
+  realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
+}
+
 function LoopContinues(completion, labelSet) {
   if (completion.Type === 'normal') {
     return true;
@@ -13083,139 +13373,20 @@ function* LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
   }
-}
+} // #sec-enumerate-object-properties
 
-function* InternalEnumerateObjectProperties(O) {
-  const visited = new ValueSet();
+function EnumerateObjectProperties(O) {
+  const it = CreateForInIterator(O);
 
-  let _temp28 = O.OwnPropertyKeys();
+  let _temp28 = GetIterator(it);
 
-  if (_temp28 instanceof AbruptCompletion) {
-    return _temp28;
-  }
+  Assert(!(_temp28 instanceof AbruptCompletion), "GetIterator(it)" + ' returned an abrupt completion');
 
   if (_temp28 instanceof Completion) {
     _temp28 = _temp28.Value;
   }
 
-  const keys = _temp28;
-
-  for (const key of keys) {
-    if (Type(key) === 'Symbol') {
-      continue;
-    }
-
-    let _temp29 = O.GetOwnProperty(key);
-
-    if (_temp29 instanceof AbruptCompletion) {
-      return _temp29;
-    }
-
-    if (_temp29 instanceof Completion) {
-      _temp29 = _temp29.Value;
-    }
-
-    const desc = _temp29;
-
-    if (Type(desc) !== 'Undefined') {
-      visited.add(key);
-
-      if (desc.Enumerable === Value.true) {
-        yield key;
-      }
-    }
-  }
-
-  let _temp30 = O.GetPrototypeOf();
-
-  if (_temp30 instanceof AbruptCompletion) {
-    return _temp30;
-  }
-
-  if (_temp30 instanceof Completion) {
-    _temp30 = _temp30.Value;
-  }
-
-  const proto = _temp30;
-
-  if (Type(proto) === 'Null') {
-    return;
-  }
-
-  for (const protoKey of InternalEnumerateObjectProperties(proto)) {
-    if (!visited.has(protoKey)) {
-      yield protoKey;
-    }
-  }
-} // 13.7.5.15 #sec-enumerate-object-properties
-
-
-function EnumerateObjectProperties(O) {
-  Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-  const internalIterator = InternalEnumerateObjectProperties(O);
-
-  let _temp31 = ObjectCreate(Value.null);
-
-  Assert(!(_temp31 instanceof AbruptCompletion), "ObjectCreate(Value.null)" + ' returned an abrupt completion');
-
-  if (_temp31 instanceof Completion) {
-    _temp31 = _temp31.Value;
-  }
-
-  const iterator = _temp31;
-  const nextMethod = CreateBuiltinFunction(() => {
-    let {
-      value,
-      done
-    } = internalIterator.next();
-
-    if (value instanceof AbruptCompletion) {
-      return value;
-    }
-
-    if (value instanceof Completion) {
-      value = value.Value;
-    }
-
-    let _temp32 = CreateIterResultObject(value === undefined ? Value.undefined : value, done ? Value.true : Value.false);
-
-    Assert(!(_temp32 instanceof AbruptCompletion), "CreateIterResultObject(\n      value === undefined ? Value.undefined : value,\n      done ? Value.true : Value.false,\n    )" + ' returned an abrupt completion');
-
-    if (_temp32 instanceof Completion) {
-      _temp32 = _temp32.Value;
-    }
-
-    return _temp32;
-  }, []);
-
-  let _temp33 = CreateDataProperty(iterator, new Value('next'), nextMethod);
-
-  Assert(!(_temp33 instanceof AbruptCompletion), "CreateDataProperty(iterator, new Value('next'), nextMethod)" + ' returned an abrupt completion');
-
-  if (_temp33 instanceof Completion) {
-    _temp33 = _temp33.Value;
-  }
-
-  let _temp34 = CreateDataProperty(iterator, new Value('throw'), Value.null);
-
-  Assert(!(_temp34 instanceof AbruptCompletion), "CreateDataProperty(iterator, new Value('throw'), Value.null)" + ' returned an abrupt completion');
-
-  if (_temp34 instanceof Completion) {
-    _temp34 = _temp34.Value;
-  }
-
-  let _temp35 = CreateDataProperty(iterator, new Value('return'), Value.null);
-
-  Assert(!(_temp35 instanceof AbruptCompletion), "CreateDataProperty(iterator, new Value('return'), Value.null)" + ' returned an abrupt completion');
-
-  if (_temp35 instanceof Completion) {
-    _temp35 = _temp35.Value;
-  }
-  return {
-    Iterator: iterator,
-    NextMethod: nextMethod,
-    Done: Value.false
-  };
+  return _temp28;
 }
 
 // FunctionDeclaration :
@@ -34693,173 +34864,6 @@ function* Await(value) {
   return completion;
 }
 
-function assignProps(realmRec, obj, props) {
-  for (const item of props) {
-    if (item === undefined) {
-      continue;
-    }
-
-    const [n, v, len, descriptor] = item;
-    const name = n instanceof Value ? n : new Value(n);
-
-    if (Array.isArray(v)) {
-      // Every accessor property described in clauses 18 through 26 and in
-      // Annex B.2 has the attributes { [[Enumerable]]: false,
-      // [[Configurable]]: true } unless otherwise specified. If only a get
-      // accessor function is described, the set accessor function is the
-      // default value, undefined. If only a set accessor is described the get
-      // accessor is the default value, undefined.
-      let [getter = Value.undefined, setter = Value.undefined] = v;
-
-      if (typeof getter === 'function') {
-        getter = CreateBuiltinFunction(getter, [], realmRec);
-
-        let _temp = SetFunctionName(getter, name, new Value('get'));
-
-        Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
-        /* istanbul ignore if */
-
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-
-        let _temp2 = SetFunctionLength(getter, new Value(0));
-
-        Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionLength(getter, new Value(0))" + ' returned an abrupt completion');
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-      }
-
-      if (typeof setter === 'function') {
-        setter = CreateBuiltinFunction(setter, [], realmRec);
-
-        let _temp3 = SetFunctionName(setter, name, new Value('set'));
-
-        Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(setter, name, new Value('set'))" + ' returned an abrupt completion');
-
-        if (_temp3 instanceof Completion) {
-          _temp3 = _temp3.Value;
-        }
-
-        let _temp4 = SetFunctionLength(setter, new Value(1));
-
-        Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionLength(setter, new Value(1))" + ' returned an abrupt completion');
-
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
-        }
-      }
-
-      let _temp5 = obj.DefineOwnProperty(name, Descriptor({
-        Get: getter,
-        Set: setter,
-        Enumerable: Value.false,
-        Configurable: Value.true,
-        ...descriptor
-      }));
-
-      Assert(!(_temp5 instanceof AbruptCompletion), "obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      }))" + ' returned an abrupt completion');
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-    } else {
-      // Every other data property described in clauses 18 through 26 and in
-      // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
-      // false, [[Configurable]]: true } unless otherwise specified.
-      let value;
-
-      if (typeof v === 'function') {
-        Assert(typeof len === 'number', "typeof len === 'number'");
-        value = CreateBuiltinFunction(v, [], realmRec);
-
-        let _temp6 = SetFunctionName(value, name);
-
-        Assert(!(_temp6 instanceof AbruptCompletion), "SetFunctionName(value, name)" + ' returned an abrupt completion');
-
-        if (_temp6 instanceof Completion) {
-          _temp6 = _temp6.Value;
-        }
-
-        let _temp7 = SetFunctionLength(value, new Value(len));
-
-        Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionLength(value, new Value(len))" + ' returned an abrupt completion');
-
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
-        }
-      } else {
-        value = v;
-      }
-
-      obj.properties.set(name, Descriptor({
-        Value: value,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true,
-        ...descriptor
-      }));
-    }
-  }
-}
-function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
-  Assert(Prototype !== undefined, "Prototype !== undefined");
-  const proto = ObjectCreate(Prototype);
-  assignProps(realmRec, proto, props);
-
-  if (stringTag !== undefined) {
-    let _temp8 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-      Value: new Value(stringTag),
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    Assert(!(_temp8 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: new Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-  }
-
-  return proto;
-}
-function BootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
-  const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
-  SetFunctionName(cons, new Value(name));
-  SetFunctionLength(cons, new Value(length));
-
-  let _temp9 = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
-    Value: Prototype,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false
-  }));
-
-  Assert(!(_temp9 instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-  if (_temp9 instanceof Completion) {
-    _temp9 = _temp9.Value;
-  }
-
-  let _temp10 = Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
-    Value: cons,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true
-  }));
-
-  Assert(!(_temp10 instanceof AbruptCompletion), "Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
-  }
-  assignProps(realmRec, cons, props);
-  return cons;
-}
-
 function ObjectProto_hasOwnProperty([V = Value.undefined], {
   thisValue
 }) {
@@ -55102,6 +55106,7 @@ function CreateIntrinsics(realmRec) {
   CreateSetIteratorPrototype(realmRec);
   CreateStringIteratorPrototype(realmRec);
   CreateRegExpStringIteratorPrototype(realmRec);
+  CreateForInIteratorPrototype(realmRec);
   CreateStringPrototype(realmRec);
   CreateString(realmRec);
   CreateArrayPrototype(realmRec);
