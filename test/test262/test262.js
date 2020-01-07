@@ -29,13 +29,13 @@ if (!process.send) {
 
   const workers = Array.from({ length: NUM_WORKERS }, (_, i) => {
     const c = childProcess.fork(__filename);
-    c.on('message', ({ file, status, error }) => {
+    c.on('message', ({ description, status, error }) => {
       switch (status) {
         case 'PASS':
           pass();
           break;
         case 'FAIL':
-          fail(file, error);
+          fail(description, error);
           break;
         case 'SKIP':
           skip();
@@ -112,7 +112,7 @@ if (!process.send) {
   });
   agent.enter();
 
-  const createRealm = () => {
+  const createRealm = (test) => {
     const resolverCache = new Map();
     const trackedPromises = new Set();
     const realm = new Realm({
@@ -158,13 +158,13 @@ if (!process.send) {
           }
           return inspect(a, realm);
         }).join(' ');
-        console.log(formatted); // eslint-disable-line no-console
+        console.log(test.file, formatted); // eslint-disable-line no-console
       }
       return Value.undefined;
     }));
 
     Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
-    Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm()));
+    Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm(test)));
     Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'), new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
     Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
@@ -204,9 +204,10 @@ if (!process.send) {
 
   const includeCache = {};
 
-  const run = ({ file, contents, attrs }) => {
+  const run = (test) => {
+    const { file, contents, attrs } = test;
     const specifier = path.resolve(__dirname, 'test262', file);
-    const $262 = createRealm();
+    const $262 = createRealm({ file });
     let asyncPromise;
     let timeout;
     if (attrs.flags.async) {
@@ -286,13 +287,14 @@ if (!process.send) {
     if (test === 'DONE') {
       p = p.then(() => process.exit(0));
     } else {
+      const description = `${test.file}\n${test.attrs.description}`;
       p = p
         .then(() => run(test))
         .catch((e) => {
-          process.send({ file: test.file, status: 'FAIL', error: e.stack || e });
+          process.send({ description, status: 'FAIL', error: e.stack || e });
           process.exit(1);
         })
-        .then((r) => process.send({ file: test.file, ...r }, (e) => {
+        .then((r) => process.send({ description, ...r }, (e) => {
           if (e) {
             process.exit(1);
           }

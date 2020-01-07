@@ -27,15 +27,9 @@ import {
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
-  ContainsExpression_BindingElement,
-  ContainsExpression_BindingRestElement,
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
 import {
@@ -315,54 +309,16 @@ function* IteratorBindingInitialization_BindingRestElement(BindingRestElement, i
 
 // 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FormalParameter : BindingElement
-function* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
+function IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment) {
   const BindingElement = FormalParameter;
-  if (!ContainsExpression_BindingElement(BindingElement)) {
-    return yield* IteratorBindingInitialization_BindingElement(
-      BindingElement, iteratorRecord, environment,
-    );
-  }
-  const currentContext = surroundingAgent.runningExecutionContext;
-  const originalEnv = currentContext.VariableEnvironment;
-  Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);
-  if (environment !== Value.undefined) {
-    Assert(environment === originalEnv);
-  }
-  const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
-  currentContext.VariableEnvironment = paramVarEnv;
-  currentContext.LexicalEnvironment = paramVarEnv;
-  const result = yield* IteratorBindingInitialization_BindingElement(
-    BindingElement, iteratorRecord, environment,
-  );
-  currentContext.VariableEnvironment = originalEnv;
-  currentContext.LexicalEnvironment = originalEnv;
-  return result;
+  return IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
 }
 
 // 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 //   FunctionRestParameter : BindingRestElement
-function* IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
+function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
   const BindingRestElement = FunctionRestParameter;
-  if (!ContainsExpression_BindingRestElement(BindingRestElement)) {
-    return yield* IteratorBindingInitialization_BindingRestElement(
-      BindingRestElement, iteratorRecord, environment,
-    );
-  }
-  const currentContext = surroundingAgent.runningExecutionContext;
-  const originalEnv = currentContext.VariableEnvironment;
-  Assert(currentContext.VariableEnvironment === currentContext.LexicalEnvironment);
-  if (environment !== Value.undefined) {
-    Assert(environment === originalEnv);
-  }
-  const paramVarEnv = NewDeclarativeEnvironment(originalEnv);
-  currentContext.VariableEnvironment = paramVarEnv;
-  currentContext.LexicalEnvironment = paramVarEnv;
-  const result = yield* IteratorBindingInitialization_BindingRestElement(
-    BindingRestElement, iteratorRecord, environment,
-  );
-  currentContext.VariableEnvironment = originalEnv;
-  currentContext.LexicalEnvironment = originalEnv;
-  return result;
+  return IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment);
 }
 
 // 14.1.19 #sec-function-definitions-runtime-semantics-iteratorbindinginitialization

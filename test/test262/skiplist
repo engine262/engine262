@@ -29,6 +29,24 @@ language/expressions/prefix-decrement/eval-nostrict.js
 language/expressions/prefix-increment/arguments-nostrict.js
 language/expressions/prefix-increment/eval-nostrict.js
 
+// https://github.com/tc39/test262/pull/2447
+language/expressions/class/async-gen-method/eval-var-scope-syntax-err.js
+language/expressions/class/async-gen-method-static/eval-var-scope-syntax-err.js
+language/expressions/class/gen-method/eval-var-scope-syntax-err.js
+language/expressions/class/gen-method-static/eval-var-scope-syntax-err.js
+language/expressions/class/method/eval-var-scope-syntax-err.js
+language/expressions/class/method-static/eval-var-scope-syntax-err.js
+language/statements/class/async-gen-method/eval-var-scope-syntax-err.js
+language/statements/class/async-gen-method-static/eval-var-scope-syntax-err.js
+language/statements/class/gen-method/eval-var-scope-syntax-err.js
+language/statements/class/gen-method-static/eval-var-scope-syntax-err.js
+language/statements/class/method/eval-var-scope-syntax-err.js
+language/statements/class/method-static/eval-var-scope-syntax-err.js
+language/expressions/class/async-method-static/eval-var-scope-syntax-err.js
+language/statements/class/async-method-static/eval-var-scope-syntax-err.js
+language/expressions/class/async-method/eval-var-scope-syntax-err.js
+language/statements/class/async-method/eval-var-scope-syntax-err.js
+
 // https://github.com/tc39/test262/pull/2428
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
