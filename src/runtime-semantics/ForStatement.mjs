@@ -3,22 +3,19 @@ import { Type, Value } from '../value.mjs';
 import {
   Assert,
   Call,
-  CreateBuiltinFunction,
-  CreateDataProperty,
-  CreateIterResultObject,
   GetIterator,
   GetValue,
   InitializeReferencedBinding,
   IteratorClose,
   IteratorComplete,
   IteratorValue,
-  ObjectCreate,
   PutValue,
   ResolveBinding,
   ToBoolean,
   ToObject,
   AsyncIteratorClose,
 } from '../abstract-ops/all.mjs';
+import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mjs';
 import {
   AbruptCompletion, BreakCompletion, Completion,
   EnsureCompletion,
@@ -450,51 +447,8 @@ export function* LabelledEvaluation_IterationStatement(IterationStatement, label
   }
 }
 
-function* InternalEnumerateObjectProperties(O) {
-  const visited = new ValueSet();
-  const keys = Q(O.OwnPropertyKeys());
-  for (const key of keys) {
-    if (Type(key) === 'Symbol') {
-      continue;
-    }
-    const desc = Q(O.GetOwnProperty(key));
-    if (Type(desc) !== 'Undefined') {
-      visited.add(key);
-      if (desc.Enumerable === Value.true) {
-        yield key;
-      }
-    }
-  }
-  const proto = Q(O.GetPrototypeOf());
-  if (Type(proto) === 'Null') {
-    return;
-  }
-  for (const protoKey of InternalEnumerateObjectProperties(proto)) {
-    if (!visited.has(protoKey)) {
-      yield protoKey;
-    }
-  }
-}
-
-// 13.7.5.15 #sec-enumerate-object-properties
+// #sec-enumerate-object-properties
 function EnumerateObjectProperties(O) {
-  Assert(Type(O) === 'Object');
-  const internalIterator = InternalEnumerateObjectProperties(O);
-  const iterator = X(ObjectCreate(Value.null));
-  const nextMethod = CreateBuiltinFunction(() => {
-    const { value, done } = internalIterator.next();
-    ReturnIfAbrupt(value);
-    return X(CreateIterResultObject(
-      value === undefined ? Value.undefined : value,
-      done ? Value.true : Value.false,
-    ));
-  }, []);
-  X(CreateDataProperty(iterator, new Value('next'), nextMethod));
-  X(CreateDataProperty(iterator, new Value('throw'), Value.null));
-  X(CreateDataProperty(iterator, new Value('return'), Value.null));
-  return {
-    Iterator: iterator,
-    NextMethod: nextMethod,
-    Done: Value.false,
-  };
+  const it = CreateForInIterator(O);
+  return X(GetIterator(it));
 }
