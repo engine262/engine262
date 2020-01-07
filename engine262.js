@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 3828db0e0c24d039e72253fdbf6cce2ff29f1ae8
+ * engine262 0.0.1 8a63ce166f231b65a6013f29d7cd12316dbf4867
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -33249,16 +33249,20 @@
     }
 
     GetOwnProperty(P) {
-      const O = this;
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      const handler = O.ProxyHandler;
+      const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+      Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Let handler be O.[[ProxyHandler]].
+
+      const handler = O.ProxyHandler; // 3. If handler is null, throw a TypeError exception.
 
       if (handler === Value.null) {
         return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getOwnPropertyDescriptor');
-      }
+      } // 4. Assert: Type(Handler) is Object.
 
-      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'");
-      const target = O.ProxyTarget;
+
+      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'"); // 5. Let target be O.[[ProxyTarget]].
+
+      const target = O.ProxyTarget; // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
 
       let _temp52 = GetMethod(handler, new Value('getOwnPropertyDescriptor'));
 
@@ -33270,11 +33274,13 @@
         _temp52 = _temp52.Value;
       }
 
-      const trap = _temp52;
+      const trap = _temp52; // 7. If trap is undefined, then
 
       if (trap === Value.undefined) {
+        // a. Return ? target.[[GetOwnProperty]](P).
         return target.GetOwnProperty(P);
-      }
+      } // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
+
 
       let _temp53 = Call(trap, handler, [target, P]);
 
@@ -33286,11 +33292,12 @@
         _temp53 = _temp53.Value;
       }
 
-      const trapResultObj = _temp53;
+      const trapResultObj = _temp53; // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
 
       if (Type(trapResultObj) !== 'Object' && Type(trapResultObj) !== 'Undefined') {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorInvalid', P);
-      }
+      } // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
+
 
       let _temp54 = target.GetOwnProperty(P);
 
@@ -33302,16 +33309,19 @@
         _temp54 = _temp54.Value;
       }
 
-      const targetDesc = _temp54;
+      const targetDesc = _temp54; // 11. If trapResultObj is undefined, then
 
       if (trapResultObj === Value.undefined) {
+        // a. If targetDesc is undefined, return undefined.
         if (targetDesc === Value.undefined) {
           return Value.undefined;
-        }
+        } // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
+
 
         if (targetDesc.Configurable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorUndefined', P);
-        }
+        } // c. Let extensibleTarget be ? IsExtensible(target).
+
 
         let _temp55 = IsExtensible(target);
 
@@ -33323,14 +33333,16 @@
           _temp55 = _temp55.Value;
         }
 
-        const extensibleTarget = _temp55;
+        const extensibleTarget = _temp55; // d. If extensibleTarget is false, throw a TypeError exception.
 
         if (extensibleTarget === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonExtensible', P);
-        }
+        } // e. Return undefined.
+
 
         return Value.undefined;
-      }
+      } // 12. Let extensibleTarget be ? IsExtensible(target).
+
 
       let _temp56 = IsExtensible(target);
 
@@ -33342,7 +33354,7 @@
         _temp56 = _temp56.Value;
       }
 
-      const extensibleTarget = _temp56;
+      const extensibleTarget = _temp56; // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
 
       let _temp57 = ToPropertyDescriptor(trapResultObj);
 
@@ -33354,34 +33366,52 @@
         _temp57 = _temp57.Value;
       }
 
-      const resultDesc = _temp57;
-      CompletePropertyDescriptor(resultDesc);
-      const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
+      const resultDesc = _temp57; // 14. Call CompletePropertyDescriptor(resultDesc).
+
+      CompletePropertyDescriptor(resultDesc); // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
+
+      const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc); // 16. If valid is false, throw a TypeError exception.
 
       if (valid === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorIncompatible', P);
-      }
+      } // 17. If resultDesc.[[Configurable]] is false, then
+
 
       if (resultDesc.Configurable === Value.false) {
+        // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
         if (targetDesc === Value.undefined || targetDesc.Configurable === Value.true) {
+          // i. Throw a TypeError exception.
           return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurable', P);
+        } // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
+
+
+        if ('Writable' in resultDesc && resultDesc.Writable === Value.false) {
+          // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
+          if (targetDesc.Writable === Value.true) {
+            return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurableWritable', P);
+          }
         }
-      }
+      } // 18. Return resultDesc.
+
 
       return resultDesc;
     }
 
     DefineOwnProperty(P, Desc) {
-      const O = this;
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      const handler = O.ProxyHandler;
+      const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+      Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Let handler be O.[[ProxyHandler]].
+
+      const handler = O.ProxyHandler; // 3. If handler is null, throw a TypeError exception.
 
       if (handler === Value.null) {
         return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'defineProperty');
-      }
+      } // 4. Assert: Type(handler) is Object.
 
-      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'");
-      const target = O.ProxyTarget;
+
+      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'"); // 5. Let target be O.[[ProxyTarget]].
+
+      const target = O.ProxyTarget; // 6. Let trap be ? GetMethod(handler, "defineProperty").
 
       let _temp58 = GetMethod(handler, new Value('defineProperty'));
 
@@ -33393,13 +33423,15 @@
         _temp58 = _temp58.Value;
       }
 
-      const trap = _temp58;
+      const trap = _temp58; // 7. If trap is undefined, then
 
       if (trap === Value.undefined) {
+        // a. Return ? target.[[DefineOwnProperty]](P, Desc).
         return target.DefineOwnProperty(P, Desc);
-      }
+      } // 8. Let descObj be FromPropertyDescriptor(Desc).
 
-      const descObj = FromPropertyDescriptor(Desc);
+
+      const descObj = FromPropertyDescriptor(Desc); // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
 
       let _temp59 = Call(trap, handler, [target, P, descObj]);
 
@@ -33411,11 +33443,12 @@
         _temp59 = _temp59.Value;
       }
 
-      const booleanTrapResult = ToBoolean(_temp59);
+      const booleanTrapResult = ToBoolean(_temp59); // 10. If booleanTrapResult is false, return false.
 
       if (booleanTrapResult === Value.false) {
         return Value.false;
-      }
+      } // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
+
 
       let _temp60 = target.GetOwnProperty(P);
 
@@ -33427,7 +33460,7 @@
         _temp60 = _temp60.Value;
       }
 
-      const targetDesc = _temp60;
+      const targetDesc = _temp60; // 12. Let extensibleTarget be ? IsExtensible(target).
 
       let _temp61 = IsExtensible(target);
 
@@ -33440,29 +33473,44 @@
       }
 
       const extensibleTarget = _temp61;
-      let settingConfigFalse;
+      let settingConfigFalse; // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
 
       if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
+        // a. Let settingConfigFalse be true.
         settingConfigFalse = true;
       } else {
+        // Else, let settingConfigFalse be false.
         settingConfigFalse = false;
-      }
+      } // 15. If targetDesc is undefined, then
+
 
       if (targetDesc === Value.undefined) {
+        // a. If extensibleTarget is false, throw a TypeError exception.
         if (extensibleTarget === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonExtensible', P);
-        }
+        } // b. If settingConfigFalse is true, throw a TypeError exception.
+
 
         if (settingConfigFalse === true) {
           return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurable', P);
         }
       } else {
+        // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
         if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyIncompatible', P);
-        }
+        } // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
+
 
         if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
-          return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurableWritable', P);
+          return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurable', P);
+        } // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
+
+
+        if (IsDataDescriptor(targetDesc) && targetDesc.Configurable === Value.false && targetDesc.Writable === Value.true) {
+          // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
+          if ('Writable' in Desc && Desc.Writable === Value.false) {
+            return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurableWritable', P);
+          }
         }
       }
 
@@ -33691,16 +33739,20 @@
     }
 
     Delete(P) {
-      const O = this;
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      const handler = O.ProxyHandler;
+      const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+      Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Let handler be O.[[ProxyHandler]].
+
+      const handler = O.ProxyHandler; // 3. If handler is null, throw a TypeError exception.
 
       if (handler === Value.null) {
         return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'deleteProperty');
-      }
+      } // 4. Assert: Type(handler) is Object.
 
-      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'");
-      const target = O.ProxyTarget;
+
+      Assert(Type(handler) === 'Object', "Type(handler) === 'Object'"); // 5. Let target be O.[[ProxyTarget]].
+
+      const target = O.ProxyTarget; // 6. Let trap be ? GetMethod(handler, "deleteProperty").
 
       let _temp72 = GetMethod(handler, new Value('deleteProperty'));
 
@@ -33712,11 +33764,13 @@
         _temp72 = _temp72.Value;
       }
 
-      const trap = _temp72;
+      const trap = _temp72; // 7. If trap is undefined, then
 
       if (trap === Value.undefined) {
+        // a. Return ? target.[[Delete]](P).
         return target.Delete(P);
-      }
+      } // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
+
 
       let _temp73 = Call(trap, handler, [target, P]);
 
@@ -33728,11 +33782,12 @@
         _temp73 = _temp73.Value;
       }
 
-      const booleanTrapResult = ToBoolean(_temp73);
+      const booleanTrapResult = ToBoolean(_temp73); // 9. If booleanTrapResult is false, return false.
 
       if (booleanTrapResult === Value.false) {
         return Value.false;
-      }
+      } // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
+
 
       let _temp74 = target.GetOwnProperty(P);
 
@@ -33744,15 +33799,34 @@
         _temp74 = _temp74.Value;
       }
 
-      const targetDesc = _temp74;
+      const targetDesc = _temp74; // 11. If targetDesc is undefined, return true.
 
       if (targetDesc === Value.undefined) {
         return Value.true;
-      }
+      } // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
+
 
       if (targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonConfigurable', P);
+      } // 13. Let extensibleTarget be ? IsExtensible(target).
+
+
+      let _temp75 = IsExtensible(target);
+
+      if (_temp75 instanceof AbruptCompletion) {
+        return _temp75;
       }
+
+      if (_temp75 instanceof Completion) {
+        _temp75 = _temp75.Value;
+      }
+
+      const extensibleTarget = _temp75; // 14. If extensibleTarget is false, throw a TypeError exception.
+
+      if (extensibleTarget === Value.false) {
+        return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonExtensible', P);
+      } // 15. Return true.
+
 
       return Value.true;
     }
@@ -33768,23 +33842,7 @@
       Assert(Type(handler) === 'Object', "Type(handler) === 'Object'");
       const target = O.ProxyTarget;
 
-      let _temp75 = GetMethod(handler, new Value('ownKeys'));
-
-      if (_temp75 instanceof AbruptCompletion) {
-        return _temp75;
-      }
-
-      if (_temp75 instanceof Completion) {
-        _temp75 = _temp75.Value;
-      }
-
-      const trap = _temp75;
-
-      if (trap === Value.undefined) {
-        return target.OwnPropertyKeys();
-      }
-
-      let _temp76 = Call(trap, handler, [target]);
+      let _temp76 = GetMethod(handler, new Value('ownKeys'));
 
       if (_temp76 instanceof AbruptCompletion) {
         return _temp76;
@@ -33794,9 +33852,13 @@
         _temp76 = _temp76.Value;
       }
 
-      const trapResultArray = _temp76;
+      const trap = _temp76;
 
-      let _temp77 = CreateListFromArrayLike(trapResultArray, ['String', 'Symbol']);
+      if (trap === Value.undefined) {
+        return target.OwnPropertyKeys();
+      }
+
+      let _temp77 = Call(trap, handler, [target]);
 
       if (_temp77 instanceof AbruptCompletion) {
         return _temp77;
@@ -33806,13 +33868,9 @@
         _temp77 = _temp77.Value;
       }
 
-      const trapResult = _temp77;
+      const trapResultArray = _temp77;
 
-      if (new ValueSet(trapResult).size !== trapResult.length) {
-        return surroundingAgent.Throw('TypeError', 'ProxyOwnKeysDuplicateEntries');
-      }
-
-      let _temp78 = IsExtensible(target);
+      let _temp78 = CreateListFromArrayLike(trapResultArray, ['String', 'Symbol']);
 
       if (_temp78 instanceof AbruptCompletion) {
         return _temp78;
@@ -33822,9 +33880,13 @@
         _temp78 = _temp78.Value;
       }
 
-      const extensibleTarget = _temp78;
+      const trapResult = _temp78;
 
-      let _temp79 = target.OwnPropertyKeys();
+      if (new ValueSet(trapResult).size !== trapResult.length) {
+        return surroundingAgent.Throw('TypeError', 'ProxyOwnKeysDuplicateEntries');
+      }
+
+      let _temp79 = IsExtensible(target);
 
       if (_temp79 instanceof AbruptCompletion) {
         return _temp79;
@@ -33834,24 +33896,36 @@
         _temp79 = _temp79.Value;
       }
 
-      const targetKeys = _temp79; // Assert: targetKeys is a List containing only String and Symbol values.
+      const extensibleTarget = _temp79;
+
+      let _temp80 = target.OwnPropertyKeys();
+
+      if (_temp80 instanceof AbruptCompletion) {
+        return _temp80;
+      }
+
+      if (_temp80 instanceof Completion) {
+        _temp80 = _temp80.Value;
+      }
+
+      const targetKeys = _temp80; // Assert: targetKeys is a List containing only String and Symbol values.
       // Assert: targetKeys contains no duplicate entries.
 
       const targetConfigurableKeys = [];
       const targetNonconfigurableKeys = [];
 
       for (const key of targetKeys) {
-        let _temp80 = target.GetOwnProperty(key);
+        let _temp81 = target.GetOwnProperty(key);
 
-        if (_temp80 instanceof AbruptCompletion) {
-          return _temp80;
+        if (_temp81 instanceof AbruptCompletion) {
+          return _temp81;
         }
 
-        if (_temp80 instanceof Completion) {
-          _temp80 = _temp80.Value;
+        if (_temp81 instanceof Completion) {
+          _temp81 = _temp81.Value;
         }
 
-        const desc = _temp80;
+        const desc = _temp81;
 
         if (desc !== Value.undefined && desc.Configurable === Value.false) {
           targetNonconfigurableKeys.push(key);
@@ -34099,6 +34173,7 @@
   const ProxyDefinePropertyNonExtensible = p => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} to the non-extensible proxy target`;
   const ProxyDefinePropertyIncompatible = p => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} that is incompatible with the existing property in the proxy target`;
   const ProxyDeletePropertyNonConfigurable = p => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} which is non-configurable in the proxy target`;
+  const ProxyDeletePropertyNonExtensible = p => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} but the proxy target is non-extensible`;
   const ProxyGetNonConfigurableData = p => `'get' on proxy: property ${i(p)} is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value`;
   const ProxyGetNonConfigurableAccessor = p => `'get' on proxy: property ${i(p)} is a non-configurable accessor property on the proxy target and does not have a getter function, but the trap did not return 'undefined'`;
   const ProxyGetPrototypeOfInvalid = () => '\'getPrototypeOf\' on proxy: trap returned neither object nor null';
@@ -34205,6 +34280,7 @@
     ProxyDefinePropertyNonExtensible: ProxyDefinePropertyNonExtensible,
     ProxyDefinePropertyIncompatible: ProxyDefinePropertyIncompatible,
     ProxyDeletePropertyNonConfigurable: ProxyDeletePropertyNonConfigurable,
+    ProxyDeletePropertyNonExtensible: ProxyDeletePropertyNonExtensible,
     ProxyGetNonConfigurableData: ProxyGetNonConfigurableData,
     ProxyGetNonConfigurableAccessor: ProxyGetNonConfigurableAccessor,
     ProxyGetPrototypeOfInvalid: ProxyGetPrototypeOfInvalid,
