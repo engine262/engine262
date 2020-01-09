@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@master
         with:
           node-version: 12
@@ -47,14 +49,12 @@ jobs:
       - run: |
           git config --global user.email "gha@example.com"
           git config --global user.name "GHA"
-          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git remote add github "https://$GITHUB_ACTOR:$BETTER_GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git fetch github
           git checkout gh-pages
           cp dist/* .
           git add engine262.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
-
-          curl -X POST -u $GITHUB_ACTOR:$GITHUB_TOKEN https://api.github.com/v3/repos/$GITHUB_REPOSITORY/pages/builds
         env:
-          GITHUB_TOKEN: ${{github.token}}
+          BETTER_GITHUB_TOKEN: ${{secrets.BETTER_GITHUB_TOKEN}}
