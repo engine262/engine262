@@ -54,5 +54,7 @@ jobs:
           git add engine262.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
+
+          curl -X POST -u $GITHUB_ACTOR:$GITHUB_TOKEN https://api.github.com/v3/repos/$GITHUB_REPOSITORY/pages/builds
         env:
           GITHUB_TOKEN: ${{github.token}}
