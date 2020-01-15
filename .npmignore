@@ -1,6 +1,8 @@
 test
 src
 scripts
+coverage
+rollup.config.js
 .eslintcache
 .eslintrc.js
 .eslintignore
