@@ -14,6 +14,7 @@ const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const packageJson = require('../package.json');
 const snekparse = require('./snekparse');
 const {
   inspect,
@@ -233,6 +234,9 @@ if (entry) {
     oneShotEval(source, process.cwd());
   });
 } else {
+  process.stdout.write(`${packageJson.name} v${packageJson.version}
+Please report bugs to ${packageJson.bugs.url}
+`);
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
