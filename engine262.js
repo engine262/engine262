@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d8b2508b86e56b701fd75e35f44d4d16576f0133
+ * engine262 0.0.1 ce8e52eb0f0067b8d4772e092d0d9d45d0ef4a34
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -3787,12 +3787,13 @@
     const closure = _temp;
     closure.SourceText = sourceTextMatchedBy(ArrowFunction);
     return closure;
-  } // https://github.com/tc39/ecma262/pull/1406
+  } // #sec-arrow-function-definitions-runtime-semantics-evaluation
   //   ExpressionBody : AssignmentExpression
 
   function* Evaluate_ExpressionBody(ExpressionBody) {
-    const AssignmentExpression = ExpressionBody;
-    const exprRef = yield* Evaluate(AssignmentExpression);
+    const AssignmentExpression = ExpressionBody; // 1. Let exprRef be the result of evaluating |AssignmentExpression|.
+
+    const exprRef = yield* Evaluate(AssignmentExpression); // 2. Let exprValue be ? GetValue(exprRef).
 
     let _temp2 = GetValue(exprRef);
     /* istanbul ignore if */
@@ -3808,7 +3809,8 @@
       _temp2 = _temp2.Value;
     }
 
-    const exprValue = _temp2;
+    const exprValue = _temp2; // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+
     return new ReturnCompletion(exprValue);
   }
 
@@ -23560,11 +23562,19 @@
   } // 22.1.5.1 #sec-createarrayiterator
 
   function CreateArrayIterator(array, kind) {
-    Assert(Type(array) === 'Object', "Type(array) === 'Object'");
-    const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), ['IteratedArrayLike', 'ArrayLikeNextIndex', 'ArrayLikeIterationKind']);
-    iterator.IteratedArrayLike = array;
-    iterator.ArrayLikeNextIndex = 0;
-    iterator.ArrayLikeIterationKind = kind;
+    // 1. Assert: Type(array) is Object.
+    Assert(Type(array) === 'Object', "Type(array) === 'Object'"); // 2. Assert: kind is key+value, key, or value.
+
+    Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'"); // 3. Let iterator be ObjectCreate(%ArrayIteratorPrototype%, « [[IteratedArrayLike]], [[ArrayLikeNextIndex]], [[ArrayLikeIterationKind]] »).
+
+    const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), ['IteratedArrayLike', 'ArrayLikeNextIndex', 'ArrayLikeIterationKind']); // 4. Set iterator.[[IteratedArrayLike]] to array.
+
+    iterator.IteratedArrayLike = array; // 5. Set iterator.[[ArrayLikeNextIndex]] to 0.
+
+    iterator.ArrayLikeNextIndex = 0; // 6. Set iterator.[[ArrayLikeIterationKind]] to kind.
+
+    iterator.ArrayLikeIterationKind = kind; // 7. Return iterator.
+
     return iterator;
   }
 
