@@ -196,14 +196,22 @@ export function SortCompare(x, y, comparefn) {
 
 // 22.1.5.1 #sec-createarrayiterator
 export function CreateArrayIterator(array, kind) {
+  // 1. Assert: Type(array) is Object.
   Assert(Type(array) === 'Object');
+  // 2. Assert: kind is key+value, key, or value.
+  Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
+  // 3. Let iterator be ObjectCreate(%ArrayIteratorPrototype%, « [[IteratedArrayLike]], [[ArrayLikeNextIndex]], [[ArrayLikeIterationKind]] »).
   const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
     'IteratedArrayLike',
     'ArrayLikeNextIndex',
     'ArrayLikeIterationKind',
   ]);
+  // 4. Set iterator.[[IteratedArrayLike]] to array.
   iterator.IteratedArrayLike = array;
+  // 5. Set iterator.[[ArrayLikeNextIndex]] to 0.
   iterator.ArrayLikeNextIndex = 0;
+  // 6. Set iterator.[[ArrayLikeIterationKind]] to kind.
   iterator.ArrayLikeIterationKind = kind;
+  // 7. Return iterator.
   return iterator;
 }
