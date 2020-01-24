@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 ce8e52eb0f0067b8d4772e092d0d9d45d0ef4a34
+ * engine262 0.0.1 e4e2b8ff830a281c31d2c4a24438e38f1a497450
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -41204,7 +41204,7 @@
     // generalization of that specified in 7.1.12.1.
 
 
-    return new Value(x.numberValue().toString());
+    return new Value(x.numberValue().toString(radixNumber));
   } // 20.1.3.7 #sec-number.prototype.valueof
 
 
