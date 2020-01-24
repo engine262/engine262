@@ -206,7 +206,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return new Value(x.numberValue().toString());
+  return new Value(x.numberValue().toString(radixNumber));
 }
 
 // 20.1.3.7 #sec-number.prototype.valueof
