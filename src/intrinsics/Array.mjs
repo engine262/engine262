@@ -201,7 +201,7 @@ function Array_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function CreateArray(realmRec) {
+export function BootstrapArray(realmRec) {
   const proto = realmRec.Intrinsics['%Array.prototype%'];
 
   const cons = BootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [

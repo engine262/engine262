@@ -16,7 +16,7 @@ function BooleanConstructor([value = Value.undefined], { NewTarget }) {
   return O;
 }
 
-export function CreateBoolean(realmRec) {
+export function BootstrapBoolean(realmRec) {
   const cons = BootstrapConstructor(
     realmRec, BooleanConstructor, 'Boolean', 1,
     realmRec.Intrinsics['%Boolean.prototype%'], [],

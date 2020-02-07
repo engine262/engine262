@@ -45,7 +45,7 @@ function Set_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function CreateSet(realmRec) {
+export function BootstrapSet(realmRec) {
   const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
     [wellKnownSymbols.species, [Set_speciesGetter]],
   ]);

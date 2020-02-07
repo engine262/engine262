@@ -94,7 +94,7 @@ function ObjectProto_valueOf(argList, { thisValue }) {
   return Q(ToObject(thisValue));
 }
 
-export function CreateObjectPrototype(realmRec) {
+export function BootstrapObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
 
   assignProps(realmRec, proto, [

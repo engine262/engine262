@@ -620,7 +620,7 @@ function RegExpProto_unicodeGetter(args, { thisValue }) {
   return Value.false;
 }
 
-export function CreateRegExpPrototype(realmRec) {
+export function BootstrapRegExpPrototype(realmRec) {
   const proto = BootstrapPrototype(
     realmRec,
     [

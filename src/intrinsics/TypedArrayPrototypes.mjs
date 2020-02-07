@@ -17,7 +17,7 @@ function CreateTypedArrayPrototype(realmRec, TypedArray) {
   realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
 }
 
-export function CreateTypedArrayPrototypes(realmRec) {
+export function BootstrapTypedArrayPrototypes(realmRec) {
   for (const TypedArray of typedArrayInfo.keys()) {
     CreateTypedArrayPrototype(realmRec, TypedArray);
   }

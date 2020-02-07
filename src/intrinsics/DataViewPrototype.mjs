@@ -177,7 +177,7 @@ function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.un
   return Q(SetViewValue(v, byteOffset, littleEndian, 'Uint32', value));
 }
 
-export function CreateDataViewPrototype(realmRec) {
+export function BootstrapDataViewPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['buffer', [DataViewProto_bufferGetter]],
     ['byteLength', [DataViewProto_byteLengthGetter]],

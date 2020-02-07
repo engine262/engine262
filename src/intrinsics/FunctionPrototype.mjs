@@ -145,7 +145,7 @@ function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
   return Q(OrdinaryHasInstance(F, V));
 }
 
-export function CreateFunctionPrototype(realmRec) {
+export function BootstrapFunctionPrototype(realmRec) {
   const proto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Function.prototype%'] = proto;
 

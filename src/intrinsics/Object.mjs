@@ -274,7 +274,7 @@ function Object_values([O = Value.undefined]) {
   return CreateArrayFromList(nameList);
 }
 
-export function CreateObject(realmRec) {
+export function BootstrapObject(realmRec) {
   const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],

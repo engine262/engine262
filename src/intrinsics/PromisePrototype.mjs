@@ -87,7 +87,7 @@ function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.un
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
 }
 
-export function CreatePromisePrototype(realmRec) {
+export function BootstrapPromisePrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],

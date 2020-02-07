@@ -214,7 +214,7 @@ function NumberProto_valueOf(args, { thisValue }) {
   return Q(thisNumberValue(thisValue));
 }
 
-export function CreateNumberPrototype(realmRec) {
+export function BootstrapNumberPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['toExponential', NumberProto_toExponential, 1],
     ['toFixed', NumberProto_toFixed, 1],

@@ -645,7 +645,7 @@ function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   return Q(OrdinaryToPrimitive(O, tryFirst));
 }
 
-export function CreateDatePrototype(realmRec) {
+export function BootstrapDatePrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['getDate', DateProto_getDate, 0],
     ['getDay', DateProto_getDay, 0],

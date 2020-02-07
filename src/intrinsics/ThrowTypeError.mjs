@@ -4,7 +4,7 @@ import { Value, Descriptor } from '../value.mjs';
 import { X } from '../completion.mjs';
 
 // https://tc39.es/ecma262/#sec-%throwtypeerror%
-export function CreateThrowTypeError(realmRec) {
+export function BootstrapThrowTypeError(realmRec) {
   const ThrowTypeError = X(CreateBuiltinFunction(
     () => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'),
     [], realmRec, Value.null,

@@ -17,7 +17,7 @@ function TheEval([x = Value.undefined]) {
   return Q(PerformEval(x, callerRealm, false, false));
 }
 
-export function CreateEval(realmRec) {
+export function BootstrapEval(realmRec) {
   const it = CreateBuiltinFunction(TheEval, [], realmRec);
   SetFunctionName(it, new Value('eval'));
   SetFunctionLength(it, new Value(1));

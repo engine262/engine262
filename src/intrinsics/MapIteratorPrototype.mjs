@@ -47,7 +47,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
   return CreateIterResultObject(Value.undefined, Value.true);
 }
 
-export function CreateMapIteratorPrototype(realmRec) {
+export function BootstrapMapIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');

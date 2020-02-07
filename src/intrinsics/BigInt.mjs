@@ -42,7 +42,7 @@ function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   return new Value(BigInt.asUintN(bits.numberValue(), bigint.bigintValue()));
 }
 
-export function CreateBigInt(realmRec) {
+export function BootstrapBigInt(realmRec) {
   const bigintConstructor = BootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [
     ['asIntN', BigInt_asIntN, 2],
     ['asUintN', BigInt_asUintN, 2],

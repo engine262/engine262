@@ -120,7 +120,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   return result;
 }
 
-export function CreateProxy(realmRec) {
+export function BootstrapProxy(realmRec) {
   const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec, undefined, Value.true);
   SetFunctionName(proxyConstructor, new Value('Proxy'));
   SetFunctionLength(proxyConstructor, new Value(2));

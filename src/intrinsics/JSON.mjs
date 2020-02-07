@@ -507,7 +507,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   return Q(SerializeJSONProperty(new Value(''), wrapper));
 }
 
-export function CreateJSON(realmRec) {
+export function BootstrapJSON(realmRec) {
   const json = BootstrapPrototype(realmRec, [
     ['parse', JSON_parse, 2],
     ['stringify', JSON_stringify, 3],

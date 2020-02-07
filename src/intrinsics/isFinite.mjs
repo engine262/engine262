@@ -15,7 +15,7 @@ function IsFinite([number = Value.undefined]) {
   return Value.true;
 }
 
-export function CreateIsFinite(realmRec) {
+export function BootstrapIsFinite(realmRec) {
   const fn = CreateBuiltinFunction(IsFinite, [], realmRec);
   X(SetFunctionName(fn, new Value('isFinite')));
   X(SetFunctionLength(fn, new Value(1)));

@@ -44,7 +44,7 @@ function SymbolProto_toPrimitive(argList, { thisValue }) {
   return Q(thisSymbolValue(thisValue));
 }
 
-export function CreateSymbolPrototype(realmRec) {
+export function BootstrapSymbolPrototype(realmRec) {
   const override = {
     Writable: Value.false,
     Enumerable: Value.false,

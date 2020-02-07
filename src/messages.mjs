@@ -103,7 +103,7 @@ export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n) => `Cannot not delete property ${i(n)}`;
-export const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on strict mode functions or the arguments objects for calls to them';
+export const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
 export const StringRepeatCount = (v) => `Count ${i(v)} is invalid`;
 export const StringCodePointInvalid = (n) => `Invalid code point ${i(n)}`;
 export const SubclassLengthTooSmall = (v) => `Subclass constructor returned a smaller-than-requested object ${i(v)}`;

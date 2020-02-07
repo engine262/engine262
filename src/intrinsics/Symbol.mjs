@@ -55,7 +55,7 @@ function Symbol_keyFor([sym = Value.undefined]) {
   return Value.undefined;
 }
 
-export function CreateSymbol(realmRec) {
+export function BootstrapSymbol(realmRec) {
   const symbolConstructor = BootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],

@@ -16,7 +16,7 @@ function ParseFloat([string = Value.undefined]) {
   return mathFloat;
 }
 
-export function CreateParseFloat(realmRec) {
+export function BootstrapParseFloat(realmRec) {
   const fn = CreateBuiltinFunction(ParseFloat, [], realmRec);
   X(SetFunctionName(fn, new Value('parseFloat')));
   X(SetFunctionLength(fn, new Value(1)));

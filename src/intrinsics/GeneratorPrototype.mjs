@@ -30,7 +30,7 @@ function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
   return Q(GeneratorResumeAbrupt(g, C));
 }
 
-export function CreateGeneratorPrototype(realmRec) {
+export function BootstrapGeneratorPrototype(realmRec) {
   const generatorPrototype = BootstrapPrototype(realmRec, [
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],

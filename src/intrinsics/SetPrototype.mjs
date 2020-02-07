@@ -118,7 +118,7 @@ function SetProto_sizeGetter(args, { thisValue }) {
   return new Value(count);
 }
 
-export function CreateSetPrototype(realmRec) {
+export function BootstrapSetPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],

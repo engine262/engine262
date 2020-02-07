@@ -191,7 +191,7 @@ function CreateTypedArrayConstructor(realmRec, TypedArray) {
   realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
 }
 
-export function CreateTypedArrayConstructors(realmRec) {
+export function BootstrapTypedArrayConstructors(realmRec) {
   for (const TypedArray of typedArrayInfo.keys()) {
     CreateTypedArrayConstructor(realmRec, TypedArray);
   }

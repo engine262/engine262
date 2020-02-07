@@ -38,7 +38,7 @@ function ErrorProto_toString(args, { thisValue }) {
   return new Value(`${name.stringValue()}: ${msg.stringValue()}`);
 }
 
-export function CreateErrorPrototype(realmRec) {
+export function BootstrapErrorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['toString', ErrorProto_toString, 0],
     ['message', new Value('')],

@@ -39,7 +39,7 @@ function SetIteratorPrototype_next(args, { thisValue }) {
   return CreateIterResultObject(Value.undefined, Value.true);
 }
 
-export function CreateSetIteratorPrototype(realmRec) {
+export function BootstrapSetIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['next', SetIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');

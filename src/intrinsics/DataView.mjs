@@ -45,7 +45,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   return O;
 }
 
-export function CreateDataView(realmRec) {
+export function BootstrapDataView(realmRec) {
   const dvConstructor = BootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
 
   realmRec.Intrinsics['%DataView%'] = dvConstructor;

@@ -56,7 +56,7 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
 }
 
 // 20.2 #sec-math-object
-export function CreateMath(realmRec) {
+export function BootstrapMath(realmRec) {
   // 20.2.1 #sec-value-properties-of-the-math-object
   const readonly = { Writable: Value.false, Configurable: Value.false };
   const valueProps = [

@@ -103,7 +103,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   }
 }
 
-export function CreateString(realmRec) {
+export function BootstrapString(realmRec) {
   const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
     ['fromCodePoint', String_fromCodePoint, 1],

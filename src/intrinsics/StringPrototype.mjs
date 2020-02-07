@@ -573,7 +573,7 @@ function StringProto_iterator(args, { thisValue }) {
   return Q(CreateStringIterator(S));
 }
 
-export function CreateStringPrototype(realmRec) {
+export function BootstrapStringPrototype(realmRec) {
   const proto = new StringExoticObjectValue();
   proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
   proto.Extensible = Value.true;
