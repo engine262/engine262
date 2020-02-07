@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 696bdffa63dc5021586ab3fe3833f05a26af8c91
+ * engine262 0.0.1 4201d40a99131611dfc71636de4cd94539cf496b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -12664,7 +12664,7 @@
     }
   }
 
-  function CreateForInIteratorPrototype(realmRec) {
+  function BootstrapForInIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
     realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
   }
@@ -34208,7 +34208,7 @@
   const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
   const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
   const StrictModeDelete = n => `Cannot not delete property ${i(n)}`;
-  const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on strict mode functions or the arguments objects for calls to them';
+  const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
   const StringRepeatCount = v => `Count ${i(v)} is invalid`;
   const StringCodePointInvalid = n => `Invalid code point ${i(n)}`;
   const SubclassLengthTooSmall = v => `Subclass constructor returned a smaller-than-requested object ${i(v)}`;
@@ -35166,7 +35166,7 @@
     return ToObject(thisValue);
   }
 
-  function CreateObjectPrototype(realmRec) {
+  function BootstrapObjectPrototype(realmRec) {
     const proto = realmRec.Intrinsics['%Object.prototype%'];
     assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0]]);
 
@@ -35312,7 +35312,7 @@
     return thisValue;
   }
 
-  function CreateMap(realmRec) {
+  function BootstrapMap(realmRec) {
     const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [[wellKnownSymbols.species, [Map_speciesGetter]]]);
     realmRec.Intrinsics['%Map%'] = mapConstructor;
   }
@@ -36020,7 +36020,7 @@
     return CreateArrayFromList(nameList);
   }
 
-  function CreateObject(realmRec) {
+  function BootstrapObject(realmRec) {
     const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [['assign', Object_assign, 2], ['create', Object_create, 2], ['defineProperties', Object_defineProperties, 2], ['defineProperty', Object_defineProperty, 3], ['entries', Object_entries, 1], ['freeze', Object_freeze, 1], ['fromEntries', Object_fromEntries, 1], ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2], ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1], ['getOwnPropertyNames', Object_getOwnPropertyNames, 1], ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1], ['getPrototypeOf', Object_getPrototypeOf, 1], ['is', Object_is, 2], ['isExtensible', Object_isExtensible, 1], ['isFrozen', Object_isFrozen, 1], ['isSealed', Object_isSealed, 1], ['keys', Object_keys, 1], ['preventExtensions', Object_preventExtensions, 1], ['seal', Object_seal, 1], ['setPrototypeOf', Object_setPrototypeOf, 2], ['values', Object_values, 1]]);
     realmRec.Intrinsics['%Object%'] = objectConstructor;
   }
@@ -36216,7 +36216,7 @@
 
     return obj;
   }
-  function CreateArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
+  function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
     // 22.1.3.5 #sec-array.prototype.every
     // 22.2.3.7 #sec-%typedarray%.prototype.every
     function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], {
@@ -39975,7 +39975,7 @@
     return CreateArrayIterator(O, 'value');
   }
 
-  function CreateArrayPrototype(realmRec) {
+  function BootstrapArrayPrototype(realmRec) {
     const proto = new ArrayExoticObjectValue();
     proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
     proto.Extensible = Value.true;
@@ -39986,7 +39986,7 @@
       Configurable: Value.false
     }));
     assignProps(realmRec, proto, [['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], ['keys', ArrayProto_keys, 0], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['sort', ArrayProto_sort, 1], ['splice', ArrayProto_splice, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0]]);
-    CreateArrayPrototypeShared(realmRec, proto, () => {}, O => Get(O, new Value('length')));
+    BootstrapArrayPrototypeShared(realmRec, proto, () => {}, O => Get(O, new Value('length')));
     proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
     {
       const unscopableList = ObjectCreate(Value.null);
@@ -40555,7 +40555,7 @@
     return thisValue;
   }
 
-  function CreateArray(realmRec) {
+  function BootstrapArray(realmRec) {
     const proto = realmRec.Intrinsics['%Array.prototype%'];
     const cons = BootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [['from', Array_from, 1], ['isArray', Array_isArray, 1], ['of', Array_of, 0], [wellKnownSymbols.species, [Array_speciesGetter]]]);
     realmRec.Intrinsics['%Array%'] = cons;
@@ -40655,7 +40655,7 @@
     return new Value(BigInt.asUintN(bits.numberValue(), bigint.bigintValue()));
   }
 
-  function CreateBigInt(realmRec) {
+  function BootstrapBigInt(realmRec) {
     const bigintConstructor = BootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [['asIntN', BigInt_asIntN, 2], ['asUintN', BigInt_asUintN, 2]]);
     realmRec.Intrinsics['%BigInt%'] = bigintConstructor;
   }
@@ -40765,7 +40765,7 @@
     return thisBigIntValue(thisValue);
   }
 
-  function CreateBigIntPrototype(realmRec) {
+  function BootstrapBigIntPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['toLocaleString', BigIntProto_toLocalString, 0], ['toString', BigIntProto_toString, 0], ['valueOf', BigIntProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');
     realmRec.Intrinsics['%BigInt.prototype%'] = proto;
   }
@@ -40816,7 +40816,7 @@
     return thisBooleanValue(thisValue);
   }
 
-  function CreateBooleanPrototype(realmRec) {
+  function BootstrapBooleanPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.BooleanData = Value.false;
     realmRec.Intrinsics['%Boolean.prototype%'] = proto;
@@ -40850,7 +40850,7 @@
     return O;
   }
 
-  function CreateBoolean(realmRec) {
+  function BootstrapBoolean(realmRec) {
     const cons = BootstrapConstructor(realmRec, BooleanConstructor, 'Boolean', 1, realmRec.Intrinsics['%Boolean.prototype%'], []);
     realmRec.Intrinsics['%Boolean%'] = cons;
   }
@@ -41214,7 +41214,7 @@
     return thisNumberValue(thisValue);
   }
 
-  function CreateNumberPrototype(realmRec) {
+  function BootstrapNumberPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['toExponential', NumberProto_toExponential, 1], ['toFixed', NumberProto_toFixed, 1], ['toLocaleString', NumberProto_toLocaleString, 0], ['toPrecision', NumberProto_toPrecision, 1], ['toString', NumberProto_toString, 0], ['valueOf', NumberProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.NumberData = new Value(0);
     realmRec.Intrinsics['%Number.prototype%'] = proto;
@@ -41323,7 +41323,7 @@
     return Value.false;
   }
 
-  function CreateNumber(realmRec) {
+  function BootstrapNumber(realmRec) {
     const override = {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -41595,7 +41595,7 @@
     return OrdinaryHasInstance(F, V);
   }
 
-  function CreateFunctionPrototype(realmRec) {
+  function BootstrapFunctionPrototype(realmRec) {
     const proto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Function.prototype%'] = proto;
     SetFunctionLength(proto, new Value(0));
@@ -41614,7 +41614,7 @@
     return CreateDynamicFunction(C, NewTarget, 'normal', args);
   }
 
-  function CreateFunction(realmRec) {
+  function BootstrapFunction(realmRec) {
     const cons = BootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
     realmRec.Intrinsics['%Function%'] = cons;
   }
@@ -41685,7 +41685,7 @@
     return thisSymbolValue(thisValue);
   }
 
-  function CreateSymbolPrototype(realmRec) {
+  function BootstrapSymbolPrototype(realmRec) {
     const override = {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -41771,7 +41771,7 @@
     return Value.undefined;
   }
 
-  function CreateSymbol(realmRec) {
+  function BootstrapSymbol(realmRec) {
     const symbolConstructor = BootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [['for', Symbol_for, 1], ['keyFor', Symbol_keyFor, 1]]);
 
     for (const [name, sym] of Object.entries(wellKnownSymbols)) {
@@ -41891,7 +41891,7 @@
   } // 20.2 #sec-math-object
 
 
-  function CreateMath(realmRec) {
+  function BootstrapMath(realmRec) {
     // 20.2.1 #sec-value-properties-of-the-math-object
     const readonly = {
       Writable: Value.false,
@@ -43488,7 +43488,7 @@
     return OrdinaryToPrimitive(O, tryFirst);
   }
 
-  function CreateDatePrototype(realmRec) {
+  function BootstrapDatePrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -43920,7 +43920,7 @@
     return new Value(parsed);
   }
 
-  function CreateDate(realmRec) {
+  function BootstrapDate(realmRec) {
     const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [['now', Date_now, 0], ['parse', Date_parse, 1], ['UTC', Date_UTC, 7]]);
     realmRec.Intrinsics['%Date%'] = cons;
   }
@@ -44077,7 +44077,7 @@
     }
   }
 
-  function CreateRegExpStringIteratorPrototype(realmRec) {
+  function BootstrapRegExpStringIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0], [wellKnownSymbols.toStringTag, new Value('RegExp String Iterator'), undefined, {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -45801,7 +45801,7 @@
     return Value.false;
   }
 
-  function CreateRegExpPrototype(realmRec) {
+  function BootstrapRegExpPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['exec', RegExpProto_exec, 1], ['dotAll', [RegExpProto_dotAllGetter]], ['flags', [RegExpProto_flagsGetter]], ['global', [RegExpProto_globalGetter]], ['ignoreCase', [RegExpProto_ignoreCaseGetter]], [wellKnownSymbols.match, RegExpProto_match, 1], [wellKnownSymbols.matchAll, RegExpProto_matchAll, 1], ['multiline', [RegExpProto_multilineGetter]], [wellKnownSymbols.replace, RegExpProto_replace, 2], [wellKnownSymbols.search, RegExpProto_search, 1], ['source', [RegExpProto_sourceGetter]], [wellKnownSymbols.split, RegExpProto_split, 2], ['sticky', [RegExpProto_stickyGetter]], ['test', RegExpProto_test, 1], ['toString', RegExpProto_toString, 0], ['unicode', [RegExpProto_unicodeGetter]]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%RegExp.prototype%'] = proto;
   }
@@ -45915,7 +45915,7 @@
     return thisValue;
   }
 
-  function CreateRegExp(realmRec) {
+  function BootstrapRegExp(realmRec) {
     const proto = realmRec.Intrinsics['%RegExp.prototype%'];
     const cons = BootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [[wellKnownSymbols.species, [RegExp_speciesGetter]]]);
     realmRec.Intrinsics['%RegExp%'] = cons;
@@ -46089,7 +46089,7 @@
     return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
   }
 
-  function CreatePromisePrototype(realmRec) {
+  function BootstrapPromisePrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['catch', PromiseProto_catch, 1], ['finally', PromiseProto_finally, 1], ['then', PromiseProto_then, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
     let _temp9 = Get(proto, new Value('then'));
@@ -46891,7 +46891,7 @@
     return thisValue;
   }
 
-  function CreatePromise(realmRec) {
+  function BootstrapPromise(realmRec) {
     const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
     promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
       Writable: Value.false,
@@ -47134,7 +47134,7 @@
     return result;
   }
 
-  function CreateProxy(realmRec) {
+  function BootstrapProxy(realmRec) {
     const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec, undefined, Value.true);
     SetFunctionName(proxyConstructor, new Value('Proxy'));
     SetFunctionLength(proxyConstructor, new Value(2));
@@ -47393,7 +47393,7 @@
     return target.SetPrototypeOf(proto);
   }
 
-  function CreateReflect(realmRec) {
+  function BootstrapReflect(realmRec) {
     const reflect = BootstrapPrototype(realmRec, [['apply', Reflect_apply, 3], ['construct', Reflect_construct, 2], ['defineProperty', Reflect_defineProperty, 3], ['deleteProperty', Reflect_deleteProperty, 2], ['get', Reflect_get, 2], ['getOwnPropertyDescriptor', Reflect_getOwnPropertyDescriptor, 2], ['getPrototypeOf', Reflect_getPrototypeOf, 1], ['has', Reflect_has, 2], ['isExtensible', Reflect_isExtensible, 1], ['ownKeys', Reflect_ownKeys, 1], ['preventExtensions', Reflect_preventExtensions, 1], ['set', Reflect_set, 3], ['setPrototypeOf', Reflect_setPrototypeOf, 2]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Reflect%'] = reflect;
   }
@@ -47448,7 +47448,7 @@
     return CreateIterResultObject(resultString, Value.false);
   }
 
-  function CreateStringIteratorPrototype(realmRec) {
+  function BootstrapStringIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
     realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
   }
@@ -49164,7 +49164,7 @@
     return CreateStringIterator(S);
   }
 
-  function CreateStringPrototype(realmRec) {
+  function BootstrapStringPrototype(realmRec) {
     const proto = new StringExoticObjectValue();
     proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
     proto.Extensible = Value.true;
@@ -49435,7 +49435,7 @@
     }
   }
 
-  function CreateString(realmRec) {
+  function BootstrapString(realmRec) {
     const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [['fromCharCode', String_fromCharCode, 1], ['fromCodePoint', String_fromCodePoint, 1], ['raw', String_raw, 1]]);
     realmRec.Intrinsics['%String%'] = stringConstructor;
   }
@@ -49520,7 +49520,7 @@
     return new Value(`${name.stringValue()}: ${msg.stringValue()}`);
   }
 
-  function CreateErrorPrototype(realmRec) {
+  function BootstrapErrorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', new Value('')], ['name', new Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Error.prototype%'] = proto;
   }
@@ -49592,12 +49592,12 @@
     return O;
   }
 
-  function CreateError(realmRec) {
+  function BootstrapError(realmRec) {
     const error = BootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
     realmRec.Intrinsics['%Error%'] = error;
   }
 
-  function CreateNativeError(realmRec) {
+  function BootstrapNativeError(realmRec) {
     for (const name of ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
       const proto = BootstrapPrototype(realmRec, [['name', new Value(name)], ['message', new Value('')]], realmRec.Intrinsics['%Error.prototype%']);
 
@@ -49685,7 +49685,7 @@
     return thisValue;
   }
 
-  function CreateIteratorPrototype(realmRec) {
+  function BootstrapIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [[wellKnownSymbols.iterator, IteratorPrototype_iterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%IteratorPrototype%'] = proto;
   }
@@ -49696,7 +49696,7 @@
     return thisValue;
   }
 
-  function CreateAsyncIteratorPrototype(realmRec) {
+  function BootstrapAsyncIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [[wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
   }
@@ -49802,7 +49802,7 @@
     return CreateIterResultObject(result, Value.false);
   }
 
-  function CreateArrayIteratorPrototype(realmRec) {
+  function BootstrapArrayIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
     realmRec.Intrinsics['%ArrayIterator.prototype%'] = proto;
   }
@@ -49867,7 +49867,7 @@
     return CreateIterResultObject(Value.undefined, Value.true);
   }
 
-  function CreateMapIteratorPrototype(realmRec) {
+  function BootstrapMapIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
     realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
   }
@@ -49915,7 +49915,7 @@
     return CreateIterResultObject(Value.undefined, Value.true);
   }
 
-  function CreateSetIteratorPrototype(realmRec) {
+  function BootstrapSetIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
     realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
   }
@@ -50168,7 +50168,7 @@
     return CreateMapIterator(M, 'value');
   }
 
-  function CreateMapPrototype(realmRec) {
+  function BootstrapMapPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
     let _temp10 = proto.GetOwnProperty(new Value('entries'));
@@ -50397,7 +50397,7 @@
     return new Value(count);
   }
 
-  function CreateSetPrototype(realmRec) {
+  function BootstrapSetPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
     let _temp9 = proto.GetOwnProperty(new Value('values'));
@@ -50527,12 +50527,12 @@
     return thisValue;
   }
 
-  function CreateSet(realmRec) {
+  function BootstrapSet(realmRec) {
     const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [[wellKnownSymbols.species, [Set_speciesGetter]]]);
     realmRec.Intrinsics['%Set%'] = setConstructor;
   }
 
-  function CreateGenerator(realmRec) {
+  function BootstrapGenerator(realmRec) {
     const generatorPrototype = realmRec.Intrinsics['%Generator.prototype%'];
     const generator = BootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
       Writable: Value.false
@@ -50561,7 +50561,7 @@
     return CreateDynamicFunction(C, NewTarget, 'generator', args);
   }
 
-  function CreateGeneratorFunction(realmRec) {
+  function BootstrapGeneratorFunction(realmRec) {
     const generator = realmRec.Intrinsics['%Generator%'];
     const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
 
@@ -50614,12 +50614,12 @@
     return GeneratorResumeAbrupt(g, C);
   }
 
-  function CreateGeneratorPrototype(realmRec) {
+  function BootstrapGeneratorPrototype(realmRec) {
     const generatorPrototype = BootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
     realmRec.Intrinsics['%Generator.prototype%'] = generatorPrototype;
   }
 
-  function CreateAsyncFunctionPrototype(realmRec) {
+  function BootstrapAsyncFunctionPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [], realmRec.Intrinsics['%Function.prototype%'], 'AsyncFunction');
     realmRec.Intrinsics['%AsyncFunction.prototype%'] = proto;
   }
@@ -50631,7 +50631,7 @@
     return CreateDynamicFunction(C, NewTarget, 'async', args);
   }
 
-  function CreateAsyncFunction(realmRec) {
+  function BootstrapAsyncFunction(realmRec) {
     const cons = BootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
     cons.DefineOwnProperty(new Value('prototype'), Descriptor({
       Writable: Value.false,
@@ -50642,7 +50642,7 @@
     realmRec.Intrinsics['%AsyncFunction%'] = cons;
   }
 
-  function CreateAsyncGenerator(realmRec) {
+  function BootstrapAsyncGenerator(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGenerator.prototype%'], undefined, {
       Writable: Value.false
     }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
@@ -50670,7 +50670,7 @@
     return CreateDynamicFunction(C, NewTarget, 'async generator', args);
   }
 
-  function CreateAsyncGeneratorFunction(realmRec) {
+  function BootstrapAsyncGeneratorFunction(realmRec) {
     const cons = BootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
     let _temp = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
@@ -50753,7 +50753,7 @@
     return _temp3;
   }
 
-  function CreateAsyncGeneratorPrototype(realmRec) {
+  function BootstrapAsyncGeneratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', AsyncGeneratorPrototype_next, 1], ['return', AsyncGeneratorPrototype_return, 1], ['throw', AsyncGeneratorPrototype_throw, 1]], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
     realmRec.Intrinsics['%AsyncGenerator.prototype%'] = proto;
   }
@@ -50979,7 +50979,7 @@
     return _temp11;
   }
 
-  function CreateAsyncFromSyncIteratorPrototype(realmRec) {
+  function BootstrapAsyncFromSyncIteratorPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['next', AsyncFromSyncIteratorPrototype_next, 1], ['return', AsyncFromSyncIteratorPrototype_return, 1], ['throw', AsyncFromSyncIteratorPrototype_throw, 1]], realmRec.Intrinsics['%AsyncIteratorPrototype%']);
     realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
   }
@@ -51029,7 +51029,7 @@
     return thisValue;
   }
 
-  function CreateArrayBuffer(realmRec) {
+  function BootstrapArrayBuffer(realmRec) {
     const abConstructor = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [['isView', ArrayBuffer_isView, 1], [wellKnownSymbols.species, [ArrayBuffer_speciesGetter]]]);
     realmRec.Intrinsics['%ArrayBuffer%'] = abConstructor;
   }
@@ -51189,7 +51189,7 @@
     return neww;
   }
 
-  function CreateArrayBufferPrototype(realmRec) {
+  function BootstrapArrayBufferPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLengthGetter]], ['slice', ArrayBufferProto_slice, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
     realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
   }
@@ -52501,7 +52501,7 @@
     return SerializeJSONProperty(new Value(''), wrapper);
   }
 
-  function CreateJSON(realmRec) {
+  function BootstrapJSON(realmRec) {
     const json = BootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
     realmRec.Intrinsics['%JSON%'] = json;
 
@@ -52523,7 +52523,7 @@
     return PerformEval(x, callerRealm, false, false);
   }
 
-  function CreateEval(realmRec) {
+  function BootstrapEval(realmRec) {
     const it = CreateBuiltinFunction(TheEval, [], realmRec);
     SetFunctionName(it, new Value('eval'));
     SetFunctionLength(it, new Value(1));
@@ -52554,7 +52554,7 @@
     return Value.true;
   }
 
-  function CreateIsFinite(realmRec) {
+  function BootstrapIsFinite(realmRec) {
     const fn = CreateBuiltinFunction(IsFinite, [], realmRec);
 
     let _temp2 = SetFunctionName(fn, new Value('isFinite'));
@@ -52600,7 +52600,7 @@
     return Value.false;
   }
 
-  function CreateIsNaN(realmRec) {
+  function BootstrapIsNaN(realmRec) {
     const fn = CreateBuiltinFunction(IsNaN, [], realmRec);
 
     let _temp2 = SetFunctionName(fn, new Value('isNaN'));
@@ -52655,7 +52655,7 @@
     return mathFloat;
   }
 
-  function CreateParseFloat(realmRec) {
+  function BootstrapParseFloat(realmRec) {
     const fn = CreateBuiltinFunction(ParseFloat, [], realmRec);
 
     let _temp3 = SetFunctionName(fn, new Value('parseFloat'));
@@ -52828,7 +52828,7 @@
     return new Value(sign * number);
   }
 
-  function CreateParseInt(realmRec) {
+  function BootstrapParseInt(realmRec) {
     const fn = CreateBuiltinFunction(ParseInt, [], realmRec);
 
     let _temp4 = SetFunctionName(fn, new Value('parseInt'));
@@ -52849,7 +52849,7 @@
     realmRec.Intrinsics['%parseInt%'] = fn;
   }
 
-  function CreateThrowTypeError(realmRec) {
+  function BootstrapThrowTypeError(realmRec) {
     let _temp = CreateBuiltinFunction(() => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'), [], realmRec, Value.null);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(\n    () => surroundingAgent.Throw('TypeError', 'StrictPoisonPill'),\n    [], realmRec, Value.null,\n  )" + ' returned an abrupt completion');
@@ -53137,7 +53137,7 @@
     return thisValue;
   }
 
-  function CreateTypedArray(realmRec) {
+  function BootstrapTypedArray(realmRec) {
     const typedArrayConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [['from', TypedArray_from, 1], ['of', TypedArray_of, 0], [wellKnownSymbols.species, [TypedArray_speciesGetter]]]);
     realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
   }
@@ -54288,7 +54288,7 @@
     return name;
   }
 
-  function CreateTypedArrayPrototype(realmRec) {
+  function BootstrapTypedArrayPrototype(realmRec) {
     let _temp56 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
 
     Assert(!(_temp56 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
@@ -54300,7 +54300,7 @@
     const ArrayProto_toString = _temp56;
     Assert(Type(ArrayProto_toString) === 'Object', "Type(ArrayProto_toString) === 'Object'");
     const proto = BootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_bufferGetter]], ['byteLength', [TypedArrayProto_byteLengthGetter]], ['byteOffset', [TypedArrayProto_byteOffsetGetter]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_lengthGetter]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTagGetter]]], realmRec.Intrinsics['%Object.prototype%']);
-    CreateArrayPrototypeShared(realmRec, proto, thisValue => {
+    BootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
       let _temp57 = ValidateTypedArray(thisValue);
 
       if (_temp57 instanceof AbruptCompletion) {
@@ -54738,13 +54738,13 @@
     realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
   }
 
-  function CreateTypedArrayConstructors(realmRec) {
+  function BootstrapTypedArrayConstructors(realmRec) {
     for (const TypedArray of typedArrayInfo.keys()) {
       CreateTypedArrayConstructor(realmRec, TypedArray);
     }
   }
 
-  function CreateTypedArrayPrototype$1(realmRec, TypedArray) {
+  function CreateTypedArrayPrototype(realmRec, TypedArray) {
     const info = typedArrayInfo.get(TypedArray);
     Assert(info !== undefined, "info !== undefined");
     const readonly = {
@@ -54755,9 +54755,9 @@
     realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
   }
 
-  function CreateTypedArrayPrototypes(realmRec) {
+  function BootstrapTypedArrayPrototypes(realmRec) {
     for (const TypedArray of typedArrayInfo.keys()) {
-      CreateTypedArrayPrototype$1(realmRec, TypedArray);
+      CreateTypedArrayPrototype(realmRec, TypedArray);
     }
   }
 
@@ -54848,7 +54848,7 @@
     return O;
   }
 
-  function CreateDataView(realmRec) {
+  function BootstrapDataView(realmRec) {
     const dvConstructor = BootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
     realmRec.Intrinsics['%DataView%'] = dvConstructor;
   }
@@ -55116,7 +55116,7 @@
     return SetViewValue(v, byteOffset, littleEndian, 'Uint32', value);
   }
 
-  function CreateDataViewPrototype(realmRec) {
+  function BootstrapDataViewPrototype(realmRec) {
     const proto = BootstrapPrototype(realmRec, [['buffer', [DataViewProto_bufferGetter]], ['byteLength', [DataViewProto_byteLengthGetter]], ['byteOffset', [DataViewProto_byteOffsetGetter]], ['getFloat32', DataViewProto_getFloat32, 1], ['getFloat64', DataViewProto_getFloat64, 1], ['getInt8', DataViewProto_getInt8, 1], ['getInt16', DataViewProto_getInt16, 1], ['getInt32', DataViewProto_getInt32, 1], ['getUint8', DataViewProto_getUint8, 1], ['getUint16', DataViewProto_getUint16, 1], ['getUint32', DataViewProto_getUint32, 1], ['setFloat32', DataViewProto_setFloat32, 2], ['setFloat64', DataViewProto_setFloat64, 2], ['setInt8', DataViewProto_setInt8, 2], ['setInt16', DataViewProto_setInt16, 2], ['setInt32', DataViewProto_setInt32, 2], ['setUint8', DataViewProto_setUint8, 2], ['setUint16', DataViewProto_setUint16, 2], ['setUint32', DataViewProto_setUint32, 2]], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
     realmRec.Intrinsics['%DataView.prototype%'] = proto;
   }
@@ -55178,70 +55178,70 @@
     const intrinsics = Object.create(null);
     realmRec.Intrinsics = intrinsics;
     intrinsics['%Object.prototype%'] = ObjectCreate(Value.null);
-    CreateFunctionPrototype(realmRec);
-    CreateObjectPrototype(realmRec);
-    CreateThrowTypeError(realmRec);
-    CreateEval(realmRec);
-    CreateIsFinite(realmRec);
-    CreateIsNaN(realmRec);
-    CreateParseFloat(realmRec);
-    CreateParseInt(realmRec);
-    CreateObject(realmRec);
-    CreateErrorPrototype(realmRec);
-    CreateError(realmRec);
-    CreateNativeError(realmRec);
-    CreateFunction(realmRec);
-    CreateIteratorPrototype(realmRec);
-    CreateAsyncIteratorPrototype(realmRec);
-    CreateArrayIteratorPrototype(realmRec);
-    CreateMapIteratorPrototype(realmRec);
-    CreateSetIteratorPrototype(realmRec);
-    CreateStringIteratorPrototype(realmRec);
-    CreateRegExpStringIteratorPrototype(realmRec);
-    CreateForInIteratorPrototype(realmRec);
-    CreateStringPrototype(realmRec);
-    CreateString(realmRec);
-    CreateArrayPrototype(realmRec);
-    CreateArray(realmRec);
-    CreateBooleanPrototype(realmRec);
-    CreateBoolean(realmRec);
-    CreateNumberPrototype(realmRec);
-    CreateNumber(realmRec);
-    CreateBigIntPrototype(realmRec);
-    CreateBigInt(realmRec);
-    CreateSymbolPrototype(realmRec);
-    CreateSymbol(realmRec);
-    CreatePromisePrototype(realmRec);
-    CreatePromise(realmRec);
-    CreateProxy(realmRec);
-    CreateReflect(realmRec);
-    CreateMath(realmRec);
-    CreateDatePrototype(realmRec);
-    CreateDate(realmRec);
-    CreateRegExpPrototype(realmRec);
-    CreateRegExp(realmRec);
-    CreateSetPrototype(realmRec);
-    CreateSet(realmRec);
-    CreateMapPrototype(realmRec);
-    CreateMap(realmRec);
-    CreateGeneratorPrototype(realmRec);
-    CreateGenerator(realmRec);
-    CreateGeneratorFunction(realmRec);
-    CreateAsyncFunctionPrototype(realmRec);
-    CreateAsyncFunction(realmRec);
-    CreateAsyncGeneratorPrototype(realmRec);
-    CreateAsyncGenerator(realmRec);
-    CreateAsyncGeneratorFunction(realmRec);
-    CreateAsyncFromSyncIteratorPrototype(realmRec);
-    CreateArrayBufferPrototype(realmRec);
-    CreateArrayBuffer(realmRec);
-    CreateTypedArrayPrototype(realmRec);
-    CreateTypedArray(realmRec);
-    CreateTypedArrayPrototypes(realmRec);
-    CreateTypedArrayConstructors(realmRec);
-    CreateDataViewPrototype(realmRec);
-    CreateDataView(realmRec);
-    CreateJSON(realmRec);
+    BootstrapFunctionPrototype(realmRec);
+    BootstrapObjectPrototype(realmRec);
+    BootstrapThrowTypeError(realmRec);
+    BootstrapEval(realmRec);
+    BootstrapIsFinite(realmRec);
+    BootstrapIsNaN(realmRec);
+    BootstrapParseFloat(realmRec);
+    BootstrapParseInt(realmRec);
+    BootstrapObject(realmRec);
+    BootstrapErrorPrototype(realmRec);
+    BootstrapError(realmRec);
+    BootstrapNativeError(realmRec);
+    BootstrapFunction(realmRec);
+    BootstrapIteratorPrototype(realmRec);
+    BootstrapAsyncIteratorPrototype(realmRec);
+    BootstrapArrayIteratorPrototype(realmRec);
+    BootstrapMapIteratorPrototype(realmRec);
+    BootstrapSetIteratorPrototype(realmRec);
+    BootstrapStringIteratorPrototype(realmRec);
+    BootstrapRegExpStringIteratorPrototype(realmRec);
+    BootstrapForInIteratorPrototype(realmRec);
+    BootstrapStringPrototype(realmRec);
+    BootstrapString(realmRec);
+    BootstrapArrayPrototype(realmRec);
+    BootstrapArray(realmRec);
+    BootstrapBooleanPrototype(realmRec);
+    BootstrapBoolean(realmRec);
+    BootstrapNumberPrototype(realmRec);
+    BootstrapNumber(realmRec);
+    BootstrapBigIntPrototype(realmRec);
+    BootstrapBigInt(realmRec);
+    BootstrapSymbolPrototype(realmRec);
+    BootstrapSymbol(realmRec);
+    BootstrapPromisePrototype(realmRec);
+    BootstrapPromise(realmRec);
+    BootstrapProxy(realmRec);
+    BootstrapReflect(realmRec);
+    BootstrapMath(realmRec);
+    BootstrapDatePrototype(realmRec);
+    BootstrapDate(realmRec);
+    BootstrapRegExpPrototype(realmRec);
+    BootstrapRegExp(realmRec);
+    BootstrapSetPrototype(realmRec);
+    BootstrapSet(realmRec);
+    BootstrapMapPrototype(realmRec);
+    BootstrapMap(realmRec);
+    BootstrapGeneratorPrototype(realmRec);
+    BootstrapGenerator(realmRec);
+    BootstrapGeneratorFunction(realmRec);
+    BootstrapAsyncFunctionPrototype(realmRec);
+    BootstrapAsyncFunction(realmRec);
+    BootstrapAsyncGeneratorPrototype(realmRec);
+    BootstrapAsyncGenerator(realmRec);
+    BootstrapAsyncGeneratorFunction(realmRec);
+    BootstrapAsyncFromSyncIteratorPrototype(realmRec);
+    BootstrapArrayBufferPrototype(realmRec);
+    BootstrapArrayBuffer(realmRec);
+    BootstrapTypedArrayPrototype(realmRec);
+    BootstrapTypedArray(realmRec);
+    BootstrapTypedArrayPrototypes(realmRec);
+    BootstrapTypedArrayConstructors(realmRec);
+    BootstrapDataViewPrototype(realmRec);
+    BootstrapDataView(realmRec);
+    BootstrapJSON(realmRec);
     AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
     return intrinsics;
   } // 8.2.3 #sec-setrealmglobalobject
