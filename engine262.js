@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 07d1ac719b07b58bb4e32d05776faaa6e3cf8d7e
+ * engine262 0.0.1 3ab32640420f2362a7055b899cbd5e9f834fff03
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -970,7 +970,7 @@
     }
 
     isTopLevel() {
-      return this.context.VariableEnvironment === undefined && this.context.Function === Value.null;
+      return this.context.Function === Value.null;
     }
 
     isConstructCall() {
@@ -1066,18 +1066,14 @@
       const isAsync = this.isAsync();
       const functionName = this.getFunctionName();
       const isConstructCall = this.isConstructCall();
-      const isMethodCall = !(this.isTopLevel() || isConstructCall);
+      const isMethodCall = !isConstructCall && !this.isTopLevel();
       let string = isAsync ? 'async ' : '';
 
-      if (isMethodCall) {
-        if (functionName) {
-          string += functionName;
-        } else {
-          string += '<anonymous>';
-        }
-      } else if (isConstructCall) {
+      if (isConstructCall) {
         string += 'new ';
+      }
 
+      if (isMethodCall || isConstructCall) {
         if (functionName) {
           string += functionName;
         } else {
@@ -24947,6 +24943,7 @@
 
     const calleeContext = PrepareForOrdinaryCall(F, newTarget);
     Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
+    surroundingAgent.runningExecutionContext.callSite.constructCall = true;
 
     if (kind === 'base') {
       OrdinaryCallBindThis(F, calleeContext, thisArgument);
