@@ -108,6 +108,7 @@ export class Agent {
 
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, [new Value(message)]);
+    Assert(!(error instanceof AbruptCompletion));
     return new ThrowCompletion(error);
   }
 

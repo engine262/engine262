@@ -170,7 +170,8 @@ export class CallSite {
   }
 
   isTopLevel() {
-    return this.context.Function === Value.null;
+    return this.context.VariableEnvironment === undefined
+      && this.context.Function === Value.null;
   }
 
   isConstructCall() {
@@ -246,7 +247,8 @@ export class CallSite {
   toString() {
     const isAsync = this.isAsync();
     const functionName = this.getFunctionName();
-    const isMethodCall = !(this.isTopLevel() || this.isConstructCall());
+    const isConstructCall = this.isConstructCall();
+    const isMethodCall = !(this.isTopLevel() || isConstructCall);
 
     let string = isAsync ? 'async ' : '';
 
@@ -256,7 +258,7 @@ export class CallSite {
       } else {
         string += '<anonymous>';
       }
-    } else if (this.isConstructCall()) {
+    } else if (isConstructCall) {
       string += 'new ';
       if (functionName) {
         string += functionName;
@@ -302,7 +304,7 @@ export function captureStack(O) {
   const stack = [];
   for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.VariableEnvironment === undefined) {
+    if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
     }
     stack.push(e.callSite.clone());
