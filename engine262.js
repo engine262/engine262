@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 4201d40a99131611dfc71636de4cd94539cf496b
+ * engine262 0.0.1 07d1ac719b07b58bb4e32d05776faaa6e3cf8d7e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -970,7 +970,7 @@
     }
 
     isTopLevel() {
-      return this.context.Function === Value.null;
+      return this.context.VariableEnvironment === undefined && this.context.Function === Value.null;
     }
 
     isConstructCall() {
@@ -1065,7 +1065,8 @@
     toString() {
       const isAsync = this.isAsync();
       const functionName = this.getFunctionName();
-      const isMethodCall = !(this.isTopLevel() || this.isConstructCall());
+      const isConstructCall = this.isConstructCall();
+      const isMethodCall = !(this.isTopLevel() || isConstructCall);
       let string = isAsync ? 'async ' : '';
 
       if (isMethodCall) {
@@ -1074,7 +1075,7 @@
         } else {
           string += '<anonymous>';
         }
-      } else if (this.isConstructCall()) {
+      } else if (isConstructCall) {
         string += 'new ';
 
         if (functionName) {
@@ -1128,7 +1129,7 @@
     for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
       const e = surroundingAgent.executionContextStack[i];
 
-      if (e.VariableEnvironment === undefined) {
+      if (e.VariableEnvironment === undefined && e.Function === Value.null) {
         break;
       }
 
@@ -34417,6 +34418,7 @@
       const message = tfn(...templateArgs);
       const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
       const error = Construct(cons, [new Value(message)]);
+      Assert(!(error instanceof AbruptCompletion), "!(error instanceof AbruptCompletion)");
       return new ThrowCompletion(error);
     } // NON-SPEC: Check if a feature is enabled in this agent.
 
