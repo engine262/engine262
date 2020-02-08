@@ -170,8 +170,7 @@ export class CallSite {
   }
 
   isTopLevel() {
-    return this.context.VariableEnvironment === undefined
-      && this.context.Function === Value.null;
+    return this.context.Function === Value.null;
   }
 
   isConstructCall() {
@@ -248,18 +247,15 @@ export class CallSite {
     const isAsync = this.isAsync();
     const functionName = this.getFunctionName();
     const isConstructCall = this.isConstructCall();
-    const isMethodCall = !(this.isTopLevel() || isConstructCall);
+    const isMethodCall = !isConstructCall && !this.isTopLevel();
 
     let string = isAsync ? 'async ' : '';
 
-    if (isMethodCall) {
-      if (functionName) {
-        string += functionName;
-      } else {
-        string += '<anonymous>';
-      }
-    } else if (isConstructCall) {
+    if (isConstructCall) {
       string += 'new ';
+    }
+
+    if (isMethodCall || isConstructCall) {
       if (functionName) {
         string += functionName;
       } else {

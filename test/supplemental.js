@@ -80,12 +80,32 @@ TypeError: undefined is not an object
     at x (<anonymous>:2:21)
     at <anonymous>:4:8`.trim());
   },
+  () => {
+    const agent = new Agent();
+    agent.enter();
+    const realm = new Realm();
+    const result = realm.evaluateScript(`
+      function Y() { throw new Error('owo'); }
+      function x() { new Y(); }
+      try {
+        x();
+      } catch (e) {
+        e.stack;
+      }
+    `);
+    assert.strictEqual(result.Value.stringValue(), `
+Error: owo
+    at new Y (<anonymous>:2:37)
+    at x (<anonymous>:3:25)
+    at <anonymous>:5:8`.trim());
+  },
 ].forEach((test) => {
   total();
   try {
     test();
     pass();
   } catch (e) {
+    process.exitCode = 1;
     fail('', e);
   }
 });

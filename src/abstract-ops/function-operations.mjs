@@ -165,6 +165,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   }
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  surroundingAgent.runningExecutionContext.callSite.constructCall = true;
   if (kind === 'base') {
     OrdinaryCallBindThis(F, calleeContext, thisArgument);
   }
