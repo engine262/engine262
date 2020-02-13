@@ -218,7 +218,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         targetIndex = Q(FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1));
       } else {
         if (targetIndex >= (2 ** 53) - 1) {
-          return surroundingAgent.Throw('TypeError');
+          return surroundingAgent.Throw('TypeError', 'OutOfRange', targetIndex);
         }
         Q(CreateDataPropertyOrThrow(target, X(ToString(new Value(targetIndex))), element));
         targetIndex += 1;

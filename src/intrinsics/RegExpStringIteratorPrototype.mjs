@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { wellKnownSymbols, Type, Value } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import {
   Assert,
   ObjectCreate,
@@ -75,12 +75,7 @@ function RegExpStringIteratorPrototype_next(args, { thisValue }) {
 export function BootstrapRegExpStringIteratorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['next', RegExpStringIteratorPrototype_next, 0],
-    [wellKnownSymbols.toStringTag, new Value('RegExp String Iterator'), undefined, {
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    }],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  ], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');
 
   realmRec.Intrinsics['%RegExpStringIteratorPrototype%'] = proto;
 }

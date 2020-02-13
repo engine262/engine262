@@ -15,11 +15,8 @@ tail-call-optimization
 
 u180e
 
-host-gc-required
 WeakMap
 WeakSet
-WeakRef
-FinalizationGroup
 
 class-fields-public
 class-fields-private

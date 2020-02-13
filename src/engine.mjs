@@ -15,6 +15,7 @@ import {
 import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
+  CleanupFinalizationGroup,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
@@ -30,6 +31,10 @@ export const FEATURES = Object.freeze([
   {
     name: 'import.meta',
     url: 'https://github.com/tc39/proposal-import-meta',
+  },
+  {
+    name: 'WeakRefs',
+    url: 'https://github.com/tc39/proposal-weakrefs',
   },
 ].map(Object.freeze));
 
@@ -66,6 +71,10 @@ export class Agent {
         return acc;
       }, {}),
     };
+
+    if (this.feature('WeakRefs')) {
+      this.KeptAlive = new Set();
+    }
   }
 
   // #sec-running-execution-context
@@ -93,19 +102,7 @@ export class Agent {
     if (type instanceof Value) {
       return new ThrowCompletion(type);
     }
-
-    if (!template) {
-      throw new RangeError('Throw must use a message template');
-    }
-    const tfn = messages[template];
-    if (!tfn) {
-      throw new RangeError(`'${template}' is not a valid message template`);
-    }
-    if (tfn.length !== templateArgs.length) {
-      throw new RangeError(`Template '${template}' was passed the wrong number of arguments`);
-    }
-    const message = tfn(...templateArgs);
-
+    const message = messages[template](...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     const error = Construct(cons, [new Value(message)]);
     Assert(!(error instanceof AbruptCompletion));
@@ -115,6 +112,19 @@ export class Agent {
   // NON-SPEC: Check if a feature is enabled in this agent.
   feature(name) {
     return this.hostDefinedOptions.features[name];
+  }
+
+  mark(m) {
+    this.executionContextStack.forEach((e) => {
+      m(e);
+    });
+    this.jobQueue.forEach((j) => {
+      j.Arguments.forEach((a) => {
+        m(a);
+      });
+      m(j.Realm);
+      m(j.ScriptOrModule);
+    });
   }
 }
 Agent.Increment = 0;
@@ -137,6 +147,15 @@ export class ExecutionContext {
     // NON-SPEC
     this.callSite = new CallSite(this);
     this.promiseCapability = undefined;
+  }
+
+  mark(m) {
+    m(this.Function);
+    m(this.Realm);
+    m(this.ScriptOrModule);
+    m(this.VariableEnvironment);
+    m(this.LexicalEnvironment);
+    m(this.promiseCapability);
   }
 
   copy() {
@@ -164,7 +183,7 @@ export function EnqueueJob(queueName, job, args) {
     Arguments: args,
     Realm: callerRealm,
     ScriptOrModule: callerScriptOrModule,
-    HostDefined: undefined,
+    HostDefined: { queueName },
   };
   surroundingAgent.jobQueue.push(pending);
 }
@@ -410,4 +429,16 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public));
   }
   return Value.undefined;
+}
+
+// https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-group
+export function HostCleanupFinalizationGroup(fg) {
+  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup !== undefined) {
+    Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup(fg));
+  } else {
+    EnqueueJob('FinalizationCleanup', () => {
+      CleanupFinalizationGroup(fg);
+    }, []);
+  }
+  return new NormalCompletion(undefined);
 }

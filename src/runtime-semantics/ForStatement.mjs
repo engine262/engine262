@@ -184,7 +184,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       nextResult = Q(yield* Await(nextResult));
     }
     if (Type(nextResult) !== 'Object') {
-      return surroundingAgent.Throw('TypeError');
+      return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
     }
     const done = Q(IteratorComplete(nextResult));
     if (done === Value.true) {

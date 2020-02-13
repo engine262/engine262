@@ -55,8 +55,7 @@ export function BootstrapSymbolPrototype(realmRec) {
     ['description', [SymbolProto_descriptionGetter]],
     ['valueOf', SymbolProto_valueOf, 0],
     [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override],
-    [wellKnownSymbols.toStringTag, new Value('Symbol'), undefined, override],
-  ], realmRec.Intrinsics['%Object.prototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Symbol');
 
   realmRec.Intrinsics['%Symbol.prototype%'] = proto;
 }

@@ -27,6 +27,13 @@ export class ValueMap extends Map {
     }
   }
 
+  mark(m) {
+    for (const [k, v] of this.entries()) {
+      m(k);
+      m(v);
+    }
+  }
+
   get(key) {
     return super.get(convertValueForKey(key));
   }
@@ -83,6 +90,12 @@ export class ValueSet extends Set {
       for (const item of init) {
         this.add(item);
       }
+    }
+  }
+
+  mark(m) {
+    for (const item of this.values()) {
+      m(item);
     }
   }
 

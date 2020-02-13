@@ -93,7 +93,7 @@ export function PutValue(V, W) {
   ReturnIfAbrupt(V);
   ReturnIfAbrupt(W);
   if (Type(V) !== 'Reference') {
-    return surroundingAgent.Throw('ReferenceError');
+    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V);
   }
   let base = GetBase(V);
   if (IsUnresolvableReference(V) === Value.true) {

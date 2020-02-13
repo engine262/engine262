@@ -1,7 +1,23 @@
 'use strict';
 
+const Module = require('module');
+
+const ModuleFindPath = Module._findPath; // eslint-disable-line no-underscore-dangle
+const hacks = [
+  'eslint-plugin-engine262',
+];
+// eslint-disable-next-line no-underscore-dangle
+Module._findPath = (request, paths, isMain) => {
+  const r = ModuleFindPath(request, paths, isMain);
+  if (!r && hacks.includes(request)) {
+    return require.resolve(`./test/${request}`);
+  }
+  return r;
+};
+
 module.exports = {
   extends: 'airbnb-base',
+  plugins: ['engine262'],
   parser: 'babel-eslint',
   parserOptions: {
     ecmaVersion: 2019,
@@ -45,5 +61,6 @@ module.exports = {
     'import/order': ['error', { 'newlines-between': 'never' }],
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'global-require': 'off',
+    'engine262/valid-throw': 'error',
   },
 };

@@ -50,7 +50,7 @@ if (!process.send) {
       }
       workers[i] = undefined;
       if (workers.every((w) => w === undefined)) {
-        process.exit(0);
+        process.exit();
       }
     });
     return c;
@@ -125,7 +125,7 @@ if (!process.send) {
             trackedPromises.delete(promise);
             break;
           default:
-            break;
+            throw new RangeError('promiseRejectionTracker', operation);
         }
       },
       resolveImportedModule(referencingScriptOrModule, specifier) {
@@ -168,6 +168,8 @@ if (!process.send) {
     Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'), new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
     Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
+    Abstract.CreateDataProperty($262, new Value(realm, 'gc'), new Value(realm, () => Value.undefined));
+
     Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
     $262.realm = realm;
@@ -205,6 +207,8 @@ if (!process.send) {
   const includeCache = {};
 
   const run = (test) => {
+    agent.agent.jobQueue = [];
+
     const { file, contents, attrs } = test;
     const specifier = path.resolve(__dirname, 'test262', file);
     const $262 = createRealm({ file });
@@ -224,7 +228,7 @@ if (!process.send) {
           if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
             resolve({ status: 'PASS' });
           } else {
-            resolve({ status: 'FAIL', error: inspect(m, $262.realm) });
+            resolve({ status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m, $262.realm) });
           }
           $262.handlePrint = undefined;
         };
@@ -240,6 +244,22 @@ if (!process.send) {
       const source = includeCache[include] || fs.readFileSync(p, 'utf8');
       $262.evalScript(source, { specifier: p });
     });
+
+    $262.evalScript(`
+var Test262Error = class Test262Error extends Error {};
+
+function $DONE(error) {
+  if (error) {
+    if (typeof error === 'object' && error !== null && 'stack' in error) {
+      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
+    } else {
+      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
+    }
+  } else {
+    __consolePrintHandle__('Test262:AsyncTestComplete');
+  }
+}`.trim());
+
     let completion;
     if (attrs.flags.module) {
       completion = $262.realm.createSourceTextModule(specifier, contents);
@@ -294,11 +314,13 @@ if (!process.send) {
           process.send({ description, status: 'FAIL', error: e.stack || e });
           process.exit(1);
         })
-        .then((r) => process.send({ description, ...r }, (e) => {
-          if (e) {
-            process.exit(1);
-          }
-        }));
+        .then((r) => {
+          process.send({ description, ...r }, (e) => {
+            if (e) {
+              process.exit(1);
+            }
+          });
+        });
     }
   });
 }

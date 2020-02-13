@@ -70,7 +70,11 @@ export function Value(value) {
   }
 }
 
-export class PrimitiveValue extends Value {}
+export class PrimitiveValue extends Value {
+  mark(_m) {
+    // do nothing
+  }
+}
 
 export class UndefinedValue extends PrimitiveValue {}
 
@@ -716,6 +720,11 @@ export class ObjectValue extends Value {
   OwnPropertyKeys() {
     return OrdinaryOwnPropertyKeys(this);
   }
+
+  mark(m) {
+    m(this.Prototype);
+    m(this.properties);
+  }
 }
 ObjectValue.prototype.isOrdinary = true;
 
@@ -751,6 +760,30 @@ export class ArrayExoticObjectValue extends ObjectValue {
 ArrayExoticObjectValue.prototype.isOrdinary = false;
 
 export class FunctionValue extends ObjectValue {
+  constructor() {
+    super();
+
+    this.Environment = undefined;
+    this.FormalParamters = undefined;
+    this.ECMAScriptCode = undefined;
+    this.ConstructorKind = undefined;
+    this.Realm = undefined;
+    this.ScriptOrModule = undefined;
+    this.ThisMode = undefined;
+    this.Strict = undefined;
+    this.HomeObject = undefined;
+    this.SourceText = undefined;
+    this.IsClassConstructor = undefined;
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.Environment);
+    m(this.Realm);
+    m(this.ScriptOrModule);
+    m(this.HomeObject);
+  }
+
   static [Symbol.hasInstance](V) {
     return V instanceof ObjectValue && typeof V.Call === 'function';
   }
@@ -767,8 +800,6 @@ export class BuiltinFunctionValue extends FunctionValue {
   constructor(nativeFunction, isConstructor = Value.false) {
     super();
     this.nativeFunction = nativeFunction;
-    this.Realm = undefined;
-    this.ScriptOrModule = undefined;
 
     if (isConstructor === Value.true) {
       this.Construct = function Construct(argumentsList, newTarget) {
@@ -979,6 +1010,11 @@ export class ArgumentsExoticObjectValue extends ObjectValue {
     }
     return result;
   }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ParameterMap);
+  }
 }
 ArgumentsExoticObjectValue.prototype.isOrdinary = false;
 
@@ -1117,6 +1153,11 @@ export class IntegerIndexedExoticObjectValue extends ObjectValue {
       }
     }
     return keys;
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ViewedArrayBuffer);
   }
 }
 IntegerIndexedExoticObjectValue.prototype.isOrdinary = false;
@@ -1264,6 +1305,12 @@ export class ModuleNamespaceExoticObjectValue extends ObjectValue {
     const symbolKeys = X(OrdinaryOwnPropertyKeys(O));
     exports.push(...symbolKeys);
     return exports;
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.Module);
+    m(this.Prototype);
   }
 }
 ModuleNamespaceExoticObjectValue.prototype.isOrdinary = false;
@@ -1732,6 +1779,12 @@ export class ProxyExoticObjectValue extends ObjectValue {
     }
     return trapResult;
   }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ProxyTarget);
+    m(this.ProxyHandler);
+  }
 }
 ProxyExoticObjectValue.prototype.isOrdinary = false;
 
@@ -1741,6 +1794,11 @@ export class Reference {
     this.ReferencedName = ReferencedName;
     Assert(Type(StrictReference) === 'Boolean');
     this.StrictReference = StrictReference;
+  }
+
+  mark(m) {
+    m(this.BaseValue);
+    m(this.ReferencedName);
   }
 }
 
@@ -1753,6 +1811,11 @@ export class SuperReference extends Reference {
   }) {
     super({ BaseValue, ReferencedName, StrictReference });
     this.thisValue = thisValue;
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.thisValue);
   }
 }
 
@@ -1776,6 +1839,12 @@ Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
     && this.Writable === undefined
     && this.Enumerable === undefined
     && this.Configurable === undefined;
+};
+
+Descriptor.prototype.mark = function mark(m) {
+  m(this.Value);
+  m(this.Get);
+  m(this.Set);
 };
 
 export class DataBlock extends Uint8Array {

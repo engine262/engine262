@@ -35,6 +35,12 @@ export class PromiseCapabilityRecord {
     this.Resolve = Value.undefined;
     this.Reject = Value.undefined;
   }
+
+  mark(m) {
+    m(this.Promise);
+    m(this.Resolve);
+    m(this.Reject);
+  }
 }
 
 // 25.6.1.2 #sec-promisereaction-records
@@ -48,6 +54,11 @@ export class PromiseReactionRecord {
     this.Capability = O.Capability;
     this.Type = O.Type;
     this.Handler = O.Handler;
+  }
+
+  mark(m) {
+    m(this.Capability);
+    m(this.Handler);
   }
 }
 

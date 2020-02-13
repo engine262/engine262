@@ -105,7 +105,6 @@ Error: owo
     test();
     pass();
   } catch (e) {
-    process.exitCode = 1;
     fail('', e);
   }
 });

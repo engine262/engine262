@@ -79,6 +79,7 @@ module.exports = {
   fail(name, error) {
     failed += 1;
     handledPerSecCounter += 1;
+    process.exitCode = 1;
     process.stderr.write(`\nFAILURE! ${name}\n${error}\n`);
   },
   skip() {

@@ -10,6 +10,7 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
+  HostCleanupFinalizationGroup,
   FEATURES,
 } from './engine.mjs';
 import {
@@ -22,7 +23,7 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q,
+  Q, X,
   ThrowCompletion,
   EnsureCompletion,
 } from './completion.mjs';
@@ -45,10 +46,67 @@ export {
 
 export { inspect } from './inspect.mjs';
 
+function mark() {
+  const marked = new Set();
+  const weakrefs = new Set();
+  const fgs = new Set();
+
+  const markCb = (o) => {
+    if (o === undefined || o === null) {
+      return;
+    }
+    if (marked.has(o)) {
+      return;
+    }
+    marked.add(o);
+    if ('WeakRefTarget' in o) {
+      weakrefs.add(o);
+    }
+    if ('Cells' in o) {
+      fgs.add(o);
+    }
+    o.mark(markCb);
+  };
+  markCb(surroundingAgent);
+
+  // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
+  // At any time, if an object obj is not live, an ECMAScript implementation may perform the following steps atomically:
+  // 1. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
+  //   a. Set ref.[[WeakRefTarget]] to empty.
+  // 2. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   a. Set cell.[[WeakRefTarget]] to empty.
+  //   b. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+
+  weakrefs.forEach((w) => {
+    if (!marked.has(w.WeakRefTarget)) {
+      w.WeakRefTarget = undefined;
+    }
+  });
+
+  fgs.forEach((fg) => {
+    let foundEmptyCell = false;
+    fg.Cells.forEach((cell) => {
+      if (!marked.has(cell.WeakRefTarget)) {
+        cell.WeakRefTarget = undefined;
+        foundEmptyCell = true;
+      }
+    });
+    if (foundEmptyCell) {
+      X(HostCleanupFinalizationGroup(fg));
+    }
+  });
+}
+
 function runJobQueue() {
+  if (surroundingAgent.executionContextStack.length !== 0) {
+    return;
+  }
+
+
   while (true) { // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0) {
+    if (nextQueue.length === 0
+        || nextQueue.find((j) => j.HostDefined.queueName !== 'FinalizationCleanup') === undefined) {
       break;
     }
     const nextPending = nextQueue.shift();
@@ -58,10 +116,16 @@ function runJobQueue() {
     newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
     const result = nextPending.Job(...nextPending.Arguments);
-    surroundingAgent.executionContextStack.pop(newContext);
     if (result instanceof AbruptCompletion) {
       HostReportErrors(result.Value);
     }
+
+    if (surroundingAgent.feature('WeakRefs')) {
+      AbstractOps.ClearKeptObjects();
+      mark();
+    }
+
+    surroundingAgent.executionContextStack.pop(newContext);
   }
 }
 
@@ -132,7 +196,8 @@ class APIRealm {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    return this.scope(() => {
+
+    const res = this.scope(() => {
       // BEGIN ScriptEvaluationJob
       const realm = surroundingAgent.currentRealmRecord;
       const s = ParseScript(sourceText, realm, {
@@ -146,12 +211,14 @@ class APIRealm {
       }
       // END ScriptEvaluationJob
 
-      const res = Q(ScriptEvaluation(s));
-
-      runJobQueue();
-
-      return EnsureCompletion(res);
+      return EnsureCompletion(ScriptEvaluation(s));
     });
+
+    if (!(res instanceof AbruptCompletion)) {
+      runJobQueue();
+    }
+
+    return res;
   }
 
   createSourceTextModule(specifier, sourceText) {
@@ -167,11 +234,13 @@ class APIRealm {
         specifier,
         Link: () => this.scope(() => module.Link()),
         GetNamespace: () => this.scope(() => GetModuleNamespace(module)),
-        Evaluate: () => this.scope(() => {
-          const result = module.Evaluate();
-          runJobQueue();
-          return result;
-        }),
+        Evaluate: () => {
+          const res = this.scope(() => module.Evaluate());
+          if (!(res instanceof AbruptCompletion)) {
+            runJobQueue();
+          }
+          return res;
+        },
       },
     }));
     if (Array.isArray(module)) {
@@ -229,6 +298,7 @@ export {
 export function Throw(realm, V, ...args) {
   return realm.scope(() => {
     if (typeof V === 'string') {
+      // eslint-disable-next-line engine262/valid-throw
       return surroundingAgent.Throw(V, 'Raw', args[0]);
     }
     return new ThrowCompletion(V);

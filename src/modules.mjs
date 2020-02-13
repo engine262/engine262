@@ -94,6 +94,12 @@ export class AbstractModuleRecord {
     this.Namespace = Namespace;
     this.HostDefined = HostDefined;
   }
+
+  mark(m) {
+    m(this.Realm);
+    m(this.Environment);
+    m(this.Namespace);
+  }
 }
 
 // 15.2.1.16 #sec-cyclic-module-records
@@ -165,6 +171,11 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     }
     return capability.Promise;
   }
+
+  mark(m) {
+    super.mark(m);
+    m(this.EvaluationError);
+  }
 }
 
 // 15.2.1.17 #sec-source-text-module-records
@@ -172,15 +183,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   constructor(init) {
     super(init);
 
-    ({
-      ImportMeta: this.ImportMeta,
-      ECMAScriptCode: this.ECMAScriptCode,
-      Context: this.Context,
-      ImportEntries: this.ImportEntries,
-      LocalExportEntries: this.LocalExportEntries,
-      IndirectExportEntries: this.IndirectExportEntries,
-      StarExportEntries: this.StarExportEntries,
-    } = init);
+    this.ImportMeta = init.ImportMeta;
+    this.ECMAScriptCode = init.ECMAScriptCode;
+    this.Context = init.Context;
+    this.ImportEntries = init.ImportEntries;
+    this.LocalExportEntries = init.LocalExportEntries;
+    this.IndirectExportEntries = init.IndirectExportEntries;
+    this.StarExportEntries = init.StarExportEntries;
   }
 
   // 15.2.1.17.2 #sec-getexportednames
@@ -377,5 +386,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleContext));
       return Value.undefined;
     }
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ImportMeta);
+    m(this.Context);
   }
 }

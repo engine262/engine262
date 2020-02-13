@@ -196,7 +196,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
     radixNumber = Q(ToInteger(radix)).numberValue();
   }
   if (radixNumber < 2 || radixNumber > 36) {
-    return surroundingAgent.Throw('TypeError');
+    return surroundingAgent.Throw('TypeError', 'NumberFormatRange', 'toString');
   }
   if (radixNumber === 10) {
     return X(ToString(x));
