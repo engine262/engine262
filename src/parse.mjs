@@ -380,10 +380,6 @@ export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
     Environment: undefined,
     ECMAScriptCode: body,
     HostDefined: hostDefined,
-    mark(m) {
-      m(this.Realm);
-      m(this.Environment);
-    },
   };
 }
 

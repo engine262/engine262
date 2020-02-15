@@ -18,9 +18,9 @@ import {
   SetFunctionName,
   ToInteger,
   CreateBuiltinFunction,
+  MakeBasicObject,
 } from '../abstract-ops/all.mjs';
 import {
-  ObjectValue,
   Type,
   Value,
   wellKnownSymbols,
@@ -66,18 +66,36 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
 
 // 9.4.1.3 #sec-boundfunctioncreate
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
+  // 1. Assert: Type(targetFunction) is Object.
   Assert(Type(targetFunction) === 'Object');
+  // 2. Let proto be ? targetFunction.[[GetPrototypeOf]]().
   const proto = Q(targetFunction.GetPrototypeOf());
-  const obj = new ObjectValue();
+  // 3. Let internalSlotsList be the internal slots listed in Table 30, plus [[Prototype]] and [[Extensible]].
+  const internalSlotsList = [
+    'BoundTargetFunction',
+    'BoundThis',
+    'BoundArguments',
+    'Prototype',
+    'Extensible',
+  ];
+  // 4. Let obj be ! MakeBasicObject(internalSlotsList).
+  const obj = X(MakeBasicObject(internalSlotsList));
+  // 5. Set obj.[[Prototype]] to proto.
+  obj.Prototype = proto;
+  // 6. Set obj.[[Call]] as described in 9.4.1.1.
   obj.Call = BoundFunctionExoticObjectCall;
+  // 7. If IsConstructor(targetFunction) is true, then
   if (IsConstructor(targetFunction) === Value.true) {
+    // a. Set obj.[[Construct]] as described in 9.4.1.2.
     obj.Construct = BoundFunctionExoticObjectConstruct;
   }
-  obj.Prototype = proto;
-  obj.Extensible = Value.true;
+  // 8. Set obj.[[BoundTargetFunction]] to targetFunction.
   obj.BoundTargetFunction = targetFunction;
+  // 9. Set obj.[[BoundThis]] to boundThis.
   obj.BoundThis = boundThis;
+  // 10. Set obj.[[BoundArguments]] to boundArguments.
   obj.BoundArguments = boundArgs;
+  // 11. Return obj.
   return obj;
 }
 

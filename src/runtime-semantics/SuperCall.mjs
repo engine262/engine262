@@ -5,8 +5,9 @@ import {
   GetNewTarget,
   GetThisEnvironment,
   IsConstructor,
+  isECMAScriptFunctionObject,
 } from '../abstract-ops/all.mjs';
-import { FunctionValue, Type, Value } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
@@ -17,7 +18,7 @@ function GetSuperConstructor() {
   const envRec = GetThisEnvironment();
   Assert(envRec instanceof FunctionEnvironmentRecord);
   const activeFunction = envRec.FunctionObject;
-  Assert(activeFunction instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(activeFunction));
   const superConstructor = X(activeFunction.GetPrototypeOf());
   if (IsConstructor(superConstructor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', superConstructor);

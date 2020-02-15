@@ -1,12 +1,12 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  ArrayExoticObjectValue,
   Descriptor,
   Type,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
+  ArrayCreate,
   ArraySpeciesCreate,
   Assert,
   Call,
@@ -19,10 +19,10 @@ import {
   IsArray,
   IsCallable,
   IsConcatSpreadable,
-  ObjectCreate,
   Set,
   SortCompare,
   LengthOfArrayLike,
+  OrdinaryObjectCreate,
   ToBoolean,
   ToInteger,
   ToObject,
@@ -532,15 +532,7 @@ function ArrayProto_values(args, { thisValue }) {
 }
 
 export function BootstrapArrayPrototype(realmRec) {
-  const proto = new ArrayExoticObjectValue();
-  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
-  proto.Extensible = Value.true;
-  proto.properties.set(new Value('length'), Descriptor({
-    Value: new Value(0),
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
+  const proto = X(ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']));
 
   assignProps(realmRec, proto, [
     ['concat', ArrayProto_concat, 1],
@@ -573,7 +565,7 @@ export function BootstrapArrayPrototype(realmRec) {
   proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
 
   {
-    const unscopableList = ObjectCreate(Value.null);
+    const unscopableList = OrdinaryObjectCreate(Value.null);
     Assert(X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);

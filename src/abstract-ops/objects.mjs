@@ -1,13 +1,9 @@
 import {
   Descriptor,
   ObjectValue,
-  IntegerIndexedExoticObjectValue,
   Type,
   Value,
 } from '../value.mjs';
-import {
-  surroundingAgent,
-} from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
 import {
   Assert,
@@ -15,20 +11,15 @@ import {
   CreateDataProperty,
   Get,
   GetFunctionRealm,
-  GetValueFromBuffer,
   IsAccessorDescriptor,
   IsCallable,
   IsDataDescriptor,
-  IsDetachedBuffer,
   IsExtensible,
-  IsValidIntegerIndex,
   IsGenericDescriptor,
   IsPropertyKey,
   SameValue,
-  SetValueInBuffer,
-  ToNumber,
+  MakeBasicObject,
   isArrayIndex,
-  typedArrayInfo,
 } from './all.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
@@ -376,35 +367,27 @@ export function OrdinaryOwnPropertyKeys(O) {
   return keys;
 }
 
-// 9.1.12 ObjectCreate
-export function ObjectCreate(proto, internalSlotsList) {
-  Assert(Type(proto) === 'Null' || Type(proto) === 'Object');
-  if (!internalSlotsList) {
-    internalSlotsList = [];
+// #sec-ordinaryobjectcreate
+export function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
+  // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
+  const internalSlotsList = ['Prototype', 'Extensible'];
+  // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.
+  if (additionalInternalSlotsList !== undefined) {
+    internalSlotsList.push(...additionalInternalSlotsList);
   }
-
-  const obj = new ObjectValue();
-  for (const slot of internalSlotsList) {
-    obj[slot] = Value.undefined;
-  }
-
-  // The following steps happen in ObjectValue constructor:
-  //
-  // Set obj's essential internal methods to the default ordinary
-  // object definitions specified in 9.1.
-
-  obj.Prototype = proto;
-  obj.Extensible = Value.true;
-
-  return obj;
+  // 3. Let O be ! MakeBasicObject(internalSlotsList).
+  const O = X(MakeBasicObject(internalSlotsList));
+  // 4. Set O.[[Prototype]] to proto.
+  O.Prototype = proto;
+  // 5. Return O.
+  return O;
 }
 
 // 9.1.13 OrdinaryCreateFromConstructor
 export function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
-  // Assert: intrinsicDefaultProto is a String value that
-  // is this specification's name of an intrinsic object.
+  // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
-  return ObjectCreate(proto, internalSlotsList);
+  return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
 // 9.1.14 GetPrototypeFromConstructor
@@ -420,62 +403,3 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
   return proto;
 }
 
-// 9.4.5.7 #sec-integerindexedobjectcreate
-export function IntegerIndexedObjectCreate(prototype, internalSlotsList) {
-  Assert(internalSlotsList.includes('ViewedArrayBuffer'));
-  Assert(internalSlotsList.includes('ArrayLength'));
-  Assert(internalSlotsList.includes('ByteOffset'));
-  Assert(internalSlotsList.includes('TypedArrayName'));
-
-  const A = new IntegerIndexedExoticObjectValue();
-  for (const slot of internalSlotsList) {
-    A[slot] = Value.undefined;
-  }
-  A.Prototype = prototype;
-  A.Extensible = Value.true;
-  return A;
-}
-
-// 9.4.5.8 #sec-integerindexedelementget
-export function IntegerIndexedElementGet(O, index) {
-  Assert(O instanceof IntegerIndexedExoticObjectValue);
-  Assert(Type(index) === 'Number');
-  const buffer = O.ViewedArrayBuffer;
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
-  if (IsValidIntegerIndex(O, index) === Value.false) {
-    return Value.undefined;
-  }
-  const offset = O.ByteOffset;
-  const arrayTypeName = O.TypedArrayName.stringValue();
-  const {
-    ElementSize: elementSize,
-    ElementType: elementType,
-  } = typedArrayInfo.get(arrayTypeName);
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
-  return GetValueFromBuffer(buffer, indexedPosition, elementType, true, 'Unordered');
-}
-
-// 9.4.5.9 #sec-integerindexedelementset
-export function IntegerIndexedElementSet(O, index, value) {
-  Assert(O instanceof IntegerIndexedExoticObjectValue);
-  Assert(Type(index) === 'Number');
-  const numValue = Q(ToNumber(value));
-  const buffer = O.ViewedArrayBuffer;
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
-  if (IsValidIntegerIndex(O, index) === Value.false) {
-    return Value.false;
-  }
-  const offset = O.ByteOffset;
-  const arrayTypeName = O.TypedArrayName.stringValue();
-  const {
-    ElementSize: elementSize,
-    ElementType: elementType,
-  } = typedArrayInfo.get(arrayTypeName);
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
-  X(SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, 'Unordered'));
-  return Value.true;
-}

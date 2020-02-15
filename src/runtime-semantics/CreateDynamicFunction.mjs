@@ -4,7 +4,7 @@ import {
   GetPrototypeFromConstructor,
   MakeConstructor,
   OrdinaryFunctionCreate,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -163,7 +163,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   const scope = realmF.GlobalEnv;
   const F = X(OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope));
   if (kind === 'generator') {
-    const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
@@ -171,7 +171,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       Configurable: Value.false,
     })));
   } else if (kind === 'async generator') {
-    const prototype = ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,

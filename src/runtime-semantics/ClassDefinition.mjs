@@ -8,7 +8,7 @@ import {
   IsConstructor,
   MakeClassConstructor,
   MakeConstructor,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
@@ -64,7 +64,7 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
       constructorParent = superclass;
     }
   }
-  const proto = ObjectCreate(protoParent);
+  const proto = OrdinaryObjectCreate(protoParent);
   let constructor;
   if (!ClassBody) {
     constructor = undefined;

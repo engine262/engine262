@@ -10,7 +10,7 @@ import {
   IteratorClose,
   IteratorStep,
   IteratorValue,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   PutValue,
   RequireObjectCoercible,
   ResolveBinding,
@@ -213,7 +213,7 @@ function* RestDestructuringAssignmentEvaluation_AssignmentRestProperty(Assignmen
   const DestructuringAssignmentTarget = AssignmentRestProperty.argument;
   const lref = yield* Evaluate(DestructuringAssignmentTarget);
   ReturnIfAbrupt(lref);
-  const restObj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
   return PutValue(lref, restObj);
 }

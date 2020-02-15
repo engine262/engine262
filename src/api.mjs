@@ -10,7 +10,6 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
-  HostCleanupFinalizationGroup,
   FEATURES,
 } from './engine.mjs';
 import {
@@ -23,7 +22,7 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q, X,
+  Q,
   ThrowCompletion,
   EnsureCompletion,
 } from './completion.mjs';
@@ -31,7 +30,7 @@ import * as AbstractOps from './abstract-ops/all.mjs';
 
 export const Abstract = { ...AbstractOps, Type };
 const {
-  ObjectCreate,
+  OrdinaryObjectCreate,
   CreateBuiltinFunction,
   GetModuleNamespace,
   ToPrimitive,
@@ -45,58 +44,6 @@ export {
 };
 
 export { inspect } from './inspect.mjs';
-
-function mark() {
-  const marked = new Set();
-  const weakrefs = new Set();
-  const fgs = new Set();
-
-  const markCb = (o) => {
-    if (o === undefined || o === null) {
-      return;
-    }
-    if (marked.has(o)) {
-      return;
-    }
-    marked.add(o);
-    if ('WeakRefTarget' in o) {
-      weakrefs.add(o);
-    }
-    if ('Cells' in o) {
-      fgs.add(o);
-    }
-    o.mark(markCb);
-  };
-  markCb(surroundingAgent);
-
-  // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
-  // At any time, if an object obj is not live, an ECMAScript implementation may perform the following steps atomically:
-  // 1. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
-  //   a. Set ref.[[WeakRefTarget]] to empty.
-  // 2. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
-  //   a. Set cell.[[WeakRefTarget]] to empty.
-  //   b. Optionally, perform ! HostCleanupFinalizationGroup(fg).
-
-  weakrefs.forEach((w) => {
-    if (!marked.has(w.WeakRefTarget)) {
-      w.WeakRefTarget = undefined;
-    }
-  });
-
-  fgs.forEach((fg) => {
-    let foundEmptyCell = false;
-    fg.Cells.forEach((cell) => {
-      if (!marked.has(cell.WeakRefTarget)) {
-        cell.WeakRefTarget = undefined;
-        foundEmptyCell = true;
-      }
-    });
-    if (foundEmptyCell) {
-      X(HostCleanupFinalizationGroup(fg));
-    }
-  });
-}
-
 function runJobQueue() {
   if (surroundingAgent.executionContextStack.length !== 0) {
     return;
@@ -105,8 +52,7 @@ function runJobQueue() {
 
   while (true) { // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0
-        || nextQueue.find((j) => j.HostDefined.queueName !== 'FinalizationCleanup') === undefined) {
+    if (nextQueue.length === 0) {
       break;
     }
     const nextPending = nextQueue.shift();
@@ -118,11 +64,6 @@ function runJobQueue() {
     const result = nextPending.Job(...nextPending.Arguments);
     if (result instanceof AbruptCompletion) {
       HostReportErrors(result.Value);
-    }
-
-    if (surroundingAgent.feature('WeakRefs')) {
-      AbstractOps.ClearKeptObjects();
-      mark();
     }
 
     surroundingAgent.executionContextStack.pop(newContext);
@@ -264,7 +205,7 @@ class APIRealm {
 }
 
 function APIObject(realm, intrinsic = '%Object.prototype%') {
-  return ObjectCreate(realm.realm.Intrinsics[intrinsic]);
+  return OrdinaryObjectCreate(realm.realm.Intrinsics[intrinsic]);
 }
 
 class APIValue extends Value {

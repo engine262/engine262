@@ -1,7 +1,4 @@
 import {
-  ArrayExoticObjectValue,
-  ProxyExoticObjectValue,
-  IntegerIndexedExoticObjectValue,
   BigIntValue,
   Type,
   TypeNumeric,
@@ -19,6 +16,9 @@ import {
   ToNumeric,
   ToPrimitive,
   StringToBigInt,
+  isProxyExoticObject,
+  isArrayExoticObject,
+  isIntegerIndexedExoticObject,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -49,11 +49,11 @@ export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
   }
-  if (argument instanceof ArrayExoticObjectValue) {
+  if (isArrayExoticObject(argument)) {
     return Value.true;
   }
-  if (argument instanceof ProxyExoticObjectValue) {
-    if (Type(argument.ProxyHandler) === 'Null') {
+  if (isProxyExoticObject(argument)) {
+    if (argument.ProxyHandler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'IsArray');
     }
     const target = argument.ProxyTarget;
@@ -386,7 +386,7 @@ export function StrictEqualityComparison(x, y) {
 
 // #sec-isvalidintegerindex
 export function IsValidIntegerIndex(O, index) {
-  Assert(O instanceof IntegerIndexedExoticObjectValue);
+  Assert(isIntegerIndexedExoticObject(O));
   Assert(Type(index) === 'Number');
   if (IsInteger(index) === Value.false) {
     return Value.false;
@@ -399,4 +399,14 @@ export function IsValidIntegerIndex(O, index) {
     return Value.false;
   }
   return Value.true;
+}
+
+// #sec-isnonnegativeinteger
+export function IsNonNegativeInteger(argument) {
+  // 1. If ! IsInteger(argument) is true and argument ≥ 0, return true.
+  if (X(IsInteger(argument)) === Value.true && argument.numberValue() >= 0) {
+    return Value.true;
+  }
+  // 2. Otherwise, return false.
+  return Value.false;
 }

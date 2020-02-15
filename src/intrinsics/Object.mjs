@@ -15,7 +15,7 @@ import {
   FromPropertyDescriptor,
   Get,
   IsExtensible,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   RequireObjectCoercible,
   SameValue,
@@ -36,7 +36,7 @@ function ObjectConstructor([value = Value.undefined], { NewTarget }) {
     return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
   }
   if (value === Value.null || value === Value.undefined) {
-    return ObjectCreate(surroundingAgent.currentRealmRecord.Intrinsics['%Object.prototype%']);
+    return OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   }
   return X(ToObject(value));
 }
@@ -67,7 +67,7 @@ function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   if (Type(O) !== 'Object' && Type(O) !== 'Null') {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
-  const obj = ObjectCreate(O);
+  const obj = OrdinaryObjectCreate(O);
   if (Properties !== Value.undefined) {
     return Q(ObjectDefineProperties(obj, Properties));
   }
@@ -141,7 +141,7 @@ function CreateDataPropertyOnObjectFunctions([key, value], { thisValue }) {
 
 function Object_fromEntries([iterable = Value.undefined]) {
   Q(RequireObjectCoercible(iterable));
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Assert(obj.Extensible === Value.true && obj.properties.size === 0);
   const stepsDefine = CreateDataPropertyOnObjectFunctions;
   const adder = X(CreateBuiltinFunction(stepsDefine, []));
@@ -158,7 +158,7 @@ function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefin
 function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   const ownKeys = Q(obj.OwnPropertyKeys());
-  const descriptors = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
+  const descriptors = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   for (const key of ownKeys) {
     const desc = Q(obj.GetOwnProperty(key));
     const descriptor = X(FromPropertyDescriptor(desc));

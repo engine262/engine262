@@ -12,7 +12,7 @@ import {
   Get,
   HasProperty,
   IsCallable,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   ToBoolean,
 } from './all.mjs';
 
@@ -61,7 +61,7 @@ export function FromPropertyDescriptor(Desc) {
   if (Type(Desc) === 'Undefined') {
     return Value.undefined;
   }
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (Desc.Value !== undefined) {
     X(CreateDataProperty(obj, new Value('value'), Desc.Value));
   }

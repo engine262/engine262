@@ -20,7 +20,7 @@ import {
   GetMethod,
   GetV,
   PromiseResolve,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   PerformPromiseThen,
   ToBoolean,
 } from './all.mjs';
@@ -149,7 +149,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
 // 7.4.8 #sec-createiterresultobject
 export function CreateIterResultObject(value, done) {
   Assert(Type(done) === 'Boolean');
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataProperty(obj, new Value('value'), value));
   X(CreateDataProperty(obj, new Value('done'), done));
   return obj;
@@ -157,7 +157,7 @@ export function CreateIterResultObject(value, done) {
 
 // 7.4.9 #sec-createlistiteratorRecord
 export function CreateListIteratorRecord(list) {
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
     'IteratedList',
     'ListNextIndex',
   ]);
@@ -189,7 +189,7 @@ function ListIteratorNextSteps(args, { thisValue }) {
 
 // 25.1.4.1 #sec-createasyncfromsynciterator
 export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-  const asyncIterator = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
+  const asyncIterator = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
     'SyncIteratorRecord',
   ]));
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;

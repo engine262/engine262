@@ -168,8 +168,6 @@ if (!process.send) {
     Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'), new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
     Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
 
-    Abstract.CreateDataProperty($262, new Value(realm, 'gc'), new Value(realm, () => Value.undefined));
-
     Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
 
     $262.realm = realm;
@@ -207,8 +205,6 @@ if (!process.send) {
   const includeCache = {};
 
   const run = (test) => {
-    agent.agent.jobQueue = [];
-
     const { file, contents, attrs } = test;
     const specifier = path.resolve(__dirname, 'test262', file);
     const $262 = createRealm({ file });

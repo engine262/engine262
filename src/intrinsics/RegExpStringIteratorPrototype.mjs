@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import {
   Assert,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   CreateIterResultObject,
   ToString,
   ToLength,
@@ -19,7 +19,7 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   Assert(Type(S) === 'String');
   Assert(Type(global) === 'Boolean');
   Assert(Type(fullUnicode) === 'Boolean');
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'), [
     'IteratingRegExp',
     'IteratedString',
     'Global',

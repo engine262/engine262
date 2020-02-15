@@ -1,7 +1,7 @@
 import {
   Assert,
   CreateBuiltinFunction,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionLength,
   SetFunctionName,
 } from '../abstract-ops/all.mjs';
@@ -74,7 +74,7 @@ export function assignProps(realmRec, obj, props) {
 
 export function BootstrapPrototype(realmRec, props, Prototype, stringTag) {
   Assert(Prototype !== undefined);
-  const proto = ObjectCreate(Prototype);
+  const proto = OrdinaryObjectCreate(Prototype);
 
   assignProps(realmRec, proto, props);
 

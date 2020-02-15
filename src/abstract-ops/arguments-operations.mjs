@@ -1,30 +1,126 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  ArgumentsExoticObjectValue,
   Descriptor,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
-import { X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
   CreateDataProperty,
   DefinePropertyOrThrow,
-  ObjectCreate,
   SetFunctionLength,
   ToString,
+  SameValue,
+  MakeBasicObject,
+  OrdinaryObjectCreate,
+  OrdinaryGetOwnProperty,
+  OrdinaryDefineOwnProperty,
+  OrdinaryGet,
+  OrdinarySet,
+  OrdinaryDelete,
+  Get,
+  Set,
+  HasOwnProperty,
+  IsAccessorDescriptor,
+  IsDataDescriptor,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
 // 9.4.4 #sec-arguments-exotic-objects
 
+
+function ArgumentsGetOwnProperty(P) {
+  const args = this;
+  const desc = OrdinaryGetOwnProperty(args, P);
+  if (desc === Value.undefined) {
+    return desc;
+  }
+  const map = args.ParameterMap;
+  const isMapped = X(HasOwnProperty(map, P));
+  if (isMapped === Value.true) {
+    desc.Value = Get(map, P);
+  }
+  return desc;
+}
+
+function ArgumentsDefineOwnProperty(P, Desc) {
+  const args = this;
+  const map = args.ParameterMap;
+  const isMapped = X(HasOwnProperty(map, P));
+  let newArgDesc = Desc;
+  if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
+    if (Desc.Value === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
+      newArgDesc = Descriptor({ ...Desc });
+      newArgDesc.Value = X(Get(map, P));
+    }
+  }
+  const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
+  if (allowed === Value.false) {
+    return Value.false;
+  }
+  if (isMapped === Value.true) {
+    if (IsAccessorDescriptor(Desc) === true) {
+      map.Delete(P);
+    } else {
+      if (Desc.Value !== undefined) {
+        const setStatus = Set(map, P, Desc.Value, Value.false);
+        Assert(setStatus === Value.true);
+      }
+      if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
+        map.Delete(P);
+      }
+    }
+  }
+  return Value.true;
+}
+
+function ArgumentsGet(P, Receiver) {
+  const args = this;
+  const map = args.ParameterMap;
+  const isMapped = X(HasOwnProperty(map, P));
+  if (isMapped === Value.false) {
+    return Q(OrdinaryGet(args, P, Receiver));
+  } else {
+    return Get(map, P);
+  }
+}
+
+function ArgumentsSet(P, V, Receiver) {
+  const args = this;
+  let isMapped;
+  let map;
+  if (SameValue(args, Receiver) === Value.false) {
+    isMapped = false;
+  } else {
+    map = args.ParameterMap;
+    isMapped = X(HasOwnProperty(map, P)) === Value.true;
+  }
+  if (isMapped) {
+    const setStatus = Set(map, P, V, Value.false);
+    Assert(setStatus === Value.true);
+  }
+  return Q(OrdinarySet(args, P, V, Receiver));
+}
+
+function ArgumentsDelete(P) {
+  const args = this;
+  const map = args.ParameterMap;
+  const isMapped = X(HasOwnProperty(map, P));
+  const result = Q(OrdinaryDelete(args, P));
+  if (result === Value.true && isMapped === Value.true) {
+    map.Delete(P);
+  }
+  return result;
+}
+
 // 9.4.4.6 #sec-createunmappedargumentsobject
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
+  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
     Value: new Value(len),
@@ -93,10 +189,14 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   // Assert: formals does not contain a rest parameter, any binding
   // patterns, or any initializers. It may contain duplicate identifiers.
   const len = argumentsList.length;
-  const obj = new ArgumentsExoticObjectValue();
+  const obj = X(MakeBasicObject(['Prototype', 'Extensible', 'ParameterMap']));
+  obj.GetOwnProperty = ArgumentsGetOwnProperty;
+  obj.DefineOwnProperty = ArgumentsDefineOwnProperty;
+  obj.Get = ArgumentsGet;
+  obj.Set = ArgumentsSet;
+  obj.Delete = ArgumentsDelete;
   obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
-  obj.Extensible = Value.true;
-  const map = ObjectCreate(Value.null);
+  const map = OrdinaryObjectCreate(Value.null);
   obj.ParameterMap = map;
   const parameterNames = BoundNames_FormalParameters(formals).map(Value);
   const numberOfParameters = parameterNames.length;

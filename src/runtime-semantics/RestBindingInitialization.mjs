@@ -4,7 +4,7 @@ import {
 import {
   CopyDataProperties,
   InitializeReferencedBinding,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   PutValue,
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
@@ -23,7 +23,7 @@ export function RestBindingInitialization_BindingRestProperty(
 ) {
   const BindingIdentifier = BindingRestProperty.argument;
   const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment, BindingIdentifier.strict));
-  const restObj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Q(CopyDataProperties(restObj, value, excludedNames));
   if (Type(environment) === 'Undefined') {
     return PutValue(lhs, restObj);

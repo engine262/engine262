@@ -3,120 +3,68 @@ import {
 } from '../engine.mjs';
 import {
   Assert,
-  Call,
-  Construct,
-  CreateArrayFromList,
   CreateBuiltinFunction,
   CreateDataProperty,
-  GetMethod,
-  IsCallable,
-  IsConstructor,
-  ObjectCreate,
+  OrdinaryObjectCreate,
+  ProxyCreate,
   SetFunctionLength,
   SetFunctionName,
+  isProxyExoticObject,
 } from '../abstract-ops/all.mjs';
-import {
-  ProxyExoticObjectValue,
-  Type,
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-function ProxyCallSlot(thisArgument, argumentsList) {
-  const O = this;
-
-  const handler = O.ProxyHandler;
-  if (handler === Value.null) {
-    return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'apply');
-  }
-  Assert(Type(handler) === 'Object');
-  const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('apply')));
-  if (trap === Value.undefined) {
-    return Q(Call(target, thisArgument, argumentsList));
-  }
-  const argArray = X(CreateArrayFromList(argumentsList));
-  return Q(Call(trap, handler, [target, thisArgument, argArray]));
-}
-
-function ProxyConstructSlot(argumentsList, newTarget) {
-  const O = this;
-
-  const handler = O.ProxyHandler;
-  if (handler === Value.null) {
-    return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'construct');
-  }
-  Assert(Type(handler) === 'Object');
-  const target = O.ProxyTarget;
-  Assert(IsConstructor(target) === Value.true);
-  const trap = Q(GetMethod(handler, new Value('construct')));
-  if (trap === Value.undefined) {
-    return Q(Construct(target, argumentsList, newTarget));
-  }
-  const argArray = X(CreateArrayFromList(argumentsList));
-  const newObj = Q(Call(trap, handler, [target, argArray, newTarget]));
-  if (Type(newObj) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', newObj);
-  }
-  return newObj;
-}
-
-function ProxyCreate(target, handler) {
-  if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'target');
-  }
-  if (target instanceof ProxyExoticObjectValue && Type(target.ProxyHandler) === 'Null') {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'revoked proxy', 'target');
-  }
-  if (Type(handler) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'handler');
-  }
-  if (handler instanceof ProxyExoticObjectValue && Type(handler.ProxyHandler) === 'Null') {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'revoked proxy', 'handler');
-  }
-  const P = new ProxyExoticObjectValue();
-  if (IsCallable(target) === Value.true) {
-    P.Call = ProxyCallSlot;
-    if (IsConstructor(target) === Value.true) {
-      P.Construct = ProxyConstructSlot;
-    }
-  }
-  P.ProxyTarget = target;
-  P.ProxyHandler = handler;
-  return P;
-}
-
+// #sec-proxy-target-handler
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
-  if (Type(NewTarget) === 'Undefined') {
+  // 1. f NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Proxy');
   }
+  // 2. Return ? ProxyCreate(target, handler).
   return Q(ProxyCreate(target, handler));
 }
 
+// #sec-proxy-revocation-functions
 function ProxyRevocationFunctions() {
-  const F = this;
-
+  // 1. Let F be the active function object.
+  const F = surroundingAgent.activeFunctionObject;
+  // 2. Let p be F.[[RevocableProxy]].
   const p = F.RevocableProxy;
-  if (Type(p) === 'Null') {
+  // 3. If p is null, return undefined.
+  if (p === Value.null) {
     return Value.undefined;
   }
+  // 4. Set F.[[RevocableProxy]] to null.
   F.RevocableProxy = Value.null;
-  Assert(p instanceof ProxyExoticObjectValue);
+  // 5. Assert: p is a Proxy object.
+  Assert(isProxyExoticObject(p));
+  // 6. Set p.[[ProxyTarget]] to null.
   p.ProxyTarget = Value.null;
+  // 7. Set p.[[ProxyHandler]] to null.
   p.ProxyHandler = Value.null;
+  // 8. Return undefined.
   return Value.undefined;
 }
 
+// #sec-proxy.revocable
 function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
+  // 1. Let p be ? ProxyCreate(target, handler).
   const p = Q(ProxyCreate(target, handler));
+  // 2. Let steps be the algorithm steps defined in #sec-proxy-revocation-functions.
   const steps = ProxyRevocationFunctions;
+  // 3. Let revoker be ! CreateBuiltinFunction(steps, « [[RevocableProxy]] »).
   const revoker = X(CreateBuiltinFunction(steps, ['RevocableProxy']));
   SetFunctionLength(revoker, new Value(0));
+  // 4. Set revoker.[[RevocableProxy]] to p.
   revoker.RevocableProxy = p;
-  const result = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  // 6. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
   X(CreateDataProperty(result, new Value('proxy'), p));
+  // 7. Perform ! CreateDataPropertyOrThrow(result, "revoke", revoker).
   X(CreateDataProperty(result, new Value('revoke'), revoker));
+  // 8. Return result.
   return result;
 }
 

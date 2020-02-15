@@ -1,6 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  ArrayExoticObjectValue,
   Descriptor,
   Type,
   Value,
@@ -17,25 +16,56 @@ import {
   IsAccessorDescriptor,
   IsArray,
   IsConstructor,
-  ObjectCreate,
   OrdinaryDefineOwnProperty,
   OrdinaryGetOwnProperty,
+  OrdinaryObjectCreate,
+  MakeBasicObject,
   SameValue,
   ToBoolean,
   ToNumber,
   ToString,
   ToUint32,
+  IsPropertyKey,
+  IsNonNegativeInteger,
   isArrayIndex,
 } from './all.mjs';
 
-// This file covers abstract operations defined in
-// 9.4.2 #sec-array-exotic-objects
-// and
-// 22.1 #sec-array-objects
+// #sec-array-exotic-objects-defineownproperty-p-desc
+function ArrayDefineOwnProperty(P, Desc) {
+  const A = this;
+
+  Assert(IsPropertyKey(P));
+  if (Type(P) === 'String' && P.stringValue() === 'length') {
+    return Q(ArraySetLength(A, Desc));
+  } else if (isArrayIndex(P)) {
+    const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+    Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
+    const oldLen = oldLenDesc.Value;
+    const index = X(ToUint32(P));
+    if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+      return Value.false;
+    }
+    const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
+    if (succeeded === Value.false) {
+      return Value.false;
+    }
+    if (index.numberValue() >= oldLen.numberValue()) {
+      oldLenDesc.Value = new Value(index.numberValue() + 1);
+      const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+      Assert(succeeded === Value.true);
+    }
+    return Value.true;
+  }
+  return OrdinaryDefineOwnProperty(A, P, Desc);
+}
+
+export function isArrayExoticObject(O) {
+  return O.DefineOwnProperty === ArrayDefineOwnProperty;
+}
 
 // 9.4.2.2 #sec-arraycreate
 export function ArrayCreate(length, proto) {
-  Assert(length.numberValue() >= 0);
+  Assert(X(IsNonNegativeInteger(length)) === Value.true);
   if (Object.is(length.numberValue(), -0)) {
     length = new Value(0);
   }
@@ -45,9 +75,9 @@ export function ArrayCreate(length, proto) {
   if (proto === undefined) {
     proto = surroundingAgent.intrinsic('%Array.prototype%');
   }
-  const A = new ArrayExoticObjectValue();
+  const A = X(MakeBasicObject(['Prototype', 'Extensible']));
   A.Prototype = proto;
-  A.Extensible = Value.true;
+  A.DefineOwnProperty = ArrayDefineOwnProperty;
 
   X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
     Value: length,
@@ -201,7 +231,7 @@ export function CreateArrayIterator(array, kind) {
   // 2. Assert: kind is key+value, key, or value.
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 3. Let iterator be ObjectCreate(%ArrayIteratorPrototype%, « [[IteratedArrayLike]], [[ArrayLikeNextIndex]], [[ArrayLikeIterationKind]] »).
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
     'IteratedArrayLike',
     'ArrayLikeNextIndex',
     'ArrayLikeIterationKind',

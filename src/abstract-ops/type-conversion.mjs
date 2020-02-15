@@ -17,7 +17,7 @@ import {
   Get,
   GetMethod,
   IsCallable,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SameValue,
   SameValueZero,
   StringCreate,
@@ -384,24 +384,24 @@ export function ToObject(argument) {
     case 'Null':
       return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
     case 'Boolean': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'));
       obj.BooleanData = argument;
       return obj;
     }
     case 'Number': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'));
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'));
       obj.NumberData = argument;
       return obj;
     }
     case 'String':
       return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
     case 'Symbol': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'));
       obj.SymbolData = argument;
       return obj;
     }
     case 'BigInt': {
-      const obj = ObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'));
+      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'));
       obj.BigIntData = argument;
       return obj;
     }

@@ -23,7 +23,7 @@ import {
   IteratorStep,
   IteratorValue,
   NewPromiseCapability,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   PromiseCapabilityRecord,
   PromiseResolve,
@@ -163,7 +163,7 @@ function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   const values = F.Values;
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
-  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
+  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   X(CreateDataProperty(obj, new Value('status'), new Value('fulfilled')));
   X(CreateDataProperty(obj, new Value('value'), x));
   values[index] = obj;
@@ -186,7 +186,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   const values = F.Values;
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
-  const obj = X(ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
+  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   X(CreateDataProperty(obj, new Value('status'), new Value('rejected')));
   X(CreateDataProperty(obj, new Value('reason'), x));
   values[index] = obj;

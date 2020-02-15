@@ -1,5 +1,5 @@
 import {
-  ObjectCreate,
+  OrdinaryObjectCreate,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
@@ -14,12 +14,12 @@ import {
 //     `{` PropertyDefintionList `,` `}`
 export function* Evaluate_ObjectLiteral(ObjectLiteral) {
   if (ObjectLiteral.properties.length === 0) {
-    return ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    return OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   }
 
   const PropertyDefintionList = ObjectLiteral.properties;
 
-  const obj = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   Q(yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefintionList, obj, true));
   return obj;
 }

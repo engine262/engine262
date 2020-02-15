@@ -1,7 +1,6 @@
 import { AbstractModuleRecord } from './modules.mjs';
 import {
   Descriptor,
-  FunctionValue,
   Reference,
   Type,
   Value,
@@ -19,6 +18,7 @@ import {
   IsPropertyKey,
   Set,
   ToBoolean,
+  isECMAScriptFunctionObject,
 } from './abstract-ops/all.mjs';
 import { NormalCompletion, Q, X } from './completion.mjs';
 import { ValueMap } from './helpers.mjs';
@@ -28,11 +28,6 @@ export class LexicalEnvironment {
   constructor() {
     this.EnvironmentRecord = undefined;
     this.outerEnvironmentReference = undefined;
-  }
-
-  mark(m) {
-    m(this.EnvironmentRecord);
-    m(this.outerEnvironmentReference);
   }
 }
 
@@ -74,9 +69,6 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: undefined,
       deletable: D === Value.true,
       value: undefined,
-      mark(m) {
-        m(this.value);
-      },
     });
     //  4. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -97,9 +89,6 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: S === Value.true,
       deletable: false,
       value: undefined,
-      mark(m) {
-        m(this.value);
-      },
     });
     // 4. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -209,10 +198,6 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   WithBaseObject() {
     // 1. Return undefined.
     return Value.undefined;
-  }
-
-  mark(m) {
-    m(this.bindings);
   }
 }
 
@@ -349,10 +334,6 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 3. Otherwise, return undefined.
     return Value.undefined;
   }
-
-  mark(m) {
-    m(this.bindingObject);
-  }
 }
 
 // #sec-function-environment-records
@@ -440,15 +421,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     Assert(Type(home) === 'Object');
     // 5. Return ? home.[[GetPrototypeOf]]().
     return Q(home.GetPrototypeOf());
-  }
-
-  mark(m) {
-    super.mark(m);
-    m(this.ThisValue);
-    m(this.ThisBindingValue);
-    m(this.FunctionObject);
-    m(this.HomeObject);
-    m(this.NewTarget);
   }
 }
 
@@ -785,12 +757,6 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
-
-  mark(m) {
-    m(this.ObjectRecord);
-    m(this.GlobalThisValue);
-    m(this.DeclarativeRecord);
-  }
 }
 
 // #sec-module-environment-records
@@ -858,10 +824,6 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       indirect: true,
       target: [M, N2],
       initialized: true,
-      mark(m) {
-        m(this.target[0]);
-        m(this.target[1]);
-      },
     });
     // 6. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -932,7 +894,7 @@ export function NewObjectEnvironment(O, E) {
 // 8.1.2.4 #sec-newfunctionenvironment
 export function NewFunctionEnvironment(F, newTarget) {
   // 1. Assert: F is an ECMAScript function.
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   // 2. Assert: Type(newTarget) is Undefined or Object.
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
   // 3. Let env be a new Lexical Environment.

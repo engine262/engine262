@@ -80,7 +80,7 @@ export function ValidateTypedArray(O) {
 // 22.2.4.2.1 #sec-allocatetypedarray
 export function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
   const proto = Q(GetPrototypeFromConstructor(newTarget, defaultProto));
-  const obj = IntegerIndexedObjectCreate(proto, ['ViewedArrayBuffer', 'TypedArrayName', 'ByteLength', 'ByteOffset', 'ArrayLength']);
+  const obj = IntegerIndexedObjectCreate(proto);
   Assert(obj.ViewedArrayBuffer === Value.undefined);
   obj.TypedArrayName = constructorName;
   if (length === undefined) {

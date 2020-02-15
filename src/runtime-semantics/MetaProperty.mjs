@@ -4,7 +4,7 @@ import {
   Assert,
   GetNewTarget,
   GetActiveScriptOrModule,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   CreateDataProperty,
 } from '../abstract-ops/all.mjs';
 import { AbstractModuleRecord } from '../modules.mjs';
@@ -25,7 +25,7 @@ function Evaluate_ImportMeta() {
   Assert(module instanceof AbstractModuleRecord);
   let importMeta = module.ImportMeta;
   if (importMeta === Value.undefined) {
-    importMeta = ObjectCreate(Value.null);
+    importMeta = OrdinaryObjectCreate(Value.null);
     const importMetaValues = X(HostGetImportMetaProperties(module));
     for (const p of importMetaValues) {
       X(CreateDataProperty(importMeta, p.Key, p.Value));

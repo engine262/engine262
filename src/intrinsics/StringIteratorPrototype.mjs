@@ -3,7 +3,7 @@ import {
   Assert,
   CodePointAt,
   CreateIterResultObject,
-  ObjectCreate,
+  OrdinaryObjectCreate,
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -13,7 +13,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 // 21.1.5.1 #sec-createstringiterator
 export function CreateStringIterator(string) {
   Assert(Type(string) === 'String');
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%StringIteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%StringIteratorPrototype%'), [
     'IteratedString',
     'StringNextIndex',
   ]);

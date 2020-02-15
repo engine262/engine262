@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
   IsCallable,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SameValueZero,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
@@ -17,7 +17,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 // 23.2.5.1 #sec-createsetiterator
 function CreateSetIterator(set, kind) {
   Q(RequireInternalSlot(set, 'SetData'));
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
     'IteratedSet',
     'SetNextIndex',
     'SetIterationKind',

@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
   IsCallable,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SameValueZero,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
@@ -17,7 +17,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function CreateMapIterator(map, kind) {
   Q(RequireInternalSlot(map, 'MapData'));
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
     'IteratedMap',
     'MapNextIndex',
     'MapIterationKind',

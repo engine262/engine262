@@ -17,7 +17,7 @@ import {
   GetV,
   IsArray,
   IsCallable,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   LengthOfArrayLike,
   ToInteger,
   ToNumber,
@@ -261,7 +261,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
          || unfiltered instanceof NullValue
          || unfiltered instanceof ObjectValue);
   if (IsCallable(reviver) === Value.true) {
-    const root = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     const rootName = new Value('');
     const status = X(CreateDataProperty(root, rootName, unfiltered));
     Assert(status === Value.true);
@@ -501,7 +501,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   } else {
     gap = '';
   }
-  const wrapper = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   const status = X(CreateDataProperty(wrapper, new Value(''), value));
   Assert(status === Value.true);
   return Q(SerializeJSONProperty(new Value(''), wrapper));

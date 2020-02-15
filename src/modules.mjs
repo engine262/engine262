@@ -94,12 +94,6 @@ export class AbstractModuleRecord {
     this.Namespace = Namespace;
     this.HostDefined = HostDefined;
   }
-
-  mark(m) {
-    m(this.Realm);
-    m(this.Environment);
-    m(this.Namespace);
-  }
 }
 
 // 15.2.1.16 #sec-cyclic-module-records
@@ -170,11 +164,6 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(stack.length === 0);
     }
     return capability.Promise;
-  }
-
-  mark(m) {
-    super.mark(m);
-    m(this.EvaluationError);
   }
 }
 
@@ -386,11 +375,5 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleContext));
       return Value.undefined;
     }
-  }
-
-  mark(m) {
-    super.mark(m);
-    m(this.ImportMeta);
-    m(this.Context);
   }
 }

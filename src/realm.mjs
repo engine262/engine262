@@ -1,4 +1,3 @@
-import { surroundingAgent } from './engine.mjs';
 import {
   Descriptor,
   Value,
@@ -6,7 +5,7 @@ import {
 import {
   Assert,
   DefinePropertyOrThrow,
-  ObjectCreate,
+  OrdinaryObjectCreate,
 } from './abstract-ops/all.mjs';
 import { NewGlobalEnvironment } from './environment.mjs';
 import { Q, X } from './completion.mjs';
@@ -74,11 +73,6 @@ import { BootstrapTypedArrayConstructors } from './intrinsics/TypedArrayConstruc
 import { BootstrapTypedArrayPrototypes } from './intrinsics/TypedArrayPrototypes.mjs';
 import { BootstrapDataView } from './intrinsics/DataView.mjs';
 import { BootstrapDataViewPrototype } from './intrinsics/DataViewPrototype.mjs';
-import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
-import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
-import { BootstrapFinalizationGroupPrototype } from './intrinsics/FinalizationGroupPrototype.mjs';
-import { BootstrapFinalizationGroup } from './intrinsics/FinalizationGroup.mjs';
-import { BootstrapFinalizationGroupCleanupIteratorPrototype } from './intrinsics/FinalizationGroupCleanupIteratorPrototype.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -88,11 +82,6 @@ export class Realm {
     this.GlobalEnv = undefined;
     this.TemplateMap = undefined;
     this.HostDefined = undefined;
-  }
-
-  mark(m) {
-    m(this.GlobalObject);
-    m(this.GlobalEnv);
   }
 }
 
@@ -128,7 +117,7 @@ export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
-  intrinsics['%Object.prototype%'] = ObjectCreate(Value.null);
+  intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
 
   BootstrapFunctionPrototype(realmRec);
   BootstrapObjectPrototype(realmRec);
@@ -222,15 +211,6 @@ export function CreateIntrinsics(realmRec) {
 
   BootstrapJSON(realmRec);
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    BootstrapWeakRefPrototype(realmRec);
-    BootstrapWeakRef(realmRec);
-
-    BootstrapFinalizationGroupPrototype(realmRec);
-    BootstrapFinalizationGroup(realmRec);
-    BootstrapFinalizationGroupCleanupIteratorPrototype(realmRec);
-  }
-
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
   return intrinsics;
@@ -240,7 +220,7 @@ export function CreateIntrinsics(realmRec) {
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   const intrinsics = realmRec.Intrinsics;
   if (globalObj === Value.undefined) {
-    globalObj = ObjectCreate(intrinsics['%Object.prototype%']);
+    globalObj = OrdinaryObjectCreate(intrinsics['%Object.prototype%']);
   }
   if (thisValue === Value.undefined) {
     thisValue = globalObj;
@@ -338,22 +318,6 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
-
-  if (surroundingAgent.feature('WeakRefs')) {
-    Q(DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({
-      Value: realmRec.Intrinsics['%WeakRef%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-
-    Q(DefinePropertyOrThrow(global, new Value('FinalizationGroup'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationGroup%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   return global;
 }

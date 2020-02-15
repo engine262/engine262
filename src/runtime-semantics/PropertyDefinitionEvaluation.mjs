@@ -21,7 +21,7 @@ import {
   OrdinaryFunctionCreate,
   GetValue,
   MakeMethod,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
@@ -85,7 +85,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
   const exprValue = yield* Evaluate(IdentifierReference);
   const propValue = Q(GetValue(exprValue));
   Assert(enumerable);
-  Assert(object.isOrdinary);
+  // Assert: object is an ordinary object.
   Assert(object.Extensible === Value.true);
   Assert(!hasNonConfigurableProperties(object));
   return X(CreateDataPropertyOrThrow(object, propName, propValue));
@@ -108,7 +108,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
     propValue = Q(GetValue(exprValueRef));
   }
   Assert(enumerable);
-  Assert(object.isOrdinary);
+  // Assert: object is an ordinary object.
   Assert(object.Extensible === Value.true);
   Assert(!hasNonConfigurableProperties(object));
   return X(CreateDataPropertyOrThrow(object, propKey, propValue));
@@ -207,7 +207,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), UniqueFormalParameters, GeneratorExpression, 'non-lexical-this', scope));
   MakeMethod(closure, object);
-  const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
@@ -266,7 +266,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), UniqueFormalParameters, AsyncGeneratorExpression, 'non-lexical-this', scope));
   X(MakeMethod(closure, object));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
+  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,

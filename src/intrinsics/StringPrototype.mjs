@@ -15,10 +15,9 @@ import {
   ToNumber,
   ToString,
   ToUint32,
+  StringCreate,
 } from '../abstract-ops/all.mjs';
 import {
-  Descriptor,
-  StringExoticObjectValue,
   Type,
   Value,
   wellKnownSymbols,
@@ -574,16 +573,7 @@ function StringProto_iterator(args, { thisValue }) {
 }
 
 export function BootstrapStringPrototype(realmRec) {
-  const proto = new StringExoticObjectValue();
-  proto.Prototype = realmRec.Intrinsics['%Object.prototype%'];
-  proto.Extensible = Value.true;
-  proto.StringData = new Value('');
-  proto.properties.set(new Value('length'), Descriptor({
-    Value: new Value(0),
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
+  const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
 
   assignProps(realmRec, proto, [
     ['charAt', StringProto_charAt, 1],

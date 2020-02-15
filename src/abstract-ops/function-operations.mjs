@@ -1,13 +1,10 @@
 import {
   surroundingAgent,
-  // Suspend,
   ExecutionContext,
 } from '../engine.mjs';
 import { Realm } from '../realm.mjs';
 import {
-  BuiltinFunctionValue,
   Descriptor,
-  FunctionValue,
   Type,
   Value,
 } from '../value.mjs';
@@ -40,7 +37,8 @@ import {
   IsConstructor,
   IsExtensible,
   IsInteger,
-  ObjectCreate,
+  MakeBasicObject,
+  OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   ToObject,
   isStrictModeCode,
@@ -51,6 +49,14 @@ import {
 // 9.3 #sec-built-in-function-objects
 // and
 // 14.9 #sec-tail-position-calls
+
+export function isECMAScriptFunctionObject(O) {
+  return 'ECMAScriptCode' in O;
+}
+
+export function isFunctionObject(O) {
+  return 'Call' in O;
+}
 
 // 9.2.1.1 #sec-prepareforordinarycall
 function PrepareForOrdinaryCall(F, newTarget) {
@@ -132,7 +138,7 @@ export function* OrdinaryCallEvaluateBody(F, argumentsList) {
 function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   if (F.IsClassConstructor === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
   }
@@ -155,7 +161,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 function FunctionConstructSlot(argumentsList, newTarget) {
   const F = this;
 
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   Assert(Type(newTarget) === 'Object');
   // const callerContext = surroundingAgent.runningExecutionContext;
   const kind = F.ConstructorKind;
@@ -191,30 +197,24 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   return Q(envRec.GetThisBinding());
 }
 
-// 9.2 #sec-ecmascript-function-objects
-const esFunctionInternalSlots = Object.freeze([
-  'Environment',
-  'FormalParameters',
-  'ECMAScriptCode',
-  'ConstructorKind',
-  'Realm',
-  'ScriptOrModule',
-  'ThisMode',
-  'Strict',
-  'HomeObject',
-  'IsClassConstructor',
-]);
-
 // 9.2.3 #sec-functionallocate
 export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, thisMode, Scope) {
   Assert(Type(functionPrototype) === 'Object');
-  const F = new FunctionValue(functionPrototype);
-  for (const internalSlot of esFunctionInternalSlots) {
-    F[internalSlot] = Value.undefined;
-  }
+  const internalSlotsList = [
+    'Environment',
+    'FormalParameters',
+    'ECMAScriptCode',
+    'ConstructorKind',
+    'Realm',
+    'ScriptOrModule',
+    'ThisMode',
+    'Strict',
+    'HomeObject',
+    'SourceText',
+    'IsClassConstructor',
+  ];
+  const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
   F.Call = FunctionCallSlot;
-  F.Prototype = functionPrototype;
-  F.Extensible = Value.true;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;
@@ -231,6 +231,7 @@ export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, t
   F.Environment = Scope;
   F.ScriptOrModule = GetActiveScriptOrModule();
   F.Realm = surroundingAgent.currentRealmRecord;
+  F.HomeObject = Value.undefined;
   const len = ExpectedArgumentCount(ParameterList);
   X(SetFunctionLength(F, new Value(len)));
   return F;
@@ -238,7 +239,7 @@ export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, t
 
 // 9.2.10 #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   Assert(IsConstructor(F) === Value.false);
   Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
   F.Construct = FunctionConstructSlot;
@@ -247,7 +248,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     writablePrototype = true;
   }
   if (prototype === undefined) {
-    prototype = ObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     X(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
       Value: F,
       Writable: writablePrototype ? Value.true : Value.false,
@@ -266,7 +267,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
 
 // 9.2.11 #sec-makeclassconstructor
 export function MakeClassConstructor(F) {
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
   return new NormalCompletion(Value.undefined);
@@ -274,7 +275,7 @@ export function MakeClassConstructor(F) {
 
 // 9.2.12 #sec-makemethod
 export function MakeMethod(F, homeObject) {
-  Assert(F instanceof FunctionValue);
+  Assert(isECMAScriptFunctionObject(F));
   Assert(Type(homeObject) === 'Object');
   F.HomeObject = homeObject;
   return new NormalCompletion(Value.undefined);
@@ -317,27 +318,82 @@ export function SetFunctionLength(F, length) {
   })));
 }
 
+
+function nativeCall(F, argumentsList, thisArgument, newTarget) {
+  return F.nativeFunction(argumentsList, {
+    thisValue: thisArgument || Value.undefined,
+    NewTarget: newTarget || Value.undefined,
+  });
+}
+
+function BuiltinFunctionCall(thisArgument, argumentsList) {
+  const F = this;
+
+  // const callerContext = surroundingAgent.runningExecutionContext;
+  // If callerContext is not already suspended, suspend callerContext.
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = F;
+  const calleeRealm = F.Realm;
+  calleeContext.Realm = calleeRealm;
+  calleeContext.ScriptOrModule = F.ScriptOrModule;
+  // 8. Perform any necessary implementation-defined initialization of calleeContext.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  const result = nativeCall(F, argumentsList, thisArgument, Value.undefined);
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  return result;
+}
+
+function BuiltinFunctionConstruct(argumentsList, newTarget) {
+  const F = this;
+
+  // const callerContext = surroundingAgent.runningExecutionContext;
+  // If callerContext is not already suspended, suspend callerContext.
+  const calleeContext = new ExecutionContext();
+  calleeContext.Function = F;
+  const calleeRealm = F.Realm;
+  calleeContext.Realm = calleeRealm;
+  calleeContext.ScriptOrModule = F.ScriptOrModule;
+  // 8. Perform any necessary implementation-defined initialization of calleeContext.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  const result = nativeCall(F, argumentsList, undefined, newTarget);
+  // Remove calleeContext from the execution context stack and
+  // restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  return result;
+}
+
 // 9.3.3 #sec-createbuiltinfunction
 export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isConstructor = Value.false) {
+  // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
+  // 2. If realm is not present, set realm to the current Realm Record.
   if (realm === undefined) {
     realm = surroundingAgent.currentRealmRecord;
   }
+  // 3. Assert: realm is a Realm Record.
   Assert(realm instanceof Realm);
+  // 4. If prototype is not present, set prototype to realm.[[Intrinsics]].[[%Function.prototype%]].
   if (prototype === undefined) {
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
-
-  const func = new BuiltinFunctionValue(steps, isConstructor);
-  for (const slot of internalSlotsList) {
-    func[slot] = Value.undefined;
+  // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
+  const func = X(MakeBasicObject(internalSlotsList));
+  func.Call = BuiltinFunctionCall;
+  if (isConstructor === Value.true) {
+    func.Construct = BuiltinFunctionConstruct;
   }
-
+  func.nativeFunction = steps;
+  // 6. Set func.[[Realm]] to realm.
   func.Realm = realm;
+  // 7. Set func.[[Prototype]] to prototype.
   func.Prototype = prototype;
+  // 8. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
+  // 9. Set func.[[Extensible]] to true.
   func.ScriptOrModule = Value.null;
-
+  // 10. Return func.
   return func;
 }
 

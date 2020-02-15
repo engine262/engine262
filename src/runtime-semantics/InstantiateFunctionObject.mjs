@@ -1,7 +1,7 @@
 import {
   DefinePropertyOrThrow,
   MakeConstructor,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionName,
   OrdinaryFunctionCreate,
   sourceTextMatchedBy,
@@ -45,7 +45,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   } = GeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorDeclaration, 'non-lexical-this', scope));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
+  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
@@ -76,7 +76,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   } = AsyncGeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorDeclaration, 'non-lexical-this', scope));
-  const prototype = X(ObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
+  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,

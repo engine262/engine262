@@ -1,7 +1,7 @@
 import {
   DefinePropertyOrThrow,
   OrdinaryFunctionCreate,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
@@ -30,7 +30,7 @@ export function Evaluate_GeneratorExpression(GeneratorExpression) {
     envRec.CreateImmutableBinding(name, Value.false);
   }
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv));
-  const prototype = ObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),

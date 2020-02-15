@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   SameValue,
-  ObjectCreate,
+  OrdinaryObjectCreate,
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
@@ -14,7 +14,7 @@ export function CreateForInIterator(object) {
   // 1. Assert: Type(object) is Object.
   Assert(Type(object) === 'Object');
   // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
-  const iterator = ObjectCreate(surroundingAgent.intrinsic('%ForInIteratorPrototype%'), [
+  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%ForInIteratorPrototype%'), [
     'Object',
     'ObjectWasVisited',
     'VisitedKeys',
