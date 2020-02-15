@@ -19,7 +19,6 @@ import {
   IsCallable,
   OrdinaryObjectCreate,
   SameValue,
-  SameValueZero,
   StringCreate,
 } from './all.mjs';
 
@@ -150,7 +149,6 @@ export function ToNumber(argument) {
   }
 }
 
-const sign = (n) => (n >= 0 ? 1 : -1);
 const mod = (n, m) => {
   const r = n % m;
   return Math.floor(r >= 0 ? r : r + m);
@@ -158,15 +156,24 @@ const mod = (n, m) => {
 
 // 7.1.4 #sec-tointeger
 export function ToInteger(argument) {
+  // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
-  if (Number.isNaN(number)) {
+  // 2. If number is NaN, +0, or -0, return +0.
+  if (Number.isNaN(number) || number === 0) {
     return new Value(0);
   }
-  if (number === 0 || !Number.isFinite(number)) {
+  // 3. If number is +∞, or -∞, return number.
+  if (!Number.isFinite(number)) {
     return new Value(number);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
-  return new Value(int);
+  // 4. Let integer be the Number value that is the same sign as number and whose magnitude is floor(abs(number)).
+  const integer = Math.sign(number) * Math.floor(Math.abs(number));
+  // 5. If integer is -0, return +0.
+  if (Object.is(integer, -0)) {
+    return new Value(+0);
+  }
+  // 6. Return integer.
+  return new Value(integer);
 }
 
 // 7.1.5 #sec-toint32
@@ -175,7 +182,7 @@ export function ToInt32(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod(int, 2 ** 32);
   if (int32bit >= (2 ** 31)) {
     return new Value(int32bit - (2 ** 32));
@@ -189,7 +196,7 @@ export function ToUint32(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod(int, 2 ** 32);
   return new Value(int32bit);
 }
@@ -200,7 +207,7 @@ export function ToInt16(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int16bit = mod(int, 2 ** 16);
   if (int16bit >= (2 ** 15)) {
     return new Value(int16bit - (2 ** 16));
@@ -214,7 +221,7 @@ export function ToUint16(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int16bit = mod(int, 2 ** 16);
   return new Value(int16bit);
 }
@@ -225,7 +232,7 @@ export function ToInt8(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int8bit = mod(int, 2 ** 8);
   if (int8bit >= (2 ** 7)) {
     return new Value(int8bit - (2 ** 8));
@@ -239,7 +246,7 @@ export function ToUint8(argument) {
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return new Value(0);
   }
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int8bit = mod(int, 2 ** 8);
   return new Value(int8bit);
 }
@@ -454,7 +461,7 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     index = X(ToLength(integerIndex));
-    if (SameValueZero(integerIndex, index) === Value.false) {
+    if (X(SameValue(integerIndex, index)) === Value.false) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
   }

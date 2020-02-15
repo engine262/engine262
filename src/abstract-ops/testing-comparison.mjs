@@ -164,7 +164,7 @@ export function SameValueZero(x, y) {
     return TypeNumeric(x).sameValueZero(x, y);
   }
   // 3. Return ! SameValueNonNumeric(x, y).
-  return SameValueNonNumber(x, y);
+  return X(SameValueNonNumber(x, y));
 }
 
 // 7.2.12 #sec-samevaluenonnumber

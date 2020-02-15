@@ -274,11 +274,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k;
     if (n >= 0) {
-      if (Object.is(-0, n)) {
-        k = 0;
-      } else {
-        k = n;
-      }
+      k = n;
     } else {
       k = len + n;
       if (k < 0) {
@@ -351,11 +347,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k;
     if (n >= 0) {
-      if (Object.is(n, -0)) {
-        k = 0;
-      } else {
-        k = Math.min(n, len - 1);
-      }
+      k = Math.min(n, len - 1);
     } else {
       k = len + n;
     }

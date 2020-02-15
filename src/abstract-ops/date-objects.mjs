@@ -230,9 +230,5 @@ export function TimeClip(time) {
   if (Math.abs(time.numberValue()) > 8.64e15) {
     return new Value(NaN);
   }
-  let clippedTime = X(ToInteger(time)).numberValue();
-  if (Object.is(clippedTime, -0)) {
-    clippedTime = 0;
-  }
-  return new Value(clippedTime);
+  return X(ToInteger(time));
 }
