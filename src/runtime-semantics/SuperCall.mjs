@@ -20,9 +20,6 @@ function GetSuperConstructor() {
   const activeFunction = envRec.FunctionObject;
   Assert(isECMAScriptFunctionObject(activeFunction));
   const superConstructor = X(activeFunction.GetPrototypeOf());
-  if (IsConstructor(superConstructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', superConstructor);
-  }
   return superConstructor;
 }
 
@@ -31,8 +28,11 @@ function GetSuperConstructor() {
 export function* Evaluate_SuperCall({ arguments: Arguments }) {
   const newTarget = GetNewTarget();
   Assert(Type(newTarget) === 'Object');
-  const func = Q(GetSuperConstructor());
+  const func = X(GetSuperConstructor());
   const argList = Q(yield* ArgumentListEvaluation(Arguments));
+  if (IsConstructor(func) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+  }
   const result = Q(Construct(func, argList, newTarget));
   const thisER = GetThisEnvironment();
   return Q(thisER.BindThisValue(result));
