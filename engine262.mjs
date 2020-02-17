@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 14610339f5c3dbeb3a5e26c93c7c64538def87d7
+ * engine262 0.0.1 d7bad3fcc820c9e26dfc5292d89522d77e8804a3
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -18191,11 +18191,6 @@ function GetSuperConstructor() {
   }
 
   const superConstructor = _temp;
-
-  if (IsConstructor(superConstructor) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', superConstructor);
-  }
-
   return superConstructor;
 } // 12.3.5.1 #sec-super-keyword-runtime-semantics-evaluation
 // SuperCall : `super` Arguments
@@ -18208,14 +18203,8 @@ function* Evaluate_SuperCall({
   Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'");
 
   let _temp2 = GetSuperConstructor();
-  /* istanbul ignore if */
 
-
-  if (_temp2 instanceof AbruptCompletion) {
-    return _temp2;
-  }
-  /* istanbul ignore if */
-
+  Assert(!(_temp2 instanceof AbruptCompletion), "GetSuperConstructor()" + ' returned an abrupt completion');
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -18224,16 +18213,24 @@ function* Evaluate_SuperCall({
   const func = _temp2;
 
   let _temp3 = yield* ArgumentListEvaluation(Arguments);
+  /* istanbul ignore if */
+
 
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
   }
+  /* istanbul ignore if */
+
 
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
 
   const argList = _temp3;
+
+  if (IsConstructor(func) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+  }
 
   let _temp4 = Construct(func, argList, newTarget);
 
@@ -24967,13 +24964,7 @@ function TimeClip(time) {
     _temp8 = _temp8.Value;
   }
 
-  let clippedTime = _temp8.numberValue();
-
-  if (Object.is(clippedTime, -0)) {
-    clippedTime = 0;
-  }
-
-  return new Value(clippedTime);
+  return _temp8;
 }
 
 // 8.3 #sec-execution-contexts
@@ -31725,7 +31716,15 @@ function SameValueZero(x, y) {
   } // 3. Return ! SameValueNonNumeric(x, y).
 
 
-  return SameValueNonNumber(x, y);
+  let _temp3 = SameValueNonNumber(x, y);
+
+  Assert(!(_temp3 instanceof AbruptCompletion), "SameValueNonNumber(x, y)" + ' returned an abrupt completion');
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  return _temp3;
 } // 7.2.12 #sec-samevaluenonnumber
 
 function SameValueNonNumber(x, y) {
@@ -31768,20 +31767,7 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let py; // 1. If the LeftFirst flag is true, then
 
   if (LeftFirst === true) {
-    let _temp3 = ToPrimitive(x, 'Number');
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    // a. Let px be ? ToPrimitive(x, hint Number).
-    px = _temp3; // b. Let py be ? ToPrimitive(y, hint Number).
-
-    let _temp4 = ToPrimitive(y, 'Number');
+    let _temp4 = ToPrimitive(x, 'Number');
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -31791,8 +31777,9 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       _temp4 = _temp4.Value;
     }
 
-    py = _temp4;
-  } else {
+    // a. Let px be ? ToPrimitive(x, hint Number).
+    px = _temp4; // b. Let py be ? ToPrimitive(y, hint Number).
+
     let _temp5 = ToPrimitive(y, 'Number');
 
     if (_temp5 instanceof AbruptCompletion) {
@@ -31803,11 +31790,9 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       _temp5 = _temp5.Value;
     }
 
-    // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = _temp5; // c. Let px be ? ToPrimitive(x, hint Number).
-
-    let _temp6 = ToPrimitive(x, 'Number');
+    py = _temp5;
+  } else {
+    let _temp6 = ToPrimitive(y, 'Number');
 
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -31817,7 +31802,21 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       _temp6 = _temp6.Value;
     }
 
-    px = _temp6;
+    // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
+    // b. Let py be ? ToPrimitive(y, hint Number).
+    py = _temp6; // c. Let px be ? ToPrimitive(x, hint Number).
+
+    let _temp7 = ToPrimitive(x, 'Number');
+
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
+    }
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+
+    px = _temp7;
   } // 3. If Type(px) is String and Type(py) is String, then
 
 
@@ -31858,16 +31857,16 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
     if (Type(px) === 'BigInt' && Type(py) === 'String') {
-      let _temp7 = StringToBigInt(py);
+      let _temp8 = StringToBigInt(py);
 
-      Assert(!(_temp7 instanceof AbruptCompletion), "StringToBigInt(py)" + ' returned an abrupt completion');
+      Assert(!(_temp8 instanceof AbruptCompletion), "StringToBigInt(py)" + ' returned an abrupt completion');
 
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
 
       // i. Let ny be ! StringToBigInt(py).
-      const ny = _temp7; // ii. If ny is NaN, return undefined.
+      const ny = _temp8; // ii. If ny is NaN, return undefined.
 
       if (Number.isNaN(ny)) {
         return Value.undefined;
@@ -31879,16 +31878,16 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
 
 
     if (Type(px) === 'String' && Type(py) === 'BigInt') {
-      let _temp8 = StringToBigInt(px);
+      let _temp9 = StringToBigInt(px);
 
-      Assert(!(_temp8 instanceof AbruptCompletion), "StringToBigInt(px)" + ' returned an abrupt completion');
+      Assert(!(_temp9 instanceof AbruptCompletion), "StringToBigInt(px)" + ' returned an abrupt completion');
 
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
 
       // i. Let ny be ! StringToBigInt(py).
-      const nx = _temp8; // ii. If ny is NaN, return undefined.
+      const nx = _temp9; // ii. If ny is NaN, return undefined.
 
       if (Number.isNaN(nx)) {
         return Value.undefined;
@@ -31899,19 +31898,7 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
     } // c. Let nx be ? ToNumeric(px). NOTE: Because px and py are primitive values evaluation order is not important.
 
 
-    let _temp9 = ToNumeric(px);
-
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-
-    const nx = _temp9; // d. Let ny be ? ToNumeric(py).
-
-    let _temp10 = ToNumeric(py);
+    let _temp10 = ToNumeric(px);
 
     if (_temp10 instanceof AbruptCompletion) {
       return _temp10;
@@ -31921,7 +31908,19 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       _temp10 = _temp10.Value;
     }
 
-    const ny = _temp10; // e. If Type(nx) is the same as Type(ny), return Type(nx)::lessThan(nx, ny).
+    const nx = _temp10; // d. Let ny be ? ToNumeric(py).
+
+    let _temp11 = ToNumeric(py);
+
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
+    }
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    const ny = _temp11; // e. If Type(nx) is the same as Type(ny), return Type(nx)::lessThan(nx, ny).
 
     if (Type(nx) === Type(ny)) {
       return TypeNumeric(nx).lessThan(nx, ny);
@@ -31970,42 +31969,42 @@ function AbstractEqualityComparison(x, y) {
 
 
   if (Type(x) === 'Number' && Type(y) === 'String') {
-    let _temp11 = ToNumber(y);
+    let _temp12 = ToNumber(y);
 
-    Assert(!(_temp11 instanceof AbruptCompletion), "ToNumber(y)" + ' returned an abrupt completion');
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    return AbstractEqualityComparison(x, _temp11);
-  } // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
-
-
-  if (Type(x) === 'String' && Type(y) === 'Number') {
-    let _temp12 = ToNumber(x);
-
-    Assert(!(_temp12 instanceof AbruptCompletion), "ToNumber(x)" + ' returned an abrupt completion');
+    Assert(!(_temp12 instanceof AbruptCompletion), "ToNumber(y)" + ' returned an abrupt completion');
 
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
     }
 
-    return AbstractEqualityComparison(_temp12, y);
-  } // 6. If Type(x) is BigInt and Type(y) is String, then
+    return AbstractEqualityComparison(x, _temp12);
+  } // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
 
 
-  if (Type(x) === 'BigInt' && Type(y) === 'String') {
-    let _temp13 = StringToBigInt(y);
+  if (Type(x) === 'String' && Type(y) === 'Number') {
+    let _temp13 = ToNumber(x);
 
-    Assert(!(_temp13 instanceof AbruptCompletion), "StringToBigInt(y)" + ' returned an abrupt completion');
+    Assert(!(_temp13 instanceof AbruptCompletion), "ToNumber(x)" + ' returned an abrupt completion');
 
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
     }
 
+    return AbstractEqualityComparison(_temp13, y);
+  } // 6. If Type(x) is BigInt and Type(y) is String, then
+
+
+  if (Type(x) === 'BigInt' && Type(y) === 'String') {
+    let _temp14 = StringToBigInt(y);
+
+    Assert(!(_temp14 instanceof AbruptCompletion), "StringToBigInt(y)" + ' returned an abrupt completion');
+
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
+    }
+
     // a. Let n be ! StringToBigInt(y).
-    const n = _temp13; // b. If n is NaN, return false.
+    const n = _temp14; // b. If n is NaN, return false.
 
     if (Number.isNaN(n)) {
       return Value.false;
@@ -32022,48 +32021,33 @@ function AbstractEqualityComparison(x, y) {
 
 
   if (Type(x) === 'Boolean') {
-    let _temp14 = ToNumber(x);
+    let _temp15 = ToNumber(x);
 
-    Assert(!(_temp14 instanceof AbruptCompletion), "ToNumber(x)" + ' returned an abrupt completion');
-
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-
-    return AbstractEqualityComparison(_temp14, y);
-  } // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
-
-
-  if (Type(y) === 'Boolean') {
-    let _temp15 = ToNumber(y);
-
-    Assert(!(_temp15 instanceof AbruptCompletion), "ToNumber(y)" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "ToNumber(x)" + ' returned an abrupt completion');
 
     if (_temp15 instanceof Completion) {
       _temp15 = _temp15.Value;
     }
 
-    return AbstractEqualityComparison(x, _temp15);
-  } // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
+    return AbstractEqualityComparison(_temp15, y);
+  } // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
 
 
-  if (['String', 'Number', 'BigInt', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
-    let _temp16 = ToPrimitive(y);
+  if (Type(y) === 'Boolean') {
+    let _temp16 = ToNumber(y);
 
-    if (_temp16 instanceof AbruptCompletion) {
-      return _temp16;
-    }
+    Assert(!(_temp16 instanceof AbruptCompletion), "ToNumber(y)" + ' returned an abrupt completion');
 
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
 
     return AbstractEqualityComparison(x, _temp16);
-  } // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
+  } // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
 
 
-  if (Type(x) === 'Object' && ['String', 'Number', 'BigInt', 'Symbol'].includes(Type(y))) {
-    let _temp17 = ToPrimitive(x);
+  if (['String', 'Number', 'BigInt', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
+    let _temp17 = ToPrimitive(y);
 
     if (_temp17 instanceof AbruptCompletion) {
       return _temp17;
@@ -32073,7 +32057,22 @@ function AbstractEqualityComparison(x, y) {
       _temp17 = _temp17.Value;
     }
 
-    return AbstractEqualityComparison(_temp17, y);
+    return AbstractEqualityComparison(x, _temp17);
+  } // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
+
+
+  if (Type(x) === 'Object' && ['String', 'Number', 'BigInt', 'Symbol'].includes(Type(y))) {
+    let _temp18 = ToPrimitive(x);
+
+    if (_temp18 instanceof AbruptCompletion) {
+      return _temp18;
+    }
+
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
+    }
+
+    return AbstractEqualityComparison(_temp18, y);
   } // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
 
 
@@ -32101,16 +32100,16 @@ function StrictEqualityComparison(x, y) {
 
 
   if (Type(x) === 'Number' || Type(x) === 'BigInt') {
-    let _temp18 = TypeNumeric(x).equal(x, y);
+    let _temp19 = TypeNumeric(x).equal(x, y);
 
-    Assert(!(_temp18 instanceof AbruptCompletion), "TypeNumeric(x).equal(x, y)" + ' returned an abrupt completion');
+    Assert(!(_temp19 instanceof AbruptCompletion), "TypeNumeric(x).equal(x, y)" + ' returned an abrupt completion');
 
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
 
     // a. Return ! Type(x)::equal(x, y).
-    return _temp18;
+    return _temp19;
   } // 3. Return ! SameValueNonNumeric(x, y).
 
 
@@ -32139,16 +32138,16 @@ function IsValidIntegerIndex(O, index) {
 } // #sec-isnonnegativeinteger
 
 function IsNonNegativeInteger(argument) {
-  let _temp19 = IsInteger(argument);
+  let _temp20 = IsInteger(argument);
 
-  Assert(!(_temp19 instanceof AbruptCompletion), "IsInteger(argument)" + ' returned an abrupt completion');
+  Assert(!(_temp20 instanceof AbruptCompletion), "IsInteger(argument)" + ' returned an abrupt completion');
 
-  if (_temp19 instanceof Completion) {
-    _temp19 = _temp19.Value;
+  if (_temp20 instanceof Completion) {
+    _temp20 = _temp20.Value;
   }
 
   // 1. If ! IsInteger(argument) is true and argument ≥ 0, return true.
-  if (_temp19 === Value.true && argument.numberValue() >= 0) {
+  if (_temp20 === Value.true && argument.numberValue() >= 0) {
     return Value.true;
   } // 2. Otherwise, return false.
 
@@ -32388,8 +32387,6 @@ function ToNumber(argument) {
   }
 }
 
-const sign = n => n >= 0 ? 1 : -1;
-
 const mod$1 = (n, m) => {
   const r = n % m;
   return Math.floor(r >= 0 ? r : r + m);
@@ -32407,18 +32404,28 @@ function ToInteger(argument) {
     _temp7 = _temp7.Value;
   }
 
-  const number = _temp7.numberValue();
+  // 1. Let number be ? ToNumber(argument).
+  const number = _temp7.numberValue(); // 2. If number is NaN, +0, or -0, return +0.
 
-  if (Number.isNaN(number)) {
+
+  if (Number.isNaN(number) || number === 0) {
     return new Value(0);
-  }
+  } // 3. If number is +∞, or -∞, return number.
 
-  if (number === 0 || !Number.isFinite(number)) {
+
+  if (!Number.isFinite(number)) {
     return new Value(number);
-  }
+  } // 4. Let integer be the Number value that is the same sign as number and whose magnitude is floor(abs(number)).
 
-  const int = sign(number) * Math.floor(Math.abs(number));
-  return new Value(int);
+
+  const integer = Math.sign(number) * Math.floor(Math.abs(number)); // 5. If integer is -0, return +0.
+
+  if (Object.is(integer, -0)) {
+    return new Value(+0);
+  } // 6. Return integer.
+
+
+  return new Value(integer);
 } // 7.1.5 #sec-toint32
 
 function ToInt32(argument) {
@@ -32438,7 +32445,7 @@ function ToInt32(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod$1(int, 2 ** 32);
 
   if (int32bit >= 2 ** 31) {
@@ -32465,7 +32472,7 @@ function ToUint32(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int32bit = mod$1(int, 2 ** 32);
   return new Value(int32bit);
 } // 7.1.7 #sec-toint16
@@ -32487,7 +32494,7 @@ function ToInt16(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int16bit = mod$1(int, 2 ** 16);
 
   if (int16bit >= 2 ** 15) {
@@ -32514,7 +32521,7 @@ function ToUint16(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int16bit = mod$1(int, 2 ** 16);
   return new Value(int16bit);
 } // 7.1.9 #sec-toint8
@@ -32536,7 +32543,7 @@ function ToInt8(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int8bit = mod$1(int, 2 ** 8);
 
   if (int8bit >= 2 ** 7) {
@@ -32563,7 +32570,7 @@ function ToUint8(argument) {
     return new Value(0);
   }
 
-  const int = sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(number) * Math.floor(Math.abs(number));
   const int8bit = mod$1(int, 2 ** 8);
   return new Value(int8bit);
 } // 7.1.11 #sec-touint8clamp
@@ -32967,7 +32974,15 @@ function ToIndex(value) {
 
     index = _temp28;
 
-    if (SameValueZero(integerIndex, index) === Value.false) {
+    let _temp29 = SameValue(integerIndex, index);
+
+    Assert(!(_temp29 instanceof AbruptCompletion), "SameValue(integerIndex, index)" + ' returned an abrupt completion');
+
+    if (_temp29 instanceof Completion) {
+      _temp29 = _temp29.Value;
+    }
+
+    if (_temp29 === Value.false) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
   }
@@ -37114,11 +37129,7 @@ function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     let k;
 
     if (n >= 0) {
-      if (Object.is(-0, n)) {
-        k = 0;
-      } else {
-        k = n;
-      }
+      k = n;
     } else {
       k = len + n;
 
@@ -37374,11 +37385,7 @@ function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     let k;
 
     if (n >= 0) {
-      if (Object.is(n, -0)) {
-        k = 0;
-      } else {
-        k = Math.min(n, len - 1);
-      }
+      k = Math.min(n, len - 1);
     } else {
       k = len + n;
     }
