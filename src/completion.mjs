@@ -22,6 +22,11 @@ export function Completion(type, value, target) {
   return type;
 }
 
+// NON-SPEC
+Completion.prototype.mark = function mark(m) {
+  m(this.Value);
+};
+
 // #sec-normalcompletion
 export function NormalCompletion(value) {
   return new Completion('normal', value);

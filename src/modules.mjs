@@ -79,6 +79,10 @@ export class ResolvedBindingRecord {
     this.Module = Module;
     this.BindingName = BindingName;
   }
+
+  mark(m) {
+    m(this.Module);
+  }
 }
 
 // 15.2.1.15 #sec-abstract-module-records
@@ -93,6 +97,12 @@ export class AbstractModuleRecord {
     this.Environment = Environment;
     this.Namespace = Namespace;
     this.HostDefined = HostDefined;
+  }
+
+  mark(m) {
+    m(this.Realm);
+    m(this.Environment);
+    m(this.Namespace);
   }
 }
 
@@ -164,6 +174,11 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(stack.length === 0);
     }
     return capability.Promise;
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.EvaluationError);
   }
 }
 
@@ -375,5 +390,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       X(AsyncBlockStart(capability, module.ECMAScriptCode.body, moduleContext));
       return Value.undefined;
     }
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ImportMeta);
+    m(this.Context);
   }
 }

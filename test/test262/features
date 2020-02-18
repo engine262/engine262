@@ -17,9 +17,6 @@ u180e
 
 WeakMap
 WeakSet
-WeakRef
-FinalizationGroup
-host-gc-required
 
 class-fields-public
 class-fields-private

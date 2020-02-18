@@ -130,7 +130,9 @@ function createRealm() {
   Abstract.CreateDataProperty($, new Value(realm, 'evalScript'),
     new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
 
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'invokeAbstract'), new Value(realm, ([name, ...args]) => {
+  Abstract.CreateDataProperty($, new Value(realm, 'gc'), new Value(realm, () => {}));
+
+  Abstract.CreateDataProperty($, new Value(realm, 'invokeAbstract'), new Value(realm, ([name, ...args]) => {
     const op = Abstract[name.stringValue()];
     return op(...args);
   }));

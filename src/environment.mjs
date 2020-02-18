@@ -29,6 +29,12 @@ export class LexicalEnvironment {
     this.EnvironmentRecord = undefined;
     this.outerEnvironmentReference = undefined;
   }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.EnvironmentRecord);
+    m(this.outerEnvironmentReference);
+  }
 }
 
 // #sec-environment-records
@@ -69,6 +75,9 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: undefined,
       deletable: D === Value.true,
       value: undefined,
+      mark(m) {
+        m(this.value);
+      },
     });
     //  4. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -89,6 +98,9 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       strict: S === Value.true,
       deletable: false,
       value: undefined,
+      mark(m) {
+        m(this.value);
+      },
     });
     // 4. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -198,6 +210,11 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   WithBaseObject() {
     // 1. Return undefined.
     return Value.undefined;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.bindings);
   }
 }
 
@@ -334,6 +351,11 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 3. Otherwise, return undefined.
     return Value.undefined;
   }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.bindingObject);
+  }
 }
 
 // #sec-function-environment-records
@@ -421,6 +443,15 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     Assert(Type(home) === 'Object');
     // 5. Return ? home.[[GetPrototypeOf]]().
     return Q(home.GetPrototypeOf());
+  }
+
+  mark(m) {
+    super.mark(m);
+    m(this.ThisValue);
+    m(this.ThisBindingValue);
+    m(this.FunctionObject);
+    m(this.HomeObject);
+    m(this.NewTarget);
   }
 }
 
@@ -757,6 +788,12 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
+
+  mark(m) {
+    m(this.ObjectRecord);
+    m(this.GlobalThisValue);
+    m(this.DeclarativeRecord);
+  }
 }
 
 // #sec-module-environment-records
@@ -824,6 +861,10 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       indirect: true,
       target: [M, N2],
       initialized: true,
+      mark(m) {
+        m(this.target[0]);
+        m(this.target[1]);
+      },
     });
     // 6. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

@@ -635,10 +635,11 @@ for (const name of [
 Object.freeze(wellKnownSymbols);
 
 export class ObjectValue extends Value {
-  constructor() {
+  constructor(internalSlotsList) {
     super();
 
     this.properties = new ValueMap();
+    this.internalSlotsList = internalSlotsList;
   }
 
   GetPrototypeOf() {
@@ -684,6 +685,14 @@ export class ObjectValue extends Value {
   OwnPropertyKeys() {
     return OrdinaryOwnPropertyKeys(this);
   }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.properties);
+    this.internalSlotsList.forEach((s) => {
+      m(this[s]);
+    });
+  }
 }
 
 export class Reference {
@@ -692,6 +701,12 @@ export class Reference {
     this.ReferencedName = ReferencedName;
     Assert(Type(StrictReference) === 'Boolean');
     this.StrictReference = StrictReference;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.BaseValue);
+    m(this.ReferencedName);
   }
 }
 
@@ -704,6 +719,12 @@ export class SuperReference extends Reference {
   }) {
     super({ BaseValue, ReferencedName, StrictReference });
     this.thisValue = thisValue;
+  }
+
+  // NON-SPEC
+  mark(m) {
+    super.mark(m);
+    m(this.thisValue);
   }
 }
 
@@ -727,6 +748,13 @@ Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
     && this.Writable === undefined
     && this.Enumerable === undefined
     && this.Configurable === undefined;
+};
+
+// NON-SPEC
+Descriptor.prototype.mark = function mark(m) {
+  m(this.Value);
+  m(this.Get);
+  m(this.Set);
 };
 
 export class DataBlock extends Uint8Array {

@@ -15,6 +15,7 @@ import {
 import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
+  CleanupFinalizationGroup,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
@@ -30,6 +31,10 @@ export const FEATURES = Object.freeze([
   {
     name: 'import.meta',
     url: 'https://github.com/tc39/proposal-import-meta',
+  },
+  {
+    name: 'WeakRefs',
+    url: 'https://github.com/tc39/proposal-weakrefs',
   },
 ].map(Object.freeze));
 
@@ -66,6 +71,10 @@ export class Agent {
         return acc;
       }, {}),
     };
+
+    if (this.feature('WeakRefs')) {
+      this.KeptAlive = new Set();
+    }
   }
 
   // #sec-running-execution-context
@@ -104,6 +113,20 @@ export class Agent {
   feature(name) {
     return this.hostDefinedOptions.features[name];
   }
+
+  // NON-SPEC
+  mark(m) {
+    this.executionContextStack.forEach((e) => {
+      m(e);
+    });
+    this.jobQueue.forEach((j) => {
+      j.Arguments.forEach((a) => {
+        m(a);
+      });
+      m(j.Realm);
+      m(j.ScriptOrModule);
+    });
+  }
 }
 Agent.Increment = 0;
 
@@ -140,6 +163,16 @@ export class ExecutionContext {
     e.promiseCapability = this.promiseCapability;
     return e;
   }
+
+  // NON-SPEC
+  mark(m) {
+    m(this.Function);
+    m(this.Realm);
+    m(this.ScriptOrModule);
+    m(this.VariableEnvironment);
+    m(this.LexicalEnvironment);
+    m(this.promiseCapability);
+  }
 }
 
 // 8.4.1 #sec-enqueuejob
@@ -152,7 +185,7 @@ export function EnqueueJob(queueName, job, args) {
     Arguments: args,
     Realm: callerRealm,
     ScriptOrModule: callerScriptOrModule,
-    HostDefined: undefined,
+    HostDefined: { queueName },
   };
   surroundingAgent.jobQueue.push(pending);
 }
@@ -398,4 +431,21 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public));
   }
   return Value.undefined;
+}
+
+// https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-group
+const scheduledForCleanup = new Set();
+export function HostCleanupFinalizationGroup(fg) {
+  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup !== undefined) {
+    Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup(fg));
+  } else {
+    if (!scheduledForCleanup.has(fg)) {
+      scheduledForCleanup.add(fg);
+      EnqueueJob('FinalizationCleanup', () => {
+        scheduledForCleanup.delete(fg);
+        CleanupFinalizationGroup(fg);
+      }, []);
+    }
+  }
+  return new NormalCompletion(undefined);
 }

@@ -10,6 +10,7 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
+  HostCleanupFinalizationGroup,
   FEATURES,
 } from './engine.mjs';
 import {
@@ -22,7 +23,7 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q,
+  Q, X,
   ThrowCompletion,
   EnsureCompletion,
 } from './completion.mjs';
@@ -44,6 +45,64 @@ export {
 };
 
 export { inspect } from './inspect.mjs';
+
+function mark() {
+  // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
+  // At any time, if an object obj is not live, an ECMAScript implementation may perform the following steps atomically:
+  // 1. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
+  //   a. Set ref.[[WeakRefTarget]] to empty.
+  // 2. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   a. Set cell.[[WeakRefTarget]] to empty.
+  //   b. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+
+  const marked = new Set();
+  const weakrefs = new Set();
+  const fgs = new Set();
+
+  const markCb = (O) => {
+    if (typeof O !== 'object' || O === null) {
+      return;
+    }
+
+    if (marked.has(O)) {
+      return;
+    }
+    marked.add(O);
+
+    if ('WeakRefTarget' in O && !('HeldValue' in O)) {
+      weakrefs.add(O);
+    } else if ('Cells' in O) {
+      fgs.add(O);
+      O.Cells.forEach((cell) => {
+        markCb(cell.HeldValue);
+      });
+    } else if (O.mark) {
+      O.mark(markCb);
+    }
+  };
+
+  markCb(surroundingAgent);
+
+  weakrefs.forEach((ref) => {
+    if (!marked.has(ref.WeakRefTarget)) {
+      ref.WeakRefTarget = undefined;
+    }
+  });
+
+  fgs.forEach((fg) => {
+    let dirty = false;
+    fg.Cells.forEach((cell) => {
+      if (!marked.has(cell.WeakRefTarget)) {
+        cell.WeakRefTarget = undefined;
+        dirty = true;
+      }
+    });
+    if (dirty) {
+      X(HostCleanupFinalizationGroup(fg));
+    }
+  });
+}
+
 function runJobQueue() {
   if (surroundingAgent.executionContextStack.length !== 0) {
     return;
@@ -52,7 +111,8 @@ function runJobQueue() {
 
   while (true) { // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0) {
+    if (nextQueue.length === 0
+        || nextQueue.find((j) => j.HostDefined.queueName !== 'FinalizationCleanup') === undefined) {
       break;
     }
     const nextPending = nextQueue.shift();
@@ -66,8 +126,15 @@ function runJobQueue() {
       HostReportErrors(result.Value);
     }
 
+    if (surroundingAgent.feature('WeakRefs')) {
+      AbstractOps.ClearKeptObjects();
+      mark();
+    }
+
     surroundingAgent.executionContextStack.pop(newContext);
   }
+
+  surroundingAgent.jobQueue = [];
 }
 
 class APIAgent {

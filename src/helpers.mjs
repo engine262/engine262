@@ -74,6 +74,13 @@ export class ValueMap extends Map {
       }
     }
   }
+
+  mark(m) {
+    for (const [k, v] of this.entries()) {
+      m(k);
+      m(v);
+    }
+  }
 }
 
 export class ValueSet extends Set {
@@ -113,6 +120,12 @@ export class ValueSet extends Set {
       } else {
         yield key;
       }
+    }
+  }
+
+  mark(m) {
+    for (const v of this.values()) {
+      m(v);
     }
   }
 }
