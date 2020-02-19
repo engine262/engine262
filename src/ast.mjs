@@ -2,23 +2,22 @@ import { Assert } from './abstract-ops/notational-conventions.mjs';
 
 // #prod-NullLiteral
 export function isNullLiteral(node) {
-  return node.type === 'Literal' && node.value === null;
+  return node.type === 'NullLiteral';
 }
 
 // #prod-BooleanLiteral
 export function isBooleanLiteral(node) {
-  return node.type === 'Literal' && typeof node.value === 'boolean';
+  return node.type === 'BooleanLiteral';
 }
 
 // #prod-NumericLiteral
 export function isNumericLiteral(node) {
-  return node.type === 'Literal'
-    && (typeof node.value === 'number' || typeof node.value === 'bigint');
+  return node.type === 'NumericLiteral';
 }
 
 // #prod-StringLiteral
 export function isStringLiteral(node) {
-  return node.type === 'Literal' && typeof node.value === 'string';
+  return node.type === 'StringLiteral';
 }
 
 export function isSpreadElement(node) {

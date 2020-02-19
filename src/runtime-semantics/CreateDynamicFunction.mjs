@@ -15,13 +15,13 @@ import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  ParseAsAsyncFunctionBody,
-  ParseAsAsyncGeneratorBody,
-  ParseAsFormalParameters,
-  ParseAsFunctionBody,
-  ParseAsGeneratorBody,
-} from '../parse.mjs';
+// import {
+//   ParseAsAsyncFunctionBody,
+//   ParseAsAsyncGeneratorBody,
+//   ParseAsFormalParameters,
+//   ParseAsFunctionBody,
+//   ParseAsGeneratorBody,
+// } from '../parse.mjs';
 import {
   BoundNames_FormalParameters,
   ContainsUseStrict_FunctionBody,

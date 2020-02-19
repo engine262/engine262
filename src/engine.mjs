@@ -210,7 +210,7 @@ export function ScriptEvaluation(scriptRecord) {
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
-  const scriptBody = scriptRecord.ECMAScriptCode.body;
+  const scriptBody = scriptRecord.ECMAScriptCode;
   let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
   if (result.Type === 'normal') {

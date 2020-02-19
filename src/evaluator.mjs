@@ -282,7 +282,7 @@ export const Evaluate_Statement = Evaluate_StatementListItem;
 // 13.5.1 #sec-expression-statement-runtime-semantics-evaluation
 //   ExpressionStatement : Expression `;`
 function* Evaluate_ExpressionStatement(ExpressionStatement) {
-  const exprRef = yield* Evaluate(ExpressionStatement.expression);
+  const exprRef = yield* Evaluate(ExpressionStatement.Expression);
   return GetValue(exprRef);
 }
 
@@ -464,10 +464,10 @@ function* Inner_Evaluate_Expression(Expression) {
 //   Script : ScriptBody
 //   ScriptBody : StatementList
 export function Evaluate_Script(Script) {
-  if (Script.length === 0) {
+  if (Script.ScriptBody.length === 0) {
     return new NormalCompletion(Value.undefined);
   }
-  return unwind(Evaluate_StatementList(Script));
+  return unwind(Evaluate_StatementList(Script.ScriptBody));
 }
 
 // 15.2.1.23 #sec-module-semantics-runtime-semantics-evaluation

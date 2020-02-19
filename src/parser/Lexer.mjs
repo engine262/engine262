@@ -1,0 +1,605 @@
+import {
+  RawTokens,
+  Token, KeywordLookup, TokenNames,
+  isKeywordRaw,
+} from './tokens.mjs';
+
+const isIdentifierStart = (c) => /\p{ID_Start}/u.test(c);
+const isIdentifierContinue = (c) => /\p{ID_Continue}/.test(c);
+const isDecimalDigit = (c) => /\d/.test(c);
+const isHexDigit = (c) => /[\da-f]/i.test(c);
+const isOctalDigit = (c) => /[0-7]/.test(c);
+const isBinaryDigit = (c) => c === '0' || c === '1';
+const isWhitespace = (c) => /[\u0009\u000B\u000C\u0020\u00A0\uFEFF]|\p{Space_Separator}/u.test(c); // eslint-disable-line no-control-regex
+const isNewline = (c) => /\r\n?|[\n\u2028\u2029]/.test(c);
+
+const SingleCharTokens = {
+  '__proto__': null,
+  '0': Token.NUMBER,
+  '1': Token.NUMBER,
+  '2': Token.NUMBER,
+  '3': Token.NUMBER,
+  '4': Token.NUMBER,
+  '5': Token.NUMBER,
+  '6': Token.NUMBER,
+  '7': Token.NUMBER,
+  '8': Token.NUMBER,
+  '9': Token.NUMBER,
+  'a': Token.IDENTIFIER,
+  'b': Token.IDENTIFIER,
+  'c': Token.IDENTIFIER,
+  'd': Token.IDENTIFIER,
+  'e': Token.IDENTIFIER,
+  'f': Token.IDENTIFIER,
+  'g': Token.IDENTIFIER,
+  'h': Token.IDENTIFIER,
+  'i': Token.IDENTIFIER,
+  'j': Token.IDENTIFIER,
+  'k': Token.IDENTIFIER,
+  'l': Token.IDENTIFIER,
+  'm': Token.IDENTIFIER,
+  'n': Token.IDENTIFIER,
+  'o': Token.IDENTIFIER,
+  'p': Token.IDENTIFIER,
+  'q': Token.IDENTIFIER,
+  'r': Token.IDENTIFIER,
+  's': Token.IDENTIFIER,
+  't': Token.IDENTIFIER,
+  'u': Token.IDENTIFIER,
+  'v': Token.IDENTIFIER,
+  'w': Token.IDENTIFIER,
+  'x': Token.IDENTIFIER,
+  'y': Token.IDENTIFIER,
+  'z': Token.IDENTIFIER,
+  'A': Token.IDENTIFIER,
+  'B': Token.IDENTIFIER,
+  'C': Token.IDENTIFIER,
+  'D': Token.IDENTIFIER,
+  'E': Token.IDENTIFIER,
+  'F': Token.IDENTIFIER,
+  'G': Token.IDENTIFIER,
+  'H': Token.IDENTIFIER,
+  'I': Token.IDENTIFIER,
+  'J': Token.IDENTIFIER,
+  'K': Token.IDENTIFIER,
+  'L': Token.IDENTIFIER,
+  'M': Token.IDENTIFIER,
+  'N': Token.IDENTIFIER,
+  'O': Token.IDENTIFIER,
+  'P': Token.IDENTIFIER,
+  'Q': Token.IDENTIFIER,
+  'R': Token.IDENTIFIER,
+  'S': Token.IDENTIFIER,
+  'T': Token.IDENTIFIER,
+  'U': Token.IDENTIFIER,
+  'V': Token.IDENTIFIER,
+  'W': Token.IDENTIFIER,
+  'X': Token.IDENTIFIER,
+  'Y': Token.IDENTIFIER,
+  'Z': Token.IDENTIFIER,
+  '$': Token.IDENTIFIER,
+  '_': Token.IDENTIFIER,
+  '.': Token.PERIOD,
+  ',': Token.COMMA,
+  ':': Token.COLON,
+  ';': Token.SEMICOLON,
+  '%': Token.MOD,
+  '~': Token.BIT_NOT,
+  '!': Token.NOT,
+  '+': Token.ADD,
+  '-': Token.SUB,
+  '*': Token.MUL,
+  '<': Token.LT,
+  '>': Token.GT,
+  '=': Token.ASSIGN,
+  '?': Token.CONDITIONAL,
+  '[': Token.LBRACK,
+  ']': Token.RBRACK,
+  '(': Token.LPAREN,
+  ')': Token.RPAREN,
+  '/': Token.DIV,
+  '^': Token.BIT_XOR,
+  '`': Token.TEMPLATE_SPAN,
+  '{': Token.LBRACE,
+  '}': Token.RBRACE,
+  '&': Token.BIT_AND,
+  '|': Token.BIT_OR,
+  '"': Token.STRING,
+  '\'': Token.STRING,
+};
+
+export class Lexer {
+  constructor() {
+    this.peekedToken = null;
+    this.currentToken = null;
+    this.position = 0;
+    this.line = 1;
+    this.column = 1;
+    this.value = undefined;
+    this.hasLineTerminatorBeforeNextFlag = false;
+  }
+
+  advance() {
+    const type = this.nextToken();
+    return {
+      type,
+      name: TokenNames[type],
+      value: type === Token.IDENTIFIER || type === Token.NUMBER || type === Token.STRING
+        ? this.value
+        : RawTokens[type][1],
+    };
+  }
+
+  next() {
+    this.hasLineTerminatorBeforeNextFlag = false;
+    if (this.peekedToken !== null) {
+      this.currentToken = this.peekedToken;
+      this.peekedToken = null;
+    } else {
+      this.currentToken = this.advance();
+    }
+    return this.currentToken;
+  }
+
+  peek() {
+    if (this.peekedToken === null) {
+      this.peekedToken = this.advance();
+    }
+    return this.peekedToken;
+  }
+
+  eat(token) {
+    if (this.peek().type === token) {
+      this.next();
+      return true;
+    }
+    return false;
+  }
+
+  expect(token) {
+    const next = this.next();
+    if (next.type !== token) {
+      this.error(`Unexpected token: ${next.name}`);
+    }
+  }
+
+  current() {
+    return this.currentToken;
+  }
+
+  hasLineTerminatorBeforeNext() {
+    return this.hasLineTerminatorBeforeNextFlag;
+  }
+
+  skipSpace() {
+    loop: // eslint-disable-line no-labels
+    while (this.position < this.source.length) {
+      const c = this.source[this.position];
+      switch (c) {
+        case ' ':
+        case '\t':
+          this.position += 1;
+          break;
+        case '\r':
+          this.position += 1;
+          if (this.source[this.position + 1] === '\n') {
+            this.position += 1;
+          }
+          this.hasLineTerminatorBeforeNextFlag = true;
+          break;
+        case '\n':
+          this.position += 1;
+          this.hasLineTerminatorBeforeNextFlag = true;
+          break;
+        case '/':
+          switch (this.source[this.position + 1]) {
+            case '/':
+              this.skipLineComment();
+              break;
+            case '*':
+              this.skipBlockComment();
+              break;
+            default:
+              break loop; // eslint-disable-line no-labels
+          }
+          break;
+        default:
+          if (isWhitespace(c)) {
+            this.position += 1;
+          } else {
+            break loop; // eslint-disable-line no-labels
+          }
+          break;
+      }
+    }
+  }
+
+  skipLineComment() {
+    while (this.position < this.source.length) {
+      const c = this.source[this.position];
+      this.position += 1;
+      if (isNewline(c)) {
+        this.hasLineTerminatorBeforeNextFlag = true;
+        break;
+      }
+    }
+  }
+
+  skipBlockComment() {
+    this.position += 2;
+    const end = this.source.indexOf('*/', this.position);
+    if (end === -1) {
+      this.error('Unterminated comment');
+    }
+    {
+      const re = /\r\n?|[\n\u2028\u2029]/g;
+      re.lastIndex = this.position;
+      const match = re.exec(this.source);
+      if (match.index < end) {
+        this.hasLineTerminatorBeforeNextFlag = true;
+      }
+    }
+    this.position = end + 2;
+  }
+
+  nextToken() {
+    this.skipSpace();
+    if (this.position >= this.source.length) {
+      return Token.EOS;
+    }
+    const c = this.source[this.position];
+    this.position += 1;
+    this.column += 1;
+    const c1 = this.source[this.position];
+    if (c.charCodeAt(0) <= 127) {
+      const single = SingleCharTokens[c];
+      switch (single) {
+        case Token.LPAREN:
+        case Token.RPAREN:
+        case Token.LBRACE:
+        case Token.RBRACE:
+        case Token.LBRACK:
+        case Token.RBRACK:
+        case Token.CONDITIONAL:
+        case Token.COLON:
+        case Token.SEMICOLON:
+        case Token.COMMA:
+        case Token.BIT_NOT:
+          return single;
+
+        case Token.LT:
+          // < <= << <<=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.LTE;
+          }
+          if (c1 === '<') {
+            this.position += 1;
+            if (this.source[this.position] === '=') {
+              this.position += 1;
+              return Token.ASSIGN_SHL;
+            }
+            return Token.SHL;
+          }
+          return Token.LT;
+
+        case Token.GT:
+          // > >= >> >>= >>> >>>=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.GTE;
+          }
+          if (c1 === '>') {
+            this.position += 1;
+            if (this.source[this.position] === '>') {
+              this.position += 1;
+              if (this.source[this.position] === '=') {
+                this.position += 1;
+                return Token.ASSIGN_SHR;
+              }
+              return Token.SHR;
+            }
+            if (this.source[this.position] === '=') {
+              this.position += 1;
+              return Token.ASSIGN_SAR;
+            }
+            return Token.SAR;
+          }
+          return Token.GT;
+
+        case Token.ASSIGN:
+          // = == === =>
+          if (c1 === '=') {
+            this.position += 1;
+            if (this.source[this.position] === '=') {
+              this.position += 1;
+              return Token.EQ_STRICT;
+            }
+            return Token.EQ;
+          }
+          if (c1 === '>') {
+            this.position += 1;
+            return Token.ARROW;
+          }
+          return Token.ASSIGN;
+
+        case Token.NOT:
+          // ! != !==
+          if (c1 === '=') {
+            this.position += 1;
+            if (this.source[this.position] === '=') {
+              this.position += 1;
+              return Token.NE_STRICT;
+            }
+            return Token.NE;
+          }
+          return Token.NOT;
+
+        case Token.ADD:
+          // + ++ +=
+          if (c1 === '+') {
+            this.position += 1;
+            return Token.INC;
+          }
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_ADD;
+          }
+          return Token.ADD;
+
+        case Token.SUB:
+          // - -- -=
+          if (c1 === '-') {
+            this.position += 1;
+            return Token.DEC;
+          }
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_SUB;
+          }
+          return Token.SUB;
+
+        case Token.MUL:
+          // * *= ** **=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_MUL;
+          }
+          if (c1 === '*') {
+            this.position += 1;
+            if (this.source[this.position] === '=') {
+              this.position += 1;
+              return Token.ASSIGN_EXP;
+            }
+            return Token.EXP;
+          }
+          return Token.MUL;
+
+        case Token.MOD:
+          // % %=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_MOD;
+          }
+          return Token.MOD;
+
+        case Token.DIV:
+          // / /=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_DIV;
+          }
+          return Token.DIV;
+
+        case Token.BIT_AND:
+          // & && &=
+          if (c1 === '&') {
+            this.position += 1;
+            return Token.AND;
+          }
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_BIT_AND;
+          }
+          return Token.BIT_AND;
+
+        case Token.BIT_OR:
+          // | || |=
+          if (c1 === '|') {
+            this.position += 1;
+            return Token.OR;
+          }
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_BIT_OR;
+          }
+          return Token.BIT_OR;
+
+        case Token.BIT_XOR:
+          // ^ ^=
+          if (c1 === '=') {
+            this.position += 1;
+            return Token.ASSIGN_BIT_XOR;
+          }
+          return Token.BIT_XOR;
+
+        case Token.PERIOD:
+          // . ... NUMBER
+          if (isDecimalDigit(c1)) {
+            return this.scanNumber(true);
+          }
+          if (c1 === '.') {
+            if (this.source[this.position + 1] === '.') {
+              this.position += 2;
+              return Token.ELLIPSIS;
+            }
+          }
+          return Token.PERIOD;
+
+        case Token.TEMPLATE_SPAN:
+          return this.scanTemplate();
+
+        case Token.STRING:
+          return this.scanString(c);
+
+        case Token.NUMBER:
+          return this.scanNumber(false);
+
+        case Token.IDENTIFIER:
+          return this.scanIdentifierOrKeyword();
+
+        default:
+          return this.error(`Unexpected token: ${c}`);
+      }
+    }
+
+    if (isIdentifierStart(c)) {
+      return this.scanIdentifierOrKeyword();
+    }
+
+    return this.error('Unexpected token');
+  }
+
+  scanNumber(decimal) {
+    let afterDecimal = decimal;
+    let buffer = this.source[this.position - 1];
+    let base = 10;
+    let first = true;
+    while (this.position < this.source.length) {
+      const c = this.source[this.position];
+      if (first) {
+        first = false;
+        if (c === 'x' || c === 'X') {
+          this.position += 1;
+          base = 16;
+          continue;
+        } else if (c === 'o' || c === 'O') {
+          this.position += 1;
+          base = 8;
+          continue;
+        } else if (c === 'b' || c === 'B') {
+          this.position += 1;
+          base = 2;
+          continue;
+        }
+      }
+      const single = SingleCharTokens[c];
+      if (base === 10 && single === Token.PERIOD) {
+        if (afterDecimal) {
+          break;
+        } else {
+          afterDecimal = true;
+          this.position += 1;
+          buffer += c;
+        }
+        continue;
+      }
+      if (single === Token.NUMBER) {
+        if (base === 2 && !isBinaryDigit(c)) {
+          this.error('Invalid binary literal');
+        } else if (base === 8 && !isOctalDigit(c)) {
+          this.error('Invalid octal literal');
+        }
+        this.position += 1;
+        buffer += c;
+        continue;
+      }
+      if (base === 16 && isHexDigit(c)) {
+        this.position += 1;
+        buffer += c;
+        continue;
+      }
+      break;
+    }
+    this.value = base === 10
+      ? Number.parseFloat(buffer, base)
+      : Number.parseInt(buffer, base);
+    return Token.NUMBER;
+  }
+
+  scanString(char) {
+    let buffer = '';
+    while (true) {
+      if (this.position >= this.source.length) {
+        this.error('Unterminated string constant');
+      }
+      const c = this.source[this.position];
+      this.position += 1;
+      if (c === char) {
+        break;
+      }
+      if (isNewline(c)) {
+        this.error('Unterminated string constant');
+      }
+      if (c === '\\') {
+        buffer += this.scanEscapeSequence();
+      } else {
+        buffer += c;
+      }
+    }
+    this.value = buffer;
+    return Token.STRING;
+  }
+
+  scanEscapeSequence() {
+    const c = this.source[this.position];
+    switch (c) {
+      case 'n':
+        return '\n';
+      case 'r':
+        return '\r';
+      case 'x':
+        return this.scanHex();
+      case 'u':
+        return String.fromCodePoint(this.scanCodePoint());
+      case 't':
+        return '\t';
+      case 'b':
+        return '\b';
+      case 'v':
+        return '\v';
+      default:
+        return 5;
+    }
+  }
+
+  scanCodePoint() {
+    if (this.source[this.position] === '{') {
+      const end = this.source.indexOf('}', this.position);
+      const code = this.scanHex(end - this.position);
+      if (code > 0x10FFFF) {
+        this.error('Invalid code point');
+      }
+      return code;
+    }
+    return this.scanHex(4);
+  }
+
+  scanHex(n) {
+    for (let i = 0; i < n; i += 1) {
+      const c = this.source[this.position];
+    }
+  }
+
+  scanIdentifierOrKeyword() {
+    let buffer = this.source[this.position - 1];
+    while (this.position < this.source.length) {
+      const c = this.source[this.position];
+      const single = SingleCharTokens[c];
+      if (single === Token.IDENTIFIER || single === Token.NUMBER) {
+        buffer += c;
+      } else if (isIdentifierContinue(c)) {
+        buffer += c;
+      } else {
+        break;
+      }
+      this.position += 1;
+    }
+    if (isKeywordRaw(buffer)) {
+      return KeywordLookup[buffer];
+    } else {
+      this.value = buffer;
+      return Token.IDENTIFIER;
+    }
+  }
+}

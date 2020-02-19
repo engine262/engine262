@@ -41,8 +41,8 @@ export function GlobalDeclarationInstantiation(script, env) {
   const envRec = env.EnvironmentRecord;
   Assert(envRec instanceof EnvironmentRecord);
 
-  const lexNames = LexicallyDeclaredNames_ScriptBody(script).map(Value);
-  const varNames = VarDeclaredNames_ScriptBody(script).map(Value);
+  const lexNames = LexicallyDeclaredNames_ScriptBody(script.ScriptBody).map(Value);
+  const varNames = VarDeclaredNames_ScriptBody(script.ScriptBody).map(Value);
 
   for (const name of lexNames) {
     if (envRec.HasVarDeclaration(name) === Value.true) {
@@ -63,7 +63,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     }
   }
 
-  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
+  const varDeclarations = VarScopedDeclarations_ScriptBody(script.ScriptBody);
 
   const functionsToInitialize = [];
   const declaredFunctionNames = [];
@@ -113,7 +113,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   // NOTE: Annex B.3.3.2 adds additional steps at this point.
   // TODO(devsnek): Annex B.3.3.2
 
-  const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
+  const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script.ScriptBody);
   for (const d of lexDeclarations) {
     for (const dn of BoundNames_Declaration(d).map(Value)) {
       if (IsConstantDeclaration(d)) {
