@@ -2,25 +2,36 @@ import {
   Assert,
   Get,
   ToString,
+  IsNonNegativeInteger,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Type, Value } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
 
-// 21.1.3.17.1 #sec-getsubstitution
+// #sec-getsubstitution
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
+  // 1. Assert: Type(matched) is String.
   Assert(Type(matched) === 'String');
+  // 2. Let matchLength be the number of code units in matched.
   const matchLength = matched.stringValue().length;
+  // 3. Assert: Type(str) is String.
   Assert(Type(str) === 'String');
+  // 4. Let stringLength be the number of code units in str.
   const stringLength = str.stringValue().length;
-  Assert(Type(position) === 'Number' && Number.isInteger(position.numberValue()) && position.numberValue() >= 0);
+  // 5. Assert: ! IsNonNegativeInteger(position) is true.
+  Assert(X(IsNonNegativeInteger(position)) === Value.true);
+  // 6. Assert: position ≤ stringLength.
   Assert(position.numberValue() <= stringLength);
+  // 7. Assert: captures is a possibly empty List of Strings.
   Assert(Array.isArray(captures) && captures.every((value) => Type(value) === 'String' || Type(value) === 'Undefined'));
+  // 8. Assert: Type(replacement) is String.
   Assert(Type(replacement) === 'String');
+  // 9. Let tailPos be position + matchLength.
   const tailPos = position.numberValue() + matchLength;
+  // 10. Let m be the number of elements in captures.
   const m = captures.length;
+  // 11. Let result be the String value derived from replacement by copying code unit elements from replacement
+  //     to result while performing replacements as specified in Table 52. These $ replacements are done left-to-right,
+  //     and, once such a replacement is performed, the new replacement text is not subject to further replacements.
   const replacementStr = replacement.stringValue();
   let result = '';
   let i = 0;
@@ -101,5 +112,6 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
       i += 1;
     }
   }
+  // 12. Return result.
   return new Value(result);
 }

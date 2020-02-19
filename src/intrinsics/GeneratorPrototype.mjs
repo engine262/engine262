@@ -3,30 +3,38 @@ import {
   GeneratorResumeAbrupt,
 } from '../abstract-ops/all.mjs';
 import {
-  Q,
-  ReturnCompletion,
+  Completion,
   ThrowCompletion,
+  Q,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// 25.4.1.2 #sec-generator.prototype.next
+// #sec-generator.prototype.next
 function GeneratorProto_next([value = Value.undefined], { thisValue }) {
+  // 1. Let g be the this value.
   const g = thisValue;
+  // 2. Return ? GeneratorResume(g, value).
   return Q(GeneratorResume(g, value));
 }
 
-// 25.4.1.3 #sec-generator.prototype.return
+// #sec-generator.prototype.return
 function GeneratorProto_return([value = Value.undefined], { thisValue }) {
+  // 1. Let g be the this value.
   const g = thisValue;
-  const C = new ReturnCompletion(value);
+  // 2. Let C be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  const C = new Completion({ Type: 'return', Value: value, Target: undefined });
+  // 3. Return ? GeneratorResumeAbrupt(g, C).
   return Q(GeneratorResumeAbrupt(g, C));
 }
 
-// 25.4.1.4 #sec-generator.prototype.throw
+// #sec-generator.prototype.throw
 function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
+  // 1. Let g be the this value.
   const g = thisValue;
-  const C = new ThrowCompletion(exception);
+  // 2. Let C be ThrowCompletion(exception).
+  const C = ThrowCompletion(exception);
+  // 3. Return ? GeneratorResumeAbrupt(g, C).
   return Q(GeneratorResumeAbrupt(g, C));
 }
 

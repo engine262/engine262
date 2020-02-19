@@ -1,15 +1,17 @@
-import { Value } from '../value.mjs';
-import { BreakCompletion } from '../completion.mjs';
+import { Completion } from '../completion.mjs';
+import { StringValue } from '../static-semantics/all.mjs';
 
-// 13.9.3 #sec-break-statement-runtime-semantics-evaluation
-// BreakStatement :
-//   `break` `;`
-//   `break` LabelIdentifier `;`
-export function Evaluate_BreakStatement({ label: LabelIdentifier }) {
-  if (LabelIdentifier) {
-    const label = new Value(LabelIdentifier.name);
-    return new BreakCompletion(label);
-  } else {
-    return new BreakCompletion();
+// #sec-break-statement-runtime-semantics-evaluation
+//   BreakStatement :
+//     `break` `;`
+//     `break` LabelIdentifier `;`
+export function Evaluate_BreakStatement({ LabelIdentifier }) {
+  if (!LabelIdentifier) {
+    // 1. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+    return new Completion({ Type: 'break', Value: undefined, Target: undefined });
   }
+  // 1. Let label be the StringValue of LabelIdentifier.
+  const label = StringValue(LabelIdentifier);
+  // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
+  return new Completion({ Type: 'break', Value: undefined, Target: label });
 }

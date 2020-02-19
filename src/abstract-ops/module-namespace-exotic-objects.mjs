@@ -22,6 +22,7 @@ import {
   OrdinaryGet,
   OrdinaryDelete,
   OrdinaryOwnPropertyKeys,
+  GetModuleNamespace,
 } from './all.mjs';
 
 
@@ -100,28 +101,46 @@ function ModuleNamespaceHasProperty(P) {
   return Value.false;
 }
 
+// #sec-module-namespace-exotic-objects-get-p-receiver
 function ModuleNamespaceGet(P, Receiver) {
   const O = this;
 
+  // 1. Assert: IsPropertyKey(P) is true.
   Assert(IsPropertyKey(P));
+  // 2. If Type(P) is Symbol, then
   if (Type(P) === 'Symbol') {
+    // a. Return ? OrdinaryGet(O, P, Receiver).
     return OrdinaryGet(O, P, Receiver);
   }
+  // 3. Let exports be O.[[Exports]].
   const exports = O.Exports;
+  // 4. If P is not an element of exports, return undefined.
   if (!exports.has(P)) {
     return Value.undefined;
   }
+  // 5. Let m be O.[[Module]].
   const m = O.Module;
+  // 6. Let binding be ! m.ResolveExport(P).
   const binding = m.ResolveExport(P);
+  // 7. Assert: binding is a ResolvedBinding Record.
   Assert(binding instanceof ResolvedBindingRecord);
+  // 8. Let targetModule be binding.[[Module]].
   const targetModule = binding.Module;
+  // 9. Assert: targetModule is not undefined.
   Assert(targetModule !== Value.undefined);
+  // 10. If binding.[[BindingName]] is "*namespace*", then
+  if (binding.BindingName.stringValue() === '*namespace*') {
+    // a. Return ? GetModuleNamespace(targetModule).
+    return Q(GetModuleNamespace(targetModule));
+  }
+  // 11. Let targetEnv be targetModule.[[Environment]].
   const targetEnv = targetModule.Environment;
+  // 12. If targetEnv is undefined, throw a ReferenceError exception.
   if (targetEnv === Value.undefined) {
     return surroundingAgent.Throw('ReferenceError', 'NotDefined', P);
   }
-  const targetEnvRec = targetEnv.EnvironmentRecord;
-  return Q(targetEnvRec.GetBindingValue(binding.BindingName, Value.true));
+  // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
+  return Q(targetEnv.GetBindingValue(binding.BindingName, Value.true));
 }
 
 function ModuleNamespaceSet() {

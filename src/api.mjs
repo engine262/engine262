@@ -1,48 +1,42 @@
+import { Value } from './value.mjs';
 import {
-  CreateRealm,
-  SetDefaultGlobalBindings,
-  SetRealmGlobalObject,
-} from './realm.mjs';
-import {
-  ExecutionContext,
   surroundingAgent,
-  setSurroundingAgent,
-  evaluateScript,
-  Agent,
+  ExecutionContext,
   HostCleanupFinalizationRegistry,
-  FEATURES,
+  ScriptEvaluation,
 } from './engine.mjs';
 import {
-  Descriptor,
-  Type,
-  Value,
-} from './value.mjs';
-import { ParseModule } from './parse.mjs';
-import {
-  AbruptCompletion,
-  Completion,
-  NormalCompletion,
-  Q, X,
+  X,
   ThrowCompletion,
-} from './completion.mjs';
-import * as AbstractOps from './abstract-ops/all.mjs';
-
-export const Abstract = { ...AbstractOps, Type };
-const {
-  OrdinaryObjectCreate,
-  CreateBuiltinFunction,
-  GetModuleNamespace,
-  ToPrimitive,
-} = Abstract;
-export {
   AbruptCompletion,
-  NormalCompletion,
-  Completion,
-  Descriptor,
-  FEATURES,
-};
+  EnsureCompletion,
+} from './completion.mjs';
+import {
+  Realm,
+  ClearKeptObjects,
+  CreateIntrinsics,
+  GetModuleNamespace,
+  SetRealmGlobalObject,
+  SetDefaultGlobalBindings,
+} from './abstract-ops/all.mjs';
+import {
+  ParseScript,
+  ParseModule,
+} from './parse.mjs';
 
-export { inspect } from './inspect.mjs';
+export * from './value.mjs';
+export * from './engine.mjs';
+export * from './completion.mjs';
+export * from './abstract-ops/all.mjs';
+export * from './static-semantics/all.mjs';
+export * from './runtime-semantics/all.mjs';
+export * from './environment.mjs';
+export * from './parse.mjs';
+export * from './inspect.mjs';
+
+export function Throw(...args) {
+  return surroundingAgent.Throw(...args);
+}
 
 function mark() {
   // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
@@ -103,7 +97,7 @@ function mark() {
   };
 
   if (surroundingAgent.feature('WeakRefs')) {
-    AbstractOps.ClearKeptObjects();
+    ClearKeptObjects();
   }
 
   markCb(surroundingAgent);
@@ -155,18 +149,14 @@ function mark() {
 }
 
 // https://tc39.es/ecma262/#sec-jobs
-function runJobQueue() {
-  if (surroundingAgent.executionContextStack.length !== 0) {
+export function runJobQueue() {
+  if (surroundingAgent.executionContextStack.some((e) => e.ScriptOrModule !== Value.null)) {
     return;
   }
 
   // At some future point in time, when there is no running execution context
   // and the execution context stack is empty, the implementation must:
-
-  while (true) { // eslint-disable-line no-constant-condition
-    if (surroundingAgent.jobQueue.length === 0) {
-      break;
-    }
+  while (surroundingAgent.jobQueue.length > 0) { // eslint-disable-line no-constant-condition
     const {
       job: abstractClosure,
       callerRealm,
@@ -189,67 +179,50 @@ function runJobQueue() {
   }
 }
 
-class APIAgent {
-  constructor(options = {}) {
-    this.agent = new Agent(options);
+export function evaluateScript(sourceText, realm, hostDefined) {
+  const s = ParseScript(sourceText, realm, hostDefined);
+  if (Array.isArray(s)) {
+    return ThrowCompletion(s[0]);
+  }
+
+  return EnsureCompletion(ScriptEvaluation(s));
+}
+
+export class ManagedRealm extends Realm {
+  constructor(HostDefined = {}) {
+    super();
+    // CreateRealm()
+    CreateIntrinsics(this);
+    this.GlobalObject = Value.undefined;
+    this.GlobalEnv = Value.undefined;
+    this.TemplateMap = [];
+
+    // InitializeHostDefinedRealm()
+    const newContext = new ExecutionContext();
+    newContext.Function = Value.null;
+    newContext.Realm = this;
+    newContext.ScriptOrModule = Value.null;
+    surroundingAgent.executionContextStack.push(newContext);
+    SetRealmGlobalObject(this, Value.undefined, Value.undefined);
+    SetDefaultGlobalBindings(this);
+
+    // misc
+    surroundingAgent.executionContextStack.pop(newContext);
+    this.HostDefined = HostDefined;
+    this.topContext = newContext;
     this.active = false;
-    this.outerAgent = undefined;
   }
 
   scope(cb) {
-    this.enter();
-    try {
-      return cb();
-    } finally {
-      this.exit();
-    }
-  }
-
-  enter() {
     if (this.active) {
-      throw new Error('Agent is already entered');
+      return cb();
     }
     this.active = true;
-    this.outerAgent = surroundingAgent;
-    setSurroundingAgent(this.agent);
-  }
-
-  exit() {
-    if (!this.active) {
-      throw new Error('Agent is not entered');
-    }
-    setSurroundingAgent(this.outerAgent);
-    this.outerAgent = undefined;
+    surroundingAgent.executionContextStack.push(this.topContext);
+    const r = cb();
+    surroundingAgent.executionContextStack.pop(this.topContext);
     this.active = false;
-  }
-}
-
-class APIRealm {
-  constructor(options = {}) {
-    const realm = CreateRealm();
-
-    realm.HostDefined = options;
-
-    const newContext = new ExecutionContext();
-    newContext.Function = Value.null;
-    newContext.Realm = realm;
-    newContext.ScriptOrModule = Value.null;
-    surroundingAgent.executionContextStack.push(newContext);
-    const global = Value.undefined;
-    const thisValue = Value.undefined;
-    SetRealmGlobalObject(realm, global, thisValue);
-    const globalObj = SetDefaultGlobalBindings(realm);
-
-    // Create any implementation-defined global object properties on globalObj.
-
-    surroundingAgent.executionContextStack.pop(newContext);
-
-    this.global = globalObj;
-    this.realm = realm;
-    this.context = newContext;
-    this.agent = surroundingAgent;
-
-    this.active = false;
+    return r;
   }
 
   evaluateScript(sourceText, { specifier } = {}) {
@@ -261,9 +234,7 @@ class APIRealm {
       const realm = surroundingAgent.currentRealmRecord;
       return evaluateScript(sourceText, realm, {
         specifier,
-        public: {
-          specifier,
-        },
+        public: { specifier },
       });
     });
 
@@ -281,7 +252,7 @@ class APIRealm {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
-    const module = this.scope(() => ParseModule(sourceText, this.realm, {
+    const module = this.scope(() => ParseModule(sourceText, this, {
       specifier,
       public: {
         specifier,
@@ -297,92 +268,9 @@ class APIRealm {
       },
     }));
     if (Array.isArray(module)) {
-      return new ThrowCompletion(module[0]);
+      return ThrowCompletion(module[0]);
     }
     module.HostDefined.public.module = module;
     return module.HostDefined.public;
   }
-
-  scope(cb) {
-    if (this.active) {
-      return cb();
-    }
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.context);
-    const r = cb();
-    surroundingAgent.executionContextStack.pop(this.context);
-    this.active = false;
-    return r;
-  }
-}
-
-function APIObject(realm, intrinsic = '%Object.prototype%') {
-  return OrdinaryObjectCreate(realm.realm.Intrinsics[intrinsic]);
-}
-
-class APIValue extends Value {
-  constructor(realm, value) {
-    if (typeof value === 'function') {
-      return CreateBuiltinFunction(value, [], realm.realm);
-    }
-    if (value === undefined) {
-      return Value.undefined;
-    }
-    if (value === null) {
-      return Value.null;
-    }
-    if (value === true) {
-      return Value.true;
-    }
-    if (value === false) {
-      return Value.false;
-    }
-    return new Value(value);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Value;
-  }
-}
-
-export {
-  APIAgent as Agent,
-  APIRealm as Realm,
-  APIValue as Value,
-  APIObject as Object,
-};
-
-export function Throw(realm, V, ...args) {
-  return realm.scope(() => {
-    if (typeof V === 'string') {
-      // eslint-disable-next-line engine262/valid-throw
-      return surroundingAgent.Throw(V, 'Raw', args[0]);
-    }
-    return new ThrowCompletion(V);
-  });
-}
-
-export function ToString(realm, value) {
-  return realm.scope(() => {
-    while (true) {
-      const type = Type(value);
-      switch (type) {
-        case 'String':
-          return value.stringValue();
-        case 'Number':
-          return value.numberValue().toString();
-        case 'Boolean':
-          return value === Value.true ? 'true' : 'false';
-        case 'Undefined':
-          return 'undefined';
-        case 'Null':
-          return 'null';
-        case 'Symbol':
-          return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
-        default:
-          value = Q(ToPrimitive(value, 'String'));
-          break;
-      }
-    }
-  });
 }

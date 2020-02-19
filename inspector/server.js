@@ -62,7 +62,7 @@ wss.on('connection', (ws) => {
     ws.send(s);
   };
 
-  ws._socket.unref(); // eslint-disable-line no-underscore-dangle
+  ws._socket.unref();
 
   const context = {
     sendEvent(event, params) {

@@ -1,10 +1,10 @@
-import { evaluateScript, surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   BooleanValue,
   NullValue,
   NumberValue,
   ObjectValue,
-  StringValue,
+  JSStringValue,
   Type,
   Value,
 } from '../value.mjs';
@@ -30,6 +30,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
+import { evaluateScript } from '../api.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -50,7 +51,7 @@ class JSONValidator {
     if (this.pos < this.input.length) {
       return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
     }
-    return new NormalCompletion(undefined);
+    return NormalCompletion(undefined);
   }
 
   advance() {
@@ -255,6 +256,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
   return Q(Call(reviver, holder, [name, val]));
 }
 
+// #sec-json.parse
 function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 1. Let jsonString be ? ToString(text).
   const jsonString = Q(ToString(text));
@@ -270,7 +272,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
-  Assert(unfiltered instanceof StringValue
+  Assert(unfiltered instanceof JSStringValue
          || unfiltered instanceof NumberValue
          || unfiltered instanceof BooleanValue
          || unfiltered instanceof NullValue
@@ -462,6 +464,7 @@ function SerializeJSONArray(state, value) {
   return final;
 }
 
+// #sec-json.stringify
 function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
   const stack = [];
   const indent = '';

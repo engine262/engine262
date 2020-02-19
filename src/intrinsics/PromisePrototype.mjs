@@ -47,7 +47,7 @@ function CatchFinallyFunctions([reason = Value.undefined]) {
   const C = F.Constructor;
   Assert(IsConstructor(C) === Value.true);
   const promise = Q(PromiseResolve(C, result));
-  const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
+  const thrower = CreateBuiltinFunction(() => ThrowCompletion(reason), []);
   SetFunctionLength(thrower, new Value(0));
   SetFunctionName(thrower, new Value(''));
   return Q(Invoke(promise, new Value('then'), [thrower]));

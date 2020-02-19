@@ -65,26 +65,18 @@ function DataViewProto_byteOffset(args, { thisValue }) {
 }
 
 // #sec-dataview.prototype.getbigint64
-function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian = Value.undefined], { thisValue }) {
   // 1. Let v be the this value.
   const v = thisValue;
-  // 2. If littleEndian is not present, set littleEndian to undefined.
-  if (littleEndian === undefined) {
-    littleEndian = Value.undefined;
-  }
-  // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigInt64).
+  // 2. Return ? GetViewValue(v, byteOffset, littleEndian, BigInt64).
   return Q(GetViewValue(v, byteOffset, littleEndian, 'BigInt64'));
 }
 
 // #sec-dataview.prototype.getbiguint64
-function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian = Value.undefined], { thisValue }) {
   // 1. Let v be the this value.
   const v = thisValue;
-  // 2. If littleEndian is not present, set littleEndian to undefined.
-  if (littleEndian === undefined) {
-    littleEndian = Value.undefined;
-  }
-  // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigUint64).
+  // 2. Return ? GetViewValue(v, byteOffset, littleEndian, BigUint64).
   return Q(GetViewValue(v, byteOffset, littleEndian, 'BigUint64'));
 }
 

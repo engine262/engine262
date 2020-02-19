@@ -6,7 +6,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
   const C = surroundingAgent.activeFunctionObject;
-  return Q(CreateDynamicFunction(C, NewTarget, 'async generator', args));
+  return Q(CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
 }
 
 export function BootstrapAsyncGeneratorFunction(realmRec) {

@@ -2,7 +2,7 @@ import { Value } from '../value.mjs';
 import { Assert, ToString, ToLength } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// 21.1.3.15.1 #sec-stringpad
+// #sec-stringpad
 export function StringPad(O, maxLength, fillString, placement) {
   Assert(placement === 'start' || placement === 'end');
   const S = Q(ToString(O));

@@ -206,5 +206,5 @@ export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count
     fromIndex += 1;
     count -= 1;
   }
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

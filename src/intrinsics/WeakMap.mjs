@@ -12,6 +12,7 @@ import {
 import { AddEntriesFromIterable } from './Map.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// #sec-weakmap-constructor
 function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {

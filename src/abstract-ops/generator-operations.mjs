@@ -5,8 +5,8 @@ import {
   EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { resume } from '../helpers.mjs';
 import {
   Assert,
@@ -28,7 +28,7 @@ export function GeneratorStart(generator, generatorBody) {
   //    for that execution context the following steps will be performed:
   genContext.codeEvaluationState = (function* resumer() {
     // a. Let result be the result of evaluating generatorBody.
-    const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
+    const result = EnsureCompletion(yield* Evaluate(generatorBody));
     // b. Assert: If we return here, the generator either threw an exception or
     //    performed either an implicit or explicit return.
     // c. Remove genContext from the execution context stack and restore the execution context
@@ -61,7 +61,7 @@ export function GeneratorStart(generator, generatorBody) {
   // 6. Set generator.[[GeneratorState]] to suspendedStart.
   generator.GeneratorState = 'suspendedStart';
   // 7. Return NormalCompletion(undefined).
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // #sec-generatorvalidate
@@ -102,7 +102,7 @@ export function GeneratorResume(generator, value) {
   // 9. Resume the suspended evaluation of genContext using NormalCompletion(value) as
   //    the result of the operation that suspended it. Let result be the value returned by
   //    the resumed computation.
-  const result = resume(genContext, new NormalCompletion(value));
+  const result = EnsureCompletion(resume(genContext, NormalCompletion(value)));
   // 10. Assert: When we return here, genContext has already been removed from the execution
   //     context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
@@ -149,7 +149,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
   //     result of the operation that suspended it. Let result be the completion record
   //     returned by the resumed computation.
-  const result = resume(genContext, abruptCompletion);
+  const result = EnsureCompletion(resume(genContext, abruptCompletion));
   // 11. Assert: When we return here, genContext has already been removed from the
   //     execution context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
@@ -193,7 +193,7 @@ export function* GeneratorYield(iterNextObj) {
   // 8. Set the code evaluation state of genContext such that when evaluation is resumed with
   //    a Completion resumptionValue the following steps will be performed:
   //      a. Return resumptionValue
-  const resumptionValue = yield new NormalCompletion(iterNextObj);
+  const resumptionValue = yield NormalCompletion(iterNextObj);
   // 9. Return NormalCompletion(iterNextObj).
   return resumptionValue;
   // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.

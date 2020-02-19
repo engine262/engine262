@@ -6,20 +6,21 @@ import {
   PromiseResolve,
   SetFunctionLength,
 } from './abstract-ops/all.mjs';
-import { Reference, Value } from './value.mjs';
+import { Value } from './value.mjs';
 import { resume } from './helpers.mjs';
 
-// 6.2.3 #sec-completion-record-specification-type
-export function Completion(type, value, target) {
+// #sec-completion-record-specification-type
+export function Completion(init) {
   if (new.target === Completion) {
-    if (typeof type !== 'string') {
-      throw new TypeError('Completion type is not a string');
-    }
-    this.Type = type;
-    this.Value = value;
-    this.Target = target;
+    this.Type = init.Type;
+    this.Value = init.Value;
+    this.Target = init.Target;
+  } else {
+    // 1. Assert: completionRecord is a Completion Record.
+    Assert(init instanceof Completion);
+    // 2. Return completionRecord as the Completion Record of this abstract operation.
+    return init;
   }
-  return type;
 }
 
 // NON-SPEC
@@ -28,8 +29,12 @@ Completion.prototype.mark = function mark(m) {
 };
 
 // #sec-normalcompletion
-export function NormalCompletion(value) {
-  return new Completion('normal', value);
+export function NormalCompletion(argument) {
+  if (new.target !== undefined) {
+    throw new TypeError();
+  }
+  // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
+  return new Completion({ Type: 'normal', Value: argument, Target: undefined });
 }
 
 Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
@@ -47,40 +52,13 @@ export class AbruptCompletion {
   }
 }
 
-export class BreakCompletion {
-  constructor(target) {
-    return new Completion('break', undefined, target);
+// #sec-throwcompletion
+export function ThrowCompletion(argument) {
+  if (new.target !== undefined) {
+    throw new TypeError();
   }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'break';
-  }
-}
-
-export class ContinueCompletion {
-  constructor(target) {
-    return new Completion('continue', undefined, target);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'continue';
-  }
-}
-
-// 6.2.3.2 #sec-normalcompletion
-export class ReturnCompletion {
-  constructor(value) {
-    return new Completion('return', value);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'return';
-  }
-}
-
-// 6.2.3.3 #sec-throwcompletion
-export function ThrowCompletion(value) {
-  return new Completion('throw', value);
+  // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
+  return new Completion({ Type: 'throw', Value: argument, Target: undefined });
 }
 
 Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
@@ -95,13 +73,14 @@ Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
 // 6.2.3.4 #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
   Assert(completionRecord instanceof Completion);
-  if (completionRecord.Type === 'return' || completionRecord.Type === 'throw') {
-    Assert(completionRecord.Value !== undefined);
-  }
+  // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
+  Assert(!(completionRecord.Type === 'return' || completionRecord.Type === 'throw') || completionRecord.Value !== undefined);
+  // 2. If completionRecord.[[Value]] is not empty, return Completion(completionRecord).
   if (completionRecord.Value !== undefined) {
-    return completionRecord;
+    return Completion(completionRecord);
   }
-  return new Completion(completionRecord.Type, value, completionRecord.Target);
+  // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
+  return new Completion({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target });
 }
 
 // 5.2.3.3 #sec-returnifabrupt
@@ -130,10 +109,7 @@ export function EnsureCompletion(val) {
   if (val instanceof Completion) {
     return val;
   }
-  if (val instanceof Reference) {
-    return val;
-  }
-  return new NormalCompletion(val);
+  return NormalCompletion(val);
 }
 
 export function AwaitFulfilledFunctions([value]) {
@@ -142,7 +118,7 @@ export function AwaitFulfilledFunctions([value]) {
   const prevContext = surroundingAgent.runningExecutionContext;
   // Suspend prevContext
   surroundingAgent.executionContextStack.push(asyncContext);
-  resume(asyncContext, new NormalCompletion(value));
+  resume(asyncContext, NormalCompletion(value));
   Assert(surroundingAgent.runningExecutionContext === prevContext);
   return Value.undefined;
 }
@@ -153,7 +129,7 @@ function AwaitRejectedFunctions([reason]) {
   const prevContext = surroundingAgent.runningExecutionContext;
   // Suspend prevContext
   surroundingAgent.executionContextStack.push(asyncContext);
-  resume(asyncContext, new ThrowCompletion(reason));
+  resume(asyncContext, ThrowCompletion(reason));
   Assert(surroundingAgent.runningExecutionContext === prevContext);
   return Value.undefined;
 }

@@ -2,12 +2,10 @@
 
 const Module = require('module');
 
-// eslint-disable-next-line no-underscore-dangle
 const ModuleFindPath = Module._findPath;
 const hacks = [
   'eslint-plugin-engine262',
 ];
-// eslint-disable-next-line no-underscore-dangle
 Module._findPath = (request, paths, isMain) => {
   const r = ModuleFindPath(request, paths, isMain);
   if (!r && hacks.includes(request)) {
@@ -21,7 +19,7 @@ module.exports = {
   plugins: ['engine262'],
   parser: 'babel-eslint',
   parserOptions: {
-    ecmaVersion: 2019,
+    ecmaVersion: 2020,
   },
   overrides: [
     {
@@ -30,11 +28,11 @@ module.exports = {
     },
   ],
   globals: {
-    BigInt: false,
-    Atomics: false,
-    SharedArrayBuffer: false,
-    WeakRef: false,
     globalThis: false,
+    Atomics: false,
+    BigInt: false,
+    BigUint64Array: false,
+    SharedArrayBuffer: false,
   },
   rules: {
     'arrow-parens': ['error', 'always'],
@@ -45,7 +43,12 @@ module.exports = {
     'import/order': ['error', { 'newlines-between': 'never' }],
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
-    'no-unused-vars': ['error', { vars: 'all', args: 'after-used', argsIgnorePattern: '^_' }],
+    'no-unused-vars': ['error', {
+      vars: 'all',
+      varsIgnorePattern: '^_',
+      args: 'after-used',
+      argsIgnorePattern: '^_',
+    }],
     'no-empty': ['error', { allowEmptyCatch: true }],
     'quote-props': ['error', 'consistent'],
     'strict': ['error', 'global'],
@@ -60,12 +63,15 @@ module.exports = {
     'lines-between-class-members': 'off',
     'max-classes-per-file': 'off',
     'max-len': 'off',
+    'no-bitwise': 'off',
     'no-constant-condition': 'off',
     'no-continue': 'off',
     'no-else-return': 'off',
     'no-lonely-if': 'off',
+    'no-loop-func': 'off',
     'no-param-reassign': 'off',
     'no-restricted-syntax': 'off',
+    'no-underscore-dangle': 'off',
     'no-use-before-define': 'off',
     'prefer-destructuring': 'off',
   },

@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import {
   Q, X,
   Await,
@@ -8,6 +7,7 @@ import {
   NormalCompletion,
   AbruptCompletion,
 } from '../completion.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Value, Type } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
 import {
@@ -39,7 +39,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   const genContext = surroundingAgent.runningExecutionContext;
   genContext.Generator = generator;
   genContext.codeEvaluationState = (function* resumer() {
-    const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
+    const result = EnsureCompletion(yield* Evaluate(generatorBody));
     // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
     surroundingAgent.executionContextStack.pop(genContext);
     generator.AsyncGeneratorState = 'completed';
@@ -171,23 +171,41 @@ export function AsyncGeneratorEnqueue(generator, completion) {
   return promiseCapability.Promise;
 }
 
-// 25.5.3.7 #sec-asyncgeneratoryield
+// #sec-asyncgeneratoryield
 export function* AsyncGeneratorYield(value) {
+  // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
+  // 2. Assert: genContext is the execution context of a generator.
   Assert(genContext.Generator !== Value.undefined);
+  // 3. Let generator be the value of the Generator component of genContext.
   const generator = genContext.Generator;
+  // 4. Assert: GetGeneratorKind() is async.
   Assert(GetGeneratorKind() === 'async');
+  // 5. Set value to ? Await(value).
   value = Q(yield* Await(value));
+  // 6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
   generator.AsyncGeneratorState = 'suspendedYield';
+  // 7. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
   surroundingAgent.executionContextStack.pop(genContext);
+  // 8. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
   const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false));
+
+  // a. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
   if (resumptionValue.Type !== 'return') {
     return Completion(resumptionValue);
   }
+  // b. Let awaited be Await(resumptionValue.[[Value]]).
   const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
+  // c. If awaited.[[Type]] is throw, return Completion(awaited).
   if (awaited.Type === 'Throw') {
     return Completion(awaited);
   }
+  // d. Assert: awaited.[[Type]] is normal.
   Assert(awaited.Type === 'normal');
-  return new Completion('return', awaited.Value, undefined);
+  // e. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+  return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
+  // f. NOTE: When one of the above steps returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
+
+  // 9. Return ! AsyncGeneratorResolve(generator, value, false).
+  // 10. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
 }

@@ -7,21 +7,19 @@ import {
   Q, X,
 } from './completion.mjs';
 import {
-  CreateRealm,
-  SetDefaultGlobalBindings,
-  SetRealmGlobalObject,
-} from './realm.mjs';
-import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
+  CreateArrayFromList,
+  CreateRealm,
+  SetDefaultGlobalBindings,
+  SetRealmGlobalObject,
 } from './abstract-ops/all.mjs';
-import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
-import { Evaluate_Script } from './evaluator.mjs';
+import { Evaluate } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
-import { CallSite } from './helpers.mjs';
+import { CallSite, unwind } from './helpers.mjs';
 import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
@@ -34,20 +32,16 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-weakrefs',
   },
   {
-    name: 'LogicalAssignment',
-    url: 'https://github.com/tc39/proposal-logical-assignment',
-  },
-  {
-    name: 'Promise.any',
-    url: 'https://github.com/tc39/proposal-promise-any',
-  },
-  {
     name: 'RegExpMatchIndices',
     url: 'https://github.com/tc39/proposal-regexp-match-Indices',
   },
   {
-    name: 'String.prototype.replaceAll',
-    url: 'https://github.com/tc39/proposal-string-replaceall',
+    name: 'hashbang',
+    url: 'https://github.com/tc39/proposal-hashbang',
+  },
+  {
+    name: 'NumericSeparators',
+    url: 'https://github.com/tc39/proposal-numeric-separator',
   },
 ].map(Object.freeze));
 
@@ -90,7 +84,7 @@ export class Agent {
     }
   }
 
-  // #sec-running-execution-context
+  // #running-execution-context
   get runningExecutionContext() {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
@@ -113,20 +107,20 @@ export class Agent {
   // Generate a throw completion using message templates
   Throw(type, template, ...templateArgs) {
     if (type instanceof Value) {
-      return new ThrowCompletion(type);
+      return ThrowCompletion(type);
     }
     const message = messages[template](...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     let error;
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
-        Symbol.for('engine262.placeholder'),
+        X(CreateArrayFromList([])),
         new Value(message),
       ]));
     } else {
       error = X(Construct(cons, [new Value(message)]));
     }
-    return new ThrowCompletion(error);
+    return ThrowCompletion(error);
   }
 
   queueJob(queueName, job) {
@@ -218,15 +212,15 @@ export function ScriptEvaluation(scriptRecord) {
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
-  const scriptBody = scriptRecord.ECMAScriptCode.body;
+  const scriptBody = scriptRecord.ECMAScriptCode;
   let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
   if (result.Type === 'normal') {
-    result = Evaluate_Script(scriptBody, globalEnv);
+    result = EnsureCompletion(unwind(Evaluate(scriptBody)));
   }
 
   if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(Value.undefined);
+    result = NormalCompletion(Value.undefined);
   }
 
   // Suspend scriptCtx
@@ -234,15 +228,6 @@ export function ScriptEvaluation(scriptRecord) {
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
-}
-
-export function evaluateScript(sourceText, realm, hostDefined) {
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    return new ThrowCompletion(s[0]);
-  }
-
-  return EnsureCompletion(ScriptEvaluation(s));
 }
 
 // #sec-hostenqueuepromisejob
@@ -274,7 +259,7 @@ export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm));
   }
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }
 
 export function HostPromiseRejectionTracker(promise, operation) {
@@ -364,7 +349,7 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
     }
     FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
   });
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // #sec-hostgetimportmetaproperties
@@ -399,5 +384,5 @@ export function HostCleanupFinalizationRegistry(fg) {
       });
     }
   }
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

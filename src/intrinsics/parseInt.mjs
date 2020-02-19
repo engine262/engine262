@@ -51,6 +51,7 @@ function searchNotRadixDigit(str, R) {
   return str.length;
 }
 
+// #sec-parseint-string-radix
 function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   const inputString = Q(ToString(string));
   let S = X(TrimString(inputString, 'start')).stringValue();

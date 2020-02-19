@@ -1,99 +1,104 @@
-import { Assert } from '../abstract-ops/notational-conventions.mjs';
-import {
-  isNoSubstitutionTemplate,
-  isSubstitutionTemplate,
-  unrollTemplateLiteral,
-} from '../ast.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import {
-  TV_NoSubstitutionTemplate,
-  TV_TemplateHead,
-  TV_TemplateMiddle,
-  TV_TemplateTail,
-  TRV_NoSubstitutionTemplate,
-  TRV_TemplateHead,
-  TRV_TemplateMiddle,
-  TRV_TemplateTail,
-} from './all.mjs';
+import { Value } from '../value.mjs';
+import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parse.mjs';
 
-// 12.2.9.2 #sec-static-semantics-templatestrings
-//   TemplateLiteral : NoSubstitutionTemplate
-//
-// (implicit)
-//   TemplateLiteral : SubstitutionTemplate
-export function TemplateStrings_TemplateLiteral(TemplateLiteral, raw) {
-  switch (true) {
-    case isNoSubstitutionTemplate(TemplateLiteral): {
-      let string;
-      if (raw === false) {
-        string = TV_NoSubstitutionTemplate(TemplateLiteral);
-      } else {
-        string = TRV_NoSubstitutionTemplate(TemplateLiteral);
+export function TV(s) {
+  let buffer = '';
+  for (let i = 0; i < s.length; i += 1) {
+    if (s[i] === '\\') {
+      i += 1;
+      switch (s[i]) {
+        case '\\':
+          buffer += '\\';
+          break;
+        case '`':
+          buffer += '`';
+          break;
+        case '\'':
+          buffer += '\'';
+          break;
+        case '"':
+          buffer += '"';
+          break;
+        case 'b':
+          buffer += '\b';
+          break;
+        case 'f':
+          buffer += '\f';
+          break;
+        case 'n':
+          buffer += '\n';
+          break;
+        case 'r':
+          buffer += '\r';
+          break;
+        case 't':
+          buffer += '\t';
+          break;
+        case 'v':
+          buffer += '\v';
+          break;
+        case 'x':
+          i += 1;
+          if (isHexDigit(s[i]) && isHexDigit(s[i + 1])) {
+            const n = Number.parseInt(s.slice(i, i + 2), 16);
+            i += 2;
+            buffer += String.fromCharCode(n);
+          } else {
+            return undefined;
+          }
+          break;
+        case 'u':
+          i += 1;
+          if (s[i] === '{') {
+            i += 1;
+            const start = i;
+            do {
+              i += 1;
+            } while (isHexDigit(s[i]));
+            if (s[i] !== '}') {
+              return undefined;
+            }
+            const n = Number.parseInt(s.slice(start, i), 16);
+            if (n > 0x10FFFF) {
+              return undefined;
+            }
+            buffer += String.fromCodePoint(n);
+          } else if (isHexDigit(s[i]) && isHexDigit(s[i + 1])
+                     && isHexDigit(s[i + 2]) && isHexDigit(s[i + 3])) {
+            const n = Number.parseInt(s.slice(i, i + 4), 16);
+            i += 3;
+            buffer += String.fromCodePoint(n);
+          } else {
+            return undefined;
+          }
+          break;
+        case '0':
+          if (isDecimalDigit(s[i + 1])) {
+            return undefined;
+          }
+          return '\u{0000}';
+        default:
+          if (isLineTerminator(s)) {
+            return '';
+          }
+          return undefined;
       }
-      return [string];
-    }
-
-    case isSubstitutionTemplate(TemplateLiteral):
-      return TemplateStrings_SubstitutionTemplate(TemplateLiteral, raw);
-
-    default:
-      throw new OutOfRange('TemplateStrings_TemplateLiteral', TemplateLiteral);
-  }
-}
-
-// 12.2.9.2 #sec-static-semantics-templatestrings
-//   SubstitutionTemplate : TemplateHead Expression TemplateSpans
-export function TemplateStrings_SubstitutionTemplate(SubstitutionTemplate, raw) {
-  const [TemplateHead, /* Expression */, ...TemplateSpans] = unrollTemplateLiteral(SubstitutionTemplate);
-
-  let head;
-  if (raw === false) {
-    head = TV_TemplateHead(TemplateHead);
-  } else {
-    head = TRV_TemplateHead(TemplateHead);
-  }
-  const tail = TemplateStrings_TemplateSpans(TemplateSpans, raw);
-  return [head, ...tail];
-}
-
-// 12.2.9.2 #sec-static-semantics-templatestrings
-//   TemplateSpans :
-//     TemplateTail
-//     TemplateMiddleList TemplateTail
-export function TemplateStrings_TemplateSpans(TemplateSpans, raw) {
-  let middle = [];
-  Assert(TemplateSpans.length % 2 === 1);
-  if (TemplateSpans.length > 1) {
-    middle = TemplateStrings_TemplateMiddleList(TemplateSpans.slice(0, -1), raw);
-  }
-
-  const TemplateTail = TemplateSpans[TemplateSpans.length - 1];
-  let tail;
-  if (raw === false) {
-    tail = TV_TemplateTail(TemplateTail);
-  } else {
-    tail = TRV_TemplateTail(TemplateTail);
-  }
-
-  return [...middle, tail];
-}
-
-// 12.2.9.2 #sec-static-semantics-templatestrings
-//   TemplateMiddleList :
-//     TemplateMiddle Expression
-//     TemplateMiddleList TemplateMiddle Expression
-export function TemplateStrings_TemplateMiddleList(TemplateMiddleList, raw) {
-  const front = [];
-  Assert(TemplateMiddleList.length % 2 === 0);
-  for (let i = 0; i < TemplateMiddleList.length; i += 2) {
-    const TemplateMiddle = TemplateMiddleList[i];
-    let last;
-    if (raw === false) {
-      last = TV_TemplateMiddle(TemplateMiddle);
     } else {
-      last = TRV_TemplateMiddle(TemplateMiddle);
+      buffer += s[i];
     }
-    front.push(last);
   }
-  return front;
+  return buffer;
+}
+
+export function TemplateStrings(node, raw) {
+  if (raw) {
+    return node.TemplateSpanList.map(Value);
+  }
+  return node.TemplateSpanList.map((v) => {
+    const tv = TV(v);
+    if (tv === undefined) {
+      return Value.undefined;
+    }
+    return new Value(tv);
+  });
 }

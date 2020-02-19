@@ -65,6 +65,22 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
+  function addSectionFromComments(path) {
+    if (path.node.leadingComments) {
+      for (const c of path.node.leadingComments) {
+        const lines = c.value.split('\n');
+        for (const line of lines) {
+          if (/#sec/.test(line)) {
+            const section = line.split(' ').find((l) => l.includes('#sec'));
+            const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
+            path.insertAfter(template.ast(`${path.node.id ? path.node.id.name : path.node.declarations[0].id.name}.section = '${url}';`));
+            return;
+          }
+        }
+      }
+    }
+  }
+
   const MACROS = {
     Q: {
       template: template(`
@@ -232,19 +248,11 @@ module.exports = ({ types: t, template }) => {
         }
       },
       FunctionDeclaration(path) {
-        if (path.node.leadingComments) {
-          outer: // eslint-disable-line no-labels
-          for (const c of path.node.leadingComments) {
-            const lines = c.value.split('\n');
-            for (const line of lines) {
-              if (/#sec/.test(line)) {
-                const section = line.split(' ').find((l) => l.includes('#sec'));
-                const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-                path.insertAfter(template.ast(`${path.node.id.name}.section = '${url}';`));
-                break outer; // eslint-disable-line no-labels
-              }
-            }
-          }
+        addSectionFromComments(path);
+      },
+      VariableDeclaration(path) {
+        if (path.get('declarations.0.init').isArrowFunctionExpression()) {
+          addSectionFromComments(path);
         }
       },
     },

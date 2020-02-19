@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { NormalCompletion, EnsureCompletion } from '../completion.mjs';
 
-// 13.16.1 #sec-debugger-statement-runtime-semantics-evaluation
+// #sec-debugger-statement-runtime-semantics-evaluation
 // DebuggerStatement : `debugger` `;`
 export function Evaluate_DebuggerStatement() {
   let result;

@@ -1,17 +1,40 @@
 'use strict';
 
-/* eslint-disable no-inner-declarations */
+try {
+  require('@snek/source-map-support/register');
+} catch {}
 
-require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
+const util = require('util');
+const glob = require('glob');
+
+const readList = (name) => {
+  const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
+  return source.split('\n').filter((l) => l && !l.startsWith('#'));
+};
+const readListPaths = (name) => readList(name)
+  .flatMap((t) => glob.sync(path.resolve(__dirname, 'test262', 'test', t)))
+  .map((f) => path.relative(path.resolve(__dirname, 'test262'), f));
+
+const disabledFeatures = [];
+const featureMap = {};
+readList('features')
+  .forEach((f) => {
+    if (f.startsWith('-')) {
+      disabledFeatures.push(f.slice(1));
+    }
+    if (f.includes('=')) {
+      const [k, v] = f.split('=');
+      featureMap[k.trim()] = v.trim();
+    }
+  });
 
 if (!process.send) {
   // supervisor
 
   const childProcess = require('child_process');
   const TestStream = require('test262-stream');
-  const glob = require('glob');
 
   const {
     pass,
@@ -29,7 +52,8 @@ if (!process.send) {
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
-    c.on('message', ({ description, status, error }) => {
+    c.on('message', (message) => {
+      const { description, status, error } = message;
       switch (status) {
         case 'PASS':
           pass();
@@ -41,7 +65,7 @@ if (!process.send) {
           skip();
           break;
         default:
-          break;
+          throw new RangeError(JSON.stringify(message));
       }
     });
     c.on('exit', (code) => {
@@ -58,16 +82,7 @@ if (!process.send) {
     longRunningWorker = createWorker();
   }
 
-  const readList = (name) => {
-    const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
-    return source.split('\n').filter((l) => l && !l.startsWith('//'));
-  };
-  const readListPaths = (name) => readList(name)
-    .flatMap((t) => glob.sync(path.resolve(__dirname, 'test262', 'test', t)))
-    .map((f) => path.relative(path.resolve(__dirname, 'test262'), f));
-
-  const features = readList('features');
-  const longlist = readListPaths('longlist');
+  const slowlist = readListPaths('slowlist');
   const skiplist = readListPaths('skiplist');
 
   const stream = new TestStream(path.resolve(__dirname, 'test262'), {
@@ -77,24 +92,30 @@ if (!process.send) {
 
   let workerIndex = 0;
   stream.on('data', (test) => {
+    if (test.attrs.flags.module && test.scenario !== 'default') {
+      // test262-stream duplicates module tests, deduplicate here
+      return;
+    }
+
     total();
 
     if (/annexB|intl402/.test(test.file)
-      || (test.attrs.features && test.attrs.features.some((feature) => features.includes(feature)))
+      || (test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
       || test.attrs.includes.includes('nativeFunctionMatcher.js')
+      || /\b(reg ?exp?)\b/i.test(test.attrs.description) || /\b(reg ?exp?)\b/.test(test.contents)
       || skiplist.includes(test.file)) {
       skip();
       return;
     }
 
-    if (longlist.includes(test.file)) {
+    if (slowlist.includes(test.file)) {
       if (RUN_LONG) {
-        longRunningWorker.send(test, () => 0);
+        longRunningWorker.send(test);
       } else {
         skip();
       }
     } else {
-      workers[workerIndex].send(test, () => 0);
+      workers[workerIndex].send(test);
       workerIndex += 1;
       if (workerIndex >= workers.length) {
         workerIndex = 0;
@@ -105,175 +126,197 @@ if (!process.send) {
   stream.on('end', () => {
     workers.forEach((w) => {
       w.send('DONE');
-      if (RUN_LONG) {
-        longRunningWorker.send('DONE');
-      }
     });
+    if (RUN_LONG) {
+      longRunningWorker.send('DONE');
+    }
   });
 } else {
   // worker
 
   const {
-    Agent, Value,
-    FEATURES, Abstract,
-    Throw,
-    AbruptCompletion,
+    Agent,
+    setSurroundingAgent,
     inspect,
+
+    Value,
+
+    IsCallable,
+    IsDataDescriptor,
+    Type,
+
+    AbruptCompletion,
+    Throw,
   } = require('../..');
   const { createRealm } = require('../../bin/test262_realm');
 
-  const agent = new Agent({
-    features: FEATURES.map((f) => f.name),
-  });
-  agent.enter();
-
-  const isError = (realm, type, value) => {
-    if (Abstract.Type(value) !== 'Object') {
+  const isError = (type, value) => {
+    if (Type(value) !== 'Object') {
       return false;
     }
     const proto = value.Prototype;
-    if (!proto || Abstract.Type(proto) !== 'Object') {
+    if (!proto || Type(proto) !== 'Object') {
       return false;
     }
-    const ctorDesc = proto.properties.get(new Value(realm, 'constructor'));
-    if (!ctorDesc || !Abstract.IsDataDescriptor(ctorDesc)) {
+    const ctorDesc = proto.properties.get(new Value('constructor'));
+    if (!ctorDesc || !IsDataDescriptor(ctorDesc)) {
       return false;
     }
     const ctor = ctorDesc.Value;
-    if (Abstract.Type(ctor) !== 'Object' || Abstract.IsCallable(ctor) !== Value.true) {
+    if (Type(ctor) !== 'Object' || IsCallable(ctor) !== Value.true) {
       return false;
     }
-    const namePropDesc = ctor.properties.get(new Value(realm, 'name'));
-    if (!namePropDesc || !Abstract.IsDataDescriptor(namePropDesc)) {
+    const namePropDesc = ctor.properties.get(new Value('name'));
+    if (!namePropDesc || !IsDataDescriptor(namePropDesc)) {
       return false;
     }
     const nameProp = namePropDesc.Value;
-    return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
+    return Type(nameProp) === 'String' && nameProp.stringValue() === type;
   };
 
   const includeCache = {};
 
   const run = (test) => {
-    const { file, contents, attrs } = test;
-    const specifier = path.resolve(__dirname, 'test262', file);
+    const features = [];
+    if (test.attrs.features) {
+      test.attrs.features.forEach((f) => {
+        if (featureMap[f]) {
+          features.push(featureMap[f]);
+        }
+      });
+    }
+    const agent = new Agent({
+      features,
+    });
+    setSurroundingAgent(agent);
+
     const {
       realm, trackedPromises,
       resolverCache, setPrintHandle,
-    } = createRealm({ file });
-    let asyncPromise;
-    let timeout;
-    if (attrs.flags.async) {
-      asyncPromise = new Promise((resolve) => {
-        timeout = setTimeout(() => {
-          const failure = [...trackedPromises][0];
-          if (failure) {
-            resolve({ status: 'FAIL', error: inspect(failure.PromiseResult, realm) });
-          } else {
-            resolve({ status: 'FAIL', error: 'test timed out' });
-          }
-        }, 2500);
+    } = createRealm({ file: test.file });
+    const r = realm.scope(() => {
+      test.attrs.includes.unshift('assert.js', 'sta.js');
+      if (test.attrs.flags.async) {
+        test.attrs.includes.unshift('doneprintHandle.js');
+      }
+
+      for (const include of test.attrs.includes) {
+        if (includeCache[include] === undefined) {
+          const p = path.resolve(__dirname, `./test262/harness/${include}`);
+          includeCache[include] = {
+            source: fs.readFileSync(p, 'utf8'),
+            specifier: p,
+          };
+        }
+        const entry = includeCache[include];
+        const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
+        if (completion instanceof AbruptCompletion) {
+          return { status: 'FAIL', error: inspect(completion) };
+        }
+      }
+
+      {
+        const completion = realm.evaluateScript(`
+  var Test262Error = class Test262Error extends Error {};
+
+  function $DONE(error) {
+    if (error) {
+      if (typeof error === 'object' && error !== null && 'stack' in error) {
+        __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
+      } else {
+        __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
+      }
+    } else {
+      __consolePrintHandle__('Test262:AsyncTestComplete');
+    }
+  }`.trim());
+        if (completion instanceof AbruptCompletion) {
+          return { status: 'FAIL', error: inspect(completion) };
+        }
+      }
+
+      let asyncResult;
+      if (test.attrs.flags.async) {
         setPrintHandle((m) => {
           if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
-            resolve({ status: 'PASS' });
+            asyncResult = { status: 'PASS' };
           } else {
-            resolve({ status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m, realm) });
+            asyncResult = { status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m) };
           }
           setPrintHandle(undefined);
         });
-      });
-    }
-
-    attrs.includes.unshift('assert.js', 'sta.js');
-    if (attrs.flags.async) {
-      attrs.includes.unshift('doneprintHandle.js');
-    }
-    attrs.includes.forEach((include) => {
-      if (includeCache[include] === undefined) {
-        const p = path.resolve(__dirname, `./test262/harness/${include}`);
-        includeCache[include] = {
-          source: fs.readFileSync(p, 'utf8'),
-          specifier: p,
-        };
       }
-      const entry = includeCache[include];
-      realm.evaluateScript(entry.source, { specifier: entry.specifier });
-    });
 
-    realm.evaluateScript(`
-var Test262Error = class Test262Error extends Error {};
+      const specifier = path.resolve(__dirname, 'test262', test.file);
 
-function $DONE(error) {
-  if (error) {
-    if (typeof error === 'object' && error !== null && 'stack' in error) {
-      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
-    } else {
-      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
-    }
-  } else {
-    __consolePrintHandle__('Test262:AsyncTestComplete');
-  }
-}`.trim());
-
-    let completion;
-    if (attrs.flags.module) {
-      completion = realm.createSourceTextModule(specifier, contents);
-      if (!(completion instanceof AbruptCompletion)) {
-        const module = completion;
-        resolverCache.set(specifier, module);
-        completion = module.Link();
+      let completion;
+      if (test.attrs.flags.module) {
+        completion = realm.createSourceTextModule(specifier, test.contents);
         if (!(completion instanceof AbruptCompletion)) {
-          completion = module.Evaluate();
+          const module = completion;
+          resolverCache.set(specifier, module);
+          completion = module.Link();
+          if (!(completion instanceof AbruptCompletion)) {
+            completion = module.Evaluate();
+          }
           if (!(completion instanceof AbruptCompletion)) {
             if (completion.PromiseState === 'rejected') {
-              completion = Throw(realm, completion.PromiseResult);
+              completion = Throw(completion.PromiseResult);
             }
           }
         }
-      }
-    } else {
-      completion = realm.evaluateScript(contents, { specifier });
-    }
-
-    if (completion instanceof AbruptCompletion) {
-      clearTimeout(timeout);
-      if (attrs.negative && isError(realm, attrs.negative.type, completion.Value)) {
-        return { status: 'PASS' };
       } else {
-        return { status: 'FAIL', error: inspect(completion, realm) };
+        completion = realm.evaluateScript(test.contents, { specifier });
       }
-    }
 
-    if (asyncPromise !== undefined) {
-      return asyncPromise;
-    }
+      if (completion instanceof AbruptCompletion) {
+        if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
+          return { status: 'PASS' };
+        } else {
+          return { status: 'FAIL', error: inspect(completion) };
+        }
+      }
 
-    clearTimeout(timeout);
+      if (test.attrs.flags.async) {
+        if (!asyncResult) {
+          throw new Error('missing async result');
+        }
+        return asyncResult;
+      }
 
-    if (attrs.negative) {
-      return { status: 'FAIL', error: `Expected ${attrs.negative.type} during ${attrs.negative.phase}` };
-    } else {
-      return { status: 'PASS' };
-    }
+      if (trackedPromises.length > 0) {
+        return { status: 'FAIL', error: inspect(trackedPromises[0]) };
+      }
+
+      if (test.attrs.negative) {
+        return { status: 'FAIL', error: `Expected ${test.attrs.negative.type} during ${test.attrs.negative.phase}` };
+      } else {
+        return { status: 'PASS' };
+      }
+    });
+
+    return r;
   };
 
   let p = Promise.resolve();
+  const handleSendError = (e) => {
+    if (e) {
+      process.exit(1);
+    }
+  };
   process.on('message', (test) => {
     if (test === 'DONE') {
-      p = p.then(() => process.exit(0));
+      p.then(() => process.exit(0));
+      p = undefined;
     } else {
       const description = `${test.file}\n${test.attrs.description}`;
       p = p
         .then(() => run(test))
-        .catch((e) => {
-          process.send({ description, status: 'FAIL', error: e.stack || e });
-          process.exit(1);
-        })
         .then((r) => {
-          process.send({ description, ...r }, (e) => {
-            if (e) {
-              process.exit(1);
-            }
-          });
+          process.send({ description, ...r }, handleSendError);
+        })
+        .catch((e) => {
+          process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
         });
     }
   });

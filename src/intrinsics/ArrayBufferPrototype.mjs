@@ -27,6 +27,7 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   return length;
 }
 
+// #sec-arraybuffer.prototype.slice
 function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;

@@ -5,12 +5,12 @@ import {
   BigIntValue,
   wellKnownSymbols,
 } from '../value.mjs';
-import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   Assert,
   Call,

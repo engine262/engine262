@@ -19,6 +19,7 @@ import {
 import { BootstrapConstructor } from './Bootstrap.mjs';
 import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 
+// #sec-date-constructor
 function DateConstructor(args, { NewTarget }) {
   const numberOfArgs = args.length;
   if (numberOfArgs >= 2) {

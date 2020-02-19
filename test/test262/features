@@ -1,25 +1,39 @@
-// blacklist
+# https://github.com/tc39/test262/blob/master/features.txt
 
-Atomics
-Atomics.waitAsync
+# Start with `-` to skip feature
+# Map feature to engine262 feature using `feature = engine262featurename`
 
-caller
+-Atomics
+-Atomics.waitAsync
 
-SharedArrayBuffer
+-caller
 
-tail-call-optimization
+-SharedArrayBuffer
 
-u180e
+-tail-call-optimization
 
-class-fields-public
-class-fields-private
-class-methods-private
-class-static-fields-public
-class-static-fields-private
-class-static-methods-private
+-u180e
 
-export-star-as-namespace-from-module
+-class-fields-public
+-class-fields-private
+-class-methods-private
+-class-static-fields-public
+-class-static-fields-private
+-class-static-methods-private
 
-hashbang
+# https://github.com/tc39/proposal-top-level-await
+top-level-await = TopLevelAwait
 
-numeric-separator-literal
+# https://github.com/tc39/proposal-weakrefs
+WeakRef = WeakRefs
+FinalizationRegistry = WeakRefs
+cleanupSome = WeakRefs
+
+# https://github.com/tc39/proposal-regexp-match-Indices
+regexp-match-indices = RegExpMatchIndices
+
+# https://github.com/tc39/proposal-hashbang
+hashbang = hashbang
+
+# https://github.com/tc39/proposal-numeric-separator
+numeric-separator-literal = NumericSeparators

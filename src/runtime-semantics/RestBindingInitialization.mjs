@@ -1,6 +1,5 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
+import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   CopyDataProperties,
   InitializeReferencedBinding,
@@ -8,25 +7,21 @@ import {
   PutValue,
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
-import {
-  Q,
-} from '../completion.mjs';
+import { StringValue } from '../static-semantics/all.mjs';
+import { Q } from '../completion.mjs';
 
-// 13.3.3.7 #sec-destructuring-binding-patterns-runtime-semantics-restbindinginitialization
-//   BindingRestProperty : `...` BindingIdentifier
-export function RestBindingInitialization_BindingRestProperty(
-  BindingRestProperty, value, environment, excludedNames,
-) {
-  const BindingIdentifier = BindingRestProperty.argument;
-  const lhs = Q(ResolveBinding(new Value(BindingIdentifier.name), environment, BindingIdentifier.strict));
+// BindingRestProperty : `...` BindingIdentifier
+export function RestBindingInitialization({ BindingIdentifier }, value, environment, excludedNames) {
+  // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
+  const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment));
+  // 2. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  // 3. Perform ? CopyDataProperties(restObj, value, excludedNames).
   Q(CopyDataProperties(restObj, value, excludedNames));
-  if (Type(environment) === 'Undefined') {
+  // 4. If environment is undefined, return PutValue(lhs, restObj).
+  if (environment === Value.undefined) {
     return PutValue(lhs, restObj);
   }
+  // 5. Return InitializeReferencedBinding(lhs, restObj).
   return InitializeReferencedBinding(lhs, restObj);
 }

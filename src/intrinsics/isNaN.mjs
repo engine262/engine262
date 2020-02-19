@@ -7,11 +7,15 @@ import {
 import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
+// #sec-isnan-number
 function IsNaN([number = Value.undefined]) {
+  // 1. Let num be ? ToNumber(number).
   const num = Q(ToNumber(number));
+  // 2. If num is NaN, return true.
   if (num.isNaN()) {
     return Value.true;
   }
+  // 3. Otherwise, return false.
   return Value.false;
 }
 

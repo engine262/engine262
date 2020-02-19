@@ -38,7 +38,7 @@ module.exports = {
         }
         return engine262.Value.undefined;
       });
-      const r = engine262.Abstract.Call(F, thisValue, args);
+      const r = engine262.Call(F, thisValue, args);
       return context.createEvaluationResult(r, options);
     },
     evaluate(options) {
@@ -71,7 +71,10 @@ module.exports = {
         return context.createEvaluationResult(properties, options);
       }
 
-      return { result: properties };
+      return {
+        result: properties.properties,
+        internalProperties: properties.internalProperties,
+      };
     },
     globalLexicalScopeNames({ executionContextId }) {
       const context = getContext(executionContextId);

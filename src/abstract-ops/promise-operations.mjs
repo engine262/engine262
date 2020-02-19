@@ -11,7 +11,6 @@ import {
   Q,
   X,
   ThrowCompletion,
-  EnsureCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -273,12 +272,12 @@ function NewPromiseReactionJob(reaction, argument) {
     if (handler === Value.undefined) {
       // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
       if (type === 'Fulfill') {
-        handlerResult = new NormalCompletion(argument);
+        handlerResult = NormalCompletion(argument);
       } else {
         // 1. Assert: type is Reject.
         Assert(type === 'Reject');
         // 2. Let handlerResult be ThrowCompletion(argument).
-        handlerResult = new ThrowCompletion(argument);
+        handlerResult = ThrowCompletion(argument);
       }
     } else {
       // f. let handlerResult be Call(handler, undefined, « argument »).
@@ -289,7 +288,7 @@ function NewPromiseReactionJob(reaction, argument) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion));
       // ii. Return NormalCompletion(empty).
-      return new NormalCompletion(undefined);
+      return NormalCompletion(undefined);
     }
     let status;
     // h. If handlerResult is an abrupt completion, then
@@ -298,7 +297,7 @@ function NewPromiseReactionJob(reaction, argument) {
       status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
     } else {
       // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
+      status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
     }
     // j. Return Completion(status).
     return Completion(status);

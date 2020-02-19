@@ -13,34 +13,52 @@ import {
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
+// #sec-thissymbolvalue
 function thisSymbolValue(value) {
+  // 1. If Type(value) is Symbol, return value.
   if (Type(value) === 'Symbol') {
     return value;
   }
+  // 2. If Type(value) is Object and value has a [[SymbolData]] internal slot, then
   if (Type(value) === 'Object' && 'SymbolData' in value) {
+    // a. Let s be value.[[SymbolData]].
     const s = value.SymbolData;
+    // b. Assert: Type(s) is Symbol.
     Assert(Type(s) === 'Symbol');
+    // c. Return s.
     return s;
   }
+  // 3. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Symbol', value);
 }
 
-function SymbolProto_toString(argList, { thisValue }) {
-  const sym = Q(thisSymbolValue(thisValue));
-  return SymbolDescriptiveString(sym);
-}
-
+// #sec-symbol.prototype.description
 function SymbolProto_descriptionGetter(argList, { thisValue }) {
+  // 1. Let s be the this value.
   const s = thisValue;
+  // 2. Let sym be ? thisSymbolValue(s).
   const sym = Q(thisSymbolValue(s));
+  // 3. Return sym.[[Description]].
   return sym.Description;
 }
 
+// #sec-symbol.prototype.tostring
+function SymbolProto_toString(argList, { thisValue }) {
+  // 1. Let sym be ? thisSymbolValue(this value).
+  const sym = Q(thisSymbolValue(thisValue));
+  // 2. Return SymbolDescriptiveString(sym).
+  return SymbolDescriptiveString(sym);
+}
+
+// #sec-symbol.prototype.valueof
 function SymbolProto_valueOf(argList, { thisValue }) {
+  // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }
 
+// #sec-symbol.prototype-@@toprimitive
 function SymbolProto_toPrimitive(argList, { thisValue }) {
+  // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }
 

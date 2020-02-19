@@ -10,14 +10,67 @@ import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
-import { isAssignmentPattern } from '../ast.mjs';
-import { EvaluateBinopValues, Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
-  DestructuringAssignmentEvaluation_AssignmentPattern,
-  NamedEvaluation_Expression,
+  NamedEvaluation,
+  ApplyStringOrNumericBinaryOperator,
+  DestructuringAssignmentEvaluation,
 } from './all.mjs';
 
-// 12.15.4 #sec-assignment-operators-runtime-semantics-evaluation
+// #sec-destructuring-assignment
+export function refineLeftHandSideExpression(node) {
+  switch (node.type) {
+    case 'ArrayLiteral':
+      return {
+        type: 'ArrayAssignmentPattern',
+        AssignmentElementList: node.ElementList.map((n) => refineLeftHandSideExpression(n)),
+      };
+    case 'ObjectLiteral':
+      return {
+        type: 'ObjectAssignmentPattern',
+        AssignmentPropertyList: node.PropertyDefinitionList.map((p) => refineLeftHandSideExpression(p)),
+      };
+    case 'PropertyDefinition':
+      return {
+        type: 'AssignmentProperty',
+        PropertyName: node.PropertyName,
+        AssignmentElement: node.AssignmentExpression.type === 'AssignmentExpression'
+          ? {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression.LeftHandSideExpression,
+            AssignmentExpression: node.AssignmentExpression.AssignmentExpression,
+          }
+          : {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression,
+            Initializer: undefined,
+          },
+      };
+    case 'IdentifierReference':
+      return {
+        type: 'AssignmentProperty',
+        IdentifierReference: node,
+        Initializer: undefined,
+      };
+    case 'CoverInitializedName':
+      return {
+        type: 'AssignmentProperty',
+        IdentifierReference: node.IdentifierReference,
+        Initializer: node.Initializer,
+      };
+    case 'AssignmentExpression':
+      return {
+        type: 'AssignmentElement',
+        DestructuringAssignmentTarget: node.LeftHandSideExpression,
+        Initializer: node.AssignmentExpression,
+      };
+    default:
+      throw new OutOfRange('refineLeftHandSideExpression', node.type);
+  }
+}
+
+// #sec-assignment-operators-runtime-semantics-evaluation
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -25,29 +78,43 @@ import {
 //     LeftHandSideExpression `&&=` AssignmentExpression
 //     LeftHandSideExpression `||=` AssignmentExpression
 //     LeftHandSideExpression `??=` AssignmentExpression
-export function* Evaluate_AssignmentExpression(node) {
-  const LeftHandSideExpression = node.left;
-  const AssignmentExpression = node.right;
-  if (node.operator === '=') {
-    if (!isAssignmentPattern(LeftHandSideExpression)) {
+export function* Evaluate_AssignmentExpression({
+  LeftHandSideExpression, AssignmentOperator, AssignmentExpression,
+}) {
+  if (AssignmentOperator === '=') {
+    // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
+    if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
+      // a. Let lref be the result of evaluating LeftHandSideExpression.
       const lref = yield* Evaluate(LeftHandSideExpression);
+      // b. ReturnIfAbrupt(lref).
       ReturnIfAbrupt(lref);
+      // c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
       let rval;
       if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
-        rval = yield* NamedEvaluation_Expression(AssignmentExpression, GetReferencedName(lref));
-      } else {
+        // i. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      } else { // d. Else,
+        // i. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
+        // ii. Let rval be ? GetValue(rref).
         rval = Q(GetValue(rref));
       }
+      // e. Perform ? PutValue(lref, rval).
       Q(PutValue(lref, rval));
+      // f. Return rval.
       return rval;
     }
-    const assignmentPattern = LeftHandSideExpression;
+    // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
+    const assignmentPattern = refineLeftHandSideExpression(LeftHandSideExpression);
+    // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
+    // 3. Let rval be ? GetValue(rref).
     const rval = Q(GetValue(rref));
-    Q(yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rval));
+    // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+    Q(yield* DestructuringAssignmentEvaluation(assignmentPattern, rval));
+    // 5. Return rval.
     return rval;
-  } else if (node.operator === '&&=') {
+  } else if (AssignmentOperator === '&&=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -66,7 +133,7 @@ export function* Evaluate_AssignmentExpression(node) {
     Q(PutValue(lref, rval));
     // 8. Return rval.
     return rval;
-  } else if (node.operator === '||=') {
+  } else if (AssignmentOperator === '||=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -85,7 +152,7 @@ export function* Evaluate_AssignmentExpression(node) {
     Q(PutValue(lref, rval));
     // 8. Return rval.
     return rval;
-  } else if (node.operator === '??=') {
+  } else if (AssignmentOperator === '??=') {
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -103,18 +170,36 @@ export function* Evaluate_AssignmentExpression(node) {
     // 7. Return rval.
     return rval;
   } else {
-    const AssignmentOperator = node.operator;
-
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
+    // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
+    // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
+    // 4. Let rval be ? GetValue(rref).
     const rval = Q(GetValue(rref));
-    // Let op be the @ where AssignmentOperator is @=.
-    const op = AssignmentOperator.slice(0, -1);
-    // Let r be the result of applying op to lval and rval
-    // as if evaluating the expression lval op rval.
-    const r = EvaluateBinopValues(op, lval, rval);
+    // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
+    const assignmentOpText = AssignmentOperator;
+    // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
+    const opText = {
+      '**=': '**',
+      '*=': '*',
+      '/=': '/',
+      '%=': '%',
+      '+=': '+',
+      '-=': '-',
+      '<<=': '<<',
+      '>>=': '>>',
+      '>>>=': '>>>',
+      '&=': '&',
+      '^=': '^',
+      '|=': '|',
+    }[assignmentOpText];
+    // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
+    const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval);
+    // 8. Perform ? PutValue(lref, r).
     Q(PutValue(lref, r));
+    // 9. Return r.
     return r;
   }
 }

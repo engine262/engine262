@@ -1,38 +1,7 @@
-// random issues in test262
-built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
-built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
-built-ins/Proxy/has/trap-is-missing-target-is-proxy.js
-
-// https://github.com/tc39/ecma262/pull/1408
-language/statements/for-of/iterator-close-throw-get-method-abrupt.js
-language/statements/for-of/iterator-close-throw-get-method-non-callable.js
-language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js
-language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js
-
-// https://github.com/tc39/ecma262/pull/1814
-built-ins/Proxy/create-target-is-revoked-proxy.js
-built-ins/Proxy/create-handler-is-revoked-proxy.js
-built-ins/Proxy/create-target-is-revoked-function-proxy.js
-
-// https://github.com/tc39/ecma262/pull/1776
-built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
-built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
-built-ins/AsyncFromSyncIteratorPrototype/throw/absent-value-not-passed.js
-
-// https://github.com/tc39/ecma262/issues/1426
+# https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
-// https://github.com/acornjs/acorn/issues/934
-language/expressions/import.meta/syntax/escape-sequence-import.js
-language/expressions/dynamic-import/escape-sequence-import.js
-
-// https://github.com/acornjs/acorn/issues/938
-language/identifiers/start-unicode-13.0.0.js
-language/identifiers/part-unicode-13.0.0.js
-language/identifiers/part-unicode-13.0.0-escaped.js
-language/identifiers/start-unicode-13.0.0-escaped.js
-
-// TODO(7): Missing Date.
+# TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
 built-ins/Date/parse/time-value-maximum-range.js
 built-ins/Date/parse/without-utc-offset.js
@@ -44,20 +13,7 @@ built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
 harness/assertRelativeDateMs.js
 
-// TODO: Missing {decode|encode}URI{Component}
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js
-built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
-built-ins/decodeURI/**/*.js
-built-ins/decodeURIComponent/**/*.js
-built-ins/encodeURI/**/*.js
-built-ins/encodeURIComponent/**/*.js
-built-ins/global/S10.2.3_A1.1_T2.js
-built-ins/global/S10.2.3_A1.2_T2.js
-built-ins/global/S10.2.3_A1.3_T2.js
-
-// TODO(46): Missing Number
+# TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
 built-ins/Number/prototype/toFixed/*.js
@@ -74,17 +30,4 @@ language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 
-// Failing tests in language
-language/eval-code/direct/new.target-fn.js
-language/eval-code/direct/super-prop-method.js
-language/expressions/super/prop-dot-cls-val-from-eval.js
-language/expressions/super/prop-dot-obj-val-from-eval.js
-language/expressions/super/prop-expr-cls-val-from-eval.js
-language/expressions/super/prop-expr-obj-val-from-eval.js
-language/expressions/super/prop-expr-cls-val.js
-
-// https://github.com/tc39/test262/pull/2575
-built-ins/RegExp/lookBehind/sliced-strings.js
-
-built-ins/RegExp/named-groups/unicode-property-names-valid.js
-built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
+built-ins/RegExp/**/*.js

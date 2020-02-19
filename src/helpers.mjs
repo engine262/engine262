@@ -191,8 +191,9 @@ export class CallSite {
   }
 
   isAsync() {
-    if (this.context.Function !== Value.null) {
-      return this.context.Function.ECMAScriptCode && this.context.Function.ECMAScriptCode.async;
+    if (this.context.Function !== Value.null && this.context.Function.ECMAScriptCode) {
+      const code = this.context.Function.ECMAScriptCode;
+      return code.type === 'AsyncFunctionBody' || code.type === 'AsyncGeneratorBody';
     }
     return false;
   }
@@ -224,14 +225,14 @@ export class CallSite {
 
   get lineNumber() {
     if (this.lastNode) {
-      return this.lastNode.loc.start.line;
+      return this.lastNode.location.start.line;
     }
     return null;
   }
 
   get columnNumber() {
     if (this.lastNode) {
-      return this.lastNode.loc.start.column;
+      return this.lastNode.location.start.column;
     }
     return null;
   }

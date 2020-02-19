@@ -1,10 +1,5 @@
-import {
-  Type,
-  Value,
-} from '../value.mjs';
-import {
-  Assert,
-} from '../abstract-ops/all.mjs';
+import { Type, Value } from '../value.mjs';
+import { Assert } from '../abstract-ops/all.mjs';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
 export function StringIndexOf(string, searchValue, fromIndex) {

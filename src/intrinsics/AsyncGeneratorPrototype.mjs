@@ -8,21 +8,33 @@ import { Value } from '../value.mjs';
 import { AsyncGeneratorEnqueue } from '../abstract-ops/all.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
+// #sec-asyncgenerator-prototype-next
 function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) {
+  // 1. Let generator be the this value.
   const generator = thisValue;
-  const completion = new NormalCompletion(value);
+  // 2. Let completion be NormalCompletion(value).
+  const completion = NormalCompletion(value);
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 
+// #sec-asyncgenerator-prototype-return
 function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }) {
+  // 1. Let generator be the this value.
   const generator = thisValue;
-  const completion = new Completion('return', value, undefined);
+  // 2. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 
+// #sec-asyncgenerator-prototype-throw
 function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValue }) {
+  // 1. Let generator be the this value.
   const generator = thisValue;
-  const completion = new ThrowCompletion(exception);
+  // 2. Let completion be ThrowCompletion(exception).
+  const completion = ThrowCompletion(exception);
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 

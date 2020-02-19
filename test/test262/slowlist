@@ -1,4 +1,4 @@
-# Tests that pass but take a really long time
+# Tests that take a really long time
 
 built-ins/parseFloat/S15.1.2.3_A6.js
 built-ins/parseInt/S15.1.2.2_A8.js
@@ -11,3 +11,5 @@ built-ins/RegExp/property-escapes/generated/*.js
 
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
+
+built-ins/{encode,decode}URI?(Component)/**/*.js

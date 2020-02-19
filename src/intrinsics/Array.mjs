@@ -118,7 +118,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
     let k = 0;
     while (true) { // eslint-disable-line no-constant-condition
       if (k >= (2 ** 53) - 1) {
-        const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength').Value);
+        const error = ThrowCompletion(surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength').Value);
         return Q(IteratorClose(iteratorRecord, error));
       }
       const Pk = X(ToString(new Value(k)));

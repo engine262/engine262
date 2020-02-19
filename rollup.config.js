@@ -49,6 +49,7 @@ module.exports = () => ({
       // Squelch.
       return;
     }
+    process.exitCode = 1;
     warn(warning);
   },
 });

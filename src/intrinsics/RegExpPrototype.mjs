@@ -24,10 +24,7 @@ import {
   ToUint32,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
-import {
-  GetSubstitution,
-  State,
-} from '../runtime-semantics/all.mjs';
+import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
   Type,
   Value,
@@ -164,7 +161,7 @@ function RegExpBuiltinExec(R, S) {
   X(CreateDataProperty(A, new Value('index'), lastIndex));
   // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataProperty(A, new Value('input'), S));
-  const capturingParens = R.parsedRegExp.capturingParens;
+  const capturingParens = R.parsedPattern.capturingGroups;
   // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
   if (surroundingAgent.feature('RegExpMatchIndices')) {
     // Let indices be a new empty List.
@@ -180,7 +177,7 @@ function RegExpBuiltinExec(R, S) {
     let groups;
     let groupNames;
     // If R contains any GroupName, then
-    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+    if (R.parsedPattern.groupSpecifiers.size > 0) {
       // Let groups be OrdinaryObjectCreate(null).
       groups = OrdinaryObjectCreate(Value.null);
       // Let groupNames be a new empty List.
@@ -255,7 +252,7 @@ function RegExpBuiltinExec(R, S) {
     X(CreateDataProperty(A, new Value('0'), new Value(matchedSubstr)));
     let groups;
     // 24. If R contains any GroupName, then
-    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+    if (R.parsedPattern.groupSpecifiers.size > 0) {
       // a. Let groups be OrdinaryObjectCreate(null).
       groups = OrdinaryObjectCreate(Value.null);
     } else { // 25. Else,

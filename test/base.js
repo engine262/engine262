@@ -106,4 +106,5 @@ setInterval(() => {
 
 process.on('exit', () => {
   printStatusLine();
+  process.stdout.write('\n');
 });

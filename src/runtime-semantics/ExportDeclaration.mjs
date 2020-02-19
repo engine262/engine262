@@ -1,63 +1,88 @@
-import {
-  isExportDeclarationWithStar,
-  isExportDeclarationWithVariable,
-  isExportDeclarationWithDeclaration,
-  isExportDeclarationWithExport,
-  isExportDeclarationWithExportAndFrom,
-  isExportDeclarationWithDefaultAndHoistable,
-  isExportDeclarationWithDefaultAndClass,
-  isExportDeclarationWithDefaultAndExpression,
-} from '../ast.mjs';
-import { BoundNames_ClassDeclaration, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { NormalCompletion, ReturnIfAbrupt, Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { GetValue } from '../abstract-ops/all.mjs';
+import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
-  BindingClassDeclarationEvaluation_ClassDeclaration,
+  NamedEvaluation,
   InitializeBoundName,
-  NamedEvaluation_Expression,
+  BindingClassDeclarationEvaluation,
 } from './all.mjs';
 
+// #sec-exports-runtime-semantics-evaluation
+//   ExportDeclaration :
+//     `export` ExportFromClause FromClause `;`
+//     `export` NamedExports `;`
+//     `export` VariableDeclaration
+//     `export` Declaration
+//     `export` `default` HoistableDeclaration
+//     `export` `default` ClassDeclaration
+//     `export` `default` AssignmentExpression `;`
 export function* Evaluate_ExportDeclaration(ExportDeclaration) {
-  switch (true) {
-    case isExportDeclarationWithStar(ExportDeclaration):
-    case isExportDeclarationWithExportAndFrom(ExportDeclaration):
-    case isExportDeclarationWithExport(ExportDeclaration):
-      return new NormalCompletion(undefined);
-    case isExportDeclarationWithVariable(ExportDeclaration):
-    case isExportDeclarationWithDeclaration(ExportDeclaration):
-    case isExportDeclarationWithDefaultAndHoistable(ExportDeclaration):
-      return yield* Evaluate(ExportDeclaration.declaration);
-    case isExportDeclarationWithDefaultAndClass(ExportDeclaration): {
-      const ClassDeclaration = ExportDeclaration.declaration;
+  const {
+    FromClause, NamedExports,
+    VariableStatement,
+    Declaration,
+    default: isDefault,
+    HoistableDeclaration,
+    ClassDeclaration,
+    AssignmentExpression,
+  } = ExportDeclaration;
 
-      const value = Q(yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration));
-      const className = BoundNames_ClassDeclaration(ClassDeclaration)[0];
-      if (className === '*default*') {
-        const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-        Q(InitializeBoundName(new Value('*default*'), value, env));
-      }
-      return new NormalCompletion(undefined);
-    }
-    case isExportDeclarationWithDefaultAndExpression(ExportDeclaration): {
-      const AssignmentExpression = ExportDeclaration.declaration;
-
-      let value;
-      if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
-        value = yield* NamedEvaluation_Expression(AssignmentExpression, new Value('default'));
-        ReturnIfAbrupt(value); // https://github.com/tc39/ecma262/issues/1605
-      } else {
-        const rhs = yield* Evaluate(AssignmentExpression);
-        value = Q(GetValue(rhs));
-      }
-      const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      Q(InitializeBoundName(new Value('*default*'), value, env));
-      return new NormalCompletion(undefined);
-    }
-    default:
-      throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+  if (FromClause || NamedExports) {
+    // 1. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
   }
+  if (VariableStatement) {
+    // 1. Return the result of evaluating VariableStatement.
+    return yield* Evaluate(VariableStatement);
+  }
+  if (Declaration) {
+    // 1. Return the result of evaluating Declaration.
+    return yield* Evaluate(ExportDeclaration.Declaration);
+  }
+  if (!isDefault) {
+    throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+  }
+  if (HoistableDeclaration) {
+    // 1. Return the result of evaluating HoistableDeclaration.
+    return yield* Evaluate(HoistableDeclaration);
+  }
+  if (ClassDeclaration) {
+    // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
+    const value = Q(BindingClassDeclarationEvaluation(ClassDeclaration));
+    // 2. Let className be the sole element of BoundNames of ClassDeclaration.
+    const className = BoundNames(ClassDeclaration)[0];
+    // If className is "*default*", then
+    if (className.stringValue() === '*default*') {
+      // a. Let env be the running execution context's LexicalEnvironment.
+      const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+      // b. Perform ? InitializeBoundName("*default*", value, env).
+      Q(InitializeBoundName(new Value('*default*'), value, env));
+    }
+    // 3. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+  if (AssignmentExpression) {
+    let value;
+    // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) === Value.true) {
+      // a. Let value be NamedEvaluation of AssignmentExpression with argument "default".
+      value = yield* NamedEvaluation(AssignmentExpression, new Value('default'));
+    } else { // 2. Else,
+      // a. Let rhs be the result of evaluating AssignmentExpression.
+      const rhs = yield* Evaluate(AssignmentExpression);
+      // a. Let value be ? GetValue(rhs).
+      value = Q(GetValue(rhs));
+    }
+    // 3. Let env be the running execution context's LexicalEnvironment.
+    const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    // 4. Perform ? InitializeBoundName("*default*", value, env).
+    Q(InitializeBoundName(new Value('*default*'), value, env));
+    // 5. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+  throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
 }

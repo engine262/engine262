@@ -24,15 +24,20 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
 }
 
+// #sec-boolean.prototype.tostring
 function BooleanProto_toString(argList, { thisValue }) {
+  // 1. Let b be ? thisBooleanValue(this value).
   const b = Q(thisBooleanValue(thisValue));
+  // 2. If b is true, return "true"; else return "false".
   if (b === Value.true) {
     return new Value('true');
   }
   return new Value('false');
 }
 
+// #sec-boolean.prototype.valueof
 function BooleanProto_valueOf(argList, { thisValue }) {
+  // 1. Return ? thisBooleanValue(this value).
   return Q(thisBooleanValue(thisValue));
 }
 

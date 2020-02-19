@@ -1,11 +1,14 @@
-// 14.6.10 #sec-static-semantics-nonconstructormethoddefinitions
-//   ClassElementList :
-//     ClassElement
-//     ClassElementList ClassElement
-function NonConstructorMethodDefinitions_ClassElementList(ClassElementList) {
-  return ClassElementList.filter((ClassElement) => ClassElement.kind !== 'constructor');
-}
+import { PropName } from './all.mjs';
 
-// (implicit)
-//   ClassBody : ClassElementList
-export const NonConstructorMethodDefinitions_ClassBody = NonConstructorMethodDefinitions_ClassElementList;
+// #sec-static-semantics-nonconstructormethoddefinitions
+// ClassElementList :
+//   ClassElement
+//   ClassElementList ClassElement
+export function NonConstructorMethodDefinitions(ClassElementList) {
+  return ClassElementList.filter((ClassElement) => {
+    if (ClassElement.static === false && PropName(ClassElement) === 'constructor') {
+      return false;
+    }
+    return true;
+  });
+}

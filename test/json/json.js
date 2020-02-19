@@ -10,7 +10,8 @@ const {
 } = require('../base');
 const {
   Agent,
-  Realm,
+  setSurroundingAgent,
+  ManagedRealm,
   AbruptCompletion,
   inspect,
 } = require('../..');
@@ -18,18 +19,19 @@ const {
 const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
 
 const agent = new Agent();
-agent.enter();
+setSurroundingAgent(agent);
 
 function test(filename) {
-  const realm = new Realm();
+  const realm = new ManagedRealm();
 
   const source = fs.readFileSync(filename, 'utf8');
 
   let result;
   try {
-    result = realm.evaluateScript(`
-      JSON.parse(${JSON.stringify(source)});
-    `);
+    result = realm.evaluateScript(`'use strict';
+const source = ${JSON.stringify(source)};
+JSON.parse(source);
+`);
   } catch {
     // ...
   }
@@ -42,7 +44,7 @@ function test(filename) {
     } else if (testName.startsWith('i_')) {
       skip();
     } else {
-      fail(testName, inspect(realm, result));
+      fail(testName, inspect(result));
     }
   } else {
     if (testName.startsWith('n_')) {

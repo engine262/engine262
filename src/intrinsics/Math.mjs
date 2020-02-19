@@ -1,3 +1,4 @@
+import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor,
   Value,
@@ -55,6 +56,47 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   return X(NumberValue.exponentiate(base, exponent));
 }
 
+// #sec-math.random
+function fmix64(h) {
+  h ^= h >> 33n;
+  h *= 0xFF51AFD7ED558CCDn;
+  h ^= h >> 33n;
+  h *= 0xC4CEB9FE1A85EC53n;
+  h ^= h >> 33n;
+  return h;
+}
+
+const floatView = new Float64Array(1);
+const big64View = new BigUint64Array(floatView.buffer);
+function Math_random() {
+  const realm = surroundingAgent.currentRealmRecord;
+  if (realm.randomState === undefined) {
+    const seed = realm.HostDefined.randomSeed
+      ? BigInt(X(realm.HostDefined.randomSeed()))
+      : BigInt(Math.round(Math.random() * (2 ** 32)));
+    realm.randomState = new BigUint64Array([
+      fmix64(BigInt.asUintN(64, seed)),
+      fmix64(BigInt.asUintN(64, ~seed)),
+    ]);
+  }
+  const s = realm.randomState;
+
+  // XorShift128+
+  let s1 = s[0];
+  const s0 = s[1];
+  s[0] = s0;
+  s1 ^= s1 << 23n;
+  s1 ^= s1 >> 17n;
+  s1 ^= s0;
+  s1 ^= s0 >> 26n;
+  s[1] = s1;
+
+  // Convert to double in [0, 1) range
+  big64View[0] = (s0 >> 12n) | 0x3FF0000000000000n;
+  const result = floatView[0] - 1;
+  return new Value(result);
+}
+
 // 20.2 #sec-math-object
 export function BootstrapMath(realmRec) {
   // 20.2.1 #sec-value-properties-of-the-math-object
@@ -76,6 +118,7 @@ export function BootstrapMath(realmRec) {
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
     ['pow', Math_pow, 2],
+    ['random', Math_random, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
   // 20.2.2 #sec-function-properties-of-the-math-object
@@ -104,7 +147,6 @@ export function BootstrapMath(realmRec) {
     ['log2', 1],
     ['max', 2],
     ['min', 2],
-    ['random', 0],
     ['round', 1],
     ['sign', 1],
     ['sin', 1],
@@ -115,12 +157,14 @@ export function BootstrapMath(realmRec) {
     ['trunc', 1],
   ].forEach(([name, length]) => {
     // TODO(18): Math
-    const func = CreateBuiltinFunction(((args) => {
+    // #sec-function-properties-of-the-math-object
+    const method = (args) => {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();
       }
       return new Value(Math[name](...args));
-    }), [], realmRec);
+    };
+    const func = CreateBuiltinFunction(method, [], realmRec);
     X(SetFunctionName(func, new Value(name)));
     X(SetFunctionLength(func, new Value(length)));
     mathObj.DefineOwnProperty(new Value(name), Descriptor({

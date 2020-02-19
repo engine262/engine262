@@ -1,8 +1,8 @@
 import { surroundingAgent } from './engine.mjs';
 import { Type, Value, wellKnownSymbols } from './value.mjs';
-import { Realm as APIRealm } from './api.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
+  EscapeRegExpPattern,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 
@@ -62,7 +62,10 @@ const INSPECTORS = {
     return n.toString();
   },
   BigInt: (v) => `${v.bigintValue()}n`,
-  String: (v, ctx) => (ctx.quote ? `'${v.stringValue().replace(/\n/g, '\\n')}'` : v.stringValue()),
+  String: (v) => {
+    const s = JSON.stringify(v.stringValue()).slice(1, -1);
+    return `'${s}'`;
+  },
   Symbol: (v) => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
   Object: (v, ctx, i) => {
     if (ctx.inspected.includes(v)) {
@@ -80,7 +83,7 @@ const INSPECTORS = {
 
     if ('Call' in v) {
       const name = v.properties.get(new Value('name'));
-      if (name !== undefined) {
+      if (name !== undefined && name.Value.stringValue() !== '') {
         return `[Function: ${name.Value.stringValue()}]`;
       }
       return '[Function]';
@@ -93,6 +96,20 @@ const INSPECTORS = {
         e = X(Call(toString, v));
       }
       return e.stringValue();
+    }
+
+    if ('RegExpMatcher' in v) {
+      const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
+      const F = v.OriginalFlags.stringValue();
+      return `/${P}/${F}`;
+    }
+
+    if ('DateValue' in v) {
+      const d = new Date(v.DateValue.numberValue());
+      if (Number.isNaN(d.getTime())) {
+        return '[Date Invalid]';
+      }
+      return `[Date ${d.toISOString()}]`;
     }
 
     if ('BooleanData' in v) {
@@ -177,14 +194,10 @@ const INSPECTORS = {
   },
 };
 
-export function inspect(value, realm = surroundingAgent.currentRealmRecord) {
-  if (realm instanceof APIRealm) {
-    realm = realm.realm;
-  }
+export function inspect(value) {
   const context = {
-    realm,
+    realm: surroundingAgent.currentRealmRecord,
     indent: 0,
-    quote: true,
     inspected: [],
   };
   const inner = (v) => INSPECTORS[Type(v)](v, context, inner);

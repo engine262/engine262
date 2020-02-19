@@ -2,33 +2,25 @@ import {
   surroundingAgent,
   ExecutionContext,
 } from '../engine.mjs';
-import { Realm } from '../realm.mjs';
 import {
   Descriptor,
   Type,
   Value,
 } from '../value.mjs';
 import {
-  EnsureCompletion, NormalCompletion, Q,
+  EnsureCompletion,
+  NormalCompletion,
   ReturnIfAbrupt,
-  X,
+  Q, X,
 } from '../completion.mjs';
 import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
-import {
-  EvaluateBody_AsyncConciseBody_ExpressionBody,
-  EvaluateBody_AsyncFunctionBody,
-  EvaluateBody_ConciseBody_ExpressionBody,
-  EvaluateBody_FunctionBody,
-  EvaluateBody_GeneratorBody,
-  EvaluateBody_AsyncGeneratorBody,
-  getFunctionBodyType,
-} from '../runtime-semantics/all.mjs';
+import { EvaluateBody } from '../runtime-semantics/all.mjs';
 import {
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind, OutOfRange } from '../helpers.mjs';
+import { unwind } from '../helpers.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -42,6 +34,7 @@ import {
   OrdinaryCreateFromConstructor,
   ToObject,
   isStrictModeCode,
+  Realm,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -58,147 +51,167 @@ export function isFunctionObject(O) {
   return 'Call' in O;
 }
 
-// 9.2.1.1 #sec-prepareforordinarycall
-function PrepareForOrdinaryCall(F, newTarget) {
+// #sec-prepareforordinarycall
+export function PrepareForOrdinaryCall(F, newTarget) {
+  // 1. Assert: Type(newTarget) is Undefined or Object.
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  // 2. Let callerContext be the running execution context.
   // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let calleeContext be a new ECMAScript code execution context.
   const calleeContext = new ExecutionContext();
+  // 4. Set the Function of calleeContext to F.
   calleeContext.Function = F;
+  // 5. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
+  // 6. Set the Realm of calleeContext to calleeRealm.
   calleeContext.Realm = calleeRealm;
+  // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
   calleeContext.ScriptOrModule = F.ScriptOrModule;
+  // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
   const localEnv = NewFunctionEnvironment(F, newTarget);
+  // 9. Set the LexicalEnvironment of calleeContext to localEnv.
   calleeContext.LexicalEnvironment = localEnv;
+  // 10. Set the VariableEnvironment of calleeContext to localEnv.
   calleeContext.VariableEnvironment = localEnv;
-  // Suspend(callerContext);
+  // 11. Set the VariableEnvironment of calleeContext to localEnv.
+  // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
   surroundingAgent.executionContextStack.push(calleeContext);
+  // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+  // 14. Return calleeContext.
   return calleeContext;
 }
 
-// 9.2.1.2 #sec-ordinarycallbindthis
-function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+// #sec-ordinarycallbindthis
+export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+  // 1. Let thisMode be F.[[ThisMode]].
   const thisMode = F.ThisMode;
+  // 2. If thisMode is lexical, return NormalCompletion(undefined).
   if (thisMode === 'lexical') {
-    return new NormalCompletion(Value.undefined);
+    return NormalCompletion(Value.undefined);
   }
+  // 3. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
+  // 4. Let localEnv be the LexicalEnvironment of calleeContext.
   const localEnv = calleeContext.LexicalEnvironment;
   let thisValue;
+  // 5. If thisMode is strict, let thisValue be thisArgument.
   if (thisMode === 'strict') {
     thisValue = thisArgument;
-  } else {
+  } else { // 6. Else,
+    // a. If thisArgument is undefined or null, then
     if (thisArgument === Value.undefined || thisArgument === Value.null) {
+      // i. Let globalEnv be calleeRealm.[[GlobalEnv]].
       const globalEnv = calleeRealm.GlobalEnv;
-      const globalEnvRec = globalEnv.EnvironmentRecord;
-      Assert(globalEnvRec instanceof GlobalEnvironmentRecord);
-      thisValue = globalEnvRec.GlobalThisValue;
-    } else {
+      // ii. Assert: globalEnv is a global Environment Record.
+      Assert(globalEnv instanceof GlobalEnvironmentRecord);
+      // iii. Let thisValue be globalEnv.[[GlobalThisValue]].
+      thisValue = globalEnv.GlobalThisValue;
+    } else { // b. Else,
+      // i. Let thisValue be ! ToObject(thisArgument).
       thisValue = X(ToObject(thisArgument));
-      // NOTE: ToObject produces wrapper objects using calleeRealm.
+      // ii. NOTE: ToObject produces wrapper objects using calleeRealm.
     }
   }
-  const envRec = localEnv.EnvironmentRecord;
-  Assert(envRec instanceof FunctionEnvironmentRecord);
-  Assert(envRec.ThisBindingStatus !== 'initialized');
-  return envRec.BindThisValue(thisValue);
+  // 7. Assert: localEnv is a function Environment Record.
+  Assert(localEnv instanceof FunctionEnvironmentRecord);
+  // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
+  Assert(localEnv.ThisBindingStatus !== 'initialized');
+  // 10. Return localEnv.BindThisValue(thisValue).
+  return localEnv.BindThisValue(thisValue);
 }
 
-// 9.2.1.3 #sec-ordinarycallevaluatebody
-export function* OrdinaryCallEvaluateBody(F, argumentsList) {
-  switch (getFunctionBodyType(F.ECMAScriptCode)) {
-    // FunctionBody : FunctionStatementList
-    // ConciseBody : `{` FunctionBody `}`
-    case 'FunctionBody':
-    case 'ConciseBody_FunctionBody':
-      return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    // ConciseBody : ExpressionBody
-    case 'ConciseBody_ExpressionBody':
-      return yield* EvaluateBody_ConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-    case 'GeneratorBody':
-      return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    case 'AsyncFunctionBody':
-    case 'AsyncConciseBody_AsyncFunctionBody':
-      return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    case 'AsyncConciseBody_ExpressionBody':
-      return yield* EvaluateBody_AsyncConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-    case 'AsyncGeneratorBody':
-      return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    default:
-      throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
-  }
+// #sec-ordinarycallevaluatebody
+export function OrdinaryCallEvaluateBody(F, argumentsList) {
+  // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
+  return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
 }
 
-// 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
+// #sec-ecmascript-function-objects-call-thisargument-argumentslist
 function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
+  // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
+  // 2. If F.[[IsClassConstructor]] is true, throw a TypeError exception.
   if (F.IsClassConstructor === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
   }
-  // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let callerContext be the running execution context.
+  // 4. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
+  // 5. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  // 6. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+  // 7. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
+  // 8. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  // 9. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
   if (result.Type === 'return') {
-    return new NormalCompletion(result.Value);
+    return NormalCompletion(result.Value);
   }
+  // 10. ReturnIfAbrupt(result).
   ReturnIfAbrupt(result);
-  return new NormalCompletion(Value.undefined);
+  // 11. Return NormalCompletion(undefined).
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.2 #sec-ecmascript-function-objects-construct-argumentslist-newtarget
 function FunctionConstructSlot(argumentsList, newTarget) {
   const F = this;
 
+  // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
+  // 2. Assert: Type(newTarget) is Object.
   Assert(Type(newTarget) === 'Object');
-  // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let callerContext be the running execution context.
+  // 4. Let kind be F.[[ConstructorKind]].
   const kind = F.ConstructorKind;
   let thisArgument;
+  // 5. If kind is base, then
   if (kind === 'base') {
+    // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
     thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
   }
+  // 6. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
+  // 7. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   surroundingAgent.runningExecutionContext.callSite.constructCall = true;
+  // 8. If kind is base, perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
   if (kind === 'base') {
     OrdinaryCallBindThis(F, calleeContext, thisArgument);
   }
+  // 9. Let constructorEnv be the LexicalEnvironment of calleeContext.
   const constructorEnv = calleeContext.LexicalEnvironment;
-  const envRec = constructorEnv.EnvironmentRecord;
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+  // 10. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
+  // 11. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  // 12. If result.[[Type]] is return, then
   if (result.Type === 'return') {
+    // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
     if (Type(result.Value) === 'Object') {
-      return new NormalCompletion(result.Value);
+      return NormalCompletion(result.Value);
     }
+    // b. If kind is base, return NormalCompletion(thisArgument).
     if (kind === 'base') {
-      return new NormalCompletion(thisArgument);
+      return NormalCompletion(thisArgument);
     }
-    if (Type(result.Value) !== 'Undefined') {
+    // c. If result.[[Value]] is not undefined, throw a TypeError exception.
+    if (result.Value !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
-  } else {
+  } else { // 13. Else, ReturnIfAbrupt(result).
     ReturnIfAbrupt(result);
   }
-  return Q(envRec.GetThisBinding());
+  // 14. Return ? constructorEnv.GetThisBinding().
+  return Q(constructorEnv.GetThisBinding());
 }
 
 // 9.2.3 #sec-functionallocate
-export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, thisMode, Scope) {
+export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope) {
   Assert(Type(functionPrototype) === 'Object');
   const internalSlotsList = [
     'Environment',
@@ -215,6 +228,7 @@ export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, t
   ];
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
   F.Call = FunctionCallSlot;
+  F.SourceText = sourceText;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;
@@ -262,7 +276,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.11 #sec-makeclassconstructor
@@ -270,7 +284,7 @@ export function MakeClassConstructor(F) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.12 #sec-makemethod
@@ -278,7 +292,7 @@ export function MakeMethod(F, homeObject) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(Type(homeObject) === 'Object');
   F.HomeObject = homeObject;
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.13 #sec-setfunctionname

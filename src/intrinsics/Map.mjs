@@ -52,16 +52,23 @@ export function AddEntriesFromIterable(target, iterable, adder) {
   }
 }
 
+// #sec-map-iterable
 function MapConstructor([iterable = Value.undefined], { NewTarget }) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
+  // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%Map.prototype%", « [[MapData]] »).
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']));
+  // 3. Set map.[[MapData]] to a new empty List.
   map.MapData = [];
+  // 4. If iterable is either undefined or null, return map.
   if (iterable === Value.undefined || iterable === Value.null) {
     return map;
   }
+  // 5. Let adder be ? Get(map, "set").
   const adder = Q(Get(map, new Value('set')));
+  // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 

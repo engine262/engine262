@@ -1,16 +1,17 @@
-import {
-  HasName_Expression,
-  IsFunctionDefinition_Expression,
-} from './all.mjs';
+import { IsFunctionDefinition, HasName } from './all.mjs';
 
-// 14.1.10 #sec-isanonymousfunctiondefinition
+// #sec-isanonymousfunctiondefinition
 export function IsAnonymousFunctionDefinition(expr) {
-  if (IsFunctionDefinition_Expression(expr) === false) {
+  // 1. If IsFunctionDefinition of expr is false, return false.
+  if (!IsFunctionDefinition(expr)) {
     return false;
   }
-  const hasName = HasName_Expression(expr);
-  if (hasName === true) {
+  // 1. Let hasName be HasName of expr.
+  const hasName = HasName(expr);
+  // 1. If hasName is true, return false.
+  if (hasName) {
     return false;
   }
+  // 1. Return true.
   return true;
 }

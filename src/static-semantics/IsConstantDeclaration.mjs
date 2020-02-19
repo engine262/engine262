@@ -1,3 +1,3 @@
 export function IsConstantDeclaration(node) {
-  return node.kind === 'const';
+  return node.type === 'LexicalDeclaration' && node.LetOrConst === 'const';
 }

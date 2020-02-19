@@ -1,5 +1,3 @@
-// 14.9.1 #sec-isintailposition
-// TODO(TCO)
-export function IsInTailPosition() {
+export function IsInTailPosition(_node) {
   return false;
 }

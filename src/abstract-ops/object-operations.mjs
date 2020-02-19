@@ -8,11 +8,10 @@ import {
 import {
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  InstanceofOperator,
-} from '../runtime-semantics/all.mjs';
+import { InstanceofOperator } from '../runtime-semantics/all.mjs';
 import {
   NormalCompletion,
+  EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
 import {
@@ -60,7 +59,7 @@ export function Get(O, P) {
   Assert(Type(O) === 'Object');
   Assert(IsPropertyKey(P));
   // TODO: This should just return Q(O.Get(P, O))
-  return new NormalCompletion(Q(O.Get(P, O)));
+  return NormalCompletion(Q(O.Get(P, O)));
 }
 
 // 7.3.2 #sec-getv
@@ -185,7 +184,7 @@ export function Call(F, V, argumentsList) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
-  return Q(F.Call(V, argumentsList));
+  return EnsureCompletion(Q(F.Call(V, argumentsList)));
 }
 
 // 7.3.13 #sec-construct

@@ -1,94 +1,57 @@
+import { Value } from '../value.mjs';
 import {
   GetV,
   GetValue,
-  InitializeReferencedBinding,
   PutValue,
   ResolveBinding,
+  InitializeReferencedBinding,
 } from '../abstract-ops/all.mjs';
-import {
-  isBindingIdentifier,
-  isBindingIdentifierAndInitializer,
-  isBindingPattern,
-  isBindingPatternAndInitializer,
-  isSingleNameBinding,
-} from '../ast.mjs';
-import { Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { Q } from '../completion.mjs';
 import {
-  IsAnonymousFunctionDefinition,
-} from '../static-semantics/all.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
-import {
-  BindingInitialization_BindingPattern,
-  NamedEvaluation_Expression,
+  NamedEvaluation,
+  BindingInitialization,
 } from './all.mjs';
 
-// 13.3.3.9 #sec-runtime-semantics-keyedbindinginitialization
-//   BindingElement : BindingPattern Initializer
-//
-// (implicit)
-//   BindingElement : SingleNameBinding
-export function* KeyedBindingInitialization_BindingElement(BindingElement, value, environment, propertyName) {
-  let BindingPattern;
-  let Initializer;
-  switch (true) {
-    case isSingleNameBinding(BindingElement):
-      return yield* KeyedBindingInitialization_SingleNameBinding(BindingElement, value, environment, propertyName);
-    case isBindingPattern(BindingElement):
-      BindingPattern = BindingElement;
-      Initializer = undefined;
-      break;
-    case isBindingPatternAndInitializer(BindingElement):
-      BindingPattern = BindingElement.left;
-      Initializer = BindingElement.right;
-      break;
-    default:
-      throw new OutOfRange('KeyedBindingInitialization_BindingElement', BindingElement);
-  }
-
-  let v = Q(GetV(value, propertyName));
-  if (Initializer !== undefined && Type(v) === 'Undefined') {
-    const defaultValue = yield* Evaluate(Initializer);
-    v = Q(GetValue(defaultValue));
-  }
-  return yield* BindingInitialization_BindingPattern(BindingPattern, v, environment);
-}
-
-// 13.3.3.9 #sec-runtime-semantics-keyedbindinginitialization
-//   SingleNameBinding : BindingIdentifier Initializer
-export function* KeyedBindingInitialization_SingleNameBinding(SingleNameBinding, value, environment, propertyName) {
-  let BindingIdentifier;
-  let Initializer;
-  switch (true) {
-    case isBindingIdentifier(SingleNameBinding):
-      BindingIdentifier = SingleNameBinding;
-      Initializer = undefined;
-      break;
-    case isBindingIdentifierAndInitializer(SingleNameBinding):
-      BindingIdentifier = SingleNameBinding.left;
-      Initializer = SingleNameBinding.right;
-      break;
-    default:
-      throw new OutOfRange('KeyedBindingInitialization_SingleNameBinding', SingleNameBinding);
-  }
-
-  const bindingId = new Value(BindingIdentifier.name);
-  const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
-  let v = Q(GetV(value, propertyName));
-  if (Initializer !== undefined && Type(v) === 'Undefined') {
-    if (IsAnonymousFunctionDefinition(Initializer)) {
-      v = yield* NamedEvaluation_Expression(Initializer, bindingId);
-    } else {
-      const defaultValue = yield* Evaluate(Initializer);
+// #sec-runtime-semantics-keyedbindinginitialization
+export function* KeyedBindingInitialization(node, value, environment, propertyName) {
+  if (node.type === 'BindingElement') {
+    // 1. Let v be ? GetV(value, propertyName).
+    let v = Q(GetV(value, propertyName));
+    // 2. If Initializer is present and v is undefined, then
+    if (node.Initializer && v === Value.undefined) {
+      // a. Let defaultValue be the result of evaluating Initializer.
+      const defaultValue = yield* Evaluate(node.Initializer);
+      // b. Set v to ? GetValue(defaultValue).
       v = Q(GetValue(defaultValue));
     }
+    // 2. Return the result of performing BindingInitialization for BindingPattern passing v and environment as arguments.
+    return yield* BindingInitialization(node.BindingPattern, v, environment);
+  } else {
+    // 1. Let bindingId be StringValue of BindingIdentifier.
+    const bindingId = StringValue(node.BindingIdentifier);
+    // 2. Let lhs be ? ResolveBinding(bindingId, environment).
+    const lhs = Q(ResolveBinding(bindingId, environment));
+    // 3. Let v be ? GetV(value, propertyName).
+    let v = Q(GetV(value, propertyName));
+    if (node.Initializer && v === Value.undefined) {
+      // a. If IsAnonymousFunctionDefinition(Initializer) is true, then
+      if (IsAnonymousFunctionDefinition(node.Initializer)) {
+        // i. Set v to the result of performing NamedEvaluation for Initializer with argument bindingId.
+        v = yield* NamedEvaluation(node.Initializer, bindingId);
+      } else { // b. Else,
+        // i. Let defaultValue be the result of evaluating Initializer.
+        const defaultValue = yield* Evaluate(node.Initializer);
+        // ii. Set v to ? GetValue(defaultValue).
+        v = Q(GetValue(defaultValue));
+      }
+    }
+    // 5. If environment is undefined, return ? PutValue(lhs, v).
+    if (environment === Value.undefined) {
+      return Q(PutValue(lhs, v));
+    }
+    // 6. Return InitializeReferencedBinding(lhs, v).
+    return InitializeReferencedBinding(lhs, v);
   }
-  if (Type(environment) === 'Undefined') {
-    return Q(PutValue(lhs, v));
-  }
-  return InitializeReferencedBinding(lhs, v);
 }

@@ -16,11 +16,8 @@ import {
   ToInt32,
   ToUint32,
 } from './abstract-ops/all.mjs';
-import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import {
-  Completion,
-  X,
-} from './completion.mjs';
+import { EnvironmentRecord } from './environment.mjs';
+import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange } from './helpers.mjs';
 
 export function Value(value) {
@@ -425,7 +422,7 @@ export class BigIntValue extends PrimitiveValue {
     return BigIntValue.leftShift(x, new Value(-y.bigintValue()));
   }
 
-  // #sec-numeric-types-bigint-unsighedRightShift
+  // #sec-numeric-types-bigint-unsignedRightShift
   static unsignedRightShift(_x, _y) {
     return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
   }
@@ -603,7 +600,7 @@ function BigIntBitwiseOp(op, x, y) {
   }
 }
 
-export class StringValue extends PrimitiveValue {
+class StringValue extends PrimitiveValue {
   constructor(string) {
     super();
     this.string = string;
@@ -613,6 +610,8 @@ export class StringValue extends PrimitiveValue {
     return this.string;
   }
 }
+// rename for static semantics StringValue() conflict
+export { StringValue as JSStringValue };
 
 export class SymbolValue extends PrimitiveValue {
   constructor(Description) {
@@ -820,10 +819,6 @@ export function Type(val) {
 
   if (val instanceof EnvironmentRecord) {
     return 'EnvironmentRecord';
-  }
-
-  if (val instanceof LexicalEnvironment) {
-    return 'LexicalEnvironment';
   }
 
   if (val instanceof Descriptor) {

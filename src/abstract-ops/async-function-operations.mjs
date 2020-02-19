@@ -1,10 +1,6 @@
-import { isExpressionBody } from '../ast.mjs';
 import { EnsureCompletion, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import {
-  Evaluate_ExpressionBody,
-  Evaluate_FunctionBody,
-} from '../runtime-semantics/all.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
 import { Assert, Call } from './all.mjs';
@@ -18,8 +14,7 @@ export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
 
   const runningContext = surroundingAgent.runningExecutionContext;
   asyncContext.codeEvaluationState = (function* resumer() {
-    const evaluator = isExpressionBody(asyncBody) ? Evaluate_ExpressionBody : Evaluate_FunctionBody;
-    const result = EnsureCompletion(yield* evaluator(asyncBody));
+    const result = EnsureCompletion(yield* Evaluate(asyncBody));
     // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
     surroundingAgent.executionContextStack.pop(asyncContext);
     if (result.Type === 'normal') {

@@ -25,9 +25,9 @@ import {
 } from '../value.mjs';
 import {
   GetSubstitution,
-  StringIndexOf,
-  StringPad,
   TrimString,
+  StringPad,
+  StringIndexOf,
 } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
@@ -157,12 +157,12 @@ function StringProto_includes([searchString = Value.undefined, position = Value.
   return Value.false;
 }
 
-// 21.1.3.8 #sec-string.prototype.indexof
+// #sec-string.prototype.indexof
 function StringProto_indexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. Let S be ? ToString(O).
-  const S = Q(ToString(O)).stringValue();
+  const S = Q(ToString(O));
   // 3. Let searchStr be ? ToString(searchString).
   const searchStr = Q(ToString(searchString));
   // 4. Let pos be ? ToInteger(position).
@@ -170,37 +170,11 @@ function StringProto_indexOf([searchString = Value.undefined, position = Value.u
   // 5. Assert: If position is undefined, then pos is 0.
   Assert(!(position === Value.undefined) || pos.numberValue() === 0);
   // 6. Let len be the length of S.
-  const len = S.length;
+  const len = S.stringValue().length;
   // 7. Let start be min(max(pos, 0), len).
   const start = Math.min(Math.max(pos.numberValue(), 0), len);
-  // 8. Let searchLen be the length of searchStr.
-  const searchLen = searchStr.stringValue().length;
-  // https://tc39.es/proposal-string-replaceall/#sec-string.prototype.indexof
-  if (surroundingAgent.feature('String.prototype.replaceAll')) {
-    // Let position be ! StringIndexOf(S, searchStr, start).
-    position = X(StringIndexOf(new Value(S), searchStr, start));
-    // Return position.
-    return position;
-  } else {
-    // 9. Return the smallest possible integer k not smaller than start such that k + searchLen is not greater than len,
-    //    and for all nonnegative integers j less than searchLen, the code unit at index k + j within S is the same as the code unit at index j within searchStr;
-    //    but if there is no such integer k, return the value -1.
-    let k = start;
-    while (k + searchLen <= len) {
-      let match = true;
-      for (let j = 0; j < searchLen; j += 1) {
-        if (searchStr[j] !== S[k + j]) {
-          match = false;
-          break;
-        }
-      }
-      if (match) {
-        return new Value(k);
-      }
-      k += 1;
-    }
-    return new Value(-1);
-  }
+  // 8. Return ! StringIndexOf(S, searchStr, start).
+  return X(StringIndexOf(S, searchStr, start));
 }
 
 // 21.1.3.9 #sec-string.prototype.lastindexof
@@ -386,7 +360,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   return new Value(newString);
 }
 
-// https://tc39.es/proposal-string-replaceall/#sec-string.prototype.replaceall
+// #sec-string.prototype.replaceall
 function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -726,9 +700,7 @@ export function BootstrapStringPrototype(realmRec) {
     ['padStart', StringProto_padStart, 1],
     ['repeat', StringProto_repeat, 1],
     ['replace', StringProto_replace, 2],
-    surroundingAgent.feature('String.prototype.replaceAll')
-      ? ['replaceAll', StringProto_replaceAll, 2]
-      : undefined,
+    ['replaceAll', StringProto_replaceAll, 2],
     ['search', StringProto_search, 1],
     ['slice', StringProto_slice, 2],
     ['split', StringProto_split, 2],

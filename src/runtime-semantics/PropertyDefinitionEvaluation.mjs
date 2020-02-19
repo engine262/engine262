@@ -1,60 +1,26 @@
-import {
-  IsAnonymousFunctionDefinition,
-} from '../static-semantics/all.mjs';
-import {
-  isAsyncMethod,
-  isAsyncGeneratorMethod,
-  isGeneratorMethod,
-  isMethodDefinition,
-  isMethodDefinitionGetter,
-  isMethodDefinitionRegularFunction,
-  isMethodDefinitionSetter,
-  isPropertyDefinitionIdentifierReference,
-  isPropertyDefinitionKeyValue,
-  isPropertyDefinitionSpread,
-} from '../ast.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { Value, Descriptor } from '../value.mjs';
 import {
   Assert,
-  CopyDataProperties,
+  GetValue,
+  OrdinaryObjectCreate,
+  OrdinaryFunctionCreate,
   CreateDataPropertyOrThrow,
   DefinePropertyOrThrow,
-  OrdinaryFunctionCreate,
-  GetValue,
-  MakeMethod,
-  OrdinaryObjectCreate,
   SetFunctionName,
+  MakeMethod,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
-import { Descriptor, Value } from '../value.mjs';
+import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import {
-  DefineMethod,
-  Evaluate_PropertyName,
-  NamedEvaluation_Expression,
-} from './all.mjs';
+import { NamedEvaluation, DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
-function hasNonConfigurableProperties(obj) {
-  for (const desc of obj.properties.values()) {
-    if (desc.Configurable === Value.false) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
-//   PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition
-//
-// (implicit)
-//   PropertyDefinitionList : PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(
-  PropertyDefinitionList, object, enumerable,
-) {
-  Assert(PropertyDefinitionList.length > 0);
-
+// #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
+//   PropertyDefinitionList :
+//     PropertyDefinitionList `,` PropertyDefinition
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
     lastReturn = Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(
@@ -64,122 +30,137 @@ export function* PropertyDefinitionEvaluation_PropertyDefinitionList(
   return lastReturn;
 }
 
-// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
-//   PropertyDefinition : `...` AssignmentExpression
-function* PropertyDefinitionEvaluation_PropertyDefinition_Spread(PropertyDefinition, object) {
-  const AssignmentExpression = PropertyDefinition.argument;
-
-  const exprValue = yield* Evaluate(AssignmentExpression);
-  const fromValue = Q(GetValue(exprValue));
-  const excludedNames = [];
-  return Q(CopyDataProperties(object, fromValue, excludedNames));
-}
-
-// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
-//   PropertyDefinition : IdentifierReference
-function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
-  PropertyDefinition, object, enumerable,
-) {
-  const IdentifierReference = PropertyDefinition.key;
-  const propName = new Value(IdentifierReference.name);
-  const exprValue = yield* Evaluate(IdentifierReference);
-  const propValue = Q(GetValue(exprValue));
-  Assert(enumerable);
-  // Assert: object is an ordinary object.
-  Assert(object.Extensible === Value.true);
-  Assert(!hasNonConfigurableProperties(object));
-  return X(CreateDataPropertyOrThrow(object, propName, propValue));
-}
-
-// 12.2.6.8 #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
-//   PropertyDefinition : PropertyName `:` AssignmentExpression
-function* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(
-  PropertyDefinition, object, enumerable,
-) {
-  const { key: PropertyName, value: AssignmentExpression } = PropertyDefinition;
-  const propKey = yield* Evaluate_PropertyName(PropertyName, PropertyDefinition.computed);
+// PropertyDefinition :
+//   `...` AssignmentExpression
+//   IdentifierReference
+//   PropertyName `:` AssignmentExpression
+function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+  switch (PropertyDefinition.type) {
+    case 'IdentifierReference':
+      return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(PropertyDefinition, object, enumerable);
+    case 'PropertyDefinition':
+      break;
+    case 'MethodDefinition':
+      return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
+    case 'GeneratorMethod':
+      return yield* PropertyDefinitionEvaluation_GeneratorMethod(PropertyDefinition, object, enumerable);
+    case 'AsyncMethod':
+      return yield* PropertyDefinitionEvaluation_AsyncMethod(PropertyDefinition, object, enumerable);
+    case 'AsyncGeneratorMethod':
+      return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(PropertyDefinition, object, enumerable);
+    default:
+      throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
+  }
+  // PropertyDefinition : PropertyName `:` AssignmentExpression
+  const { PropertyName, AssignmentExpression } = PropertyDefinition;
+  // 1. Let propKey be the result of evaluating PropertyName.
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  // 2. ReturnIfAbrupt(propKey).
   ReturnIfAbrupt(propKey);
   let propValue;
+  // 3. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
   if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
-    propValue = yield* NamedEvaluation_Expression(AssignmentExpression, propKey);
-    ReturnIfAbrupt(propValue); // https://github.com/tc39/ecma262/issues/1605
-  } else {
+    // a. Let propValue be NamedEvaluation of AssignmentExpression with argument propKey.
+    propValue = yield* NamedEvaluation(AssignmentExpression, propKey);
+  } else { // 4. Else,
+    // a. Let exprValueRef be the result of evaluating AssignmentExpression.
     const exprValueRef = yield* Evaluate(AssignmentExpression);
+    // b. Let propValue be ? GetValue(exprValueRef).
     propValue = Q(GetValue(exprValueRef));
   }
-  Assert(enumerable);
-  // Assert: object is an ordinary object.
-  Assert(object.Extensible === Value.true);
-  Assert(!hasNonConfigurableProperties(object));
+  // 5. Assert: enumerable is true.
+  Assert(enumerable === Value.true);
+  // 6. Assert: object is an ordinary, extensible object with no non-configurable properties.
+  // 7. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
   return X(CreateDataPropertyOrThrow(object, propKey, propValue));
 }
 
-// 14.3.8 #sec-method-definitions-runtime-semantics-propertydefinitionevaluation
-//   MethodDefinition :
-//     PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-//     `get` PropertyName `(` `)` `{` FunctionBody `}`
-//     `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-//
-// (implicit)
-//   MethodDefinition : GeneratorMethod
-export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+// PropertyDefinition : IdentifierReference
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference, object, enumerable) {
+  // 1. Let propName be StringValue of IdentifierReference.
+  const propName = StringValue(IdentifierReference);
+  // 2. Let exprValue be the result of evaluating IdentifierReference.
+  const exprValue = yield* Evaluate(IdentifierReference);
+  // 3. Let propValue be ? GetValue(exprValue).
+  const propValue = Q(GetValue(exprValue));
+  // 4. Assert: enumerable is true.
+  Assert(enumerable === Value.true);
+  // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
+  // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
+  return X(CreateDataPropertyOrThrow(object, propName, propValue));
+}
+
+// MethodDefinition :
+//   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+//   `get` PropertyName `(` `)` `{` FunctionBody `}`
+//   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (true) {
-    case isMethodDefinitionRegularFunction(MethodDefinition): {
+    case !!MethodDefinition.UniqueFormalParameters: {
+      // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
       const methodDef = Q(yield* DefineMethod(MethodDefinition, object));
-      X(SetFunctionName(methodDef.Closure, methodDef.Key));
+      // 2. Perform SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
+      SetFunctionName(methodDef.Closure, methodDef.Key);
+      // 3. Let desc be the PropertyDescriptor { [[Value]]: methodDef.[[Closure]], [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
       const desc = Descriptor({
         Value: methodDef.Closure,
         Writable: Value.true,
-        Enumerable: enumerable ? Value.true : Value.false,
+        Enumerable: enumerable,
         Configurable: Value.true,
       });
+      // 4. Return ? DefinePropertyOrThrow(object, methodDef.[[Key]], desc).
       return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
     }
-
-    case isGeneratorMethod(MethodDefinition):
-      return yield* PropertyDefinitionEvaluation_GeneratorMethod(MethodDefinition, object, enumerable);
-
-    case isAsyncMethod(MethodDefinition):
-      return yield* PropertyDefinitionEvaluation_AsyncMethod(MethodDefinition, object, enumerable);
-
-    case isAsyncGeneratorMethod(MethodDefinition):
-      return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(MethodDefinition, object, enumerable);
-
-    case isMethodDefinitionGetter(MethodDefinition): {
-      const PropertyName = MethodDefinition.key;
-
-      const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
+    case !!MethodDefinition.PropertySetParameterList: {
+      const { PropertyName, PropertySetParameterList, FunctionBody } = MethodDefinition;
+      // 1. Let propKey be the result of evaluating PropertyName.
+      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      // 2. ReturnIfAbrupt(propKey).
       ReturnIfAbrupt(propKey);
+      // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      const formalParameterList = [];
-      const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), formalParameterList, MethodDefinition.value, 'non-lexical-this', scope));
-      X(SetFunctionName(closure, propKey, new Value('get')));
-      X(MakeMethod(closure, object));
-      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
-      const desc = Descriptor({
-        Get: closure,
-        Enumerable: enumerable ? Value.true : Value.false,
-        Configurable: Value.true,
-      });
-      return Q(DefinePropertyOrThrow(object, propKey, desc));
-    }
-
-    case isMethodDefinitionSetter(MethodDefinition): {
-      const PropertyName = MethodDefinition.key;
-      const PropertySetParameterList = MethodDefinition.value.params;
-
-      const propKey = yield* Evaluate_PropertyName(PropertyName, MethodDefinition.computed);
-      ReturnIfAbrupt(propKey);
-      const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), PropertySetParameterList, MethodDefinition.value, 'non-lexical-this', scope));
-      X(SetFunctionName(closure, propKey, new Value('set')));
-      X(MakeMethod(closure, object));
-      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
+      // 4. Let sourceText be the source text matched by MethodDefinition.
+      const sourceText = sourceTextMatchedBy(MethodDefinition);
+      // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, PropertySetParameterList, FunctionBody, non-lexical-this, scope).
+      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, PropertySetParameterList, FunctionBody, 'non-lexical-this', scope);
+      // 6. Perform MakeMethod(closure, object).
+      MakeMethod(closure, object);
+      // 7. Perform SetFunctionName(closure, propKey, "get").
+      SetFunctionName(closure, propKey, new Value('set'));
+      // 8. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
       const desc = Descriptor({
         Set: closure,
-        Enumerable: enumerable ? Value.true : Value.false,
+        Enumerable: enumerable,
         Configurable: Value.true,
       });
+      // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
+      return Q(DefinePropertyOrThrow(object, propKey, desc));
+    }
+    case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList: {
+      const { PropertyName, FunctionBody } = MethodDefinition;
+      // 1. Let propKey be the result of evaluating PropertyName.
+      const propKey = yield* Evaluate_PropertyName(PropertyName);
+      // 2. ReturnIfAbrupt(propKey).
+      ReturnIfAbrupt(propKey);
+      // 3. Let scope be the running execution context's LexicalEnvironment.
+      const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+      // 4. Let formalParameterList be an instance of the production FormalParameters : [empty].
+      const formalParameterList = [];
+      // 5. Let sourceText be the source text matched by MethodDefinition.
+      const sourceText = sourceTextMatchedBy(MethodDefinition);
+      // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameterList, FunctionBody, non-lexical-this, scope).
+      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, formalParameterList, FunctionBody, 'non-lexical-this', scope);
+      // 7. Perform MakeMethod(closure, object).
+      MakeMethod(closure, object);
+      // 8. Perform SetFunctionName(closure, propKey, "get").
+      SetFunctionName(closure, propKey, new Value('get'));
+      // 9. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+      const desc = Descriptor({
+        Get: closure,
+        Enumerable: enumerable,
+        Configurable: Value.true,
+      });
+      // 10. Return ? DefinePropertyOrThrow(object, propKey, desc).
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
     default:
@@ -187,126 +168,127 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
   }
 }
 
-// (implicit)
-//   ClassElement :
-//     MethodDefinition
-//     `static` MethodDefinition
-export const PropertyDefinitionEvaluation_ClassElement = PropertyDefinitionEvaluation_MethodDefinition;
-
-// 14.4.12 #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
-//   GeneratorMethod : `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
-  const {
-    key: PropertyName,
-    value: GeneratorExpression,
-  } = GeneratorMethod;
-  const UniqueFormalParameters = GeneratorExpression.params;
-
-  const propKey = yield* Evaluate_PropertyName(PropertyName, GeneratorMethod.computed);
-  ReturnIfAbrupt(propKey);
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), UniqueFormalParameters, GeneratorExpression, 'non-lexical-this', scope));
-  MakeMethod(closure, object);
-  X(SetFunctionName(closure, propKey));
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
-  X(DefinePropertyOrThrow(
-    closure,
-    new Value('prototype'),
-    Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false,
-    }),
-  ));
-  closure.SourceText = sourceTextMatchedBy(GeneratorExpression);
-  const desc = Descriptor({
-    Value: closure,
-    Writable: Value.true,
-    Enumerable: enumerable ? Value.true : Value.false,
-    Configurable: Value.true,
-  });
-  return Q(DefinePropertyOrThrow(object, propKey, desc));
-}
-
-// AsyncMethod : `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+// #sec-async-function-definitions-PropertyDefinitionEvaluation
+//   AsyncMethod :
+//     `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
 function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
-  const {
-    key: PropertyName,
-    value: AsyncExpression,
-  } = AsyncMethod;
-  const UniqueFormalParameters = AsyncExpression.params;
-
-  const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncMethod.computed);
+  const { PropertyName, UniqueFormalParameters, AsyncFunctionBody } = AsyncMethod;
+  // 1. Let propKey be the result of evaluating PropertyName.
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  // 2. ReturnIfAbrupt(propKey).
   ReturnIfAbrupt(propKey);
+  // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), UniqueFormalParameters, AsyncExpression, 'non-lexical-this', scope));
+  // 4. Let sourceText be the source text matched by AsyncMethod.
+  const sourceText = sourceTextMatchedBy(AsyncMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
+  // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  closure.SourceText = sourceTextMatchedBy(AsyncMethod);
+  // 8. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,
-    Enumerable: enumerable ? Value.true : Value.false,
+    Enumerable: enumerable,
     Configurable: Value.true,
   });
+  // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
   return Q(DefinePropertyOrThrow(object, propKey, desc));
 }
 
-// AsyncGeneratorMethod : `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorFunctionBody `}`
-function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
-  const {
-    key: PropertyName,
-    value: AsyncGeneratorExpression,
-  } = AsyncGeneratorMethod;
-  const UniqueFormalParameters = AsyncGeneratorExpression.params;
-
-  const propKey = yield* Evaluate_PropertyName(PropertyName, AsyncGeneratorMethod.computed);
+// #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+//   GeneratorMethod :
+//     `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
+  const { PropertyName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
+  // 1. Let propKey be the result of evaluating PropertyName.
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  // 2. ReturnIfAbrupt(propKey).
   ReturnIfAbrupt(propKey);
+  // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), UniqueFormalParameters, AsyncGeneratorExpression, 'non-lexical-this', scope));
+  // 4. Let sourceText be the source text matched by GeneratorMethod.
+  const sourceText = sourceTextMatchedBy(GeneratorMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%Generator%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
+  // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
-  X(DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+  // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
-  })));
-  closure.SourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
+  }));
+  // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
   const desc = Descriptor({
     Value: closure,
     Writable: Value.true,
-    Enumerable: enumerable ? Value.true : Value.false,
+    Enumerable: enumerable,
     Configurable: Value.true,
   });
+  // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
   return Q(DefinePropertyOrThrow(object, propKey, desc));
 }
 
-// (implicit)
-//   PropertyDefinition : MethodDefinition
-//
-// Note: PropertyDefinition : CoverInitializedName is an early error.
-function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
-  switch (true) {
-    case isPropertyDefinitionIdentifierReference(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(
-        PropertyDefinition, object, enumerable,
-      );
+// #sec-asyncgenerator-definitions-propertydefinitionevaluation
+//   AsyncGeneratorMethod :
+//     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
+  const { PropertyName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
+  // 1. Let propKey be the result of evaluating PropertyName.
+  const propKey = yield* Evaluate_PropertyName(PropertyName);
+  // 2. ReturnIfAbrupt(propKey).
+  ReturnIfAbrupt(propKey);
+  // 3. Let scope be the LexicalEnvironment of the running execution context.
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
+  X(MakeMethod(closure, object));
+  // 7. Perform ! SetFunctionName(closure, propKey).
+  X(SetFunctionName(closure, propKey));
+  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    Value: prototype,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  }));
+  // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+  const desc = Descriptor({
+    Value: closure,
+    Writable: Value.true,
+    Enumerable: enumerable,
+    Configurable: Value.true,
+  });
+  // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
+  return Q(DefinePropertyOrThrow(object, propKey, desc));
+}
 
-    case isPropertyDefinitionKeyValue(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_PropertyDefinition_KeyValue(PropertyDefinition, object, enumerable);
-
-    case isMethodDefinition(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
-
-    case isPropertyDefinitionSpread(PropertyDefinition):
-      return yield* PropertyDefinitionEvaluation_PropertyDefinition_Spread(
-        PropertyDefinition, object, enumerable,
-      );
-
+export function PropertyDefinitionEvaluation(node, object, enumerable) {
+  switch (node.type) {
+    case 'MethodDefinition':
+      return PropertyDefinitionEvaluation_MethodDefinition(node, object, enumerable);
+    case 'AsyncMethod':
+      return PropertyDefinitionEvaluation_AsyncMethod(node, object, enumerable);
+    case 'GeneratorMethod':
+      return PropertyDefinitionEvaluation_GeneratorMethod(node, object, enumerable);
+    case 'AsyncGeneratorMethod':
+      return PropertyDefinitionEvaluation_AsyncGeneratorMethod(node, object, enumerable);
+    case 'ClassElement':
+      return PropertyDefinitionEvaluation(node.MethodDefinition, object, enumerable);
     default:
-      throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
+      throw new OutOfRange('PropertyDefinitionEvaluation', node);
   }
 }

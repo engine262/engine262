@@ -1,138 +1,145 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
-  EnvironmentRecord,
-} from '../environment.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { EnvironmentRecord } from '../environment.mjs';
 import { Assert } from '../abstract-ops/all.mjs';
 import {
-  BoundNames_BindingIdentifier,
-  BoundNames_Declaration,
-  BoundNames_ForBinding,
-  BoundNames_FunctionDeclaration,
-  BoundNames_VariableDeclaration,
+  BoundNames,
   IsConstantDeclaration,
-  LexicallyDeclaredNames_ScriptBody,
-  LexicallyScopedDeclarations_ScriptBody,
-  VarDeclaredNames_ScriptBody,
-  VarScopedDeclarations_ScriptBody,
+  LexicallyDeclaredNames,
+  LexicallyScopedDeclarations,
+  VarDeclaredNames,
+  VarScopedDeclarations,
 } from '../static-semantics/all.mjs';
-import {
-  isAsyncFunctionDeclaration,
-  isAsyncGeneratorDeclaration,
-  isBindingIdentifier,
-  isForBinding,
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
-  isVariableDeclaration,
-} from '../ast.mjs';
 import { Value } from '../value.mjs';
-import {
-  NormalCompletion,
-  Q,
-} from '../completion.mjs';
-import {
-  InstantiateFunctionObject,
-} from './all.mjs';
+import { Q, NormalCompletion } from '../completion.mjs';
+import { ValueSet } from '../helpers.mjs';
+import { InstantiateFunctionObject } from './all.mjs';
 
-
-// 15.1.11 #sec-globaldeclarationinstantiation
 export function GlobalDeclarationInstantiation(script, env) {
-  const envRec = env.EnvironmentRecord;
-  Assert(envRec instanceof EnvironmentRecord);
-
-  const lexNames = LexicallyDeclaredNames_ScriptBody(script).map(Value);
-  const varNames = VarDeclaredNames_ScriptBody(script).map(Value);
-
+  // 1. Assert: env is a global Environment Record.
+  Assert(env instanceof EnvironmentRecord);
+  // 2. Let lexNames be the LexicallyDeclaredNames of script.
+  const lexNames = LexicallyDeclaredNames(script);
+  // 3. Let varNames be the VarDeclaredNames of script.
+  const varNames = VarDeclaredNames(script);
+  // 4. For each name in lexNames, do
   for (const name of lexNames) {
-    if (envRec.HasVarDeclaration(name) === Value.true) {
+    // 1. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
+    if (env.HasVarDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
-    if (envRec.HasLexicalDeclaration(name) === Value.true) {
+    // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+    if (env.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
-    const hasRestrictedGlobal = Q(envRec.HasRestrictedGlobalProperty(name));
+    // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
+    const hasRestrictedGlobal = Q(env.HasRestrictedGlobalProperty(name));
+    // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
     if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
-
+  // 5. For each name in varNames, do
   for (const name of varNames) {
-    if (envRec.HasLexicalDeclaration(name) === Value.true) {
+    // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+    if (env.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
-
-  const varDeclarations = VarScopedDeclarations_ScriptBody(script);
-
+  // 6. Let varDeclarations be the VarScopedDeclarations of script.
+  const varDeclarations = VarScopedDeclarations(script);
+  // 7. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
-  const declaredFunctionNames = [];
-
+  // 8. Let declaredFunctionNames be a new empty List.
+  const declaredFunctionNames = new ValueSet();
+  // 9. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
-    if (!isVariableDeclaration(d) && !isForBinding(d) && !isBindingIdentifier(d)) {
-      Assert(isFunctionDeclaration(d) || isGeneratorDeclaration(d)
-             || isAsyncFunctionDeclaration(d) || isAsyncGeneratorDeclaration(d));
-      const fn = BoundNames_FunctionDeclaration(d)[0];
-      if (!declaredFunctionNames.includes(fn)) {
-        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(new Value(fn)));
+    // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+    if (d.type !== 'VariableDeclaration'
+        && d.type !== 'ForBinding'
+        && d.type !== 'BindingIdentifier') {
+      // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+      Assert(d.type === 'FunctionDeclaration'
+             || d.type === 'GeneratorDeclaration'
+             || d.type === 'AsyncFunctionDeclaration'
+             || d.type === 'AsyncGeneratorDeclaration');
+      // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+      // iii. Let fn be the sole element of the BoundNames of d.
+      const fn = BoundNames(d)[0];
+      // iv. If fn is not an element of declaredFunctionNames, then
+      if (!declaredFunctionNames.has(fn)) {
+        // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
+        const fnDefinable = Q(env.CanDeclareGlobalFunction(fn));
+        // 2. If fnDefinable is false, throw a TypeError exception.
         if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
         }
-        declaredFunctionNames.push(fn);
+        // 3. Append fn to declaredFunctionNames.
+        declaredFunctionNames.add(fn);
+        // 4. Insert d as the first element of functionsToInitialize.
         functionsToInitialize.unshift(d);
       }
     }
   }
-
-  const declaredVarNames = [];
-
+  // 10. Let declaredVarNames be a new empty List.
+  const declaredVarNames = new ValueSet();
+  // 11. For each d in varDeclarations, do
   for (const d of varDeclarations) {
-    let boundNames;
-    if (isVariableDeclaration(d)) {
-      boundNames = BoundNames_VariableDeclaration(d);
-    } else if (isForBinding(d)) {
-      boundNames = BoundNames_ForBinding(d);
-    } else if (isBindingIdentifier(d)) {
-      boundNames = BoundNames_BindingIdentifier(d);
-    }
-    if (boundNames !== undefined) {
-      for (const vn of boundNames.map(Value)) {
-        if (!declaredFunctionNames.includes(vn)) {
-          const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
+    // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
+    if (d.type === 'VariableDeclaration'
+        || d.type === 'ForBinding'
+        || d.type === 'BindingIdentifier') {
+      // i. For each String vn in the BoundNames of d, do
+      for (const vn of BoundNames(d)) {
+        // 1. If vn is not an element of declaredFunctionNames, then
+        if (!declaredFunctionNames.has(vn)) {
+          // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
+          const vnDefinable = Q(env.CanDeclareGlobalVar(vn));
+          // b. If vnDefinable is false, throw a TypeError exception.
           if (vnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
           }
-          if (!declaredVarNames.includes(vn)) {
-            declaredVarNames.push(vn);
+          // c. If vn is not an element of declaredVarNames, then
+          if (!declaredVarNames.has(vn)) {
+            // i. Append vn to declaredVarNames.
+            declaredVarNames.add(vn);
           }
         }
       }
     }
   }
-
-  // NOTE: Annex B.3.3.2 adds additional steps at this point.
-  // TODO(devsnek): Annex B.3.3.2
-
-  const lexDeclarations = LexicallyScopedDeclarations_ScriptBody(script);
+  // 12. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
+  // 13. NOTE: Annex B.3.3.2 adds additional steps at this point.
+  // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
+  const lexDeclarations = LexicallyScopedDeclarations(script);
+  // 15. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
-    for (const dn of BoundNames_Declaration(d).map(Value)) {
+    // a. NOTE: Lexically declared names are only instantiated here but not initialized.
+    // b. For each element dn of the BoundNames of d, do
+    for (const dn of BoundNames(d)) {
+      // 1. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        Q(envRec.CreateImmutableBinding(dn, Value.true));
-      } else {
-        Q(envRec.CreateMutableBinding(dn, Value.false));
+        // 1. Perform ? env.CreateImmutableBinding(dn, true).
+        Q(env.CreateImmutableBinding(dn, Value.true));
+      } else { // 1. Else,
+        // 1. Perform ? env.CreateMutableBinding(dn, false).
+        Q(env.CreateMutableBinding(dn, Value.false));
       }
     }
   }
-
+  // 16. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
-    const fn = new Value(BoundNames_FunctionDeclaration(f)[0]);
+    // a. Let fn be the sole element of the BoundNames of f.
+    const fn = BoundNames(f)[0];
+    // b. Let fo be InstantiateFunctionObject of f with argument env.
     const fo = InstantiateFunctionObject(f, env);
-    Q(envRec.CreateGlobalFunctionBinding(fn, fo, Value.false));
+    // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
+    Q(env.CreateGlobalFunctionBinding(fn, fo, Value.false));
   }
-
+  // 17. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
-    Q(envRec.CreateGlobalVarBinding(vn, Value.false));
+    // a. Perform ? env.CreateGlobalVarBinding(vn, false).
+    Q(env.CreateGlobalVarBinding(vn, Value.false));
   }
-
-  return new NormalCompletion(undefined);
+  // 18. Return NormalCompletion(empty).
+  return NormalCompletion(undefined);
 }
