@@ -17,17 +17,15 @@ import {
 } from '../value.mjs';
 import {
   AbruptCompletion,
-  ThrowCompletion,
   Q,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-
 
 export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
-  Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null');
+  Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null);
   const iteratorRecord = Q(GetIterator(iterable));
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
@@ -36,7 +34,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
     }
     const nextItem = Q(IteratorValue(next));
     if (Type(nextItem) !== 'Object') {
-      const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem).Value);
+      const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
       return Q(IteratorClose(iteratorRecord, error));
     }
     const k = Get(nextItem, new Value('0'));

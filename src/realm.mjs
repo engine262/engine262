@@ -74,6 +74,10 @@ import { BootstrapTypedArrayConstructors } from './intrinsics/TypedArrayConstruc
 import { BootstrapTypedArrayPrototypes } from './intrinsics/TypedArrayPrototypes.mjs';
 import { BootstrapDataView } from './intrinsics/DataView.mjs';
 import { BootstrapDataViewPrototype } from './intrinsics/DataViewPrototype.mjs';
+import { BootstrapWeakMapPrototype } from './intrinsics/WeakMapPrototype.mjs';
+import { BootstrapWeakMap } from './intrinsics/WeakMap.mjs';
+import { BootstrapWeakSetPrototype } from './intrinsics/WeakSetPrototype.mjs';
+import { BootstrapWeakSet } from './intrinsics/WeakSet.mjs';
 import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
 import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
 import { BootstrapFinalizationGroupPrototype } from './intrinsics/FinalizationGroupPrototype.mjs';
@@ -228,6 +232,11 @@ export function CreateIntrinsics(realmRec) {
 
   BootstrapJSON(realmRec);
 
+  BootstrapWeakMapPrototype(realmRec);
+  BootstrapWeakMap(realmRec);
+  BootstrapWeakSetPrototype(realmRec);
+  BootstrapWeakSet(realmRec);
+
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
@@ -328,8 +337,8 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Uint16Array',
     'Uint32Array',
     'URIError',
-    // 'WeakMap',
-    // 'WeakSet',
+    'WeakMap',
+    'WeakSet',
 
     // Other Properties of the Global Object
     // 'Atomics',

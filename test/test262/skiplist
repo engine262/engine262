@@ -571,6 +571,3 @@ language/expressions/assignment/dstr/ident-name-prop-name-literal-finally-escape
 language/expressions/assignment/dstr/ident-name-prop-name-literal-in-escaped.js
 language/expressions/assignment/dstr/ident-name-prop-name-literal-switch-escaped.js
 language/expressions/assignment/dstr/ident-name-prop-name-literal-void-escaped.js
-
-built-ins/WeakMap/**/*.js
-built-ins/WeakSet/**/*.js

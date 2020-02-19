@@ -48,16 +48,23 @@ export { inspect } from './inspect.mjs';
 
 function mark() {
   // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
-  // At any time, if an object obj is not live, an ECMAScript implementation may perform the following steps atomically:
-  // 1. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
-  //   a. Set ref.[[WeakRefTarget]] to empty.
-  // 2. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
-  //   a. Set cell.[[WeakRefTarget]] to empty.
-  //   b. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps automically:
+  // 1. For each obj os S, do
+  //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
+  //     i. Set ref.[[WeakRefTarget]] to empty.
+  //   b. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //     i. Set cell.[[WeakRefTarget]] to empty.
+  //     ii. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
+  //     i. Remove r from map.WeakMapData.
+  //   d. For each WeakSet set such that set.WeakSetData contains obj,
+  //     i. Remove obj from WeakSetData.
 
   const marked = new Set();
   const weakrefs = new Set();
   const fgs = new Set();
+  const weakmaps = new Set();
+  const weaksets = new Set();
 
   const markCb = (O) => {
     if (typeof O !== 'object' || O === null) {
@@ -71,35 +78,70 @@ function mark() {
 
     if ('WeakRefTarget' in O && !('HeldValue' in O)) {
       weakrefs.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
     } else if ('Cells' in O) {
       fgs.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
       O.Cells.forEach((cell) => {
         markCb(cell.HeldValue);
       });
+    } else if ('WeakMapData' in O) {
+      weakmaps.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
+    } else if ('WeakSetData' in O) {
+      weaksets.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
     } else if (O.mark) {
       O.mark(markCb);
     }
   };
 
+  if (surroundingAgent.feature('WeakRefs')) {
+    AbstractOps.ClearKeptObjects();
+  }
+
   markCb(surroundingAgent);
 
-  weakrefs.forEach((ref) => {
-    if (!marked.has(ref.WeakRefTarget)) {
-      ref.WeakRefTarget = undefined;
-    }
-  });
-
-  fgs.forEach((fg) => {
-    let dirty = false;
-    fg.Cells.forEach((cell) => {
-      if (!marked.has(cell.WeakRefTarget)) {
-        cell.WeakRefTarget = undefined;
-        dirty = true;
+  if (surroundingAgent.feature('WeakRefs')) {
+    weakrefs.forEach((ref) => {
+      if (!marked.has(ref.WeakRefTarget)) {
+        ref.WeakRefTarget = undefined;
       }
     });
-    if (dirty) {
-      X(HostCleanupFinalizationGroup(fg));
-    }
+
+    fgs.forEach((fg) => {
+      let dirty = false;
+      fg.Cells.forEach((cell) => {
+        if (!marked.has(cell.WeakRefTarget)) {
+          cell.WeakRefTarget = undefined;
+          dirty = true;
+        }
+      });
+      if (dirty) {
+        X(HostCleanupFinalizationGroup(fg));
+      }
+    });
+  }
+
+  weakmaps.forEach((map) => {
+    map.WeakMapData.forEach((r) => {
+      if (!marked.has(r.Key)) {
+        r.Key = undefined;
+        r.Value = undefined;
+      }
+    });
+  });
+
+  weaksets.forEach((set) => {
+    set.WeakSetData.forEach((obj, i) => {
+      if (!marked.has(obj)) {
+        set.WeakSetData[i] = undefined;
+      }
+    });
   });
 }
 
@@ -126,10 +168,7 @@ function runJobQueue() {
       HostReportErrors(result.Value);
     }
 
-    if (surroundingAgent.feature('WeakRefs')) {
-      AbstractOps.ClearKeptObjects();
-      mark();
-    }
+    mark();
 
     surroundingAgent.executionContextStack.pop(newContext);
   }

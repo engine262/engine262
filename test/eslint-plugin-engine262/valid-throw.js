@@ -55,7 +55,7 @@ module.exports = {
           return;
         }
         if (tfn !== templateArgs.length) {
-          context.report(node, `Template expects ${tfn.length} args`);
+          context.report(node, `Template expects ${tfn} args`);
         }
       },
     };

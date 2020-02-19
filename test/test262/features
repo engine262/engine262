@@ -15,9 +15,6 @@ tail-call-optimization
 
 u180e
 
-WeakMap
-WeakSet
-
 class-fields-public
 class-fields-private
 class-methods-private

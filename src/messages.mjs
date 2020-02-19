@@ -120,3 +120,4 @@ export const TypedArrayTooSmall = () => 'Derived TypedArray constructor created 
 export const UnableToSeal = (o) => `Unable to seal object ${i(o)}`;
 export const UnableToFreeze = (o) => `Unable to freeze object ${i(o)}`;
 export const UnableToPreventExtensions = (o) => `Unable to prevent extensions on object ${i(o)}`;
+export const WeakCollectionNotObject = (v) => `${i(v)} is not a valid weak collectection entry object`;
