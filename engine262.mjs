@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 fe5c49d858df245fe760a37e8780cc3810a26d2a
+ * engine262 0.0.1 67bef1a3b2474a580e88199484fb860aa503fcb6
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -24242,7 +24242,7 @@ function AddEntriesFromIterable(target, iterable, adder) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
 
-  Assert(iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null', "iterable && Type(iterable) !== 'Undefined' && Type(iterable) !== 'Null'");
+  Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null, "iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null");
 
   let _temp = GetIterator(iterable);
   /* istanbul ignore if */
@@ -24290,7 +24290,7 @@ function AddEntriesFromIterable(target, iterable, adder) {
     const nextItem = _temp3;
 
     if (Type(nextItem) !== 'Object') {
-      const error = new ThrowCompletion(surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem).Value);
+      const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
       return IteratorClose(iteratorRecord, error);
     }
 
@@ -44052,6 +44052,444 @@ function BootstrapDataViewPrototype(realmRec) {
   realmRec.Intrinsics['%DataView.prototype%'] = proto;
 }
 
+function WeakMapProto_delete([key = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let M be the this value.
+  const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+
+  let _temp = RequireInternalSlot(M, 'WeakMapData');
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const entries = M.WeakMapData; // 4. If Type(key) is not Object, return false.
+
+  if (Type(key) !== 'Object') {
+    return Value.false;
+  } // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const p = entries[i]; // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+      // i. Set p.[[Key]] to empty.
+      p.Key = undefined; // ii. Set p.[[Value]] to empty.
+
+      p.Value = undefined; // iii. return true.
+
+      return Value.true;
+    }
+  } // 6. Return false.
+
+
+  return Value.false;
+}
+
+function WeakMapProto_get([key = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let m be the this value.
+  const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+
+  let _temp2 = RequireInternalSlot(M, 'WeakMapData');
+
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  const entries = M.WeakMapData; // 4. If Type(key) is not Object, return undefined.
+
+  if (Type(key) !== 'Object') {
+    return Value.undefined;
+  } // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+
+
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+      return p.Value;
+    }
+  } // 6. Return undefined.
+
+
+  return Value.undefined;
+}
+
+function WeakMapProto_has([key = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let M be the this value.
+  const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+
+  let _temp3 = RequireInternalSlot(M, 'WeakMapData');
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  const entries = M.WeakMapData; // 4. If Type(key) is not Object, return false.
+
+  if (Type(key) !== 'Object') {
+    return Value.false;
+  } // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+
+
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return true.
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+      return Value.true;
+    }
+  } // 6. Return false.
+
+
+  return Value.false;
+}
+
+function WeakMapProto_set([key = Value.undefined, value = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let M be the this value.
+  const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
+
+  let _temp4 = RequireInternalSlot(M, 'WeakMapData');
+
+  if (_temp4 instanceof AbruptCompletion) {
+    return _temp4;
+  }
+
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
+  }
+
+  const entries = M.WeakMapData; // 4. If Type(key) is not Object, throw a TypeError exception.
+
+  if (Type(key) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
+  } // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+
+
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+      // i. Set p.[[Value]] to value.
+      p.Value = value; // ii. Return M.
+
+      return M;
+    }
+  } // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+
+
+  const p = {
+    Key: key,
+    Value: value
+  }; // 7. Append p as the last element of entries.
+
+  entries.push(p); // 8. Return M.
+
+  return M;
+}
+
+function BootstrapWeakMapPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['delete', WeakMapProto_delete, 1], ['get', WeakMapProto_get, 1], ['has', WeakMapProto_has, 1], ['set', WeakMapProto_set, 2]], realmRec.Intrinsics['%Object.prototype%'], 'WeakMap');
+  realmRec.Intrinsics['%WeakMap.prototype%'] = proto;
+}
+
+function WeakMapConstructor([iterable = Value.undefined], {
+  NewTarget
+}) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakMap');
+  } // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
+
+
+  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData']);
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const map = _temp; // 3. Set map.[[WeakMapData]] to a new empty List.
+
+  map.WeakMapData = []; // 4. If iterable is either undefined or null, return map.
+
+  if (iterable === Value.undefined || iterable === Value.null) {
+    return map;
+  } // 5. Let adder be ? Get(map, "set").
+
+
+  let _temp2 = Get(map, new Value('set'));
+
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  const adder = _temp2; // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
+
+  return AddEntriesFromIterable(map, iterable, adder);
+}
+
+function BootstrapWeakMap(realmRec) {
+  const c = BootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
+  realmRec.Intrinsics['%WeakMap%'] = c;
+}
+
+function WeakSetProto_add([value = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let S be this value.
+  const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+
+  let _temp = RequireInternalSlot(S, 'WeakSetData');
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  if (Type(value) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', value);
+  } // 4. Let entries be the List that is S.[[WeakSetData]].
+
+
+  const entries = S.WeakSetData; // 5. For each e that is an element of entries, do
+
+  for (const e of entries) {
+    // a. If e is not empty and SameValue(e, value) is true, then
+    if (e !== undefined && SameValue(e, value) === Value.true) {
+      // i. Return S.
+      return S;
+    }
+  } // 6. Append value as the last element of entries.
+
+
+  entries.push(value); // 7. Return S.
+
+  return S;
+} // #sec-weakset.prototype.delete
+
+
+function WeakSetProto_delete([value = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let S be the this value.`
+  const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+
+  let _temp2 = RequireInternalSlot(S, 'WeakSetData');
+
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  if (Type(value) !== 'Object') {
+    return Value.false;
+  } // 4. Let entries be the List that is S.[[WeakSetData]].
+
+
+  const entries = S.WeakSetData; // 5. For each e that is an element of entries, do
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const e = entries[i]; // i. If e is not empty and SameValue(e, value) is true, then
+
+    if (e !== undefined && SameValue(e, value) === Value.true) {
+      // i. Replace the element of entries whose value is e with an element whose value is empty.
+      entries[i] = undefined; // ii. Return true.
+
+      return Value.true;
+    }
+  } // 6. Return false.
+
+
+  return Value.false;
+} // #sec-weakset.prototype.has
+
+
+function WeakSetProto_has([value = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let S be the this value.
+  const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+
+  let _temp3 = RequireInternalSlot(S, 'WeakSetData');
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  const entries = S.WeakSetData; // 4. If Type(value) is not Object, return false.
+
+  if (Type(value) !== 'Object') {
+    return Value.false;
+  } // 5. For each e that is an element of entries, do
+
+
+  for (const e of entries) {
+    // a. If e is not empty and SameValue(e, value) is true, return true.
+    if (e !== undefined && SameValue(e, value) === Value.true) {
+      return Value.true;
+    }
+  } // 6. Return false.
+
+
+  return Value.false;
+}
+
+function BootstrapWeakSetPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['add', WeakSetProto_add, 1], ['delete', WeakSetProto_delete, 1], ['has', WeakSetProto_has, 1]], realmRec.Intrinsics['%Object.prototype%'], 'WeakSet');
+  realmRec.Intrinsics['%WeakSet.prototype%'] = proto;
+}
+
+function WeakSetConstructor([iterable = Value.undefined], {
+  NewTarget
+}) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakSet');
+  } // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakSet.prototype%", « [[WeakSetData]] »).
+
+
+  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']);
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const set = _temp; // 3. Set set.[[WeakSetData]] to a new empty List.
+
+  set.WeakSetData = []; // 4. If iterable is either undefined or null, return set.
+
+  if (iterable === Value.undefined || iterable === Value.null) {
+    return set;
+  } // 5. Let adder be ? Get(set, "add").
+
+
+  let _temp2 = Get(set, new Value('add'));
+
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  const adder = _temp2; // 6. If IsCallable(adder) is false, throw a TypeError exception.
+
+  if (IsCallable(adder) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+  } // 7. Let iteratorRecord be ? GetIterator(iterable).
+
+
+  let _temp3 = GetIterator(iterable);
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  const iteratorRecord = _temp3; // 8. Repeat,
+
+  while (true) {
+    let _temp4 = IteratorStep(iteratorRecord);
+
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    // a. Let next be ? IteratorStep(iteratorRecord).
+    const next = _temp4; // b. If next is false, return set.
+
+    if (next === Value.false) {
+      return set;
+    } // c. Let nextValue be ? IteratorValue(next).
+
+
+    let _temp5 = IteratorValue(next);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const nextValue = _temp5; // d. Let status be Call(adder, set, « nextValue »).
+
+    const status = Call(adder, set, [nextValue]); // e. If status is an abrupt completion, return ? IteratorClose(iteratorRecord, status).
+
+    if (status instanceof AbruptCompletion) {
+      return IteratorClose(iteratorRecord, status);
+    }
+  }
+}
+
+function BootstrapWeakSet(realmRec) {
+  const c = BootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
+  realmRec.Intrinsics['%WeakSet%'] = c;
+}
+
 function WeakRefProto_deref(args, {
   thisValue
 }) {
@@ -44523,6 +44961,10 @@ function CreateIntrinsics(realmRec) {
   BootstrapDataViewPrototype(realmRec);
   BootstrapDataView(realmRec);
   BootstrapJSON(realmRec);
+  BootstrapWeakMapPrototype(realmRec);
+  BootstrapWeakMap(realmRec);
+  BootstrapWeakSetPrototype(realmRec);
+  BootstrapWeakSet(realmRec);
 
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
@@ -44598,9 +45040,7 @@ function SetDefaultGlobalBindings(realmRec) {
   // 'encodeURIComponent',
   // Constructor Properties of the Global Object
   'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'DataView', 'Date', 'Error', 'EvalError', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', // 'SharedArrayBuffer',
-  'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', // 'WeakMap',
-  // 'WeakSet',
-  // Other Properties of the Global Object
+  'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakSet', // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect'].forEach(name => {
     let _temp5 = DefinePropertyOrThrow(global, new Value(name), Descriptor({
@@ -44770,6 +45210,7 @@ const TypedArrayTooSmall = () => 'Derived TypedArray constructor created an arra
 const UnableToSeal = o => `Unable to seal object ${i(o)}`;
 const UnableToFreeze = o => `Unable to freeze object ${i(o)}`;
 const UnableToPreventExtensions = o => `Unable to prevent extensions on object ${i(o)}`;
+const WeakCollectionNotObject = v => `${i(v)} is not a valid weak collectection entry object`;
 
 var messages = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -44880,7 +45321,8 @@ var messages = /*#__PURE__*/Object.freeze({
   TypedArrayTooSmall: TypedArrayTooSmall,
   UnableToSeal: UnableToSeal,
   UnableToFreeze: UnableToFreeze,
-  UnableToPreventExtensions: UnableToPreventExtensions
+  UnableToPreventExtensions: UnableToPreventExtensions,
+  WeakCollectionNotObject: WeakCollectionNotObject
 });
 
 const FEATURES = Object.freeze([{
@@ -56498,15 +56940,22 @@ const {
 
 function mark() {
   // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
-  // At any time, if an object obj is not live, an ECMAScript implementation may perform the following steps atomically:
-  // 1. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
-  //   a. Set ref.[[WeakRefTarget]] to empty.
-  // 2. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
-  //   a. Set cell.[[WeakRefTarget]] to empty.
-  //   b. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps automically:
+  // 1. For each obj os S, do
+  //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
+  //     i. Set ref.[[WeakRefTarget]] to empty.
+  //   b. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //     i. Set cell.[[WeakRefTarget]] to empty.
+  //     ii. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
+  //     i. Remove r from map.WeakMapData.
+  //   d. For each WeakSet set such that set.WeakSetData contains obj,
+  //     i. Remove obj from WeakSetData.
   const marked = new Set();
   const weakrefs = new Set();
   const fgs = new Set();
+  const weakmaps = new Set();
+  const weaksets = new Set();
 
   const markCb = O => {
     if (typeof O !== 'object' || O === null) {
@@ -56521,41 +56970,76 @@ function mark() {
 
     if ('WeakRefTarget' in O && !('HeldValue' in O)) {
       weakrefs.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
     } else if ('Cells' in O) {
       fgs.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
       O.Cells.forEach(cell => {
         markCb(cell.HeldValue);
       });
+    } else if ('WeakMapData' in O) {
+      weakmaps.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
+    } else if ('WeakSetData' in O) {
+      weaksets.add(O);
+      markCb(O.properties);
+      markCb(O.Prototype);
     } else if (O.mark) {
       O.mark(markCb);
     }
   };
 
+  if (surroundingAgent.feature('WeakRefs')) {
+    ClearKeptObjects();
+  }
+
   markCb(surroundingAgent);
-  weakrefs.forEach(ref => {
-    if (!marked.has(ref.WeakRefTarget)) {
-      ref.WeakRefTarget = undefined;
-    }
-  });
-  fgs.forEach(fg => {
-    let dirty = false;
-    fg.Cells.forEach(cell => {
-      if (!marked.has(cell.WeakRefTarget)) {
-        cell.WeakRefTarget = undefined;
-        dirty = true;
+
+  if (surroundingAgent.feature('WeakRefs')) {
+    weakrefs.forEach(ref => {
+      if (!marked.has(ref.WeakRefTarget)) {
+        ref.WeakRefTarget = undefined;
       }
     });
+    fgs.forEach(fg => {
+      let dirty = false;
+      fg.Cells.forEach(cell => {
+        if (!marked.has(cell.WeakRefTarget)) {
+          cell.WeakRefTarget = undefined;
+          dirty = true;
+        }
+      });
 
-    if (dirty) {
-      let _temp = HostCleanupFinalizationGroup(fg);
+      if (dirty) {
+        let _temp = HostCleanupFinalizationGroup(fg);
 
-      Assert(!(_temp instanceof AbruptCompletion), "HostCleanupFinalizationGroup(fg)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+        Assert(!(_temp instanceof AbruptCompletion), "HostCleanupFinalizationGroup(fg)" + ' returned an abrupt completion');
+        /* istanbul ignore if */
 
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
+        }
       }
-    }
+    });
+  }
+
+  weakmaps.forEach(map => {
+    map.WeakMapData.forEach(r => {
+      if (!marked.has(r.Key)) {
+        r.Key = undefined;
+        r.Value = undefined;
+      }
+    });
+  });
+  weaksets.forEach(set => {
+    set.WeakSetData.forEach((obj, i) => {
+      if (!marked.has(obj)) {
+        set.WeakSetData[i] = undefined;
+      }
+    });
   });
 }
 
@@ -56584,11 +57068,7 @@ function runJobQueue() {
       HostReportErrors(result.Value);
     }
 
-    if (surroundingAgent.feature('WeakRefs')) {
-      ClearKeptObjects();
-      mark();
-    }
-
+    mark();
     surroundingAgent.executionContextStack.pop(newContext);
   }
 
