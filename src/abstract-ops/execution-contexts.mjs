@@ -33,17 +33,25 @@ export function ResolveBinding(name, env, strict) {
   return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
-// 8.3.3 #sec-getthisenvironment
+// #sec-getthisenvironment
 export function GetThisEnvironment() {
+  // 1. Let lex be the running execution context's LexicalEnvironment.
   let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  while (true) { // eslint-disable-line no-constant-condition
+  // 2. Repeat,
+  while (true) {
+    // a. Let envRec be lex's EnvironmentRecord.
     const envRec = lex.EnvironmentRecord;
+    // b. Let exists be envRec.HasThisBinding().
     const exists = envRec.HasThisBinding();
+    // c. If exists is true, return envRec.
     if (exists === Value.true) {
       return envRec;
     }
+    // d. Let outer be the value of lex's outer environment reference.
     const outer = lex.outerEnvironmentReference;
-    Assert(Type(outer) !== 'Null');
+    // e. Assert: outer is not null.
+    Assert(outer !== Value.null);
+    // f. Set lex to outer.
     lex = outer;
   }
 }

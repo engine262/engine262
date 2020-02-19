@@ -9,26 +9,19 @@ import {
   Value,
 } from '../value.mjs';
 import {
-  EnsureCompletion, NormalCompletion, Q,
+  EnsureCompletion,
+  NormalCompletion,
   ReturnIfAbrupt,
-  X,
+  Q, X,
 } from '../completion.mjs';
 import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
-import {
-  EvaluateBody_AsyncConciseBody_ExpressionBody,
-  EvaluateBody_AsyncFunctionBody,
-  EvaluateBody_ConciseBody_ExpressionBody,
-  EvaluateBody_FunctionBody,
-  EvaluateBody_GeneratorBody,
-  EvaluateBody_AsyncGeneratorBody,
-  getFunctionBodyType,
-} from '../runtime-semantics/all.mjs';
+import { EvaluateBody } from '../runtime-semantics/all.mjs';
 import {
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind, OutOfRange } from '../helpers.mjs';
+import { unwind } from '../helpers.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -104,34 +97,8 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 }
 
 // 9.2.1.3 #sec-ordinarycallevaluatebody
-export function* OrdinaryCallEvaluateBody(F, argumentsList) {
-  switch (getFunctionBodyType(F.ECMAScriptCode)) {
-    // FunctionBody : FunctionStatementList
-    // ConciseBody : `{` FunctionBody `}`
-    case 'FunctionBody':
-    case 'ConciseBody_FunctionBody':
-      return yield* EvaluateBody_FunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    // ConciseBody : ExpressionBody
-    case 'ConciseBody_ExpressionBody':
-      return yield* EvaluateBody_ConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-    case 'GeneratorBody':
-      return yield* EvaluateBody_GeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    case 'AsyncFunctionBody':
-    case 'AsyncConciseBody_AsyncFunctionBody':
-      return yield* EvaluateBody_AsyncFunctionBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    case 'AsyncConciseBody_ExpressionBody':
-      return yield* EvaluateBody_AsyncConciseBody_ExpressionBody(F.ECMAScriptCode.body, F, argumentsList);
-
-    case 'AsyncGeneratorBody':
-      return yield* EvaluateBody_AsyncGeneratorBody(F.ECMAScriptCode.body.body, F, argumentsList);
-
-    default:
-      throw new OutOfRange('OrdinaryCallEvaluateBody', F.ECMAScriptCode);
-  }
+export function OrdinaryCallEvaluateBody(F, argumentsList) {
+  return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
 }
 
 // 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
@@ -146,7 +113,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
@@ -177,7 +144,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   }
   const constructorEnv = calleeContext.LexicalEnvironment;
   const envRec = constructorEnv.EnvironmentRecord;
-  const result = EnsureCompletion(unwind(OrdinaryCallEvaluateBody(F, argumentsList)));
+  const result = OrdinaryCallEvaluateBody(F, argumentsList);
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);

@@ -1,8 +1,8 @@
 import { ResolveThisBinding } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// 12.2.2 #sec-this-keyword
-// PrimaryExpression : this
-export function Evaluate_ThisExpression() {
+// #sec-this-keyword-runtime-semantics-evaluation
+// PrimaryExpression : `this`
+export function Evaluate_This(_PrimaryExpression) {
   return Q(ResolveThisBinding());
 }

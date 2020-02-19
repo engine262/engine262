@@ -1,61 +1,17 @@
-import {
-  isIterationStatement,
-  isSwitchStatement,
-} from '../ast.mjs';
-import {
-  Completion,
-  EnsureCompletion,
-  NormalCompletion,
-} from '../completion.mjs';
-import { ValueSet, OutOfRange } from '../helpers.mjs';
-import { Value } from '../value.mjs';
-import {
-  Evaluate_SwitchStatement,
-  LabelledEvaluation_IterationStatement,
-} from './all.mjs';
+import { ValueSet } from '../helpers.mjs';
+import { LabelledEvaluation_BreakableStatement } from './all.mjs';
 
-// 13.1.8 #sec-statement-semantics-runtime-semantics-evaluation
+// #sec-statement-semantics-runtime-semantics-evaluation
 //   BreakableStatement :
 //     IterationStatement
 //     SwitchStatement
-export function* Evaluate_BreakableStatement(BreakableStatement) {
+//
+//   IterationStatement :
+//     (DoStatement)
+//     (WhileStatement)
+export function Evaluate_BreakableStatement(BreakableStatement) {
+  // 1. Let newLabelSet be a new empty List.
   const newLabelSet = new ValueSet();
-  return yield* LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
-}
-
-// 13.1.7 #sec-statement-semantics-runtime-semantics-labelledevaluation
-//   BreakableStatement : IterationStatement
-export function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
-  switch (true) {
-    case isIterationStatement(BreakableStatement): {
-      let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet));
-      if (stmtResult.Type === 'break') {
-        if (stmtResult.Target === undefined) {
-          if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(Value.undefined);
-          } else {
-            stmtResult = new NormalCompletion(stmtResult.Value);
-          }
-        }
-      }
-      return Completion(stmtResult);
-    }
-
-    case isSwitchStatement(BreakableStatement): {
-      let stmtResult = EnsureCompletion(yield* Evaluate_SwitchStatement(BreakableStatement, labelSet));
-      if (stmtResult.Type === 'break') {
-        if (stmtResult.Target === undefined) {
-          if (stmtResult.Value === undefined) {
-            stmtResult = new NormalCompletion(Value.undefined);
-          } else {
-            stmtResult = new NormalCompletion(stmtResult.Value);
-          }
-        }
-      }
-      return Completion(stmtResult);
-    }
-
-    default:
-      throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
-  }
+  // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
+  return LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
 }

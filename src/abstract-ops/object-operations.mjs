@@ -8,9 +8,7 @@ import {
 import {
   surroundingAgent,
 } from '../engine.mjs';
-import {
-  InstanceofOperator,
-} from '../runtime-semantics/all.mjs';
+import { InstanceofOperator } from '../runtime-semantics/all.mjs';
 import {
   NormalCompletion,
   Q, X,

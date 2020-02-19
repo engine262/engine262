@@ -1,67 +1,28 @@
-import { Assert } from '../abstract-ops/all.mjs';
-import {
-  isBindingElement,
-  isFunctionRestParameter,
-} from '../ast.mjs';
-import { HasInitializer_BindingElement } from './all.mjs';
+import { HasInitializer } from './all.mjs';
 
-// 14.1.7 #sec-function-definitions-static-semantics-expectedargumentcount
-//   FormalParameters :
-//     [empty]
-//     FormalParameterList `,` FunctionRestParameter
-//
-//   FormalParameterList : FormalParameterList `,` FormalParameter
-//
-// (implicit)
-//   FormalParameters :
-//     FunctionRestParameter
-//     FormalParameterList
-//     FormalParameterList `,`
-//
-//   FormalParameterList : FormalParameter
-export function ExpectedArgumentCount_FormalParameters(FormalParameters) {
-  if (FormalParameters.length === 0) {
+export function ExpectedArgumentCount(FormalParameterList) {
+  if (FormalParameterList.length === 0) {
     return 0;
   }
 
   let count = 0;
-  for (const FormalParameter of FormalParameters.slice(0, -1)) {
-    Assert(isBindingElement(FormalParameter));
+  for (const FormalParameter of FormalParameterList.slice(0, -1)) {
     const BindingElement = FormalParameter;
-    if (HasInitializer_BindingElement(BindingElement)) {
+    if (HasInitializer(BindingElement)) {
       return count;
     }
     count += 1;
   }
 
-  const last = FormalParameters[FormalParameters.length - 1];
+  const last = FormalParameterList[FormalParameterList.length - 1];
+  /*
   if (isFunctionRestParameter(last)) {
     return count;
   }
   Assert(isBindingElement(last));
-  if (HasInitializer_BindingElement(last)) {
+  */
+  if (HasInitializer(last)) {
     return count;
   }
   return count + 1;
 }
-
-// 14.2.6 #sec-arrow-function-definitions-static-semantics-expectedargumentcount
-//   ArrowParameters : BindingIdentifier
-//
-// (implicit)
-//   ArrowParameters : CoverParenthesizedExpressionAndArrowParameterList
-//   ArrowFormalParameters : `(` UniqueFormalParameters `)`
-//   UniqueFormalParameters : FormalParameters
-export const ExpectedArgumentCount_ArrowParameters = ExpectedArgumentCount_FormalParameters;
-
-// 14.3.3 #sec-method-definitions-static-semantics-expectedargumentcount
-//   PropertySetParameterList : FormalParameter
-//
-// Not implemented. Use ExpectedArgumentCount_FormalParameters instead.
-
-// 14.8.6 #sec-async-arrow-function-definitions-static-semantics-ExpectedArgumentCount
-//   AsyncArrowBindingIdentifier : BindingIdentifier
-//
-// Not implemented. Use ExpectedArgumentCount_ArrowParameters instead.
-
-export const ExpectedArgumentCount = ExpectedArgumentCount_FormalParameters;

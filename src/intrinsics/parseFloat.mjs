@@ -6,7 +6,10 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
-import { MV_StrDecimalLiteral, TrimString } from '../runtime-semantics/all.mjs';
+import {
+  // MV_StrDecimalLiteral,
+  TrimString,
+} from '../runtime-semantics/all.mjs';
 
 function ParseFloat([string = Value.undefined]) {
   const inputString = Q(ToString(string));

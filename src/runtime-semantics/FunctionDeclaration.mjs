@@ -1,11 +1,10 @@
-import {
-  NormalCompletion,
-} from '../completion.mjs';
+import { NormalCompletion } from '../completion.mjs';
 
-// 14.1.22 #sec-function-definitions-runtime-semantics-evaluation
+// #sec-function-definitions-runtime-semantics-evaluation
 // FunctionDeclaration :
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
 //   function ( FormalParameters ) { FunctionBody }
-export function Evaluate_FunctionDeclaration() {
+export function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
+  // 1. Return NormalCompletion(empty).
   return new NormalCompletion(undefined);
 }

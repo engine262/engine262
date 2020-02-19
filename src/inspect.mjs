@@ -80,7 +80,7 @@ const INSPECTORS = {
 
     if ('Call' in v) {
       const name = v.properties.get(new Value('name'));
-      if (name !== undefined) {
+      if (name !== undefined && name.Value.stringValue() !== '') {
         return `[Function: ${name.Value.stringValue()}]`;
       }
       return '[Function]';

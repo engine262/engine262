@@ -1,12 +1,10 @@
-import { Evaluate_StatementList } from '../evaluator.mjs';
+import { Evaluate_StatementList } from './all.mjs';
 
-// 14.1.22 #sec-function-definitions-runtime-semantics-evaluation
+// #sec-function-definitions-runtime-semantics-evaluation
 //   FunctionStatementList : [empty]
 //
 // (implicit)
 //   FunctionStatementList : StatementList
-export const Evaluate_FunctionStatementList = Evaluate_StatementList;
-
-// (implicit)
-//   FunctionBody : FunctionStatementList
-export const Evaluate_FunctionBody = Evaluate_FunctionStatementList;
+export function Evaluate_FunctionStatementList(FunctionStatementList) {
+  return Evaluate_StatementList(FunctionStatementList);
+}

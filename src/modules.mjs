@@ -20,21 +20,6 @@ import {
   Q,
   X,
 } from './completion.mjs';
-import {
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
-  isAsyncFunctionDeclaration,
-  isAsyncGeneratorDeclaration,
-} from './ast.mjs';
-import { Evaluate_Module } from './evaluator.mjs';
-import {
-  BoundNames_ModuleItem,
-  BoundNames_VariableDeclaration,
-  IsConstantDeclaration,
-  LexicallyScopedDeclarations_Module,
-  VarScopedDeclarations_ModuleBody,
-} from './static-semantics/all.mjs';
-import { InstantiateFunctionObject } from './runtime-semantics/all.mjs';
 
 // #importentry-record
 export class ImportEntryRecord {

@@ -141,7 +141,15 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue: f
   return Q(Call(func, thisArg, argList));
 }
 
+// #sec-function.prototype.tostring
 function FunctionProto_toString(args, { thisValue: func }) {
+  // 1. Let func be the this value.
+  // 2. If func is a bound function exotic object or a built-in function object, then
+  //    return an implementation-dependent String source code representation of func.
+  //    The representation must have the syntax of a NativeFunction. Additionally, if
+  //    func is a Well-known Intrinsic Object and is not identified as an anonymous
+  //    function, the portion of the returned String that would be matched by
+  //    PropertyName must be the initial value of the "name" property of func.
   if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
     const name = func.properties.get(new Value('name'));
     if (name !== undefined) {
@@ -149,12 +157,21 @@ function FunctionProto_toString(args, { thisValue: func }) {
     }
     return new Value('function() { [native code] }');
   }
-  if (Type(func) === 'Object' && 'SourceText' in func && Type(func.SourceText) === 'String' && X(HostHasSourceTextAvailable(func)) === Value.true) {
-    return func.SourceText;
+  // 3. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
+  //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
+  if (Type(func) === 'Object'
+      && 'SourceText' in func
+      && X(HostHasSourceTextAvailable(func)) === Value.true) {
+    // Return ! UTF16Encode(func.[[SourceText]]).
+    return new Value(func.SourceText);
   }
+  // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
+  //    dependent String source code representation of func. The representation must have
+  //    the syntax of a NativeFunction.
   if (Type(func) === 'Object' && IsCallable(func) === Value.true) {
     return new Value('function() { [native code] }');
   }
+  // 5. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 

@@ -5,6 +5,7 @@
 require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
+const util = require('util');
 
 if (!process.send) {
   // supervisor
@@ -187,7 +188,8 @@ if (!process.send) {
     if (attrs.flags.async) {
       attrs.includes.unshift('doneprintHandle.js');
     }
-    attrs.includes.forEach((include) => {
+
+    for (const include of attrs.includes) {
       if (includeCache[include] === undefined) {
         const p = path.resolve(__dirname, `./test262/harness/${include}`);
         includeCache[include] = {
@@ -196,10 +198,15 @@ if (!process.send) {
         };
       }
       const entry = includeCache[include];
-      realm.evaluateScript(entry.source, { specifier: entry.specifier });
-    });
+      const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
+      if (completion instanceof AbruptCompletion) {
+        clearTimeout(timeout);
+        return { status: 'FAIL', error: inspect(completion, realm) };
+      }
+    }
 
-    realm.evaluateScript(`
+    {
+      const completion = realm.evaluateScript(`
 var Test262Error = class Test262Error extends Error {};
 
 function $DONE(error) {
@@ -213,6 +220,11 @@ function $DONE(error) {
     __consolePrintHandle__('Test262:AsyncTestComplete');
   }
 }`.trim());
+      if (completion instanceof AbruptCompletion) {
+        clearTimeout(timeout);
+        return { status: 'FAIL', error: inspect(completion, realm) };
+      }
+    }
 
     let completion;
     if (attrs.flags.module) {
@@ -265,7 +277,7 @@ function $DONE(error) {
       p = p
         .then(() => run(test))
         .catch((e) => {
-          process.send({ description, status: 'FAIL', error: e.stack || e });
+          process.send({ description, status: 'FAIL', error: util.inspect(e) });
           process.exit(1);
         })
         .then((r) => {

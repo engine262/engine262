@@ -1,14 +1,9 @@
 import { Evaluate } from '../evaluator.mjs';
 import {
   NormalCompletion,
-  Q,
   ReturnIfAbrupt,
-  X,
+  Q, X,
 } from '../completion.mjs';
-import {
-  isBindingIdentifier,
-  isBindingPattern,
-} from '../ast.mjs';
 import { Value } from '../value.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
@@ -16,37 +11,40 @@ import {
   InitializeReferencedBinding,
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
-import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import {
-  BindingInitialization_BindingPattern,
-  NamedEvaluation_Expression,
-} from './all.mjs';
+import { NamedEvaluation } from './all.mjs';
 
-// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
+// #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
-function* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding) {
-  const { id: BindingIdentifier, init: Initializer, strict } = LexicalBinding;
-  const bindingId = new Value(BindingIdentifier.name);
-  const lhs = X(ResolveBinding(bindingId, undefined, strict));
-
+function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }) {
+  // 1. Let bindingId be StringValue of BindingIdentifier.
+  const bindingId = StringValue(BindingIdentifier);
   if (Initializer) {
+    // 2. Let lhs be ResolveBinding(bindingId).
+    const lhs = X(ResolveBinding(bindingId, undefined, strict));
     let value;
+    // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      value = yield* NamedEvaluation_Expression(Initializer, bindingId);
-    } else {
+      // a. Let value be NamedEvaluation of Initializer with argument bindingId.
+      value = NamedEvaluation(Initializer, bindingId);
+    } else { // 4. Else,
+      // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);
+      // b. Let value be ? GetValue(rhs).
       value = Q(GetValue(rhs));
     }
+    // 5. Return InitializeReferencedBinding(lhs, value).
     return InitializeReferencedBinding(lhs, value);
   } else {
-    return InitializeReferencedBinding(lhs, Value.undefined);
+    // 2. Return InitializeReferencedBinding(StringValue of BindingIdentifier, undefined).
+    return InitializeReferencedBinding(StringValue(BindingIdentifier), Value.undefined);
   }
 }
 
-// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
+// #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { id: BindingPattern, init: Initializer } = LexicalBinding;
@@ -58,35 +56,39 @@ function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
 
 export function* Evaluate_LexicalBinding(LexicalBinding) {
   switch (true) {
-    case isBindingIdentifier(LexicalBinding.id):
+    case LexicalBinding.BindingIdentifier !== null:
       return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
-
-    case isBindingPattern(LexicalBinding.id):
+    case LexicalBinding.BindingPattern !== null:
       return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
-
     default:
-      throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding.id);
+      throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding);
   }
 }
 
-// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
+// #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   BindingList : BindingList `,` LexicalBinding
 //
 // (implicit)
 //   BindingList : LexicalBinding
 export function* Evaluate_BindingList(BindingList) {
-  let last;
+  // 1. Let next be the result of evaluating BindingList.
+  // 2. ReturnIfAbrupt(next).
+  // 3. Return the result of evaluating LexicalBinding.
+  let next;
   for (const LexicalBinding of BindingList) {
-    last = yield* Evaluate_LexicalBinding(LexicalBinding);
-    ReturnIfAbrupt(last);
+    next = yield* Evaluate_LexicalBinding(LexicalBinding);
+    ReturnIfAbrupt(next);
   }
-  return last;
+  return next;
 }
 
-// 13.3.1.4 #sec-let-and-const-declarations-runtime-semantics-evaluation
+// #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalDeclaration : LetOrConst BindingList `;`
-export function* Evaluate_LexicalDeclaration({ declarations: BindingList }) {
+export function* Evaluate_LexicalDeclaration({ BindingList }) {
+  // 1. Let next be the result of evaluating BindingList.
   const next = yield* Evaluate_BindingList(BindingList);
+  // 2. ReturnIfAbrupt(next).
   ReturnIfAbrupt(next);
+  // 3. Return NormalCompletion(empty).
   return new NormalCompletion(undefined);
 }

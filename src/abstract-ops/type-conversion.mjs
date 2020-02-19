@@ -5,7 +5,6 @@ import {
   BigIntValue,
   wellKnownSymbols,
 } from '../value.mjs';
-import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
@@ -135,6 +134,7 @@ export function ToNumber(argument) {
     case 'Number':
       return argument;
     case 'String':
+      return new Value(Number(argument.stringValue()));
       return MV_StringNumericLiteral(argument.stringValue());
     case 'BigInt':
       return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');

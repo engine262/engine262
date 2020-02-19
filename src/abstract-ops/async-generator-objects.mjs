@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import {
   Q, X,
   Await,
@@ -8,6 +7,7 @@ import {
   NormalCompletion,
   AbruptCompletion,
 } from '../completion.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { Value, Type } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
 import {
@@ -39,7 +39,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   const genContext = surroundingAgent.runningExecutionContext;
   genContext.Generator = generator;
   genContext.codeEvaluationState = (function* resumer() {
-    const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
+    const result = EnsureCompletion(yield* Evaluate(generatorBody));
     // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
     surroundingAgent.executionContextStack.pop(genContext);
     generator.AsyncGeneratorState = 'completed';

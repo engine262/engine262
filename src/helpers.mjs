@@ -224,14 +224,14 @@ export class CallSite {
 
   get lineNumber() {
     if (this.lastNode) {
-      return this.lastNode.loc.start.line;
+      return this.lastNode.location.start.line;
     }
     return null;
   }
 
   get columnNumber() {
     if (this.lastNode) {
-      return this.lastNode.loc.start.column;
+      return this.lastNode.location.start.column;
     }
     return null;
   }

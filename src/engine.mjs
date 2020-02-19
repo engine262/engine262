@@ -19,9 +19,9 @@ import {
 } from './abstract-ops/all.mjs';
 import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
-import { Evaluate_Script } from './evaluator.mjs';
+import { Evaluate } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
-import { CallSite } from './helpers.mjs';
+import { CallSite, unwind } from './helpers.mjs';
 import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
@@ -218,11 +218,11 @@ export function ScriptEvaluation(scriptRecord) {
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
-  const scriptBody = scriptRecord.ECMAScriptCode.body;
+  const scriptBody = scriptRecord.ECMAScriptCode;
   let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
   if (result.Type === 'normal') {
-    result = Evaluate_Script(scriptBody, globalEnv);
+    result = EnsureCompletion(unwind(Evaluate(scriptBody)));
   }
 
   if (result.Type === 'normal' && !result.Value) {

@@ -10,7 +10,7 @@ import {
   EscapeRegExpPattern,
   Get,
   IsCallable,
-  MatchRecord,
+  // MatchRecord,
   OrdinaryObjectCreate,
   SameValue,
   Set,
@@ -24,10 +24,7 @@ import {
   ToUint32,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
-import {
-  GetSubstitution,
-  State,
-} from '../runtime-semantics/all.mjs';
+// import { GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
   Type,
   Value,

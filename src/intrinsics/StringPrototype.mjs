@@ -24,10 +24,10 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  GetSubstitution,
-  StringIndexOf,
-  StringPad,
+  // GetSubstitution,
   TrimString,
+  StringPad,
+  StringIndexOf,
 } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';

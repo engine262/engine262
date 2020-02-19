@@ -17,6 +17,7 @@ export const ArrayBufferShared = () => 'Attempt to access shared ArrayBuffer';
 export const ArrayPastSafeLength = () => 'Cannot make length of array-like object surpass the bounds of an integer index';
 export const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
 export const AssignmentToConstant = (n) => `Assignment to constant variable ${i(n)}`;
+export const AwaitNotInAsyncFunction = () => 'await is only valid in async functions';
 export const BigIntDivideByZero = () => 'Division by zero';
 export const BigIntNegativeExponent = () => 'Exponent must be positive';
 export const BigIntUnsignedRightShift = () => 'BigInt has no unsigned right shift, use >> instead';
@@ -43,6 +44,7 @@ export const DerivedConstructorReturnedNonObject = () => 'Derived constructors m
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
 export const InvalidArrayLength = (l) => `Invalid array length: ${i(l)}`;
+export const InvalidAssignmentTarget = () => 'Invalid assignment target';
 export const InvalidHint = (v) => `Invalid hint: ${i(v)}`;
 export const InvalidPropertyDescriptor = () => 'Invalid property descriptor. Cannot both specify accessors and a value or writable attribute';
 export const InvalidRadix = () => 'Radix must be between 2 and 36, inclusive';
@@ -121,4 +123,10 @@ export const TypedArrayTooSmall = () => 'Derived TypedArray constructor created 
 export const UnableToSeal = (o) => `Unable to seal object ${i(o)}`;
 export const UnableToFreeze = (o) => `Unable to freeze object ${i(o)}`;
 export const UnableToPreventExtensions = (o) => `Unable to prevent extensions on object ${i(o)}`;
+export const UnterminatedRegExp = () => 'Missing / after RegExp literal';
+export const UnterminatedString = () => 'Missing \' or " after string literal';
+export const UnterminatedTemplate = () => 'Missing ` after template literal';
+export const UnexpectedEOS = () => 'Unexpected end of source';
+export const UnexpectedToken = () => 'Unexpected token';
 export const WeakCollectionNotObject = (v) => `${i(v)} is not a valid weak collectection entry object`;
+export const YieldNotInGenerator = () => 'yield is only valid in generators';

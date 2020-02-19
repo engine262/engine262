@@ -1,10 +1,13 @@
 import {
-  RequireObjectCoercible, GetValue, ToPropertyKey, Assert,
+  RequireObjectCoercible,
+  GetValue,
+  ToPropertyKey,
+  Assert,
 } from '../abstract-ops/all.mjs';
 import { Value, Reference } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
-import { isIdentifier } from '../ast.mjs';
 
 // #sec-evaluate-expression-key-property-access
 export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
@@ -28,11 +31,11 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, 
 // #sec-evaluate-identifier-key-property-access
 export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
   // 1. Assert: identifierName is an IdentifierName.
-  Assert(isIdentifier(identifierName));
+  Assert(identifierName.type === 'IdentifierName');
   // 2. Let bv be ? RequireObjectCoercible(baseValue).
   const bv = Q(RequireObjectCoercible(baseValue));
   // 3. Let propertyNameString be StringValue of IdentifierName
-  const propertyNameString = new Value(identifierName.name);
+  const propertyNameString = StringValue(identifierName);
   // 4. Return a value of type Reference whose base value component is bv, whose
   //    referenced name component is propertyNameString, and whose strict reference flag is strict.
   return new Reference({

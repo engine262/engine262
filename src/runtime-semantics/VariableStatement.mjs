@@ -3,60 +3,47 @@ import {
   PutValue,
   ResolveBinding,
 } from '../abstract-ops/all.mjs';
-import {
-  isBindingIdentifier,
-  isBindingPattern,
-} from '../ast.mjs';
 import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
-import {
-  BindingInitialization_BindingPattern,
-  NamedEvaluation_Expression,
-} from './all.mjs';
+import { NamedEvaluation } from './all.mjs';
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableDeclaration :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
-export function* Evaluate_VariableDeclaration(VariableDeclaration) {
-  switch (true) {
-    case isBindingIdentifier(VariableDeclaration.id) && VariableDeclaration.init === null:
+function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }) {
+  if (BindingIdentifier !== null) {
+    if (Initializer === null) {
+      // 1. Return NormalCompletion(empty).
       return new NormalCompletion(undefined);
-
-    case isBindingIdentifier(VariableDeclaration.id) && VariableDeclaration.init !== null: {
-      const {
-        id: BindingIdentifier,
-        init: Initializer,
-      } = VariableDeclaration;
-      const bindingId = new Value(BindingIdentifier.name);
-      const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
-      let value;
-      if (IsAnonymousFunctionDefinition(Initializer)) {
-        value = yield* NamedEvaluation_Expression(Initializer, bindingId);
-      } else {
-        const rhs = yield* Evaluate(Initializer);
-        value = Q(GetValue(rhs));
-      }
-      return Q(PutValue(lhs, value));
     }
-
-    case isBindingPattern(VariableDeclaration.id) && VariableDeclaration.init !== null: {
-      const {
-        id: BindingPattern,
-        init: Initializer,
-      } = VariableDeclaration;
+    // 1. Let bindingId be StringValue of BindingIdentifier.
+    const bindingId = StringValue(BindingIdentifier);
+    // 2. Let lhs be ? ResolveBinding(bindingId).
+    const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
+    // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
+    let value;
+    if (IsAnonymousFunctionDefinition(Initializer)) {
+      // a. Let value be NamedEvaluation of Initializer with argument bindingId.
+      value = NamedEvaluation(Initializer, bindingId);
+    } else { // 4. Else,
+      // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);
-      const rval = Q(GetValue(rhs));
-      return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
+      // b. Let value be ? GetValue(rhs).
+      value = Q(GetValue(rhs));
     }
-
-    default:
-      throw new OutOfRange('Evaluate_VariableDeclaration', VariableDeclaration);
+    // 5. Return ? PutValue(lhs, value).
+    return Q(PutValue(lhs, value));
   }
+  // 1. Let rhs be the result of evaluating Initializer.
+  const rhs = yield* Evaluate(Initializer);
+  // 2. Let rval be ? GetValue(rhs).
+  const rval = Q(GetValue(rhs));
+  // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
+  return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
 }
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
@@ -75,8 +62,8 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function* Evaluate_VariableStatement(VariableStatement) {
-  const next = yield* Evaluate_VariableDeclarationList(VariableStatement.declarations);
+export function* Evaluate_VariableStatement({ VariableDeclarationList }) {
+  const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
   ReturnIfAbrupt(next);
   return new NormalCompletion(undefined);
 }

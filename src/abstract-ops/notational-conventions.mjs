@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type } from '../value.mjs';
 
 export function Assert(invariant, source) {
   if (!invariant) {
@@ -18,7 +18,7 @@ export function RequireInternalSlot(O, internalSlot) {
 }
 
 export function sourceTextMatchedBy(node) {
-  return new Value(node.sourceText());
+  return node.sourceText();
 }
 
 // An ECMAScript Script syntactic unit may be processed using either unrestricted or strict mode syntax and semantics.
@@ -43,13 +43,5 @@ export function sourceTextMatchedBy(node) {
 //    AsyncGenerator constructors is strict mode code if the last argument is a String that when processed is a
 //    FunctionBody that begins with a Directive Prologue that contains a Use Strict Directive.
 export function isStrictModeCode(node) {
-  if (node.strict === true) {
-    return true;
-  }
-
-  if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
-    return isStrictModeCode(node.body);
-  }
-
-  return false;
+  return node.strict;
 }

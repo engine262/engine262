@@ -5,8 +5,8 @@ import {
   EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
+import { Evaluate } from '../evaluator.mjs';
 import { resume } from '../helpers.mjs';
 import {
   Assert,
@@ -28,7 +28,7 @@ export function GeneratorStart(generator, generatorBody) {
   //    for that execution context the following steps will be performed:
   genContext.codeEvaluationState = (function* resumer() {
     // a. Let result be the result of evaluating generatorBody.
-    const result = EnsureCompletion(yield* Evaluate_FunctionBody(generatorBody));
+    const result = EnsureCompletion(yield* Evaluate(generatorBody));
     // b. Assert: If we return here, the generator either threw an exception or
     //    performed either an implicit or explicit return.
     // c. Remove genContext from the execution context stack and restore the execution context

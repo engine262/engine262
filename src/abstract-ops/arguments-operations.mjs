@@ -4,7 +4,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
+import { BoundNames } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
@@ -198,7 +198,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
   const map = OrdinaryObjectCreate(Value.null);
   obj.ParameterMap = map;
-  const parameterNames = BoundNames_FormalParameters(formals).map(Value);
+  const parameterNames = BoundNames(formals);
   const numberOfParameters = parameterNames.length;
   let index = 0;
   while (index < len) {

@@ -1,35 +1,14 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-import {
-  ParseRegExp,
-} from '../parse.mjs';
-import {
-  Descriptor,
-  Value,
-} from '../value.mjs';
+import { surroundingAgent } from '../engine.mjs';
+import { ParseRegExp } from '../parse.mjs';
+import { Descriptor, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import { getMatcher } from '../runtime-semantics/all.mjs';
 import {
-  getMatcher,
-} from '../runtime-semantics/all.mjs';
-import {
-  Assert,
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   Set,
   ToString,
 } from './all.mjs';
-
-
-// https://tc39.es/proposal-regexp-match-indices/#sec-match-records
-export class MatchRecord {
-  constructor(StartIndex, EndIndex) {
-    Assert(Number.isInteger(StartIndex) && StartIndex >= 0);
-    Assert(Number.isInteger(EndIndex) && EndIndex >= StartIndex);
-    this.StartIndex = StartIndex;
-    this.EndIndex = EndIndex;
-  }
-}
 
 // 21.2.3.2.1 #sec-regexpalloc
 export function RegExpAlloc(newTarget) {
