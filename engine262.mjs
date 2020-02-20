@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 8473db60c4202a16ddaed8dc8aeb2908e1cf0d30
+ * engine262 0.0.1 587a1fa64b42201eccc48280a07b36bbb4f40b7e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -44583,13 +44583,13 @@ function BootstrapWeakRef(realmRec) {
   realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }
 
-function FinalizationGroupProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
+function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
   thisValue
 }) {
-  // 1. Let finalizationGroup be the this value.
-  const finalizationGroup = thisValue; // 2. Perform ? RequireInternalSlot(finalizationGroup, [[Cells]]).
+  // 1. Let finalizationRegistry be the this value.
+  const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
 
-  let _temp = RequireInternalSlot(finalizationGroup, 'Cells');
+  let _temp = RequireInternalSlot(finalizationRegistry, 'Cells');
   /* istanbul ignore if */
 
 
@@ -44628,21 +44628,21 @@ function FinalizationGroupProto_register([target = Value.undefined, heldValue = 
     WeakRefTarget: target,
     HeldValue: heldValue,
     UnregisterToken: unregisterToken
-  }; // 7. Append cell to finalizationGroup.[[Cells]].
+  }; // 7. Append cell to finalizationRegistry.[[Cells]].
 
-  finalizationGroup.Cells.push(cell); // 8. Return undefined.
+  finalizationRegistry.Cells.push(cell); // 8. Return undefined.
 
   return Value.undefined;
-} // https://tc39.es/proposal-weakrefs/#sec-finalization-group.prototype.unregister
+} // https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.unregister
 
 
-function FinalizationGroupProto_unregister([unregisterToken = Value.undefined], {
+function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], {
   thisValue
 }) {
-  // 1. Let finalizationGroup be the this value.
-  const finalizationGroup = thisValue; // 2. Perform ? RequireInternalSlot(finalizationGroup, [[Cells]]).
+  // 1. Let finalizationRegistry be the this value.
+  const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
 
-  let _temp2 = RequireInternalSlot(finalizationGroup, 'Cells');
+  let _temp2 = RequireInternalSlot(finalizationRegistry, 'Cells');
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
@@ -44657,13 +44657,13 @@ function FinalizationGroupProto_unregister([unregisterToken = Value.undefined], 
   } // 4. Let removed be false.
 
 
-  let removed = Value.false; // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationGroup.[[Cells]], do
+  let removed = Value.false; // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationRegistry.[[Cells]], do
 
-  finalizationGroup.Cells = finalizationGroup.Cells.filter(cell => {
+  finalizationRegistry.Cells = finalizationRegistry.Cells.filter(cell => {
     let r = true; // a. If SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
 
     if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === Value.true) {
-      // i. Remove cell from finalizationGroup.Cells.
+      // i. Remove cell from finalizationRegistry.Cells.
       r = false; // ii. Set removed to true.
 
       removed = Value.true;
@@ -44673,16 +44673,16 @@ function FinalizationGroupProto_unregister([unregisterToken = Value.undefined], 
   }); // 6. Return removed.
 
   return removed;
-} // https://tc39.es/proposal-weakrefs/#sec-finalization-group.prototype.cleanupSome
+} // https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.cleanupSome
 
 
-function FinalizationGroupProto_cleanupSome([callback = Value.undefined], {
+function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   thisValue
 }) {
-  // 1. Let finalizationGroup be the this value.
-  const finalizationGroup = thisValue; // 2. Perform ? RequireInternalSlot(finalizationGroup, [[Cells]]).
+  // 1. Let finalizationRegistry be the this value.
+  const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
 
-  let _temp3 = RequireInternalSlot(finalizationGroup, 'Cells');
+  let _temp3 = RequireInternalSlot(finalizationRegistry, 'Cells');
 
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -44692,17 +44692,17 @@ function FinalizationGroupProto_cleanupSome([callback = Value.undefined], {
     _temp3 = _temp3.Value;
   }
 
-  if (finalizationGroup.IsFinalizationGroupCleanupJobActive) {
-    return surroundingAgent.Throw('TypeError', 'FinalizationGroupCleanupJobActive');
+  if (finalizationRegistry.IsFinalizationRegistryCleanupJobActive) {
+    return surroundingAgent.Throw('TypeError', 'FinalizationRegistryCleanupJobActive');
   } // 4. If callback is not undefined and IsCallable(callback) is false, throw a TypeError exception.
 
 
   if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
-  } // 5. Perform ? CleanupFinalizationGroup(finalizationGroup, callback).
+  } // 5. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
 
 
-  let _temp4 = CleanupFinalizationGroup(finalizationGroup, callback);
+  let _temp4 = CleanupFinalizationRegistry(finalizationRegistry, callback);
 
   if (_temp4 instanceof AbruptCompletion) {
     return _temp4;
@@ -44715,26 +44715,26 @@ function FinalizationGroupProto_cleanupSome([callback = Value.undefined], {
   return Value.undefined;
 }
 
-function BootstrapFinalizationGroupPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['register', FinalizationGroupProto_register, 2], ['unregister', FinalizationGroupProto_unregister, 1], ['cleanupSome', FinalizationGroupProto_cleanupSome, 0]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationGroup');
-  realmRec.Intrinsics['%FinalizationGroup.prototype%'] = proto;
+function BootstrapFinalizationRegistryPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1], ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
+  realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
 }
 
-function FinalizationGroupConstructor([cleanupCallback = Value.undefined], {
+function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationGroup');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
   } // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
 
 
   if (IsCallable(cleanupCallback) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
-  } // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationGroupPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]], [[IsFinalizationGroupCleanupJobActive]] »).
+  } // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]], [[IsFinalizationRegistryCleanupJobActive]] »).
 
 
-  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%FinalizationGroup.prototype%', ['Realm', 'CleanupCallback', 'Cells', 'IsFinalizationGroupCleanupJobActive']);
+  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', ['Realm', 'CleanupCallback', 'Cells', 'IsFinalizationRegistryCleanupJobActive']);
   /* istanbul ignore if */
 
 
@@ -44756,26 +44756,26 @@ function FinalizationGroupConstructor([cleanupCallback = Value.undefined], {
 
   finalizationGroup.CleanupCallback = cleanupCallback; // 7. Set finalizationGroup.[[Cells]] to be an empty List.
 
-  finalizationGroup.Cells = []; // 8. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to false.
+  finalizationGroup.Cells = []; // 8. Set finalizationGroup.[[IsFinalizationRegistryCleanupJobActive]] to false.
 
-  finalizationGroup.IsFinalizationGroupCleanupJobActive = false; // 9. Return finalizationGroup.
+  finalizationGroup.IsFinalizationRegistryCleanupJobActive = false; // 9. Return finalizationGroup.
 
   return finalizationGroup;
 }
 
-function BootstrapFinalizationGroup(realmRec) {
-  const finalizationGroupConstructor = BootstrapConstructor(realmRec, FinalizationGroupConstructor, 'FinalizationGroup', 1, realmRec.Intrinsics['%FinalizationGroup.prototype%'], []);
-  realmRec.Intrinsics['%FinalizationGroup%'] = finalizationGroupConstructor;
+function BootstrapFinalizationRegistry(realmRec) {
+  const cons = BootstrapConstructor(realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1, realmRec.Intrinsics['%FinalizationRegistry.prototype%'], []);
+  realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
 }
 
-function FinalizationGroupCleanupIteratorPrototype_next(args, {
+function FinalizationRegistryCleanupIteratorPrototype_next(args, {
   thisValue
 }) {
   // 1. Let iterator be the this value.
   const iterator = thisValue; // 2. If Type(iterator) is not Object, throw a TypeError exception.
-  // 3. If iterator does not have a [[FinalizationGroup]] internal slot, throw a TypeError exception.
+  // 3. If iterator does not have a [[FinalizationRegistry]] internal slot, throw a TypeError exception.
 
-  let _temp = RequireInternalSlot(iterator, 'FinalizationGroup');
+  let _temp = RequireInternalSlot(iterator, 'FinalizationRegistry');
   /* istanbul ignore if */
 
 
@@ -44789,30 +44789,30 @@ function FinalizationGroupCleanupIteratorPrototype_next(args, {
     _temp = _temp.Value;
   }
 
-  if (iterator.FinalizationGroup === undefined) {
+  if (iterator.FinalizationRegistry === undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Value.undefined);
-  } // 5. Let finalizationGroup be iterator.[[FinalizationGroup]].
+  } // 5. Let finalizationRegistry be iterator.[[FinalizationRegistry]].
 
 
-  const finalizationGroup = iterator.FinalizationGroup; // 6. Assert: Type(finalizationGroup) is Object.
-  // 7. Assert: finalizationGroup has a [[Cells]] internal slot.
+  const finalizationRegistry = iterator.FinalizationRegistry; // 6. Assert: Type(finalizationRegistry) is Object.
+  // 7. Assert: finalizationRegistry has a [[Cells]] internal slot.
 
-  let _temp2 = RequireInternalSlot(finalizationGroup, 'Cells');
+  let _temp2 = RequireInternalSlot(finalizationRegistry, 'Cells');
 
-  Assert(!(_temp2 instanceof AbruptCompletion), "RequireInternalSlot(finalizationGroup, 'Cells')" + ' returned an abrupt completion');
+  Assert(!(_temp2 instanceof AbruptCompletion), "RequireInternalSlot(finalizationRegistry, 'Cells')" + ' returned an abrupt completion');
   /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
 
-  const index = finalizationGroup.Cells.findIndex(cell => cell.WeakRefTarget === undefined);
+  const index = finalizationRegistry.Cells.findIndex(cell => cell.WeakRefTarget === undefined);
 
   if (index !== -1) {
     // a. Choose any such cell.
-    const cell = finalizationGroup.Cells[index]; // b. Remove cell from finalizationGroup.[[Cells]].
+    const cell = finalizationRegistry.Cells[index]; // b. Remove cell from finalizationRegistry.[[Cells]].
 
-    finalizationGroup.Cells.splice(index, 1); // c. Return CreateIterResultObject(cell.[[HeldValue]], false).
+    finalizationRegistry.Cells.splice(index, 1); // c. Return CreateIterResultObject(cell.[[HeldValue]], false).
 
     return CreateIterResultObject(cell.HeldValue, Value.false);
   } // 9. If the preceding steps were not performed,
@@ -44822,9 +44822,9 @@ function FinalizationGroupCleanupIteratorPrototype_next(args, {
   return CreateIterResultObject(Value.undefined, Value.true);
 }
 
-function BootstrapFinalizationGroupCleanupIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['next', FinalizationGroupCleanupIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'FinalizationGroup Cleanup Iterator');
-  realmRec.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%'] = proto;
+function BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['next', FinalizationRegistryCleanupIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'FinalizationRegistry Cleanup Iterator');
+  realmRec.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'] = proto;
 }
 
 class Realm {
@@ -44969,9 +44969,9 @@ function CreateIntrinsics(realmRec) {
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
-    BootstrapFinalizationGroupPrototype(realmRec);
-    BootstrapFinalizationGroup(realmRec);
-    BootstrapFinalizationGroupCleanupIteratorPrototype(realmRec);
+    BootstrapFinalizationRegistryPrototype(realmRec);
+    BootstrapFinalizationRegistry(realmRec);
+    BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec);
   }
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
@@ -45075,8 +45075,8 @@ function SetDefaultGlobalBindings(realmRec) {
       _temp6 = _temp6.Value;
     }
 
-    let _temp7 = DefinePropertyOrThrow(global, new Value('FinalizationGroup'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationGroup%'],
+    let _temp7 = DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
+      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
@@ -45132,7 +45132,7 @@ const CouldNotResolveModule = s => `Could not resolve module ${i(s)}`;
 const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 const DateInvalidTime = () => 'Invalid time';
 const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
-const FinalizationGroupCleanupJobActive = () => 'FinalizationGroup cleanup is already active';
+const FinalizationRegistryCleanupJobActive = () => 'FinalizationRegistry cleanup is already active';
 const GeneratorRunning = () => 'Cannot manipulate a running generator';
 const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
 const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
@@ -45244,7 +45244,7 @@ var messages = /*#__PURE__*/Object.freeze({
   DataViewOOB: DataViewOOB,
   DateInvalidTime: DateInvalidTime,
   DerivedConstructorReturnedNonObject: DerivedConstructorReturnedNonObject,
-  FinalizationGroupCleanupJobActive: FinalizationGroupCleanupJobActive,
+  FinalizationRegistryCleanupJobActive: FinalizationRegistryCleanupJobActive,
   GeneratorRunning: GeneratorRunning,
   InternalSlotMissing: InternalSlotMissing,
   InvalidArrayLength: InvalidArrayLength,
@@ -45777,12 +45777,12 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
   }
 
   return Value.undefined;
-} // https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-group
+} // https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-registry
 
 const scheduledForCleanup = new Set();
-function HostCleanupFinalizationGroup(fg) {
-  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup !== undefined) {
-    let _temp16 = surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup(fg);
+function HostCleanupFinalizationRegistry(fg) {
+  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
+    let _temp16 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
 
     if (_temp16 instanceof AbruptCompletion) {
       return _temp16;
@@ -45796,7 +45796,7 @@ function HostCleanupFinalizationGroup(fg) {
       scheduledForCleanup.add(fg);
       EnqueueJob('FinalizationCleanup', () => {
         scheduledForCleanup.delete(fg);
-        CleanupFinalizationGroup(fg);
+        CleanupFinalizationRegistry(fg);
       }, []);
     }
   }
@@ -56285,11 +56285,11 @@ function AddToKeptObjects(object) {
   agent.KeptAlive.add(object);
 } // https://tc39.es/proposal-weakrefs/#sec-check-for-empty-cells
 
-function CheckForEmptyCells(finalizationGroup) {
-  // 1. Assert: finalizationGroup has an [[Cells]] internal slot.
-  Assert('Cells' in finalizationGroup, "'Cells' in finalizationGroup"); // 2. For each cell in finalizationGroup.[[Cells]], do
+function CheckForEmptyCells(finalizationRegistry) {
+  // 1. Assert: finalizationRegistry has an [[Cells]] internal slot.
+  Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. For each cell in finalizationRegistry.[[Cells]], do
 
-  for (const cell of finalizationGroup.Cells) {
+  for (const cell of finalizationRegistry.Cells) {
     // a. If cell.[[WeakRefTarget]] is empty, then
     if (cell.WeakRefTarget === undefined) {
       // i. Return true.
@@ -56299,61 +56299,61 @@ function CheckForEmptyCells(finalizationGroup) {
 
 
   return Value.false;
-} // https://tc39.es/proposal-weakrefs/#sec-createfinalizationgroupcleanupiterator
+} // https://tc39.es/proposal-weakrefs/#sec-createfinalizationregistrycleanupiterator
 
-function CreateFinalizationGroupCleanupIterator(finalizationGroup) {
-  let _temp = RequireInternalSlot(finalizationGroup, 'Cells');
+function CreateFinalizationRegistryCleanupIterator(finalizationRegistry) {
+  let _temp = RequireInternalSlot(finalizationRegistry, 'Cells');
 
-  Assert(!(_temp instanceof AbruptCompletion), "RequireInternalSlot(finalizationGroup, 'Cells')" + ' returned an abrupt completion');
+  Assert(!(_temp instanceof AbruptCompletion), "RequireInternalSlot(finalizationRegistry, 'Cells')" + ' returned an abrupt completion');
   /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
 
-  Assert(finalizationGroup.Realm.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%'], "finalizationGroup.Realm.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%']"); // 4. Let prototype be finalizationGroup.[[Realm]].[[Intrinsics]].[[%FinalizationGroupCleanupIteratorPrototype%]].
+  Assert(finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'], "finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%']"); // 4. Let prototype be finalizationRegistry.[[Realm]].[[Intrinsics]].[[%FinalizationRegistryCleanupIteratorPrototype%]].
 
-  const prototype = finalizationGroup.Realm.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%']; // 5. Let iterator be OrdinaryObjectCreate(prototype, « [[FinalizationGroup]] »).
+  const prototype = finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%']; // 5. Let iterator be OrdinaryObjectCreate(prototype, « [[FinalizationRegistry]] »).
 
-  const iterator = OrdinaryObjectCreate(prototype, ['FinalizationGroup']); // 6. Set iterator.[[FinalizationGroup]] to finalizationGroup.
+  const iterator = OrdinaryObjectCreate(prototype, ['FinalizationRegistry']); // 6. Set iterator.[[FinalizationRegistry]] to finalizationRegistry.
 
-  iterator.FinalizationGroup = finalizationGroup; // 7. Return iterator.
+  iterator.FinalizationRegistry = finalizationRegistry; // 7. Return iterator.
 
   return iterator;
-} // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-group
+} // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
 
 
-function CleanupFinalizationGroup(finalizationGroup, callback) {
-  // 1. Assert: finalizationGroup has [[Cells]], [[CleanupCallback]], and [[IsFinalizationGroupCleanupJobActive]] internal slots.
-  Assert('Cells' in finalizationGroup, "'Cells' in finalizationGroup"); // 2. If CheckForEmptyCells(finalizationGroup) is false, return.
+function CleanupFinalizationRegistry(finalizationRegistry, callback) {
+  // 1. Assert: finalizationRegistry has [[Cells]], [[CleanupCallback]], and [[IsFinalizationRegistryCleanupJobActive]] internal slots.
+  Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. If CheckForEmptyCells(finalizationRegistry) is false, return.
 
-  if (CheckForEmptyCells(finalizationGroup) === Value.false) {
+  if (CheckForEmptyCells(finalizationRegistry) === Value.false) {
     return NormalCompletion(Value.undefined);
-  } // 3. Let iterator be ! CreateFinalizationGroupCleanupIterator(finalizationGroup).
+  } // 3. Let iterator be ! CreateFinalizationRegistryCleanupIterator(finalizationRegistry).
 
 
-  let _temp2 = CreateFinalizationGroupCleanupIterator(finalizationGroup);
+  let _temp2 = CreateFinalizationRegistryCleanupIterator(finalizationRegistry);
 
-  Assert(!(_temp2 instanceof AbruptCompletion), "CreateFinalizationGroupCleanupIterator(finalizationGroup)" + ' returned an abrupt completion');
+  Assert(!(_temp2 instanceof AbruptCompletion), "CreateFinalizationRegistryCleanupIterator(finalizationRegistry)" + ' returned an abrupt completion');
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
 
-  const iterator = _temp2; // 4. If callback is not present or undefined, set callback to finalizationGroup.[[CleanupCallback]].
+  const iterator = _temp2; // 4. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
 
   if (callback === undefined || callback === Value.undefined) {
-    callback = finalizationGroup.CleanupCallback;
-  } // 5. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to true.
+    callback = finalizationRegistry.CleanupCallback;
+  } // 5. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to true.
 
 
-  finalizationGroup.IsFinalizationGroupCleanupJobActive = true; // 6. Let result be Call(callback, undefined, « iterator »).
+  finalizationRegistry.IsFinalizationRegistryCleanupJobActive = true; // 6. Let result be Call(callback, undefined, « iterator »).
 
-  const result = Call(callback, Value.undefined, [iterator]); // 7. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to false.
+  const result = Call(callback, Value.undefined, [iterator]); // 7. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to false.
 
-  finalizationGroup.IsFinalizationGroupCleanupJobActive = false; // 8. Set iterator.[[FinalizationGroup]] to empty.
+  finalizationRegistry.IsFinalizationRegistryCleanupJobActive = false; // 8. Set iterator.[[FinalizationRegistry]] to empty.
 
-  iterator.FinalizationGroup = undefined; // 9. If result is an abrupt completion, return result.
+  iterator.FinalizationRegistry = undefined; // 9. If result is an abrupt completion, return result.
 
   if (result instanceof AbruptCompletion) {
     return result;
@@ -56613,7 +56613,7 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   ClearKeptObjects: ClearKeptObjects,
   AddToKeptObjects: AddToKeptObjects,
   CheckForEmptyCells: CheckForEmptyCells,
-  CleanupFinalizationGroup: CleanupFinalizationGroup
+  CleanupFinalizationRegistry: CleanupFinalizationRegistry
 });
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
@@ -56944,9 +56944,9 @@ function mark() {
   // 1. For each obj os S, do
   //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
   //     i. Set ref.[[WeakRefTarget]] to empty.
-  //   b. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
   //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  //     ii. Optionally, perform ! HostCleanupFinalizationRegistry(fg).
   //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
   //     i. Remove r from map.WeakMapData.
   //   d. For each WeakSet set such that set.WeakSetData contains obj,
@@ -57014,9 +57014,9 @@ function mark() {
       });
 
       if (dirty) {
-        let _temp = HostCleanupFinalizationGroup(fg);
+        let _temp = HostCleanupFinalizationRegistry(fg);
 
-        Assert(!(_temp instanceof AbruptCompletion), "HostCleanupFinalizationGroup(fg)" + ' returned an abrupt completion');
+        Assert(!(_temp instanceof AbruptCompletion), "HostCleanupFinalizationRegistry(fg)" + ' returned an abrupt completion');
         /* istanbul ignore if */
 
         if (_temp instanceof Completion) {
