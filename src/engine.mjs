@@ -15,7 +15,7 @@ import {
 import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
-  CleanupFinalizationGroup,
+  CleanupFinalizationRegistry,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
@@ -433,17 +433,17 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-group
+// https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-registry
 const scheduledForCleanup = new Set();
-export function HostCleanupFinalizationGroup(fg) {
-  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup !== undefined) {
-    Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationGroup(fg));
+export function HostCleanupFinalizationRegistry(fg) {
+  if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
+    Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
   } else {
     if (!scheduledForCleanup.has(fg)) {
       scheduledForCleanup.add(fg);
       EnqueueJob('FinalizationCleanup', () => {
         scheduledForCleanup.delete(fg);
-        CleanupFinalizationGroup(fg);
+        CleanupFinalizationRegistry(fg);
       }, []);
     }
   }

@@ -25,11 +25,11 @@ export function AddToKeptObjects(object) {
 }
 
 // https://tc39.es/proposal-weakrefs/#sec-check-for-empty-cells
-export function CheckForEmptyCells(finalizationGroup) {
-  // 1. Assert: finalizationGroup has an [[Cells]] internal slot.
-  Assert('Cells' in finalizationGroup);
-  // 2. For each cell in finalizationGroup.[[Cells]], do
-  for (const cell of finalizationGroup.Cells) {
+export function CheckForEmptyCells(finalizationRegistry) {
+  // 1. Assert: finalizationRegistry has an [[Cells]] internal slot.
+  Assert('Cells' in finalizationRegistry);
+  // 2. For each cell in finalizationRegistry.[[Cells]], do
+  for (const cell of finalizationRegistry.Cells) {
     // a. If cell.[[WeakRefTarget]] is empty, then
     if (cell.WeakRefTarget === undefined) {
       // i. Return true.
@@ -40,45 +40,45 @@ export function CheckForEmptyCells(finalizationGroup) {
   return Value.false;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-createfinalizationgroupcleanupiterator
-function CreateFinalizationGroupCleanupIterator(finalizationGroup) {
-  // 1. Assert: Type(finalizationGroup) is Object.
-  // 2. Assert: finalizationGroup has a [[Cells]] internal slot.
-  X(RequireInternalSlot(finalizationGroup, 'Cells'));
-  // 3. Assert: finalizationGroup.[[Realm]].[[Intrinsics]].[[%FinalizationGroupCleanupIteratorPrototype%]] exists and has been initialized.
-  Assert(finalizationGroup.Realm.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%']);
-  // 4. Let prototype be finalizationGroup.[[Realm]].[[Intrinsics]].[[%FinalizationGroupCleanupIteratorPrototype%]].
-  const prototype = finalizationGroup.Realm.Intrinsics['%FinalizationGroupCleanupIteratorPrototype%'];
-  // 5. Let iterator be OrdinaryObjectCreate(prototype, « [[FinalizationGroup]] »).
-  const iterator = OrdinaryObjectCreate(prototype, ['FinalizationGroup']);
-  // 6. Set iterator.[[FinalizationGroup]] to finalizationGroup.
-  iterator.FinalizationGroup = finalizationGroup;
+// https://tc39.es/proposal-weakrefs/#sec-createfinalizationregistrycleanupiterator
+function CreateFinalizationRegistryCleanupIterator(finalizationRegistry) {
+  // 1. Assert: Type(finalizationRegistry) is Object.
+  // 2. Assert: finalizationRegistry has a [[Cells]] internal slot.
+  X(RequireInternalSlot(finalizationRegistry, 'Cells'));
+  // 3. Assert: finalizationRegistry.[[Realm]].[[Intrinsics]].[[%FinalizationRegistryCleanupIteratorPrototype%]] exists and has been initialized.
+  Assert(finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%']);
+  // 4. Let prototype be finalizationRegistry.[[Realm]].[[Intrinsics]].[[%FinalizationRegistryCleanupIteratorPrototype%]].
+  const prototype = finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'];
+  // 5. Let iterator be OrdinaryObjectCreate(prototype, « [[FinalizationRegistry]] »).
+  const iterator = OrdinaryObjectCreate(prototype, ['FinalizationRegistry']);
+  // 6. Set iterator.[[FinalizationRegistry]] to finalizationRegistry.
+  iterator.FinalizationRegistry = finalizationRegistry;
   // 7. Return iterator.
   return iterator;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-group
-export function CleanupFinalizationGroup(finalizationGroup, callback) {
-  // 1. Assert: finalizationGroup has [[Cells]], [[CleanupCallback]], and [[IsFinalizationGroupCleanupJobActive]] internal slots.
-  Assert('Cells' in finalizationGroup);
-  // 2. If CheckForEmptyCells(finalizationGroup) is false, return.
-  if (CheckForEmptyCells(finalizationGroup) === Value.false) {
+// https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
+export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
+  // 1. Assert: finalizationRegistry has [[Cells]], [[CleanupCallback]], and [[IsFinalizationRegistryCleanupJobActive]] internal slots.
+  Assert('Cells' in finalizationRegistry);
+  // 2. If CheckForEmptyCells(finalizationRegistry) is false, return.
+  if (CheckForEmptyCells(finalizationRegistry) === Value.false) {
     return NormalCompletion(Value.undefined);
   }
-  // 3. Let iterator be ! CreateFinalizationGroupCleanupIterator(finalizationGroup).
-  const iterator = X(CreateFinalizationGroupCleanupIterator(finalizationGroup));
-  // 4. If callback is not present or undefined, set callback to finalizationGroup.[[CleanupCallback]].
+  // 3. Let iterator be ! CreateFinalizationRegistryCleanupIterator(finalizationRegistry).
+  const iterator = X(CreateFinalizationRegistryCleanupIterator(finalizationRegistry));
+  // 4. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
   if (callback === undefined || callback === Value.undefined) {
-    callback = finalizationGroup.CleanupCallback;
+    callback = finalizationRegistry.CleanupCallback;
   }
-  // 5. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to true.
-  finalizationGroup.IsFinalizationGroupCleanupJobActive = true;
+  // 5. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to true.
+  finalizationRegistry.IsFinalizationRegistryCleanupJobActive = true;
   // 6. Let result be Call(callback, undefined, « iterator »).
   const result = Call(callback, Value.undefined, [iterator]);
-  // 7. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to false.
-  finalizationGroup.IsFinalizationGroupCleanupJobActive = false;
-  // 8. Set iterator.[[FinalizationGroup]] to empty.
-  iterator.FinalizationGroup = undefined;
+  // 7. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to false.
+  finalizationRegistry.IsFinalizationRegistryCleanupJobActive = false;
+  // 8. Set iterator.[[FinalizationRegistry]] to empty.
+  iterator.FinalizationRegistry = undefined;
   // 9. If result is an abrupt completion, return result.
   if (result instanceof AbruptCompletion) {
     return result;

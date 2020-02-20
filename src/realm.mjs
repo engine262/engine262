@@ -80,9 +80,9 @@ import { BootstrapWeakSetPrototype } from './intrinsics/WeakSetPrototype.mjs';
 import { BootstrapWeakSet } from './intrinsics/WeakSet.mjs';
 import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
 import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
-import { BootstrapFinalizationGroupPrototype } from './intrinsics/FinalizationGroupPrototype.mjs';
-import { BootstrapFinalizationGroup } from './intrinsics/FinalizationGroup.mjs';
-import { BootstrapFinalizationGroupCleanupIteratorPrototype } from './intrinsics/FinalizationGroupCleanupIteratorPrototype.mjs';
+import { BootstrapFinalizationRegistryPrototype } from './intrinsics/FinalizationRegistryPrototype.mjs';
+import { BootstrapFinalizationRegistry } from './intrinsics/FinalizationRegistry.mjs';
+import { BootstrapFinalizationRegistryCleanupIteratorPrototype } from './intrinsics/FinalizationRegistryCleanupIteratorPrototype.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -241,9 +241,9 @@ export function CreateIntrinsics(realmRec) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
 
-    BootstrapFinalizationGroupPrototype(realmRec);
-    BootstrapFinalizationGroup(realmRec);
-    BootstrapFinalizationGroupCleanupIteratorPrototype(realmRec);
+    BootstrapFinalizationRegistryPrototype(realmRec);
+    BootstrapFinalizationRegistry(realmRec);
+    BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec);
   }
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
@@ -362,8 +362,8 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
 
-    Q(DefinePropertyOrThrow(global, new Value('FinalizationGroup'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationGroup%'],
+    Q(DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
+      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,

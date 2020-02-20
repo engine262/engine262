@@ -10,7 +10,7 @@ import {
   setSurroundingAgent,
   Agent,
   HostReportErrors,
-  HostCleanupFinalizationGroup,
+  HostCleanupFinalizationRegistry,
   FEATURES,
 } from './engine.mjs';
 import {
@@ -52,9 +52,9 @@ function mark() {
   // 1. For each obj os S, do
   //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
   //     i. Set ref.[[WeakRefTarget]] to empty.
-  //   b. For each FinalizationGroup fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
   //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Optionally, perform ! HostCleanupFinalizationGroup(fg).
+  //     ii. Optionally, perform ! HostCleanupFinalizationRegistry(fg).
   //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
   //     i. Remove r from map.WeakMapData.
   //   d. For each WeakSet set such that set.WeakSetData contains obj,
@@ -122,7 +122,7 @@ function mark() {
         }
       });
       if (dirty) {
-        X(HostCleanupFinalizationGroup(fg));
+        X(HostCleanupFinalizationRegistry(fg));
       }
     });
   }

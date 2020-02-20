@@ -5,10 +5,6 @@ built-ins/RegExp/character-class-escape-non-whitespace.js
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
-// https://github.com/tc39/test262/pull/2502
-language/expressions/super/call-proto-not-ctor.js
-language/statements/class/subclass/class-definition-null-proto-super.js
-
 // WIP
 built-ins/TypedArrayConstructors/BigInt64Array/**/*.js
 built-ins/TypedArrayConstructors/BigUint64Array/**/*.js
