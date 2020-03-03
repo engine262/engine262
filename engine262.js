@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 587a1fa64b42201eccc48280a07b36bbb4f40b7e
+ * engine262 0.0.1 964c64c4859fab2b9d55cffb6117f0c121ad6d09
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -8660,9 +8660,11 @@
     if (this.options.ecmaVersion >= 6) {
       if (name === "__proto__" && kind === "init") {
         if (propHash.proto) {
-          if (refDestructuringErrors && refDestructuringErrors.doubleProto < 0) { refDestructuringErrors.doubleProto = key.start; }
-          // Backwards-compat kludge. Can be removed in version 6.0
-          else { this.raiseRecoverable(key.start, "Redefinition of __proto__ property"); }
+          if (refDestructuringErrors) {
+            if (refDestructuringErrors.doubleProto < 0)
+              { refDestructuringErrors.doubleProto = key.start; }
+            // Backwards-compat kludge. Can be removed in version 6.0
+          } else { this.raiseRecoverable(key.start, "Redefinition of __proto__ property"); }
         }
         propHash.proto = true;
       }
@@ -8727,12 +8729,11 @@
       else { this.exprAllowed = false; }
     }
 
-    var ownDestructuringErrors = false, oldParenAssign = -1, oldTrailingComma = -1, oldShorthandAssign = -1;
+    var ownDestructuringErrors = false, oldParenAssign = -1, oldTrailingComma = -1;
     if (refDestructuringErrors) {
       oldParenAssign = refDestructuringErrors.parenthesizedAssign;
       oldTrailingComma = refDestructuringErrors.trailingComma;
-      oldShorthandAssign = refDestructuringErrors.shorthandAssign;
-      refDestructuringErrors.parenthesizedAssign = refDestructuringErrors.trailingComma = refDestructuringErrors.shorthandAssign = -1;
+      refDestructuringErrors.parenthesizedAssign = refDestructuringErrors.trailingComma = -1;
     } else {
       refDestructuringErrors = new DestructuringErrors;
       ownDestructuringErrors = true;
@@ -8747,8 +8748,11 @@
       var node = this.startNodeAt(startPos, startLoc);
       node.operator = this.value;
       node.left = this.type === types.eq ? this.toAssignable(left, false, refDestructuringErrors) : left;
-      if (!ownDestructuringErrors) { DestructuringErrors.call(refDestructuringErrors); }
-      refDestructuringErrors.shorthandAssign = -1; // reset because shorthand default was used correctly
+      if (!ownDestructuringErrors) {
+        refDestructuringErrors.parenthesizedAssign = refDestructuringErrors.trailingComma = refDestructuringErrors.doubleProto = -1;
+      }
+      if (refDestructuringErrors.shorthandAssign >= node.left.start)
+        { refDestructuringErrors.shorthandAssign = -1; } // reset because shorthand default was used correctly
       this.checkLVal(left);
       this.next();
       node.right = this.parseMaybeAssign(noIn);
@@ -8758,7 +8762,6 @@
     }
     if (oldParenAssign > -1) { refDestructuringErrors.parenthesizedAssign = oldParenAssign; }
     if (oldTrailingComma > -1) { refDestructuringErrors.trailingComma = oldTrailingComma; }
-    if (oldShorthandAssign > -1) { refDestructuringErrors.shorthandAssign = oldShorthandAssign; }
     return left
   };
 
@@ -8863,8 +8866,8 @@
   pp$3.parseExprSubscripts = function(refDestructuringErrors) {
     var startPos = this.start, startLoc = this.startLoc;
     var expr = this.parseExprAtom(refDestructuringErrors);
-    var skipArrowSubscripts = expr.type === "ArrowFunctionExpression" && this.input.slice(this.lastTokStart, this.lastTokEnd) !== ")";
-    if (this.checkExpressionErrors(refDestructuringErrors) || skipArrowSubscripts) { return expr }
+    if (expr.type === "ArrowFunctionExpression" && this.input.slice(this.lastTokStart, this.lastTokEnd) !== ")")
+      { return expr }
     var result = this.parseSubscripts(expr, startPos, startLoc);
     if (refDestructuringErrors && result.type === "MemberExpression") {
       if (refDestructuringErrors.parenthesizedAssign >= result.start) { refDestructuringErrors.parenthesizedAssign = -1; }
@@ -9162,6 +9165,7 @@
   var empty$1 = [];
 
   pp$3.parseNew = function() {
+    if (this.containsEsc) { this.raiseRecoverable(this.start, "Escape sequence in keyword new"); }
     var node = this.startNode();
     var meta = this.parseIdent(true);
     if (this.options.ecmaVersion >= 6 && this.eat(types.dot)) {
@@ -9562,7 +9566,7 @@
     } else {
       this.unexpected();
     }
-    this.next();
+    this.next(!!liberal);
     this.finishNode(node, "Identifier");
     if (!liberal) {
       this.checkUnreserved(node);
@@ -9594,7 +9598,7 @@
 
     var node = this.startNode();
     this.next();
-    node.argument = this.parseMaybeUnary(null, true);
+    node.argument = this.parseMaybeUnary(null, false);
     return this.finishNode(node, "AwaitExpression")
   };
 
@@ -9993,7 +9997,8 @@
     if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
       return c
     }
-    return (c << 10) + s.charCodeAt(i + 1) - 0x35FDC00
+    var next = s.charCodeAt(i + 1);
+    return next >= 0xDC00 && next <= 0xDFFF ? (c << 10) + next - 0x35FDC00 : c
   };
 
   RegExpValidationState.prototype.nextIndex = function nextIndex (i) {
@@ -10002,8 +10007,9 @@
     if (i >= l) {
       return l
     }
-    var c = s.charCodeAt(i);
-    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l) {
+    var c = s.charCodeAt(i), next;
+    if (!this.switchU || c <= 0xD7FF || c >= 0xE000 || i + 1 >= l ||
+        (next = s.charCodeAt(i + 1)) < 0xDC00 || next > 0xDFFF) {
       return i + 1
     }
     return i + 2
@@ -10094,7 +10100,7 @@
       if (state.eat(0x29 /* ) */)) {
         state.raise("Unmatched ')'");
       }
-      if (state.eat(0x5D /* [ */) || state.eat(0x7D /* } */)) {
+      if (state.eat(0x5D /* ] */) || state.eat(0x7D /* } */)) {
         state.raise("Lone quantifier brackets");
       }
     }
@@ -10783,7 +10789,7 @@
     if (state.eat(0x5B /* [ */)) {
       state.eat(0x5E /* ^ */);
       this.regexp_classRanges(state);
-      if (state.eat(0x5D /* [ */)) {
+      if (state.eat(0x5D /* ] */)) {
         return true
       }
       // Unreachable since it threw "unterminated regular expression" error before.
@@ -10831,7 +10837,7 @@
     }
 
     var ch = state.current();
-    if (ch !== 0x5D /* [ */) {
+    if (ch !== 0x5D /* ] */) {
       state.lastIntValue = ch;
       state.advance();
       return true
@@ -11010,7 +11016,9 @@
 
   // Move to the next token
 
-  pp$9.next = function() {
+  pp$9.next = function(ignoreEscapeSequenceInKeyword) {
+    if (!ignoreEscapeSequenceInKeyword && this.type.keyword && this.containsEsc)
+      { this.raiseRecoverable(this.start, "Escape sequence in keyword " + this.type.keyword); }
     if (this.options.onToken)
       { this.options.onToken(new Token(this)); }
 
@@ -11429,7 +11437,6 @@
     if (!startsWithDot && this.readInt(10) === null) { this.raise(start, "Invalid number"); }
     var octal = this.pos - start >= 2 && this.input.charCodeAt(start) === 48;
     if (octal && this.strict) { this.raise(start, "Invalid number"); }
-    if (octal && /[89]/.test(this.input.slice(start, this.pos))) { octal = false; }
     var next = this.input.charCodeAt(this.pos);
     if (!octal && !startsWithDot && this.options.ecmaVersion >= 11 && next === 110) {
       var str$1 = this.input.slice(start, this.pos);
@@ -11438,6 +11445,7 @@
       if (isIdentifierStart(this.fullCharCodeAtPos())) { this.raise(this.pos, "Identifier directly after number"); }
       return this.finishToken(types.num, val$1)
     }
+    if (octal && /[89]/.test(this.input.slice(start, this.pos))) { octal = false; }
     if (next === 46 && !octal) { // '.'
       ++this.pos;
       this.readInt(10);
@@ -11612,6 +11620,18 @@
     case 10: // ' \n'
       if (this.options.locations) { this.lineStart = this.pos; ++this.curLine; }
       return ""
+    case 56:
+    case 57:
+      if (inTemplate) {
+        var codePos = this.pos - 1;
+
+        this.invalidStringToken(
+          codePos,
+          "Invalid escape sequence in template string"
+        );
+
+        return null
+      }
     default:
       if (ch >= 48 && ch <= 55) {
         var octalStr = this.input.substr(this.pos - 1, 3).match(/^[0-7]+/)[0];
@@ -11691,7 +11711,6 @@
     var word = this.readWord1();
     var type = types.name;
     if (this.keywords.test(word)) {
-      if (this.containsEsc) { this.raiseRecoverable(this.start, "Escape sequence in keyword " + word); }
       type = keywords$1[word];
     }
     return this.finishToken(type, word)
@@ -40747,149 +40766,149 @@
 
   }
 
-  function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
-    function InternalizeJSONProperty(holder, name) {
-      let _temp51 = Get(holder, name);
+  function InternalizeJSONProperty(holder, name, reviver) {
+    let _temp51 = Get(holder, name);
 
-      if (_temp51 instanceof AbruptCompletion) {
-        return _temp51;
-      }
-
-      if (_temp51 instanceof Completion) {
-        _temp51 = _temp51.Value;
-      }
-
-      const val = _temp51;
-
-      if (Type(val) === 'Object') {
-        let _temp52 = IsArray(val);
-
-        if (_temp52 instanceof AbruptCompletion) {
-          return _temp52;
-        }
-
-        if (_temp52 instanceof Completion) {
-          _temp52 = _temp52.Value;
-        }
-
-        const isArray = _temp52;
-
-        if (isArray === Value.true) {
-          let I = 0;
-
-          let _temp53 = LengthOfArrayLike(val);
-
-          if (_temp53 instanceof AbruptCompletion) {
-            return _temp53;
-          }
-
-          if (_temp53 instanceof Completion) {
-            _temp53 = _temp53.Value;
-          }
-
-          const len = _temp53.numberValue();
-
-          while (I < len) {
-            let _temp54 = ToString(new Value(I));
-
-            Assert(!(_temp54 instanceof AbruptCompletion), "ToString(new Value(I))" + ' returned an abrupt completion');
-
-            if (_temp54 instanceof Completion) {
-              _temp54 = _temp54.Value;
-            }
-
-            const Istr = _temp54;
-
-            let _temp55 = InternalizeJSONProperty(val, Istr);
-
-            if (_temp55 instanceof AbruptCompletion) {
-              return _temp55;
-            }
-
-            if (_temp55 instanceof Completion) {
-              _temp55 = _temp55.Value;
-            }
-
-            const newElement = _temp55;
-
-            if (Type(newElement) === 'Undefined') {
-              let _temp56 = val.Delete(Istr);
-
-              if (_temp56 instanceof AbruptCompletion) {
-                return _temp56;
-              }
-
-              if (_temp56 instanceof Completion) {
-                _temp56 = _temp56.Value;
-              }
-            } else {
-              let _temp57 = CreateDataProperty(val, Istr, newElement);
-
-              if (_temp57 instanceof AbruptCompletion) {
-                return _temp57;
-              }
-
-              if (_temp57 instanceof Completion) {
-                _temp57 = _temp57.Value;
-              }
-            }
-
-            I += 1;
-          }
-        } else {
-          let _temp58 = EnumerableOwnPropertyNames(val, 'key');
-
-          if (_temp58 instanceof AbruptCompletion) {
-            return _temp58;
-          }
-
-          if (_temp58 instanceof Completion) {
-            _temp58 = _temp58.Value;
-          }
-
-          const keys = _temp58;
-
-          for (const P of keys) {
-            let _temp59 = InternalizeJSONProperty(val, P);
-
-            if (_temp59 instanceof AbruptCompletion) {
-              return _temp59;
-            }
-
-            if (_temp59 instanceof Completion) {
-              _temp59 = _temp59.Value;
-            }
-
-            const newElement = _temp59;
-
-            if (Type(newElement) === 'Undefined') {
-              let _temp60 = val.Delete(P);
-
-              if (_temp60 instanceof AbruptCompletion) {
-                return _temp60;
-              }
-
-              if (_temp60 instanceof Completion) {
-                _temp60 = _temp60.Value;
-              }
-            } else {
-              let _temp61 = CreateDataProperty(val, P, newElement);
-
-              if (_temp61 instanceof AbruptCompletion) {
-                return _temp61;
-              }
-
-              if (_temp61 instanceof Completion) {
-                _temp61 = _temp61.Value;
-              }
-            }
-          }
-        }
-      }
-
-      return Call(reviver, holder, [name, val]);
+    if (_temp51 instanceof AbruptCompletion) {
+      return _temp51;
     }
 
+    if (_temp51 instanceof Completion) {
+      _temp51 = _temp51.Value;
+    }
+
+    const val = _temp51;
+
+    if (Type(val) === 'Object') {
+      let _temp52 = IsArray(val);
+
+      if (_temp52 instanceof AbruptCompletion) {
+        return _temp52;
+      }
+
+      if (_temp52 instanceof Completion) {
+        _temp52 = _temp52.Value;
+      }
+
+      const isArray = _temp52;
+
+      if (isArray === Value.true) {
+        let I = 0;
+
+        let _temp53 = LengthOfArrayLike(val);
+
+        if (_temp53 instanceof AbruptCompletion) {
+          return _temp53;
+        }
+
+        if (_temp53 instanceof Completion) {
+          _temp53 = _temp53.Value;
+        }
+
+        const len = _temp53.numberValue();
+
+        while (I < len) {
+          let _temp54 = ToString(new Value(I));
+
+          Assert(!(_temp54 instanceof AbruptCompletion), "ToString(new Value(I))" + ' returned an abrupt completion');
+
+          if (_temp54 instanceof Completion) {
+            _temp54 = _temp54.Value;
+          }
+
+          const Istr = _temp54;
+
+          let _temp55 = InternalizeJSONProperty(val, Istr, reviver);
+
+          if (_temp55 instanceof AbruptCompletion) {
+            return _temp55;
+          }
+
+          if (_temp55 instanceof Completion) {
+            _temp55 = _temp55.Value;
+          }
+
+          const newElement = _temp55;
+
+          if (Type(newElement) === 'Undefined') {
+            let _temp56 = val.Delete(Istr);
+
+            if (_temp56 instanceof AbruptCompletion) {
+              return _temp56;
+            }
+
+            if (_temp56 instanceof Completion) {
+              _temp56 = _temp56.Value;
+            }
+          } else {
+            let _temp57 = CreateDataProperty(val, Istr, newElement);
+
+            if (_temp57 instanceof AbruptCompletion) {
+              return _temp57;
+            }
+
+            if (_temp57 instanceof Completion) {
+              _temp57 = _temp57.Value;
+            }
+          }
+
+          I += 1;
+        }
+      } else {
+        let _temp58 = EnumerableOwnPropertyNames(val, 'key');
+
+        if (_temp58 instanceof AbruptCompletion) {
+          return _temp58;
+        }
+
+        if (_temp58 instanceof Completion) {
+          _temp58 = _temp58.Value;
+        }
+
+        const keys = _temp58;
+
+        for (const P of keys) {
+          let _temp59 = InternalizeJSONProperty(val, P, reviver);
+
+          if (_temp59 instanceof AbruptCompletion) {
+            return _temp59;
+          }
+
+          if (_temp59 instanceof Completion) {
+            _temp59 = _temp59.Value;
+          }
+
+          const newElement = _temp59;
+
+          if (Type(newElement) === 'Undefined') {
+            let _temp60 = val.Delete(P);
+
+            if (_temp60 instanceof AbruptCompletion) {
+              return _temp60;
+            }
+
+            if (_temp60 instanceof Completion) {
+              _temp60 = _temp60.Value;
+            }
+          } else {
+            let _temp61 = CreateDataProperty(val, P, newElement);
+
+            if (_temp61 instanceof AbruptCompletion) {
+              return _temp61;
+            }
+
+            if (_temp61 instanceof Completion) {
+              _temp61 = _temp61.Value;
+            }
+          }
+        }
+      }
+    }
+
+    return Call(reviver, holder, [name, val]);
+  }
+
+  function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
     let _temp62 = ToString(text);
 
     if (_temp62 instanceof AbruptCompletion) {
@@ -40931,7 +40950,7 @@
 
       const status = _temp64;
       Assert(status === Value.true, "status === Value.true");
-      return InternalizeJSONProperty(root, rootName);
+      return InternalizeJSONProperty(root, rootName, reviver);
     } else {
       return unfiltered;
     }
