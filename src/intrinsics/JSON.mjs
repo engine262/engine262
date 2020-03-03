@@ -215,39 +215,39 @@ class JSONValidator {
   }
 }
 
-function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
-  function InternalizeJSONProperty(holder, name) {
-    const val = Q(Get(holder, name));
-    if (Type(val) === 'Object') {
-      const isArray = Q(IsArray(val));
-      if (isArray === Value.true) {
-        let I = 0;
-        const len = Q(LengthOfArrayLike(val)).numberValue();
-        while (I < len) {
-          const Istr = X(ToString(new Value(I)));
-          const newElement = Q(InternalizeJSONProperty(val, Istr));
-          if (Type(newElement) === 'Undefined') {
-            Q(val.Delete(Istr));
-          } else {
-            Q(CreateDataProperty(val, Istr, newElement));
-          }
-          I += 1;
+function InternalizeJSONProperty(holder, name, reviver) {
+  const val = Q(Get(holder, name));
+  if (Type(val) === 'Object') {
+    const isArray = Q(IsArray(val));
+    if (isArray === Value.true) {
+      let I = 0;
+      const len = Q(LengthOfArrayLike(val)).numberValue();
+      while (I < len) {
+        const Istr = X(ToString(new Value(I)));
+        const newElement = Q(InternalizeJSONProperty(val, Istr, reviver));
+        if (Type(newElement) === 'Undefined') {
+          Q(val.Delete(Istr));
+        } else {
+          Q(CreateDataProperty(val, Istr, newElement));
         }
-      } else {
-        const keys = Q(EnumerableOwnPropertyNames(val, 'key'));
-        for (const P of keys) {
-          const newElement = Q(InternalizeJSONProperty(val, P));
-          if (Type(newElement) === 'Undefined') {
-            Q(val.Delete(P));
-          } else {
-            Q(CreateDataProperty(val, P, newElement));
-          }
+        I += 1;
+      }
+    } else {
+      const keys = Q(EnumerableOwnPropertyNames(val, 'key'));
+      for (const P of keys) {
+        const newElement = Q(InternalizeJSONProperty(val, P, reviver));
+        if (Type(newElement) === 'Undefined') {
+          Q(val.Delete(P));
+        } else {
+          Q(CreateDataProperty(val, P, newElement));
         }
       }
     }
-    return Q(Call(reviver, holder, [name, val]));
   }
+  return Q(Call(reviver, holder, [name, val]));
+}
 
+function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   const jText = Q(ToString(text));
   // Parse JText interpreted as UTF-16 encoded Unicode points (6.1.4) as a JSON text as specified in ECMA-404.
   // Throw a SyntaxError exception if JText is not a valid JSON text as defined in that specification.
@@ -265,7 +265,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
     const rootName = new Value('');
     const status = X(CreateDataProperty(root, rootName, unfiltered));
     Assert(status === Value.true);
-    return Q(InternalizeJSONProperty(root, rootName));
+    return Q(InternalizeJSONProperty(root, rootName, reviver));
   } else {
     return unfiltered;
   }
