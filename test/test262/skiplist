@@ -1,10 +1,3 @@
-// these tests pass but take a long time
-built-ins/parseFloat/S15.1.2.3_A6.js
-built-ins/parseInt/S15.1.2.2_A8.js
-built-ins/RegExp/character-class-escape-non-whitespace.js
-language/comments/S7.4_A5.js
-language/comments/S7.4_A6.js
-
 // WIP
 built-ins/TypedArrayConstructors/BigInt64Array/**/*.js
 built-ins/TypedArrayConstructors/BigUint64Array/**/*.js

@@ -6,8 +6,6 @@ require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
 
-const override = process.argv[2];
-
 if (!process.send) {
   // supervisor
 
@@ -23,11 +21,13 @@ if (!process.send) {
     CPU_COUNT,
   } = require('../base.js');
 
+  const override = process.argv.find((e, i) => i > 1 && !e.startsWith('-'));
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(CPU_COUNT * 0.75);
+  const RUN_LONG = process.argv.includes('--run-long');
 
-  const workers = Array.from({ length: NUM_WORKERS }, (_, i) => {
+  const createWorker = () => {
     const c = childProcess.fork(__filename);
     c.on('message', ({ description, status, error }) => {
       switch (status) {
@@ -48,22 +48,27 @@ if (!process.send) {
       if (code !== 0) {
         process.exit(1);
       }
-      workers[i] = undefined;
-      if (workers.every((w) => w === undefined)) {
-        process.exit();
-      }
     });
     return c;
-  });
+  };
+
+  const workers = Array.from({ length: NUM_WORKERS }, () => createWorker());
+  let longRunningWorker;
+  if (RUN_LONG) {
+    longRunningWorker = createWorker();
+  }
 
   const readList = (name) => {
     const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
     return source.split('\n').filter((l) => l && !l.startsWith('//'));
   };
-  const skiplist = readList('skiplist')
+  const readListPaths = (name) => readList(name)
     .flatMap((t) => glob.sync(path.resolve(__dirname, 'test262', 'test', t)))
     .map((f) => path.relative(path.resolve(__dirname, 'test262'), f));
+
   const features = readList('features');
+  const longlist = readListPaths('longlist');
+  const skiplist = readListPaths('skiplist');
 
   const stream = new TestStream(path.resolve(__dirname, 'test262'), {
     paths: [override || 'test'],
@@ -83,16 +88,27 @@ if (!process.send) {
       return;
     }
 
-    workers[workerIndex].send(test, () => 0);
-    workerIndex += 1;
-    if (workerIndex >= workers.length) {
-      workerIndex = 0;
+    if (longlist.includes(test.file)) {
+      if (RUN_LONG) {
+        longRunningWorker.send(test, () => 0);
+      } else {
+        skip();
+      }
+    } else {
+      workers[workerIndex].send(test, () => 0);
+      workerIndex += 1;
+      if (workerIndex >= workers.length) {
+        workerIndex = 0;
+      }
     }
   });
 
   stream.on('end', () => {
     workers.forEach((w) => {
       w.send('DONE');
+      if (RUN_LONG) {
+        longRunningWorker.send('DONE');
+      }
     });
   });
 } else {
