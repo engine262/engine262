@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d1ce0c8ec60d4432728185c5317d91f333b381b1
+ * engine262 0.0.1 2212018e24759d5b77be3df2e2c7996592f7acf0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -45514,11 +45514,7 @@
       m(this.promiseCapability);
     }
 
-  } // #sec-hostenqueuepromisejob
-
-  function HostEnqueuePromiseJob(job, _realm) {
-    surroundingAgent.queueJob('PromiseJobs', job);
-  } // 8.5 #sec-initializehostdefinedrealm
+  } // 15.1.10 #sec-runtime-semantics-scriptevaluation
 
   function ScriptEvaluation(scriptRecord) {
     const globalEnv = scriptRecord.Realm.GlobalEnv;
@@ -45547,6 +45543,19 @@
 
     return result;
   }
+  function evaluateScript(sourceText, realm, hostDefined) {
+    const s = ParseScript(sourceText, realm, hostDefined);
+
+    if (Array.isArray(s)) {
+      return new ThrowCompletion(s[0]);
+    }
+
+    return EnsureCompletion(ScriptEvaluation(s));
+  } // #sec-hostenqueuepromisejob
+
+  function HostEnqueuePromiseJob(job, _realm) {
+    surroundingAgent.queueJob('PromiseJobs', job);
+  } // 8.5 #sec-initializehostdefinedrealm
   function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
     if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
       let _temp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
@@ -57230,16 +57239,6 @@
 
   }
 
-  function evaluateScript(sourceText, realm, hostDefined) {
-    const s = ParseScript(sourceText, realm, hostDefined);
-
-    if (Array.isArray(s)) {
-      return new ThrowCompletion(s[0]);
-    }
-
-    return EnsureCompletion(ScriptEvaluation(s));
-  }
-
   class APIRealm {
     constructor(options = {}) {
       const realm = CreateRealm();
@@ -57434,7 +57433,6 @@
   exports.Throw = Throw;
   exports.ToString = ToString$1;
   exports.Value = APIValue;
-  exports.evaluateScript = evaluateScript;
   exports.inspect = inspect;
 
   Object.defineProperty(exports, '__esModule', { value: true });

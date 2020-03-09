@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d1ce0c8ec60d4432728185c5317d91f333b381b1
+ * engine262 0.0.1 2212018e24759d5b77be3df2e2c7996592f7acf0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -45508,11 +45508,7 @@ class ExecutionContext {
     m(this.promiseCapability);
   }
 
-} // #sec-hostenqueuepromisejob
-
-function HostEnqueuePromiseJob(job, _realm) {
-  surroundingAgent.queueJob('PromiseJobs', job);
-} // 8.5 #sec-initializehostdefinedrealm
+} // 15.1.10 #sec-runtime-semantics-scriptevaluation
 
 function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
@@ -45541,6 +45537,19 @@ function ScriptEvaluation(scriptRecord) {
 
   return result;
 }
+function evaluateScript(sourceText, realm, hostDefined) {
+  const s = ParseScript(sourceText, realm, hostDefined);
+
+  if (Array.isArray(s)) {
+    return new ThrowCompletion(s[0]);
+  }
+
+  return EnsureCompletion(ScriptEvaluation(s));
+} // #sec-hostenqueuepromisejob
+
+function HostEnqueuePromiseJob(job, _realm) {
+  surroundingAgent.queueJob('PromiseJobs', job);
+} // 8.5 #sec-initializehostdefinedrealm
 function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
     let _temp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
@@ -57224,16 +57233,6 @@ class APIAgent {
 
 }
 
-function evaluateScript(sourceText, realm, hostDefined) {
-  const s = ParseScript(sourceText, realm, hostDefined);
-
-  if (Array.isArray(s)) {
-    return new ThrowCompletion(s[0]);
-  }
-
-  return EnsureCompletion(ScriptEvaluation(s));
-}
-
 class APIRealm {
   constructor(options = {}) {
     const realm = CreateRealm();
@@ -57416,5 +57415,5 @@ function ToString$1(realm, value) {
   });
 }
 
-export { AbruptCompletion, Abstract, APIAgent as Agent, Completion, Descriptor, FEATURES, NormalCompletion, APIObject as Object, APIRealm as Realm, Throw, ToString$1 as ToString, APIValue as Value, evaluateScript, inspect };
+export { AbruptCompletion, Abstract, APIAgent as Agent, Completion, Descriptor, FEATURES, NormalCompletion, APIObject as Object, APIRealm as Realm, Throw, ToString$1 as ToString, APIValue as Value, inspect };
 //# sourceMappingURL=engine262.mjs.map
