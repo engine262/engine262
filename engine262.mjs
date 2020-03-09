@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 f8ef93ecbc6932d66b1edd14ae0f002646096cc3
+ * engine262 0.0.1 d1ce0c8ec60d4432728185c5317d91f333b381b1
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -40913,10 +40913,11 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
     _temp62 = _temp62.Value;
   }
 
-  const jText = _temp62; // Parse JText interpreted as UTF-16 encoded Unicode points (6.1.4) as a JSON text as specified in ECMA-404.
-  // Throw a SyntaxError exception if JText is not a valid JSON text as defined in that specification.
+  // 1. Let jsonString be ? ToString(text).
+  const jsonString = _temp62; // 2. Parse ! UTF16DecodeString(jsonString) as a JSON text as specified in ECMA-404.
+  //    Throw a SyntaxError exception if it is not a valid JSON text as defined in that specification.
 
-  let _temp63 = JSONValidator.validate(jText.stringValue());
+  let _temp63 = JSONValidator.validate(jsonString.stringValue());
 
   if (_temp63 instanceof AbruptCompletion) {
     return _temp63;
@@ -40925,27 +40926,34 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   if (_temp63 instanceof Completion) {
     _temp63 = _temp63.Value;
   }
-  const scriptText = `(${jText.stringValue()});`;
-  const completion = EnsureCompletion(ScriptEvaluationJob(scriptText));
-  const unfiltered = completion.Value;
-  Assert(unfiltered instanceof StringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof StringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue");
+
+  const scriptString = `(${jsonString.stringValue()});`; // 4. Let completion be the result of parsing and evaluating
+  //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
+  //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
+
+  const completion = evaluateScript(scriptString, surroundingAgent.currentRealmRecord); // 5. Let unfiltered be completion.[[Value]].
+
+  const unfiltered = completion.Value; // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
+
+  Assert(unfiltered instanceof StringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof StringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue"); // 7. If IsCallable(reviver) is true, then
 
   if (IsCallable(reviver) === Value.true) {
-    const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    const rootName = new Value('');
+    // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
+    const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')); // b. Let rootName be the empty String.
 
-    let _temp64 = CreateDataProperty(root, rootName, unfiltered);
+    const rootName = new Value(''); // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
 
-    Assert(!(_temp64 instanceof AbruptCompletion), "CreateDataProperty(root, rootName, unfiltered)" + ' returned an abrupt completion');
+    let _temp64 = CreateDataPropertyOrThrow(root, rootName, unfiltered);
+
+    Assert(!(_temp64 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(root, rootName, unfiltered)" + ' returned an abrupt completion');
 
     if (_temp64 instanceof Completion) {
       _temp64 = _temp64.Value;
     }
 
-    const status = _temp64;
-    Assert(status === Value.true, "status === Value.true");
     return InternalizeJSONProperty(root, rootName, reviver);
   } else {
+    // a. Return unfiltered.
     return unfiltered;
   }
 }
@@ -45426,6 +45434,19 @@ class Agent {
     const error = Construct(cons, [new Value(message)]);
     Assert(!(error instanceof AbruptCompletion), "!(error instanceof AbruptCompletion)");
     return new ThrowCompletion(error);
+  }
+
+  queueJob(queueName, job) {
+    const callerContext = this.runningExecutionContext;
+    const callerRealm = callerContext.Realm;
+    const callerScriptOrModule = callerContext.ScriptOrModule;
+    const pending = {
+      queueName,
+      job,
+      callerRealm,
+      callerScriptOrModule
+    };
+    this.jobQueue.push(pending);
   } // NON-SPEC: Check if a feature is enabled in this agent.
 
 
@@ -45439,11 +45460,8 @@ class Agent {
       m(e);
     });
     this.jobQueue.forEach(j => {
-      j.Arguments.forEach(a => {
-        m(a);
-      });
-      m(j.Realm);
-      m(j.ScriptOrModule);
+      m(j.callerRealm);
+      m(j.callerScriptOrModule);
     });
   }
 
@@ -45490,22 +45508,10 @@ class ExecutionContext {
     m(this.promiseCapability);
   }
 
-} // 8.4.1 #sec-enqueuejob
+} // #sec-hostenqueuepromisejob
 
-function EnqueueJob(queueName, job, args) {
-  const callerContext = surroundingAgent.runningExecutionContext;
-  const callerRealm = callerContext.Realm;
-  const callerScriptOrModule = callerContext.ScriptOrModule;
-  const pending = {
-    Job: job,
-    Arguments: args,
-    Realm: callerRealm,
-    ScriptOrModule: callerScriptOrModule,
-    HostDefined: {
-      queueName
-    }
-  };
-  surroundingAgent.jobQueue.push(pending);
+function HostEnqueuePromiseJob(job, _realm) {
+  surroundingAgent.queueJob('PromiseJobs', job);
 } // 8.5 #sec-initializehostdefinedrealm
 
 function ScriptEvaluation(scriptRecord) {
@@ -45534,42 +45540,21 @@ function ScriptEvaluation(scriptRecord) {
   surroundingAgent.executionContextStack.pop(scriptContext); // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
-} // 15.1.12 #sec-scriptevaluationjob
-
-function ScriptEvaluationJob(sourceText, hostDefined) {
-  const realm = surroundingAgent.currentRealmRecord;
-  const s = ParseScript(sourceText, realm, hostDefined);
-
-  if (Array.isArray(s)) {
-    HostReportErrors(s);
-    return new NormalCompletion(undefined);
-  }
-
-  return ScriptEvaluation(s);
-} // 15.2.1.22 #sec-toplevelmoduleevaluationjob
-
-
-function HostReportErrors(errorList) {
-  if (surroundingAgent.hostDefinedOptions.reportError) {
-    errorList.forEach(error => {
-      surroundingAgent.hostDefinedOptions.reportError(error);
-    });
-  }
 }
 function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
-    let _temp2 = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+    let _temp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
     /* istanbul ignore if */
 
 
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
     }
     /* istanbul ignore if */
 
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
     }
   }
 
@@ -45579,26 +45564,27 @@ function HostPromiseRejectionTracker(promise, operation) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm && realm.HostDefined.promiseRejectionTracker) {
-    let _temp3 = realm.HostDefined.promiseRejectionTracker(promise, operation);
+    let _temp2 = realm.HostDefined.promiseRejectionTracker(promise, operation);
 
-    Assert(!(_temp3 instanceof AbruptCompletion), "realm.HostDefined.promiseRejectionTracker(promise, operation)" + ' returned an abrupt completion');
+    Assert(!(_temp2 instanceof AbruptCompletion), "realm.HostDefined.promiseRejectionTracker(promise, operation)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
   }
 }
 function HostHasSourceTextAvailable(func) {
   if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
-    let _temp4 = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
+    let _temp3 = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
 
-    Assert(!(_temp4 instanceof AbruptCompletion), "surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func)" + ' returned an abrupt completion');
+    Assert(!(_temp3 instanceof AbruptCompletion), "surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func)" + ' returned an abrupt completion');
 
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
 
-    return _temp4;
+    return _temp3;
   }
 
   return Value.true;
@@ -45621,17 +45607,17 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
 
     const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
 
-    let _temp5 = realm.HostDefined.resolveImportedModule(publicModule, specifier);
+    let _temp4 = realm.HostDefined.resolveImportedModule(publicModule, specifier);
 
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
     }
 
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
 
-    const apiModule = _temp5;
+    const apiModule = _temp4;
 
     if (referencingScriptOrModule !== Value.null) {
       referencingScriptOrModule.HostDefined.moduleMap.set(specifier, apiModule.module);
@@ -45645,91 +45631,91 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
 
 function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
   if (completion instanceof AbruptCompletion) {
-    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
+    let _temp5 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
 
-    Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [completion.Value])" + ' returned an abrupt completion');
+    Assert(!(_temp5 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [completion.Value])" + ' returned an abrupt completion');
 
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
     }
   } else {
     Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
 
-    let _temp7 = CreateBuiltinFunction(([v = Value.undefined]) => {
+    let _temp6 = CreateBuiltinFunction(([v = Value.undefined]) => {
       Assert(v === Value.undefined, "v === Value.undefined");
 
-      let _temp10 = HostResolveImportedModule(referencingScriptOrModule, specifier);
+      let _temp9 = HostResolveImportedModule(referencingScriptOrModule, specifier);
 
-      Assert(!(_temp10 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
+      Assert(!(_temp9 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
 
-      if (_temp10 instanceof Completion) {
-        _temp10 = _temp10.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
 
-      const moduleRecord = _temp10; // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+      const moduleRecord = _temp9; // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
 
       const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
 
       if (namespace instanceof AbruptCompletion) {
-        let _temp11 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
+        let _temp10 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
 
-        Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
+        Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
+
+        if (_temp10 instanceof Completion) {
+          _temp10 = _temp10.Value;
+        }
+      } else {
+        let _temp11 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
+
+        Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
 
         if (_temp11 instanceof Completion) {
           _temp11 = _temp11.Value;
-        }
-      } else {
-        let _temp12 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
-
-        Assert(!(_temp12 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
         }
       }
 
       return Value.undefined;
     }, []);
 
-    Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(([v = Value.undefined]) => {\n      Assert(v === Value.undefined);\n      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));\n      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.\n      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));\n      if (namespace instanceof AbruptCompletion) {\n        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));\n      } else {\n        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));\n      }\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+    Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(([v = Value.undefined]) => {\n      Assert(v === Value.undefined);\n      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));\n      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.\n      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));\n      if (namespace instanceof AbruptCompletion) {\n        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));\n      } else {\n        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));\n      }\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    const onFulfilled = _temp6;
+
+    let _temp7 = CreateBuiltinFunction(([r = Value.undefined]) => {
+      let _temp12 = Call(promiseCapability.Reject, Value.undefined, [r]);
+
+      Assert(!(_temp12 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [r])" + ' returned an abrupt completion');
+
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+      return Value.undefined;
+    }, []);
+
+    Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(([r = Value.undefined]) => {\n      X(Call(promiseCapability.Reject, Value.undefined, [r]));\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
 
-    const onFulfilled = _temp7;
+    const onRejected = _temp7;
 
-    let _temp8 = CreateBuiltinFunction(([r = Value.undefined]) => {
-      let _temp13 = Call(promiseCapability.Reject, Value.undefined, [r]);
+    let _temp8 = PerformPromiseThen(completion.Value, onFulfilled, onRejected);
 
-      Assert(!(_temp13 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [r])" + ' returned an abrupt completion');
-
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-      return Value.undefined;
-    }, []);
-
-    Assert(!(_temp8 instanceof AbruptCompletion), "CreateBuiltinFunction(([r = Value.undefined]) => {\n      X(Call(promiseCapability.Reject, Value.undefined, [r]));\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+    Assert(!(_temp8 instanceof AbruptCompletion), "PerformPromiseThen(completion.Value, onFulfilled, onRejected)" + ' returned an abrupt completion');
 
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
-    }
-
-    const onRejected = _temp8;
-
-    let _temp9 = PerformPromiseThen(completion.Value, onFulfilled, onRejected);
-
-    Assert(!(_temp9 instanceof AbruptCompletion), "PerformPromiseThen(completion.Value, onFulfilled, onRejected)" + ' returned an abrupt completion');
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
     }
   }
 }
 
 function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
-  EnqueueJob('ImportModuleDynamicallyJobs', () => {
+  surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
     let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
 
     if (!(completion instanceof AbruptCompletion)) {
@@ -45758,7 +45744,7 @@ function HostImportModuleDynamically(referencingScriptOrModule, specifier, promi
     }
 
     FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
-  }, []);
+  });
   return new NormalCompletion(Value.undefined);
 } // https://tc39.es/proposal-import-meta/#sec-hostgetimportmetaproperties
 
@@ -45766,15 +45752,15 @@ function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.getImportMetaProperties) {
-    let _temp14 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
+    let _temp13 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
 
-    Assert(!(_temp14 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp13 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
     }
 
-    return _temp14;
+    return _temp13;
   }
 
   return [];
@@ -45784,15 +45770,15 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.finalizeImportMeta) {
-    let _temp15 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
+    let _temp14 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
 
-    Assert(!(_temp15 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp14 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
     }
 
-    return _temp15;
+    return _temp14;
   }
 
   return Value.undefined;
@@ -45801,22 +45787,22 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
 const scheduledForCleanup = new Set();
 function HostCleanupFinalizationRegistry(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
-    let _temp16 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
+    let _temp15 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
 
-    if (_temp16 instanceof AbruptCompletion) {
-      return _temp16;
+    if (_temp15 instanceof AbruptCompletion) {
+      return _temp15;
     }
 
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
     }
   } else {
     if (!scheduledForCleanup.has(fg)) {
       scheduledForCleanup.add(fg);
-      EnqueueJob('FinalizationCleanup', () => {
+      surroundingAgent.queueJob('FinalizationCleanup', () => {
         scheduledForCleanup.delete(fg);
         CleanupFinalizationRegistry(fg);
-      }, []);
+      });
     }
   }
 
@@ -52092,6 +52078,46 @@ function PromiseRejectFunctions([reason = Value.undefined]) {
 
   alreadyResolved.Value = true;
   return RejectPromise(promise, reason);
+} // #sec-newpromiseresolvethenablejob
+
+
+function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
+  // 1. Let job be a new Job abstract closure with no parameters that captures
+  //    promiseToResolve, thenable, and then and performs the following steps when called:
+  const job = () => {
+    // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
+    const resolvingFunctions = CreateResolvingFunctions(promiseToResolve); // b. Let thenCallResult be Call(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+
+    const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]); // c. If thenCallResult is an abrupt completion, then
+
+    if (thenCallResult instanceof AbruptCompletion) {
+      // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
+      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]); // ii. Return Completion(status).
+
+      return Completion(status);
+    } // d. Return Completion(thenCallResult).
+
+
+    return Completion(thenCallResult);
+  }; // 2. Let getThenRealmResult be GetFunctionRealm(then).
+
+
+  const getThenRealmResult = GetFunctionRealm(then); // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
+  // 4. Otherwise, let thenRealm be null.
+
+  let thenRealm;
+
+  if (getThenRealmResult instanceof NormalCompletion) {
+    thenRealm = getThenRealmResult.Value;
+  } else {
+    thenRealm = Value.null;
+  } // 5. Return { [[Job]]: job, [[Realm]]: thenRealm }.
+
+
+  return {
+    Job: job,
+    Realm: thenRealm
+  };
 } // 25.6.1.3.2 #sec-promise-resolve-functions
 
 
@@ -52128,7 +52154,8 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
     return FulfillPromise(promise, resolution);
   }
 
-  EnqueueJob('PromiseJobs', PromiseResolveThenableJob, [promise, resolution, thenAction]);
+  const job = NewPromiseResolveThenableJob(promise, resolution, thenAction);
+  HostEnqueuePromiseJob(job.Job);
   return Value.undefined;
 } // 25.6.1.4 #sec-fulfillpromise
 
@@ -52235,61 +52262,19 @@ function RejectPromise(promise, reason) {
   }
 
   return TriggerPromiseReactions(reactions, reason);
-} // 25.6.1.8 #sec-triggerpromisereactions
+} // #sec-triggerpromisereactions
 
 
 function TriggerPromiseReactions(reactions, argument) {
+  // 1. For each reaction in reactions, in original insertion order, do
   reactions.forEach(reaction => {
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [reaction, argument]);
-  });
+    // a. Let job be NewPromiseReactionJob(reaction, argument).
+    const job = NewPromiseReactionJob(reaction, argument); // b. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
+
+    HostEnqueuePromiseJob(job.Job);
+  }); // 2. Return undefined.
+
   return Value.undefined;
-} // 25.6.2.1 #sec-promisereactionjob
-
-
-function PromiseReactionJob(reaction, argument) {
-  Assert(reaction instanceof PromiseReactionRecord, "reaction instanceof PromiseReactionRecord");
-  const promiseCapability = reaction.Capability;
-  const type = reaction.Type;
-  const handler = reaction.Handler;
-  let handlerResult;
-
-  if (handler === Value.undefined) {
-    if (type === 'Fulfill') {
-      handlerResult = new NormalCompletion(argument);
-    } else {
-      Assert(type === 'Reject', "type === 'Reject'");
-      handlerResult = new ThrowCompletion(argument);
-    }
-  } else {
-    handlerResult = Call(handler, Value.undefined, [argument]);
-  }
-
-  if (promiseCapability === Value.undefined) {
-    Assert(!(handlerResult instanceof AbruptCompletion), "!(handlerResult instanceof AbruptCompletion)");
-    return new NormalCompletion(undefined);
-  }
-
-  let status;
-
-  if (handlerResult instanceof AbruptCompletion) {
-    status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
-  } else {
-    status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
-  }
-
-  return status;
-} // 25.6.2.2 #sec-promiseresolvethenablejob
-
-function PromiseResolveThenableJob(promiseToResolve, thenable, then) {
-  const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
-  const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
-
-  if (thenCallResult instanceof AbruptCompletion) {
-    const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
-    return status;
-  }
-
-  return thenCallResult;
 } // 25.6.4.5.1 #sec-promise-resolve
 
 
@@ -52336,58 +52321,152 @@ function PromiseResolve(C, x) {
     _temp7 = _temp7.Value;
   }
   return promiseCapability.Promise;
+} // #sec-newpromisereactionjob
+
+function NewPromiseReactionJob(reaction, argument) {
+  // 1. Let job be a new Job abstract closure with no parameters that captures
+  //    reaction and argument and performs the following steps when called:
+  const job = () => {
+    // a. Assert: reaction is a PromiseReaction Record.
+    Assert(reaction instanceof PromiseReactionRecord, "reaction instanceof PromiseReactionRecord"); // b. Let promiseCapability be reaction.[[Capability]].
+
+    const promiseCapability = reaction.Capability; // c. Let type be reaction.[[Type]].
+
+    const type = reaction.Type; // d. Let handler be reaction.[[Handler]].
+
+    const handler = reaction.Handler;
+    let handlerResult; // e. If handler is undefined, then
+
+    if (handler === Value.undefined) {
+      // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
+      if (type === 'Fulfill') {
+        handlerResult = new NormalCompletion(argument);
+      } else {
+        // 1. Assert: type is Reject.
+        Assert(type === 'Reject', "type === 'Reject'"); // 2. Let handlerResult be ThrowCompletion(argument).
+
+        handlerResult = new ThrowCompletion(argument);
+      }
+    } else {
+      // f. let handlerResult be Call(handler, undefined, « argument »).
+      handlerResult = Call(handler, Value.undefined, [argument]);
+    } // g. If promiseCapability is undefined, then
+
+
+    if (promiseCapability === Value.undefined) {
+      // i. Assert: handlerResult is not an abrupt completion.
+      Assert(!(handlerResult instanceof AbruptCompletion), "!(handlerResult instanceof AbruptCompletion)"); // ii. Return NormalCompletion(empty).
+
+      return new NormalCompletion(undefined);
+    }
+
+    let status; // h. If handlerResult is an abrupt completion, then
+
+    if (handlerResult instanceof AbruptCompletion) {
+      // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
+      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+    } else {
+      // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
+      status = Call(promiseCapability.Resolve, Value.undefined, [EnsureCompletion(handlerResult).Value]);
+    } // j. Return Completion(status).
+
+
+    return Completion(status);
+  }; // 2. Let handlerRealm be null.
+
+
+  let handlerRealm = Value.null; // 3. If reaction.[[Handler]] is not undefined, then
+
+  if (reaction.Handler !== Value.undefined) {
+    // a. Let getHandlerRealmResult be GetFunctionRealm(handler).
+    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler); // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
+
+    if (getHandlerRealmResult instanceof NormalCompletion) {
+      handlerRealm = getHandlerRealmResult.Value;
+    }
+  } // 4. Return { [[Job]]: job, [[Realm]]: handlerRealm }.
+
+
+  return {
+    Job: job,
+    Realm: handlerRealm
+  };
 } // 25.6.5.4.1 #sec-performpromisethen
 
+
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
-  Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true");
+  // 1. Assert: IsPromise(promise) is true.
+  Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true"); // 2. If resultCapability is present, then
 
   if (resultCapability) {
+    // a. Assert: resultCapability is a PromiseCapability Record.
     Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
   } else {
+    // a. Set resultCapability to undefined.
     resultCapability = Value.undefined;
-  }
+  } // 4. If IsCallable(onFulfilled) is false, then
+
 
   if (IsCallable(onFulfilled) === Value.false) {
+    // a. Set onFulfilled to undefined.
     onFulfilled = Value.undefined;
-  }
+  } // 5. If IsCallable(onRejected) is false, then
+
 
   if (IsCallable(onRejected) === Value.false) {
+    // a. Set onRejected to undefined.
     onRejected = Value.undefined;
-  }
+  } // 6. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
+
 
   const fulfillReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
     Handler: onFulfilled
-  });
+  }); // 7. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
+
   const rejectReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
     Handler: onRejected
-  });
+  }); // 8. If promise.[[PromiseState]] is pending, then
 
   if (promise.PromiseState === 'pending') {
-    promise.PromiseFulfillReactions.push(fulfillReaction);
+    // a. Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
+    promise.PromiseFulfillReactions.push(fulfillReaction); // b. Append rejectReaction as the last element of the List that is promise.[[PromiseRejectReactions]].
+
     promise.PromiseRejectReactions.push(rejectReaction);
   } else if (promise.PromiseState === 'fulfilled') {
-    const value = promise.PromiseResult;
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [fulfillReaction, value]);
+    // a. Let value be promise.[[PromiseResult]].
+    const value = promise.PromiseResult; // b. Let fulfillJob be NewPromiseReactionJob(fulfillReaction, value).
+
+    const fulfillJob = NewPromiseReactionJob(fulfillReaction, value); // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
+
+    HostEnqueuePromiseJob(fulfillJob.Job);
   } else {
-    Assert(promise.PromiseState === 'rejected', "promise.PromiseState === 'rejected'");
-    const reason = promise.PromiseResult;
+    // a. Assert: The value of promise.[[PromiseState]] is rejected.
+    Assert(promise.PromiseState === 'rejected', "promise.PromiseState === 'rejected'"); // b. Let reason be promise.[[PromiseResult]].
+
+    const reason = promise.PromiseResult; // c. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
 
     if (promise.PromiseIsHandled === Value.false) {
       HostPromiseRejectionTracker(promise, 'handle');
-    }
+    } // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
 
-    EnqueueJob('PromiseJobs', PromiseReactionJob, [rejectReaction, reason]);
-  }
 
-  promise.PromiseIsHandled = Value.true;
+    const rejectJob = NewPromiseReactionJob(rejectReaction, reason); // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
+
+    HostEnqueuePromiseJob(rejectJob.Job);
+  } // 11. Set promise.[[PromiseIsHandled]] to true.
+
+
+  promise.PromiseIsHandled = Value.true; // 12. If resultCapability is undefined, then
 
   if (resultCapability === Value.undefined) {
+    // a. Return undefined.
     return Value.undefined;
   } else {
+    // return resultCapability.[[Promise]].
     return resultCapability.Promise;
   }
 }
@@ -56547,7 +56626,6 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   CreateResolvingFunctions: CreateResolvingFunctions,
   NewPromiseCapability: NewPromiseCapability,
   IsPromise: IsPromise,
-  PromiseReactionJob: PromiseReactionJob,
   PromiseResolve: PromiseResolve,
   PerformPromiseThen: PerformPromiseThen,
   isProxyExoticObject: isProxyExoticObject,
@@ -57060,34 +57138,47 @@ function mark() {
       }
     });
   });
-}
+} // https://tc39.es/ecma262/#sec-jobs
+
 
 function runJobQueue() {
   if (surroundingAgent.executionContextStack.length !== 0) {
     return;
-  }
+  } // At some future point in time, when there is no running execution context
+  // and the execution context stack is empty, the implementation must:
+
 
   while (true) {
     // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
 
-    if (nextQueue.length === 0 || nextQueue.find(j => j.HostDefined.queueName !== 'FinalizationCleanup') === undefined) {
+    if (nextQueue.length === 0 || nextQueue.find(j => j.queueName !== 'FinalizationCleanup') === undefined) {
       break;
     }
 
-    const nextPending = nextQueue.shift();
-    const newContext = new ExecutionContext();
-    newContext.Function = Value.null;
-    newContext.Realm = nextPending.Realm;
-    newContext.ScriptOrModule = nextPending.ScriptOrModule;
-    surroundingAgent.executionContextStack.push(newContext);
-    const result = nextPending.Job(...nextPending.Arguments);
+    const {
+      job: abstractClosure,
+      callerRealm,
+      callerScriptOrModule
+    } = nextQueue.shift(); // 1. Push an execution context onto the execution context stack.
 
-    if (result instanceof AbruptCompletion) {
-      HostReportErrors(result.Value);
+    const newContext = new ExecutionContext();
+    surroundingAgent.executionContextStack.push(newContext); // 2. Perform any implementation-defined preparation steps.
+
+    newContext.Function = Value.null;
+    newContext.Realm = callerRealm;
+    newContext.ScriptOrModule = callerScriptOrModule; // 3. Call the abstract closure.
+
+    let _temp2 = abstractClosure();
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "abstractClosure()" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
 
-    mark();
+    mark(); // 5. Pop the previously-pushed execution context from the execution context stack.
+
     surroundingAgent.executionContextStack.pop(newContext);
   }
 
@@ -57133,6 +57224,16 @@ class APIAgent {
 
 }
 
+function evaluateScript(sourceText, realm, hostDefined) {
+  const s = ParseScript(sourceText, realm, hostDefined);
+
+  if (Array.isArray(s)) {
+    return new ThrowCompletion(s[0]);
+  }
+
+  return EnsureCompletion(ScriptEvaluation(s));
+}
+
 class APIRealm {
   constructor(options = {}) {
     const realm = CreateRealm();
@@ -57163,21 +57264,13 @@ class APIRealm {
     }
 
     const res = this.scope(() => {
-      // BEGIN ScriptEvaluationJob
       const realm = surroundingAgent.currentRealmRecord;
-      const s = ParseScript(sourceText, realm, {
+      return evaluateScript(sourceText, realm, {
         specifier,
         public: {
           specifier
         }
       });
-
-      if (Array.isArray(s)) {
-        return new ThrowCompletion(s[0]);
-      } // END ScriptEvaluationJob
-
-
-      return EnsureCompletion(ScriptEvaluation(s));
     });
 
     if (!(res instanceof AbruptCompletion)) {
@@ -57302,26 +57395,26 @@ function ToString$1(realm, value) {
           return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
 
         default:
-          let _temp2 = ToPrimitive$1(value, 'String');
+          let _temp3 = ToPrimitive$1(value, 'String');
           /* istanbul ignore if */
 
 
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
           }
           /* istanbul ignore if */
 
 
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
           }
 
-          value = _temp2;
+          value = _temp3;
           break;
       }
     }
   });
 }
 
-export { AbruptCompletion, Abstract, APIAgent as Agent, Completion, Descriptor, FEATURES, NormalCompletion, APIObject as Object, APIRealm as Realm, Throw, ToString$1 as ToString, APIValue as Value, inspect };
+export { AbruptCompletion, Abstract, APIAgent as Agent, Completion, Descriptor, FEATURES, NormalCompletion, APIObject as Object, APIRealm as Realm, Throw, ToString$1 as ToString, APIValue as Value, evaluateScript, inspect };
 //# sourceMappingURL=engine262.mjs.map
