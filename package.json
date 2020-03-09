@@ -34,23 +34,23 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-syntax-bigint": "^7.4.4",
+    "@babel/core": "^7.8.7",
+    "@babel/plugin-syntax-bigint": "^7.8.3",
     "@snek/source-map-support": "^1.0.4",
-    "acorn": "^7.1.0",
-    "babel-eslint": "^10.0.2",
-    "eslint": "^6.1.0",
+    "acorn": "^7.1.1",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.20.1",
     "glob": "^7.1.6",
     "minimatch": "^3.0.4",
     "nearley": "2.16.0",
     "nyc": "^15.0.0",
-    "rollup": "^1.19.4",
-    "rollup-plugin-babel": "^4.3.3",
+    "rollup": "^1.32.1",
+    "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "test262-stream": "^1.3.0",
-    "ws": "^7.2.0"
+    "ws": "^7.2.3"
   }
 }

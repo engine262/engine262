@@ -5,9 +5,9 @@ import {
 } from './realm.mjs';
 import {
   ExecutionContext,
-  ScriptEvaluation,
   surroundingAgent,
   setSurroundingAgent,
+  evaluateScript,
   Agent,
   HostCleanupFinalizationRegistry,
   FEATURES,
@@ -17,14 +17,13 @@ import {
   Type,
   Value,
 } from './value.mjs';
-import { ParseScript, ParseModule } from './parse.mjs';
+import { ParseModule } from './parse.mjs';
 import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
   Q, X,
   ThrowCompletion,
-  EnsureCompletion,
 } from './completion.mjs';
 import * as AbstractOps from './abstract-ops/all.mjs';
 
@@ -212,15 +211,6 @@ class APIAgent {
     this.outerAgent = undefined;
     this.active = false;
   }
-}
-
-export function evaluateScript(sourceText, realm, hostDefined) {
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    return new ThrowCompletion(s[0]);
-  }
-
-  return EnsureCompletion(ScriptEvaluation(s));
 }
 
 class APIRealm {

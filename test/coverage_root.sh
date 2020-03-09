@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -ex
 
 npm run test:test262
 npm run test:supplemental

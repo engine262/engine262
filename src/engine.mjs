@@ -16,6 +16,7 @@ import {
   PerformPromiseThen, CreateBuiltinFunction,
   CleanupFinalizationRegistry,
 } from './abstract-ops/all.mjs';
+import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate_Script } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
@@ -184,31 +185,6 @@ export class ExecutionContext {
   }
 }
 
-// #sec-hostenqueuepromisejob
-export function HostEnqueuePromiseJob(job, _realm) {
-  surroundingAgent.queueJob('PromiseJobs', job);
-}
-
-// 8.5 #sec-initializehostdefinedrealm
-export function InitializeHostDefinedRealm() {
-  const realm = CreateRealm();
-  const newContext = new ExecutionContext();
-  newContext.Function = Value.null;
-  newContext.Realm = realm;
-  newContext.ScriptOrModule = Value.null;
-  surroundingAgent.executionContextStack.push(newContext);
-  const global = Value.undefined;
-  const thisValue = Value.undefined;
-  SetRealmGlobalObject(realm, global, thisValue);
-  SetDefaultGlobalBindings(realm);
-}
-
-// 8.7.1 #sec-agentsignifier
-export function AgentSignifier() {
-  const AR = surroundingAgent;
-  return AR.Signifier;
-}
-
 // 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
   const globalEnv = scriptRecord.Realm.GlobalEnv;
@@ -237,6 +213,40 @@ export function ScriptEvaluation(scriptRecord) {
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
+}
+
+export function evaluateScript(sourceText, realm, hostDefined) {
+  const s = ParseScript(sourceText, realm, hostDefined);
+  if (Array.isArray(s)) {
+    return new ThrowCompletion(s[0]);
+  }
+
+  return EnsureCompletion(ScriptEvaluation(s));
+}
+
+// #sec-hostenqueuepromisejob
+export function HostEnqueuePromiseJob(job, _realm) {
+  surroundingAgent.queueJob('PromiseJobs', job);
+}
+
+// 8.5 #sec-initializehostdefinedrealm
+export function InitializeHostDefinedRealm() {
+  const realm = CreateRealm();
+  const newContext = new ExecutionContext();
+  newContext.Function = Value.null;
+  newContext.Realm = realm;
+  newContext.ScriptOrModule = Value.null;
+  surroundingAgent.executionContextStack.push(newContext);
+  const global = Value.undefined;
+  const thisValue = Value.undefined;
+  SetRealmGlobalObject(realm, global, thisValue);
+  SetDefaultGlobalBindings(realm);
+}
+
+// 8.7.1 #sec-agentsignifier
+export function AgentSignifier() {
+  const AR = surroundingAgent;
+  return AR.Signifier;
 }
 
 export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
