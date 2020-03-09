@@ -1,5 +1,4 @@
 import { Value } from './value.mjs';
-import { ParseModule, ParseScript } from './parse.mjs';
 import {
   AbruptCompletion,
   EnsureCompletion,
@@ -109,6 +108,19 @@ export class Agent {
     return new ThrowCompletion(error);
   }
 
+  queueJob(queueName, job) {
+    const callerContext = this.runningExecutionContext;
+    const callerRealm = callerContext.Realm;
+    const callerScriptOrModule = callerContext.ScriptOrModule;
+    const pending = {
+      queueName,
+      job,
+      callerRealm,
+      callerScriptOrModule,
+    };
+    this.jobQueue.push(pending);
+  }
+
   // NON-SPEC: Check if a feature is enabled in this agent.
   feature(name) {
     return this.hostDefinedOptions.features[name];
@@ -120,11 +132,8 @@ export class Agent {
       m(e);
     });
     this.jobQueue.forEach((j) => {
-      j.Arguments.forEach((a) => {
-        m(a);
-      });
-      m(j.Realm);
-      m(j.ScriptOrModule);
+      m(j.callerRealm);
+      m(j.callerScriptOrModule);
     });
   }
 }
@@ -175,19 +184,9 @@ export class ExecutionContext {
   }
 }
 
-// 8.4.1 #sec-enqueuejob
-export function EnqueueJob(queueName, job, args) {
-  const callerContext = surroundingAgent.runningExecutionContext;
-  const callerRealm = callerContext.Realm;
-  const callerScriptOrModule = callerContext.ScriptOrModule;
-  const pending = {
-    Job: job,
-    Arguments: args,
-    Realm: callerRealm,
-    ScriptOrModule: callerScriptOrModule,
-    HostDefined: { queueName },
-  };
-  surroundingAgent.jobQueue.push(pending);
+// #sec-hostenqueuepromisejob
+export function HostEnqueuePromiseJob(job, _realm) {
+  surroundingAgent.queueJob('PromiseJobs', job);
 }
 
 // 8.5 #sec-initializehostdefinedrealm
@@ -202,43 +201,6 @@ export function InitializeHostDefinedRealm() {
   const thisValue = Value.undefined;
   SetRealmGlobalObject(realm, global, thisValue);
   SetDefaultGlobalBindings(realm);
-}
-
-// 8.6 #sec-runjobs
-export function RunJobs() {
-  InitializeHostDefinedRealm();
-
-  // In an implementation-dependent manner, obtain the ECMAScript source texts
-
-  const scripts = [];
-
-  const modules = [];
-
-  scripts.forEach(({ sourceText, hostDefined }) => {
-    EnqueueJob('ScriptJobs', ScriptEvaluationJob, [sourceText, hostDefined]);
-  });
-
-  modules.forEach(({ sourceText, hostDefined }) => {
-    EnqueueJob('ScriptJobs', TopLevelModuleEvaluationJob, [sourceText, hostDefined]);
-  });
-
-  while (true) { // eslint-disable-line no-constant-condition
-    surroundingAgent.executionContextStack.pop();
-    const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0) {
-      break;
-    }
-    const nextPending = nextQueue.shift();
-    const newContext = new ExecutionContext();
-    newContext.Function = Value.null;
-    newContext.Realm = nextPending.Realm;
-    newContext.ScriptOrModule = nextPending.ScriptOrModule;
-    surroundingAgent.executionContextStack.push(newContext);
-    const result = nextPending.Job(...nextPending.Arguments);
-    if (result instanceof AbruptCompletion) {
-      HostReportErrors([result.Value]);
-    }
-  }
 }
 
 // 8.7.1 #sec-agentsignifier
@@ -275,47 +237,6 @@ export function ScriptEvaluation(scriptRecord) {
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
-}
-
-// 15.1.12 #sec-scriptevaluationjob
-export function ScriptEvaluationJob(sourceText, hostDefined) {
-  const realm = surroundingAgent.currentRealmRecord;
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    HostReportErrors(s);
-    return new NormalCompletion(undefined);
-  }
-  return ScriptEvaluation(s);
-}
-
-// 15.2.1.22 #sec-toplevelmoduleevaluationjob
-export function TopLevelModuleEvaluationJob(sourceText, hostDefined) {
-  const realm = surroundingAgent.currentRealmRecord;
-  const m = ParseModule(sourceText, realm, hostDefined);
-  if (Array.isArray(m)) {
-    HostReportErrors(m);
-    return new NormalCompletion(Value.undefined);
-  }
-  m.Link();
-  const promise = m.Evaluate();
-  const stepsRejected = ReportRejectedError;
-  const onRejected = CreateBuiltinFunction(stepsRejected);
-  X(PerformPromiseThen(promise, Value.undefined, onRejected));
-  return Value.undefined;
-}
-
-function ReportRejectedError([reason]) {
-  HostReportErrors([reason]);
-  return Value.undefined;
-}
-
-// 16.1 #sec-host-report-errors
-export function HostReportErrors(errorList) {
-  if (surroundingAgent.hostDefinedOptions.reportError) {
-    errorList.forEach((error) => {
-      surroundingAgent.hostDefinedOptions.reportError(error);
-    });
-  }
 }
 
 export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
@@ -387,7 +308,7 @@ function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapabi
 }
 
 export function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
-  EnqueueJob('ImportModuleDynamicallyJobs', () => {
+  surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
     let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
     if (!(completion instanceof AbruptCompletion)) {
       const module = completion.Value;
@@ -411,7 +332,7 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
       }
     }
     FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
-  }, []);
+  });
   return new NormalCompletion(Value.undefined);
 }
 
@@ -441,10 +362,10 @@ export function HostCleanupFinalizationRegistry(fg) {
   } else {
     if (!scheduledForCleanup.has(fg)) {
       scheduledForCleanup.add(fg);
-      EnqueueJob('FinalizationCleanup', () => {
+      surroundingAgent.queueJob('FinalizationCleanup', () => {
         scheduledForCleanup.delete(fg);
         CleanupFinalizationRegistry(fg);
-      }, []);
+      });
     }
   }
   return new NormalCompletion(undefined);

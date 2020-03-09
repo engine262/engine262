@@ -1,4 +1,4 @@
-import { ScriptEvaluationJob, surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   BooleanValue,
   NullValue,
@@ -12,6 +12,7 @@ import {
   Assert,
   Call,
   CreateDataProperty,
+  CreateDataPropertyOrThrow,
   EnumerableOwnPropertyNames,
   Get,
   GetV,
@@ -26,10 +27,10 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   NormalCompletion,
-  EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
+import { evaluateScript } from '../api.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -248,25 +249,37 @@ function InternalizeJSONProperty(holder, name, reviver) {
 }
 
 function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
-  const jText = Q(ToString(text));
-  // Parse JText interpreted as UTF-16 encoded Unicode points (6.1.4) as a JSON text as specified in ECMA-404.
-  // Throw a SyntaxError exception if JText is not a valid JSON text as defined in that specification.
-  Q(JSONValidator.validate(jText.stringValue()));
-  const scriptText = `(${jText.stringValue()});`;
-  const completion = EnsureCompletion(ScriptEvaluationJob(scriptText));
+  // 1. Let jsonString be ? ToString(text).
+  const jsonString = Q(ToString(text));
+  // 2. Parse ! UTF16DecodeString(jsonString) as a JSON text as specified in ECMA-404.
+  //    Throw a SyntaxError exception if it is not a valid JSON text as defined in that specification.
+  Q(JSONValidator.validate(jsonString.stringValue()));
+  // 3. Let scriptString be the string-concatenation of "(", jsonString, and ");".
+  const scriptString = `(${jsonString.stringValue()});`;
+  // 4. Let completion be the result of parsing and evaluating
+  //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
+  //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
+  const completion = evaluateScript(scriptString, surroundingAgent.currentRealmRecord);
+  // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
+  // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
   Assert(unfiltered instanceof StringValue
          || unfiltered instanceof NumberValue
          || unfiltered instanceof BooleanValue
          || unfiltered instanceof NullValue
          || unfiltered instanceof ObjectValue);
+  // 7. If IsCallable(reviver) is true, then
   if (IsCallable(reviver) === Value.true) {
+    // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    // b. Let rootName be the empty String.
     const rootName = new Value('');
-    const status = X(CreateDataProperty(root, rootName, unfiltered));
-    Assert(status === Value.true);
+    // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
+    X(CreateDataPropertyOrThrow(root, rootName, unfiltered));
+    // d. Return ? InternalizeJSONProperty(root, rootName, reviver).
     return Q(InternalizeJSONProperty(root, rootName, reviver));
   } else {
+    // a. Return unfiltered.
     return unfiltered;
   }
 }

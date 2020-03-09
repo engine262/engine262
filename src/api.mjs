@@ -9,7 +9,6 @@ import {
   surroundingAgent,
   setSurroundingAgent,
   Agent,
-  HostReportErrors,
   HostCleanupFinalizationRegistry,
   FEATURES,
 } from './engine.mjs';
@@ -145,31 +144,35 @@ function mark() {
   });
 }
 
+// https://tc39.es/ecma262/#sec-jobs
 function runJobQueue() {
   if (surroundingAgent.executionContextStack.length !== 0) {
     return;
   }
 
+  // At some future point in time, when there is no running execution context
+  // and the execution context stack is empty, the implementation must:
 
   while (true) { // eslint-disable-line no-constant-condition
     const nextQueue = surroundingAgent.jobQueue;
     if (nextQueue.length === 0
-        || nextQueue.find((j) => j.HostDefined.queueName !== 'FinalizationCleanup') === undefined) {
+        || nextQueue.find((j) => j.queueName !== 'FinalizationCleanup') === undefined) {
       break;
     }
-    const nextPending = nextQueue.shift();
+    const { job: abstractClosure, callerRealm, callerScriptOrModule } = nextQueue.shift();
+
+    // 1. Push an execution context onto the execution context stack.
     const newContext = new ExecutionContext();
-    newContext.Function = Value.null;
-    newContext.Realm = nextPending.Realm;
-    newContext.ScriptOrModule = nextPending.ScriptOrModule;
     surroundingAgent.executionContextStack.push(newContext);
-    const result = nextPending.Job(...nextPending.Arguments);
-    if (result instanceof AbruptCompletion) {
-      HostReportErrors(result.Value);
-    }
-
+    // 2. Perform any implementation-defined preparation steps.
+    newContext.Function = Value.null;
+    newContext.Realm = callerRealm;
+    newContext.ScriptOrModule = callerScriptOrModule;
+    // 3. Call the abstract closure.
+    X(abstractClosure());
+    // 4. Perform any implementation-defined cleanup steps.
     mark();
-
+    // 5. Pop the previously-pushed execution context from the execution context stack.
     surroundingAgent.executionContextStack.pop(newContext);
   }
 
@@ -211,6 +214,15 @@ class APIAgent {
   }
 }
 
+export function evaluateScript(sourceText, realm, hostDefined) {
+  const s = ParseScript(sourceText, realm, hostDefined);
+  if (Array.isArray(s)) {
+    return new ThrowCompletion(s[0]);
+  }
+
+  return EnsureCompletion(ScriptEvaluation(s));
+}
+
 class APIRealm {
   constructor(options = {}) {
     const realm = CreateRealm();
@@ -245,20 +257,13 @@ class APIRealm {
     }
 
     const res = this.scope(() => {
-      // BEGIN ScriptEvaluationJob
       const realm = surroundingAgent.currentRealmRecord;
-      const s = ParseScript(sourceText, realm, {
+      return evaluateScript(sourceText, realm, {
         specifier,
         public: {
           specifier,
         },
       });
-      if (Array.isArray(s)) {
-        return new ThrowCompletion(s[0]);
-      }
-      // END ScriptEvaluationJob
-
-      return EnsureCompletion(ScriptEvaluation(s));
     });
 
     if (!(res instanceof AbruptCompletion)) {
