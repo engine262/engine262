@@ -3,6 +3,7 @@
 const assert = require('assert');
 const { total, pass, fail } = require('./base');
 const {
+  Abstract,
   Agent,
   Realm,
   Value,
@@ -98,6 +99,55 @@ Error: owo
     at new Y (<anonymous>:2:37)
     at x (<anonymous>:3:25)
     at <anonymous>:5:8`.trim());
+  },
+  () => {
+    const agent = new Agent({
+      features: ['WeakRefs'],
+    });
+    agent.enter();
+    const realm = new Realm();
+    const result = realm.evaluateScript(`
+      const w = new WeakRef({});
+      Promise.resolve()
+        .then(() => {
+          if (typeof w.deref() !== 'object') {
+            throw new Error();
+          }
+        })
+        .then(() => {
+          if (typeof w.deref() !== 'undefined') {
+            throw new Error();
+          }
+        })
+        .then(() => 'pass');
+    `);
+    assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+  },
+  () => {
+    const agent = new Agent({
+      features: ['WeakRefs'],
+    });
+    agent.enter();
+    const realm = new Realm();
+    const module = realm.createSourceTextModule('test.js', `
+      const w = new WeakRef({});
+      globalThis.result = Promise.resolve()
+        .then(() => {
+          if (typeof w.deref() !== 'object') {
+            throw new Error();
+          }
+        })
+        .then(() => {
+          if (typeof w.deref() !== 'undefined') {
+            throw new Error();
+          }
+        })
+        .then(() => 'pass');
+    `);
+    module.Link();
+    module.Evaluate();
+    const result = Abstract.Get(realm.global, new Value(realm, 'result'));
+    assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
   },
 ].forEach((test) => {
   total();

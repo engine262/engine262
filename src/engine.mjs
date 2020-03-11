@@ -14,6 +14,7 @@ import {
 import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
+  GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
 } from './abstract-ops/all.mjs';
 import { ParseScript } from './parse.mjs';
@@ -112,7 +113,7 @@ export class Agent {
   queueJob(queueName, job) {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = callerContext.ScriptOrModule;
+    const callerScriptOrModule = GetActiveScriptOrModule();
     const pending = {
       queueName,
       job,
