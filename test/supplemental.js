@@ -101,6 +101,23 @@ Error: owo
     at <anonymous>:5:8`.trim());
   },
   () => {
+    const agent = new Agent();
+    agent.enter();
+    const realm = new Realm();
+    const result = realm.evaluateScript(`
+      let e;
+      new Promise(() => {
+        e = new Error('owo');
+      });
+      e.stack;
+    `);
+    assert.strictEqual(result.Value.stringValue(), `
+Error: owo
+    at <anonymous> (<anonymous>:4:22)
+    at new Promise (native)
+    at <anonymous>:3:18`.trim());
+  },
+  () => {
     const agent = new Agent({
       features: ['WeakRefs'],
     });
@@ -155,6 +172,6 @@ Error: owo
     test();
     pass();
   } catch (e) {
-    fail('', e);
+    fail('', e.stack || e);
   }
 });

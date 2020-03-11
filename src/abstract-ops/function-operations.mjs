@@ -357,6 +357,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
   calleeContext.ScriptOrModule = F.ScriptOrModule;
   // 8. Perform any necessary implementation-defined initialization of calleeContext.
   surroundingAgent.executionContextStack.push(calleeContext);
+  surroundingAgent.runningExecutionContext.callSite.constructCall = true;
   const result = nativeCall(F, argumentsList, undefined, newTarget);
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.

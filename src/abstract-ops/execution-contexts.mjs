@@ -15,12 +15,9 @@ import { Assert } from './all.mjs';
 
 // 8.3.1 #sec-getactivescriptormodule
 export function GetActiveScriptOrModule() {
-  if (surroundingAgent.executionContextStack.length === 0) {
-    return Value.null;
-  }
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.ScriptOrModule !== undefined) {
+    if (e.ScriptOrModule !== Value.null) {
       return e.ScriptOrModule;
     }
   }
