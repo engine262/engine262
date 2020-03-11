@@ -52,10 +52,10 @@ export class Agent {
 
     this.executionContextStack = [];
     const stackPop = this.executionContextStack.pop;
-    this.executionContextStack.pop = function pop(...args) {
-      const popped = stackPop.call(this);
-      if (args.length === 1) {
-        Assert(args[0] === popped);
+    this.executionContextStack.pop = function pop(ctx) {
+      if (!ctx.poppedForTailCall) {
+        const popped = stackPop.call(this);
+        Assert(popped === ctx);
       }
     };
 
@@ -159,6 +159,7 @@ export class ExecutionContext {
     // NON-SPEC
     this.callSite = new CallSite(this);
     this.promiseCapability = undefined;
+    this.poppedForTailCall = false;
   }
 
   copy() {

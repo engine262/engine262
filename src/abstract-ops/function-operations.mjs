@@ -400,9 +400,11 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
 
 // 14.9.3 #sec-preparefortailcall
 export function PrepareForTailCall() {
-  // const leafContext = surroundingAgent.runningExecutionContext;
-  // Suspend(leafContext);
-  // surroundingAgent.executionContextStack.pop();
-  // Assert: leafContext has no further use. It will never
-  // be activated as the running execution context.
+  // 1. Let leafContext be the running execution context.
+  const leafContext = surroundingAgent.runningExecutionContext;
+  // 2. Suspend leafContext.
+  // 3. Pop leafContext from the execution context stack. The execution context now on the top of the stack becomes the running execution context.
+  surroundingAgent.executionContextStack.pop(leafContext);
+  // 4. Assert: leafContext has no further use. It will never be activated as the running execution context.
+  leafContext.poppedForTailCall = true;
 }
