@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 48204b4f804ee8be538a5461d3661adc6e837183
+ * engine262 0.0.1 574448c6a6c36b381d9db6578fb8de9c54222102
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -45888,7 +45888,7 @@ class Agent {
   queueJob(queueName, job) {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
-    const callerScriptOrModule = callerContext.ScriptOrModule;
+    const callerScriptOrModule = GetActiveScriptOrModule();
     const pending = {
       queueName,
       job,
@@ -48583,14 +48583,10 @@ function TimeClip(time) {
 // 8.3.1 #sec-getactivescriptormodule
 
 function GetActiveScriptOrModule() {
-  if (surroundingAgent.executionContextStack.length === 0) {
-    return Value.null;
-  }
-
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
 
-    if (e.ScriptOrModule !== undefined) {
+    if (e.ScriptOrModule !== Value.null) {
       return e.ScriptOrModule;
     }
   }
@@ -49063,6 +49059,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
   calleeContext.ScriptOrModule = F.ScriptOrModule; // 8. Perform any necessary implementation-defined initialization of calleeContext.
 
   surroundingAgent.executionContextStack.push(calleeContext);
+  surroundingAgent.runningExecutionContext.callSite.constructCall = true;
   const result = nativeCall(F, argumentsList, undefined, newTarget); // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
 
