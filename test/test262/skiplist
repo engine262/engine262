@@ -1,13 +1,3 @@
-// more parsing issues
-language/expressions/postfix-decrement/arguments-nostrict.js
-language/expressions/postfix-decrement/eval-nostrict.js
-language/expressions/postfix-increment/arguments-nostrict.js
-language/expressions/postfix-increment/eval-nostrict.js
-language/expressions/prefix-decrement/arguments-nostrict.js
-language/expressions/prefix-decrement/eval-nostrict.js
-language/expressions/prefix-increment/arguments-nostrict.js
-language/expressions/prefix-increment/eval-nostrict.js
-
 // https://github.com/tc39/test262/pull/2428
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
@@ -15,6 +5,10 @@ language/computed-property-names/class/static/method-symbol.js
 
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
+
+// https://github.com/acornjs/acorn/issues/934
+language/expressions/import.meta/syntax/escape-sequence-import.js
+language/expressions/dynamic-import/escape-sequence-import.js
 
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
@@ -101,7 +95,3 @@ language/expressions/function/name.js
 language/expressions/function/name.js
 language/expressions/generators/name.js
 language/expressions/generators/name.js
-
-// https://github.com/acornjs/acorn/issues/934
-language/expressions/import.meta/syntax/escape-sequence-import.js
-language/expressions/dynamic-import/escape-sequence-import.js
