@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 574448c6a6c36b381d9db6578fb8de9c54222102
+ * engine262 0.0.1 8c1f6f27bdd12ec2d3900224f983ca9198cd695b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -6704,6 +6704,11 @@
     if (IsCallable(func) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
     } // 6. If tailPosition is true, perform PrepareForTailCall().
+
+
+    if (tailPosition) {
+      PrepareForTailCall();
+    } // 7. Let result be Call(func, thisValue, argList).
 
 
     const result = Call(func, thisValue, argList); // 8. Assert: If tailPosition is true, the above call will not return here but instead
@@ -30440,6 +30445,7 @@
     }
 
     if (Type(argArray) === 'Undefined' || Type(argArray) === 'Null') {
+      PrepareForTailCall();
       return Call(func, thisArg);
     }
 
@@ -30458,6 +30464,7 @@
     }
 
     const argList = _temp;
+    PrepareForTailCall();
     return Call(func, thisArg, argList);
   }
 
@@ -30642,6 +30649,8 @@
     for (const arg of args) {
       argList.push(arg);
     }
+
+    PrepareForTailCall();
     return Call(func, thisArg, argList);
   }
 
@@ -36135,6 +36144,7 @@
     }
 
     const args = _temp;
+    PrepareForTailCall();
     return Call(target, thisArgument, args);
   }
 
@@ -45830,11 +45840,10 @@
       this.executionContextStack = [];
       const stackPop = this.executionContextStack.pop;
 
-      this.executionContextStack.pop = function pop(...args) {
-        const popped = stackPop.call(this);
-
-        if (args.length === 1) {
-          Assert(args[0] === popped, "args[0] === popped");
+      this.executionContextStack.pop = function pop(ctx) {
+        if (!ctx.poppedForTailCall) {
+          const popped = stackPop.call(this);
+          Assert(popped === ctx, "popped === ctx");
         }
       };
 
@@ -45938,6 +45947,7 @@
 
       this.callSite = new CallSite(this);
       this.promiseCapability = undefined;
+      this.poppedForTailCall = false;
     }
 
     copy() {
@@ -49118,11 +49128,14 @@
     return func;
   } // 14.9.3 #sec-preparefortailcall
 
-  function PrepareForTailCall() {// const leafContext = surroundingAgent.runningExecutionContext;
-    // Suspend(leafContext);
-    // surroundingAgent.executionContextStack.pop();
-    // Assert: leafContext has no further use. It will never
-    // be activated as the running execution context.
+  function PrepareForTailCall() {
+    // 1. Let leafContext be the running execution context.
+    const leafContext = surroundingAgent.runningExecutionContext; // 2. Suspend leafContext.
+    // 3. Pop leafContext from the execution context stack. The execution context now on the top of the stack becomes the running execution context.
+
+    surroundingAgent.executionContextStack.pop(leafContext); // 4. Assert: leafContext has no further use. It will never be activated as the running execution context.
+
+    leafContext.poppedForTailCall = true;
   }
 
   // 25.4 #sec-generator-objects
