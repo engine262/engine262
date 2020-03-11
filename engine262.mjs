@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 2212018e24759d5b77be3df2e2c7996592f7acf0
+ * engine262 0.0.1 f977bbd0c035cb6f8b57f1efcffaf95d96b86d2c
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -23499,6 +23499,14 @@ class BigIntValue extends PrimitiveValue {
 
   bigintValue() {
     return this.bigint;
+  }
+
+  isNaN() {
+    return false;
+  }
+
+  isFinite() {
+    return true;
   } // #sec-numeric-types-bigint-unaryMinus
 
 
@@ -24337,7 +24345,7 @@ function MapConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Map');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
 
   let _temp4 = OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']);
@@ -30776,7 +30784,7 @@ function SymbolConstructor([description = Value.undefined], {
   NewTarget
 }) {
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', surroundingAgent.activeFunctionObject);
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
 
   let descString;
@@ -35179,7 +35187,7 @@ function PromiseConstructor([executor = Value.undefined], {
   NewTarget
 }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Promise');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
 
   if (IsCallable(executor) === Value.false) {
@@ -36007,7 +36015,7 @@ function ProxyConstructor([target = Value.undefined, handler = Value.undefined],
 }) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Proxy');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   } // 2. Return ? ProxyCreate(target, handler).
 
 
@@ -38675,8 +38683,8 @@ function ArrayIteratorPrototype_next(args, {
   let len;
 
   if ('TypedArrayName' in a) {
-    if (IsDetachedBuffer(a.ViewedArrayBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
+    if (IsDetachedBuffer(a.ViewedArrayBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
 
     len = a.ArrayLength;
@@ -39383,7 +39391,7 @@ function SetConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Set');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
 
   let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']);
@@ -39937,9 +39945,11 @@ function BootstrapAsyncFromSyncIteratorPrototype(realmRec) {
 function ArrayBufferConstructor([length = Value.undefined], {
   NewTarget
 }) {
-  if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'ArrayBuffer');
-  }
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+  } // 2. Let byteLength be ? ToIndex(length).
+
 
   let _temp = ToIndex(length);
   /* istanbul ignore if */
@@ -39955,39 +39965,44 @@ function ArrayBufferConstructor([length = Value.undefined], {
     _temp = _temp.Value;
   }
 
-  const byteLength = _temp;
+  const byteLength = _temp; // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
+
   return AllocateArrayBuffer(NewTarget, byteLength);
-} // 24.1.3.1 #sec-arraybuffer.isview
+} // #sec-arraybuffer.isview
 
 
 function ArrayBuffer_isView([arg = Value.undefined]) {
+  // 1. If Type(arg) is not Object, return false.
   if (Type(arg) !== 'Object') {
     return Value.false;
-  }
+  } // 2. If arg has a [[ViewedArrayBuffer]] internal slot, return true.
+
 
   if ('ViewedArrayBuffer' in arg) {
     return Value.true;
-  }
+  } // 3. Return false.
+
 
   return Value.false;
-} // 24.1.3.3 #sec-get-arraybuffer-@@species
+} // #sec-get-arraybuffer-@@species
 
 
-function ArrayBuffer_speciesGetter(a, {
+function ArrayBuffer_species(a, {
   thisValue
 }) {
   return thisValue;
 }
 
 function BootstrapArrayBuffer(realmRec) {
-  const abConstructor = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [['isView', ArrayBuffer_isView, 1], [wellKnownSymbols.species, [ArrayBuffer_speciesGetter]]]);
-  realmRec.Intrinsics['%ArrayBuffer%'] = abConstructor;
+  const c = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [['isView', ArrayBuffer_isView, 1], [wellKnownSymbols.species, [ArrayBuffer_species]]]);
+  realmRec.Intrinsics['%ArrayBuffer%'] = c;
 }
 
-function ArrayBufferProto_byteLengthGetter(args, {
+function ArrayBufferProto_byteLength(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
 
   let _temp = RequireInternalSlot(O, 'ArrayBufferData');
   /* istanbul ignore if */
@@ -40003,23 +40018,26 @@ function ArrayBufferProto_byteLengthGetter(args, {
     _temp = _temp.Value;
   }
 
-  if (IsSharedArrayBuffer(O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', O);
-  }
+  if (IsSharedArrayBuffer() === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+  } // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
 
-  if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
 
-  const length = O.ArrayBufferByteLength;
+  if (IsDetachedBuffer(O) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 5. Let length be O.[[ArrayBufferByteLength]].
+
+
+  const length = O.ArrayBufferByteLength; // 6. Return length.
+
   return length;
-} // 24.1.4.3 #sec-arraybuffer.prototype.slice
-
+}
 
 function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
 
   let _temp2 = RequireInternalSlot(O, 'ArrayBufferData');
 
@@ -40031,15 +40049,17 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     _temp2 = _temp2.Value;
   }
 
-  if (IsSharedArrayBuffer(O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', O);
-  }
+  if (IsSharedArrayBuffer() === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+  } // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
 
-  if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
 
-  const len = O.ArrayBufferByteLength.numberValue();
+  if (IsDetachedBuffer(O) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 5. Let len be O.[[ArrayBufferByteLength]].
+
+
+  const len = O.ArrayBufferByteLength.numberValue(); // 6. Let relativeStart be ? ToInteger(start).
 
   let _temp3 = ToInteger(start);
 
@@ -40053,7 +40073,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
 
   const relativeStart = _temp3.numberValue();
 
-  let first;
+  let first; // 7. If relativeStart < 0, let first be max((len + relativeStart), 0); else let first be min(relativeStart, len).
 
   if (relativeStart < 0) {
     first = Math.max(len + relativeStart, 0);
@@ -40061,9 +40081,9 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     first = Math.min(relativeStart, len);
   }
 
-  let relativeEnd;
+  let relativeEnd; // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
 
-  if (Type(end) === 'Undefined') {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp4 = ToInteger(end);
@@ -40079,15 +40099,16 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     relativeEnd = _temp4.numberValue();
   }
 
-  let final;
+  let final; // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
 
   if (relativeEnd < 0) {
     final = Math.max(len + relativeEnd, 0);
   } else {
     final = Math.min(relativeEnd, len);
-  }
+  } // 10. Let newLen be max(final - first, 0).
 
-  const newLen = Math.max(final - first, 0);
+
+  const newLen = Math.max(final - first, 0); // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
 
   let _temp5 = SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%'));
 
@@ -40099,7 +40120,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     _temp5 = _temp5.Value;
   }
 
-  const ctor = _temp5;
+  const ctor = _temp5; // 12. Let new be ? Construct(ctor, « newLen »).
 
   let _temp6 = Construct(ctor, [new Value(newLen)]);
 
@@ -40111,36 +40132,55 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     _temp6 = _temp6.Value;
   }
 
-  const neww = _temp6;
+  const newO = _temp6; // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
 
-  if (!('ArrayBufferData' in neww) || IsSharedArrayBuffer(neww) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'ArrayBuffer', neww);
+  let _temp7 = RequireInternalSlot(newO, 'ArrayBufferData');
+
+  if (_temp7 instanceof AbruptCompletion) {
+    return _temp7;
   }
 
-  if (IsDetachedBuffer(neww)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  if (_temp7 instanceof Completion) {
+    _temp7 = _temp7.Value;
   }
 
-  if (SameValue(neww, O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'SubclassSameValue', neww);
-  }
+  if (IsSharedArrayBuffer() === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
+  } // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
 
-  if (neww.ArrayBufferByteLength.numberValue() < newLen) {
-    return surroundingAgent.Throw('TypeError', 'SubclassLengthTooSmall', neww);
-  }
 
-  if (IsDetachedBuffer(O)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  if (IsDetachedBuffer(newO) === Value.true) {
+    return surroundingAgent.Throe('TypeError', 'ArrayBufferDetached');
+  } // 16. If SameValue(new, O) is true, throw a TypeError exception.
 
-  const fromBuf = O.ArrayBufferData;
-  const toBuf = neww.ArrayBufferData;
-  CopyDataBlockBytes(toBuf, new Value(0), fromBuf, new Value(first), new Value(newLen));
-  return neww;
+
+  if (SameValue(newO, O) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'SubclassSameValue', newO);
+  } // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
+
+
+  if (newO.ArrayBufferByteLength.numberValue() < newLen) {
+    return surroundingAgent.Throw('TypeError', 'SubclassLengthTooSmall', newO);
+  } // 18. NOTE: Side-effects of the above steps may have detached O.
+  // 19. If IsDetachedBuffer(O) is true, throw a TypeError exception.
+
+
+  if (IsDetachedBuffer(O) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 20. Let fromBuf be O.[[ArrayBufferData]].
+
+
+  const fromBuf = O.ArrayBufferData; // 21. Let toBuf be new.[[ArrayBufferData]].
+
+  const toBuf = newO.ArrayBufferData; // 22. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
+
+  CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen); // 23. Return new.
+
+  return newO;
 }
 
 function BootstrapArrayBufferPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLengthGetter]], ['slice', ArrayBufferProto_slice, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
+  const proto = BootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLength]], ['slice', ArrayBufferProto_slice, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
   realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
 }
 
@@ -41830,30 +41870,36 @@ function BootstrapThrowTypeError(realmRec) {
 }
 
 function TypedArrayConstructor() {
-  return surroundingAgent.Throw('TypeError', 'NotAConstructor', surroundingAgent.activeFunctionObject);
-} // 22.2.2.1 #sec-%typedarray%.from
+  // 1. Throw a TypeError exception.
+  return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
+} // #sec-%typedarray%.from
 
 
-function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undefined], {
+function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
-  const C = thisValue;
+  // 1. Let C be the this value.
+  const C = thisValue; // 2. If IsConstructor(C) is false, throw a TypeError exception.
 
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
-  }
+  } // 3. If mapfn is undefined, let mapping be false.
+
 
   let mapping;
 
-  if (mapfn !== undefined && mapfn !== Value.undefined) {
+  if (mapfn === Value.undefined) {
+    mapping = false;
+  } else {
+    // a. If IsCallable(mapfn) is false, throw a TypeError exception.
     if (IsCallable(mapfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
-    }
+    } // b. Let mapping be true.
+
 
     mapping = true;
-  } else {
-    mapping = false;
-  }
+  } // 5. Let usingIterator be ? GetMethod(source, @@iterator).
+
 
   let _temp = GetMethod(source, wellKnownSymbols.iterator);
   /* istanbul ignore if */
@@ -41869,7 +41915,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     _temp = _temp.Value;
   }
 
-  const usingIterator = _temp;
+  const usingIterator = _temp; // 6. If usingIterator is not undefined, then
 
   if (usingIterator !== Value.undefined) {
     let _temp2 = IterableToList(source, usingIterator);
@@ -41942,8 +41988,8 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
 
     Assert(values.length === 0, "values.length === 0");
     return targetObj;
-  } // NOTE: source is not an Iterable so assume it is already an array-like
-  // object.
+  } // 7. NOTE: source is not an Iterable so assume it is already an array-like object.
+  // 8. Let arrayLike be ! ToObject(source).
 
 
   let _temp7 = ToObject(source);
@@ -41954,7 +42000,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     _temp7 = _temp7.Value;
   }
 
-  const arrayLike = _temp7;
+  const arrayLike = _temp7; // 9. Let len be ? LengthOfArrayLike(arrayLike).
 
   let _temp8 = LengthOfArrayLike(arrayLike);
 
@@ -41966,7 +42012,8 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     _temp8 = _temp8.Value;
   }
 
-  const len = _temp8.numberValue();
+  const len = _temp8.numberValue(); // 10. Let targetObj be ? TypedArrayCreate(C, « len »).
+
 
   let _temp9 = TypedArrayCreate(C, [new Value(len)]);
 
@@ -41978,8 +42025,9 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     _temp9 = _temp9.Value;
   }
 
-  const targetObj = _temp9;
-  let k = 0;
+  const targetObj = _temp9; // 11. Let k be 0.
+
+  let k = 0; // 12. Repeat, while k < len
 
   while (k < len) {
     let _temp10 = ToString(new Value(k));
@@ -41990,7 +42038,8 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
       _temp10 = _temp10.Value;
     }
 
-    const Pk = _temp10;
+    // a. Let Pk be ! ToString(k).
+    const Pk = _temp10; // b. Let kValue be ? Get(arrayLike, Pk).
 
     let _temp11 = Get(arrayLike, Pk);
 
@@ -42003,7 +42052,7 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     }
 
     const kValue = _temp11;
-    let mappedValue;
+    let mappedValue; // c. If mapping is true, then
 
     if (mapping) {
       let _temp12 = Call(mapfn, thisArg, [kValue, new Value(k)]);
@@ -42016,10 +42065,13 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
         _temp12 = _temp12.Value;
       }
 
+      // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, k »).
       mappedValue = _temp12;
     } else {
+      // d. Else, let mappedValue be kValue.
       mappedValue = kValue;
-    }
+    } // e. Perform ? Set(targetObj, Pk, mappedValue, true).
+
 
     let _temp13 = Set$1(targetObj, Pk, mappedValue, Value.true);
 
@@ -42030,22 +42082,28 @@ function TypedArray_from([source = Value.undefined, mapfn, thisArg = Value.undef
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
     }
+
     k += 1;
-  }
+  } // 13. Return targetObj.
+
 
   return targetObj;
-} // 22.2.2.2 #sec-%typedarray%.of
+} // #sec-%typedarray%.of
 
 
 function TypedArray_of(items, {
   thisValue
 }) {
-  const len = items.length;
-  const C = thisValue;
+  // 1. Let len be the actual number of arguments passed to this function.
+  // 2. Let items be the List of arguments passed to this function.
+  const len = items.length; // 3. Let C be the this value.
+
+  const C = thisValue; // 4. If IsConstructor(C) is false, throw a TypeError exception.
 
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
-  }
+  } // 5. Let newObj be ? TypedArrayCreate(C, « len »).
+
 
   let _temp14 = TypedArrayCreate(C, [new Value(len)]);
 
@@ -42057,11 +42115,13 @@ function TypedArray_of(items, {
     _temp14 = _temp14.Value;
   }
 
-  const newObj = _temp14;
-  let k = 0;
+  const newObj = _temp14; // 6. Let k be 0.
+
+  let k = 0; // 7. Repeat, while k < len
 
   while (k < len) {
-    const kValue = items[k];
+    // a. Let kValue be items[k].
+    const kValue = items[k]; // b. Let Pk be ! ToString(k).
 
     let _temp15 = ToString(new Value(k));
 
@@ -42071,7 +42131,7 @@ function TypedArray_of(items, {
       _temp15 = _temp15.Value;
     }
 
-    const Pk = _temp15;
+    const Pk = _temp15; // c. Perform ? Set(newObj, Pk, kValue, true).
 
     let _temp16 = Set$1(newObj, Pk, kValue, Value.true);
 
@@ -42082,11 +42142,13 @@ function TypedArray_of(items, {
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
+
     k += 1;
-  }
+  } // 8. Return newObj.
+
 
   return newObj;
-} // 22.2.2.4 #sec-get-%typedarray%-@@species
+} // #sec-get-%typedarray%-@@species
 
 
 function TypedArray_speciesGetter(args, {
@@ -42100,10 +42162,11 @@ function BootstrapTypedArray(realmRec) {
   realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
 }
 
-function TypedArrayProto_bufferGetter(args, {
+function TypedArrayProto_buffer(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
   let _temp = RequireInternalSlot(O, 'TypedArrayName');
   /* istanbul ignore if */
@@ -42118,16 +42181,20 @@ function TypedArrayProto_bufferGetter(args, {
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
+
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
+
+  const buffer = O.ViewedArrayBuffer; // 5. Return buffer.
+
   return buffer;
-} // 22.2.3.2 #sec-get-%typedarray%.prototype.bytelength
+} // #sec-get-%typedarray%.prototype.bytelength
 
 
-function TypedArrayProto_byteLengthGetter(args, {
+function TypedArrayProto_byteLength(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
   let _temp2 = RequireInternalSlot(O, 'TypedArrayName');
 
@@ -42138,22 +42205,27 @@ function TypedArrayProto_byteLengthGetter(args, {
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
+
+  const buffer = O.ViewedArrayBuffer; // 5. If IsDetachedBuffer(buffer) is true, return 0.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return new Value(0);
-  }
+  } // 6. Let size be O.[[ByteLength]].
 
-  const size = O.ByteLength;
+
+  const size = O.ByteLength; // 7. Return size.
+
   return size;
-} // 22.2.3.3 #sec-get-%typedarray%.prototype.byteoffset
+} // #sec-get-%typedarray%.prototype.byteoffset
 
 
-function TypedArrayProto_byteOffsetGetter(args, {
+function TypedArrayProto_byteOffset(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
   let _temp3 = RequireInternalSlot(O, 'TypedArrayName');
 
@@ -42164,22 +42236,27 @@ function TypedArrayProto_byteOffsetGetter(args, {
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
+
+  const buffer = O.ViewedArrayBuffer; // 5. If IsDetachedBuffer(buffer) is true, return 0.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return new Value(0);
-  }
+  } // 6. Let offset be O.[[ByteOffset]].
 
-  const offset = O.ByteOffset;
+
+  const offset = O.ByteOffset; // 7. Return offset.
+
   return offset;
-} // 22.2.3.5 #sec-%typedarray%.prototype.copywithin
+} // #sec-%typedarray%.prototype.copywithin
 
 
-function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end], {
+function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
   let _temp4 = ValidateTypedArray(O);
 
@@ -42190,7 +42267,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
   }
-  const len = O.ArrayLength.numberValue();
+
+  const len = O.ArrayLength.numberValue(); // 4. Let relativeTarget be ? ToInteger(target).
 
   let _temp5 = ToInteger(target);
 
@@ -42202,7 +42280,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     _temp5 = _temp5.Value;
   }
 
-  const relativeTarget = _temp5.numberValue();
+  const relativeTarget = _temp5.numberValue(); // 5. If relativeTarget < 0, let to be max((len + relativeTarget), 0); else let to be min(relativeTarget, len).
+
 
   let to;
 
@@ -42210,7 +42289,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     to = Math.max(len + relativeTarget, 0);
   } else {
     to = Math.min(relativeTarget, len);
-  }
+  } // 6. Let relativeStart be ? ToInteger(start).
+
 
   let _temp6 = ToInteger(start);
 
@@ -42222,7 +42302,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     _temp6 = _temp6.Value;
   }
 
-  const relativeStart = _temp6.numberValue();
+  const relativeStart = _temp6.numberValue(); // 7. If relativeStart < 0, let from be max((len + relativeStart), 0); else let from be min(relativeStart, len).
+
 
   let from;
 
@@ -42230,11 +42311,12 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     from = Math.max(len + relativeStart, 0);
   } else {
     from = Math.min(relativeStart, len);
-  }
+  } // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+
 
   let relativeEnd;
 
-  if (end === undefined || end === Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp7 = ToInteger(end);
@@ -42248,7 +42330,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     }
 
     relativeEnd = _temp7.numberValue();
-  }
+  } // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
+
 
   let final;
 
@@ -42256,52 +42339,72 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     final = Math.max(len + relativeEnd, 0);
   } else {
     final = Math.min(relativeEnd, len);
-  }
+  } // 10. Let count be min(final - from, len - to).
 
-  const count = Math.min(final - from, len - to);
+
+  const count = Math.min(final - from, len - to); // 11. If count > 0, then
 
   if (count > 0) {
-    // NOTE: The copying must be performed in a manner that preserves the
-    // bit-level encoding of the source data.
-    const buffer = O.ViewedArrayBuffer;
+    // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
+    // b. Let buffer be O.[[ViewedArrayBuffer]].
+    const buffer = O.ViewedArrayBuffer; // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
+    if (IsDetachedBuffer(buffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
 
-    const typedArrayName = O.TypedArrayName.stringValue();
-    const elementSize = typedArrayInfo.get(typedArrayName).ElementSize;
-    const byteOffset = O.ByteOffset.numberValue();
-    let toByteIndex = to * elementSize + byteOffset;
-    let fromByteIndex = from * elementSize + byteOffset;
-    let countBytes = count * elementSize;
+
+    const typedArrayName = O.TypedArrayName.stringValue(); // e. Let elementSize be the Element Size value specified in Table 61 for typedArrayName.
+
+    const elementSize = typedArrayInfoByName[typedArrayName].ElementSize; // f. Let byteOffset be O.[[ByteOffset].
+
+    const byteOffset = O.ByteOffset.numberValue(); // g. Let toByteIndex be to × elementSize + byteOffset.
+
+    let toByteIndex = to * elementSize + byteOffset; // h. Let fromByteIndex be from × elementSize + byteOffset.
+
+    let fromByteIndex = from * elementSize + byteOffset; // i. Let countBytes be count × elementSize.
+
+    let countBytes = count * elementSize; // j. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
+
     let direction;
 
     if (fromByteIndex < toByteIndex && toByteIndex < fromByteIndex + countBytes) {
-      direction = -1;
-      fromByteIndex = fromByteIndex + countBytes - 1;
+      // i. Let direction be -1.
+      direction = -1; // ii. Set fromByteIndex to fromByteIndex + countBytes - 1.
+
+      fromByteIndex = fromByteIndex + countBytes - 1; // iii. Set toByteIndex to toByteIndex + countBytes - 1.
+
       toByteIndex = toByteIndex + countBytes - 1;
     } else {
+      // i. Let direction be 1.
       direction = 1;
-    }
+    } // l. Repeat, while countBytes > 0
+
 
     while (countBytes > 0) {
-      const value = GetValueFromBuffer(buffer, new Value(fromByteIndex), 'Uint8');
-      SetValueInBuffer(buffer, new Value(toByteIndex), 'Uint8', value);
-      fromByteIndex += direction;
-      toByteIndex += direction;
+      // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
+      const value = GetValueFromBuffer(buffer, new Value(fromByteIndex), 'Uint8'); // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
+
+      SetValueInBuffer(buffer, new Value(toByteIndex), 'Uint8', value); // iii. Set fromByteIndex to fromByteIndex + direction.
+
+      fromByteIndex += direction; // iv. Set toByteIndex to toByteIndex + direction.
+
+      toByteIndex += direction; // v. Set countBytes to countBytes - 1.
+
       countBytes -= 1;
     }
-  }
+  } // 12. Return O.
+
 
   return O;
-} // 22.2.3.6 #sec-%typedarray%.prototype.entries
+} // #sec-%typedarray%.prototype.entries
 
 
 function TypedArrayProto_entries(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
   let _temp8 = ValidateTypedArray(O);
 
@@ -42312,14 +42415,16 @@ function TypedArrayProto_entries(args, {
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
   }
+
   return CreateArrayIterator(O, 'key+value');
-} // 22.2.3.8 #sec-%typedarray%.prototype.fill
+} // #sec-%typedarray%.prototype.fill
 
 
 function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
   let _temp9 = ValidateTypedArray(O);
 
@@ -42330,131 +42435,163 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   if (_temp9 instanceof Completion) {
     _temp9 = _temp9.Value;
   }
-  const len = O.ArrayLength.numberValue();
 
-  let _temp10 = ToNumber(value);
+  const len = O.ArrayLength.numberValue(); // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
+  // 5. Else, set value to ? ToNumber(value).
 
-  if (_temp10 instanceof AbruptCompletion) {
-    return _temp10;
+  if (O.ContentType === 'BigInt') {
+    let _temp10 = ToBigInt(value);
+
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
+    }
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    value = _temp10;
+  } else {
+    let _temp11 = ToNumber(value);
+
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
+    }
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    value = _temp11;
+  } // 6. Let relativeStart be ? ToInteger(start).
+
+
+  let _temp12 = ToInteger(start);
+
+  if (_temp12 instanceof AbruptCompletion) {
+    return _temp12;
   }
 
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
+  if (_temp12 instanceof Completion) {
+    _temp12 = _temp12.Value;
   }
 
-  value = _temp10;
+  const relativeStart = _temp12.numberValue(); // 7. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
 
-  let _temp11 = ToInteger(start);
 
-  if (_temp11 instanceof AbruptCompletion) {
-    return _temp11;
-  }
+  let k;
 
-  if (_temp11 instanceof Completion) {
-    _temp11 = _temp11.Value;
-  }
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  } // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
 
-  const relativeStart = _temp11.numberValue();
 
-  let k = relativeStart < 0 ? Math.max(len + relativeStart, 0) : Math.min(relativeStart, len);
   let relativeEnd;
 
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    let _temp12 = ToInteger(end);
+    let _temp13 = ToInteger(end);
 
-    if (_temp12 instanceof AbruptCompletion) {
-      return _temp12;
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
     }
-
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-
-    relativeEnd = _temp12.numberValue();
-  }
-
-  const final = relativeEnd < 0 ? Math.max(len + relativeEnd, 0) : Math.min(relativeEnd, len);
-
-  if (IsDetachedBuffer(O.ViewedArrayBuffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
-
-  while (k < final) {
-    let _temp13 = ToString(new Value(k));
-
-    Assert(!(_temp13 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
 
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
     }
 
-    const Pk = _temp13;
+    relativeEnd = _temp13.numberValue();
+  } // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
 
-    let _temp14 = Set$1(O, Pk, value, Value.true);
 
-    Assert(!(_temp14 instanceof AbruptCompletion), "Set(O, Pk, value, Value.true)" + ' returned an abrupt completion');
+  let final;
+
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  } // 10. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+
+
+  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 11. Repeat, while k < final
+
+
+  while (k < final) {
+    let _temp14 = ToString(new Value(k));
+
+    Assert(!(_temp14 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp14 instanceof Completion) {
       _temp14 = _temp14.Value;
     }
+
+    // a. Let Pk be ! ToString(k).
+    const Pk = _temp14; // b. Perform ! Set(O, Pk, value, true).
+
+    let _temp15 = Set$1(O, Pk, value, Value.true);
+
+    Assert(!(_temp15 instanceof AbruptCompletion), "Set(O, Pk, value, Value.true)" + ' returned an abrupt completion');
+
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
+    }
+
     k += 1;
-  }
+  } // 12. Return O.
+
 
   return O;
-} // 22.2.3.9 #sec-%typedarray%.prototype.filter
+} // #sec-%typedarray%.prototype.filter
 
 
 function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
-  let _temp15 = ValidateTypedArray(O);
+  let _temp16 = ValidateTypedArray(O);
 
-  if (_temp15 instanceof AbruptCompletion) {
-    return _temp15;
+  if (_temp16 instanceof AbruptCompletion) {
+    return _temp16;
   }
 
-  if (_temp15 instanceof Completion) {
-    _temp15 = _temp15.Value;
+  if (_temp16 instanceof Completion) {
+    _temp16 = _temp16.Value;
   }
-  const len = O.ArrayLength.numberValue();
+
+  const len = O.ArrayLength.numberValue(); // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
 
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
-  }
+  } // 5. Let kept be a new empty List.
 
-  const kept = [];
-  let k = 0;
-  let captured = 0;
+
+  const kept = []; // 6. Let k be 0.
+
+  let k = 0; // 7. Let captured be 0.
+
+  let captured = 0; // 8. Repeat, while k < len
 
   while (k < len) {
-    let _temp16 = ToString(new Value(k));
+    let _temp17 = ToString(new Value(k));
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
-    }
-
-    const Pk = _temp16;
-
-    let _temp17 = Get(O, Pk);
-
-    if (_temp17 instanceof AbruptCompletion) {
-      return _temp17;
-    }
+    Assert(!(_temp17 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
     if (_temp17 instanceof Completion) {
       _temp17 = _temp17.Value;
     }
 
-    const kValue = _temp17;
+    // a. Let Pk be ! ToString(k).
+    const Pk = _temp17; // b. Let kValue be ? Get(O, Pk).
 
-    let _temp18 = Call(callbackfn, thisArg, [kValue, new Value(k), O]);
+    let _temp18 = Get(O, Pk);
 
     if (_temp18 instanceof AbruptCompletion) {
       return _temp18;
@@ -42464,78 +42601,78 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
       _temp18 = _temp18.Value;
     }
 
-    const selected = ToBoolean(_temp18);
+    const kValue = _temp18; // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, k, O »)).
+
+    let _temp19 = Call(callbackfn, thisArg, [kValue, new Value(k), O]);
+
+    if (_temp19 instanceof AbruptCompletion) {
+      return _temp19;
+    }
+
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
+    }
+
+    const selected = ToBoolean(_temp19); // d. If selected is true, then
 
     if (selected === Value.true) {
-      kept.push(kValue);
+      // i. Append kValue to the end of kept.
+      kept.push(kValue); // ii. Setp captured to captured + 1.
+
       captured += 1;
-    }
+    } // e. Set k to k + 1.
+
 
     k += 1;
+  } // 9. Let A be ? TypedArraySpeciesCreate(O, « captured »).
+
+
+  let _temp20 = TypedArraySpeciesCreate(O, [new Value(captured)]);
+
+  if (_temp20 instanceof AbruptCompletion) {
+    return _temp20;
   }
 
-  let _temp19 = TypedArraySpeciesCreate(O, [new Value(captured)]);
-
-  if (_temp19 instanceof AbruptCompletion) {
-    return _temp19;
+  if (_temp20 instanceof Completion) {
+    _temp20 = _temp20.Value;
   }
 
-  if (_temp19 instanceof Completion) {
-    _temp19 = _temp19.Value;
-  }
+  const A = _temp20; // 10. Let n be 0.
 
-  const A = _temp19;
-  let n = 0;
+  let n = 0; // 11. For each element e of kept, do
 
   for (const e of kept) {
-    let _temp20 = ToString(new Value(n));
+    let _temp22 = ToString(new Value(n));
 
-    Assert(!(_temp20 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+    Assert(!(_temp22 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-    if (_temp20 instanceof Completion) {
-      _temp20 = _temp20.Value;
+    if (_temp22 instanceof Completion) {
+      _temp22 = _temp22.Value;
     }
 
-    const nStr = _temp20;
+    let _temp21 = Set$1(A, _temp22, e, Value.true);
 
-    let _temp21 = Set$1(A, nStr, e, Value.true);
-
-    Assert(!(_temp21 instanceof AbruptCompletion), "Set(A, nStr, e, Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp21 instanceof AbruptCompletion), "Set(A, X(ToString(new Value(n))), e, Value.true)" + ' returned an abrupt completion');
 
     if (_temp21 instanceof Completion) {
       _temp21 = _temp21.Value;
     }
+
     n += 1;
-  }
+  } // 12. Return A.
+
 
   return A;
-} // 22.2.3.16 #sec-%typedarray%.prototype.keys
+} // #sec-%typedarray%.prototype.keys
 
 
 function TypedArrayProto_keys(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
-  let _temp22 = ValidateTypedArray(O);
-
-  if (_temp22 instanceof AbruptCompletion) {
-    return _temp22;
-  }
-
-  if (_temp22 instanceof Completion) {
-    _temp22 = _temp22.Value;
-  }
-  return CreateArrayIterator(O, 'key');
-} // 22.2.3.18 #sec-get-%typedarray%.prototype.length
-
-
-function TypedArrayProto_lengthGetter(args, {
-  thisValue
-}) {
-  const O = thisValue;
-
-  let _temp23 = RequireInternalSlot(O, 'TypedArrayName');
+  let _temp23 = ValidateTypedArray(O);
 
   if (_temp23 instanceof AbruptCompletion) {
     return _temp23;
@@ -42544,24 +42681,18 @@ function TypedArrayProto_lengthGetter(args, {
   if (_temp23 instanceof Completion) {
     _temp23 = _temp23.Value;
   }
-  Assert('ViewedArrayBuffer' in O && 'ArrayLength' in O, "'ViewedArrayBuffer' in O && 'ArrayLength' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
-    return new Value(0);
-  }
-
-  const length = O.ArrayLength;
-  return length;
-} // 22.2.3.19 #sec-%typedarray%.prototype.map
+  return CreateArrayIterator(O, 'key');
+} // #sec-get-%typedarray%.prototype.length
 
 
-function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], {
+function TypedArrayProto_length(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
-  let _temp24 = ValidateTypedArray(O);
+  let _temp24 = RequireInternalSlot(O, 'TypedArrayName');
 
   if (_temp24 instanceof AbruptCompletion) {
     return _temp24;
@@ -42570,13 +42701,29 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
   if (_temp24 instanceof Completion) {
     _temp24 = _temp24.Value;
   }
-  const len = O.ArrayLength;
 
-  if (IsCallable(callbackfn) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
-  }
+  Assert('ViewedArrayBuffer' in O && 'ArrayLength' in O, "'ViewedArrayBuffer' in O && 'ArrayLength' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
 
-  let _temp25 = TypedArraySpeciesCreate(O, [len]);
+  const buffer = O.ViewedArrayBuffer; // 5. If IsDetachedBuffer(buffer) is true, return 0.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return new Value(0);
+  } // 6. Let length be O.[[ArrayLength]].
+
+
+  const length = O.ArrayLength; // 8. Return length.
+
+  return length;
+} // #sec-%typedarray%.prototype.map
+
+
+function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
+
+  let _temp25 = ValidateTypedArray(O);
 
   if (_temp25 instanceof AbruptCompletion) {
     return _temp25;
@@ -42586,33 +42733,40 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
     _temp25 = _temp25.Value;
   }
 
-  const A = _temp25;
-  let k = 0;
+  const len = O.ArrayLength; // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+
+  if (IsCallable(callbackfn) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+  } // 5. Let A be ? TypedArraySpeciesCreate(O, « len »).
+
+
+  let _temp26 = TypedArraySpeciesCreate(O, [len]);
+
+  if (_temp26 instanceof AbruptCompletion) {
+    return _temp26;
+  }
+
+  if (_temp26 instanceof Completion) {
+    _temp26 = _temp26.Value;
+  }
+
+  const A = _temp26; // 6. Let k be 0.
+
+  let k = 0; // 7. Repeat, while k < len
 
   while (k < len.numberValue()) {
-    let _temp26 = ToString(new Value(k));
+    let _temp27 = ToString(new Value(k));
 
-    Assert(!(_temp26 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-    if (_temp26 instanceof Completion) {
-      _temp26 = _temp26.Value;
-    }
-
-    const Pk = _temp26;
-
-    let _temp27 = Get(O, Pk);
-
-    if (_temp27 instanceof AbruptCompletion) {
-      return _temp27;
-    }
+    Assert(!(_temp27 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
     if (_temp27 instanceof Completion) {
       _temp27 = _temp27.Value;
     }
 
-    const kValue = _temp27;
+    // a. Let Pk be ! ToString(k).
+    const Pk = _temp27; // b. Let kValue be ? Get(O, Pk).
 
-    let _temp28 = Call(callbackfn, thisArg, [kValue, new Value(k), O]);
+    let _temp28 = Get(O, Pk);
 
     if (_temp28 instanceof AbruptCompletion) {
       return _temp28;
@@ -42622,9 +42776,9 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
       _temp28 = _temp28.Value;
     }
 
-    const mappedValue = _temp28;
+    const kValue = _temp28; // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, k, O »).
 
-    let _temp29 = Set$1(A, Pk, mappedValue, Value.true);
+    let _temp29 = Call(callbackfn, thisArg, [kValue, new Value(k), O]);
 
     if (_temp29 instanceof AbruptCompletion) {
       return _temp29;
@@ -42633,22 +42787,10 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
     if (_temp29 instanceof Completion) {
       _temp29 = _temp29.Value;
     }
-    k += 1;
-  }
 
-  return A;
-} // 22.2.3.23 #sec-%typedarray%.prototype.set-overloaded-offset
+    const mappedValue = _temp29; // d. Perform ? Set(A, Pk, mappedValue, true).
 
-
-function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undefined], {
-  thisValue
-}) {
-  if (Type(overloaded) !== 'Object' || !('TypedArrayName' in overloaded)) {
-    // 22.2.3.23.1 #sec-%typedarray%.prototype.set-array-offset
-    const array = overloaded;
-    const target = thisValue;
-
-    let _temp30 = RequireInternalSlot(target, 'TypedArrayName');
+    let _temp30 = Set$1(A, Pk, mappedValue, Value.true);
 
     if (_temp30 instanceof AbruptCompletion) {
       return _temp30;
@@ -42657,9 +42799,26 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     if (_temp30 instanceof Completion) {
       _temp30 = _temp30.Value;
     }
-    Assert('ViewedArrayBuffer' in target, "'ViewedArrayBuffer' in target");
 
-    let _temp31 = ToInteger(offset);
+    k += 1;
+  } // 8. Return A.
+
+
+  return A;
+} // #sec-%typedarray%.prototype.set-overloaded-offset
+
+
+function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undefined], {
+  thisValue
+}) {
+  if (Type(overloaded) !== 'Object' || !('TypedArrayName' in overloaded)) {
+    // #sec-%typedarray%.prototype.set-array-offset
+    const array = overloaded; // 1. Assert: array is any ECMAScript language value other than an Object with a [[TypedArrayName]] internal slot.
+    // 2. Let target be the this value.
+
+    const target = thisValue; // 3. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
+
+    let _temp31 = RequireInternalSlot(target, 'TypedArrayName');
 
     if (_temp31 instanceof AbruptCompletion) {
       return _temp31;
@@ -42669,26 +42828,9 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       _temp31 = _temp31.Value;
     }
 
-    const targetOffset = _temp31.numberValue();
+    Assert('ViewedArrayBuffer' in target, "'ViewedArrayBuffer' in target"); // 5. Let targetOffset be ? ToInteger(offset).
 
-    if (targetOffset < 0) {
-      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
-    }
-
-    const targetBuffer = target.ViewedArrayBuffer;
-
-    if (IsDetachedBuffer(targetBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
-
-    const targetLength = target.ArrayLength.numberValue();
-    const targetName = target.TypedArrayName.stringValue();
-    const targetInfo = typedArrayInfo.get(targetName);
-    const targetElementSize = targetInfo.ElementSize;
-    const targetType = targetInfo.ElementType;
-    const targetByteOffset = target.ByteOffset.numberValue();
-
-    let _temp32 = ToObject(array);
+    let _temp32 = ToInteger(offset);
 
     if (_temp32 instanceof AbruptCompletion) {
       return _temp32;
@@ -42698,9 +42840,32 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       _temp32 = _temp32.Value;
     }
 
-    const src = _temp32;
+    const targetOffset = _temp32.numberValue(); // 6. If targetOffset < 0, throw a RangeError exception.
 
-    let _temp33 = LengthOfArrayLike(src);
+
+    if (targetOffset < 0) {
+      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
+    } // 7. Let targetBuffer be target.[[ViewedArrayBuffer]].
+
+
+    const targetBuffer = target.ViewedArrayBuffer; // 8. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
+
+    if (IsDetachedBuffer(targetBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // 9. Let targetLength be target.[[ArrayLength]].
+
+
+    const targetLength = target.ArrayLength.numberValue(); // 10. Let targetName be the String value of target.[[TypedArrayName]].
+
+    const targetName = target.TypedArrayName.stringValue(); // 11. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
+
+    const targetElementSize = typedArrayInfoByName[targetName].ElementSize; // 12. Let targetType be the Element Type value in Table 61 for targetName.
+
+    const targetType = typedArrayInfoByName[targetName].ElementType; // 13. Let targetByteOffset be target.[[ByteOffset]].
+
+    const targetByteOffset = target.ByteOffset.numberValue(); // 14. Let src be ? ToObject(array).
+
+    let _temp33 = ToObject(array);
 
     if (_temp33 instanceof AbruptCompletion) {
       return _temp33;
@@ -42710,40 +42875,45 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       _temp33 = _temp33.Value;
     }
 
-    const srcLength = _temp33.numberValue();
+    const src = _temp33; // 15. Let srcLength be ? LengthOfArrayLike(src).
+
+    let _temp34 = LengthOfArrayLike(src);
+
+    if (_temp34 instanceof AbruptCompletion) {
+      return _temp34;
+    }
+
+    if (_temp34 instanceof Completion) {
+      _temp34 = _temp34.Value;
+    }
+
+    const srcLength = _temp34.numberValue(); // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+
 
     if (srcLength + targetOffset > targetLength) {
       return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
-    }
+    } // 17. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
 
-    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
-    let k = 0;
-    const limit = targetByteIndex + targetElementSize * srcLength;
+
+    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset; // 18. Let k be 0.
+
+    let k = 0; // 19. Let limit be targetByteIndex + targetElementSize × srcLength.
+
+    const limit = targetByteIndex + targetElementSize * srcLength; // 20. Repeat, while targetByteIndex < limit
 
     while (targetByteIndex < limit) {
-      let _temp34 = ToString(new Value(k));
+      let _temp35 = ToString(new Value(k));
 
-      Assert(!(_temp34 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-      if (_temp34 instanceof Completion) {
-        _temp34 = _temp34.Value;
-      }
-
-      const Pk = _temp34;
-
-      let _temp35 = Get(src, Pk);
-
-      if (_temp35 instanceof AbruptCompletion) {
-        return _temp35;
-      }
+      Assert(!(_temp35 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
       if (_temp35 instanceof Completion) {
         _temp35 = _temp35.Value;
       }
 
-      const kProp = _temp35;
+      // a. Let Pk be ! ToString(k).
+      const Pk = _temp35; // b. Let value be ? Get(src, Pk).
 
-      let _temp36 = ToNumber(kProp);
+      let _temp36 = Get(src, Pk);
 
       if (_temp36 instanceof AbruptCompletion) {
         return _temp36;
@@ -42753,196 +42923,223 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
         _temp36 = _temp36.Value;
       }
 
-      const kNumber = _temp36;
+      let value = _temp36; // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
+      // d. Otherwise, set value to ? ToNumber(value).
 
-      if (IsDetachedBuffer(targetBuffer)) {
-        return surroundingAgent.Throw('TypeError', 'BufferDetached');
-      }
+      if (target.ContentType === 'BigInt') {
+        let _temp37 = ToBigInt(value);
 
-      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, kNumber);
-      k += 1;
+        if (_temp37 instanceof AbruptCompletion) {
+          return _temp37;
+        }
+
+        if (_temp37 instanceof Completion) {
+          _temp37 = _temp37.Value;
+        }
+
+        value = _temp37;
+      } else {
+        let _temp38 = ToNumber(value);
+
+        if (_temp38 instanceof AbruptCompletion) {
+          return _temp38;
+        }
+
+        if (_temp38 instanceof Completion) {
+          _temp38 = _temp38.Value;
+        }
+
+        value = _temp38;
+      } // e. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
+
+
+      if (IsDetachedBuffer(targetBuffer) === Value.true) {
+        return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      } // f. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
+
+
+      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, value); // g. Set k to k + 1.
+
+      k += 1; // h. Set targetByteIndex to targetByteIndex + targetElementSize.
+
       targetByteIndex += targetElementSize;
-    }
+    } // 21. Return undefined.
+
 
     return Value.undefined;
   } else {
-    // 22.2.3.23.2 #sec-%typedarray%.prototype.set-typedarray-offset
-    const typedArray = overloaded;
-    Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray, "Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray");
-    const target = thisValue;
+    // #sec-%typedarray%.prototype.set-typedarray-offset
+    const typedArray = overloaded; // 1. Assert: typedArray has a [[TypedArrayName]] internal slot.
 
-    let _temp37 = RequireInternalSlot(target, 'TypedArrayName');
+    Assert('TypedArrayName' in typedArray, "'TypedArrayName' in typedArray"); // 2. Let target be the this value.
 
-    if (_temp37 instanceof AbruptCompletion) {
-      return _temp37;
+    const target = thisValue; // 3. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
+
+    let _temp39 = RequireInternalSlot(target, 'TypedArrayName');
+
+    if (_temp39 instanceof AbruptCompletion) {
+      return _temp39;
     }
 
-    if (_temp37 instanceof Completion) {
-      _temp37 = _temp37.Value;
-    }
-    Assert('ViewedArrayBuffer' in target, "'ViewedArrayBuffer' in target");
-
-    let _temp38 = ToInteger(offset);
-
-    if (_temp38 instanceof AbruptCompletion) {
-      return _temp38;
+    if (_temp39 instanceof Completion) {
+      _temp39 = _temp39.Value;
     }
 
-    if (_temp38 instanceof Completion) {
-      _temp38 = _temp38.Value;
+    Assert('ViewedArrayBuffer' in target, "'ViewedArrayBuffer' in target"); // 5. Let targetOffset be ? ToInteger(offset).
+
+    let _temp40 = ToInteger(offset);
+
+    if (_temp40 instanceof AbruptCompletion) {
+      return _temp40;
     }
 
-    const targetOffset = _temp38.numberValue();
+    if (_temp40 instanceof Completion) {
+      _temp40 = _temp40.Value;
+    }
+
+    const targetOffset = _temp40.numberValue(); // 6. If targetOffset < 0, throw a RangeError exception.
+
 
     if (targetOffset < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
-    }
+    } // 7. Let targetBuffer be target.[[ViewedArrayBuffer]].
 
-    const targetBuffer = target.ViewedArrayBuffer;
 
-    if (IsDetachedBuffer(targetBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
+    const targetBuffer = target.ViewedArrayBuffer; // 8. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
 
-    const targetLength = target.ArrayLength.numberValue();
-    let srcBuffer = typedArray.ViewedArrayBuffer;
+    if (IsDetachedBuffer(targetBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // 9. Let targetLength be target.[[ArrayLength]].
 
-    if (IsDetachedBuffer(srcBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
 
-    const targetName = target.TypedArrayName.stringValue();
-    const targetInfo = typedArrayInfo.get(targetName);
-    const targetType = targetInfo.ElementType;
-    const targetElementSize = targetInfo.ElementSize;
-    const targetByteOffset = target.ByteOffset.numberValue();
-    const srcName = typedArray.TypedArrayName.stringValue();
-    const srcInfo = typedArrayInfo.get(srcName);
-    const srcType = srcInfo.ElementType;
-    const srcElementSize = srcInfo.ElementSize;
-    const srcLength = typedArray.ArrayLength.numberValue();
-    const srcByteOffset = typedArray.ByteOffset;
+    const targetLength = target.ArrayLength.numberValue(); // 10. Let srcBuffer be typedArray.[[ViewedArrayBuffer]].
+
+    let srcBuffer = typedArray.ViewedArrayBuffer; // 11. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
+
+    if (IsDetachedBuffer(srcBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // 12. Let targetName be the String value of target.[[TypedArrayName]].
+
+
+    const targetName = target.TypedArrayName.stringValue(); // 13. Let targetType be the Element Type value in Table 61 for targetName.
+
+    const targetType = typedArrayInfoByName[targetName].ElementType; // 14. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
+
+    const targetElementSize = typedArrayInfoByName[targetName].ElementSize; // 15. Let targetByteOffset be target.[[ByteOffset]].
+
+    const targetByteOffset = target.ByteOffset.numberValue(); // 16. Let srcName be the String value of typedArray.[[TypedArrayName]].
+
+    const srcName = typedArray.TypedArrayName.stringValue(); // 17. Let srcType be the Element Type value in Table 61 for srcName.
+
+    const srcType = typedArrayInfoByName[srcName].ElementType; // 18. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
+
+    const srcElementSize = typedArrayInfoByName[srcName].ElementSize; // 19. Let srcLength be typedArray.[[ArrayLength]].
+
+    const srcLength = typedArray.ArrayLength.numberValue(); // 20. Let srcByteOffset be typedArray.[[ByteOffset]].
+
+    const srcByteOffset = typedArray.ByteOffset.numberValue(); // 21. If srcLength + targetOffset > targetLength, throw a RangeError exception.
 
     if (srcLength + targetOffset > targetLength) {
       return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
-    } // let same;
-    // if (IsSharedArrayBuffer(srcBuffer) && IsSharedArrayBuffer(targetBuffer)) {
-    //   same = ...
-    // } else {
+    } // 22. If target.[[ContentType]] is not equal to typedArray.[[ContentType]], throw a TypeError exception.
 
 
-    const same = SameValue(srcBuffer, targetBuffer); // }
+    if (target.ContentType !== typedArray.ContentType) {
+      return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+    } // 23. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
+
+
+    let same;
+
+    if (IsSharedArrayBuffer() === Value.true && IsSharedArrayBuffer() === Value.true) {
+      Assert(false, "false");
+    } else {
+      same = SameValue(srcBuffer, targetBuffer);
+    } // 25. If same is true, then
+
 
     let srcByteIndex;
 
     if (same === Value.true) {
-      const srcByteLength = typedArray.ByteLength;
+      // a. Let srcByteLength be typedArray.[[ByteLength]].
+      const srcByteLength = typedArray.ByteLength; // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
 
-      let _temp39 = CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%'));
+      let _temp41 = CloneArrayBuffer(srcBuffer, new Value(srcByteOffset), srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%'));
 
-      if (_temp39 instanceof AbruptCompletion) {
-        return _temp39;
+      if (_temp41 instanceof AbruptCompletion) {
+        return _temp41;
       }
 
-      if (_temp39 instanceof Completion) {
-        _temp39 = _temp39.Value;
+      if (_temp41 instanceof Completion) {
+        _temp41 = _temp41.Value;
       }
 
-      srcBuffer = _temp39;
-      srcByteIndex = new Value(0);
+      srcBuffer = _temp41; // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
+      // d. Let srcByteIndex be 0.
+
+      srcByteIndex = 0;
     } else {
+      // 26. Else, let srcByteIndex be srcByteOffset.
       srcByteIndex = srcByteOffset;
-    }
+    } // 27. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
 
-    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
-    const limit = targetByteIndex + targetElementSize * srcLength;
 
-    if (SameValue(new Value(srcType), new Value(targetType)) === Value.true) {
+    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset; // 28. Let limit be targetByteIndex + targetElementSize × srcLength.
+
+    const limit = targetByteIndex + targetElementSize * srcLength; // 29. If srcType is the same as targetType, then
+
+    if (srcType === targetType) {
+      // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+      // b. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value);
-        srcByteIndex = new Value(srcByteIndex.numberValue() + 1);
+        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8'); // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+
+        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value); // iii. Set srcByteIndex to srcByteIndex + 1.
+
+        srcByteIndex += 1; // iv. Set targetByteIndex to targetByteIndex + 1.
+
         targetByteIndex += 1;
       }
     } else {
+      // a. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType);
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, value);
-        srcByteIndex = new Value(srcByteIndex.numberValue() + srcElementSize);
+        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
+        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), srcType); // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
+
+        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, value); // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
+
+        srcByteIndex += srcElementSize; // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
+
         targetByteIndex += targetElementSize;
       }
-    }
+    } // 31. Return undefined.
+
 
     return Value.undefined;
   }
-} // 22.2.3.24 #sec-%typedarray%.prototype.slice
+} // #sec-%typedarray%.prototype.slice
 
 
 function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
-  let _temp40 = ValidateTypedArray(O);
+  let _temp42 = ValidateTypedArray(O);
 
-  if (_temp40 instanceof AbruptCompletion) {
-    return _temp40;
+  if (_temp42 instanceof AbruptCompletion) {
+    return _temp42;
   }
 
-  if (_temp40 instanceof Completion) {
-    _temp40 = _temp40.Value;
-  }
-  const len = O.ArrayLength.numberValue();
-
-  let _temp41 = ToInteger(start);
-
-  if (_temp41 instanceof AbruptCompletion) {
-    return _temp41;
+  if (_temp42 instanceof Completion) {
+    _temp42 = _temp42.Value;
   }
 
-  if (_temp41 instanceof Completion) {
-    _temp41 = _temp41.Value;
-  }
+  const len = O.ArrayLength.numberValue(); // 4. Let relativeStart be ? ToInteger(start).
 
-  const relativeStart = _temp41.numberValue();
-
-  let k;
-
-  if (relativeStart < 0) {
-    k = Math.max(len + relativeStart, 0);
-  } else {
-    k = Math.min(relativeStart, len);
-  }
-
-  let relativeEnd;
-
-  if (end === Value.undefined) {
-    relativeEnd = len;
-  } else {
-    let _temp42 = ToInteger(end);
-
-    if (_temp42 instanceof AbruptCompletion) {
-      return _temp42;
-    }
-
-    if (_temp42 instanceof Completion) {
-      _temp42 = _temp42.Value;
-    }
-
-    relativeEnd = _temp42.numberValue();
-  }
-
-  let final;
-
-  if (relativeEnd < 0) {
-    final = Math.max(len + relativeEnd, 0);
-  } else {
-    final = Math.min(relativeEnd, len);
-  }
-
-  const count = Math.max(final - k, 0);
-
-  let _temp43 = TypedArraySpeciesCreate(O, [new Value(count)]);
+  let _temp43 = ToInteger(start);
 
   if (_temp43 instanceof AbruptCompletion) {
     return _temp43;
@@ -42952,80 +43149,150 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
     _temp43 = _temp43.Value;
   }
 
-  const A = _temp43;
-  const srcName = O.TypedArrayName.stringValue();
-  const srcInfo = typedArrayInfo.get(srcName);
-  const srcType = srcInfo.ElementType;
-  const targetName = A.TypedArrayName.stringValue();
-  const targetType = typedArrayInfo.get(targetName).ElementType;
+  const relativeStart = _temp43.numberValue(); // 5. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
+
+
+  let k;
+
+  if (relativeStart < 0) {
+    k = Math.max(len + relativeStart, 0);
+  } else {
+    k = Math.min(relativeStart, len);
+  } // 6. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+
+
+  let relativeEnd;
+
+  if (end === Value.undefined) {
+    relativeEnd = len;
+  } else {
+    let _temp44 = ToInteger(end);
+
+    if (_temp44 instanceof AbruptCompletion) {
+      return _temp44;
+    }
+
+    if (_temp44 instanceof Completion) {
+      _temp44 = _temp44.Value;
+    }
+
+    relativeEnd = _temp44.numberValue();
+  } // 7. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
+
+
+  let final;
+
+  if (relativeEnd < 0) {
+    final = Math.max(len + relativeEnd, 0);
+  } else {
+    final = Math.min(relativeEnd, len);
+  } // 8. Let count be max(final - k, 0).
+
+
+  const count = Math.max(final - k, 0); // 9. Let A be ? TypedArraySpeciesCreate(O, « count »).
+
+  let _temp45 = TypedArraySpeciesCreate(O, [new Value(count)]);
+
+  if (_temp45 instanceof AbruptCompletion) {
+    return _temp45;
+  }
+
+  if (_temp45 instanceof Completion) {
+    _temp45 = _temp45.Value;
+  }
+
+  const A = _temp45; // 10. Let srcName be the String value of O.[[TypedArrayName]].
+
+  const srcName = O.TypedArrayName.stringValue(); // 11. Let srcType be the Element Type value in Table 61 for srcName.
+
+  const srcType = typedArrayInfoByName[srcName].ElementType; // 12. Let targetName be the String value of A.[[TypedArrayName]].
+
+  const targetName = A.TypedArrayName.stringValue(); // 13. Let targetType be the Element Type value in Table 61 for targetName.
+
+  const targetType = typedArrayInfoByName[targetName].ElementType; // 14. If srcType is different from targetType, then
 
   if (srcType !== targetType) {
-    let n = 0;
+    // a. Let n be 0.
+    let n = 0; // b. Repeat, while k < final
 
     while (k < final) {
-      let _temp44 = ToString(new Value(k));
+      let _temp46 = ToString(new Value(k));
 
-      Assert(!(_temp44 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-      if (_temp44 instanceof Completion) {
-        _temp44 = _temp44.Value;
-      }
-
-      const Pk = _temp44;
-
-      let _temp45 = Get(O, Pk);
-
-      if (_temp45 instanceof AbruptCompletion) {
-        return _temp45;
-      }
-
-      if (_temp45 instanceof Completion) {
-        _temp45 = _temp45.Value;
-      }
-
-      const kValue = _temp45;
-
-      let _temp46 = ToString(new Value(n));
-
-      Assert(!(_temp46 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+      Assert(!(_temp46 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
       if (_temp46 instanceof Completion) {
         _temp46 = _temp46.Value;
       }
 
-      const nStr = _temp46;
+      // i. Let Pk be ! ToString(k).
+      const Pk = _temp46; // ii. Let kValue be ? Get(O, Pk).
 
-      let _temp47 = Set$1(A, nStr, kValue, Value.true);
+      let _temp47 = Get(O, Pk);
 
-      Assert(!(_temp47 instanceof AbruptCompletion), "Set(A, nStr, kValue, Value.true)" + ' returned an abrupt completion');
+      if (_temp47 instanceof AbruptCompletion) {
+        return _temp47;
+      }
 
       if (_temp47 instanceof Completion) {
         _temp47 = _temp47.Value;
       }
-      k += 1;
+
+      const kValue = _temp47; // iii. Perform ! Set(A, ! ToString(n), kValue, true).
+
+      let _temp49 = ToString(new Value(n));
+
+      Assert(!(_temp49 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+
+      if (_temp49 instanceof Completion) {
+        _temp49 = _temp49.Value;
+      }
+
+      let _temp48 = Set$1(A, _temp49, kValue, Value.true);
+
+      Assert(!(_temp48 instanceof AbruptCompletion), "Set(A, X(ToString(new Value(n))), kValue, Value.true)" + ' returned an abrupt completion');
+
+      if (_temp48 instanceof Completion) {
+        _temp48 = _temp48.Value;
+      }
+
+      k += 1; // v. Set n to n + 1.
+
       n += 1;
     }
   } else if (count > 0) {
-    const srcBuffer = O.ViewedArrayBuffer;
+    // a. Let srcBuffer be O.[[ViewedArrayBuffer]].
+    const srcBuffer = O.ViewedArrayBuffer; // b. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
 
-    if (IsDetachedBuffer(srcBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
+    if (IsDetachedBuffer(srcBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // c. Let targetBuffer be A.[[ViewedArrayBuffer]].
 
-    const targetBuffer = A.ViewedArrayBuffer;
-    const elementSize = srcInfo.ElementSize;
-    const srcByteOffset = O.ByteOffset.numberValue();
-    let targetByteIndex = A.ByteOffset.numberValue();
-    let srcByteIndex = k * elementSize + srcByteOffset;
-    const limit = targetByteIndex + count * elementSize;
+
+    const targetBuffer = A.ViewedArrayBuffer; // d. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
+
+    const elementSize = typedArrayInfoByType[srcType].ElementSize; // e. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+    // f. Let srcByteOffet be O.[[ByteOffset]].
+
+    const srcByteOffset = O.ByteOffset.numberValue(); // g. Let targetByteIndex be A.[[ByteOffset]].
+
+    let targetByteIndex = A.ByteOffset.numberValue(); // h. Let srcByteIndex be (k × elementSize) + srcByteOffet.
+
+    let srcByteIndex = k * elementSize + srcByteOffset; // i. Let limit be targetByteIndex + count × elementSize.
+
+    const limit = targetByteIndex + count * elementSize; // j. Repeat, while targetByteIndex < limit
 
     while (targetByteIndex < limit) {
-      const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8');
-      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value);
-      srcByteIndex += 1;
+      // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+      const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8'); // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+
+      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value); // iii. Set srcByteIndex to srcByteIndex + 1.
+
+      srcByteIndex += 1; // iv. Set targetByteIndex to targetByteIndex + 1.
+
       targetByteIndex += 1;
     }
-  }
+  } // 16. Return A.
+
 
   return A;
 } // 22.2.3.26 #sec-%typedarray%.prototype.sort
@@ -43034,192 +43301,146 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
 function TypedArrayProto_sort([comparefn = Value.undefined], {
   thisValue
 }) {
+  // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
+  } // 2. Let obj be the this value.
+
+
+  let _temp50 = ToObject(thisValue);
+
+  if (_temp50 instanceof AbruptCompletion) {
+    return _temp50;
   }
 
-  let _temp48 = ToObject(thisValue);
-
-  if (_temp48 instanceof AbruptCompletion) {
-    return _temp48;
+  if (_temp50 instanceof Completion) {
+    _temp50 = _temp50.Value;
   }
 
-  if (_temp48 instanceof Completion) {
-    _temp48 = _temp48.Value;
+  const obj = _temp50; // 3. Let buffer be ? ValidateTypedArray(obj).
+
+  let _temp51 = ValidateTypedArray(obj);
+
+  if (_temp51 instanceof AbruptCompletion) {
+    return _temp51;
   }
 
-  const obj = _temp48;
-
-  let _temp49 = ValidateTypedArray(obj);
-
-  if (_temp49 instanceof AbruptCompletion) {
-    return _temp49;
+  if (_temp51 instanceof Completion) {
+    _temp51 = _temp51.Value;
   }
 
-  if (_temp49 instanceof Completion) {
-    _temp49 = _temp49.Value;
-  }
+  const buffer = _temp51; // 4. Let len be obj.[[ArrayLength]].
 
-  const buffer = _temp49;
   const len = obj.ArrayLength;
   return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn, buffer), true);
 }
 
 function TypedArraySortCompare(x, y, comparefn, buffer) {
-  Assert(Type(x) === 'Number', "Type(x) === 'Number'");
-  Assert(Type(y) === 'Number', "Type(y) === 'Number'");
+  // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
+  Assert(Type(x) === 'Number' && Type(y) === 'Number' || Type(x) === 'BigInt' && Type(y) === 'BigInt', "(Type(x) === 'Number' && Type(y) === 'Number')\n         || (Type(x) === 'BigInt' && Type(y) === 'BigInt')"); // 2. If comparefn is not undefined, then
 
   if (comparefn !== Value.undefined) {
-    let _temp50 = Call(comparefn, Value.undefined, [x, y]);
+    let _temp53 = Call(comparefn, Value.undefined, [x, y]);
 
-    if (_temp50 instanceof AbruptCompletion) {
-      return _temp50;
+    if (_temp53 instanceof AbruptCompletion) {
+      return _temp53;
     }
 
-    if (_temp50 instanceof Completion) {
-      _temp50 = _temp50.Value;
+    if (_temp53 instanceof Completion) {
+      _temp53 = _temp53.Value;
     }
 
-    const callRes = _temp50;
+    let _temp52 = ToNumber(_temp53);
 
-    let _temp51 = ToNumber(callRes);
-
-    if (_temp51 instanceof AbruptCompletion) {
-      return _temp51;
+    if (_temp52 instanceof AbruptCompletion) {
+      return _temp52;
     }
 
-    if (_temp51 instanceof Completion) {
-      _temp51 = _temp51.Value;
+    if (_temp52 instanceof Completion) {
+      _temp52 = _temp52.Value;
     }
 
-    const v = _temp51;
+    // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
+    const v = _temp52; // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-    if (IsDetachedBuffer(buffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
-    }
+    if (IsDetachedBuffer(buffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    } // c. If v is NaN, return +0.
+
 
     if (v.isNaN()) {
       return new Value(+0);
-    }
+    } // d. Return v.
+
 
     return v;
-  }
+  } // 3. If x and y are both NaN, return +0.
+
 
   if (x.isNaN() && y.isNaN()) {
     return new Value(+0);
-  }
+  } // 4. If x is NaN, return 1.
+
 
   if (x.isNaN()) {
     return new Value(1);
-  }
+  } // 5. If y is NaN, return -1.
+
 
   if (y.isNaN()) {
     return new Value(-1);
   }
 
-  x = x.numberValue();
-  y = y.numberValue();
+  x = x.numberValue ? x.numberValue() : x.bigintValue();
+  y = y.numberValue ? y.numberValue() : y.bigintValue(); // 6. If x < y, return -1.
 
   if (x < y) {
     return new Value(-1);
-  }
+  } // 7. If x > y, return 1.
+
 
   if (x > y) {
     return new Value(1);
-  }
+  } // 8. If x is -0 and y is +0, return -1.
+
 
   if (Object.is(x, -0) && Object.is(y, +0)) {
     return new Value(-1);
-  }
+  } // 9. If x is +0 and y is -0, return 1.
+
 
   if (Object.is(x, +0) && Object.is(y, -0)) {
     return new Value(1);
-  }
+  } // 10. Return +0.
+
 
   return new Value(+0);
-} // 22.2.3.27 #sec-%typedarray%.prototype.subarray
+} // #sec-%typedarray%.prototype.subarray
 
 
-function TypedArrayProto_subarray([begin = Value.undefined, end], {
+function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
-  let _temp52 = RequireInternalSlot(O, 'TypedArrayName');
+  let _temp54 = RequireInternalSlot(O, 'TypedArrayName');
 
-  if (_temp52 instanceof AbruptCompletion) {
-    return _temp52;
+  if (_temp54 instanceof AbruptCompletion) {
+    return _temp54;
   }
 
-  if (_temp52 instanceof Completion) {
-    _temp52 = _temp52.Value;
-  }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
-  const srcLength = O.ArrayLength.numberValue();
-
-  let _temp53 = ToInteger(begin);
-
-  if (_temp53 instanceof AbruptCompletion) {
-    return _temp53;
+  if (_temp54 instanceof Completion) {
+    _temp54 = _temp54.Value;
   }
 
-  if (_temp53 instanceof Completion) {
-    _temp53 = _temp53.Value;
-  }
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
 
-  const relativeBegin = _temp53.numberValue();
+  const buffer = O.ViewedArrayBuffer; // 5. Let srcLength be O.[[ArrayLength]].
 
-  let beginIndex;
+  const srcLength = O.ArrayLength.numberValue(); // 6. Let relativeBegin be ? ToInteger(begin).
 
-  if (relativeBegin < 0) {
-    beginIndex = Math.max(srcLength + relativeBegin, 0);
-  } else {
-    beginIndex = Math.min(relativeBegin, srcLength);
-  }
-
-  let relativeEnd;
-
-  if (end === undefined || end === Value.undefined) {
-    relativeEnd = srcLength;
-  } else {
-    let _temp54 = ToInteger(end);
-
-    if (_temp54 instanceof AbruptCompletion) {
-      return _temp54;
-    }
-
-    if (_temp54 instanceof Completion) {
-      _temp54 = _temp54.Value;
-    }
-
-    relativeEnd = _temp54.numberValue();
-  }
-
-  let endIndex;
-
-  if (relativeEnd < 0) {
-    endIndex = Math.max(srcLength + relativeEnd, 0);
-  } else {
-    endIndex = Math.min(relativeEnd, srcLength);
-  }
-
-  const newLength = Math.max(endIndex - beginIndex, 0);
-  const constructorName = O.TypedArrayName.stringValue();
-  const elementSize = typedArrayInfo.get(constructorName).ElementSize;
-  const srcByteOffset = O.ByteOffset.numberValue();
-  const beginByteOffset = srcByteOffset + beginIndex * elementSize;
-  const argumentsList = [buffer, new Value(beginByteOffset), new Value(newLength)];
-  return TypedArraySpeciesCreate(O, argumentsList);
-} // 22.2.3.30 #sec-%typedarray%.prototype.values
-
-
-function TypedArrayProto_values(args, {
-  thisValue
-}) {
-  const O = thisValue;
-
-  let _temp55 = ValidateTypedArray(O);
+  let _temp55 = ToInteger(begin);
 
   if (_temp55 instanceof AbruptCompletion) {
     return _temp55;
@@ -43228,503 +43449,648 @@ function TypedArrayProto_values(args, {
   if (_temp55 instanceof Completion) {
     _temp55 = _temp55.Value;
   }
-  return CreateArrayIterator(O, 'value');
-} // 22.2.3.32 #sec-get-%typedarray%.prototype-@@tostringtag
+
+  const relativeBegin = _temp55.numberValue(); // 7. If relativeBegin < 0, let beginIndex be max((srcLength + relativeBegin), 0); else let beginIndex be min(relativeBegin, srcLength).
 
 
-function TypedArrayProto_toStringTagGetter(args, {
+  let beginIndex;
+
+  if (relativeBegin < 0) {
+    beginIndex = Math.max(srcLength + relativeBegin, 0);
+  } else {
+    beginIndex = Math.min(relativeBegin, srcLength);
+  } // 8. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToInteger(end).
+
+
+  let relativeEnd;
+
+  if (end === Value.undefined) {
+    relativeEnd = srcLength;
+  } else {
+    let _temp56 = ToInteger(end);
+
+    if (_temp56 instanceof AbruptCompletion) {
+      return _temp56;
+    }
+
+    if (_temp56 instanceof Completion) {
+      _temp56 = _temp56.Value;
+    }
+
+    relativeEnd = _temp56.numberValue();
+  } // 9. If relativeEnd < 0, let endIndex be max((srcLength + relativeEnd), 0); else let endIndex be min(relativeEnd, srcLength).
+
+
+  let endIndex;
+
+  if (relativeEnd < 0) {
+    endIndex = Math.max(srcLength + relativeEnd, 0);
+  } else {
+    endIndex = Math.min(relativeEnd, srcLength);
+  } // 10. Let newLength be max(endIndex - beginIndex, 0).
+
+
+  const newLength = Math.max(endIndex - beginIndex, 0); // 11. Let constructorName be the String value of O.[[TypedArrayName]].
+
+  const constructorName = O.TypedArrayName.stringValue(); // 12. Let elementSize be the Element Size value specified in Table 61 for constructorName.
+
+  const elementSize = typedArrayInfoByName[constructorName].ElementSize; // 13. Let srcByteOffset be O.[[ByteOffset]].
+
+  const srcByteOffset = O.ByteOffset.numberValue(); // 14. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
+
+  const beginByteOffset = srcByteOffset + beginIndex * elementSize; // 15. Let argumentsList be « buffer, beginByteOffset, newLength ».
+
+  const argumentsList = [buffer, new Value(beginByteOffset), new Value(newLength)]; // 16. Return ? TypedArraySpeciesCreate(O, argumentsList).
+
+  return TypedArraySpeciesCreate(O, argumentsList);
+} // #sec-%typedarray%.prototype.values
+
+
+function TypedArrayProto_values(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let o be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
 
-  if (Type(O) !== 'Object' || !('TypedArrayName' in O)) {
-    return Value.undefined;
+  let _temp57 = ValidateTypedArray(O);
+
+  if (_temp57 instanceof AbruptCompletion) {
+    return _temp57;
   }
 
-  const name = O.TypedArrayName;
-  Assert(Type(name) === 'String', "Type(name) === 'String'");
+  if (_temp57 instanceof Completion) {
+    _temp57 = _temp57.Value;
+  }
+
+  return CreateArrayIterator(O, 'value');
+} // #sec-get-%typedarray%.prototype-@@tostringtag
+
+
+function TypedArrayProto_toStringTag(args, {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. If Type(O) is not Object, return undefined.
+
+  if (Type(O) !== 'Object') {
+    return Value.undefined;
+  } // 3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
+
+
+  if (!('TypedArrayName' in O)) {
+    return Value.undefined;
+  } // 4. Let name be O.[[TypedArrayName]].
+
+
+  const name = O.TypedArrayName; // 5. Assert: Type(name) is String.
+
+  Assert(Type(name) === 'String', "Type(name) === 'String'"); // 6. Return name.
+
   return name;
 }
 
 function BootstrapTypedArrayPrototype(realmRec) {
-  let _temp56 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
+  let _temp58 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
 
-  Assert(!(_temp56 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
+  Assert(!(_temp58 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
 
-  if (_temp56 instanceof Completion) {
-    _temp56 = _temp56.Value;
+  if (_temp58 instanceof Completion) {
+    _temp58 = _temp58.Value;
   }
 
-  const ArrayProto_toString = _temp56;
+  const ArrayProto_toString = _temp58;
   Assert(Type(ArrayProto_toString) === 'Object', "Type(ArrayProto_toString) === 'Object'");
-  const proto = BootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_bufferGetter]], ['byteLength', [TypedArrayProto_byteLengthGetter]], ['byteOffset', [TypedArrayProto_byteOffsetGetter]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_lengthGetter]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTagGetter]]], realmRec.Intrinsics['%Object.prototype%']);
+  const proto = BootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_buffer]], ['byteLength', [TypedArrayProto_byteLength]], ['byteOffset', [TypedArrayProto_byteOffset]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_length]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]]], realmRec.Intrinsics['%Object.prototype%']);
   BootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
-    let _temp57 = ValidateTypedArray(thisValue);
+    let _temp59 = ValidateTypedArray(thisValue);
 
-    if (_temp57 instanceof AbruptCompletion) {
-      return _temp57;
+    if (_temp59 instanceof AbruptCompletion) {
+      return _temp59;
     }
 
-    if (_temp57 instanceof Completion) {
-      _temp57 = _temp57.Value;
+    if (_temp59 instanceof Completion) {
+      _temp59 = _temp59.Value;
     }
   }, O => O.ArrayLength); // 22.2.3.31 #sec-%typedarray%.prototype-@@iterator
 
   {
-    let _temp58 = Get(proto, new Value('values'));
+    let _temp60 = Get(proto, new Value('values'));
 
-    Assert(!(_temp58 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
+    Assert(!(_temp60 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
 
-    if (_temp58 instanceof Completion) {
-      _temp58 = _temp58.Value;
+    if (_temp60 instanceof Completion) {
+      _temp60 = _temp60.Value;
     }
 
-    const fn = _temp58;
+    const fn = _temp60;
 
-    let _temp59 = proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
+    let _temp61 = proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
 
-    Assert(!(_temp59 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+    Assert(!(_temp61 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
 
-    if (_temp59 instanceof Completion) {
-      _temp59 = _temp59.Value;
+    if (_temp61 instanceof Completion) {
+      _temp61 = _temp61.Value;
     }
   }
   realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
 }
 
-function CreateTypedArrayConstructor(realmRec, TypedArray) {
-  const info = typedArrayInfo.get(TypedArray);
-  Assert(info !== undefined, "info !== undefined");
-
-  function TypedArrayConstructor(args, {
-    NewTarget
-  }) {
-    if (args.length === 0) {
-      // 22.2.4.1 #sec-typedarray
-      if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
-      }
-
-      const constructorName = new Value(TypedArray);
-      return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, new Value(0));
-    } else if (Type(args[0]) !== 'Object') {
-      // 22.2.4.2 #sec-typedarray-length
-      const [length] = args;
-      Assert(Type(length) !== 'Object', "Type(length) !== 'Object'");
-
-      if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
-      }
-
-      let _temp = ToIndex(length);
-      /* istanbul ignore if */
+function BootstrapTypedArrayConstructors(realmRec) {
+  Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
+    function TypedArrayConstructor(args, {
+      NewTarget
+    }) {
+      if (args.length === 0) {
+        // #sec-typedarray
+        // 1. If NewTarget is undefined, throw a TypeError exception.
+        if (NewTarget === Value.undefined) {
+          return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        } // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
 
 
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* istanbul ignore if */
+        const constructorName = new Value(TypedArray); // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
+
+        return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, new Value(0));
+      } else if (Type(args[0]) !== 'Object') {
+        // #sec-typedarray-length
+        const [length] = args; // 1. Assert: Type(length) is not Object.
+
+        Assert(Type(length) !== 'Object', "Type(length) !== 'Object'"); // 2. If NewTarget is undefined, throw a TypeError exception.
+
+        if (NewTarget === Value.undefined) {
+          return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        } // 3. Let elementLength be ? ToIndex(length).
 
 
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
+        let _temp = ToIndex(length);
+        /* istanbul ignore if */
 
-      const elementLength = _temp;
-      const constructorName = new Value(TypedArray);
-      return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength);
-    } else if ('TypedArrayName' in args[0]) {
-      // 22.2.4.3 #sec-typedarray-typedarray
-      const [typedArray] = args;
-      Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray, "Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray");
 
-      if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
-      }
+        if (_temp instanceof AbruptCompletion) {
+          return _temp;
+        }
+        /* istanbul ignore if */
 
-      const constructorName = new Value(TypedArray);
 
-      let _temp2 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      const O = _temp2;
-      const srcArray = typedArray;
-      const srcData = srcArray.ViewedArrayBuffer;
-
-      if (IsDetachedBuffer(srcData)) {
-        return surroundingAgent.Throw('TypeError', 'BufferDetached');
-      }
-
-      const elementType = new Value(info.ElementType);
-      const elementLength = srcArray.ArrayLength;
-      const srcName = srcArray.TypedArrayName.stringValue();
-      const srcInfo = typedArrayInfo.get(srcName);
-      const srcType = new Value(srcInfo.ElementType);
-      const srcElementSize = srcInfo.ElementSize;
-      const srcByteOffset = srcArray.ByteOffset;
-      const elementSize = info.ElementSize;
-      const byteLength = new Value(elementSize * elementLength.numberValue()); // if (!IsSharedArrayBuffer(srcData)) {
-
-      let _temp3 = SpeciesConstructor(srcData, surroundingAgent.intrinsic('%ArrayBuffer%'));
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      const bufferConstructor = _temp3; // } else {
-      //   bufferConstructor = surroundingAgent.intrinsic('%ArrayBuffer%');
-      // }
-
-      let data;
-
-      if (SameValue(elementType, srcType) === Value.true) {
-        let _temp4 = CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor);
-
-        if (_temp4 instanceof AbruptCompletion) {
-          return _temp4;
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
         }
 
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
+        const elementLength = _temp; // 4. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
+
+        const constructorName = new Value(TypedArray); // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
+
+        return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength);
+      } else if ('TypedArrayName' in args[0]) {
+        // #sec-typedarray-typedarray
+        const [typedArray] = args; // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
+
+        Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray, "Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray"); // 2. If NewTarget is undefined, throw a TypeError exception.
+
+        if (NewTarget === Value.undefined) {
+          return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        } // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
+
+
+        const constructorName = new Value(TypedArray); // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
+
+        let _temp2 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
         }
 
-        data = _temp4;
-      } else {
-        let _temp5 = AllocateArrayBuffer(bufferConstructor, byteLength);
-
-        if (_temp5 instanceof AbruptCompletion) {
-          return _temp5;
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
         }
 
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
+        const O = _temp2; // 5. Let srcArray be typedArray.
+
+        const srcArray = typedArray; // 6. Let srcData be srcArray.[[ViewedArrayBuffer]].
+
+        const srcData = srcArray.ViewedArrayBuffer; // 7. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
+
+        if (IsDetachedBuffer(srcData) === Value.true) {
+          return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+        } // 8. Let elementType be the Element Type value in Table 61 for constructorName.
+
+
+        const elementType = new Value(info.ElementType); // 9. Let elementLength be srcArray.[[ArrayLength]].
+
+        const elementLength = srcArray.ArrayLength; // 10. Let srcName be the String value of srcArray.[[TypedArrayName]].
+
+        const srcName = srcArray.TypedArrayName.stringValue(); // 11. Let srcType be the Element Type value in Table 61 for srcName.
+
+        const srcType = new Value(typedArrayInfoByName[srcName].ElementType); // 12. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
+
+        const srcElementSize = typedArrayInfoByName[srcName].ElementSize; // 13. Let srcByteOffset be srcArray.[[ByteOffset]].
+
+        const srcByteOffset = srcArray.ByteOffset; // 14. Let elementSize be the Element Size value specified in Table 61 for constructorName.
+
+        const elementSize = info.ElementSize; // 15. Let byteLength be elementSize × elementLength.
+
+        const byteLength = new Value(elementSize * elementLength.numberValue()); // 16. If IsSharedArrayBuffer(srcData) is false, then
+
+        let bufferConstructor;
+
+        if (IsSharedArrayBuffer() === Value.false) {
+          let _temp3 = SpeciesConstructor(srcData, surroundingAgent.intrinsic('%ArrayBuffer%'));
+
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
+          }
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          bufferConstructor = _temp3;
+        } else {
+          // 17. Else, Let bufferConstructor be %ArrayBuffer%.
+          bufferConstructor = surroundingAgent.intrinsic('%ArrayBuffer%');
+        } // 18. If elementType is the same as srcType, then
+
+
+        let data;
+
+        if (SameValue(elementType, srcType) === Value.true) {
+          let _temp4 = CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor);
+
+          if (_temp4 instanceof AbruptCompletion) {
+            return _temp4;
+          }
+
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+
+          // a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
+          data = _temp4;
+        } else {
+          let _temp5 = AllocateArrayBuffer(bufferConstructor, byteLength);
+
+          if (_temp5 instanceof AbruptCompletion) {
+            return _temp5;
+          }
+
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
+          }
+
+          // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
+          data = _temp5; // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
+
+          if (IsDetachedBuffer(srcData) === Value.true) {
+            return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+          } // c. If srcArray.[[ContentType]] is not equal to O.[[ContentType]], throw a TypeError exception.
+
+
+          if (srcArray.ContentType !== O.ContentType) {
+            return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+          } // d. Let srcByteIndex be srcByteOffset.
+
+
+          let srcByteIndex = srcByteOffset.numberValue(); // e. Let targetByteIndex be 0.
+
+          let targetByteIndex = 0; // f. Let count be elementLength.
+
+          let count = elementLength.numberValue(); // g. Repeat, while count > 0
+
+          while (count > 0) {
+            // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
+            const value = GetValueFromBuffer(srcData, new Value(srcByteIndex), srcType.stringValue()); // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
+
+            SetValueInBuffer(data, new Value(targetByteIndex), elementType.stringValue(), value); // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
+
+            srcByteIndex += srcElementSize; // iv. Set targetByteIndex to targetByteIndex + elementSize.
+
+            targetByteIndex += elementSize; // v. Set count to count - 1.
+
+            count -= 1;
+          }
+        } // 20. Set O.[[ViewedArrayBuffer]] to data.
+
+
+        O.ViewedArrayBuffer = data; // 21. Set O.[[ByteLength]] to byteLength.
+
+        O.ByteLength = byteLength; // 22. Set O.[[ByteOffset]] to 0.
+
+        O.ByteOffset = new Value(0); // 23. Set O.[[ArrayLength]] to elementLength.
+
+        O.ArrayLength = elementLength; // 24. Return O.
+
+        return O;
+      } else if (!('TypedArrayName' in args[0]) && !('ArrayBufferData' in args[0])) {
+        // 22.2.4.4 #sec-typedarray-object
+        const [object] = args; // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
+
+        Assert(Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object), "Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object)"); // 2. If NewTarget is undefined, throw a TypeError exception.
+
+        if (NewTarget === Value.undefined) {
+          return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        } // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
+
+
+        const constructorName = new Value(TypedArray); // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
+
+        let _temp6 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
+
+        if (_temp6 instanceof AbruptCompletion) {
+          return _temp6;
         }
 
-        data = _temp5;
-
-        if (IsDetachedBuffer(srcData)) {
-          return surroundingAgent.Throw('TypeError', 'BufferDetached');
+        if (_temp6 instanceof Completion) {
+          _temp6 = _temp6.Value;
         }
 
-        let srcByteIndex = srcByteOffset.numberValue();
-        let targetByteIndex = 0;
-        let count = elementLength.numberValue();
+        const O = _temp6; // 5. Let usingIterator be ? GetMethod(object, @@iterator).
 
-        while (count > 0) {
-          const value = GetValueFromBuffer(srcData, new Value(srcByteIndex), srcType.stringValue());
-          SetValueInBuffer(data, new Value(targetByteIndex), elementType.stringValue(), value);
-          srcByteIndex += srcElementSize;
-          targetByteIndex += elementSize;
-          count -= 1;
-        }
-      }
+        let _temp7 = GetMethod(object, wellKnownSymbols.iterator);
 
-      O.ViewedArrayBuffer = data;
-      O.ByteLength = byteLength;
-      O.ByteOffset = new Value(0);
-      O.ArrayLength = elementLength;
-      return O;
-    } else if (!('TypedArrayName' in args[0]) && !('ArrayBufferData' in args[0])) {
-      // 22.2.4.4 #sec-typedarray-object
-      const [object] = args;
-      Assert(Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object), "Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object)");
-
-      if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
-      }
-
-      const constructorName = new Value(TypedArray);
-
-      let _temp6 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
-      }
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-
-      const O = _temp6;
-
-      let _temp7 = GetMethod(object, wellKnownSymbols.iterator);
-
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-
-      const usingIterator = _temp7;
-
-      if (usingIterator !== Value.undefined) {
-        let _temp8 = IterableToList(object, usingIterator);
-
-        if (_temp8 instanceof AbruptCompletion) {
-          return _temp8;
+        if (_temp7 instanceof AbruptCompletion) {
+          return _temp7;
         }
 
-        if (_temp8 instanceof Completion) {
-          _temp8 = _temp8.Value;
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
         }
 
-        const values = _temp8;
-        const len = values.length;
+        const usingIterator = _temp7; // 6. If usingIterator is not undefined, then
 
-        let _temp9 = AllocateTypedArrayBuffer(O, new Value(len));
+        if (usingIterator !== Value.undefined) {
+          let _temp8 = IterableToList(object, usingIterator);
 
-        if (_temp9 instanceof AbruptCompletion) {
-          return _temp9;
+          if (_temp8 instanceof AbruptCompletion) {
+            return _temp8;
+          }
+
+          if (_temp8 instanceof Completion) {
+            _temp8 = _temp8.Value;
+          }
+
+          // a. Let values be ? IterableToList(object, usingIterator).
+          const values = _temp8; // b. Let len be the number of elements in values.
+
+          const len = values.length; // c. Perform ? AllocateTypedArrayBuffer(O, len).
+
+          let _temp9 = AllocateTypedArrayBuffer(O, new Value(len));
+
+          if (_temp9 instanceof AbruptCompletion) {
+            return _temp9;
+          }
+
+          if (_temp9 instanceof Completion) {
+            _temp9 = _temp9.Value;
+          }
+
+          let k = 0; // e. Repeat, while k < len
+
+          while (k < len) {
+            let _temp10 = ToString(new Value(k));
+
+            Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+            /* istanbul ignore if */
+
+            if (_temp10 instanceof Completion) {
+              _temp10 = _temp10.Value;
+            }
+
+            // i. Let Pk be ! ToString(k).
+            const Pk = _temp10; // ii. Let kValue be the first element of values and remove that element from values.
+
+            const kValue = values.shift(); // iii. Perform ? Set(O, Pk, kValue, true).
+
+            let _temp11 = Set$1(O, Pk, kValue, Value.true);
+
+            if (_temp11 instanceof AbruptCompletion) {
+              return _temp11;
+            }
+
+            if (_temp11 instanceof Completion) {
+              _temp11 = _temp11.Value;
+            }
+
+            k += 1;
+          } // f. Assert: values is now an empty List.
+
+
+          Assert(values.length === 0, "values.length === 0"); // g. Return O.
+
+          return O;
+        } // 7. NOTE: object is not an Iterable so assume it is already an array-like object.
+        // 8. Let arrayLike be object.
+
+
+        const arrayLike = object; // 9. Let len be ? LengthOfArrayLike(arrayLike).
+
+        let _temp12 = LengthOfArrayLike(arrayLike);
+
+        if (_temp12 instanceof AbruptCompletion) {
+          return _temp12;
         }
 
-        if (_temp9 instanceof Completion) {
-          _temp9 = _temp9.Value;
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
         }
-        let k = 0;
+
+        const len = _temp12.numberValue(); // 10. Perform ? AllocateTypedArrayBuffer(O, len).
+
+
+        let _temp13 = AllocateTypedArrayBuffer(O, new Value(len));
+
+        if (_temp13 instanceof AbruptCompletion) {
+          return _temp13;
+        }
+
+        if (_temp13 instanceof Completion) {
+          _temp13 = _temp13.Value;
+        }
+
+        let k = 0; // 12. Repeat, while k < len.
 
         while (k < len) {
-          let _temp10 = ToString(new Value(k));
+          let _temp14 = ToString(new Value(k));
 
-          Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          Assert(!(_temp14 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
+          if (_temp14 instanceof Completion) {
+            _temp14 = _temp14.Value;
           }
 
-          const Pk = _temp10;
-          const kValue = values.shift();
+          // a. Let Pk be ! ToString(k).
+          const Pk = _temp14; // b. Let kValue be ? Get(arrayLike, Pk).
 
-          let _temp11 = Set$1(O, Pk, kValue, Value.true);
+          let _temp15 = Get(arrayLike, Pk);
 
-          if (_temp11 instanceof AbruptCompletion) {
-            return _temp11;
+          if (_temp15 instanceof AbruptCompletion) {
+            return _temp15;
           }
 
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
+          if (_temp15 instanceof Completion) {
+            _temp15 = _temp15.Value;
           }
+
+          const kValue = _temp15; // c. Perform ? Set(O, Pk, kValue, true).
+
+          let _temp16 = Set$1(O, Pk, kValue, Value.true);
+
+          if (_temp16 instanceof AbruptCompletion) {
+            return _temp16;
+          }
+
+          if (_temp16 instanceof Completion) {
+            _temp16 = _temp16.Value;
+          }
+
           k += 1;
+        } // 13. Return O.
+
+
+        return O;
+      } else {
+        // #sec-typedarray-buffer-byteoffset-length
+        const [buffer = Value.undefined, byteOffset = Value.undefined, length = Value.undefined] = args; // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
+
+        Assert(Type(buffer) === 'Object' && 'ArrayBufferData' in buffer, "Type(buffer) === 'Object' && 'ArrayBufferData' in buffer"); // 2. If NewTarget is undefined, throw a TypeError exception.
+
+        if (NewTarget === Value.undefined) {
+          return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        } // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
+
+
+        const constructorName = new Value(TypedArray); // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
+
+        let _temp17 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
+
+        if (_temp17 instanceof AbruptCompletion) {
+          return _temp17;
         }
 
-        Assert(values.length === 0, "values.length === 0");
+        if (_temp17 instanceof Completion) {
+          _temp17 = _temp17.Value;
+        }
+
+        const O = _temp17; // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
+
+        const elementSize = info.ElementSize; // 6. Let offset be ? ToIndex(byteOffset).
+
+        let _temp18 = ToIndex(byteOffset);
+
+        if (_temp18 instanceof AbruptCompletion) {
+          return _temp18;
+        }
+
+        if (_temp18 instanceof Completion) {
+          _temp18 = _temp18.Value;
+        }
+
+        const offset = _temp18; // 7. If offset modulo elementSize ≠ 0, throw a RangeError exception.
+
+        if (offset.numberValue() % elementSize !== 0) {
+          return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
+        } // 8. If length is not undefined, then
+
+
+        let newLength;
+
+        if (length !== Value.undefined) {
+          let _temp19 = ToIndex(length);
+
+          if (_temp19 instanceof AbruptCompletion) {
+            return _temp19;
+          }
+
+          if (_temp19 instanceof Completion) {
+            _temp19 = _temp19.Value;
+          }
+
+          // Let newLength be ? ToIndex(length).
+          newLength = _temp19.numberValue();
+        } // 9. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+
+        if (IsDetachedBuffer(buffer) === Value.true) {
+          return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+        } // 10. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
+
+
+        const bufferByteLength = buffer.ArrayBufferByteLength.numberValue(); // 11. If length is undefined, then
+
+        let newByteLength;
+
+        if (length === Value.undefined) {
+          // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
+          if (bufferByteLength % elementSize !== 0) {
+            return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
+          } // b. Let newByteLength be bufferByteLength - offset.
+
+
+          newByteLength = bufferByteLength - offset.numberValue(); // c. If newByteLength < 0, throw a RangeError exception.
+
+          if (newByteLength < 0) {
+            return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+          }
+        } else {
+          // a. Let newByteLength be newLength × elementSize.
+          newByteLength = newLength * elementSize; // b. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
+
+          if (offset.numberValue() + newByteLength > bufferByteLength) {
+            return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+          }
+        } // 13. Set O.[[ViewedArrayBuffer]] to buffer.
+
+
+        O.ViewedArrayBuffer = buffer; // 14. Set O.[[ByteLength]] to newByteLength.
+
+        O.ByteLength = new Value(newByteLength); // 15. Set O.[[ByteOffset]] to offset.
+
+        O.ByteOffset = offset; // 16. Set O.[[ArrayLength]] to newByteLength / elementSize.
+
+        O.ArrayLength = new Value(newByteLength / elementSize); // 17. Return O.
+
         return O;
       }
-
-      const arrayLike = object;
-
-      let _temp12 = LengthOfArrayLike(arrayLike);
-
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
-      }
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-
-      const len = _temp12;
-
-      let _temp13 = AllocateTypedArrayBuffer(O, len);
-
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
-      }
-
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-      let k = 0;
-
-      while (k < len.numberValue()) {
-        let _temp14 = ToString(new Value(k));
-
-        Assert(!(_temp14 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-
-        const Pk = _temp14;
-
-        let _temp15 = Get(arrayLike, Pk);
-
-        if (_temp15 instanceof AbruptCompletion) {
-          return _temp15;
-        }
-
-        if (_temp15 instanceof Completion) {
-          _temp15 = _temp15.Value;
-        }
-
-        const kValue = _temp15;
-
-        let _temp16 = Set$1(O, Pk, kValue, Value.true);
-
-        if (_temp16 instanceof AbruptCompletion) {
-          return _temp16;
-        }
-
-        if (_temp16 instanceof Completion) {
-          _temp16 = _temp16.Value;
-        }
-        k += 1;
-      }
-
-      return O;
-    } else {
-      // 22.2.4.5 #sec-typedarray-buffer-byteoffset-length
-      const [buffer, byteOffset = Value.undefined, length = Value.undefined] = args;
-      Assert(Type(buffer) === 'Object' && 'ArrayBufferData' in buffer, "Type(buffer) === 'Object' && 'ArrayBufferData' in buffer");
-
-      if (NewTarget === Value.undefined) {
-        return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', TypedArray);
-      }
-
-      const constructorName = new Value(TypedArray);
-
-      let _temp17 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
-      }
-
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
-      }
-
-      const O = _temp17;
-      const elementSize = info.ElementSize;
-
-      let _temp18 = ToIndex(byteOffset);
-
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
-      }
-
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
-      }
-
-      const offset = _temp18;
-
-      if (offset.numberValue() % elementSize !== 0) {
-        return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
-      }
-
-      let newLength;
-
-      if (length !== Value.undefined) {
-        let _temp19 = ToIndex(length);
-
-        if (_temp19 instanceof AbruptCompletion) {
-          return _temp19;
-        }
-
-        if (_temp19 instanceof Completion) {
-          _temp19 = _temp19.Value;
-        }
-
-        newLength = _temp19.numberValue();
-      }
-
-      if (IsDetachedBuffer(buffer)) {
-        return surroundingAgent.Throw('TypeError', 'BufferDetached');
-      }
-
-      const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
-      let newByteLength;
-
-      if (length === Value.undefined) {
-        if (bufferByteLength % elementSize !== 0) {
-          return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
-        }
-
-        newByteLength = bufferByteLength - offset.numberValue();
-
-        if (newByteLength < 0) {
-          return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
-        }
-      } else {
-        newByteLength = newLength * elementSize;
-
-        if (offset.numberValue() + newByteLength > bufferByteLength) {
-          return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
-        }
-      }
-
-      O.ViewedArrayBuffer = buffer;
-      O.ByteLength = new Value(newByteLength);
-      O.ByteOffset = offset;
-      Assert(Number.isSafeInteger(newByteLength / elementSize), "Number.isSafeInteger(newByteLength / elementSize)");
-      O.ArrayLength = new Value(newByteLength / elementSize);
-      return O;
     }
-  }
 
-  const readonly = {
-    Writable: Value.false,
-    Configurable: Value.false
-  };
-  const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly]]);
+    const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
+      Writable: Value.false,
+      Configurable: Value.false
+    }]]);
 
-  let _temp20 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
+    let _temp20 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
 
-  Assert(!(_temp20 instanceof AbruptCompletion), "taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%'])" + ' returned an abrupt completion');
+    Assert(!(_temp20 instanceof AbruptCompletion), "taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%'])" + ' returned an abrupt completion');
 
-  if (_temp20 instanceof Completion) {
-    _temp20 = _temp20.Value;
-  }
-  realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
-}
-
-function BootstrapTypedArrayConstructors(realmRec) {
-  for (const TypedArray of typedArrayInfo.keys()) {
-    CreateTypedArrayConstructor(realmRec, TypedArray);
-  }
-}
-
-function CreateTypedArrayPrototype(realmRec, TypedArray) {
-  const info = typedArrayInfo.get(TypedArray);
-  Assert(info !== undefined, "info !== undefined");
-  const readonly = {
-    Writable: Value.false,
-    Configurable: Value.false
-  };
-  const proto = BootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, readonly]], realmRec.Intrinsics['%TypedArray.prototype%']);
-  realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
+    if (_temp20 instanceof Completion) {
+      _temp20 = _temp20.Value;
+    }
+    realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
+  });
 }
 
 function BootstrapTypedArrayPrototypes(realmRec) {
-  for (const TypedArray of typedArrayInfo.keys()) {
-    CreateTypedArrayPrototype(realmRec, TypedArray);
-  }
+  Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
+    const proto = BootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
+      Writable: Value.false,
+      Configurable: Value.false
+    }]], realmRec.Intrinsics['%TypedArray.prototype%']);
+    realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
+  });
 }
 
 function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], {
   NewTarget
 }) {
-  if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'DataView');
-  }
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+  } // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
+
 
   let _temp = RequireInternalSlot(buffer, 'ArrayBufferData');
   /* istanbul ignore if */
@@ -43750,21 +44116,24 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
     _temp2 = _temp2.Value;
   }
 
-  const offset = _temp2.numberValue();
+  const offset = _temp2.numberValue(); // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
 
-  const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
+
+
+  const bufferByteLength = buffer.ArrayBufferByteLength.numberValue(); // 6. If offset > bufferByteLength, throw a RangeError exception.
 
   if (offset > bufferByteLength) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
   }
 
-  let viewByteLength;
+  let viewByteLength; // 7. If byteLength is undefined, then
 
   if (byteLength === Value.undefined) {
+    // a. Let viewByteLength be bufferByteLength - offset.
     viewByteLength = bufferByteLength - offset;
   } else {
     let _temp3 = ToIndex(byteLength);
@@ -43777,12 +44146,14 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
       _temp3 = _temp3.Value;
     }
 
-    viewByteLength = _temp3.numberValue();
+    // a. Let viewByteLength be ? ToIndex(byteLength).
+    viewByteLength = _temp3.numberValue(); // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
 
     if (offset + viewByteLength > bufferByteLength) {
       return surroundingAgent.Throw('RangeError', 'DataViewOOB');
     }
-  }
+  } // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
+
 
   let _temp4 = OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']);
 
@@ -43794,15 +44165,19 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
     _temp4 = _temp4.Value;
   }
 
-  const O = _temp4;
+  const O = _temp4; // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 11. Set O.[[ViewedArrayBuffer]] to buffer.
 
-  O.ViewedArrayBuffer = buffer;
-  O.ByteLength = new Value(viewByteLength);
-  O.ByteOffset = new Value(offset);
+
+  O.ViewedArrayBuffer = buffer; // 12. Set O.[[ByteLength]] to viewByteLength.
+
+  O.ByteLength = new Value(viewByteLength); // 13. Set O.[[ByteOffset]] to offset.
+
+  O.ByteOffset = new Value(offset); // 14. Return O.
+
   return O;
 }
 
@@ -43811,10 +44186,11 @@ function BootstrapDataView(realmRec) {
   realmRec.Intrinsics['%DataView%'] = dvConstructor;
 }
 
-function DataViewProto_bufferGetter(args, {
+function DataViewProto_buffer(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
 
   let _temp = RequireInternalSlot(O, 'DataView');
   /* istanbul ignore if */
@@ -43829,16 +44205,20 @@ function DataViewProto_bufferGetter(args, {
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
+
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
+
+  const buffer = O.ViewedArrayBuffer; // 5. Return buffer.
+
   return buffer;
-} // 24.3.4.2 #sec-get-dataview.prototype.bytelength
+} // #sec-get-dataview.prototype.bytelength
 
 
-function DataViewProto_byteLengthGetter(args, {
+function DataViewProto_byteLength(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
 
   let _temp2 = RequireInternalSlot(O, 'DataView');
 
@@ -43849,22 +44229,27 @@ function DataViewProto_byteLengthGetter(args, {
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
 
-  const size = O.ByteLength;
+  const buffer = O.ViewedArrayBuffer; // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 6. Let size be O.[[ByteLength]].
+
+
+  const size = O.ByteLength; // 7. Return size.
+
   return size;
-} // 24.3.4.3 #sec-get-dataview.prototype.byteoffset
+} // #sec-get-dataview.prototype.byteoffset
 
 
-function DataViewProto_byteOffsetGetter(args, {
+function DataViewProto_byteOffset(args, {
   thisValue
 }) {
-  const O = thisValue;
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
 
   let _temp3 = RequireInternalSlot(O, 'DataView');
 
@@ -43875,15 +44260,49 @@ function DataViewProto_byteOffsetGetter(args, {
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 4. Let buffer be O.[[ViewedArrayBuffer]].
 
-  const offset = O.ByteOffset;
+  const buffer = O.ViewedArrayBuffer; // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 6. Let offset be O.[[ByteOffset]].
+
+
+  const offset = O.ByteOffset; // 7. Return offset.
+
   return offset;
+} // #sec-dataview.prototype.getbigint64
+
+
+function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian], {
+  thisValue
+}) {
+  // 1. Let v be the this value.
+  const v = thisValue; // 2. If littleEndian is not present, set littleEndian to undefined.
+
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  } // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigInt64).
+
+
+  return GetViewValue(v, byteOffset, littleEndian, 'BigInt64');
+} // #sec-dataview.prototype.getbiguint64
+
+
+function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian], {
+  thisValue
+}) {
+  // 1. Let v be the this value.
+  const v = thisValue; // 2. If littleEndian is not present, set littleEndian to undefined.
+
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  } // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigUint64).
+
+
+  return GetViewValue(v, byteOffset, littleEndian, 'BigUint64');
 } // 24.3.4.5 #sec-dataview.prototype.getfloat32
 
 
@@ -43978,6 +44397,36 @@ function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], {
   }
 
   return GetViewValue(v, byteOffset, littleEndian, 'Uint32');
+} // #sec-dataview.prototype.setbigint64
+
+
+function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
+  thisValue
+}) {
+  // 1. Let v be the this value.
+  const v = thisValue; // 2. If littleEndian is not present, set littleEndian to undefined.
+
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  } // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigInt64, value).
+
+
+  return SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value);
+} // #sec-dataview.prototype.setbiguint64
+
+
+function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
+  thisValue
+}) {
+  // 1. Let v be the this value.
+  const v = thisValue; // 2. If littleEndian is not present, set littleEndian to undefined.
+
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  } // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigUint64, value).
+
+
+  return SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value);
 } // 24.3.4.13 #sec-dataview.prototype.setfloat32
 
 
@@ -44075,7 +44524,7 @@ function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.un
 }
 
 function BootstrapDataViewPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['buffer', [DataViewProto_bufferGetter]], ['byteLength', [DataViewProto_byteLengthGetter]], ['byteOffset', [DataViewProto_byteOffsetGetter]], ['getFloat32', DataViewProto_getFloat32, 1], ['getFloat64', DataViewProto_getFloat64, 1], ['getInt8', DataViewProto_getInt8, 1], ['getInt16', DataViewProto_getInt16, 1], ['getInt32', DataViewProto_getInt32, 1], ['getUint8', DataViewProto_getUint8, 1], ['getUint16', DataViewProto_getUint16, 1], ['getUint32', DataViewProto_getUint32, 1], ['setFloat32', DataViewProto_setFloat32, 2], ['setFloat64', DataViewProto_setFloat64, 2], ['setInt8', DataViewProto_setInt8, 2], ['setInt16', DataViewProto_setInt16, 2], ['setInt32', DataViewProto_setInt32, 2], ['setUint8', DataViewProto_setUint8, 2], ['setUint16', DataViewProto_setUint16, 2], ['setUint32', DataViewProto_setUint32, 2]], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
+  const proto = BootstrapPrototype(realmRec, [['buffer', [DataViewProto_buffer]], ['byteLength', [DataViewProto_byteLength]], ['byteOffset', [DataViewProto_byteOffset]], ['getBigInt64', DataViewProto_getBigInt64, 1], ['getBigUint64', DataViewProto_getBigUint64, 1], ['getFloat32', DataViewProto_getFloat32, 1], ['getFloat64', DataViewProto_getFloat64, 1], ['getInt8', DataViewProto_getInt8, 1], ['getInt16', DataViewProto_getInt16, 1], ['getInt32', DataViewProto_getInt32, 1], ['getUint8', DataViewProto_getUint8, 1], ['getUint16', DataViewProto_getUint16, 1], ['getUint32', DataViewProto_getUint32, 1], ['setBigInt64', DataViewProto_setBigInt64, 2], ['setBigUint64', DataViewProto_setBigUint64, 2], ['setFloat32', DataViewProto_setFloat32, 2], ['setFloat64', DataViewProto_setFloat64, 2], ['setInt8', DataViewProto_setInt8, 2], ['setInt16', DataViewProto_setInt16, 2], ['setInt32', DataViewProto_setInt32, 2], ['setUint8', DataViewProto_setUint8, 2], ['setUint16', DataViewProto_setUint16, 2], ['setUint32', DataViewProto_setUint32, 2]], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
   realmRec.Intrinsics['%DataView.prototype%'] = proto;
 }
 
@@ -44245,7 +44694,7 @@ function WeakMapConstructor([iterable = Value.undefined], {
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakMap');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   } // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
 
 
@@ -44417,7 +44866,7 @@ function WeakSetConstructor([iterable = Value.undefined], {
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakSet');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   } // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakSet.prototype%", « [[WeakSetData]] »).
 
 
@@ -44566,7 +45015,7 @@ function WeakRefConstructor([target = Value.undefined], {
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'WeakRef');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   } // 2. If Type(target) is not Object, throw a TypeError exception.
 
 
@@ -45066,7 +45515,7 @@ function SetDefaultGlobalBindings(realmRec) {
   // 'encodeURI',
   // 'encodeURIComponent',
   // Constructor Properties of the Global Object
-  'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'DataView', 'Date', 'Error', 'EvalError', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', // 'SharedArrayBuffer',
+  'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', // 'SharedArrayBuffer',
   'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakSet', // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect'].forEach(name => {
@@ -45132,14 +45581,15 @@ function i(V) {
 const Raw = s => s;
 const AlreadyDeclared = n => `${i(n)} is already declared`;
 const ArrayBufferDetached = () => 'Attempt to access detached ArrayBuffer';
+const ArrayBufferShared = () => 'Attempt to access shared ArrayBuffer';
 const ArrayPastSafeLength = () => 'Cannot make length of array-like object surpass the bounds of an integer index';
 const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
 const AssignmentToConstant = n => `Assignment to constant variable ${i(n)}`;
 const BigIntDivideByZero = () => 'Division by zero';
 const BigIntNegativeExponent = () => 'Exponent must be positive';
 const BigIntUnsignedRightShift = () => 'BigInt has no unsigned right shift, use >> instead';
+const BufferContentTypeMismatch = () => 'Newly created TypedArray did not match exemplar\'s content type';
 const BufferDetachKeyMismatch = (k, b) => `${i(k)} is not the [[ArrayBufferDetachKey]] of ${i(b)}`;
-const BufferDetached = () => 'Cannot operate on detached ArrayBuffer';
 const CannotAllocateDataBlock = () => 'Cannot allocate memory';
 const CannotCreateProxyWith = (x, y) => `Cannot create a proxy with a ${x} as ${y}`;
 const CannotConvertDecimalToBigInt = n => `Cannot convert ${i(n)} to a BigInt because it is not an integer`;
@@ -45154,7 +45604,6 @@ const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use explicit 
 const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';
 const CannotSetProperty = (p, o) => `Cannot set property ${i(p)} on ${i(o)}`;
 const ConstructorNonCallable = f => `${i(f)} cannot be invoked without new`;
-const ConstructorRequiresNew = n => `${n} constructor requires new`;
 const CouldNotResolveModule = s => `Could not resolve module ${i(s)}`;
 const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 const DateInvalidTime = () => 'Invalid time';
@@ -45244,14 +45693,15 @@ var messages = /*#__PURE__*/Object.freeze({
   Raw: Raw,
   AlreadyDeclared: AlreadyDeclared,
   ArrayBufferDetached: ArrayBufferDetached,
+  ArrayBufferShared: ArrayBufferShared,
   ArrayPastSafeLength: ArrayPastSafeLength,
   ArrayEmptyReduce: ArrayEmptyReduce,
   AssignmentToConstant: AssignmentToConstant,
   BigIntDivideByZero: BigIntDivideByZero,
   BigIntNegativeExponent: BigIntNegativeExponent,
   BigIntUnsignedRightShift: BigIntUnsignedRightShift,
+  BufferContentTypeMismatch: BufferContentTypeMismatch,
   BufferDetachKeyMismatch: BufferDetachKeyMismatch,
-  BufferDetached: BufferDetached,
   CannotAllocateDataBlock: CannotAllocateDataBlock,
   CannotCreateProxyWith: CannotCreateProxyWith,
   CannotConvertDecimalToBigInt: CannotConvertDecimalToBigInt,
@@ -45266,7 +45716,6 @@ var messages = /*#__PURE__*/Object.freeze({
   CannotResolvePromiseWithItself: CannotResolvePromiseWithItself,
   CannotSetProperty: CannotSetProperty,
   ConstructorNonCallable: ConstructorNonCallable,
-  ConstructorRequiresNew: ConstructorRequiresNew,
   CouldNotResolveModule: CouldNotResolveModule,
   DataViewOOB: DataViewOOB,
   DateInvalidTime: DateInvalidTime,
@@ -46890,11 +47339,6 @@ function CreateArrayIterator(array, kind) {
   return iterator;
 }
 
-// 24.1 #sec-arraybuffer-objects
-// and, for now
-// 24.2 #sec-sharedarraybuffer-objects
-// 24.1.1.1 #sec-allocatearraybuffer
-
 function AllocateArrayBuffer(constructor, byteLength) {
   let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
   /* istanbul ignore if */
@@ -46910,58 +47354,21 @@ function AllocateArrayBuffer(constructor, byteLength) {
     _temp = _temp.Value;
   }
 
-  const obj = _temp;
-  Assert(byteLength.numberValue() >= 0, "byteLength.numberValue() >= 0");
-  Assert(Number.isInteger(byteLength.numberValue()), "Number.isInteger(byteLength.numberValue())");
+  // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+  const obj = _temp; // 2. Assert: ! IsNonNegativeInteger(byteLength) is true.
 
-  let _temp2 = CreateByteDataBlock(byteLength);
+  let _temp2 = IsNonNegativeInteger(byteLength);
 
-  if (_temp2 instanceof AbruptCompletion) {
-    return _temp2;
-  }
+  Assert(!(_temp2 instanceof AbruptCompletion), "IsNonNegativeInteger(byteLength)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
 
-  const block = _temp2;
-  obj.ArrayBufferData = block;
-  obj.ArrayBufferByteLength = byteLength;
-  return obj;
-} // 24.1.1.2 #sec-isdetachedbuffer
+  Assert(_temp2 === Value.true, "X(IsNonNegativeInteger(byteLength)) === Value.true"); // 3. Let block be ? CreateByteDataBlock(byteLength).
 
-function IsDetachedBuffer(arrayBuffer) {
-  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer");
-
-  if (Type(arrayBuffer.ArrayBufferData) === 'Null') {
-    return true;
-  }
-
-  return false;
-} // 24.1.1.3 #sec-detacharraybuffer
-
-function DetachArrayBuffer(arrayBuffer, key) {
-  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer");
-  Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
-
-  if (key === undefined) {
-    key = Value.undefined;
-  }
-
-  if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
-  }
-
-  arrayBuffer.ArrayBufferData = Value.null;
-  arrayBuffer.ArrayBufferByteLength = new Value(0);
-  return new NormalCompletion(Value.null);
-} // 24.1.1.4 #sec-clonearraybuffer
-
-function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
-  Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer, "Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer");
-  Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true");
-
-  let _temp3 = AllocateArrayBuffer(cloneConstructor, srcLength);
+  let _temp3 = CreateByteDataBlock(byteLength);
 
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -46971,59 +47378,146 @@ function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor)
     _temp3 = _temp3.Value;
   }
 
-  const targetBuffer = _temp3;
+  const block = _temp3; // 4. Set obj.[[ArrayBufferData]] to block.
 
-  if (IsDetachedBuffer(srcBuffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  obj.ArrayBufferData = block; // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
+
+  obj.ArrayBufferByteLength = byteLength; // 6. Return obj.
+
+  return obj;
+} // #sec-isdetachedbuffer
+
+function IsDetachedBuffer(arrayBuffer) {
+  // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
+  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer, "Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer"); // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
+
+  if (arrayBuffer.ArrayBufferData === Value.null) {
+    return Value.true;
+  } // 3. Return false.
+
+
+  return Value.false;
+} // #sec-detacharraybuffer
+
+function DetachArrayBuffer(arrayBuffer, key) {
+  // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
+  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "Type(arrayBuffer) === 'Object'\n         && 'ArrayBufferData' in arrayBuffer\n         && 'ArrayBufferByteLength' in arrayBuffer\n         && 'ArrayBufferDetachKey' in arrayBuffer"); // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
+
+  Assert(IsSharedArrayBuffer() === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false"); // 3. If key is not present, set key to undefined.
+
+  if (key === undefined) {
+    key = Value.undefined;
+  } // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
+
+
+  if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
+  } // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
+
+
+  arrayBuffer.ArrayBufferData = Value.null; // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
+
+  arrayBuffer.ArrayBufferByteLength = new Value(0); // 7. Return NormalCompletion(null).
+
+  return NormalCompletion(Value.null);
+} // #sec-issharedarraybuffer
+
+function IsSharedArrayBuffer(_obj) {
+  return Value.false;
+}
+function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
+  // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
+  Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer, "Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer"); // 2. Assert: IsConstructor(cloneConstructor) is true.
+
+  Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true"); // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
+
+  let _temp4 = AllocateArrayBuffer(cloneConstructor, srcLength);
+
+  if (_temp4 instanceof AbruptCompletion) {
+    return _temp4;
   }
 
-  const srcBlock = srcBuffer.ArrayBufferData;
-  const targetBlock = targetBuffer.ArrayBufferData;
-  CopyDataBlockBytes(targetBlock, new Value(0), srcBlock, srcByteOffset, srcLength);
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
+  }
+
+  const targetBuffer = _temp4; // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
+
+  if (IsDetachedBuffer(srcBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 5. Let srcBlock be srcBuffer.[[ArrayBufferData]].
+
+
+  const srcBlock = srcBuffer.ArrayBufferData; // 6. Let targetBlock be targetBuffer.[[ArrayBufferData]].
+
+  const targetBlock = targetBuffer.ArrayBufferData; // 7. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
+
+  CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset.numberValue(), srcLength.numberValue()); // 8. Return targetBuffer.
+
   return targetBuffer;
+} // #sec-isbigintelementtype
+
+function IsBigIntElementType(type) {
+  // 1. If type is BigUint64 or BigInt64, return true.
+  if (type === 'BigUint64' || type === 'BigInt64') {
+    return Value.true;
+  } // 2. Return false
+
+
+  return Value.false;
 }
 const throwawayBuffer = new ArrayBuffer(8);
 const throwawayDataView = new DataView(throwawayBuffer);
-const throwawayArray$1 = new Uint8Array(throwawayBuffer); // 24.1.1.5 #sec-rawbytestonumber
-// Sigh…
+const throwawayArray$1 = new Uint8Array(throwawayBuffer); // #sec-rawbytestonumeric
 
-function RawBytesToNumber(type, rawBytes, isLittleEndian) {
-  isLittleEndian = isLittleEndian === Value.true;
-  const elementSize = numericTypeInfo.get(type).ElementSize;
+function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
+  // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+  const elementSize = typedArrayInfoByType[type].ElementSize;
   Assert(elementSize === rawBytes.length, "elementSize === rawBytes.length");
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray$1, rawBytes);
-  return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian));
-} // 24.1.1.6 #sec-getvaluefrombuffer
+  return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true));
+} // #sec-getvaluefrombuffer
 
 function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
-  byteIndex = byteIndex.numberValue();
-  Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
-  const info = numericTypeInfo.get(type);
-  Assert(info !== undefined, "info !== undefined");
-  Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
-  Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
-  const block = arrayBuffer.ArrayBufferData;
-  const elementSize = info.ElementSize; // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-  //
-  // } else {
+  // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false"); // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
 
-  const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)]; // }
+  let _temp5 = IsNonNegativeInteger(byteIndex);
+
+  Assert(!(_temp5 instanceof AbruptCompletion), "IsNonNegativeInteger(byteIndex)" + ' returned an abrupt completion');
+
+  if (_temp5 instanceof Completion) {
+    _temp5 = _temp5.Value;
+  }
+
+  Assert(_temp5 === Value.true, "X(IsNonNegativeInteger(byteIndex)) === Value.true"); // 4. Let block be arrayBuffer.[[ArrayBufferData]].
+
+  const block = arrayBuffer.ArrayBufferData; // 5. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+
+  const elementSize = typedArrayInfoByType[type].ElementSize; // 6. If IsSharedArrayBuffer(arrayBuffer) is true, then
+
+  if (IsSharedArrayBuffer() === Value.true) {
+    Assert(false, "false");
+  } // 7. Else, let rawValue be a List of elementSize containing, in order, the elementSize sequence of bytes starting with block[byteIndex].
+
+
+  const rawValue = [...block.subarray(byteIndex.numberValue(), byteIndex.numberValue() + elementSize)]; // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
 
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.LittleEndian;
-  }
+  } // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
 
-  return RawBytesToNumber(type, rawValue, isLittleEndian);
-} // An implementation must always choose the same encoding for each
-// implementation distinguishable NaN value.
 
+  return RawBytesToNumeric(type, rawValue, isLittleEndian);
+}
 const float32NaNLE = Object.freeze([0, 0, 192, 127]);
 const float32NaNBE = Object.freeze([127, 192, 0, 0]);
 const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
-const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]); // 24.1.1.7 #sec-numbertorawbytes
+const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]); // #sec-numerictorawbytes
 
-function NumberToRawBytes(type, value, isLittleEndian) {
+function NumericToRawBytes(type, value, isLittleEndian) {
   Assert(Type(isLittleEndian) === 'Boolean', "Type(isLittleEndian) === 'Boolean'");
   isLittleEndian = isLittleEndian === Value.true;
   let rawBytes; // One day, we will write our own IEEE 754 and two's complement encoder…
@@ -47043,69 +47537,79 @@ function NumberToRawBytes(type, value, isLittleEndian) {
       rawBytes = [...throwawayArray$1.subarray(0, 8)];
     }
   } else {
-    const info = numericTypeInfo.get(type);
-    const n = info.ElementSize;
-    const convOp = info.ConversionOperation;
+    // a. Let n be the Element Size value specified in Table 61 for Element Type type.
+    const n = typedArrayInfoByType[type].ElementSize; // b. Let convOp be the abstract operation named in the Conversion Operation column in Table 61 for Element Type type.
 
-    let _temp4 = convOp(value);
+    const convOp = typedArrayInfoByType[type].ConversionOperation; // c. Let intValue be convOp(value) treated as a mathematical value, whether the result is a BigInt or Number.
 
-    Assert(!(_temp4 instanceof AbruptCompletion), "convOp(value)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    let _temp6 = convOp(value);
 
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    Assert(!(_temp6 instanceof AbruptCompletion), "convOp(value)" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
 
-    const intValue = _temp4.numberValue();
-
+    const intValue = _temp6;
     const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-    throwawayDataView[`set${dataViewType}`](0, intValue, isLittleEndian);
+    throwawayDataView[`set${dataViewType}`](0, intValue.bigintValue ? intValue.bigintValue() : intValue.numberValue(), isLittleEndian);
     rawBytes = [...throwawayArray$1.subarray(0, n)];
   }
 
   return rawBytes;
-} // 24.1.1.8 #sec-setvalueinbuffer
+} // #sec-setvalueinbuffer
 
 function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
-  byteIndex = byteIndex.numberValue();
-  Assert(!IsDetachedBuffer(arrayBuffer), "!IsDetachedBuffer(arrayBuffer)");
-  const info = numericTypeInfo.get(type);
-  Assert(info !== undefined, "info !== undefined");
-  Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize, "arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize");
-  Assert(byteIndex >= 0 && Number.isInteger(byteIndex), "byteIndex >= 0 && Number.isInteger(byteIndex)");
-  Assert(Type(value) === 'Number', "Type(value) === 'Number'");
-  const block = arrayBuffer.ArrayBufferData; // const elementSize = info.ElementSize;
+  // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false"); // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
+
+  let _temp7 = IsNonNegativeInteger(byteIndex);
+
+  Assert(!(_temp7 instanceof AbruptCompletion), "IsNonNegativeInteger(byteIndex)" + ' returned an abrupt completion');
+
+  if (_temp7 instanceof Completion) {
+    _temp7 = _temp7.Value;
+  }
+
+  Assert(_temp7 === Value.true, "X(IsNonNegativeInteger(byteIndex)) === Value.true"); // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
+
+  let _temp8 = IsBigIntElementType(type);
+
+  Assert(!(_temp8 instanceof AbruptCompletion), "IsBigIntElementType(type)" + ' returned an abrupt completion');
+
+  if (_temp8 instanceof Completion) {
+    _temp8 = _temp8.Value;
+  }
+
+  if (_temp8 === Value.true) {
+    Assert(Type(value) === 'BigInt', "Type(value) === 'BigInt'");
+  } else {
+    Assert(Type(value) === 'Number', "Type(value) === 'Number'");
+  } // 5. Let block be arrayBuffer.[[ArrayBufferData]].
+
+
+  const block = arrayBuffer.ArrayBufferData; // 6. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+  // const elementSize = typedArrayInfo[type].ElementSize;
+  // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
 
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.LittleEndian;
-  }
-
-  const rawBytes = NumberToRawBytes(type, value, isLittleEndian); // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-  //
-  // } else {
-
-  for (let i = 0; i < rawBytes.length; i += 1) {
-    block[byteIndex + i] = rawBytes[i];
-  } // }
+  } // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
 
 
-  return new NormalCompletion(Value.undefined);
-} // 24.2.1.2 #sec-issharedarraybuffer
+  const rawBytes = NumericToRawBytes(type, value, isLittleEndian); // 9. If IsSharedArrayBuffer(arrayBuffer) is true, then
 
-function IsSharedArrayBuffer(obj) {
-  Assert(Type(obj) === 'Object' && 'ArrayBufferData' in obj, "Type(obj) === 'Object' && 'ArrayBufferData' in obj");
-  const bufferData = obj.ArrayBufferData;
+  if (IsSharedArrayBuffer() === Value.true) {
+    Assert(false, "false");
+  } // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
 
-  if (Type(bufferData) === 'Null') {
-    return Value.false;
-  }
 
-  if (Type(bufferData) === 'Data Block') {
-    return Value.false;
-  }
+  rawBytes.forEach((byte, i) => {
+    block[byteIndex.numberValue() + i] = byte;
+  }); // 11. Return NormalCompletion(undefined).
 
-  Assert(Type(bufferData) === 'Shared Data Block', "Type(bufferData) === 'Shared Data Block'");
-  return Value.true;
+  return NormalCompletion(Value.undefined);
 }
 
 // 25.7 #sec-async-function-objects
@@ -47607,7 +48111,8 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
+
+  Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view"); // 3. Let getIndex be ? ToIndex(requestIndex).
 
   let _temp2 = ToIndex(requestIndex);
 
@@ -47619,7 +48124,8 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
     _temp2 = _temp2.Value;
   }
 
-  const getIndex = _temp2.numberValue();
+  const getIndex = _temp2.numberValue(); // 4. Set isLittleEndian to ! ToBoolean(isLittleEndian).
+
 
   let _temp3 = ToBoolean(isLittleEndian);
 
@@ -47630,23 +48136,29 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
     _temp3 = _temp3.Value;
   }
 
-  isLittleEndian = _temp3;
-  const buffer = view.ViewedArrayBuffer;
+  isLittleEndian = _temp3; // 5. Let buffer be view.[[ViewedArrayBuffer]].
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  const buffer = view.ViewedArrayBuffer; // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-  const viewOffset = view.ByteOffset.numberValue();
-  const viewSize = view.ByteLength.numberValue();
-  const elementSize = numericTypeInfo.get(type).ElementSize;
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 7. Let viewOffset be view.[[ByteOffset]].
+
+
+  const viewOffset = view.ByteOffset.numberValue(); // 8. Let viewSize be view.[[ByteLength]].
+
+  const viewSize = view.ByteLength.numberValue(); // 9. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+
+  const elementSize = typedArrayInfoByType[type].ElementSize; // 10. If getIndex + elementSize > viewSize, throw a RangeError exception.
 
   if (getIndex + elementSize > viewSize) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
-  }
+  } // 11. Let bufferIndex be getIndex + viewOffset.
 
-  const bufferIndex = new Value(getIndex + viewOffset);
-  return GetValueFromBuffer(buffer, bufferIndex, type, false, 'Unordered', isLittleEndian);
+
+  const bufferIndex = new Value(getIndex + viewOffset); // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
+
+  return GetValueFromBuffer(buffer, bufferIndex, type, Value.false, 'Unordered', isLittleEndian);
 } // 24.3.1.2 #sec-setviewvalue
 
 function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
@@ -47659,7 +48171,8 @@ function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
   }
-  Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
+
+  Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view"); // 3. Let getIndex be ? ToIndex(requestIndex).
 
   let _temp5 = ToIndex(requestIndex);
 
@@ -47671,45 +48184,78 @@ function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
     _temp5 = _temp5.Value;
   }
 
-  const getIndex = _temp5.numberValue();
+  const getIndex = _temp5.numberValue(); // 4. If ! IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
+  // 5. Otherwise, let numberValue be ? ToNumber(value).
 
-  let _temp6 = ToNumber(value);
 
-  if (_temp6 instanceof AbruptCompletion) {
-    return _temp6;
-  }
+  let numberValue;
+
+  let _temp6 = IsBigIntElementType(type);
+
+  Assert(!(_temp6 instanceof AbruptCompletion), "IsBigIntElementType(type)" + ' returned an abrupt completion');
 
   if (_temp6 instanceof Completion) {
     _temp6 = _temp6.Value;
   }
 
-  const numberValue = _temp6;
+  if (_temp6 === Value.true) {
+    let _temp7 = ToBigInt(value);
 
-  let _temp7 = ToBoolean(isLittleEndian);
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
+    }
 
-  Assert(!(_temp7 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion');
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
 
-  if (_temp7 instanceof Completion) {
-    _temp7 = _temp7.Value;
+    numberValue = _temp7;
+  } else {
+    let _temp8 = ToNumber(value);
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    numberValue = _temp8;
+  } // 6. Set isLittleEndian to ! ToBoolean(isLittleEndian).
+
+
+  let _temp9 = ToBoolean(isLittleEndian);
+
+  Assert(!(_temp9 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion');
+
+  if (_temp9 instanceof Completion) {
+    _temp9 = _temp9.Value;
   }
 
-  isLittleEndian = _temp7;
-  const buffer = view.ViewedArrayBuffer;
+  isLittleEndian = _temp9; // 7. Let buffer be view.[[ViewedArrayBuffer]].
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  const buffer = view.ViewedArrayBuffer; // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-  const viewOffset = view.ByteOffset.numberValue();
-  const viewSize = view.ByteLength.numberValue();
-  const elementSize = numericTypeInfo.get(type).ElementSize;
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 9. Let viewOffset be view.[[ByteOffset]].
+
+
+  const viewOffset = view.ByteOffset.numberValue(); // 10. Let viewSize be view.[[ByteLength]].
+
+  const viewSize = view.ByteLength.numberValue(); // 11. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+
+  const elementSize = typedArrayInfoByType[type].ElementSize; // 12. If getIndex + elementSize > viewSize, throw a RangeError exception.
 
   if (getIndex + elementSize > viewSize) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
-  }
+  } // 13. Let bufferIndex be getIndex + viewOffset.
 
-  const bufferIndex = new Value(getIndex + viewOffset);
-  return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, 'Unordered', isLittleEndian);
+
+  const bufferIndex = new Value(getIndex + viewOffset); // 14. Return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
+
+  return SetValueInBuffer(buffer, bufferIndex, type, numberValue, Value.false, 'Unordered', isLittleEndian);
 }
 
 const mod = (n, m) => {
@@ -49123,9 +49669,11 @@ function isIntegerIndexedExoticObject(O) {
 } // 9.4.5.1 #sec-integer-indexed-exotic-objects-getownproperty-p
 
 function IntegerIndexedGetOwnProperty(P) {
-  const O = this;
-  Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
+  const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+  Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Assert: O is an Integer-Indexed exotic object.
+
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 3. If Type(P) is String, then
 
   if (Type(P) === 'String') {
     let _temp = CanonicalNumericIndexString(P);
@@ -49137,7 +49685,8 @@ function IntegerIndexedGetOwnProperty(P) {
       _temp = _temp.Value;
     }
 
-    const numericIndex = _temp;
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = _temp; // b. If numericIndex is not undefined, then
 
     if (numericIndex !== Value.undefined) {
       let _temp2 = IntegerIndexedElementGet(O, numericIndex);
@@ -49154,11 +49703,13 @@ function IntegerIndexedGetOwnProperty(P) {
         _temp2 = _temp2.Value;
       }
 
-      const value = _temp2;
+      // i. Let value be ? IntegerIndexedElementGet(O, numericIndex).
+      const value = _temp2; // ii. If value is undefined, return undefined.
 
       if (value === Value.undefined) {
         return Value.undefined;
-      }
+      } // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: false }.
+
 
       return Descriptor({
         Value: value,
@@ -49167,15 +49718,18 @@ function IntegerIndexedGetOwnProperty(P) {
         Configurable: Value.false
       });
     }
-  }
+  } // 4. Return OrdinaryGetOwnProperty(O, P).
+
 
   return OrdinaryGetOwnProperty(O, P);
 } // 9.4.5.2 #sec-integer-indexed-exotic-objects-hasproperty-p
 
 function IntegerIndexedHasProperty(P) {
-  const O = this;
-  Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
+  const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+  Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Assert: O is an Integer-Indexed exotic object.
+
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 3. If Type(P) is String, then
 
   if (Type(P) === 'String') {
     let _temp3 = CanonicalNumericIndexString(P);
@@ -49186,30 +49740,37 @@ function IntegerIndexedHasProperty(P) {
       _temp3 = _temp3.Value;
     }
 
-    const numericIndex = _temp3;
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = _temp3; // b. If numericIndex is not undefined, then
 
     if (numericIndex !== Value.undefined) {
-      const buffer = O.ViewedArrayBuffer;
+      // i. Let buffer be O.[[ViewedArrayBuffer]].
+      const buffer = O.ViewedArrayBuffer; // ii. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-      if (IsDetachedBuffer(buffer)) {
+      if (IsDetachedBuffer(buffer) === Value.true) {
         return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-      }
+      } // iii. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+
 
       if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
         return Value.false;
-      }
+      } // iv. Return true.
+
 
       return Value.true;
     }
-  }
+  } // 4. Return ? OrdinaryHasProperty(O, P)
+
 
   return OrdinaryHasProperty(O, P);
-} // 9.4.5.3 #sec-integer-indexed-exotic-objects-defineownproperty-p-desc
+} // #sec-integer-indexed-exotic-objects-defineownproperty-p-desc
 
 function IntegerIndexedDefineOwnProperty(P, Desc) {
-  const O = this;
-  Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
+  const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+  Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Assert: O is an Integer-Indexed exotic object.
+
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 3. If Type(P) is String, then
 
   if (Type(P) === 'String') {
     let _temp4 = CanonicalNumericIndexString(P);
@@ -49220,44 +49781,56 @@ function IntegerIndexedDefineOwnProperty(P, Desc) {
       _temp4 = _temp4.Value;
     }
 
-    const numericIndex = _temp4;
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = _temp4; // b. If numericIndex is not undefined, then
 
     if (numericIndex !== Value.undefined) {
+      // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
       if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
         return Value.false;
-      }
+      } // ii. If IsAccessorDescriptor(Desc) is true, return false.
+
 
       if (IsAccessorDescriptor(Desc)) {
         return Value.false;
-      }
+      } // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
+
 
       if (Desc.Configurable === Value.true) {
         return Value.false;
-      }
+      } // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
+
 
       if (Desc.Enumerable === Value.false) {
         return Value.false;
-      }
+      } // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
+
 
       if (Desc.Writable === Value.false) {
         return Value.false;
-      }
+      } // vi. If Desc has a [[Value]] field, then
+
 
       if (Desc.Value !== undefined) {
-        const value = Desc.Value;
+        // 1. Let value be Desc.[[Value]].
+        const value = Desc.Value; // 2. Return ? IntegerIndexedElementSet(O, numericIndex, value).
+
         return IntegerIndexedElementSet(O, numericIndex, value);
-      }
+      } // vii. Return true.
+
 
       return Value.true;
     }
-  }
+  } // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
+
 
   return OrdinaryDefineOwnProperty(O, P, Desc);
 } // 9.4.5.4 #sec-integer-indexed-exotic-objects-get-p-receiver
 
 function IntegerIndexedGet(P, Receiver) {
-  const O = this;
-  Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+  const O = this; // 1. Assert: IsPropertykey(P) is true.
+
+  Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. If Type(P) is String, then
 
   if (Type(P) === 'String') {
     let _temp5 = CanonicalNumericIndexString(P);
@@ -49268,19 +49841,23 @@ function IntegerIndexedGet(P, Receiver) {
       _temp5 = _temp5.Value;
     }
 
-    const numericIndex = _temp5;
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = _temp5; // b. If numericIndex is not undefined, then
 
     if (numericIndex !== Value.undefined) {
+      // i. Return ? IntegerIndexedElementGet(O, numericIndex).
       return IntegerIndexedElementGet(O, numericIndex);
     }
-  }
+  } // 3. Return ? OrdinaryGet(O, P, Receiver).
+
 
   return OrdinaryGet(O, P, Receiver);
 } // 9.4.5.5 #sec-integer-indexed-exotic-objects-set-p-v-receiver
 
 function IntegerIndexedSet(P, V, Receiver) {
-  const O = this;
-  Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+  const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+  Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. If Type(P) is String, then
 
   if (Type(P) === 'String') {
     let _temp6 = CanonicalNumericIndexString(P);
@@ -49291,21 +49868,27 @@ function IntegerIndexedSet(P, V, Receiver) {
       _temp6 = _temp6.Value;
     }
 
-    const numericIndex = _temp6;
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = _temp6; // b. If numericIndex is not undefined, then
 
     if (numericIndex !== Value.undefined) {
+      // i. Return ? IntegerIndexedElementSet(O, numericIndex, V).
       return IntegerIndexedElementSet(O, numericIndex, V);
     }
-  }
+  } // 3. Return ? OrdinarySet(O, P, V, Receiver).
+
 
   return OrdinarySet(O, P, V, Receiver);
 } // 9.4.5.6 #sec-integer-indexed-exotic-objects-ownpropertykeys
 
 function IntegerIndexedOwnPropertyKeys() {
-  const O = this;
-  const keys = [];
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-  const len = O.ArrayLength.numberValue();
+  const O = this; // 1. Let keys be a new empty List.
+
+  const keys = []; // 2. Assert: O is an Integer-Indexed exotic object.
+
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 3. Let len be O.[[ArrayLength]].
+
+  const len = O.ArrayLength.numberValue(); // 4. For each integer i starting with 0 such that i < len, in ascending order, do
 
   for (let i = 0; i < len; i += 1) {
     let _temp7 = ToString(new Value(i));
@@ -49316,89 +49899,129 @@ function IntegerIndexedOwnPropertyKeys() {
       _temp7 = _temp7.Value;
     }
 
+    // a. Add ! ToString(i) as the last element of keys.
     keys.push(_temp7);
-  }
+  } // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+
 
   for (const P of O.properties.keys()) {
     if (Type(P) === 'String') {
       if (!isIntegerIndex(P)) {
+        // a. Add P as the last element of keys.
         keys.push(P);
       }
     }
-  }
+  } // 6. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+
 
   for (const P of O.properties.keys()) {
     if (Type(P) === 'Symbol') {
+      // a. Add P as the last element of keys.
       keys.push(P);
     }
-  }
+  } // 7. Return keys.
+
 
   return keys;
 } // #sec-integerindexedelementget
 
 function IntegerIndexedElementGet(O, index) {
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-  Assert(Type(index) === 'Number', "Type(index) === 'Number'");
-  const buffer = O.ViewedArrayBuffer;
+  // 1. Assert: O is an Integer-Indexed exotic object.
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 2. Assert: Type(index) is Number.
 
-  if (IsDetachedBuffer(buffer)) {
+  Assert(Type(index) === 'Number', "Type(index) === 'Number'"); // 3. Let buffer be O.[[ViewedArrayBuffer]].
+
+  const buffer = O.ViewedArrayBuffer; // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
+  } // 5. If ! IsValidIntegerIndex(O, index) is false, return undefined.
+
 
   if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.undefined;
-  }
+  } // 6. Let offset be O.[[ByteOffset]].
 
-  const offset = O.ByteOffset;
-  const arrayTypeName = O.TypedArrayName.stringValue();
-  const {
-    ElementSize: elementSize,
-    ElementType: elementType
-  } = typedArrayInfo.get(arrayTypeName);
-  const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue());
+
+  const offset = O.ByteOffset; // 7. Let arrayTypeName be the String value of O.[[TypedArrayName]].
+
+  const arrayTypeName = O.TypedArrayName.stringValue(); // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
+
+  const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize; // 9. Let indexedPosition be (index × elementSize) + offset.
+
+  const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue()); // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
+
+  const elementType = typedArrayInfoByName[arrayTypeName].ElementType; // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
+
   return GetValueFromBuffer(buffer, indexedPosition, elementType);
 } // #sec-integerindexedelementset
 
 function IntegerIndexedElementSet(O, index, value) {
-  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-  Assert(Type(index) === 'Number', "Type(index) === 'Number'");
+  // 1. Assert: O is an Integer-Indexed exotic object.
+  Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 2. Assert: Type(index) is Number.
 
-  let _temp8 = ToNumber(value);
+  Assert(Type(index) === 'Number', "Type(index) === 'Number'"); // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+  // 4. Otherwise, let numValue be ? ToNumber(value).
 
-  if (_temp8 instanceof AbruptCompletion) {
-    return _temp8;
-  }
+  let numValue;
 
-  if (_temp8 instanceof Completion) {
-    _temp8 = _temp8.Value;
-  }
+  if (O.ContentType === 'BigInt') {
+    let _temp8 = ToBigInt(value);
 
-  const numValue = _temp8;
-  const buffer = O.ViewedArrayBuffer;
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
 
-  if (IsDetachedBuffer(buffer)) {
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    numValue = _temp8;
+  } else {
+    let _temp9 = ToNumber(value);
+
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
+    }
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    numValue = _temp9;
+  } // 5. Let buffer be O.[[ViewedArrayBuffer]].
+
+
+  const buffer = O.ViewedArrayBuffer; // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
+  } // 7. If ! IsValidIntegerIndex(O, index) is false, return false.
+
 
   if (IsValidIntegerIndex(O, index) === Value.false) {
     return Value.false;
+  } // 8. Let offset be O.[[ByteOffset]].
+
+
+  const offset = O.ByteOffset; // 9. Let arrayTypeName be the String value of O.[[TypedArrayName]].
+
+  const arrayTypeName = O.TypedArrayName.stringValue(); // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
+
+  const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize; // 11. Let indexedPosition be (index × elementSize) + offset.
+
+  const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue()); // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
+
+  const elementType = typedArrayInfoByName[arrayTypeName].ElementType; // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
+
+  let _temp10 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
+
+  Assert(!(_temp10 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true, 'Unordered')" + ' returned an abrupt completion');
+
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
   }
 
-  const offset = O.ByteOffset;
-  const arrayTypeName = O.TypedArrayName.stringValue();
-  const {
-    ElementSize: elementSize,
-    ElementType: elementType
-  } = typedArrayInfo.get(arrayTypeName);
-  const indexedPosition = new Value(index.numberValue() * elementSize + offset.numberValue());
-
-  let _temp9 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
-
-  Assert(!(_temp9 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, 'Unordered')" + ' returned an abrupt completion');
-
-  if (_temp9 instanceof Completion) {
-    _temp9 = _temp9.Value;
-  }
   return Value.true;
 } // #sec-integerindexedobjectcreate
 
@@ -49406,15 +50029,15 @@ function IntegerIndexedObjectCreate(prototype) {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]], [[ViewedArrayBuffer]], [[TypedArrayName]], [[ContentType]], [[ByteLength]], [[ByteOffset]], [[ArrayLength]] ».
   const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength']; // 2. Let A be ! MakeBasicObject(internalSlotsList).
 
-  let _temp10 = MakeBasicObject(internalSlotsList);
+  let _temp11 = MakeBasicObject(internalSlotsList);
 
-  Assert(!(_temp10 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
+  Assert(!(_temp11 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
 
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
+  if (_temp11 instanceof Completion) {
+    _temp11 = _temp11.Value;
   }
 
-  const A = _temp10; // 3. Set A.[[GetOwnProperty]] as specified in 9.4.5.1.
+  const A = _temp11; // 3. Set A.[[GetOwnProperty]] as specified in 9.4.5.1.
 
   A.GetOwnProperty = IntegerIndexedGetOwnProperty; // 4. Set A.[[HasProperty]] as specified in 9.4.5.2.
 
@@ -54442,19 +55065,9 @@ function CreateByteDataBlock(size) {
 } // 6.2.7.3 #sec-copydatablockbytes
 
 function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
-  Assert(Type(toIndex) === 'Number', "Type(toIndex) === 'Number'");
-  Assert(Type(fromIndex) === 'Number', "Type(fromIndex) === 'Number'");
-  Assert(Type(count) === 'Number', "Type(count) === 'Number'");
-  toIndex = toIndex.numberValue();
-  fromIndex = fromIndex.numberValue();
-  count = count.numberValue();
   Assert(fromBlock !== toBlock, "fromBlock !== toBlock");
-  Assert(Type(fromBlock) === 'Data Block'
-  /* || Type(fromBlock) === 'Shared Data Block' */
-  , "Type(fromBlock) === 'Data Block'");
-  Assert(Type(toBlock) === 'Data Block'
-  /* || Type(toBlock) === 'Shared Data Block' */
-  , "Type(toBlock) === 'Data Block'");
+  Assert(Type(fromBlock) === 'Data Block' || Type(fromBlock) === 'Shared Data Block', "Type(fromBlock) === 'Data Block' || Type(fromBlock) === 'Shared Data Block'");
+  Assert(Type(toBlock) === 'Data Block' || Type(toBlock) === 'Shared Data Block', "Type(toBlock) === 'Data Block' || Type(toBlock) === 'Shared Data Block'");
   Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0, "Number.isSafeInteger(fromIndex) && fromIndex >= 0");
   Assert(Number.isSafeInteger(toIndex) && toIndex >= 0, "Number.isSafeInteger(toIndex) && toIndex >= 0");
   Assert(Number.isSafeInteger(count) && count >= 0, "Number.isSafeInteger(count) && count >= 0");
@@ -54464,11 +55077,12 @@ function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
   Assert(toIndex + count <= toSize, "toIndex + count <= toSize");
 
   while (count > 0) {
-    // if (Type(fromBlock) === 'Shared Data Block') {
-    //   ...
-    // } else {
-    Assert(Type(toBlock) !== 'Shared Data Block', "Type(toBlock) !== 'Shared Data Block'");
-    toBlock[toIndex] = fromBlock[fromIndex]; // }
+    if (Type(fromBlock) === 'Shared Data Block') {
+      Assert(false, "false");
+    } else {
+      Assert(Type(toBlock) !== 'Shared Data Block', "Type(toBlock) !== 'Shared Data Block'");
+      toBlock[toIndex] = fromBlock[fromIndex];
+    }
 
     toIndex += 1;
     fromIndex += 1;
@@ -55797,7 +56411,7 @@ function ToBigInt(argument) {
 
     case 'Null':
       // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', argument);
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
 
     case 'Boolean':
       // Return 1n if prim is true and 0n if prim is false.
@@ -56149,54 +56763,81 @@ function ToIndex(value) {
   return index;
 }
 
-const typedArrayInfo = new Map([['Int8Array', {
-  Intrinsic: '%Int8Array%',
-  ElementType: 'Int8',
-  ElementSize: 1,
-  ConversionOperation: ToInt8
-}], ['Uint8Array', {
-  Intrinsic: '%Uint8Array%',
-  ElementType: 'Uint8',
-  ElementSize: 1,
-  ConversionOperation: ToUint8
-}], ['Uint8ClampedArray', {
-  Intrinsic: '%Uint8ClampedArray%',
-  ElementType: 'Uint8C',
-  ElementSize: 1,
-  ConversionOperation: ToUint8Clamp
-}], ['Int16Array', {
-  Intrinsic: '%Int16Array%',
-  ElementType: 'Int16',
-  ElementSize: 2,
-  ConversionOperation: ToInt16
-}], ['Uint16Array', {
-  Intrinsic: '%Uint16Array%',
-  ElementType: 'Uint16',
-  ElementSize: 2,
-  ConversionOperation: ToUint16
-}], ['Int32Array', {
-  Intrinsic: '%Int32Array%',
-  ElementType: 'Int32',
-  ElementSize: 4,
-  ConversionOperation: ToInt32
-}], ['Uint32Array', {
-  Intrinsic: '%Uint32Array%',
-  ElementType: 'Uint32',
-  ElementSize: 4,
-  ConversionOperation: ToUint32
-}], ['Float32Array', {
-  Intrinsic: '%Float32Array%',
-  ElementType: 'Float32',
-  ElementSize: 4
-}], ['Float64Array', {
-  Intrinsic: '%Float64Array%',
-  ElementType: 'Float64',
-  ElementSize: 8
-}]]);
-const numericTypeInfo = new Map([...typedArrayInfo.values()].map(info => [info.ElementType, info])); // 22.2.2.1.1 #sec-iterabletolist
+const typedArrayInfoByName = {
+  Int8Array: {
+    IntrinsicName: '%Int8Array%',
+    ElementType: 'Int8',
+    ElementSize: 1,
+    ConversionOperation: ToInt8
+  },
+  Uint8Array: {
+    IntrinsicName: '%Uint8Array%',
+    ElementType: 'Uint8',
+    ElementSize: 1,
+    ConversionOperation: ToUint8
+  },
+  Uint8ClampedArray: {
+    IntrinsicName: '%Uint8ClampedArray%',
+    ElementType: 'Uint8C',
+    ElementSize: 1,
+    ConversionOperation: ToUint8Clamp
+  },
+  Int16Array: {
+    IntrinsicName: '%Int16Array%',
+    ElementType: 'Int16',
+    ElementSize: 2,
+    ConversionOperation: ToInt16
+  },
+  Uint16Array: {
+    IntrinsicName: '%Uint16Array%',
+    ElementType: 'Uint16',
+    ElementSize: 2,
+    ConversionOperation: ToUint16
+  },
+  Int32Array: {
+    IntrinsicName: '%Int32Array%',
+    ElementType: 'Int32',
+    ElementSize: 4,
+    ConversionOperation: ToInt32
+  },
+  Uint32Array: {
+    IntrinsicName: '%Uint32Array%',
+    ElementType: 'Uint32',
+    ElementSize: 4,
+    ConversionOperation: ToUint32
+  },
+  BigInt64Array: {
+    IntrinsicName: '%BigInt64Array%',
+    ElementType: 'BigInt64',
+    ElementSize: 8,
+    ConversionOperation: ToBigInt64
+  },
+  BigUint64Array: {
+    IntrinsicName: '%BigUint64Array%',
+    ElementType: 'BigUint64',
+    ElementSize: 8,
+    ConversionOperation: ToBigUint64
+  },
+  Float32Array: {
+    IntrinsicName: '%Float32Array%',
+    ElementType: 'Float32',
+    ElementSize: 4,
+    ConversionOperation: undefined
+  },
+  Float64Array: {
+    IntrinsicName: '%Float64Array%',
+    ElementType: 'Float64',
+    ElementSize: 8,
+    ConversionOperation: undefined
+  }
+};
+const typedArrayInfoByType = {};
+Object.values(typedArrayInfoByName).forEach(v => {
+  typedArrayInfoByType[v.ElementType] = v;
+}); // #sec-validatetypedarray
 
-function IterableToList(items, method) {
-  let _temp = GetIterator(items, 'sync', method);
+function ValidateTypedArray(O) {
+  let _temp = RequireInternalSlot(O, 'TypedArrayName');
   /* istanbul ignore if */
 
 
@@ -56210,44 +56851,55 @@ function IterableToList(items, method) {
     _temp = _temp.Value;
   }
 
-  const iteratorRecord = _temp;
-  const values = [];
-  let next = Value.true;
+  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O"); // 3. Let buffer be O.[[ViewedArrayBuffer]].
 
-  while (next !== Value.false) {
-    let _temp2 = IteratorStep(iteratorRecord);
+  const buffer = O.ViewedArrayBuffer; // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
 
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  } // 5. Return buffer.
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
 
-    next = _temp2;
+  return buffer;
+} // #typedarray-create
 
-    if (next !== Value.false) {
-      let _temp3 = IteratorValue(next);
+function TypedArrayCreate(constructor, argumentList) {
+  let _temp2 = Construct(constructor, argumentList);
 
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      const nextValue = _temp3;
-      values.push(nextValue);
-    }
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
   }
 
-  return values;
-} // 22.2.3.5.1 #sec-validatetypedarray
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
 
-function ValidateTypedArray(O) {
-  let _temp4 = RequireInternalSlot(O, 'TypedArrayName');
+  // 1. Let newTypedArray be ? Construct(constructor, argumentList).
+  const newTypedArray = _temp2; // 2. Perform ? ValidateTypedArray(newTypedArray).
+
+  let _temp3 = ValidateTypedArray(newTypedArray);
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
+    // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
+    if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
+      return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
+    }
+  } // 4. Return newTypedArray.
+
+
+  return newTypedArray;
+} // #sec-allocatedtypedarray
+
+function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
+  let _temp4 = GetPrototypeFromConstructor(newTarget, defaultProto);
 
   if (_temp4 instanceof AbruptCompletion) {
     return _temp4;
@@ -56256,35 +56908,39 @@ function ValidateTypedArray(O) {
   if (_temp4 instanceof Completion) {
     _temp4 = _temp4.Value;
   }
-  Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-  const buffer = O.ViewedArrayBuffer;
 
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
-  }
+  // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
+  const proto = _temp4; // 2. Let obj be ! IntegerIndexedObjectCreate(proto).
 
-  return buffer;
-} // 22.2.4.2.1 #sec-allocatetypedarray
+  let _temp5 = IntegerIndexedObjectCreate(proto);
 
-function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
-  let _temp5 = GetPrototypeFromConstructor(newTarget, defaultProto);
-
-  if (_temp5 instanceof AbruptCompletion) {
-    return _temp5;
-  }
+  Assert(!(_temp5 instanceof AbruptCompletion), "IntegerIndexedObjectCreate(proto)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
 
   if (_temp5 instanceof Completion) {
     _temp5 = _temp5.Value;
   }
 
-  const proto = _temp5;
-  const obj = IntegerIndexedObjectCreate(proto);
-  Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
-  obj.TypedArrayName = constructorName;
+  const obj = _temp5; // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
+
+  Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined"); // 4. Set obj.[[TypedArrayName]] to constructorName.
+
+  obj.TypedArrayName = constructorName; // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
+  // 6. Otherwise, set obj.[[ContentType]] to Number.
+
+  if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
+    obj.ContentType = 'BigInt';
+  } else {
+    obj.ContentType = 'Number';
+  } // 7. If length is not present, then
+
 
   if (length === undefined) {
-    obj.ByteLength = new Value(0);
-    obj.ByteOffset = new Value(0);
+    // 1. Set obj.[[ByteLength]] to 0.
+    obj.ByteLength = new Value(0); // 1. Set obj.[[ByteOffset]] to 0.
+
+    obj.ByteOffset = new Value(0); // 1. Set obj.[[ArrayLength]] to 0.
+
     obj.ArrayLength = new Value(0);
   } else {
     let _temp6 = AllocateTypedArrayBuffer(obj, length);
@@ -56296,39 +56952,35 @@ function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
-  }
+  } // 9. Return obj.
+
 
   return obj;
-} // 22.2.4.2.2 #sec-allocatetypedarraybuffer
+} // #sec-allocatetypedarraybuffer
 
 function AllocateTypedArrayBuffer(O, length) {
-  Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O, "Type(O) === 'Object' && 'ViewedArrayBuffer' in O");
-  Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
-  Assert(length.numberValue() >= 0, "length.numberValue() >= 0");
-  const constructorName = O.TypedArrayName.stringValue();
-  const elementSize = typedArrayInfo.get(constructorName).ElementSize;
-  const byteLength = new Value(elementSize * length.numberValue());
+  // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
+  Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O, "Type(O) === 'Object' && 'ViewedArrayBuffer' in O"); // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
 
-  let _temp7 = AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
+  Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined"); // 3. Assert: ! IsNonNegativeInteger(length) is true.
 
-  if (_temp7 instanceof AbruptCompletion) {
-    return _temp7;
-  }
+  let _temp7 = IsNonNegativeInteger(length);
+
+  Assert(!(_temp7 instanceof AbruptCompletion), "IsNonNegativeInteger(length)" + ' returned an abrupt completion');
 
   if (_temp7 instanceof Completion) {
     _temp7 = _temp7.Value;
   }
 
-  const data = _temp7;
-  O.ViewedArrayBuffer = data;
-  O.ByteLength = byteLength;
-  O.ByteOffset = new Value(0);
-  O.ArrayLength = length;
-  return O;
-} // 22.2.4.6 #typedarray-create
+  Assert(_temp7 === Value.true, "X(IsNonNegativeInteger(length)) === Value.true"); // 4. Let constructorName be the String value of O.[[TypedArrayName]].
 
-function TypedArrayCreate(constructor, argumentList) {
-  let _temp8 = Construct(constructor, argumentList);
+  const constructorName = O.TypedArrayName.stringValue(); // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
+
+  const elementSize = typedArrayInfoByName[constructorName].ElementSize; // 6. Let byteLength be elementSize × length.
+
+  const byteLength = new Value(elementSize * length.numberValue()); // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
+
+  let _temp8 = AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
 
   if (_temp8 instanceof AbruptCompletion) {
     return _temp8;
@@ -56338,9 +56990,26 @@ function TypedArrayCreate(constructor, argumentList) {
     _temp8 = _temp8.Value;
   }
 
-  const newTypedArray = _temp8;
+  const data = _temp8; // 8. Set O.[[ViewedArrayBuffer]] to data.
 
-  let _temp9 = ValidateTypedArray(newTypedArray);
+  O.ViewedArrayBuffer = data; // 9. Set O.[[ByteLength]] to byteLength.
+
+  O.ByteLength = byteLength; // 10. Set O.[[ByteOffset]] to 0.
+
+  O.ByteOffset = new Value(0); // 11. Set O.[[ArrayLength]] to length.
+
+  O.ArrayLength = length; // 12. Return O.
+
+  return O;
+} // #sec-typedarray-species-create
+
+function TypedArraySpeciesCreate(exemplar, argumentList) {
+  // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
+  Assert(Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar && 'ContentType' in exemplar, "Type(exemplar) === 'Object'\n         && 'TypedArrayName' in exemplar\n         && 'ContentType' in exemplar"); // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
+
+  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue()].IntrinsicName); // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
+
+  let _temp9 = SpeciesConstructor(exemplar, defaultConstructor);
 
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
@@ -56350,21 +57019,9 @@ function TypedArrayCreate(constructor, argumentList) {
     _temp9 = _temp9.Value;
   }
 
-  if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
-    if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
-      return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
-    }
-  }
+  const constructor = _temp9; // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
 
-  return newTypedArray;
-} // 22.2.4.7 #typedarray-species-create
-
-function TypedArraySpeciesCreate(exemplar, argumentList) {
-  Assert(Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar, "Type(exemplar) === 'Object' && 'TypedArrayName' in exemplar");
-  const intrinsicName = typedArrayInfo.get(exemplar.TypedArrayName.stringValue()).Intrinsic;
-  const defaultConstructor = surroundingAgent.intrinsic(intrinsicName);
-
-  let _temp10 = SpeciesConstructor(exemplar, defaultConstructor);
+  let _temp10 = TypedArrayCreate(constructor, argumentList);
 
   if (_temp10 instanceof AbruptCompletion) {
     return _temp10;
@@ -56374,8 +57031,70 @@ function TypedArraySpeciesCreate(exemplar, argumentList) {
     _temp10 = _temp10.Value;
   }
 
-  const constructor = _temp10;
-  return TypedArrayCreate(constructor, argumentList);
+  const result = _temp10; // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
+
+  Assert('TypedArrayName' in result && 'ContentType' in result, "'TypedArrayName' in result && 'ContentType' in result"); // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
+
+  if (result.ContentType !== exemplar.ContentType) {
+    return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+  } // 7. Return result.
+
+
+  return result;
+} // #sec-iterabletolist
+
+function IterableToList(items, method) {
+  let _temp11 = GetIterator(items, 'sync', method);
+
+  if (_temp11 instanceof AbruptCompletion) {
+    return _temp11;
+  }
+
+  if (_temp11 instanceof Completion) {
+    _temp11 = _temp11.Value;
+  }
+
+  // 1. Let iteratorRecord be ? GetIterator(items, sync, method).
+  const iteratorRecord = _temp11; // 2. Let values be a new empty List.
+
+  const values = []; // 3. Let next be true.
+
+  let next = Value.true; // 4. Repeat, while next is not false
+
+  while (next !== Value.false) {
+    let _temp12 = IteratorStep(iteratorRecord);
+
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    // a. Set next to ? IteratorStep(iteratorRecord).
+    next = _temp12; // b. If next is not false, then
+
+    if (next !== Value.false) {
+      let _temp13 = IteratorValue(next);
+
+      if (_temp13 instanceof AbruptCompletion) {
+        return _temp13;
+      }
+
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+
+      // i. Let nextValue be ? IteratorValue(next).
+      const nextValue = _temp13; // ii. Append nextValue to the end of the List values.
+
+      values.push(nextValue);
+    }
+  } // 5. Return values.
+
+
+  return values;
 }
 
 function ClearKeptObjects() {
@@ -56486,12 +57205,13 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   AllocateArrayBuffer: AllocateArrayBuffer,
   IsDetachedBuffer: IsDetachedBuffer,
   DetachArrayBuffer: DetachArrayBuffer,
-  CloneArrayBuffer: CloneArrayBuffer,
-  RawBytesToNumber: RawBytesToNumber,
-  GetValueFromBuffer: GetValueFromBuffer,
-  NumberToRawBytes: NumberToRawBytes,
-  SetValueInBuffer: SetValueInBuffer,
   IsSharedArrayBuffer: IsSharedArrayBuffer,
+  CloneArrayBuffer: CloneArrayBuffer,
+  IsBigIntElementType: IsBigIntElementType,
+  RawBytesToNumeric: RawBytesToNumeric,
+  GetValueFromBuffer: GetValueFromBuffer,
+  NumericToRawBytes: NumericToRawBytes,
+  SetValueInBuffer: SetValueInBuffer,
   AsyncBlockStart: AsyncBlockStart,
   AsyncFunctionStart: AsyncFunctionStart,
   AsyncGeneratorStart: AsyncGeneratorStart,
@@ -56708,14 +57428,14 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   ToLength: ToLength,
   CanonicalNumericIndexString: CanonicalNumericIndexString,
   ToIndex: ToIndex,
-  typedArrayInfo: typedArrayInfo,
-  numericTypeInfo: numericTypeInfo,
-  IterableToList: IterableToList,
+  typedArrayInfoByName: typedArrayInfoByName,
+  typedArrayInfoByType: typedArrayInfoByType,
   ValidateTypedArray: ValidateTypedArray,
+  TypedArrayCreate: TypedArrayCreate,
   AllocateTypedArray: AllocateTypedArray,
   AllocateTypedArrayBuffer: AllocateTypedArrayBuffer,
-  TypedArrayCreate: TypedArrayCreate,
   TypedArraySpeciesCreate: TypedArraySpeciesCreate,
+  IterableToList: IterableToList,
   ClearKeptObjects: ClearKeptObjects,
   AddToKeptObjects: AddToKeptObjects,
   CheckForEmptyCells: CheckForEmptyCells,
