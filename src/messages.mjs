@@ -13,14 +13,15 @@ export const Raw = (s) => s;
 
 export const AlreadyDeclared = (n) => `${i(n)} is already declared`;
 export const ArrayBufferDetached = () => 'Attempt to access detached ArrayBuffer';
+export const ArrayBufferShared = () => 'Attempt to access shared ArrayBuffer';
 export const ArrayPastSafeLength = () => 'Cannot make length of array-like object surpass the bounds of an integer index';
 export const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
 export const AssignmentToConstant = (n) => `Assignment to constant variable ${i(n)}`;
 export const BigIntDivideByZero = () => 'Division by zero';
 export const BigIntNegativeExponent = () => 'Exponent must be positive';
 export const BigIntUnsignedRightShift = () => 'BigInt has no unsigned right shift, use >> instead';
+export const BufferContentTypeMismatch = () => 'Newly created TypedArray did not match exemplar\'s content type';
 export const BufferDetachKeyMismatch = (k, b) => `${i(k)} is not the [[ArrayBufferDetachKey]] of ${i(b)}`;
-export const BufferDetached = () => 'Cannot operate on detached ArrayBuffer';
 export const CannotAllocateDataBlock = () => 'Cannot allocate memory';
 export const CannotCreateProxyWith = (x, y) => `Cannot create a proxy with a ${x} as ${y}`;
 export const CannotConvertDecimalToBigInt = (n) => `Cannot convert ${i(n)} to a BigInt because it is not an integer`;
@@ -35,7 +36,6 @@ export const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use ex
 export const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';
 export const CannotSetProperty = (p, o) => `Cannot set property ${i(p)} on ${i(o)}`;
 export const ConstructorNonCallable = (f) => `${i(f)} cannot be invoked without new`;
-export const ConstructorRequiresNew = (n) => `${n} constructor requires new`;
 export const CouldNotResolveModule = (s) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 export const DateInvalidTime = () => 'Invalid time';

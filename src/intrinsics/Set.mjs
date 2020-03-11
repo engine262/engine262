@@ -16,7 +16,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function SetConstructor([iterable = Value.undefined], { NewTarget }) {
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Set');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']));
   set.SetData = [];

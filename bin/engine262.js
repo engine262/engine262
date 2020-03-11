@@ -247,8 +247,12 @@ Please report bugs to ${packageJson.bugs.url}
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
-      const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
-      callback(null, result);
+      try {
+        const result = realm.evaluateScript(cmd, { specifier: process.cwd() });
+        callback(null, result);
+      } catch (e) {
+        callback(e, null);
+      }
     },
     preview: false,
     completer: () => [],

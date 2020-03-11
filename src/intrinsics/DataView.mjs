@@ -5,43 +5,56 @@ import {
   ToIndex,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-// 24.3.2 #sec-dataview-constructor
+// #sec-dataview-constructor
 function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {
-  if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'DataView');
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
+  // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
   Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
+  // 3. Let offset be ? ToIndex(byteOffset).
   const offset = Q(ToIndex(byteOffset)).numberValue();
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
+  // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
   const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
+  // 6. If offset > bufferByteLength, throw a RangeError exception.
   if (offset > bufferByteLength) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
   }
   let viewByteLength;
+  // 7. If byteLength is undefined, then
   if (byteLength === Value.undefined) {
+    // a. Let viewByteLength be bufferByteLength - offset.
     viewByteLength = bufferByteLength - offset;
   } else {
+    // a. Let viewByteLength be ? ToIndex(byteLength).
     viewByteLength = Q(ToIndex(byteLength)).numberValue();
+    // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
     if (offset + viewByteLength > bufferByteLength) {
       return surroundingAgent.Throw('RangeError', 'DataViewOOB');
     }
   }
+  // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
   const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']));
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
+  // 11. Set O.[[ViewedArrayBuffer]] to buffer.
   O.ViewedArrayBuffer = buffer;
+  // 12. Set O.[[ByteLength]] to viewByteLength.
   O.ByteLength = new Value(viewByteLength);
+  // 13. Set O.[[ByteOffset]] to offset.
   O.ByteOffset = new Value(offset);
+  // 14. Return O.
   return O;
 }
 

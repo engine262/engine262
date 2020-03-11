@@ -308,6 +308,8 @@ export function SetDefaultGlobalBindings(realmRec) {
     'ArrayBuffer',
     'Boolean',
     'BigInt',
+    'BigInt64Array',
+    'BigUint64Array',
     'DataView',
     'Date',
     'Error',

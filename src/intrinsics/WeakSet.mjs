@@ -17,7 +17,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakSet');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakSet.prototype%", « [[WeakSetData]] »).
   const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']));

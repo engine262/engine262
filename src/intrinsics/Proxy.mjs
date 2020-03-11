@@ -19,7 +19,7 @@ import { assignProps } from './Bootstrap.mjs';
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'Proxy');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Return ? ProxyCreate(target, handler).
   return Q(ProxyCreate(target, handler));

@@ -185,16 +185,9 @@ export function CreateByteDataBlock(size) {
 
 // 6.2.7.3 #sec-copydatablockbytes
 export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
-  Assert(Type(toIndex) === 'Number');
-  Assert(Type(fromIndex) === 'Number');
-  Assert(Type(count) === 'Number');
-  toIndex = toIndex.numberValue();
-  fromIndex = fromIndex.numberValue();
-  count = count.numberValue();
-
   Assert(fromBlock !== toBlock);
-  Assert(Type(fromBlock) === 'Data Block' /* || Type(fromBlock) === 'Shared Data Block' */);
-  Assert(Type(toBlock) === 'Data Block' /* || Type(toBlock) === 'Shared Data Block' */);
+  Assert(Type(fromBlock) === 'Data Block' || Type(fromBlock) === 'Shared Data Block');
+  Assert(Type(toBlock) === 'Data Block' || Type(toBlock) === 'Shared Data Block');
   Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0);
   Assert(Number.isSafeInteger(toIndex) && toIndex >= 0);
   Assert(Number.isSafeInteger(count) && count >= 0);
@@ -203,12 +196,12 @@ export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count
   const toSize = toBlock.byteLength;
   Assert(toIndex + count <= toSize);
   while (count > 0) {
-    // if (Type(fromBlock) === 'Shared Data Block') {
-    //   ...
-    // } else {
-    Assert(Type(toBlock) !== 'Shared Data Block');
-    toBlock[toIndex] = fromBlock[fromIndex];
-    // }
+    if (Type(fromBlock) === 'Shared Data Block') {
+      Assert(false);
+    } else {
+      Assert(Type(toBlock) !== 'Shared Data Block');
+      toBlock[toIndex] = fromBlock[fromIndex];
+    }
     toIndex += 1;
     fromIndex += 1;
     count -= 1;

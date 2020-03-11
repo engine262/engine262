@@ -1,46 +1,44 @@
 import { surroundingAgent } from '../engine.mjs';
-import {
-  AllocateArrayBuffer,
-  ToIndex,
-} from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { Type, Value, wellKnownSymbols } from '../value.mjs';
 import { Q } from '../completion.mjs';
+import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-// 24.1.2 #sec-arraybuffer-constructor
+// #sec-arraybuffer-length
 function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
-  if (Type(NewTarget) === 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'ArrayBuffer');
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
+  // 2. Let byteLength be ? ToIndex(length).
   const byteLength = Q(ToIndex(length));
+  // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
   return Q(AllocateArrayBuffer(NewTarget, byteLength));
 }
 
-// 24.1.3.1 #sec-arraybuffer.isview
+// #sec-arraybuffer.isview
 function ArrayBuffer_isView([arg = Value.undefined]) {
+  // 1. If Type(arg) is not Object, return false.
   if (Type(arg) !== 'Object') {
     return Value.false;
   }
+  // 2. If arg has a [[ViewedArrayBuffer]] internal slot, return true.
   if ('ViewedArrayBuffer' in arg) {
     return Value.true;
   }
+  // 3. Return false.
   return Value.false;
 }
 
-// 24.1.3.3 #sec-get-arraybuffer-@@species
-function ArrayBuffer_speciesGetter(a, { thisValue }) {
+// #sec-get-arraybuffer-@@species
+function ArrayBuffer_species(a, { thisValue }) {
   return thisValue;
 }
 
 export function BootstrapArrayBuffer(realmRec) {
-  const abConstructor = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
+  const c = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
     ['isView', ArrayBuffer_isView, 1],
-    [wellKnownSymbols.species, [ArrayBuffer_speciesGetter]],
+    [wellKnownSymbols.species, [ArrayBuffer_species]],
   ]);
-
-  realmRec.Intrinsics['%ArrayBuffer%'] = abConstructor;
+  realmRec.Intrinsics['%ArrayBuffer%'] = c;
 }

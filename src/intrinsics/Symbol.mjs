@@ -19,7 +19,7 @@ export const GlobalSymbolRegistry = [];
 
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAConstructor', surroundingAgent.activeFunctionObject);
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   let descString;
   if (description === Value.undefined) {

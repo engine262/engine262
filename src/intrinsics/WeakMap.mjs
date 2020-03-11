@@ -15,7 +15,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorRequiresNew', 'WeakMap');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
   const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData']));

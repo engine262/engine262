@@ -333,6 +333,14 @@ export class BigIntValue extends PrimitiveValue {
     return this.bigint;
   }
 
+  isNaN() {
+    return false;
+  }
+
+  isFinite() {
+    return true;
+  }
+
   // #sec-numeric-types-bigint-unaryMinus
   static unaryMinus(x) {
     if (x.bigintValue() === 0n) {

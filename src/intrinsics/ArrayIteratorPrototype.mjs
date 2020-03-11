@@ -35,8 +35,8 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   const itemKind = O.ArrayLikeIterationKind;
   let len;
   if ('TypedArrayName' in a) {
-    if (IsDetachedBuffer(a.ViewedArrayBuffer)) {
-      return surroundingAgent.Throw('TypeError', 'BufferDetached');
+    if (IsDetachedBuffer(a.ViewedArrayBuffer) === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     len = a.ArrayLength;
   } else {

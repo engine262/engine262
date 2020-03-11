@@ -1,115 +1,150 @@
-import { Q, X, NormalCompletion } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Value, Type } from '../value.mjs';
+import { Type, Value } from '../value.mjs';
+import { Q, X, NormalCompletion } from '../completion.mjs';
 import {
-  Assert,
-  CreateByteDataBlock,
-  CopyDataBlockBytes,
-  IsConstructor,
-  OrdinaryCreateFromConstructor,
-  SameValue,
-  numericTypeInfo,
+  Assert, OrdinaryCreateFromConstructor,
+  IsNonNegativeInteger, CreateByteDataBlock,
+  SameValue, IsConstructor, CopyDataBlockBytes,
+  typedArrayInfoByType,
 } from './all.mjs';
 
-// This file covers abstract operations defined in
-// 24.1 #sec-arraybuffer-objects
-// and, for now
-// 24.2 #sec-sharedarraybuffer-objects
-
-// 24.1.1.1 #sec-allocatearraybuffer
+// #sec-allocatearraybuffer
 export function AllocateArrayBuffer(constructor, byteLength) {
-  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']));
-  Assert(byteLength.numberValue() >= 0);
-  Assert(Number.isInteger(byteLength.numberValue()));
+  // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', [
+    'ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey',
+  ]));
+  // 2. Assert: ! IsNonNegativeInteger(byteLength) is true.
+  Assert(X(IsNonNegativeInteger(byteLength)) === Value.true);
+  // 3. Let block be ? CreateByteDataBlock(byteLength).
   const block = Q(CreateByteDataBlock(byteLength));
+  // 4. Set obj.[[ArrayBufferData]] to block.
   obj.ArrayBufferData = block;
+  // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
   obj.ArrayBufferByteLength = byteLength;
+  // 6. Return obj.
   return obj;
 }
 
-// 24.1.1.2 #sec-isdetachedbuffer
+// #sec-isdetachedbuffer
 export function IsDetachedBuffer(arrayBuffer) {
+  // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer);
-  if (Type(arrayBuffer.ArrayBufferData) === 'Null') {
-    return true;
+  // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
+  if (arrayBuffer.ArrayBufferData === Value.null) {
+    return Value.true;
   }
-  return false;
+  // 3. Return false.
+  return Value.false;
 }
 
-// 24.1.1.3 #sec-detacharraybuffer
+// #sec-detacharraybuffer
 export function DetachArrayBuffer(arrayBuffer, key) {
-  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer);
+  // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
+  Assert(Type(arrayBuffer) === 'Object'
+         && 'ArrayBufferData' in arrayBuffer
+         && 'ArrayBufferByteLength' in arrayBuffer
+         && 'ArrayBufferDetachKey' in arrayBuffer);
+  // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false);
+  // 3. If key is not present, set key to undefined.
   if (key === undefined) {
     key = Value.undefined;
   }
+  // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
   if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
   }
+  // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
   arrayBuffer.ArrayBufferData = Value.null;
+  // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
   arrayBuffer.ArrayBufferByteLength = new Value(0);
-  return new NormalCompletion(Value.null);
+  // 7. Return NormalCompletion(null).
+  return NormalCompletion(Value.null);
 }
 
-// 24.1.1.4 #sec-clonearraybuffer
+// #sec-issharedarraybuffer
+export function IsSharedArrayBuffer(_obj) {
+  return Value.false;
+}
+
 export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
+  // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer);
+  // 2. Assert: IsConstructor(cloneConstructor) is true.
   Assert(IsConstructor(cloneConstructor) === Value.true);
+  // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
   const targetBuffer = Q(AllocateArrayBuffer(cloneConstructor, srcLength));
-  if (IsDetachedBuffer(srcBuffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(srcBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
+  // 5. Let srcBlock be srcBuffer.[[ArrayBufferData]].
   const srcBlock = srcBuffer.ArrayBufferData;
+  // 6. Let targetBlock be targetBuffer.[[ArrayBufferData]].
   const targetBlock = targetBuffer.ArrayBufferData;
-  CopyDataBlockBytes(targetBlock, new Value(0), srcBlock, srcByteOffset, srcLength);
+  // 7. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
+  CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset.numberValue(), srcLength.numberValue());
+  // 8. Return targetBuffer.
   return targetBuffer;
+}
+
+// #sec-isbigintelementtype
+export function IsBigIntElementType(type) {
+  // 1. If type is BigUint64 or BigInt64, return true.
+  if (type === 'BigUint64' || type === 'BigInt64') {
+    return Value.true;
+  }
+  // 2. Return false
+  return Value.false;
 }
 
 const throwawayBuffer = new ArrayBuffer(8);
 const throwawayDataView = new DataView(throwawayBuffer);
 const throwawayArray = new Uint8Array(throwawayBuffer);
 
-// 24.1.1.5 #sec-rawbytestonumber
-// Sigh…
-export function RawBytesToNumber(type, rawBytes, isLittleEndian) {
-  isLittleEndian = isLittleEndian === Value.true;
-  const elementSize = numericTypeInfo.get(type).ElementSize;
+// #sec-rawbytestonumeric
+export function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
+  // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+  const elementSize = typedArrayInfoByType[type].ElementSize;
   Assert(elementSize === rawBytes.length);
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray, rawBytes);
-  return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian));
+  return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true));
 }
 
-// 24.1.1.6 #sec-getvaluefrombuffer
+// #sec-getvaluefrombuffer
 export function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
-  byteIndex = byteIndex.numberValue();
-  Assert(!IsDetachedBuffer(arrayBuffer));
-  const info = numericTypeInfo.get(type);
-  Assert(info !== undefined);
-  Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize);
-  Assert(byteIndex >= 0 && Number.isInteger(byteIndex));
+  // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
+  Assert(X(IsNonNegativeInteger(byteIndex)) === Value.true);
+  // 4. Let block be arrayBuffer.[[ArrayBufferData]].
   const block = arrayBuffer.ArrayBufferData;
-  const elementSize = info.ElementSize;
-  // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-  //
-  // } else {
-  const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)];
-  // }
+  // 5. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+  const elementSize = typedArrayInfoByType[type].ElementSize;
+  // 6. If IsSharedArrayBuffer(arrayBuffer) is true, then
+  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
+    Assert(false);
+  }
+  // 7. Else, let rawValue be a List of elementSize containing, in order, the elementSize sequence of bytes starting with block[byteIndex].
+  const rawValue = [...block.subarray(byteIndex.numberValue(), byteIndex.numberValue() + elementSize)];
+  // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.LittleEndian;
   }
-  return RawBytesToNumber(type, rawValue, isLittleEndian);
+  // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
+  return RawBytesToNumeric(type, rawValue, isLittleEndian);
 }
 
-// An implementation must always choose the same encoding for each
-// implementation distinguishable NaN value.
 const float32NaNLE = Object.freeze([0, 0, 192, 127]);
 const float32NaNBE = Object.freeze([127, 192, 0, 0]);
 const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
 const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
-// 24.1.1.7 #sec-numbertorawbytes
-export function NumberToRawBytes(type, value, isLittleEndian) {
+// #sec-numerictorawbytes
+export function NumericToRawBytes(type, value, isLittleEndian) {
   Assert(Type(isLittleEndian) === 'Boolean');
   isLittleEndian = isLittleEndian === Value.true;
   let rawBytes;
@@ -129,52 +164,50 @@ export function NumberToRawBytes(type, value, isLittleEndian) {
       rawBytes = [...throwawayArray.subarray(0, 8)];
     }
   } else {
-    const info = numericTypeInfo.get(type);
-    const n = info.ElementSize;
-    const convOp = info.ConversionOperation;
-    const intValue = X(convOp(value)).numberValue();
+    // a. Let n be the Element Size value specified in Table 61 for Element Type type.
+    const n = typedArrayInfoByType[type].ElementSize;
+    // b. Let convOp be the abstract operation named in the Conversion Operation column in Table 61 for Element Type type.
+    const convOp = typedArrayInfoByType[type].ConversionOperation;
+    // c. Let intValue be convOp(value) treated as a mathematical value, whether the result is a BigInt or Number.
+    const intValue = X(convOp(value));
     const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-    throwawayDataView[`set${dataViewType}`](0, intValue, isLittleEndian);
+    throwawayDataView[`set${dataViewType}`](0, intValue.bigintValue ? intValue.bigintValue() : intValue.numberValue(), isLittleEndian);
     rawBytes = [...throwawayArray.subarray(0, n)];
   }
   return rawBytes;
 }
 
-// 24.1.1.8 #sec-setvalueinbuffer
+// #sec-setvalueinbuffer
 export function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
-  byteIndex = byteIndex.numberValue();
-  Assert(!IsDetachedBuffer(arrayBuffer));
-  const info = numericTypeInfo.get(type);
-  Assert(info !== undefined);
-  Assert(arrayBuffer.ArrayBufferByteLength.numberValue() - byteIndex >= info.ElementSize);
-  Assert(byteIndex >= 0 && Number.isInteger(byteIndex));
-  Assert(Type(value) === 'Number');
+  // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
+  Assert(X(IsNonNegativeInteger(byteIndex)) === Value.true);
+  // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
+  if (X(IsBigIntElementType(type)) === Value.true) {
+    Assert(Type(value) === 'BigInt');
+  } else {
+    Assert(Type(value) === 'Number');
+  }
+  // 5. Let block be arrayBuffer.[[ArrayBufferData]].
   const block = arrayBuffer.ArrayBufferData;
-  // const elementSize = info.ElementSize;
+  // 6. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
+  // const elementSize = typedArrayInfo[type].ElementSize;
+  // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.LittleEndian;
   }
-  const rawBytes = NumberToRawBytes(type, value, isLittleEndian);
-  // if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
-  //
-  // } else {
-  for (let i = 0; i < rawBytes.length; i += 1) {
-    block[byteIndex + i] = rawBytes[i];
+  // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
+  const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
+  // 9. If IsSharedArrayBuffer(arrayBuffer) is true, then
+  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
+    Assert(false);
   }
-  // }
-  return new NormalCompletion(Value.undefined);
-}
-
-// 24.2.1.2 #sec-issharedarraybuffer
-export function IsSharedArrayBuffer(obj) {
-  Assert(Type(obj) === 'Object' && 'ArrayBufferData' in obj);
-  const bufferData = obj.ArrayBufferData;
-  if (Type(bufferData) === 'Null') {
-    return Value.false;
-  }
-  if (Type(bufferData) === 'Data Block') {
-    return Value.false;
-  }
-  Assert(Type(bufferData) === 'Shared Data Block');
-  return Value.true;
+  // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
+  rawBytes.forEach((byte, i) => {
+    block[byteIndex.numberValue() + i] = byte;
+  });
+  // 11. Return NormalCompletion(undefined).
+  return NormalCompletion(Value.undefined);
 }

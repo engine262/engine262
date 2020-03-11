@@ -287,7 +287,7 @@ export function ToBigInt(argument) {
       return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
     case 'Null':
       // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', argument);
+      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
     case 'Boolean':
       // Return 1n if prim is true and 0n if prim is false.
       if (prim === Value.true) {

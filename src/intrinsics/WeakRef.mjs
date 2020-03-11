@@ -8,7 +8,7 @@ import { BootstrapConstructor } from './Bootstrap.mjs';
 function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'WeakRef');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {

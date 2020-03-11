@@ -10,39 +10,82 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// 24.3.4.1 #sec-get-dataview.prototype.buffer
-function DataViewProto_bufferGetter(args, { thisValue }) {
+// #sec-get-dataview.prototype.buffer
+function DataViewProto_buffer(args, { thisValue }) {
+  // 1. Let O be the this value.
   const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
+  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
+  // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
+  // 5. Return buffer.
   return buffer;
 }
 
-// 24.3.4.2 #sec-get-dataview.prototype.bytelength
-function DataViewProto_byteLengthGetter(args, { thisValue }) {
+// #sec-get-dataview.prototype.bytelength
+function DataViewProto_byteLength(args, { thisValue }) {
+  // 1. Let O be the this value.
   const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
+  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
+  // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
+  // 6. Let size be O.[[ByteLength]].
   const size = O.ByteLength;
+  // 7. Return size.
   return size;
 }
 
-// 24.3.4.3 #sec-get-dataview.prototype.byteoffset
-function DataViewProto_byteOffsetGetter(args, { thisValue }) {
+// #sec-get-dataview.prototype.byteoffset
+function DataViewProto_byteOffset(args, { thisValue }) {
+  // 1. Let O be the this value.
   const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
+  // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
+  // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  if (IsDetachedBuffer(buffer)) {
-    return surroundingAgent.Throw('TypeError', 'BufferDetached');
+  // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
+  // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
+  // 7. Return offset.
   return offset;
+}
+
+// #sec-dataview.prototype.getbigint64
+function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+  // 1. Let v be the this value.
+  const v = thisValue;
+  // 2. If littleEndian is not present, set littleEndian to undefined.
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  }
+  // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigInt64).
+  return Q(GetViewValue(v, byteOffset, littleEndian, 'BigInt64'));
+}
+
+// #sec-dataview.prototype.getbiguint64
+function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+  // 1. Let v be the this value.
+  const v = thisValue;
+  // 2. If littleEndian is not present, set littleEndian to undefined.
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  }
+  // 3. Return ? GetViewValue(v, byteOffset, littleEndian, BigUint64).
+  return Q(GetViewValue(v, byteOffset, littleEndian, 'BigUint64'));
 }
 
 // 24.3.4.5 #sec-dataview.prototype.getfloat32
@@ -109,6 +152,30 @@ function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], {
     littleEndian = Value.false;
   }
   return Q(GetViewValue(v, byteOffset, littleEndian, 'Uint32'));
+}
+
+// #sec-dataview.prototype.setbigint64
+function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+  // 1. Let v be the this value.
+  const v = thisValue;
+  // 2. If littleEndian is not present, set littleEndian to undefined.
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  }
+  // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigInt64, value).
+  return Q(SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value));
+}
+
+// #sec-dataview.prototype.setbiguint64
+function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+  // 1. Let v be the this value.
+  const v = thisValue;
+  // 2. If littleEndian is not present, set littleEndian to undefined.
+  if (littleEndian === undefined) {
+    littleEndian = Value.undefined;
+  }
+  // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigUint64, value).
+  return Q(SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value));
 }
 
 // 24.3.4.13 #sec-dataview.prototype.setfloat32
@@ -179,9 +246,11 @@ function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.un
 
 export function BootstrapDataViewPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
-    ['buffer', [DataViewProto_bufferGetter]],
-    ['byteLength', [DataViewProto_byteLengthGetter]],
-    ['byteOffset', [DataViewProto_byteOffsetGetter]],
+    ['buffer', [DataViewProto_buffer]],
+    ['byteLength', [DataViewProto_byteLength]],
+    ['byteOffset', [DataViewProto_byteOffset]],
+    ['getBigInt64', DataViewProto_getBigInt64, 1],
+    ['getBigUint64', DataViewProto_getBigUint64, 1],
     ['getFloat32', DataViewProto_getFloat32, 1],
     ['getFloat64', DataViewProto_getFloat64, 1],
     ['getInt8', DataViewProto_getInt8, 1],
@@ -190,6 +259,8 @@ export function BootstrapDataViewPrototype(realmRec) {
     ['getUint8', DataViewProto_getUint8, 1],
     ['getUint16', DataViewProto_getUint16, 1],
     ['getUint32', DataViewProto_getUint32, 1],
+    ['setBigInt64', DataViewProto_setBigInt64, 2],
+    ['setBigUint64', DataViewProto_setBigUint64, 2],
     ['setFloat32', DataViewProto_setFloat32, 2],
     ['setFloat64', DataViewProto_setFloat64, 2],
     ['setInt8', DataViewProto_setInt8, 2],

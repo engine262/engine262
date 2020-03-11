@@ -1,17 +1,3 @@
-// WIP
-built-ins/TypedArrayConstructors/BigInt64Array/**/*.js
-built-ins/TypedArrayConstructors/BigUint64Array/**/*.js
-built-ins/DataView/prototype/getBigInt64/**/*.js
-built-ins/DataView/prototype/getBigUint64/**/*.js
-built-ins/DataView/prototype/setBigInt64/**/*.js
-built-ins/DataView/prototype/setBigUint64/**/*.js
-built-ins/TypedArrayConstructors/ctors/typedarray-arg/src-typedarray-big-throws.js
-built-ins/TypedArrayConstructors/ctors-bigint/**/*.js
-built-ins/TypedArray/prototype/set/src-typedarray-big-throws.js
-built-ins/TypedArray/**/BigInt/**/*.js
-built-ins/TypedArrayConstructors/**/BigInt/**/*.js
-built-ins/TypedArrayConstructors/**/bigint-*.js
-
 // more parsing issues
 language/expressions/postfix-decrement/arguments-nostrict.js
 language/expressions/postfix-decrement/eval-nostrict.js
