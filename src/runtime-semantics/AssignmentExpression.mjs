@@ -1,8 +1,10 @@
-import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import { Value } from '../value.mjs';
+import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import {
   GetReferencedName,
   GetValue,
   PutValue,
+  ToBoolean,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,
@@ -19,6 +21,10 @@ import {
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
+// https://tc39.es/proposal-logical-assignment/#sec-assignment-operators-runtime-semantics-evaluation
+//     LeftHandSideExpression `&&=` AssignmentExpression
+//     LeftHandSideExpression `||=` AssignmentExpression
+//     LeftHandSideExpression `??=` AssignmentExpression
 export function* Evaluate_AssignmentExpression(node) {
   const LeftHandSideExpression = node.left;
   const AssignmentExpression = node.right;
@@ -40,6 +46,61 @@ export function* Evaluate_AssignmentExpression(node) {
     const rref = yield* Evaluate(AssignmentExpression);
     const rval = Q(GetValue(rref));
     Q(yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rval));
+    return rval;
+  } else if (node.operator === '&&=') {
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression);
+    // 2. Let lval be ? GetValue(lref).
+    const lval = Q(GetValue(lval));
+    // 3. Let lbool be ! ToBoolean(lval).
+    const lbool = X(ToBoolean(lval));
+    // 4. If lbool is false, return lval.
+    if (lbool === Value.false) {
+      return lval;
+    }
+    // 5. Let rref be the result of evaluating AssignmentExpression.
+    const rref = yield* Evaluate(AssignmentExpression);
+    // 6. Let rval be ? GetValue(rref).
+    const rval = Q(GetValue(rref));
+    // 7. Perform ? PutValue(lref, rval).
+    Q(PutValue(lref, rval));
+    // 8. Return rval.
+    return rval;
+  } else if (node.operator === '||=') {
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression);
+    // 2. Let lval be ? GetValue(lref).
+    const lval = Q(GetValue(lref));
+    // 3. Let lbool be ! ToBoolean(lval).
+    const lbool = X(ToBoolean(lval));
+    // 4. If lbool is true, return lval.
+    if (lbool === Value.true) {
+      return lval;
+    }
+    // 5. Let rref be the result of evaluating AssignmentExpression.
+    const rref = yield* Evaluate(AssignmentExpression);
+    // 6. Let rval be ? GetValue(rref).
+    const rval = Q(GetValue(rref));
+    // 7. Perform ? PutValue(lref, rval).
+    Q(PutValue(lref, rval));
+    // 8. Return rval.
+    return rval;
+  } else if (node.operator === '??=') {
+    // 1.Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression);
+    // 2. Let lval be ? GetValue(lref).
+    const lval = Q(GetValue(lref));
+    // 3. If lval is not undefined nor null, return lval.
+    if (lval !== Value.undefined && lval !== Value.null) {
+      return lval;
+    }
+    // 4. Let rref be the result of evaluating AssignmentExpression.
+    const rref = yield* Evaluate(AssignmentExpression);
+    // 5. Let rval be ? GetValue(rref).
+    const rval = Q(GetValue(rref));
+    // 6. Perform ? PutValue(lref, rval).
+    Q(PutValue(lref, rval));
+    // 7. Return rval.
     return rval;
   } else {
     const AssignmentOperator = node.operator;

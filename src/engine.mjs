@@ -37,6 +37,10 @@ export const FEATURES = Object.freeze([
     name: 'WeakRefs',
     url: 'https://github.com/tc39/proposal-weakrefs',
   },
+  {
+    name: 'LogicalAssignment',
+    url: 'https://github.com/tc39/proposal-logical-assignment',
+  },
 ].map(Object.freeze));
 
 // #sec-agents

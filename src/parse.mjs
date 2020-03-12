@@ -76,23 +76,48 @@ const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
   }
 
   getTokenFromCode(code) {
-    if (code === 63) {
+    if (code === 63) { // ?
       this.pos += 1;
       const next = this.input.charCodeAt(this.pos);
-      if (next === 46) {
+      if (next === 46) { // .
         const nextNext = this.input.charCodeAt(this.pos + 1);
         if (nextNext < 48 || nextNext > 57) {
           this.pos += 1;
           return this.finishToken(optionalChainToken);
         }
       }
-      if (next === 63) {
+      if (next === 63) { // ??
         this.pos += 1;
+        const nextNext = this.input.charCodeAt(this.pos);
+        if (nextNext === 61 && surroundingAgent.feature('LogicalAssignment')) { // ??=
+          this.pos -= 2;
+          return this.finishOp(acorn.tokTypes.assign, 3);
+        }
         return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
       }
       return this.finishToken(acorn.tokTypes.question);
     }
     return super.getTokenFromCode(code);
+  }
+
+  readToken_pipe_amp(code) {
+    const next = this.input.charCodeAt(this.pos + 1);
+    if (next === code) { // || or &&
+      const nextNext = this.input.charCodeAt(this.pos + 2);
+      // https://tc39.es/proposal-logical-assignment/#sec-assignment-operators
+      if (nextNext === 61 && surroundingAgent.feature('LogicalAssignment')) { // ||= or &&=
+        return this.finishOp(acorn.tokTypes.assign, 3);
+      }
+      return this.finishOp(code === 124
+        ? acorn.tokTypes.logicalOR
+        : acorn.tokTypes.logicalAND, 2);
+    }
+    if (next === 61) { // |= or &=
+      return this.finishOp(acorn.tokTypes.assign, 2);
+    }
+    return this.finishOp(code === 124
+      ? acorn.tokTypes.bitwiseOR
+      : acorn.tokTypes.bitwiseAND, 1);
   }
 
   parseStatement(context, topLevel, exports) {
@@ -156,7 +181,7 @@ const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
      *
      *  a.b?.c.d.e
      *  @=>
-     *  OptionalExpressoin a.b?.c.d.e
+     *  OptionalExpression a.b?.c.d.e
      *      MemberExpression a.b
      *      OptionalChain ?.c.d.e
      *          OptionalChain ?.c.d
