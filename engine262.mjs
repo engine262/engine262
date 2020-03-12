@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 8c1f6f27bdd12ec2d3900224f983ca9198cd695b
+ * engine262 0.0.1 a38a19dca496fcad78951fd6d8e89246c01223b0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -5923,6 +5923,10 @@ function TopLevelVarScopedDeclarations_LabelledItem(LabelledItem) {
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
+// https://tc39.es/proposal-logical-assignment/#sec-assignment-operators-runtime-semantics-evaluation
+//     LeftHandSideExpression `&&=` AssignmentExpression
+//     LeftHandSideExpression `||=` AssignmentExpression
+//     LeftHandSideExpression `??=` AssignmentExpression
 
 function* Evaluate_AssignmentExpression(node) {
   const LeftHandSideExpression = node.left;
@@ -6003,11 +6007,11 @@ function* Evaluate_AssignmentExpression(node) {
       _temp4 = _temp4.Value;
     }
     return rval;
-  } else {
-    const AssignmentOperator = node.operator;
-    const lref = yield* Evaluate(LeftHandSideExpression);
+  } else if (node.operator === '&&=') {
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
 
-    let _temp5 = GetValue(lref);
+    let _temp5 = GetValue(lval);
 
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -6017,27 +6021,27 @@ function* Evaluate_AssignmentExpression(node) {
       _temp5 = _temp5.Value;
     }
 
-    const lval = _temp5;
-    const rref = yield* Evaluate(AssignmentExpression);
+    const lval = _temp5; // 3. Let lbool be ! ToBoolean(lval).
 
-    let _temp6 = GetValue(rref);
+    let _temp6 = ToBoolean(lval);
 
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
+    Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
 
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
 
-    const rval = _temp6; // Let op be the @ where AssignmentOperator is @=.
+    const lbool = _temp6; // 4. If lbool is false, return lval.
 
-    const op = AssignmentOperator.slice(0, -1); // Let r be the result of applying op to lval and rval
-    // as if evaluating the expression lval op rval.
+    if (lbool === Value.false) {
+      return lval;
+    } // 5. Let rref be the result of evaluating AssignmentExpression.
 
-    const r = EvaluateBinopValues(op, lval, rval);
 
-    let _temp7 = PutValue(lref, r);
+    const rref = yield* Evaluate(AssignmentExpression); // 6. Let rval be ? GetValue(rref).
+
+    let _temp7 = GetValue(rref);
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -6045,6 +6049,165 @@ function* Evaluate_AssignmentExpression(node) {
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
+    }
+
+    const rval = _temp7; // 7. Perform ? PutValue(lref, rval).
+
+    let _temp8 = PutValue(lref, rval);
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    return rval;
+  } else if (node.operator === '||=') {
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp9 = GetValue(lref);
+
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
+    }
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    const lval = _temp9; // 3. Let lbool be ! ToBoolean(lval).
+
+    let _temp10 = ToBoolean(lval);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    const lbool = _temp10; // 4. If lbool is true, return lval.
+
+    if (lbool === Value.true) {
+      return lval;
+    } // 5. Let rref be the result of evaluating AssignmentExpression.
+
+
+    const rref = yield* Evaluate(AssignmentExpression); // 6. Let rval be ? GetValue(rref).
+
+    let _temp11 = GetValue(rref);
+
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
+    }
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    const rval = _temp11; // 7. Perform ? PutValue(lref, rval).
+
+    let _temp12 = PutValue(lref, rval);
+
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    return rval;
+  } else if (node.operator === '??=') {
+    // 1.Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp13 = GetValue(lref);
+
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
+    }
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    const lval = _temp13; // 3. If lval is not undefined nor null, return lval.
+
+    if (lval !== Value.undefined && lval !== Value.null) {
+      return lval;
+    } // 4. Let rref be the result of evaluating AssignmentExpression.
+
+
+    const rref = yield* Evaluate(AssignmentExpression); // 5. Let rval be ? GetValue(rref).
+
+    let _temp14 = GetValue(rref);
+
+    if (_temp14 instanceof AbruptCompletion) {
+      return _temp14;
+    }
+
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
+    }
+
+    const rval = _temp14; // 6. Perform ? PutValue(lref, rval).
+
+    let _temp15 = PutValue(lref, rval);
+
+    if (_temp15 instanceof AbruptCompletion) {
+      return _temp15;
+    }
+
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
+    }
+
+    return rval;
+  } else {
+    const AssignmentOperator = node.operator;
+    const lref = yield* Evaluate(LeftHandSideExpression);
+
+    let _temp16 = GetValue(lref);
+
+    if (_temp16 instanceof AbruptCompletion) {
+      return _temp16;
+    }
+
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
+
+    const lval = _temp16;
+    const rref = yield* Evaluate(AssignmentExpression);
+
+    let _temp17 = GetValue(rref);
+
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
+    }
+
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+
+    const rval = _temp17; // Let op be the @ where AssignmentOperator is @=.
+
+    const op = AssignmentOperator.slice(0, -1); // Let r be the result of applying op to lval and rval
+    // as if evaluating the expression lval op rval.
+
+    const r = EvaluateBinopValues(op, lval, rval);
+
+    let _temp18 = PutValue(lref, r);
+
+    if (_temp18 instanceof AbruptCompletion) {
+      return _temp18;
+    }
+
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
     }
     return r;
   }
@@ -11867,10 +12030,12 @@ const Parser$1 = Parser.extend(P => class Parse262 extends P {
 
   getTokenFromCode(code) {
     if (code === 63) {
+      // ?
       this.pos += 1;
       const next = this.input.charCodeAt(this.pos);
 
       if (next === 46) {
+        // .
         const nextNext = this.input.charCodeAt(this.pos + 1);
 
         if (nextNext < 48 || nextNext > 57) {
@@ -11880,7 +12045,16 @@ const Parser$1 = Parser.extend(P => class Parse262 extends P {
       }
 
       if (next === 63) {
+        // ??
         this.pos += 1;
+        const nextNext = this.input.charCodeAt(this.pos);
+
+        if (nextNext === 61 && surroundingAgent.feature('LogicalAssignment')) {
+          // ??=
+          this.pos -= 2;
+          return this.finishOp(types.assign, 3);
+        }
+
         return this.finishToken(nullishCoalescingToken, nullishCoalescingToken.label);
       }
 
@@ -11888,6 +12062,29 @@ const Parser$1 = Parser.extend(P => class Parse262 extends P {
     }
 
     return super.getTokenFromCode(code);
+  }
+
+  readToken_pipe_amp(code) {
+    const next = this.input.charCodeAt(this.pos + 1);
+
+    if (next === code) {
+      // || or &&
+      const nextNext = this.input.charCodeAt(this.pos + 2); // https://tc39.es/proposal-logical-assignment/#sec-assignment-operators
+
+      if (nextNext === 61 && surroundingAgent.feature('LogicalAssignment')) {
+        // ||= or &&=
+        return this.finishOp(types.assign, 3);
+      }
+
+      return this.finishOp(code === 124 ? types.logicalOR : types.logicalAND, 2);
+    }
+
+    if (next === 61) {
+      // |= or &=
+      return this.finishOp(types.assign, 2);
+    }
+
+    return this.finishOp(code === 124 ? types.bitwiseOR : types.bitwiseAND, 1);
   }
 
   parseStatement(context, topLevel, exports) {
@@ -11957,7 +12154,7 @@ const Parser$1 = Parser.extend(P => class Parse262 extends P {
      *
      *  a.b?.c.d.e
      *  @=>
-     *  OptionalExpressoin a.b?.c.d.e
+     *  OptionalExpression a.b?.c.d.e
      *      MemberExpression a.b
      *      OptionalChain ?.c.d.e
      *          OptionalChain ?.c.d
@@ -45820,6 +46017,9 @@ const FEATURES = Object.freeze([{
 }, {
   name: 'WeakRefs',
   url: 'https://github.com/tc39/proposal-weakrefs'
+}, {
+  name: 'LogicalAssignment',
+  url: 'https://github.com/tc39/proposal-logical-assignment'
 }].map(Object.freeze)); // #sec-agents
 
 class Agent {
