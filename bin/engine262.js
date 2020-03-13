@@ -19,16 +19,15 @@ const snekparse = require('./snekparse');
 const {
   inspect,
   Agent,
-  Realm,
   Completion,
   AbruptCompletion,
   Value,
   Object: APIObject,
   Abstract,
   Throw,
-  ToString,
   FEATURES,
 } = require('..');
+const { createRealm } = require('../test/test262/test262_realm');
 
 const execArgv = [];
 let entry;
@@ -46,101 +45,6 @@ const programArgv = [];
       target.push(a);
     }
   });
-}
-
-function createRealm() {
-  const moduleCache = new Map();
-  const realm = new Realm({
-    resolveImportedModule(referencingModule, specifier) {
-      const resolved = path.resolve(path.dirname(referencingModule.specifier), specifier);
-      if (realm.moduleEntry && resolved === realm.moduleEntry.specifier) {
-        return realm.moduleEntry;
-      }
-      if (moduleCache.has(resolved)) {
-        return moduleCache.get(resolved);
-      }
-      if (!fs.existsSync(resolved)) {
-        return Throw(realm, 'Error', `Cannot resolve module ${specifier}`);
-      }
-      const source = fs.readFileSync(resolved, 'utf8');
-      const m = realm.createSourceTextModule(resolved, source);
-      moduleCache.set(resolved, m);
-      return m;
-    },
-  });
-
-  const print = new Value(realm, (args) => {
-    for (let i = 0; i < args.length; i += 1) {
-      const arg = args[i];
-      const s = ToString(realm, arg);
-      if (s instanceof AbruptCompletion) {
-        return s;
-      }
-      process.stdout.write(s);
-      if (i !== args.length - 1) {
-        process.stdout.write(' ');
-      }
-    }
-    process.stdout.write('\n');
-    return Value.undefined;
-  }, [], realm);
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
-
-  {
-    const console = new APIObject(realm);
-    Abstract.CreateDataProperty(realm.global, new Value(realm, 'console'), console);
-
-    const format = (args) => args.map((a, i) => {
-      if (i === 0 && Abstract.Type(a) === 'String') {
-        return a.stringValue();
-      }
-      return inspect(a, realm);
-    }).join(' ');
-
-    const log = new Value(realm, (args) => {
-      process.stdout.write(`${format(args)}\n`);
-      return Value.undefined;
-    });
-
-    Abstract.CreateDataProperty(console, new Value(realm, 'log'), log);
-
-    const error = new Value(realm, (args) => {
-      process.stderr.write(`${format(args)}\n`);
-      return Value.undefined;
-    });
-
-    Abstract.CreateDataProperty(console, new Value(realm, 'error'), error);
-
-    const debug = new Value(realm, (args) => {
-      process.stderr.write(`${util.format(...args)}\n`);
-      return Value.undefined;
-    });
-
-    Abstract.CreateDataProperty(console, new Value(realm, 'debug'), debug);
-  }
-
-  const $ = new APIObject(realm);
-  realm.$ = $;
-
-  Abstract.CreateDataProperty($, new Value(realm, 'global'), realm.global);
-  Abstract.CreateDataProperty($, new Value(realm, 'createRealm'), new Value(realm, () => {
-    const r = createRealm();
-    return r.$;
-  }));
-  Abstract.CreateDataProperty($, new Value(realm, 'evalScript'),
-    new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
-
-  Abstract.CreateDataProperty($, new Value(realm, 'gc'), new Value(realm, () => Value.undefined));
-
-  Abstract.CreateDataProperty($, new Value(realm, 'invokeAbstract'), new Value(realm, ([name, ...args]) => {
-    const op = Abstract[name.stringValue()];
-    return op(...args);
-  }));
-
-  Abstract.CreateDataProperty(realm.global, new Value(realm, '$'), $);
-  Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $);
-
-  return realm;
 }
 
 const help = `
@@ -186,7 +90,39 @@ if (argv.features === 'all') {
 const agent = new Agent({ features });
 agent.enter();
 
-const realm = createRealm();
+const { realm, resolverCache } = createRealm({ printCompatMode: true });
+{
+  const console = new APIObject(realm);
+  Abstract.CreateDataProperty(realm.global, new Value(realm, 'console'), console);
+
+  const format = (args) => args.map((a, i) => {
+    if (i === 0 && Abstract.Type(a) === 'String') {
+      return a.stringValue();
+    }
+    return inspect(a, realm);
+  }).join(' ');
+
+  const log = new Value(realm, (args) => {
+    process.stdout.write(`${format(args)}\n`);
+    return Value.undefined;
+  });
+
+  Abstract.CreateDataProperty(console, new Value(realm, 'log'), log);
+
+  const error = new Value(realm, (args) => {
+    process.stderr.write(`${format(args)}\n`);
+    return Value.undefined;
+  });
+
+  Abstract.CreateDataProperty(console, new Value(realm, 'error'), error);
+
+  const debug = new Value(realm, (args) => {
+    process.stderr.write(`${util.format(...args)}\n`);
+    return Value.undefined;
+  });
+
+  Abstract.CreateDataProperty(console, new Value(realm, 'debug'), debug);
+}
 
 if (argv.inspector) {
   const inspector = require('../inspector');
@@ -199,7 +135,7 @@ function oneShotEval(source, filename) {
     result = realm.createSourceTextModule(filename, source);
     if (!(result instanceof AbruptCompletion)) {
       const module = result;
-      realm.moduleEntry = module;
+      resolverCache.set(filename, result);
       result = module.Link();
       if (!(result instanceof AbruptCompletion)) {
         result = module.Evaluate();

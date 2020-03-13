@@ -328,6 +328,10 @@ class APIValue extends Value {
     }
     return new Value(value);
   }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Value;
+  }
 }
 
 export {

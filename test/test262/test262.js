@@ -115,85 +115,18 @@ if (!process.send) {
   // worker
 
   const {
-    Agent, Realm, Value,
+    Agent, Value,
     FEATURES, Abstract,
-    Object: APIObject,
     Throw,
     AbruptCompletion,
     inspect,
   } = require('../..');
+  const { createRealm } = require('./test262_realm.js');
 
   const agent = new Agent({
     features: FEATURES.map((f) => f.name),
   });
   agent.enter();
-
-  const createRealm = (test) => {
-    const resolverCache = new Map();
-    const trackedPromises = new Set();
-    const realm = new Realm({
-      promiseRejectionTracker(promise, operation) {
-        switch (operation) {
-          case 'reject':
-            trackedPromises.add(promise);
-            break;
-          case 'handle':
-            trackedPromises.delete(promise);
-            break;
-          default:
-            throw new RangeError('promiseRejectionTracker', operation);
-        }
-      },
-      resolveImportedModule(referencingScriptOrModule, specifier) {
-        try {
-          const base = path.dirname(referencingScriptOrModule.specifier);
-          const resolved = path.resolve(base, specifier);
-          if (resolverCache.has(resolved)) {
-            return resolverCache.get(resolved);
-          }
-          const source = fs.readFileSync(resolved, 'utf8');
-          const m = realm.createSourceTextModule(resolved, source);
-          resolverCache.set(resolved, m);
-          return m;
-        } catch (e) {
-          return Throw(realm, e.name, e.message);
-        }
-      },
-    });
-
-    const $262 = new APIObject(realm);
-    realm.global.$262 = $262;
-
-    Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), new Value(realm, (args) => {
-      if ($262.handlePrint) {
-        $262.handlePrint(...args);
-      } else {
-        const formatted = args.map((a, i) => {
-          if (i === 0 && Abstract.Type(a) === 'String') {
-            return a.stringValue();
-          }
-          return inspect(a, realm);
-        }).join(' ');
-        console.log(test.file, formatted); // eslint-disable-line no-console
-      }
-      return Value.undefined;
-    }));
-
-    Abstract.CreateDataProperty($262, new Value(realm, 'global'), realm.global);
-    Abstract.CreateDataProperty($262, new Value(realm, 'createRealm'), new Value(realm, () => createRealm(test)));
-    Abstract.CreateDataProperty($262, new Value(realm, 'evalScript'), new Value(realm, ([sourceText]) => realm.evaluateScript(sourceText.stringValue())));
-    Abstract.CreateDataProperty($262, new Value(realm, 'detachArrayBuffer'), new Value(realm, ([arrayBuffer = Value.undefined]) => Abstract.DetachArrayBuffer(arrayBuffer)));
-    Abstract.CreateDataProperty($262, new Value(realm, 'gc'), new Value(realm, () => Value.undefined));
-
-    Abstract.CreateDataProperty(realm.global, new Value(realm, '$262'), $262);
-
-    $262.realm = realm;
-    $262.trackedPromises = trackedPromises;
-    $262.evalScript = (...args) => realm.evaluateScript(...args);
-    $262.resolverCache = resolverCache;
-
-    return $262;
-  };
 
   const isError = (realm, type, value) => {
     if (Abstract.Type(value) !== 'Object') {
@@ -224,27 +157,30 @@ if (!process.send) {
   const run = (test) => {
     const { file, contents, attrs } = test;
     const specifier = path.resolve(__dirname, 'test262', file);
-    const $262 = createRealm({ file });
+    const {
+      realm, trackedPromises,
+      resolverCache, setPrintHandle,
+    } = createRealm({ file });
     let asyncPromise;
     let timeout;
     if (attrs.flags.async) {
       asyncPromise = new Promise((resolve, reject) => {
         timeout = setTimeout(() => {
-          const failure = [...$262.trackedPromises][0];
+          const failure = [...trackedPromises][0];
           if (failure) {
-            resolve({ status: 'FAIL', error: inspect(failure.PromiseResult, $262.realm) });
+            resolve({ status: 'FAIL', error: inspect(failure.PromiseResult, realm) });
           } else {
             reject(new Error('timeout'));
           }
         }, 2500);
-        $262.handlePrint = (m) => {
+        setPrintHandle((m) => {
           if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
             resolve({ status: 'PASS' });
           } else {
-            resolve({ status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m, $262.realm) });
+            resolve({ status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m, realm) });
           }
-          $262.handlePrint = undefined;
-        };
+          setPrintHandle(undefined);
+        });
       });
     }
 
@@ -255,10 +191,10 @@ if (!process.send) {
     attrs.includes.forEach((include) => {
       const p = path.resolve(__dirname, `./test262/harness/${include}`);
       const source = includeCache[include] || fs.readFileSync(p, 'utf8');
-      $262.evalScript(source, { specifier: p });
+      realm.evaluateScript(source, { specifier: p });
     });
 
-    $262.evalScript(`
+    realm.evaluateScript(`
 var Test262Error = class Test262Error extends Error {};
 
 function $DONE(error) {
@@ -275,30 +211,30 @@ function $DONE(error) {
 
     let completion;
     if (attrs.flags.module) {
-      completion = $262.realm.createSourceTextModule(specifier, contents);
+      completion = realm.createSourceTextModule(specifier, contents);
       if (!(completion instanceof AbruptCompletion)) {
         const module = completion;
-        $262.resolverCache.set(specifier, module);
+        resolverCache.set(specifier, module);
         completion = module.Link();
         if (!(completion instanceof AbruptCompletion)) {
           completion = module.Evaluate();
           if (!(completion instanceof AbruptCompletion)) {
             if (completion.PromiseState === 'rejected') {
-              completion = Throw($262.realm, completion.PromiseResult);
+              completion = Throw(realm, completion.PromiseResult);
             }
           }
         }
       }
     } else {
-      completion = $262.evalScript(contents, { specifier });
+      completion = realm.evaluateScript(contents, { specifier });
     }
 
     if (completion instanceof AbruptCompletion) {
       clearTimeout(timeout);
-      if (attrs.negative && isError($262.realm, attrs.negative.type, completion.Value)) {
+      if (attrs.negative && isError(realm, attrs.negative.type, completion.Value)) {
         return { status: 'PASS' };
       } else {
-        return { status: 'FAIL', error: inspect(completion, $262.realm) };
+        return { status: 'FAIL', error: inspect(completion, realm) };
       }
     }
 
