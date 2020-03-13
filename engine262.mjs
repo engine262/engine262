@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 f32fc4fc94c082e6c102bfef2bc8d6b945f26158
+ * engine262 0.0.1 9017676dc2a4c67cdb63692442983307391398f1
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -58286,6 +58286,10 @@ class APIValue extends Value {
     }
 
     return new Value(value);
+  }
+
+  static [Symbol.hasInstance](v) {
+    return v instanceof Value;
   }
 
 }
