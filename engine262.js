@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 9017676dc2a4c67cdb63692442983307391398f1
+ * engine262 0.0.1 c1acd058c703a8148326ed3c87eac453332bb9ef
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -12443,7 +12443,7 @@
       Realm: realm,
       Environment: Value.undefined,
       Namespace: Value.undefined,
-      ImportMeta: Value.undefined,
+      ImportMeta: undefined,
       Async: body.containsTopLevelAwait ? Value.true : Value.false,
       AsyncEvaluating: Value.false,
       TopLevelCapability: Value.undefined,
@@ -12453,7 +12453,7 @@
       EvaluationError: Value.undefined,
       HostDefined: hostDefined,
       ECMAScriptCode: body,
-      Context: Value.undefined,
+      Context: undefined,
       RequestedModules: requestedModules,
       ImportEntries: importEntries,
       LocalExportEntries: localExportEntries,
@@ -17536,45 +17536,62 @@
 
 
   function Evaluate_ImportMeta() {
-    const module = GetActiveScriptOrModule();
-    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
-    let importMeta = module.ImportMeta;
+    // 1. Let module be GetActiveScriptOrModule().
+    const module = GetActiveScriptOrModule(); // 2. Assert: module is a Source Text Module Record;
 
-    if (importMeta === Value.undefined) {
-      importMeta = OrdinaryObjectCreate(Value.null);
+    Assert(module instanceof SourceTextModuleRecord, "module instanceof SourceTextModuleRecord"); // 3. Let importMeta be module.ImportMeta.
 
-      let _temp = HostGetImportMetaProperties(module);
+    let importMeta = module.ImportMeta; // 4. If importMeta is empty, then
 
-      Assert(!(_temp instanceof AbruptCompletion), "HostGetImportMetaProperties(module)" + ' returned an abrupt completion');
+    if (importMeta === undefined) {
+      let _temp = OrdinaryObjectCreate(Value.null);
+
+      Assert(!(_temp instanceof AbruptCompletion), "OrdinaryObjectCreate(Value.null)" + ' returned an abrupt completion');
       /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
 
-      const importMetaValues = _temp;
+      // a. Set importMeta to ! OrdinaryObjectCreate(null).
+      importMeta = _temp; // b. Let importMetaValues be ! HostGetImportMetaProperties(module).
+
+      let _temp2 = HostGetImportMetaProperties(module);
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "HostGetImportMetaProperties(module)" + ' returned an abrupt completion');
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      const importMetaValues = _temp2; // c. For each Record { [[Key]], [[Value]] } p that is an element of importMetaValues,
 
       for (const p of importMetaValues) {
-        let _temp2 = CreateDataProperty(importMeta, p.Key, p.Value);
+        let _temp3 = CreateDataProperty(importMeta, p.Key, p.Value);
 
-        Assert(!(_temp2 instanceof AbruptCompletion), "CreateDataProperty(importMeta, p.Key, p.Value)" + ' returned an abrupt completion');
+        Assert(!(_temp3 instanceof AbruptCompletion), "CreateDataProperty(importMeta, p.Key, p.Value)" + ' returned an abrupt completion');
 
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
         }
+      } // d. Perform ! HostFinalizeImportMeta(importMeta, module).
+
+
+      let _temp4 = HostFinalizeImportMeta(importMeta, module);
+
+      Assert(!(_temp4 instanceof AbruptCompletion), "HostFinalizeImportMeta(importMeta, module)" + ' returned an abrupt completion');
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
       }
 
-      let _temp3 = HostFinalizeImportMeta(importMeta, module);
+      module.ImportMeta = importMeta; // f. Return importMeta.
 
-      Assert(!(_temp3 instanceof AbruptCompletion), "HostFinalizeImportMeta(importMeta, module)" + ' returned an abrupt completion');
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      module.ImportMeta = importMeta;
       return importMeta;
     } else {
-      Assert(Type(importMeta) === 'Object', "Type(importMeta) === 'Object'");
+      // a. Assert: Type(importMeta) is Object.
+      Assert(Type(importMeta) === 'Object', "Type(importMeta) === 'Object'"); // b. Return importMeta.
+
       return importMeta;
     }
   } // #prod-MetaProperty
