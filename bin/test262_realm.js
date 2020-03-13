@@ -9,7 +9,7 @@ const {
   ToString,
   AbruptCompletion,
   inspect,
-} = require('../..');
+} = require('..');
 
 const createRealm = ({ printCompatMode = false } = {}) => {
   const resolverCache = new Map();

@@ -19,7 +19,7 @@ if (!process.send) {
     skip,
     total,
     CPU_COUNT,
-  } = require('../base.js');
+  } = require('../base');
 
   const override = process.argv.find((e, i) => i > 1 && !e.startsWith('-'));
   const NUM_WORKERS = process.env.NUM_WORKERS
@@ -121,7 +121,7 @@ if (!process.send) {
     AbruptCompletion,
     inspect,
   } = require('../..');
-  const { createRealm } = require('./test262_realm.js');
+  const { createRealm } = require('../../bin/test262_realm');
 
   const agent = new Agent({
     features: FEATURES.map((f) => f.name),

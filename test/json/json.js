@@ -13,7 +13,7 @@ const {
   Realm,
   AbruptCompletion,
   inspect,
-} = require('../../');
+} = require('../..');
 
 const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
 

@@ -27,7 +27,7 @@ const {
   Throw,
   FEATURES,
 } = require('..');
-const { createRealm } = require('../test/test262/test262_realm');
+const { createRealm } = require('./test262_realm');
 
 const execArgv = [];
 let entry;
