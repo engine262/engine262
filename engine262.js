@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 c1acd058c703a8148326ed3c87eac453332bb9ef
+ * engine262 0.0.1 763f55a0e39da2643f0a7ac30c44b67a69c25458
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -17530,6 +17530,7 @@
   // NewTarget : `new` `.` `target`
 
   function Evaluate_NewTarget() {
+    // 1. Return GetNewTarget().
     return GetNewTarget();
   } // https://tc39.es/proposal-import-meta/#sec-meta-properties
   // ImportMeta : `import` `.` `meta`
@@ -49355,29 +49356,46 @@
     leafContext.poppedForTailCall = true;
   }
 
-  // 25.4 #sec-generator-objects
-  // 25.4.3.1 #sec-generatorstart
+  // #sec-generatorstart
 
   function GeneratorStart(generator, generatorBody) {
-    Assert(Type(generator.GeneratorState) === 'Undefined', "Type(generator.GeneratorState) === 'Undefined'");
-    const genContext = surroundingAgent.runningExecutionContext;
-    genContext.Generator = generator;
+    // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
+    Assert(generator.GeneratorState === Value.undefined, "generator.GeneratorState === Value.undefined"); // 2. Let genContext be the running execution context.
+
+    const genContext = surroundingAgent.runningExecutionContext; // 3. Set the Generator component of genContext to generator.
+
+    genContext.Generator = generator; // 4. Set the code evaluation state of genContext such that when evaluation is resumed
+    //    for that execution context the following steps will be performed:
 
     genContext.codeEvaluationState = function* resumer() {
-      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody)));
-      surroundingAgent.executionContextStack.pop(genContext);
-      generator.GeneratorState = 'completed';
-      genContext.codeEvaluationState = null;
+      // a. Let result be the result of evaluating generatorBody.
+      const result = EnsureCompletion((yield* Evaluate_FunctionBody(generatorBody))); // b. Assert: If we return here, the generator either threw an exception or
+      //    performed either an implicit or explicit return.
+      // c. Remove genContext from the execution context stack and restore the execution context
+      //    that is at the top of the execution context stack as the running execution context.
+
+      surroundingAgent.executionContextStack.pop(genContext); // d. Set generator.[[GeneratorState]] to completed.
+
+      generator.GeneratorState = 'completed'; // e. Once a generator enters the completed state it never leaves it and its
+      //    associated execution context is never resumed. Any execution state associated
+      //    with generator can be discarded at this point.
+
+      genContext.codeEvaluationState = null; // f. If result.[[Type]] is normal, let resultValue be undefined.
+
       let resultValue;
 
       if (result.Type === 'normal') {
         resultValue = Value.undefined;
       } else if (result.Type === 'return') {
+        // g. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
         resultValue = result.Value;
       } else {
-        Assert(result.Type === 'throw', "result.Type === 'throw'");
+        // i. Assert: result.[[Type]] is throw.
+        Assert(result.Type === 'throw', "result.Type === 'throw'"); // ii. Return Completion(result).
+
         return Completion(result);
-      }
+      } // i. Return CreateIterResultObject(resultValue, true).
+
 
       let _temp = CreateIterResultObject(resultValue, Value.true);
 
@@ -49389,12 +49407,15 @@
       }
 
       return _temp;
-    }();
+    }(); // 5. Set generator.[[GeneratorContext]] to genContext.
 
-    generator.GeneratorContext = genContext;
-    generator.GeneratorState = 'suspendedStart';
+
+    generator.GeneratorContext = genContext; // 6. Set generator.[[GeneratorState]] to suspendedStart.
+
+    generator.GeneratorState = 'suspendedStart'; // 7. Return NormalCompletion(undefined).
+
     return new NormalCompletion(Value.undefined);
-  } // 25.4.3.2 #sec-generatorvalidate
+  } // #sec-generatorvalidate
 
   function GeneratorValidate(generator) {
     let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
@@ -49410,15 +49431,18 @@
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator");
-    const state = generator.GeneratorState;
+
+    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator"); // 3. Let state be generator.[[GeneratorState]].
+
+    const state = generator.GeneratorState; // 4. If state is executing, throw a TypeError exception.
 
     if (state === 'executing') {
       return surroundingAgent.Throw('TypeError', 'GeneratorRunning');
-    }
+    } // 5. Return state.
+
 
     return state;
-  } // 25.4.3.3 #sec-generatorresume
+  } // #sec-generatorresume
 
   function GeneratorResume(generator, value) {
     let _temp3 = GeneratorValidate(generator);
@@ -49431,7 +49455,8 @@
       _temp3 = _temp3.Value;
     }
 
-    const state = _temp3;
+    // 1. Let state be ? GeneratorValidate(generator).
+    const state = _temp3; // 2. If state is completed, return CreateIterResultObject(undefined, true).
 
     if (state === 'completed') {
       let _temp4 = CreateIterResultObject(Value.undefined, Value.true);
@@ -49443,24 +49468,31 @@
       }
 
       return _temp4;
-    }
+    } // 3. Assert: state is either suspendedStart or suspendedYield.
 
-    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
-    const genContext = generator.GeneratorContext;
-    const originalStackLength = surroundingAgent.executionContextStack.length;
-    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
 
-    generator.GeneratorState = 'executing';
-    surroundingAgent.executionContextStack.push(genContext);
-    const result = resume(genContext, new NormalCompletion(value));
-    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
-    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
+    Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'"); // 4. Let genContext be generator.[[GeneratorContext]].
+
+    const genContext = generator.GeneratorContext; // 5. Let methodContext be the running execution context.
+    // 6. Suspend methodContext.
+
+    const methodContext = surroundingAgent.runningExecutionContext; // 7. Set generator.[[GeneratorState]] to executing.
+
+    generator.GeneratorState = 'executing'; // 8. Push genContext onto the execution context stack.
+
+    surroundingAgent.executionContextStack.push(genContext); // 9. Resume the suspended evaluation of genContext using NormalCompletion(value) as
+    //    the result of the operation that suspended it. Let result be the value returned by
+    //    the resumed computation.
+
+    const result = resume(genContext, new NormalCompletion(value)); // 10. Assert: When we return here, genContext has already been removed from the execution
+    //     context stack and methodContext is the currently running execution context.
+
+    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext"); // 11. Return Completion(result).
+
     return Completion(result);
-  } // 25.4.3.4 #sec-generatorresumeabrupt
+  } // #sec-generatorresumeabrupt
 
   function GeneratorResumeAbrupt(generator, abruptCompletion) {
-    Assert(abruptCompletion instanceof AbruptCompletion, "abruptCompletion instanceof AbruptCompletion");
-
     let _temp5 = GeneratorValidate(generator);
 
     if (_temp5 instanceof AbruptCompletion) {
@@ -49471,15 +49503,23 @@
       _temp5 = _temp5.Value;
     }
 
-    let state = _temp5;
+    // 1. Let state be ? GeneratorValidate(generator).
+    let state = _temp5; // 2. If state is suspendedStart, then
 
     if (state === 'suspendedStart') {
-      generator.GeneratorState = 'completed';
-      generator.GeneratorContext = null;
+      // a. Set generator.[[GeneratorState]] to completed.
+      generator.GeneratorState = 'completed'; // b. Once a generator enters the completed state it never leaves it and its
+      //    associated execution context is never resumed. Any execution state associate
+      //    with generator can be discarded at this point.
+
+      generator.GeneratorContext = null; // c. Set state to completed.
+
       state = 'completed';
-    }
+    } // 3. If state is completed, then
+
 
     if (state === 'completed') {
+      // a. If abruptCompletion.[[Type]] is return, then
       if (abruptCompletion.Type === 'return') {
         let _temp6 = CreateIterResultObject(abruptCompletion.Value, Value.true);
 
@@ -49489,22 +49529,33 @@
           _temp6 = _temp6.Value;
         }
 
+        // i. Return CreateIterResultObject(abruptCompletion.[[Value]], true).
         return _temp6;
-      }
+      } // b. Return Completion(abruptCompletion).
+
 
       return Completion(abruptCompletion);
-    }
+    } // 4. Assert: state is suspendedYield.
 
-    Assert(state === 'suspendedYield', "state === 'suspendedYield'");
-    const genContext = generator.GeneratorContext;
-    const originalStackLength = surroundingAgent.executionContextStack.length;
-    const methodContext = surroundingAgent.runningExecutionContext; // Suspend methodContext.
 
-    generator.GeneratorState = 'executing';
-    surroundingAgent.executionContextStack.push(genContext);
-    const result = resume(genContext, abruptCompletion);
-    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext");
-    Assert(surroundingAgent.executionContextStack.length === originalStackLength, "surroundingAgent.executionContextStack.length === originalStackLength");
+    Assert(state === 'suspendedYield', "state === 'suspendedYield'"); // 5. Let genContext be generator.[[GeneratorContext]].
+
+    const genContext = generator.GeneratorContext; // 6. Let methodContext be the running execution context.
+    // 7. Suspend methodContext.
+
+    const methodContext = surroundingAgent.runningExecutionContext; // 8. Set generator.[[GeneratorState]] to executing.
+
+    generator.GeneratorState = 'executing'; // 9. Push genContext onto the execution context stack.
+
+    surroundingAgent.executionContextStack.push(genContext); // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
+    //     result of the operation that suspended it. Let result be the completion record
+    //     returned by the resumed computation.
+
+    const result = resume(genContext, abruptCompletion); // 11. Assert: When we return here, genContext has already been removed from the
+    //     execution context stack and methodContext is the currently running execution context.
+
+    Assert(surroundingAgent.runningExecutionContext === methodContext, "surroundingAgent.runningExecutionContext === methodContext"); // 12. Return Completion(result).
+
     return Completion(result);
   } // 25.4.3.5 #sec-getgeneratorkind
 
