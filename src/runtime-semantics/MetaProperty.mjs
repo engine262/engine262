@@ -12,9 +12,10 @@ import { X } from '../completion.mjs';
 import { Type, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-// 12.3.9.1 #sec-meta-properties-runtime-semantics-evaluation
+// #sec-meta-properties-runtime-semantics-evaluation
 // NewTarget : `new` `.` `target`
 function Evaluate_NewTarget() {
+  // 1. Return GetNewTarget().
   return GetNewTarget();
 }
 
