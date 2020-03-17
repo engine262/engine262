@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 c68877ef1c4633daac8b58b5ce1876f709c1cc16
+ * engine262 0.0.1 ff42446e0f1f3010f52d87e352503697c3f3f400
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -47006,16 +47006,17 @@
 
   } // 6.2.3.3 #sec-throwcompletion
 
-  class ThrowCompletion {
-    constructor(value) {
-      return new Completion('throw', value);
-    }
-
-    static [Symbol.hasInstance](v) {
+  function ThrowCompletion(value) {
+    return new Completion('throw', value);
+  }
+  Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
+    value: function hasInstance(v) {
       return v instanceof Completion && v.Type === 'throw';
-    }
-
-  } // 6.2.3.4 #sec-updateempty
+    },
+    writable: true,
+    enumerable: false,
+    configurable: true
+  }); // 6.2.3.4 #sec-updateempty
 
   function UpdateEmpty(completionRecord, value) {
     Assert(completionRecord instanceof Completion, "completionRecord instanceof Completion");
