@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 2f8a7f5dca841764dc6250874764c9b9cd20c795
+ * engine262 0.0.1 c68877ef1c4633daac8b58b5ce1876f709c1cc16
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -36130,7 +36130,7 @@
 
         if (remainingElementsCount.Value === 0) {
           // 1. Let error be a newly created AggregateError object.
-          const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected'); // 2. Set error.[[AggregateErrors]] to errors.
+          const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value; // 2. Set error.[[AggregateErrors]] to errors.
 
           error.AggregateErrors = errors; // 3. Return ThrowCompletion(error).
 
