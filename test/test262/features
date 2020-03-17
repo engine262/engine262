@@ -27,5 +27,3 @@ export-star-as-namespace-from-module
 hashbang
 
 numeric-separator-literal
-
-AggregateError

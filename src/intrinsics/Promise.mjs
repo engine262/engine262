@@ -31,13 +31,12 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion, Completion,
+  ThrowCompletion,
   IfAbruptRejectPromise,
-  Q,
   ReturnIfAbrupt,
-  X,
+  Q, X,
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
-
 
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   if (NewTarget === Value.undefined) {
@@ -277,6 +276,149 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
+// https://tc39.es/proposal-promise-any/#sec-promise.any-reject-element-functions
+function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
+  // 1. Let F be the active function object.
+  const F = surroundingAgent.activeFunctionObject;
+  // 2. Let alreadyCalled be F.[[AlreadyCalled]].
+  const alreadyCalled = F.AlreadyCalled;
+  // 3. If alreadyCalled.[[Value]] is true, return undefined.
+  if (alreadyCalled.Value) {
+    return Value.undefined;
+  }
+  // 4. Set alreadyCalled.[[Value]] to true.
+  alreadyCalled.Value = true;
+  // 5. Let index be F.[[Index]].
+  const index = F.Index;
+  // 6. Let errors be F.[[Errors]].
+  const errors = F.Errors;
+  // 7. Let promiseCapability be F.[[Capability]].
+  const promiseCapability = F.Capability;
+  // 8. Let remainingElementsCount be F.[[RemainingElements]].
+  const remainingElementsCount = F.RemainingElements;
+  // 9. Set errors[index] to x.
+  errors[index] = x;
+  // 10. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+  remainingElementsCount.Value -= 1;
+  // 11. If remainingElementsCount.[[Value]] is 0, then
+  if (remainingElementsCount.Value === 0) {
+    // a. Let error be a newly created AggregateError object.
+    const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
+    // b. Set error.[[AggregateErrors]] to errors.
+    error.AggregateErrors = errors;
+    // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
+    return Q(Call(promiseCapability.Reject, Value.undefined, [error]));
+  }
+  // 12. Return undefined.
+  return Value.undefined;
+}
+
+// https://tc39.es/proposal-promise-any/#sec-performpromiseany
+function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
+  // 1. Assert: ! IsConstructor(constructor) is true.
+  Assert(X(IsConstructor(constructor)) === Value.true);
+  // 2. Assert: resultCapability is a PromiseCapability Record.
+  Assert(resultCapability instanceof PromiseCapabilityRecord);
+  // 3. Let errors be a new empty List.
+  const errors = [];
+  // 4. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
+  const remainingElementsCount = { Value: 1 };
+  // 5. Let index be 0.
+  let index = 0;
+  // 6. Let promiseResolve be ? Get(constructor, "resolve").
+  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+  // 7. If ! IsCallable(promiseResolve) is false, throw a TypeError exception.
+  if (X(IsCallable(promiseResolve)) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
+  }
+  // 8. Repeat,
+  while (true) {
+    // a. Let next be IteratorStep(iteratorRecord).
+    const next = IteratorStep(iteratorRecord);
+    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+    if (next instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    // c. ReturnIfAbrupt(next).
+    ReturnIfAbrupt(next);
+    // d. If next is false, then
+    if (next === Value.false) {
+      // i. Set iteratorRecord.[[Done]] to true.
+      iteratorRecord.Done = Value.true;
+      // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+      remainingElementsCount.Value -= 1;
+      // iii. If remainingElementsCount.[[Value]] is 0, then
+      if (remainingElementsCount.Value === 0) {
+        // 1. Let error be a newly created AggregateError object.
+        const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
+        // 2. Set error.[[AggregateErrors]] to errors.
+        error.AggregateErrors = errors;
+        // 3. Return ThrowCompletion(error).
+        return ThrowCompletion(error);
+      }
+      // iv. Return resultCapability.[[Promise]].
+      return resultCapability.Promise;
+    }
+    // e. Let nextValue be IteratorValue(next).
+    const nextValue = IteratorValue(next);
+    // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+    if (nextValue instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    // g. ReturnIfAbrupt(nextValue).
+    ReturnIfAbrupt(nextValue);
+    // h. Append undefined to errors.
+    errors.push(Value.undefined);
+    // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
+    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    // j. Let steps be the algorithm steps defined in Promise.any Reject Element Functions.
+    const steps = PromiseAnyRejectElementFunctions;
+    // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
+    const rejectElement = X(CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
+    // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
+    rejectElement.AlreadyCalled = { Value: false };
+    // m. Set rejectElement.[[Index]] to index.
+    rejectElement.Index = index;
+    // n. Set rejectElement.[[Errors]] to errors.
+    rejectElement.Errors = errors;
+    // o. Set rejectElement.[[Capability]] to resultCapability.
+    rejectElement.Capability = resultCapability;
+    // p. Set rejectElement.[[RemainingElements]] to remainingElementsCount.
+    rejectElement.RemainingElements = remainingElementsCount;
+    // q. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
+    remainingElementsCount.Value += 1;
+    // r. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], rejectElement »).
+    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]));
+    // s. Increase index by 1.
+    index += 1;
+  }
+}
+
+// https://tc39.es/proposal-promise-any/#sec-promise.any
+function Promise_any([iterable = Value.undefined], { thisValue }) {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability = Q(NewPromiseCapability(C));
+  // 3. Let iteratorRecord be GetIterator(iterable).
+  const iteratorRecord = GetIterator(iterable);
+  // 4. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
+  IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  // 5. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
+  let result = PerformPromiseAny(iteratorRecord, C, promiseCapability);
+  // 6. If result is an abrupt completion, then
+  if (result instanceof AbruptCompletion) {
+    // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+    if (iteratorRecord.Done === Value.false) {
+      result = IteratorClose(iteratorRecord, result);
+    }
+    // b. IfAbruptRejectPromise(result, promiseCapability).
+    IfAbruptRejectPromise(result, promiseCapability);
+  }
+  // 1. Return Completion(result).
+  return Completion(result);
+}
+
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
@@ -342,6 +484,9 @@ export function BootstrapPromise(realmRec) {
   const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
     ['allSettled', Promise_allSettled, 1],
+    surroundingAgent.feature('Promise.any')
+      ? ['any', Promise_any, 1]
+      : undefined,
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],

@@ -78,11 +78,14 @@ import { BootstrapWeakMapPrototype } from './intrinsics/WeakMapPrototype.mjs';
 import { BootstrapWeakMap } from './intrinsics/WeakMap.mjs';
 import { BootstrapWeakSetPrototype } from './intrinsics/WeakSetPrototype.mjs';
 import { BootstrapWeakSet } from './intrinsics/WeakSet.mjs';
-import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
-import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
+// Flagged features
+import { BootstrapAggregateError } from './intrinsics/AggregateError.mjs';
+import { BootstrapAggregateErrorPrototype } from './intrinsics/AggregateErrorPrototype.mjs';
 import { BootstrapFinalizationRegistryPrototype } from './intrinsics/FinalizationRegistryPrototype.mjs';
 import { BootstrapFinalizationRegistry } from './intrinsics/FinalizationRegistry.mjs';
 import { BootstrapFinalizationRegistryCleanupIteratorPrototype } from './intrinsics/FinalizationRegistryCleanupIteratorPrototype.mjs';
+import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
+import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
 
 // 8.2 #sec-code-realms
 export class Realm {
@@ -237,6 +240,11 @@ export function CreateIntrinsics(realmRec) {
   BootstrapWeakSetPrototype(realmRec);
   BootstrapWeakSet(realmRec);
 
+  if (surroundingAgent.feature('Promise.any')) {
+    BootstrapAggregateErrorPrototype(realmRec);
+    BootstrapAggregateError(realmRec);
+  }
+
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
@@ -355,6 +363,15 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
+
+  if (surroundingAgent.feature('Promise.any')) {
+    Q(DefinePropertyOrThrow(global, new Value('AggregateError'), Descriptor({
+      Value: realmRec.Intrinsics['%AggregateError%'],
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    })));
+  }
 
   if (surroundingAgent.feature('WeakRefs')) {
     Q(DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({

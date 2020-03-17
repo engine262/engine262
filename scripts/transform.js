@@ -19,14 +19,14 @@ function findParentStatementPath(path) {
   return path;
 }
 
-function isInsideConditionalExpression(path) {
+function getEnclosingConditionalExpression(path) {
   while (path && !path.isStatement()) {
     if (path.isConditionalExpression()) {
-      return true;
+      return path;
     }
     path = path.parentPath;
   }
-  return false;
+  return null;
 }
 
 module.exports = ({ types: t, template }) => {
@@ -143,8 +143,23 @@ module.exports = ({ types: t, template }) => {
 
         const macroName = path.node.callee.name;
         if (MACRO_NAMES.includes(macroName)) {
-          if (isInsideConditionalExpression(path)) {
-            throw path.buildCodeFrameError('Macros may not be used within conditional expressions');
+          const enclosingConditional = getEnclosingConditionalExpression(path);
+          if (enclosingConditional !== null) {
+            if (enclosingConditional.parentPath.isVariableDeclarator()) {
+              const declaration = enclosingConditional.parentPath.parentPath;
+              const id = enclosingConditional.parentPath.get('id');
+              declaration.replaceWithMultiple(template.ast(`
+              let ${id};
+              if (${enclosingConditional.get('test')}) {
+                ${id} = ${enclosingConditional.get('consequent')}
+              } else {
+                ${id} = ${enclosingConditional.get('alternate')}
+              }
+              `));
+              return;
+            } else {
+              throw path.buildCodeFrameError('Macros may not be used within conditional expressions');
+            }
           }
 
           const macro = MACROS[macroName];

@@ -69,6 +69,7 @@ export const ObjectToPrimitive = () => 'Cannot convert object to primitive value
 export const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 export const ObjectSetPrototype = () => 'Could not set prototype of object';
 export const OutOfRange = (n) => `${n} is out of range`;
+export const PromiseAnyRejected = () => 'No promises passed to Promise.any were fulfilled';
 export const PromiseCapabilityFunctionAlreadySet = (f) => `Promise ${f} function already set`;
 export const PromiseRejectFunction = (v) => `Promise reject function ${i(v)} is not callable`;
 export const PromiseResolveFunction = (v) => `Promise resolve function ${i(v)} is not callable`;

@@ -54,6 +54,7 @@ module.exports = {
     'no-use-before-define': 'off',
     'no-continue': 'off',
     'no-unused-vars': ['error', { vars: 'all', args: 'after-used', argsIgnorePattern: '^_' }],
+    'no-empty': ['error', { allowEmptyCatch: true }],
     'import/no-cycle': 'off',
     'import/extensions': 'off',
     'import/prefer-default-export': 'off',

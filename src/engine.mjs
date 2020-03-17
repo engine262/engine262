@@ -41,6 +41,10 @@ export const FEATURES = Object.freeze([
     name: 'LogicalAssignment',
     url: 'https://github.com/tc39/proposal-logical-assignment',
   },
+  {
+    name: 'Promise.any',
+    url: 'https://github.com/tc39/proposal-promise-any',
+  },
 ].map(Object.freeze));
 
 // #sec-agents
@@ -109,8 +113,15 @@ export class Agent {
     }
     const message = messages[template](...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    const error = Construct(cons, [new Value(message)]);
-    Assert(!(error instanceof AbruptCompletion));
+    let error;
+    if (type === 'AggregateError') {
+      error = X(Construct(cons, [
+        Symbol.for('engine262.placeholder'),
+        new Value(message),
+      ]));
+    } else {
+      error = X(Construct(cons, [new Value(message)]));
+    }
     return new ThrowCompletion(error);
   }
 

@@ -9,15 +9,21 @@ import { Q, X } from './completion.mjs';
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 const getObjectTag = (value, wrap) => {
+  let s;
   try {
-    const s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
+    s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
+  } catch {}
+  try {
+    const c = X(Get(value, new Value('constructor')));
+    s = X(Get(c, new Value('name'))).stringValue();
+  } catch {}
+  if (s) {
     if (wrap) {
       return `[${s}] `;
     }
     return s;
-  } catch {
-    return '';
   }
+  return '';
 };
 
 const compactObject = (realm, value) => {
@@ -109,7 +115,6 @@ const INSPECTORS = {
     ctx.inspected.push(v);
 
     try {
-      const tag = getObjectTag(v);
       const isArray = IsArray(v) === Value.true;
       const isTypedArray = 'TypedArrayName' in v;
       if (isArray || isTypedArray) {
@@ -147,7 +152,8 @@ const INSPECTORS = {
         }
       }
 
-      let out = tag ? `${tag} {` : '{';
+      const tag = getObjectTag(v);
+      let out = tag && tag !== 'Object' ? `${tag} {` : '{';
       if (cache.length > 5) {
         cache.forEach((c) => {
           out = `${out}\n${'  '.repeat(ctx.indent)}${c[0]}: ${c[1]},`;
