@@ -79,15 +79,18 @@ export class ReturnCompletion {
 }
 
 // 6.2.3.3 #sec-throwcompletion
-export class ThrowCompletion {
-  constructor(value) {
-    return new Completion('throw', value);
-  }
-
-  static [Symbol.hasInstance](v) {
-    return v instanceof Completion && v.Type === 'throw';
-  }
+export function ThrowCompletion(value) {
+  return new Completion('throw', value);
 }
+
+Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
+  value: function hasInstance(v) {
+    return v instanceof Completion && v.Type === 'throw';
+  },
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 // 6.2.3.4 #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
