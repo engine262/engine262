@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 dd2c2995d0332d60491c16e3e7628375729d9c50
+ * engine262 0.0.1 2f8a7f5dca841764dc6250874764c9b9cd20c795
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -36010,23 +36010,280 @@ function Promise_allSettled([iterable = Value.undefined], {
   }
 
   return Completion(result);
+} // https://tc39.es/proposal-promise-any/#sec-promise.any-reject-element-functions
+
+
+function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
+  // 1. Let F be the active function object.
+  const F = surroundingAgent.activeFunctionObject; // 2. Let alreadyCalled be F.[[AlreadyCalled]].
+
+  const alreadyCalled = F.AlreadyCalled; // 3. If alreadyCalled.[[Value]] is true, return undefined.
+
+  if (alreadyCalled.Value) {
+    return Value.undefined;
+  } // 4. Set alreadyCalled.[[Value]] to true.
+
+
+  alreadyCalled.Value = true; // 5. Let index be F.[[Index]].
+
+  const index = F.Index; // 6. Let errors be F.[[Errors]].
+
+  const errors = F.Errors; // 7. Let promiseCapability be F.[[Capability]].
+
+  const promiseCapability = F.Capability; // 8. Let remainingElementsCount be F.[[RemainingElements]].
+
+  const remainingElementsCount = F.RemainingElements; // 9. Set errors[index] to x.
+
+  errors[index] = x; // 10. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+
+  remainingElementsCount.Value -= 1; // 11. If remainingElementsCount.[[Value]] is 0, then
+
+  if (remainingElementsCount.Value === 0) {
+    // a. Let error be a newly created AggregateError object.
+    const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value; // b. Set error.[[AggregateErrors]] to errors.
+
+    error.AggregateErrors = errors; // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
+
+    return Call(promiseCapability.Reject, Value.undefined, [error]);
+  } // 12. Return undefined.
+
+
+  return Value.undefined;
+} // https://tc39.es/proposal-promise-any/#sec-performpromiseany
+
+
+function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
+  let _temp29 = IsConstructor(constructor);
+
+  Assert(!(_temp29 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion');
+
+  if (_temp29 instanceof Completion) {
+    _temp29 = _temp29.Value;
+  }
+
+  // 1. Assert: ! IsConstructor(constructor) is true.
+  Assert(_temp29 === Value.true, "X(IsConstructor(constructor)) === Value.true"); // 2. Assert: resultCapability is a PromiseCapability Record.
+
+  Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord"); // 3. Let errors be a new empty List.
+
+  const errors = []; // 4. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
+
+  const remainingElementsCount = {
+    Value: 1
+  }; // 5. Let index be 0.
+
+  let index = 0; // 6. Let promiseResolve be ? Get(constructor, "resolve").
+
+  let _temp30 = Get(constructor, new Value('resolve'));
+
+  if (_temp30 instanceof AbruptCompletion) {
+    return _temp30;
+  }
+
+  if (_temp30 instanceof Completion) {
+    _temp30 = _temp30.Value;
+  }
+
+  const promiseResolve = _temp30; // 7. If ! IsCallable(promiseResolve) is false, throw a TypeError exception.
+
+  let _temp31 = IsCallable(promiseResolve);
+
+  Assert(!(_temp31 instanceof AbruptCompletion), "IsCallable(promiseResolve)" + ' returned an abrupt completion');
+
+  if (_temp31 instanceof Completion) {
+    _temp31 = _temp31.Value;
+  }
+
+  if (_temp31 === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
+  } // 8. Repeat,
+
+
+  while (true) {
+    // a. Let next be IteratorStep(iteratorRecord).
+    let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+    if (next instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    } // c. ReturnIfAbrupt(next).
+
+
+    if (next instanceof AbruptCompletion) {
+      return next;
+    }
+
+    if (next instanceof Completion) {
+      next = next.Value;
+    }
+
+    if (next === Value.false) {
+      // i. Set iteratorRecord.[[Done]] to true.
+      iteratorRecord.Done = Value.true; // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+
+      remainingElementsCount.Value -= 1; // iii. If remainingElementsCount.[[Value]] is 0, then
+
+      if (remainingElementsCount.Value === 0) {
+        // 1. Let error be a newly created AggregateError object.
+        const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected'); // 2. Set error.[[AggregateErrors]] to errors.
+
+        error.AggregateErrors = errors; // 3. Return ThrowCompletion(error).
+
+        return ThrowCompletion(error);
+      } // iv. Return resultCapability.[[Promise]].
+
+
+      return resultCapability.Promise;
+    } // e. Let nextValue be IteratorValue(next).
+
+
+    let nextValue = IteratorValue(next); // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+    if (nextValue instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    } // g. ReturnIfAbrupt(nextValue).
+
+
+    if (nextValue instanceof AbruptCompletion) {
+      return nextValue;
+    }
+
+    if (nextValue instanceof Completion) {
+      nextValue = nextValue.Value;
+    }
+
+    errors.push(Value.undefined); // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
+
+    let _temp32 = Call(promiseResolve, constructor, [nextValue]);
+
+    if (_temp32 instanceof AbruptCompletion) {
+      return _temp32;
+    }
+
+    if (_temp32 instanceof Completion) {
+      _temp32 = _temp32.Value;
+    }
+
+    const nextPromise = _temp32; // j. Let steps be the algorithm steps defined in Promise.any Reject Element Functions.
+
+    const steps = PromiseAnyRejectElementFunctions; // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
+
+    let _temp33 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
+
+    Assert(!(_temp33 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion');
+
+    if (_temp33 instanceof Completion) {
+      _temp33 = _temp33.Value;
+    }
+
+    const rejectElement = _temp33; // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
+
+    rejectElement.AlreadyCalled = {
+      Value: false
+    }; // m. Set rejectElement.[[Index]] to index.
+
+    rejectElement.Index = index; // n. Set rejectElement.[[Errors]] to errors.
+
+    rejectElement.Errors = errors; // o. Set rejectElement.[[Capability]] to resultCapability.
+
+    rejectElement.Capability = resultCapability; // p. Set rejectElement.[[RemainingElements]] to remainingElementsCount.
+
+    rejectElement.RemainingElements = remainingElementsCount; // q. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
+
+    remainingElementsCount.Value += 1; // r. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], rejectElement »).
+
+    let _temp34 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]);
+
+    if (_temp34 instanceof AbruptCompletion) {
+      return _temp34;
+    }
+
+    if (_temp34 instanceof Completion) {
+      _temp34 = _temp34.Value;
+    }
+
+    index += 1;
+  }
+} // https://tc39.es/proposal-promise-any/#sec-promise.any
+
+
+function Promise_any([iterable = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let C be the this value.
+  const C = thisValue; // 2. Let promiseCapability be ? NewPromiseCapability(C).
+
+  let _temp35 = NewPromiseCapability(C);
+
+  if (_temp35 instanceof AbruptCompletion) {
+    return _temp35;
+  }
+
+  if (_temp35 instanceof Completion) {
+    _temp35 = _temp35.Value;
+  }
+
+  const promiseCapability = _temp35; // 3. Let iteratorRecord be GetIterator(iterable).
+
+  let iteratorRecord = GetIterator(iterable); // 4. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
+
+  if (iteratorRecord instanceof AbruptCompletion) {
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
+
+    if (hygenicTemp2 instanceof AbruptCompletion) {
+      return hygenicTemp2;
+    }
+
+    return promiseCapability.Promise;
+  }
+
+  if (iteratorRecord instanceof Completion) {
+    iteratorRecord = iteratorRecord.Value;
+  }
+
+  // 5. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
+  let result = PerformPromiseAny(iteratorRecord, C, promiseCapability); // 6. If result is an abrupt completion, then
+
+  if (result instanceof AbruptCompletion) {
+    // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
+    if (iteratorRecord.Done === Value.false) {
+      result = IteratorClose(iteratorRecord, result);
+    } // b. IfAbruptRejectPromise(result, promiseCapability).
+
+
+    if (result instanceof AbruptCompletion) {
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
+
+      if (hygenicTemp2 instanceof AbruptCompletion) {
+        return hygenicTemp2;
+      }
+
+      return promiseCapability.Promise;
+    }
+
+    if (result instanceof Completion) {
+      result = result.Value;
+    }
+  } // 1. Return Completion(result).
+
+
+  return Completion(result);
 }
 
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true, "IsConstructor(constructor) === Value.true");
   Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
 
-  let _temp29 = Get(constructor, new Value('resolve'));
+  let _temp36 = Get(constructor, new Value('resolve'));
 
-  if (_temp29 instanceof AbruptCompletion) {
-    return _temp29;
+  if (_temp36 instanceof AbruptCompletion) {
+    return _temp36;
   }
 
-  if (_temp29 instanceof Completion) {
-    _temp29 = _temp29.Value;
+  if (_temp36 instanceof Completion) {
+    _temp36 = _temp36.Value;
   }
 
-  const promiseResolve = _temp29;
+  const promiseResolve = _temp36;
 
   if (IsCallable(promiseResolve) === Value.alse) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
@@ -36066,26 +36323,26 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
       nextValue = nextValue.Value;
     }
 
-    let _temp30 = Call(promiseResolve, constructor, [nextValue]);
+    let _temp37 = Call(promiseResolve, constructor, [nextValue]);
 
-    if (_temp30 instanceof AbruptCompletion) {
-      return _temp30;
+    if (_temp37 instanceof AbruptCompletion) {
+      return _temp37;
     }
 
-    if (_temp30 instanceof Completion) {
-      _temp30 = _temp30.Value;
+    if (_temp37 instanceof Completion) {
+      _temp37 = _temp37.Value;
     }
 
-    const nextPromise = _temp30;
+    const nextPromise = _temp37;
 
-    let _temp31 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+    let _temp38 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
 
-    if (_temp31 instanceof AbruptCompletion) {
-      return _temp31;
+    if (_temp38 instanceof AbruptCompletion) {
+      return _temp38;
     }
 
-    if (_temp31 instanceof Completion) {
-      _temp31 = _temp31.Value;
+    if (_temp38 instanceof Completion) {
+      _temp38 = _temp38.Value;
     }
   }
 }
@@ -36095,17 +36352,17 @@ function Promise_race([iterable = Value.undefined], {
 }) {
   const C = thisValue;
 
-  let _temp32 = NewPromiseCapability(C);
+  let _temp39 = NewPromiseCapability(C);
 
-  if (_temp32 instanceof AbruptCompletion) {
-    return _temp32;
+  if (_temp39 instanceof AbruptCompletion) {
+    return _temp39;
   }
 
-  if (_temp32 instanceof Completion) {
-    _temp32 = _temp32.Value;
+  if (_temp39 instanceof Completion) {
+    _temp39 = _temp39.Value;
   }
 
-  const promiseCapability = _temp32;
+  const promiseCapability = _temp39;
   let iteratorRecord = GetIterator(iterable);
 
   if (iteratorRecord instanceof AbruptCompletion) {
@@ -36152,26 +36409,26 @@ function Promise_reject([r = Value.undefined], {
 }) {
   const C = thisValue;
 
-  let _temp33 = NewPromiseCapability(C);
+  let _temp40 = NewPromiseCapability(C);
 
-  if (_temp33 instanceof AbruptCompletion) {
-    return _temp33;
+  if (_temp40 instanceof AbruptCompletion) {
+    return _temp40;
   }
 
-  if (_temp33 instanceof Completion) {
-    _temp33 = _temp33.Value;
+  if (_temp40 instanceof Completion) {
+    _temp40 = _temp40.Value;
   }
 
-  const promiseCapability = _temp33;
+  const promiseCapability = _temp40;
 
-  let _temp34 = Call(promiseCapability.Reject, Value.undefined, [r]);
+  let _temp41 = Call(promiseCapability.Reject, Value.undefined, [r]);
 
-  if (_temp34 instanceof AbruptCompletion) {
-    return _temp34;
+  if (_temp41 instanceof AbruptCompletion) {
+    return _temp41;
   }
 
-  if (_temp34 instanceof Completion) {
-    _temp34 = _temp34.Value;
+  if (_temp41 instanceof Completion) {
+    _temp41 = _temp41.Value;
   }
   return promiseCapability.Promise;
 }
@@ -36195,42 +36452,42 @@ function Promise_symbolSpecies(args, {
 }
 
 function BootstrapPromise(realmRec) {
-  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
+  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], surroundingAgent.feature('Promise.any') ? ['any', Promise_any, 1] : undefined, ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
   promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false
   }));
 
-  let _temp35 = Get(promiseConstructor, new Value('all'));
+  let _temp42 = Get(promiseConstructor, new Value('all'));
 
-  Assert(!(_temp35 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
+  Assert(!(_temp42 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
 
-  if (_temp35 instanceof Completion) {
-    _temp35 = _temp35.Value;
+  if (_temp42 instanceof Completion) {
+    _temp42 = _temp42.Value;
   }
 
-  realmRec.Intrinsics['%Promise.all%'] = _temp35;
+  realmRec.Intrinsics['%Promise.all%'] = _temp42;
 
-  let _temp36 = Get(promiseConstructor, new Value('reject'));
+  let _temp43 = Get(promiseConstructor, new Value('reject'));
 
-  Assert(!(_temp36 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
+  Assert(!(_temp43 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
 
-  if (_temp36 instanceof Completion) {
-    _temp36 = _temp36.Value;
+  if (_temp43 instanceof Completion) {
+    _temp43 = _temp43.Value;
   }
 
-  realmRec.Intrinsics['%Promise.reject%'] = _temp36;
+  realmRec.Intrinsics['%Promise.reject%'] = _temp43;
 
-  let _temp37 = Get(promiseConstructor, new Value('resolve'));
+  let _temp44 = Get(promiseConstructor, new Value('resolve'));
 
-  Assert(!(_temp37 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
+  Assert(!(_temp44 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
 
-  if (_temp37 instanceof Completion) {
-    _temp37 = _temp37.Value;
+  if (_temp44 instanceof Completion) {
+    _temp44 = _temp44.Value;
   }
 
-  realmRec.Intrinsics['%Promise.resolve%'] = _temp37;
+  realmRec.Intrinsics['%Promise.resolve%'] = _temp44;
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }
 
@@ -45191,13 +45448,20 @@ function BootstrapWeakSet(realmRec) {
   realmRec.Intrinsics['%WeakSet%'] = c;
 }
 
-function WeakRefProto_deref(args, {
-  thisValue
+function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined], {
+  NewTarget
 }) {
-  // 1. Let weakRef be the this value.
-  const weakRef = thisValue; // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
+  // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
+  let newTarget;
 
-  let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
+  if (NewTarget === Value.undefined) {
+    newTarget = surroundingAgent.activeFunctionObject;
+  } else {
+    newTarget = NewTarget;
+  } // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]], [[AggregateErrors]] »).
+
+
+  let _temp = OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData', 'AggregateErrors']);
   /* istanbul ignore if */
 
 
@@ -45211,45 +45475,80 @@ function WeakRefProto_deref(args, {
     _temp = _temp.Value;
   }
 
-  const target = weakRef.WeakRefTarget; // 4. If target is not empty,
+  const O = _temp; // 3. Let errorsList be ? IterableToList(errors).
 
-  if (target !== undefined) {
-    let _temp2 = AddToKeptObjects(target);
+  let errorsList;
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+  if (errors === Symbol.for('engine262.placeholder')) {
+    errorsList = [];
+  } else {
+    let _temp5 = IterableToList(errors);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    errorsList = _temp5;
+  } // 4. Set O.[[AggregateErrors]] to errorsList.
+
+
+  O.AggregateErrors = errorsList; // 5. If message is not undefined, then
+
+  if (message !== Value.undefined) {
+    let _temp2 = ToString(message);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
 
-    return target;
-  } // 5. Return undefined.
+    // a. Let msg be ? ToString(message).
+    const msg = _temp2; // b. Perform ! CreateMethodProperty(O, "message", msg).
+
+    let _temp3 = CreateMethodProperty(O, new Value('message'), msg);
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "CreateMethodProperty(O, new Value('message'), msg)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+  } // NON-SPEC
 
 
-  return Value.undefined;
+  let _temp4 = captureStack(O);
+
+  Assert(!(_temp4 instanceof AbruptCompletion), "captureStack(O)" + ' returned an abrupt completion');
+
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
+  }
+
+  return O;
 }
 
-function BootstrapWeakRefPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
-  realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
+function BootstrapAggregateError(realmRec) {
+  const c = BootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
+  c.Prototype = realmRec.Intrinsics['%Error%'];
+  realmRec.Intrinsics['%AggregateError%'] = c;
 }
 
-function WeakRefConstructor([target = Value.undefined], {
-  NewTarget
+function AggregateErrorProto_errors(args, {
+  thisValue
 }) {
-  // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-  } // 2. If Type(target) is not Object, throw a TypeError exception.
+  // 1. Let E be the this value.
+  const E = thisValue; // 2. If Type(E) is not Object, throw a TypeError exception.
+  // 3. If E does not have an [[ErrorData]] internal slot, throw a TypeError exception.
+  // 4. If E does not have an [[AggregateErrors]] internal slot, throw a TypeError exception.
 
-
-  if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
-  } // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
-
-
-  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
+  let _temp = RequireInternalSlot(E, 'AggregateErrors');
   /* istanbul ignore if */
 
 
@@ -45263,25 +45562,21 @@ function WeakRefConstructor([target = Value.undefined], {
     _temp = _temp.Value;
   }
 
-  const weakRef = _temp; // 4. Perfom ! AddToKeptObjects(target).
+  let _temp2 = CreateArrayFromList(E.AggregateErrors);
 
-  let _temp2 = AddToKeptObjects(target);
-
-  Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
+  Assert(!(_temp2 instanceof AbruptCompletion), "CreateArrayFromList(E.AggregateErrors)" + ' returned an abrupt completion');
   /* istanbul ignore if */
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
 
-  weakRef.WeakRefTarget = target; // 6. Return weakRef
-
-  return weakRef;
+  return _temp2;
 }
 
-function BootstrapWeakRef(realmRec) {
-  const bigintConstructor = BootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
-  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
+function BootstrapAggregateErrorPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['name', new Value('AggregateError')], ['message', new Value('')], ['errors', [AggregateErrorProto_errors]]], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
+  realmRec.Intrinsics['%AggregateError.prototype%'] = proto;
 }
 
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
@@ -45528,6 +45823,99 @@ function BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec) {
   realmRec.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'] = proto;
 }
 
+function WeakRefProto_deref(args, {
+  thisValue
+}) {
+  // 1. Let weakRef be the this value.
+  const weakRef = thisValue; // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
+
+  let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const target = weakRef.WeakRefTarget; // 4. If target is not empty,
+
+  if (target !== undefined) {
+    let _temp2 = AddToKeptObjects(target);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    return target;
+  } // 5. Return undefined.
+
+
+  return Value.undefined;
+}
+
+function BootstrapWeakRefPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
+  realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
+}
+
+function WeakRefConstructor([target = Value.undefined], {
+  NewTarget
+}) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+  } // 2. If Type(target) is not Object, throw a TypeError exception.
+
+
+  if (Type(target) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+  } // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
+
+
+  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const weakRef = _temp; // 4. Perfom ! AddToKeptObjects(target).
+
+  let _temp2 = AddToKeptObjects(target);
+
+  Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  weakRef.WeakRefTarget = target; // 6. Return weakRef
+
+  return weakRef;
+}
+
+function BootstrapWeakRef(realmRec) {
+  const bigintConstructor = BootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
+  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
+}
+
 class Realm {
   constructor() {
     this.Intrinsics = undefined;
@@ -45667,6 +46055,11 @@ function CreateIntrinsics(realmRec) {
   BootstrapWeakSetPrototype(realmRec);
   BootstrapWeakSet(realmRec);
 
+  if (surroundingAgent.feature('Promise.any')) {
+    BootstrapAggregateErrorPrototype(realmRec);
+    BootstrapAggregateError(realmRec);
+  }
+
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
@@ -45760,9 +46153,9 @@ function SetDefaultGlobalBindings(realmRec) {
     }
   });
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    let _temp6 = DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({
-      Value: realmRec.Intrinsics['%WeakRef%'],
+  if (surroundingAgent.feature('Promise.any')) {
+    let _temp6 = DefinePropertyOrThrow(global, new Value('AggregateError'), Descriptor({
+      Value: realmRec.Intrinsics['%AggregateError%'],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
@@ -45775,9 +46168,11 @@ function SetDefaultGlobalBindings(realmRec) {
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
+  }
 
-    let _temp7 = DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
+  if (surroundingAgent.feature('WeakRefs')) {
+    let _temp7 = DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({
+      Value: realmRec.Intrinsics['%WeakRef%'],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
@@ -45789,6 +46184,21 @@ function SetDefaultGlobalBindings(realmRec) {
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
+    }
+
+    let _temp8 = DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
+      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
     }
   }
 
@@ -45862,6 +46272,7 @@ const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 const ObjectSetPrototype = () => 'Could not set prototype of object';
 const OutOfRange$1 = n => `${n} is out of range`;
+const PromiseAnyRejected = () => 'No promises passed to Promise.any were fulfilled';
 const PromiseCapabilityFunctionAlreadySet = f => `Promise ${f} function already set`;
 const PromiseRejectFunction = v => `Promise reject function ${i(v)} is not callable`;
 const PromiseResolveFunction = v => `Promise resolve function ${i(v)} is not callable`;
@@ -45974,6 +46385,7 @@ var messages = /*#__PURE__*/Object.freeze({
   ObjectPrototypeType: ObjectPrototypeType,
   ObjectSetPrototype: ObjectSetPrototype,
   OutOfRange: OutOfRange$1,
+  PromiseAnyRejected: PromiseAnyRejected,
   PromiseCapabilityFunctionAlreadySet: PromiseCapabilityFunctionAlreadySet,
   PromiseRejectFunction: PromiseRejectFunction,
   PromiseResolveFunction: PromiseResolveFunction,
@@ -46038,6 +46450,9 @@ const FEATURES = Object.freeze([{
 }, {
   name: 'LogicalAssignment',
   url: 'https://github.com/tc39/proposal-logical-assignment'
+}, {
+  name: 'Promise.any',
+  url: 'https://github.com/tc39/proposal-promise-any'
 }].map(Object.freeze)); // #sec-agents
 
 class Agent {
@@ -46107,8 +46522,31 @@ class Agent {
 
     const message = messages[template](...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
-    const error = Construct(cons, [new Value(message)]);
-    Assert(!(error instanceof AbruptCompletion), "!(error instanceof AbruptCompletion)");
+    let error;
+
+    if (type === 'AggregateError') {
+      let _temp = Construct(cons, [Symbol.for('engine262.placeholder'), new Value(message)]);
+
+      Assert(!(_temp instanceof AbruptCompletion), "Construct(cons, [\n        Symbol.for('engine262.placeholder'),\n        new Value(message),\n      ])" + ' returned an abrupt completion');
+      /* istanbul ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      error = _temp;
+    } else {
+      let _temp2 = Construct(cons, [new Value(message)]);
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "Construct(cons, [new Value(message)])" + ' returned an abrupt completion');
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      error = _temp2;
+    }
+
     return new ThrowCompletion(error);
   }
 
@@ -46229,18 +46667,18 @@ function HostEnqueuePromiseJob(job, _realm) {
 } // 8.5 #sec-initializehostdefinedrealm
 function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
-    let _temp = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
+    let _temp3 = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
     /* istanbul ignore if */
 
 
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
     }
     /* istanbul ignore if */
 
 
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
   }
 
@@ -46250,27 +46688,26 @@ function HostPromiseRejectionTracker(promise, operation) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm && realm.HostDefined.promiseRejectionTracker) {
-    let _temp2 = realm.HostDefined.promiseRejectionTracker(promise, operation);
+    let _temp4 = realm.HostDefined.promiseRejectionTracker(promise, operation);
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "realm.HostDefined.promiseRejectionTracker(promise, operation)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    Assert(!(_temp4 instanceof AbruptCompletion), "realm.HostDefined.promiseRejectionTracker(promise, operation)" + ' returned an abrupt completion');
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
   }
 }
 function HostHasSourceTextAvailable(func) {
   if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
-    let _temp3 = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
+    let _temp5 = surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func);
 
-    Assert(!(_temp3 instanceof AbruptCompletion), "surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func)" + ' returned an abrupt completion');
+    Assert(!(_temp5 instanceof AbruptCompletion), "surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func)" + ' returned an abrupt completion');
 
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
     }
 
-    return _temp3;
+    return _temp5;
   }
 
   return Value.true;
@@ -46293,17 +46730,17 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
 
     const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
 
-    let _temp4 = realm.HostDefined.resolveImportedModule(publicModule, specifier);
+    let _temp6 = realm.HostDefined.resolveImportedModule(publicModule, specifier);
 
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
 
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
 
-    const apiModule = _temp4;
+    const apiModule = _temp6;
 
     if (referencingScriptOrModule !== Value.null) {
       referencingScriptOrModule.HostDefined.moduleMap.set(specifier, apiModule.module);
@@ -46317,85 +46754,85 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
 
 function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
   if (completion instanceof AbruptCompletion) {
-    let _temp5 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
+    let _temp7 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
 
-    Assert(!(_temp5 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [completion.Value])" + ' returned an abrupt completion');
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-  } else {
-    Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
-
-    let _temp6 = CreateBuiltinFunction(([v = Value.undefined]) => {
-      Assert(v === Value.undefined, "v === Value.undefined");
-
-      let _temp9 = HostResolveImportedModule(referencingScriptOrModule, specifier);
-
-      Assert(!(_temp9 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
-
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-
-      const moduleRecord = _temp9; // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-
-      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-
-      if (namespace instanceof AbruptCompletion) {
-        let _temp10 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
-
-        Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
-        }
-      } else {
-        let _temp11 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
-
-        Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
-        }
-      }
-
-      return Value.undefined;
-    }, []);
-
-    Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(([v = Value.undefined]) => {\n      Assert(v === Value.undefined);\n      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));\n      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.\n      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));\n      if (namespace instanceof AbruptCompletion) {\n        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));\n      } else {\n        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));\n      }\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    const onFulfilled = _temp6;
-
-    let _temp7 = CreateBuiltinFunction(([r = Value.undefined]) => {
-      let _temp12 = Call(promiseCapability.Reject, Value.undefined, [r]);
-
-      Assert(!(_temp12 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [r])" + ' returned an abrupt completion');
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-      return Value.undefined;
-    }, []);
-
-    Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(([r = Value.undefined]) => {\n      X(Call(promiseCapability.Reject, Value.undefined, [r]));\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+    Assert(!(_temp7 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [completion.Value])" + ' returned an abrupt completion');
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
+  } else {
+    Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
 
-    const onRejected = _temp7;
+    let _temp8 = CreateBuiltinFunction(([v = Value.undefined]) => {
+      Assert(v === Value.undefined, "v === Value.undefined");
 
-    let _temp8 = PerformPromiseThen(completion.Value, onFulfilled, onRejected);
+      let _temp11 = HostResolveImportedModule(referencingScriptOrModule, specifier);
 
-    Assert(!(_temp8 instanceof AbruptCompletion), "PerformPromiseThen(completion.Value, onFulfilled, onRejected)" + ' returned an abrupt completion');
+      Assert(!(_temp11 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
+
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
+
+      const moduleRecord = _temp11; // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+
+      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
+
+      if (namespace instanceof AbruptCompletion) {
+        let _temp12 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
+
+        Assert(!(_temp12 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
+
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
+        }
+      } else {
+        let _temp13 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
+
+        Assert(!(_temp13 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
+
+        if (_temp13 instanceof Completion) {
+          _temp13 = _temp13.Value;
+        }
+      }
+
+      return Value.undefined;
+    }, []);
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "CreateBuiltinFunction(([v = Value.undefined]) => {\n      Assert(v === Value.undefined);\n      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));\n      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.\n      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));\n      if (namespace instanceof AbruptCompletion) {\n        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));\n      } else {\n        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));\n      }\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
 
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
+    }
+
+    const onFulfilled = _temp8;
+
+    let _temp9 = CreateBuiltinFunction(([r = Value.undefined]) => {
+      let _temp14 = Call(promiseCapability.Reject, Value.undefined, [r]);
+
+      Assert(!(_temp14 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [r])" + ' returned an abrupt completion');
+
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+      return Value.undefined;
+    }, []);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "CreateBuiltinFunction(([r = Value.undefined]) => {\n      X(Call(promiseCapability.Reject, Value.undefined, [r]));\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    const onRejected = _temp9;
+
+    let _temp10 = PerformPromiseThen(completion.Value, onFulfilled, onRejected);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "PerformPromiseThen(completion.Value, onFulfilled, onRejected)" + ' returned an abrupt completion');
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
   }
 }
@@ -46438,15 +46875,15 @@ function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.getImportMetaProperties) {
-    let _temp13 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
+    let _temp15 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
 
-    Assert(!(_temp13 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
     }
 
-    return _temp13;
+    return _temp15;
   }
 
   return [];
@@ -46456,15 +46893,15 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.finalizeImportMeta) {
-    let _temp14 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
+    let _temp16 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
 
-    Assert(!(_temp14 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp16 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
     }
 
-    return _temp14;
+    return _temp16;
   }
 
   return Value.undefined;
@@ -46473,14 +46910,14 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
 const scheduledForCleanup = new Set();
 function HostCleanupFinalizationRegistry(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
-    let _temp15 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
+    let _temp17 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
 
-    if (_temp15 instanceof AbruptCompletion) {
-      return _temp15;
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
     }
 
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
     }
   } else {
     if (!scheduledForCleanup.has(fg)) {
@@ -57723,6 +58160,8 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 const getObjectTag = (value, wrap) => {
+  let s;
+
   try {
     let _temp = Get(value, wellKnownSymbols.toStringTag);
 
@@ -57733,64 +58172,88 @@ const getObjectTag = (value, wrap) => {
       _temp = _temp.Value;
     }
 
-    const s = _temp.stringValue();
+    s = _temp.stringValue();
+  } catch {}
 
-    if (wrap) {
-      return `[${s}] `;
-    }
-
-    return s;
-  } catch {
-    return '';
-  }
-};
-
-const compactObject = (realm, value) => {
   try {
-    let _temp2 = Get(value, new Value('toString'));
+    let _temp2 = Get(value, new Value('constructor'));
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "Get(value, new Value('toString'))" + ' returned an abrupt completion', "");
+    Assert(!(_temp2 instanceof AbruptCompletion), "Get(value, new Value('constructor'))" + ' returned an abrupt completion', "");
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
 
-    const toString = _temp2;
+    const c = _temp2;
+
+    let _temp3 = Get(c, new Value('name'));
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "Get(c, new Value('name'))" + ' returned an abrupt completion', "");
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    s = _temp3.stringValue();
+  } catch {}
+
+  if (s) {
+    if (wrap) {
+      return `[${s}] `;
+    }
+
+    return s;
+  }
+
+  return '';
+};
+
+const compactObject = (realm, value) => {
+  try {
+    let _temp4 = Get(value, new Value('toString'));
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "Get(value, new Value('toString'))" + ' returned an abrupt completion', "");
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    const toString = _temp4;
     const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
 
     if (toString.nativeFunction === objectToString.nativeFunction) {
-      let _temp3 = Call(toString, value);
+      let _temp5 = Call(toString, value);
 
-      Assert(!(_temp3 instanceof AbruptCompletion), "Call(toString, value)" + ' returned an abrupt completion', "");
+      Assert(!(_temp5 instanceof AbruptCompletion), "Call(toString, value)" + ' returned an abrupt completion', "");
 
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
       }
 
-      return _temp3.stringValue();
+      return _temp5.stringValue();
     } else {
       const tag = getObjectTag(value, false) || 'Unknown';
 
-      let _temp4 = Get(value, new Value('constructor'));
+      let _temp6 = Get(value, new Value('constructor'));
 
-      Assert(!(_temp4 instanceof AbruptCompletion), "Get(value, new Value('constructor'))" + ' returned an abrupt completion', "");
+      Assert(!(_temp6 instanceof AbruptCompletion), "Get(value, new Value('constructor'))" + ' returned an abrupt completion', "");
 
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
       }
 
-      const ctor = _temp4;
+      const ctor = _temp6;
 
       if (Type(ctor) === 'Object') {
-        let _temp5 = Get(ctor, new Value('name'));
+        let _temp7 = Get(ctor, new Value('name'));
 
-        Assert(!(_temp5 instanceof AbruptCompletion), "Get(ctor, new Value('name'))" + ' returned an abrupt completion', "");
+        Assert(!(_temp7 instanceof AbruptCompletion), "Get(ctor, new Value('name'))" + ' returned an abrupt completion', "");
 
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
         }
 
-        const ctorName = _temp5.stringValue();
+        const ctorName = _temp7.stringValue();
 
         if (ctorName !== '') {
           return `#<${ctorName}>`;
@@ -57849,44 +58312,44 @@ const INSPECTORS = {
     }
 
     if ('ErrorData' in v) {
-      let _temp6 = Get(v, new Value('stack'));
+      let _temp8 = Get(v, new Value('stack'));
       /* istanbul ignore if */
 
 
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
       }
       /* istanbul ignore if */
 
 
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
 
-      let e = _temp6;
+      let e = _temp8;
 
       if (!e.stringValue) {
-        let _temp7 = Get(v, new Value('toString'));
+        let _temp9 = Get(v, new Value('toString'));
 
-        if (_temp7 instanceof AbruptCompletion) {
-          return _temp7;
+        if (_temp9 instanceof AbruptCompletion) {
+          return _temp9;
         }
 
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
+        if (_temp9 instanceof Completion) {
+          _temp9 = _temp9.Value;
         }
 
-        const toString = _temp7;
+        const toString = _temp9;
 
-        let _temp8 = Call(toString, v);
+        let _temp10 = Call(toString, v);
 
-        Assert(!(_temp8 instanceof AbruptCompletion), "Call(toString, v)" + ' returned an abrupt completion');
+        Assert(!(_temp10 instanceof AbruptCompletion), "Call(toString, v)" + ' returned an abrupt completion');
 
-        if (_temp8 instanceof Completion) {
-          _temp8 = _temp8.Value;
+        if (_temp10 instanceof Completion) {
+          _temp10 = _temp10.Value;
         }
 
-        e = _temp8;
+        e = _temp10;
       }
 
       return e.stringValue();
@@ -57916,34 +58379,33 @@ const INSPECTORS = {
     ctx.inspected.push(v);
 
     try {
-      const tag = getObjectTag(v);
       const isArray = IsArray(v) === Value.true;
       const isTypedArray = 'TypedArrayName' in v;
 
       if (isArray || isTypedArray) {
-        let _temp9 = LengthOfArrayLike(v);
+        let _temp11 = LengthOfArrayLike(v);
 
-        Assert(!(_temp9 instanceof AbruptCompletion), "LengthOfArrayLike(v)" + ' returned an abrupt completion', "");
+        Assert(!(_temp11 instanceof AbruptCompletion), "LengthOfArrayLike(v)" + ' returned an abrupt completion', "");
 
-        if (_temp9 instanceof Completion) {
-          _temp9 = _temp9.Value;
+        if (_temp11 instanceof Completion) {
+          _temp11 = _temp11.Value;
         }
 
-        const length = _temp9.numberValue();
+        const length = _temp11.numberValue();
 
         let holes = 0;
         const out = [];
 
         for (let j = 0; j < length; j += 1) {
-          let _temp10 = v.GetOwnProperty(new Value(j.toString()));
+          let _temp12 = v.GetOwnProperty(new Value(j.toString()));
 
-          Assert(!(_temp10 instanceof AbruptCompletion), "v.GetOwnProperty(new Value(j.toString()))" + ' returned an abrupt completion', "");
+          Assert(!(_temp12 instanceof AbruptCompletion), "v.GetOwnProperty(new Value(j.toString()))" + ' returned an abrupt completion', "");
 
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
+          if (_temp12 instanceof Completion) {
+            _temp12 = _temp12.Value;
           }
 
-          const elem = _temp10;
+          const elem = _temp12;
 
           if (elem === Value.undefined) {
             holes += 1;
@@ -57964,34 +58426,35 @@ const INSPECTORS = {
         return `${isTypedArray ? `${v.TypedArrayName.stringValue()} ` : ''}[${out.join(', ')}]`;
       }
 
-      let _temp11 = v.OwnPropertyKeys();
+      let _temp13 = v.OwnPropertyKeys();
 
-      Assert(!(_temp11 instanceof AbruptCompletion), "v.OwnPropertyKeys()" + ' returned an abrupt completion', "");
+      Assert(!(_temp13 instanceof AbruptCompletion), "v.OwnPropertyKeys()" + ' returned an abrupt completion', "");
 
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
       }
 
-      const keys = _temp11;
+      const keys = _temp13;
       const cache = [];
 
       for (const key of keys) {
-        let _temp12 = v.GetOwnProperty(key);
+        let _temp14 = v.GetOwnProperty(key);
 
-        Assert(!(_temp12 instanceof AbruptCompletion), "v.GetOwnProperty(key)" + ' returned an abrupt completion', "");
+        Assert(!(_temp14 instanceof AbruptCompletion), "v.GetOwnProperty(key)" + ' returned an abrupt completion', "");
 
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
+        if (_temp14 instanceof Completion) {
+          _temp14 = _temp14.Value;
         }
 
-        const C = _temp12;
+        const C = _temp14;
 
         if (C.Enumerable === Value.true) {
           cache.push([Type(key) === 'String' && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key), C.Value ? i(C.Value) : '<accessor>']);
         }
       }
 
-      let out = tag ? `${tag} {` : '{';
+      const tag = getObjectTag(v);
+      let out = tag && tag !== 'Object' ? `${tag} {` : '{';
 
       if (cache.length > 5) {
         cache.forEach(c => {
