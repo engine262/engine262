@@ -10,6 +10,12 @@ built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 language/expressions/import.meta/syntax/escape-sequence-import.js
 language/expressions/dynamic-import/escape-sequence-import.js
 
+// https://github.com/acornjs/acorn/issues/938
+language/identifiers/start-unicode-13.0.0.js
+language/identifiers/part-unicode-13.0.0.js
+language/identifiers/part-unicode-13.0.0-escaped.js
+language/identifiers/start-unicode-13.0.0-escaped.js
+
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
 built-ins/Date/parse/time-value-maximum-range.js
