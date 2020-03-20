@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 c3fc903415570fb5ec895accc67addde8209c6ad
+ * engine262 0.0.1 4c80d84f56950fa65b86422c2e14409d6b4ea406
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -35507,7 +35507,7 @@
 
     const promiseResolve = _temp3;
 
-    if (IsCallable(promiseResolve) === Value.alse) {
+    if (IsCallable(promiseResolve) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
     }
 
@@ -36291,7 +36291,7 @@
 
     const promiseResolve = _temp36;
 
-    if (IsCallable(promiseResolve) === Value.alse) {
+    if (IsCallable(promiseResolve) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
     }
 
