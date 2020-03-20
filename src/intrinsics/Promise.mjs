@@ -94,7 +94,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
   const values = [];
   const remainingElementsCount = { Value: 1 };
   const promiseResolve = Q(Get(constructor, new Value('resolve')));
-  if (IsCallable(promiseResolve) === Value.alse) {
+  if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   let index = 0;
@@ -423,7 +423,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   const promiseResolve = Q(Get(constructor, new Value('resolve')));
-  if (IsCallable(promiseResolve) === Value.alse) {
+  if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   while (true) {
