@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 4c80d84f56950fa65b86422c2e14409d6b4ea406
+ * engine262 0.0.1 c5285227f26ef661fc6f3723df3b44489a12a42d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2437,7 +2437,11 @@
           {
             const BindingElement = BindingElisionElementOrBindingRestElement;
             const has = ContainsExpression_BindingElement(BindingElement);
-            if (has === true) return true;
+
+            if (has === true) {
+              return true;
+            }
+
             break;
           }
 
@@ -2445,7 +2449,11 @@
           {
             const BindingRestElement = BindingElisionElementOrBindingRestElement;
             const has = ContainsExpression_BindingRestElement(BindingRestElement);
-            if (has === true) return true;
+
+            if (has === true) {
+              return true;
+            }
+
             break;
           }
 
@@ -2467,7 +2475,11 @@
       case isBindingPropertyWithColon(BindingProperty):
         {
           const has = BindingProperty.computed;
-          if (has === true) return true;
+
+          if (has === true) {
+            return true;
+          }
+
           return ContainsExpression_BindingElement(BindingProperty.value);
         }
 
@@ -2510,7 +2522,11 @@
           {
             const BindingProperty = prop;
             const has = ContainsExpression_BindingProperty(BindingProperty);
-            if (has === true) return true;
+
+            if (has === true) {
+              return true;
+            }
+
             break;
           }
 
@@ -2518,6 +2534,7 @@
           {
             const BindingRestProperty = prop;
             const has = ContainsExpression_BindingRestProperty(BindingRestProperty);
+
             break;
           }
 
@@ -4542,7 +4559,11 @@
       // and correspondingly reduce exp by 54.
       throwawayArray[0] *= 18014398509481984;
       exp -= 54;
-      if (exp === 0) return throwawayArray[0];
+
+      if (exp === 0) {
+        return throwawayArray[0];
+      }
+
       origExp = throwawayArrayInt[float64High] >>> 20 & 0x7ff;
     }
 
@@ -17635,7 +17656,9 @@
 
   function searchNotStrWhiteSpaceChar(str) {
     for (let i = 0; i < str.length; i += 1) {
-      if (!isStrWhiteSpaceChar(str[i])) return i;
+      if (!isStrWhiteSpaceChar(str[i])) {
+        return i;
+      }
     }
 
     return str.length;
@@ -17643,7 +17666,9 @@
 
   function reverseSearchNotStrWhiteSpaceChar(str) {
     for (let i = str.length - 1; i >= 0; i -= 1) {
-      if (!isStrWhiteSpaceChar(str[i])) return i + 1;
+      if (!isStrWhiteSpaceChar(str[i])) {
+        return i + 1;
+      }
     }
 
     return 0;
@@ -36181,7 +36206,15 @@
         _temp33 = _temp33.Value;
       }
 
-      const rejectElement = _temp33; // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
+      const rejectElement = _temp33;
+
+      let _temp34 = SetFunctionLength(rejectElement, new Value(1));
+
+      Assert(!(_temp34 instanceof AbruptCompletion), "SetFunctionLength(rejectElement, new Value(1))" + ' returned an abrupt completion');
+
+      if (_temp34 instanceof Completion) {
+        _temp34 = _temp34.Value;
+      }
 
       rejectElement.AlreadyCalled = {
         Value: false
@@ -36197,14 +36230,14 @@
 
       remainingElementsCount.Value += 1; // r. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], rejectElement »).
 
-      let _temp34 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]);
+      let _temp35 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]);
 
-      if (_temp34 instanceof AbruptCompletion) {
-        return _temp34;
+      if (_temp35 instanceof AbruptCompletion) {
+        return _temp35;
       }
 
-      if (_temp34 instanceof Completion) {
-        _temp34 = _temp34.Value;
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
       }
 
       index += 1;
@@ -36218,17 +36251,17 @@
     // 1. Let C be the this value.
     const C = thisValue; // 2. Let promiseCapability be ? NewPromiseCapability(C).
 
-    let _temp35 = NewPromiseCapability(C);
+    let _temp36 = NewPromiseCapability(C);
 
-    if (_temp35 instanceof AbruptCompletion) {
-      return _temp35;
+    if (_temp36 instanceof AbruptCompletion) {
+      return _temp36;
     }
 
-    if (_temp35 instanceof Completion) {
-      _temp35 = _temp35.Value;
+    if (_temp36 instanceof Completion) {
+      _temp36 = _temp36.Value;
     }
 
-    const promiseCapability = _temp35; // 3. Let iteratorRecord be GetIterator(iterable).
+    const promiseCapability = _temp36; // 3. Let iteratorRecord be GetIterator(iterable).
 
     let iteratorRecord = GetIterator(iterable); // 4. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
 
@@ -36279,17 +36312,17 @@
     Assert(IsConstructor(constructor) === Value.true, "IsConstructor(constructor) === Value.true");
     Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
 
-    let _temp36 = Get(constructor, new Value('resolve'));
+    let _temp37 = Get(constructor, new Value('resolve'));
 
-    if (_temp36 instanceof AbruptCompletion) {
-      return _temp36;
+    if (_temp37 instanceof AbruptCompletion) {
+      return _temp37;
     }
 
-    if (_temp36 instanceof Completion) {
-      _temp36 = _temp36.Value;
+    if (_temp37 instanceof Completion) {
+      _temp37 = _temp37.Value;
     }
 
-    const promiseResolve = _temp36;
+    const promiseResolve = _temp37;
 
     if (IsCallable(promiseResolve) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
@@ -36329,19 +36362,7 @@
         nextValue = nextValue.Value;
       }
 
-      let _temp37 = Call(promiseResolve, constructor, [nextValue]);
-
-      if (_temp37 instanceof AbruptCompletion) {
-        return _temp37;
-      }
-
-      if (_temp37 instanceof Completion) {
-        _temp37 = _temp37.Value;
-      }
-
-      const nextPromise = _temp37;
-
-      let _temp38 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+      let _temp38 = Call(promiseResolve, constructor, [nextValue]);
 
       if (_temp38 instanceof AbruptCompletion) {
         return _temp38;
@@ -36349,6 +36370,18 @@
 
       if (_temp38 instanceof Completion) {
         _temp38 = _temp38.Value;
+      }
+
+      const nextPromise = _temp38;
+
+      let _temp39 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+
+      if (_temp39 instanceof AbruptCompletion) {
+        return _temp39;
+      }
+
+      if (_temp39 instanceof Completion) {
+        _temp39 = _temp39.Value;
       }
     }
   }
@@ -36358,17 +36391,17 @@
   }) {
     const C = thisValue;
 
-    let _temp39 = NewPromiseCapability(C);
+    let _temp40 = NewPromiseCapability(C);
 
-    if (_temp39 instanceof AbruptCompletion) {
-      return _temp39;
+    if (_temp40 instanceof AbruptCompletion) {
+      return _temp40;
     }
 
-    if (_temp39 instanceof Completion) {
-      _temp39 = _temp39.Value;
+    if (_temp40 instanceof Completion) {
+      _temp40 = _temp40.Value;
     }
 
-    const promiseCapability = _temp39;
+    const promiseCapability = _temp40;
     let iteratorRecord = GetIterator(iterable);
 
     if (iteratorRecord instanceof AbruptCompletion) {
@@ -36415,19 +36448,7 @@
   }) {
     const C = thisValue;
 
-    let _temp40 = NewPromiseCapability(C);
-
-    if (_temp40 instanceof AbruptCompletion) {
-      return _temp40;
-    }
-
-    if (_temp40 instanceof Completion) {
-      _temp40 = _temp40.Value;
-    }
-
-    const promiseCapability = _temp40;
-
-    let _temp41 = Call(promiseCapability.Reject, Value.undefined, [r]);
+    let _temp41 = NewPromiseCapability(C);
 
     if (_temp41 instanceof AbruptCompletion) {
       return _temp41;
@@ -36435,6 +36456,18 @@
 
     if (_temp41 instanceof Completion) {
       _temp41 = _temp41.Value;
+    }
+
+    const promiseCapability = _temp41;
+
+    let _temp42 = Call(promiseCapability.Reject, Value.undefined, [r]);
+
+    if (_temp42 instanceof AbruptCompletion) {
+      return _temp42;
+    }
+
+    if (_temp42 instanceof Completion) {
+      _temp42 = _temp42.Value;
     }
     return promiseCapability.Promise;
   }
@@ -36465,35 +36498,35 @@
       Configurable: Value.false
     }));
 
-    let _temp42 = Get(promiseConstructor, new Value('all'));
+    let _temp43 = Get(promiseConstructor, new Value('all'));
 
-    Assert(!(_temp42 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
-
-    if (_temp42 instanceof Completion) {
-      _temp42 = _temp42.Value;
-    }
-
-    realmRec.Intrinsics['%Promise.all%'] = _temp42;
-
-    let _temp43 = Get(promiseConstructor, new Value('reject'));
-
-    Assert(!(_temp43 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
+    Assert(!(_temp43 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
 
     if (_temp43 instanceof Completion) {
       _temp43 = _temp43.Value;
     }
 
-    realmRec.Intrinsics['%Promise.reject%'] = _temp43;
+    realmRec.Intrinsics['%Promise.all%'] = _temp43;
 
-    let _temp44 = Get(promiseConstructor, new Value('resolve'));
+    let _temp44 = Get(promiseConstructor, new Value('reject'));
 
-    Assert(!(_temp44 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
+    Assert(!(_temp44 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
 
     if (_temp44 instanceof Completion) {
       _temp44 = _temp44.Value;
     }
 
-    realmRec.Intrinsics['%Promise.resolve%'] = _temp44;
+    realmRec.Intrinsics['%Promise.reject%'] = _temp44;
+
+    let _temp45 = Get(promiseConstructor, new Value('resolve'));
+
+    Assert(!(_temp45 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
+
+    if (_temp45 instanceof Completion) {
+      _temp45 = _temp45.Value;
+    }
+
+    realmRec.Intrinsics['%Promise.resolve%'] = _temp45;
     realmRec.Intrinsics['%Promise%'] = promiseConstructor;
   }
 
@@ -40730,7 +40763,8 @@
     }
 
     eatWhitespace() {
-      while (this.eat(WHITESPACE));
+      while (this.eat(WHITESPACE)) {// nothing
+      }
     }
 
     eat(c) {
@@ -41061,7 +41095,8 @@
           _temp29 = _temp29.Value;
         }
 
-        while (this.eat(NUMERIC));
+        while (this.eat(NUMERIC)) {// nothing
+        }
       }
 
       if (this.eat('.')) {
@@ -41075,7 +41110,8 @@
           _temp30 = _temp30.Value;
         }
 
-        while (this.eat(NUMERIC));
+        while (this.eat(NUMERIC)) {// nothing
+        }
       }
 
       if (this.eat(['e', 'E'])) {
@@ -41091,7 +41127,8 @@
           _temp31 = _temp31.Value;
         }
 
-        while (this.eat(NUMERIC));
+        while (this.eat(NUMERIC)) {// nothing
+        }
       }
 
       let _temp32 = this.eatWhitespace();
@@ -58387,7 +58424,7 @@
 
       try {
         const isArray = IsArray(v) === Value.true;
-        const isTypedArray = 'TypedArrayName' in v;
+        const isTypedArray = ('TypedArrayName' in v);
 
         if (isArray || isTypedArray) {
           let _temp11 = LengthOfArrayLike(v);
