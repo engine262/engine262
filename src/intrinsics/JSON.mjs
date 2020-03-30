@@ -66,7 +66,9 @@ class JSONValidator {
   }
 
   eatWhitespace() {
-    while (this.eat(WHITESPACE));
+    while (this.eat(WHITESPACE)) {
+      // nothing
+    }
   }
 
   eat(c) {
@@ -157,16 +159,22 @@ class JSONValidator {
     this.eat('-');
     if (!this.eat('0')) {
       Q(this.expect(NUMERIC));
-      while (this.eat(NUMERIC));
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
     }
     if (this.eat('.')) {
       Q(this.expect(NUMERIC));
-      while (this.eat(NUMERIC));
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
     }
     if (this.eat(['e', 'E'])) {
       this.eat(['-', '+']);
       Q(this.expect(NUMERIC));
-      while (this.eat(NUMERIC));
+      while (this.eat(NUMERIC)) {
+        // nothing
+      }
     }
     X(this.eatWhitespace());
   }

@@ -41,7 +41,7 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-import": "^2.20.2",
     "glob": "^7.1.6",
     "minimatch": "^3.0.4",
     "nearley": "2.16.0",

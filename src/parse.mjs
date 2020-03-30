@@ -38,7 +38,7 @@ const optionalChainToken = { label: '?.' };
 const nullishCoalescingToken = { label: '??', binop: 0 };
 const skipWhiteSpace = /(?:\s|\/\/.*|\/\*[^]*?\*\/)*/g;
 
-const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
+export const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
   constructor(options = {}, source) {
     super({
       ...options,

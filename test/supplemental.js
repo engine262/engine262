@@ -1,13 +1,13 @@
 'use strict';
 
 const assert = require('assert');
-const { total, pass, fail } = require('./base');
 const {
   Abstract,
   Agent,
   Realm,
   Value,
 } = require('..');
+const { total, pass, fail } = require('./base');
 
 // Features that cannot be tested by test262 should go here.
 

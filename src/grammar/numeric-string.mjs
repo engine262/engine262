@@ -18,7 +18,9 @@ const isStrWhiteSpaceChar = (c) => isWhiteSpace(c) || isLineTerminator(c);
 // Returns index of first non-StrWhiteSpaceChar character.
 export function searchNotStrWhiteSpaceChar(str) {
   for (let i = 0; i < str.length; i += 1) {
-    if (!isStrWhiteSpaceChar(str[i])) return i;
+    if (!isStrWhiteSpaceChar(str[i])) {
+      return i;
+    }
   }
   return str.length;
 }
@@ -26,7 +28,9 @@ export function searchNotStrWhiteSpaceChar(str) {
 // Returns index of last non-StrWhiteSpaceChar character + 1.
 export function reverseSearchNotStrWhiteSpaceChar(str) {
   for (let i = str.length - 1; i >= 0; i -= 1) {
-    if (!isStrWhiteSpaceChar(str[i])) return i + 1;
+    if (!isStrWhiteSpaceChar(str[i])) {
+      return i + 1;
+    }
   }
   return 0;
 }

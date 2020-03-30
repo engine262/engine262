@@ -164,13 +164,13 @@ if (!process.send) {
     let asyncPromise;
     let timeout;
     if (attrs.flags.async) {
-      asyncPromise = new Promise((resolve, reject) => {
+      asyncPromise = new Promise((resolve) => {
         timeout = setTimeout(() => {
           const failure = [...trackedPromises][0];
           if (failure) {
             resolve({ status: 'FAIL', error: inspect(failure.PromiseResult, realm) });
           } else {
-            reject(new Error('timeout'));
+            resolve({ status: 'FAIL', error: 'test timed out' });
           }
         }, 2500);
         setPrintHandle((m) => {

@@ -1,7 +1,7 @@
 'use strict';
 
-const { getContext } = require('./context');
 const engine262 = require('..');
+const { getContext } = require('./context');
 
 module.exports = {
   Debugger: {

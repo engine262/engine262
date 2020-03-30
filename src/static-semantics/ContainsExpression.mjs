@@ -89,13 +89,17 @@ export function ContainsExpression_ArrayBindingPattern(ArrayBindingPattern) {
       case isBindingElement(BindingElisionElementOrBindingRestElement): {
         const BindingElement = BindingElisionElementOrBindingRestElement;
         const has = ContainsExpression_BindingElement(BindingElement);
-        if (has === true) return true;
+        if (has === true) {
+          return true;
+        }
         break;
       }
       case isBindingRestElement(BindingElisionElementOrBindingRestElement): {
         const BindingRestElement = BindingElisionElementOrBindingRestElement;
         const has = ContainsExpression_BindingRestElement(BindingRestElement);
-        if (has === true) return true;
+        if (has === true) {
+          return true;
+        }
         break;
       }
       default:
@@ -114,7 +118,9 @@ export function ContainsExpression_BindingProperty(BindingProperty) {
   switch (true) {
     case isBindingPropertyWithColon(BindingProperty): {
       const has = BindingProperty.computed;
-      if (has === true) return true;
+      if (has === true) {
+        return true;
+      }
       return ContainsExpression_BindingElement(BindingProperty.value);
     }
 
@@ -156,14 +162,18 @@ export function ContainsExpression_ObjectBindingPattern(ObjectBindingPattern) {
       case isBindingProperty(prop): {
         const BindingProperty = prop;
         const has = ContainsExpression_BindingProperty(BindingProperty);
-        if (has === true) return true;
+        if (has === true) {
+          return true;
+        }
         break;
       }
 
       case isBindingRestProperty(prop): {
         const BindingRestProperty = prop;
         const has = ContainsExpression_BindingRestProperty(BindingRestProperty);
-        if (has === true) return true;
+        if (has === true) {
+          return true;
+        }
         break;
       }
 

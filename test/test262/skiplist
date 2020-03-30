@@ -1,3 +1,11 @@
+// random issues in test262
+built-ins/Promise/any/does-not-perform-species-get-of-custom.js
+built-ins/Promise/any/does-not-perform-species-get-of-promise.js
+built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
+built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
+built-ins/Proxy/has/trap-is-missing-target-is-proxy.js
+built-ins/Promise/any/invoke-then.js
+
 // https://github.com/tc39/test262/pull/2428
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
@@ -81,6 +89,7 @@ built-ins/Promise/allSettled/resolve-element-function-name.js
 built-ins/Promise/allSettled/resolve-element-function-name.js
 built-ins/Promise/allSettled/reject-element-function-name.js
 built-ins/Promise/allSettled/reject-element-function-name.js
+built-ins/Promise/any/reject-element-function-name.js
 built-ins/Proxy/revocable/revocation-function-name.js
 built-ins/Proxy/revocable/revocation-function-name.js
 language/expressions/assignment/fn-name-lhs-member.js

@@ -2,7 +2,8 @@
 
 const Module = require('module');
 
-const ModuleFindPath = Module._findPath; // eslint-disable-line no-underscore-dangle
+// eslint-disable-next-line no-underscore-dangle
+const ModuleFindPath = Module._findPath;
 const hacks = [
   'eslint-plugin-engine262',
 ];
@@ -36,32 +37,35 @@ module.exports = {
     globalThis: false,
   },
   rules: {
+    'arrow-parens': ['error', 'always'],
+    'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+    'curly': ['error', 'all'],
+    'engine262/valid-throw': 'error',
+    'import/order': ['error', { 'newlines-between': 'never' }],
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
+    'no-unused-vars': ['error', { vars: 'all', args: 'after-used', argsIgnorePattern: '^_' }],
+    'no-empty': ['error', { allowEmptyCatch: true }],
     'quote-props': ['error', 'consistent'],
     'strict': ['error', 'global'],
-    'prefer-destructuring': 'off',
-    'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
-    'arrow-parens': ['error', 'always'],
+
+    'camelcase': 'off',
+    'class-methods-use-this': 'off',
+    'global-require': 'off',
+    'import/extensions': 'off',
+    'import/no-cycle': 'off',
+    'import/no-mutable-exports': 'off',
+    'import/prefer-default-export': 'off',
     'lines-between-class-members': 'off',
     'max-classes-per-file': 'off',
     'max-len': 'off',
-    'camelcase': 'off',
-    'class-methods-use-this': 'off',
     'no-constant-condition': 'off',
+    'no-continue': 'off',
     'no-else-return': 'off',
     'no-lonely-if': 'off',
     'no-param-reassign': 'off',
     'no-restricted-syntax': 'off',
     'no-use-before-define': 'off',
-    'no-continue': 'off',
-    'no-unused-vars': ['error', { vars: 'all', args: 'after-used', argsIgnorePattern: '^_' }],
-    'no-empty': ['error', { allowEmptyCatch: true }],
-    'import/no-cycle': 'off',
-    'import/extensions': 'off',
-    'import/prefer-default-export': 'off',
-    'import/no-mutable-exports': 'off',
-    'import/order': ['error', { 'newlines-between': 'never' }],
-    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-    'global-require': 'off',
-    'engine262/valid-throw': 'error',
+    'prefer-destructuring': 'off',
   },
 };

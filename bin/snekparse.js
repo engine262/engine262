@@ -1,7 +1,9 @@
 'use strict';
 
 function snekparse(args) {
-  if (typeof args === 'string') args = args.split(' ');
+  if (typeof args === 'string') {
+    args = args.split(' ');
+  }
   const argv = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -55,9 +57,13 @@ function snekparse(args) {
 
       const key = arg.slice(-1)[0];
       if (!broken && key !== '-') {
-        if (args[i + 1] && !/^(-|--)[^-]/.test(args[i + 1])) argv[key] = args[i + 1];
-        else if (args[i + 1] && /true|false/.test(args[i + 1])) argv[key] = args[i + 1] === 'true';
-        else argv[key] = true;
+        if (args[i + 1] && !/^(-|--)[^-]/.test(args[i + 1])) {
+          argv[key] = args[i + 1];
+        } else if (args[i + 1] && /true|false/.test(args[i + 1])) {
+          argv[key] = args[i + 1] === 'true';
+        } else {
+          argv[key] = true;
+        }
       }
     } else {
       argv.push(arg);

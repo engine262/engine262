@@ -51,7 +51,9 @@ function scalb(x, exp) {
     // and correspondingly reduce exp by 54.
     throwawayArray[0] *= 18014398509481984;
     exp -= 54;
-    if (exp === 0) return throwawayArray[0];
+    if (exp === 0) {
+      return throwawayArray[0];
+    }
     origExp = (throwawayArrayInt[float64High] >>> 20) & 0x7ff;
   }
   const newExp = origExp + exp;

@@ -375,6 +375,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
     const steps = PromiseAnyRejectElementFunctions;
     // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
     const rejectElement = X(CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
+    X(SetFunctionLength(rejectElement, new Value(1)));
     // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     rejectElement.AlreadyCalled = { Value: false };
     // m. Set rejectElement.[[Index]] to index.
