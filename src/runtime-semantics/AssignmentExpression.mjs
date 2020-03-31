@@ -51,7 +51,7 @@ export function* Evaluate_AssignmentExpression(node) {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
-    const lval = Q(GetValue(lval));
+    const lval = Q(GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
     const lbool = X(ToBoolean(lval));
     // 4. If lbool is false, return lval.
