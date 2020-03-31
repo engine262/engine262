@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d542379e7ad1a752b1bd4eb516131b2171d6154b
+ * engine262 0.0.1 00920d6be650ee76522dfd1f29d55044cc2b527d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
