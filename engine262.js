@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 a8480156bf6f475ed8551a79b8dfcf32900ba92a
+ * engine262 0.0.1 d542379e7ad1a752b1bd4eb516131b2171d6154b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -32667,8 +32667,12 @@
     const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
     const second = String(SecFromTime(tv).numberValue()).padStart(2, '0');
     return new Value(`${hour}:${minute}:${second} GMT`);
-  } // 20.3.4.41.2 #sec-datestring
+  } // Table 46 #sec-todatestring-day-names
 
+
+  const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // Table 47 #sec-todatestring-month-names
+
+  const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // 20.3.4.41.2 #sec-datestring
 
   function DateString(tv) {
     Assert(Type(tv) === 'Number', "Type(tv) === 'Number'");
@@ -32692,12 +32696,8 @@
     const paddedYear = _temp71.stringValue();
 
     return new Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
-  } // Table 46 #sec-todatestring-day-names
+  } // 20.3.4.41.3 #sec-timezoneestring
 
-
-  const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; // Table 47 #sec-todatestring-month-names
-
-  const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // 20.3.4.41.3 #sec-timezoneestring
 
   function TimeZoneString(tv) {
     Assert(Type(tv) === 'Number', "Type(tv) === 'Number'");
@@ -41523,338 +41523,335 @@
     }
   }
 
-  const codeUnitTable = new Map([[0x0008, '\\b'], [0x0009, '\\t'], [0x000A, '\\n'], [0x000C, '\\f'], [0x000D, '\\r'], [0x0022, '\\"'], [0x005C, '\\\\']]);
+  const codeUnitTable = new Map([[0x0008, '\\b'], [0x0009, '\\t'], [0x000A, '\\n'], [0x000C, '\\f'], [0x000D, '\\r'], [0x0022, '\\"'], [0x005C, '\\\\']]); // #sec-serializejsonproperty
+
+  function SerializeJSONProperty(state, key, holder) {
+    let _temp65 = Get(holder, key);
+
+    if (_temp65 instanceof AbruptCompletion) {
+      return _temp65;
+    }
+
+    if (_temp65 instanceof Completion) {
+      _temp65 = _temp65.Value;
+    }
+
+    let value = _temp65; // eslint-disable-line no-shadow
+
+    if (Type(value) === 'Object' || Type(value) === 'BigInt') {
+      let _temp66 = GetV(value, new Value('toJSON'));
+
+      if (_temp66 instanceof AbruptCompletion) {
+        return _temp66;
+      }
+
+      if (_temp66 instanceof Completion) {
+        _temp66 = _temp66.Value;
+      }
+
+      const toJSON = _temp66;
+
+      if (IsCallable(toJSON) === Value.true) {
+        let _temp67 = Call(toJSON, value, [key]);
+
+        if (_temp67 instanceof AbruptCompletion) {
+          return _temp67;
+        }
+
+        if (_temp67 instanceof Completion) {
+          _temp67 = _temp67.Value;
+        }
+
+        value = _temp67;
+      }
+    }
+
+    if (state.ReplacerFunction !== Value.undefined) {
+      let _temp68 = Call(state.ReplacerFunction, holder, [key, value]);
+
+      if (_temp68 instanceof AbruptCompletion) {
+        return _temp68;
+      }
+
+      if (_temp68 instanceof Completion) {
+        _temp68 = _temp68.Value;
+      }
+
+      value = _temp68;
+    }
+
+    if (Type(value) === 'Object') {
+      if ('NumberData' in value) {
+        let _temp69 = ToNumber(value);
+
+        if (_temp69 instanceof AbruptCompletion) {
+          return _temp69;
+        }
+
+        if (_temp69 instanceof Completion) {
+          _temp69 = _temp69.Value;
+        }
+
+        value = _temp69;
+      } else if ('StringData' in value) {
+        let _temp70 = ToString(value);
+
+        if (_temp70 instanceof AbruptCompletion) {
+          return _temp70;
+        }
+
+        if (_temp70 instanceof Completion) {
+          _temp70 = _temp70.Value;
+        }
+
+        value = _temp70;
+      } else if ('BooleanData' in value) {
+        value = value.BooleanData;
+      } else if ('BigIntData' in value) {
+        value = value.BigIntData;
+      }
+    }
+
+    if (value === Value.null) {
+      return new Value('null');
+    }
+
+    if (value === Value.true) {
+      return new Value('true');
+    }
+
+    if (value === Value.false) {
+      return new Value('false');
+    }
+
+    if (Type(value) === 'String') {
+      return QuoteJSONString(value);
+    }
+
+    if (Type(value) === 'Number') {
+      if (value.isFinite()) {
+        let _temp71 = ToString(value);
+
+        Assert(!(_temp71 instanceof AbruptCompletion), "ToString(value)" + ' returned an abrupt completion');
+
+        if (_temp71 instanceof Completion) {
+          _temp71 = _temp71.Value;
+        }
+
+        return _temp71;
+      }
+
+      return new Value('null');
+    }
+
+    if (Type(value) === 'BigInt') {
+      return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
+    }
+
+    if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
+      let _temp72 = IsArray(value);
+
+      if (_temp72 instanceof AbruptCompletion) {
+        return _temp72;
+      }
+
+      if (_temp72 instanceof Completion) {
+        _temp72 = _temp72.Value;
+      }
+
+      const isArray = _temp72;
+
+      if (isArray === Value.true) {
+        return SerializeJSONArray(state, value);
+      }
+
+      return SerializeJSONObject(state, value);
+    }
+
+    return Value.undefined;
+  }
+
+  function UnicodeEscape(C) {
+    const n = C.charCodeAt(0);
+    Assert(n < 0xFFFF, "n < 0xFFFF");
+    return `\u005Cu${n.toString(16).padStart(4, '0')}`;
+  }
+
+  function QuoteJSONString(value) {
+    // eslint-disable-line no-shadow
+    let product = '\u0022';
+    const cpList = [...value.stringValue()].map(c => c.codePointAt(0));
+
+    for (const C of cpList) {
+      if (codeUnitTable.has(C)) {
+        product = `${product}${codeUnitTable.get(C)}`;
+      } else if (C < 0x0020 || C >= 0xD800 && C <= 0xDBFF || C >= 0xDC00 && C <= 0xDFFF) {
+        const unit = String.fromCodePoint(C);
+        product = `${product}${UnicodeEscape(unit)}`;
+      } else {
+        product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
+      }
+    }
+
+    product = `${product}\u0022`;
+    return new Value(product);
+  } // #sec-serializejsonobject
+
+
+  function SerializeJSONObject(state, value) {
+    if (state.Stack.includes(value)) {
+      return surroundingAgent.Throw('TypeError', 'JSONCircular');
+    }
+
+    state.Stack.push(value);
+    const stepback = state.Indent;
+    state.Indent = `${state.Indent}${state.Gap}`;
+    let K;
+
+    if (state.PropertyList !== Value.undefined) {
+      K = state.PropertyList;
+    } else {
+      let _temp73 = EnumerableOwnPropertyNames(value, 'key');
+
+      if (_temp73 instanceof AbruptCompletion) {
+        return _temp73;
+      }
+
+      if (_temp73 instanceof Completion) {
+        _temp73 = _temp73.Value;
+      }
+
+      K = _temp73;
+    }
+
+    const partial = [];
+
+    for (const P of K) {
+      let _temp74 = SerializeJSONProperty(state, P, value);
+
+      if (_temp74 instanceof AbruptCompletion) {
+        return _temp74;
+      }
+
+      if (_temp74 instanceof Completion) {
+        _temp74 = _temp74.Value;
+      }
+
+      const strP = _temp74;
+
+      if (strP !== Value.undefined) {
+        let member = QuoteJSONString(P).stringValue();
+        member = `${member}:`;
+
+        if (state.Gap !== '') {
+          member = `${member} `;
+        }
+
+        member = `${member}${strP.stringValue()}`;
+        partial.push(member);
+      }
+    }
+
+    let final;
+
+    if (partial.length === 0) {
+      final = new Value('{}');
+    } else {
+      if (state.Gap === '') {
+        const properties = partial.join(',');
+        final = new Value(`{${properties}}`);
+      } else {
+        const separator = `,\u000A${state.Indent}`;
+        const properties = partial.join(separator);
+        final = new Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
+      }
+    }
+
+    state.Stack.pop();
+    state.Indent = stepback;
+    return final;
+  } // #sec-serializejsonarray
+
+
+  function SerializeJSONArray(state, value) {
+    if (state.Stack.includes(value)) {
+      return surroundingAgent.Throw('TypeError', 'JSONCircular');
+    }
+
+    state.Stack.push(value);
+    const stepback = state.Indent;
+    state.Indent = `${state.Indent}${state.Gap}`;
+    const partial = [];
+
+    let _temp75 = LengthOfArrayLike(value);
+
+    if (_temp75 instanceof AbruptCompletion) {
+      return _temp75;
+    }
+
+    if (_temp75 instanceof Completion) {
+      _temp75 = _temp75.Value;
+    }
+
+    const len = _temp75.numberValue();
+
+    let index = 0;
+
+    while (index < len) {
+      let _temp76 = ToString(new Value(index));
+
+      Assert(!(_temp76 instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
+
+      if (_temp76 instanceof Completion) {
+        _temp76 = _temp76.Value;
+      }
+
+      const indexStr = _temp76;
+
+      let _temp77 = SerializeJSONProperty(state, indexStr, value);
+
+      if (_temp77 instanceof AbruptCompletion) {
+        return _temp77;
+      }
+
+      if (_temp77 instanceof Completion) {
+        _temp77 = _temp77.Value;
+      }
+
+      const strP = _temp77;
+
+      if (strP === Value.undefined) {
+        partial.push('null');
+      } else {
+        partial.push(strP.stringValue());
+      }
+
+      index += 1;
+    }
+
+    let final;
+
+    if (partial.length === 0) {
+      final = new Value('[]');
+    } else {
+      if (state.Gap === '') {
+        const properties = partial.join(',');
+        final = new Value(`[${properties}]`);
+      } else {
+        const separator = `,\u000A${state.Indent}`;
+        const properties = partial.join(separator);
+        final = new Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
+      }
+    }
+
+    state.Stack.pop();
+    state.Indent = stepback;
+    return final;
+  }
 
   function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
-    // 24.5.2.1 #sec-serializejsonproperty
-    function SerializeJSONProperty(key, holder) {
-      let _temp65 = Get(holder, key);
-
-      if (_temp65 instanceof AbruptCompletion) {
-        return _temp65;
-      }
-
-      if (_temp65 instanceof Completion) {
-        _temp65 = _temp65.Value;
-      }
-
-      let value = _temp65; // eslint-disable-line no-shadow
-
-      if (Type(value) === 'Object' || Type(value) === 'BigInt') {
-        let _temp66 = GetV(value, new Value('toJSON'));
-
-        if (_temp66 instanceof AbruptCompletion) {
-          return _temp66;
-        }
-
-        if (_temp66 instanceof Completion) {
-          _temp66 = _temp66.Value;
-        }
-
-        const toJSON = _temp66;
-
-        if (IsCallable(toJSON) === Value.true) {
-          let _temp67 = Call(toJSON, value, [key]);
-
-          if (_temp67 instanceof AbruptCompletion) {
-            return _temp67;
-          }
-
-          if (_temp67 instanceof Completion) {
-            _temp67 = _temp67.Value;
-          }
-
-          value = _temp67;
-        }
-      }
-
-      if (ReplacerFunction !== Value.undefined) {
-        let _temp68 = Call(ReplacerFunction, holder, [key, value]);
-
-        if (_temp68 instanceof AbruptCompletion) {
-          return _temp68;
-        }
-
-        if (_temp68 instanceof Completion) {
-          _temp68 = _temp68.Value;
-        }
-
-        value = _temp68;
-      }
-
-      if (Type(value) === 'Object') {
-        if ('NumberData' in value) {
-          let _temp69 = ToNumber(value);
-
-          if (_temp69 instanceof AbruptCompletion) {
-            return _temp69;
-          }
-
-          if (_temp69 instanceof Completion) {
-            _temp69 = _temp69.Value;
-          }
-
-          value = _temp69;
-        } else if ('StringData' in value) {
-          let _temp70 = ToString(value);
-
-          if (_temp70 instanceof AbruptCompletion) {
-            return _temp70;
-          }
-
-          if (_temp70 instanceof Completion) {
-            _temp70 = _temp70.Value;
-          }
-
-          value = _temp70;
-        } else if ('BooleanData' in value) {
-          value = value.BooleanData;
-        } else if ('BigIntData' in value) {
-          value = value.BigIntData;
-        }
-      }
-
-      if (value === Value.null) {
-        return new Value('null');
-      }
-
-      if (value === Value.true) {
-        return new Value('true');
-      }
-
-      if (value === Value.false) {
-        return new Value('false');
-      }
-
-      if (Type(value) === 'String') {
-        return QuoteJSONString(value);
-      }
-
-      if (Type(value) === 'Number') {
-        if (value.isFinite()) {
-          let _temp71 = ToString(value);
-
-          Assert(!(_temp71 instanceof AbruptCompletion), "ToString(value)" + ' returned an abrupt completion');
-
-          if (_temp71 instanceof Completion) {
-            _temp71 = _temp71.Value;
-          }
-
-          return _temp71;
-        }
-
-        return new Value('null');
-      }
-
-      if (Type(value) === 'BigInt') {
-        return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
-      }
-
-      if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
-        let _temp72 = IsArray(value);
-
-        if (_temp72 instanceof AbruptCompletion) {
-          return _temp72;
-        }
-
-        if (_temp72 instanceof Completion) {
-          _temp72 = _temp72.Value;
-        }
-
-        const isArray = _temp72;
-
-        if (isArray === Value.true) {
-          return SerializeJSONArray(value);
-        }
-
-        return SerializeJSONObject(value);
-      }
-
-      return Value.undefined;
-    }
-
-    function QuoteJSONString(value) {
-      // eslint-disable-line no-shadow
-      let product = '\u0022';
-      const cpList = [...value.stringValue()].map(c => c.codePointAt(0));
-
-      for (const C of cpList) {
-        if (codeUnitTable.has(C)) {
-          product = `${product}${codeUnitTable.get(C)}`;
-        } else if (C < 0x0020 || C >= 0xD800 && C <= 0xDBFF || C >= 0xDC00 && C <= 0xDFFF) {
-          const unit = String.fromCodePoint(C);
-          product = `${product}${UnicodeEscape(unit)}`;
-        } else {
-          product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
-        }
-      }
-
-      product = `${product}\u0022`;
-      return new Value(product);
-    }
-
-    function UnicodeEscape(C) {
-      const n = C.charCodeAt(0);
-      Assert(n < 0xFFFF, "n < 0xFFFF");
-      return `\u005Cu${n.toString(16).padStart(4, '0')}`;
-    } // 24.5.2.4 #sec-serializejsonobject
-
-
-    function SerializeJSONObject(value) {
-      // eslint-disable-line no-shadow
-      if (stack.includes(value)) {
-        return surroundingAgent.Throw('TypeError', 'JSONCircular');
-      }
-
-      stack.push(value);
-      const stepback = indent;
-      indent = `${indent}${gap}`;
-      let K;
-
-      if (PropertyList !== Value.undefined) {
-        K = PropertyList;
-      } else {
-        let _temp73 = EnumerableOwnPropertyNames(value, 'key');
-
-        if (_temp73 instanceof AbruptCompletion) {
-          return _temp73;
-        }
-
-        if (_temp73 instanceof Completion) {
-          _temp73 = _temp73.Value;
-        }
-
-        K = _temp73;
-      }
-
-      const partial = [];
-
-      for (const P of K) {
-        let _temp74 = SerializeJSONProperty(P, value);
-
-        if (_temp74 instanceof AbruptCompletion) {
-          return _temp74;
-        }
-
-        if (_temp74 instanceof Completion) {
-          _temp74 = _temp74.Value;
-        }
-
-        const strP = _temp74;
-
-        if (strP !== Value.undefined) {
-          let member = QuoteJSONString(P).stringValue();
-          member = `${member}:`;
-
-          if (gap !== '') {
-            member = `${member} `;
-          }
-
-          member = `${member}${strP.stringValue()}`;
-          partial.push(member);
-        }
-      }
-
-      let final;
-
-      if (partial.length === 0) {
-        final = new Value('{}');
-      } else {
-        if (gap === '') {
-          const properties = partial.join(',');
-          final = new Value(`{${properties}}`);
-        } else {
-          const separator = `,\u000A${indent}`;
-          const properties = partial.join(separator);
-          final = new Value(`{\u000A${indent}${properties}\u000A${stepback}}`);
-        }
-      }
-
-      stack.pop();
-      indent = stepback;
-      return final;
-    } // 24.5.2.5 #sec-serializejsonarray
-
-
-    function SerializeJSONArray(value) {
-      // eslint-disable-line no-shadow
-      if (stack.includes(value)) {
-        return surroundingAgent.Throw('TypeError', 'JSONCircular');
-      }
-
-      stack.push(value);
-      const stepback = indent;
-      indent = `${indent}${gap}`;
-      const partial = [];
-
-      let _temp75 = LengthOfArrayLike(value);
-
-      if (_temp75 instanceof AbruptCompletion) {
-        return _temp75;
-      }
-
-      if (_temp75 instanceof Completion) {
-        _temp75 = _temp75.Value;
-      }
-
-      const len = _temp75.numberValue();
-
-      let index = 0;
-
-      while (index < len) {
-        let _temp76 = ToString(new Value(index));
-
-        Assert(!(_temp76 instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
-
-        if (_temp76 instanceof Completion) {
-          _temp76 = _temp76.Value;
-        }
-
-        const indexStr = _temp76;
-
-        let _temp77 = SerializeJSONProperty(indexStr, value);
-
-        if (_temp77 instanceof AbruptCompletion) {
-          return _temp77;
-        }
-
-        if (_temp77 instanceof Completion) {
-          _temp77 = _temp77.Value;
-        }
-
-        const strP = _temp77;
-
-        if (strP === Value.undefined) {
-          partial.push('null');
-        } else {
-          partial.push(strP.stringValue());
-        }
-
-        index += 1;
-      }
-
-      let final;
-
-      if (partial.length === 0) {
-        final = new Value('[]');
-      } else {
-        if (gap === '') {
-          const properties = partial.join(',');
-          final = new Value(`[${properties}]`);
-        } else {
-          const separator = `,\u000A${indent}`;
-          const properties = partial.join(separator);
-          final = new Value(`[\u000A${indent}${properties}\u000A${stepback}]`);
-        }
-      }
-
-      stack.pop();
-      indent = stepback;
-      return final;
-    }
-
     const stack = [];
-    let indent = '';
+    const indent = '';
     let PropertyList = Value.undefined;
     let ReplacerFunction = Value.undefined;
 
@@ -42011,17 +42008,21 @@
 
     const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
 
-    let _temp87 = CreateDataProperty(wrapper, new Value(''), value);
+    let _temp87 = CreateDataPropertyOrThrow(wrapper, new Value(''), value);
 
-    Assert(!(_temp87 instanceof AbruptCompletion), "CreateDataProperty(wrapper, new Value(''), value)" + ' returned an abrupt completion');
+    Assert(!(_temp87 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(wrapper, new Value(''), value)" + ' returned an abrupt completion');
 
     if (_temp87 instanceof Completion) {
       _temp87 = _temp87.Value;
     }
-
-    const status = _temp87;
-    Assert(status === Value.true, "status === Value.true");
-    return SerializeJSONProperty(new Value(''), wrapper);
+    const state = {
+      ReplacerFunction,
+      Stack: stack,
+      Indent: indent,
+      Gap: gap,
+      PropertyList
+    };
+    return SerializeJSONProperty(state, new Value(''), wrapper);
   }
 
   function BootstrapJSON(realmRec) {
@@ -48970,13 +48971,19 @@
   const mod = (n, m) => {
     const r = n % m;
     return Math.floor(r >= 0 ? r : r + m);
-  }; // 20.3.1.2 #sec-day-number-and-time-within-day
+  };
 
+  const HoursPerDay = 24;
+  const MinutesPerHour = 60;
+  const SecondsPerMinute = 60;
+  const msPerSecond = 1000;
+  const msPerMinute = msPerSecond * SecondsPerMinute;
+  const msPerHour = msPerMinute * MinutesPerHour;
+  const msPerDay = msPerHour * HoursPerDay; // 20.3.1.2 #sec-day-number-and-time-within-day
 
   function Day(t) {
     return new Value(Math.floor(t.numberValue() / msPerDay));
   }
-  const msPerDay = 86400000;
   function TimeWithinDay(t) {
     return new Value(mod(t.numberValue(), msPerDay));
   } // 20.3.1.3 #sec-year-number
@@ -49159,13 +49166,7 @@
   }
   function msFromTime(t) {
     return new Value(mod(t.numberValue(), msPerSecond));
-  }
-  const HoursPerDay = 24;
-  const MinutesPerHour = 60;
-  const SecondsPerMinute = 60;
-  const msPerSecond = 1000;
-  const msPerMinute = msPerSecond * SecondsPerMinute;
-  const msPerHour = msPerMinute * MinutesPerHour; // 20.3.1.11 #sec-maketime
+  } // 20.3.1.11 #sec-maketime
 
   function MakeTime(hour, min, sec, ms) {
     if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
@@ -57982,8 +57983,14 @@
     isArrayIndex: isArrayIndex,
     GetViewValue: GetViewValue,
     SetViewValue: SetViewValue,
-    Day: Day,
+    HoursPerDay: HoursPerDay,
+    MinutesPerHour: MinutesPerHour,
+    SecondsPerMinute: SecondsPerMinute,
+    msPerSecond: msPerSecond,
+    msPerMinute: msPerMinute,
+    msPerHour: msPerHour,
     msPerDay: msPerDay,
+    Day: Day,
     TimeWithinDay: TimeWithinDay,
     DaysInYear: DaysInYear,
     DayFromYear: DayFromYear,
@@ -58002,12 +58009,6 @@
     MinFromTime: MinFromTime,
     SecFromTime: SecFromTime,
     msFromTime: msFromTime,
-    HoursPerDay: HoursPerDay,
-    MinutesPerHour: MinutesPerHour,
-    SecondsPerMinute: SecondsPerMinute,
-    msPerSecond: msPerSecond,
-    msPerMinute: msPerMinute,
-    msPerHour: msPerHour,
     MakeTime: MakeTime,
     MakeDay: MakeDay,
     MakeDate: MakeDate,
