@@ -157,26 +157,44 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   return Completion(result);
 }
 
-// 25.4.3.5 #sec-getgeneratorkind
+// #sec-getgeneratorkind
 export function GetGeneratorKind() {
+  // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
+  // 2. If genContext does not have a Generator component, return non-generator.
   if (!genContext.Generator) {
     return 'non-generator';
   }
+  // 3. Let generator be the Generator component of genContext.
   const generator = genContext.Generator;
+  // 4. If generator has an [[AsyncGeneratorState]] internal slot, return async.
   if ('AsyncGeneratorState' in generator) {
     return 'async';
   }
+  // 5. Else, return sync.
   return 'sync';
 }
 
-// 25.4.3.6 #sec-generatoryield
+// #sec-generatoryield
 export function* GeneratorYield(iterNextObj) {
+  // 1. Assert: iterNextObj is an Object that implements the IteratorResult interface.
+  // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
+  // 3. Assert: genContext is the execution context of a generator.
+  Assert(genContext.Generator !== undefined);
+  // 4. Let generator be the value of the Generator component of genContext.
   const generator = genContext.Generator;
+  // 5. Assert: GetGeneratorKind is sync.
   Assert(GetGeneratorKind() === 'sync');
+  // 6. Set generator.GeneratorState to suspendedYield.
   generator.GeneratorState = 'suspendedYield';
+  // 7. Remove genContext from the execution context stack.
   surroundingAgent.executionContextStack.pop(genContext);
+  // 8. Set the code evaluation state of genContext such that when evaluation is resumed with
+  //    a Completion resumptionValue the following steps will be performed:
+  //      a. Return resumptionValue
   const resumptionValue = yield new NormalCompletion(iterNextObj);
+  // 9. Return NormalCompletion(iterNextObj).
   return resumptionValue;
+  // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
 }
