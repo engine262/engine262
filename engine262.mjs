@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 c5285227f26ef661fc6f3723df3b44489a12a42d
+ * engine262 0.0.1 a8480156bf6f475ed8551a79b8dfcf32900ba92a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -6032,7 +6032,7 @@ function* Evaluate_AssignmentExpression(node) {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
 
-    let _temp5 = GetValue(lval);
+    let _temp5 = GetValue(lref);
 
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
