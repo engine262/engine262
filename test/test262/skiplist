@@ -4,9 +4,18 @@ built-ins/Promise/any/does-not-perform-species-get-of-promise.js
 built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/has/trap-is-missing-target-is-proxy.js
-built-ins/Promise/any/invoke-then.js
 
-// https://github.com/tc39/test262/pull/2428
+// https://github.com/tc39/ecma262/pull/1814
+built-ins/Proxy/create-target-is-revoked-proxy.js
+built-ins/Proxy/create-handler-is-revoked-proxy.js
+built-ins/Proxy/create-target-is-revoked-function-proxy.js
+
+// https://github.com/tc39/ecma262/pull/1776
+built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
+built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
+built-ins/AsyncFromSyncIteratorPrototype/throw/absent-value-not-passed.js
+
+// https://github.com/tc39/ecma262/pull/1490
 language/computed-property-names/class/static/method-number.js
 language/computed-property-names/class/static/method-string.js
 language/computed-property-names/class/static/method-symbol.js

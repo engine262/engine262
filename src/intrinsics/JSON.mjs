@@ -301,170 +301,170 @@ const codeUnitTable = new Map([
   [0x005C, '\\\\'],
 ]);
 
+// #sec-serializejsonproperty
+function SerializeJSONProperty(state, key, holder) {
+  let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
+  if (Type(value) === 'Object' || Type(value) === 'BigInt') {
+    const toJSON = Q(GetV(value, new Value('toJSON')));
+    if (IsCallable(toJSON) === Value.true) {
+      value = Q(Call(toJSON, value, [key]));
+    }
+  }
+  if (state.ReplacerFunction !== Value.undefined) {
+    value = Q(Call(state.ReplacerFunction, holder, [key, value]));
+  }
+  if (Type(value) === 'Object') {
+    if ('NumberData' in value) {
+      value = Q(ToNumber(value));
+    } else if ('StringData' in value) {
+      value = Q(ToString(value));
+    } else if ('BooleanData' in value) {
+      value = value.BooleanData;
+    } else if ('BigIntData' in value) {
+      value = value.BigIntData;
+    }
+  }
+  if (value === Value.null) {
+    return new Value('null');
+  }
+  if (value === Value.true) {
+    return new Value('true');
+  }
+  if (value === Value.false) {
+    return new Value('false');
+  }
+  if (Type(value) === 'String') {
+    return QuoteJSONString(value);
+  }
+  if (Type(value) === 'Number') {
+    if (value.isFinite()) {
+      return X(ToString(value));
+    }
+    return new Value('null');
+  }
+  if (Type(value) === 'BigInt') {
+    return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
+  }
+  if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
+    const isArray = Q(IsArray(value));
+    if (isArray === Value.true) {
+      return Q(SerializeJSONArray(state, value));
+    }
+    return Q(SerializeJSONObject(state, value));
+  }
+  return Value.undefined;
+}
+
+function UnicodeEscape(C) {
+  const n = C.charCodeAt(0);
+  Assert(n < 0xFFFF);
+  return `\u005Cu${n.toString(16).padStart(4, '0')}`;
+}
+
+function QuoteJSONString(value) { // eslint-disable-line no-shadow
+  let product = '\u0022';
+  const cpList = [...value.stringValue()].map((c) => c.codePointAt(0));
+  for (const C of cpList) {
+    if (codeUnitTable.has(C)) {
+      product = `${product}${codeUnitTable.get(C)}`;
+    } else if (C < 0x0020 || (C >= 0xD800 && C <= 0xDBFF) || (C >= 0xDC00 && C <= 0xDFFF)) {
+      const unit = String.fromCodePoint(C);
+      product = `${product}${UnicodeEscape(unit)}`;
+    } else {
+      product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
+    }
+  }
+  product = `${product}\u0022`;
+  return new Value(product);
+}
+
+// #sec-serializejsonobject
+function SerializeJSONObject(state, value) {
+  if (state.Stack.includes(value)) {
+    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+  }
+  state.Stack.push(value);
+  const stepback = state.Indent;
+  state.Indent = `${state.Indent}${state.Gap}`;
+  let K;
+  if (state.PropertyList !== Value.undefined) {
+    K = state.PropertyList;
+  } else {
+    K = Q(EnumerableOwnPropertyNames(value, 'key'));
+  }
+  const partial = [];
+  for (const P of K) {
+    const strP = Q(SerializeJSONProperty(state, P, value));
+    if (strP !== Value.undefined) {
+      let member = QuoteJSONString(P).stringValue();
+      member = `${member}:`;
+      if (state.Gap !== '') {
+        member = `${member} `;
+      }
+      member = `${member}${strP.stringValue()}`;
+      partial.push(member);
+    }
+  }
+  let final;
+  if (partial.length === 0) {
+    final = new Value('{}');
+  } else {
+    if (state.Gap === '') {
+      const properties = partial.join(',');
+      final = new Value(`{${properties}}`);
+    } else {
+      const separator = `,\u000A${state.Indent}`;
+      const properties = partial.join(separator);
+      final = new Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
+    }
+  }
+  state.Stack.pop();
+  state.Indent = stepback;
+  return final;
+}
+
+// #sec-serializejsonarray
+function SerializeJSONArray(state, value) {
+  if (state.Stack.includes(value)) {
+    return surroundingAgent.Throw('TypeError', 'JSONCircular');
+  }
+  state.Stack.push(value);
+  const stepback = state.Indent;
+  state.Indent = `${state.Indent}${state.Gap}`;
+  const partial = [];
+  const len = Q(LengthOfArrayLike(value)).numberValue();
+  let index = 0;
+  while (index < len) {
+    const indexStr = X(ToString(new Value(index)));
+    const strP = Q(SerializeJSONProperty(state, indexStr, value));
+    if (strP === Value.undefined) {
+      partial.push('null');
+    } else {
+      partial.push(strP.stringValue());
+    }
+    index += 1;
+  }
+  let final;
+  if (partial.length === 0) {
+    final = new Value('[]');
+  } else {
+    if (state.Gap === '') {
+      const properties = partial.join(',');
+      final = new Value(`[${properties}]`);
+    } else {
+      const separator = `,\u000A${state.Indent}`;
+      const properties = partial.join(separator);
+      final = new Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
+    }
+  }
+  state.Stack.pop();
+  state.Indent = stepback;
+  return final;
+}
+
 function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
-  // 24.5.2.1 #sec-serializejsonproperty
-  function SerializeJSONProperty(key, holder) {
-    let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
-    if (Type(value) === 'Object' || Type(value) === 'BigInt') {
-      const toJSON = Q(GetV(value, new Value('toJSON')));
-      if (IsCallable(toJSON) === Value.true) {
-        value = Q(Call(toJSON, value, [key]));
-      }
-    }
-    if (ReplacerFunction !== Value.undefined) {
-      value = Q(Call(ReplacerFunction, holder, [key, value]));
-    }
-    if (Type(value) === 'Object') {
-      if ('NumberData' in value) {
-        value = Q(ToNumber(value));
-      } else if ('StringData' in value) {
-        value = Q(ToString(value));
-      } else if ('BooleanData' in value) {
-        value = value.BooleanData;
-      } else if ('BigIntData' in value) {
-        value = value.BigIntData;
-      }
-    }
-    if (value === Value.null) {
-      return new Value('null');
-    }
-    if (value === Value.true) {
-      return new Value('true');
-    }
-    if (value === Value.false) {
-      return new Value('false');
-    }
-    if (Type(value) === 'String') {
-      return QuoteJSONString(value);
-    }
-    if (Type(value) === 'Number') {
-      if (value.isFinite()) {
-        return X(ToString(value));
-      }
-      return new Value('null');
-    }
-    if (Type(value) === 'BigInt') {
-      return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
-    }
-    if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
-      const isArray = Q(IsArray(value));
-      if (isArray === Value.true) {
-        return Q(SerializeJSONArray(value));
-      }
-      return Q(SerializeJSONObject(value));
-    }
-    return Value.undefined;
-  }
-
-  function QuoteJSONString(value) { // eslint-disable-line no-shadow
-    let product = '\u0022';
-    const cpList = [...value.stringValue()].map((c) => c.codePointAt(0));
-    for (const C of cpList) {
-      if (codeUnitTable.has(C)) {
-        product = `${product}${codeUnitTable.get(C)}`;
-      } else if (C < 0x0020 || (C >= 0xD800 && C <= 0xDBFF) || (C >= 0xDC00 && C <= 0xDFFF)) {
-        const unit = String.fromCodePoint(C);
-        product = `${product}${UnicodeEscape(unit)}`;
-      } else {
-        product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
-      }
-    }
-    product = `${product}\u0022`;
-    return new Value(product);
-  }
-
-  function UnicodeEscape(C) {
-    const n = C.charCodeAt(0);
-    Assert(n < 0xFFFF);
-    return `\u005Cu${n.toString(16).padStart(4, '0')}`;
-  }
-
-  // 24.5.2.4 #sec-serializejsonobject
-  function SerializeJSONObject(value) { // eslint-disable-line no-shadow
-    if (stack.includes(value)) {
-      return surroundingAgent.Throw('TypeError', 'JSONCircular');
-    }
-    stack.push(value);
-    const stepback = indent;
-    indent = `${indent}${gap}`;
-    let K;
-    if (PropertyList !== Value.undefined) {
-      K = PropertyList;
-    } else {
-      K = Q(EnumerableOwnPropertyNames(value, 'key'));
-    }
-    const partial = [];
-    for (const P of K) {
-      const strP = Q(SerializeJSONProperty(P, value));
-      if (strP !== Value.undefined) {
-        let member = QuoteJSONString(P).stringValue();
-        member = `${member}:`;
-        if (gap !== '') {
-          member = `${member} `;
-        }
-        member = `${member}${strP.stringValue()}`;
-        partial.push(member);
-      }
-    }
-    let final;
-    if (partial.length === 0) {
-      final = new Value('{}');
-    } else {
-      if (gap === '') {
-        const properties = partial.join(',');
-        final = new Value(`{${properties}}`);
-      } else {
-        const separator = `,\u000A${indent}`;
-        const properties = partial.join(separator);
-        final = new Value(`{\u000A${indent}${properties}\u000A${stepback}}`);
-      }
-    }
-    stack.pop();
-    indent = stepback;
-    return final;
-  }
-
-  // 24.5.2.5 #sec-serializejsonarray
-  function SerializeJSONArray(value) { // eslint-disable-line no-shadow
-    if (stack.includes(value)) {
-      return surroundingAgent.Throw('TypeError', 'JSONCircular');
-    }
-    stack.push(value);
-    const stepback = indent;
-    indent = `${indent}${gap}`;
-    const partial = [];
-    const len = Q(LengthOfArrayLike(value)).numberValue();
-    let index = 0;
-    while (index < len) {
-      const indexStr = X(ToString(new Value(index)));
-      const strP = Q(SerializeJSONProperty(indexStr, value));
-      if (strP === Value.undefined) {
-        partial.push('null');
-      } else {
-        partial.push(strP.stringValue());
-      }
-      index += 1;
-    }
-    let final;
-    if (partial.length === 0) {
-      final = new Value('[]');
-    } else {
-      if (gap === '') {
-        const properties = partial.join(',');
-        final = new Value(`[${properties}]`);
-      } else {
-        const separator = `,\u000A${indent}`;
-        const properties = partial.join(separator);
-        final = new Value(`[\u000A${indent}${properties}\u000A${stepback}]`);
-      }
-    }
-    stack.pop();
-    indent = stepback;
-    return final;
-  }
-
   const stack = [];
-  let indent = '';
+  const indent = '';
   let PropertyList = Value.undefined;
   let ReplacerFunction = Value.undefined;
   if (Type(replacer) === 'Object') {
@@ -522,9 +522,11 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     gap = '';
   }
   const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  const status = X(CreateDataProperty(wrapper, new Value(''), value));
-  Assert(status === Value.true);
-  return Q(SerializeJSONProperty(new Value(''), wrapper));
+  X(CreateDataPropertyOrThrow(wrapper, new Value(''), value));
+  const state = {
+    ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
+  };
+  return Q(SerializeJSONProperty(state, new Value(''), wrapper));
 }
 
 export function BootstrapJSON(realmRec) {

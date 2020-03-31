@@ -548,6 +548,11 @@ function TimeString(tv) {
   return new Value(`${hour}:${minute}:${second} GMT`);
 }
 
+// Table 46 #sec-todatestring-day-names
+const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Table 47 #sec-todatestring-month-names
+const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 // 20.3.4.41.2 #sec-datestring
 function DateString(tv) {
   Assert(Type(tv) === 'Number');
@@ -561,11 +566,6 @@ function DateString(tv) {
   const paddedYear = X(StringPad(year, new Value(4), new Value('0'), 'start')).stringValue();
   return new Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
-
-// Table 46 #sec-todatestring-day-names
-const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-// Table 47 #sec-todatestring-month-names
-const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // 20.3.4.41.3 #sec-timezoneestring
 export function TimeZoneString(tv) {

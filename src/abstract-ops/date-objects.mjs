@@ -14,12 +14,18 @@ const mod = (n, m) => {
   return Math.floor(r >= 0 ? r : r + m);
 };
 
+export const HoursPerDay = 24;
+export const MinutesPerHour = 60;
+export const SecondsPerMinute = 60;
+export const msPerSecond = 1000;
+export const msPerMinute = msPerSecond * SecondsPerMinute;
+export const msPerHour = msPerMinute * MinutesPerHour;
+export const msPerDay = msPerHour * HoursPerDay;
+
 // 20.3.1.2 #sec-day-number-and-time-within-day
 export function Day(t) {
   return new Value(Math.floor(t.numberValue() / msPerDay));
 }
-
-export const msPerDay = 86400000;
 
 export function TimeWithinDay(t) {
   return new Value(mod(t.numberValue(), msPerDay));
@@ -176,13 +182,6 @@ export function SecFromTime(t) {
 export function msFromTime(t) {
   return new Value(mod(t.numberValue(), msPerSecond));
 }
-
-export const HoursPerDay = 24;
-export const MinutesPerHour = 60;
-export const SecondsPerMinute = 60;
-export const msPerSecond = 1000;
-export const msPerMinute = msPerSecond * SecondsPerMinute;
-export const msPerHour = msPerMinute * MinutesPerHour;
 
 // 20.3.1.11 #sec-maketime
 export function MakeTime(hour, min, sec, ms) {
