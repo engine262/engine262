@@ -11,7 +11,7 @@ function isInRange(node, location) {
 
 function isUsedInDef(reference) {
   const variable = reference.resolved;
-  if (variable.scope !== reference.from) {
+  if (!variable || variable.scope !== reference.from) {
     return false;
   }
 
