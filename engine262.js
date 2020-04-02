@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 660adc33cab4acac28502cffadf9af9991b9da76
+ * engine262 0.0.1 7296c67c6cd12fc996ad8bf135af1c9b605c8aa2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -45730,7 +45730,7 @@
 
     if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
-    } // 5. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
+    } // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
 
 
     let _temp4 = CleanupFinalizationRegistry(finalizationRegistry, callback);
