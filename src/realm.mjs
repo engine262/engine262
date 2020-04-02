@@ -83,7 +83,6 @@ import { BootstrapAggregateError } from './intrinsics/AggregateError.mjs';
 import { BootstrapAggregateErrorPrototype } from './intrinsics/AggregateErrorPrototype.mjs';
 import { BootstrapFinalizationRegistryPrototype } from './intrinsics/FinalizationRegistryPrototype.mjs';
 import { BootstrapFinalizationRegistry } from './intrinsics/FinalizationRegistry.mjs';
-import { BootstrapFinalizationRegistryCleanupIteratorPrototype } from './intrinsics/FinalizationRegistryCleanupIteratorPrototype.mjs';
 import { BootstrapWeakRefPrototype } from './intrinsics/WeakRefPrototype.mjs';
 import { BootstrapWeakRef } from './intrinsics/WeakRef.mjs';
 
@@ -251,7 +250,6 @@ export function CreateIntrinsics(realmRec) {
 
     BootstrapFinalizationRegistryPrototype(realmRec);
     BootstrapFinalizationRegistry(realmRec);
-    BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec);
   }
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);

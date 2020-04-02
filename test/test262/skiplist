@@ -1,6 +1,4 @@
 // random issues in test262
-built-ins/Promise/any/does-not-perform-species-get-of-custom.js
-built-ins/Promise/any/does-not-perform-species-get-of-promise.js
 built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/has/trap-is-missing-target-is-proxy.js

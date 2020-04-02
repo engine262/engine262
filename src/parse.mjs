@@ -121,7 +121,7 @@ export const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
   }
 
   parseStatement(context, topLevel, exports) {
-    if (this.type === acorn.tokTypes._import && surroundingAgent.feature('import.meta')) { // eslint-disable-line no-underscore-dangle
+    if (this.type === acorn.tokTypes._import) { // eslint-disable-line no-underscore-dangle
       skipWhiteSpace.lastIndex = this.pos;
       const skip = skipWhiteSpace.exec(this.input);
       const next = this.pos + skip[0].length;
@@ -141,9 +141,6 @@ export const Parser = acorn.Parser.extend((P) => (class Parse262 extends P {
       case acorn.tokTypes.parenL:
         return this.parseDynamicImport(node);
       case acorn.tokTypes.dot:
-        if (!surroundingAgent.feature('import.meta')) {
-          return this.unexpected();
-        }
         if (!(this.inModule || this.allowImportExportAnywhere)) {
           return this.unexpected();
         }

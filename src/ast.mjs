@@ -248,7 +248,7 @@ export function isNewTarget(node) {
          && node.property.name === 'target';
 }
 
-// https://tc39.es/proposal-import-meta/#prod-ImportMeta
+// #prod-ImportMeta
 export function isImportMeta(node) {
   return isMetaProperty(node)
          && node.meta.name === 'import'

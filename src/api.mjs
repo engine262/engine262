@@ -63,6 +63,7 @@ function mark() {
   const fgs = new Set();
   const weakmaps = new Set();
   const weaksets = new Set();
+  const ephemeronQueue = [];
 
   const markCb = (O) => {
     if (typeof O !== 'object' || O === null) {
@@ -89,6 +90,9 @@ function mark() {
       weakmaps.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
+      O.WeakMapData.forEach((r) => {
+        ephemeronQueue.push(r);
+      });
     } else if ('WeakSetData' in O) {
       weaksets.add(O);
       markCb(O.properties);
@@ -103,6 +107,13 @@ function mark() {
   }
 
   markCb(surroundingAgent);
+
+  while (ephemeronQueue.length > 0) {
+    const item = ephemeronQueue.shift();
+    if (marked.has(item.Key)) {
+      markCb(item.Value);
+    }
+  }
 
   if (surroundingAgent.feature('WeakRefs')) {
     weakrefs.forEach((ref) => {
@@ -153,12 +164,14 @@ function runJobQueue() {
   // and the execution context stack is empty, the implementation must:
 
   while (true) { // eslint-disable-line no-constant-condition
-    const nextQueue = surroundingAgent.jobQueue;
-    if (nextQueue.length === 0
-        || nextQueue.find((j) => j.queueName !== 'FinalizationCleanup') === undefined) {
+    if (surroundingAgent.jobQueue.length === 0) {
       break;
     }
-    const { job: abstractClosure, callerRealm, callerScriptOrModule } = nextQueue.shift();
+    const {
+      job: abstractClosure,
+      callerRealm,
+      callerScriptOrModule,
+    } = surroundingAgent.jobQueue.shift();
 
     // 1. Push an execution context onto the execution context stack.
     const newContext = new ExecutionContext();
@@ -174,8 +187,6 @@ function runJobQueue() {
     // 5. Pop the previously-pushed execution context from the execution context stack.
     surroundingAgent.executionContextStack.pop(newContext);
   }
-
-  surroundingAgent.jobQueue = [];
 }
 
 class APIAgent {

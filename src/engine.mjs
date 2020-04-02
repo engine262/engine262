@@ -30,10 +30,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-top-level-await',
   },
   {
-    name: 'import.meta',
-    url: 'https://github.com/tc39/proposal-import-meta',
-  },
-  {
     name: 'WeakRefs',
     url: 'https://github.com/tc39/proposal-weakrefs',
   },
@@ -363,7 +359,7 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
   return new NormalCompletion(Value.undefined);
 }
 
-// https://tc39.es/proposal-import-meta/#sec-hostgetimportmetaproperties
+// #sec-hostgetimportmetaproperties
 export function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.getImportMetaProperties) {
@@ -372,7 +368,7 @@ export function HostGetImportMetaProperties(moduleRecord) {
   return [];
 }
 
-// https://tc39.es/proposal-import-meta/#sec-hostfinalizeimportmeta
+// #sec-hostfinalizeimportmeta
 export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.finalizeImportMeta) {

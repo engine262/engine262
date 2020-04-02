@@ -14,12 +14,11 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
   if (IsCallable(cleanupCallback) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
   }
-  // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]], [[IsFinalizationRegistryCleanupJobActive]] »).
+  // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
   const finalizationGroup = Q(OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [
     'Realm',
     'CleanupCallback',
     'Cells',
-    'IsFinalizationRegistryCleanupJobActive',
   ]));
   // 4. Let fn be the active function object.
   const fn = surroundingAgent.activeFunctionObject;
@@ -29,9 +28,7 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
   finalizationGroup.CleanupCallback = cleanupCallback;
   // 7. Set finalizationGroup.[[Cells]] to be an empty List.
   finalizationGroup.Cells = [];
-  // 8. Set finalizationGroup.[[IsFinalizationRegistryCleanupJobActive]] to false.
-  finalizationGroup.IsFinalizationRegistryCleanupJobActive = false;
-  // 9. Return finalizationGroup.
+  // 8. Return finalizationGroup.
   return finalizationGroup;
 }
 

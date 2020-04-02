@@ -19,7 +19,7 @@ function Evaluate_NewTarget() {
   return GetNewTarget();
 }
 
-// https://tc39.es/proposal-import-meta/#sec-meta-properties
+// #sec-meta-properties-runtime-semantics-evaluation
 // ImportMeta : `import` `.` `meta`
 function Evaluate_ImportMeta() {
   // 1. Let module be GetActiveScriptOrModule().
