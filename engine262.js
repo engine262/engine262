@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 7296c67c6cd12fc996ad8bf135af1c9b605c8aa2
+ * engine262 0.0.1 cb7b1747588fba4233606d50e3115b22ca1a74c5
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -58577,9 +58577,7 @@
 
     while (true) {
       // eslint-disable-line no-constant-condition
-      const nextQueue = surroundingAgent.jobQueue;
-
-      if (nextQueue.length === 0 || nextQueue.find(j => j.queueName !== 'FinalizationCleanup') === undefined) {
+      if (surroundingAgent.jobQueue.length === 0) {
         break;
       }
 
@@ -58587,7 +58585,7 @@
         job: abstractClosure,
         callerRealm,
         callerScriptOrModule
-      } = nextQueue.shift(); // 1. Push an execution context onto the execution context stack.
+      } = surroundingAgent.jobQueue.shift(); // 1. Push an execution context onto the execution context stack.
 
       const newContext = new ExecutionContext();
       surroundingAgent.executionContextStack.push(newContext); // 2. Perform any implementation-defined preparation steps.
@@ -58608,8 +58606,6 @@
 
       surroundingAgent.executionContextStack.pop(newContext);
     }
-
-    surroundingAgent.jobQueue = [];
   }
 
   class APIAgent {
