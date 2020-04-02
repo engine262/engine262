@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 89673c601d36f24b00f718067625c88dc0ea2fc7
+ * engine262 0.0.1 660adc33cab4acac28502cffadf9af9991b9da76
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -245,7 +245,7 @@
 
   function isNewTarget(node) {
     return isMetaProperty(node) && node.meta.name === 'new' && node.property.name === 'target';
-  } // https://tc39.es/proposal-import-meta/#prod-ImportMeta
+  } // #prod-ImportMeta
 
   function isImportMeta(node) {
     return isMetaProperty(node) && node.meta.name === 'import' && node.property.name === 'meta';
@@ -12115,7 +12115,7 @@
     }
 
     parseStatement(context, topLevel, exports) {
-      if (this.type === types._import && surroundingAgent.feature('import.meta')) {
+      if (this.type === types._import) {
         // eslint-disable-line no-underscore-dangle
         skipWhiteSpace$1.lastIndex = this.pos;
         const skip = skipWhiteSpace$1.exec(this.input);
@@ -12141,10 +12141,6 @@
           return this.parseDynamicImport(node);
 
         case types.dot:
-          if (!surroundingAgent.feature('import.meta')) {
-            return this.unexpected();
-          }
-
           if (!(this.inModule || this.allowImportExportAnywhere)) {
             return this.unexpected();
           }
@@ -17553,7 +17549,7 @@
   function Evaluate_NewTarget() {
     // 1. Return GetNewTarget().
     return GetNewTarget();
-  } // https://tc39.es/proposal-import-meta/#sec-meta-properties
+  } // #sec-meta-properties-runtime-semantics-evaluation
   // ImportMeta : `import` `.` `meta`
 
 
@@ -45732,11 +45728,6 @@
       _temp3 = _temp3.Value;
     }
 
-    if (finalizationRegistry.IsFinalizationRegistryCleanupJobActive) {
-      return surroundingAgent.Throw('TypeError', 'FinalizationRegistryCleanupJobActive');
-    } // 4. If callback is not undefined and IsCallable(callback) is false, throw a TypeError exception.
-
-
     if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
     } // 5. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
@@ -45771,10 +45762,10 @@
 
     if (IsCallable(cleanupCallback) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
-    } // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]], [[IsFinalizationRegistryCleanupJobActive]] »).
+    } // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
 
 
-    let _temp = OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', ['Realm', 'CleanupCallback', 'Cells', 'IsFinalizationRegistryCleanupJobActive']);
+    let _temp = OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', ['Realm', 'CleanupCallback', 'Cells']);
     /* istanbul ignore if */
 
 
@@ -45796,9 +45787,7 @@
 
     finalizationGroup.CleanupCallback = cleanupCallback; // 7. Set finalizationGroup.[[Cells]] to be an empty List.
 
-    finalizationGroup.Cells = []; // 8. Set finalizationGroup.[[IsFinalizationRegistryCleanupJobActive]] to false.
-
-    finalizationGroup.IsFinalizationRegistryCleanupJobActive = false; // 9. Return finalizationGroup.
+    finalizationGroup.Cells = []; // 8. Return finalizationGroup.
 
     return finalizationGroup;
   }
@@ -45806,65 +45795,6 @@
   function BootstrapFinalizationRegistry(realmRec) {
     const cons = BootstrapConstructor(realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1, realmRec.Intrinsics['%FinalizationRegistry.prototype%'], []);
     realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
-  }
-
-  function FinalizationRegistryCleanupIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    // 1. Let iterator be the this value.
-    const iterator = thisValue; // 2. If Type(iterator) is not Object, throw a TypeError exception.
-    // 3. If iterator does not have a [[FinalizationRegistry]] internal slot, throw a TypeError exception.
-
-    let _temp = RequireInternalSlot(iterator, 'FinalizationRegistry');
-    /* istanbul ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* istanbul ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    if (iterator.FinalizationRegistry === undefined) {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', Value.undefined);
-    } // 5. Let finalizationRegistry be iterator.[[FinalizationRegistry]].
-
-
-    const finalizationRegistry = iterator.FinalizationRegistry; // 6. Assert: Type(finalizationRegistry) is Object.
-    // 7. Assert: finalizationRegistry has a [[Cells]] internal slot.
-
-    let _temp2 = RequireInternalSlot(finalizationRegistry, 'Cells');
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "RequireInternalSlot(finalizationRegistry, 'Cells')" + ' returned an abrupt completion');
-    /* istanbul ignore if */
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const index = finalizationRegistry.Cells.findIndex(cell => cell.WeakRefTarget === undefined);
-
-    if (index !== -1) {
-      // a. Choose any such cell.
-      const cell = finalizationRegistry.Cells[index]; // b. Remove cell from finalizationRegistry.[[Cells]].
-
-      finalizationRegistry.Cells.splice(index, 1); // c. Return CreateIterResultObject(cell.[[HeldValue]], false).
-
-      return CreateIterResultObject(cell.HeldValue, Value.false);
-    } // 9. If the preceding steps were not performed,
-    //   a. Return CreateIterResultObject(undefined, true).
-
-
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-
-  function BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec) {
-    const proto = BootstrapPrototype(realmRec, [['next', FinalizationRegistryCleanupIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'FinalizationRegistry Cleanup Iterator');
-    realmRec.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'] = proto;
   }
 
   function WeakRefProto_deref(args, {
@@ -46109,7 +46039,6 @@
       BootstrapWeakRef(realmRec);
       BootstrapFinalizationRegistryPrototype(realmRec);
       BootstrapFinalizationRegistry(realmRec);
-      BootstrapFinalizationRegistryCleanupIteratorPrototype(realmRec);
     }
 
     AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
@@ -46287,7 +46216,6 @@
   const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
   const DateInvalidTime = () => 'Invalid time';
   const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
-  const FinalizationRegistryCleanupJobActive = () => 'FinalizationRegistry cleanup is already active';
   const GeneratorRunning = () => 'Cannot manipulate a running generator';
   const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
   const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
@@ -46400,7 +46328,6 @@
     DataViewOOB: DataViewOOB,
     DateInvalidTime: DateInvalidTime,
     DerivedConstructorReturnedNonObject: DerivedConstructorReturnedNonObject,
-    FinalizationRegistryCleanupJobActive: FinalizationRegistryCleanupJobActive,
     GeneratorRunning: GeneratorRunning,
     InternalSlotMissing: InternalSlotMissing,
     InvalidArrayLength: InvalidArrayLength,
@@ -46485,9 +46412,6 @@
   const FEATURES = Object.freeze([{
     name: 'TopLevelAwait',
     url: 'https://github.com/tc39/proposal-top-level-await'
-  }, {
-    name: 'import.meta',
-    url: 'https://github.com/tc39/proposal-import-meta'
   }, {
     name: 'WeakRefs',
     url: 'https://github.com/tc39/proposal-weakrefs'
@@ -46913,7 +46837,7 @@
       FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
     });
     return new NormalCompletion(Value.undefined);
-  } // https://tc39.es/proposal-import-meta/#sec-hostgetimportmetaproperties
+  } // #sec-hostgetimportmetaproperties
 
   function HostGetImportMetaProperties(moduleRecord) {
     const realm = surroundingAgent.currentRealmRecord;
@@ -46931,7 +46855,7 @@
     }
 
     return [];
-  } // https://tc39.es/proposal-import-meta/#sec-hostfinalizeimportmeta
+  } // #sec-hostfinalizeimportmeta
 
   function HostFinalizeImportMeta(importMeta, moduleRecord) {
     const realm = surroundingAgent.currentRealmRecord;
@@ -57884,81 +57808,43 @@
     const agent = surroundingAgent; // 2. Append object to agent.[[KeptAlive]].
 
     agent.KeptAlive.add(object);
-  } // https://tc39.es/proposal-weakrefs/#sec-check-for-empty-cells
-
-  function CheckForEmptyCells(finalizationRegistry) {
-    // 1. Assert: finalizationRegistry has an [[Cells]] internal slot.
-    Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. For each cell in finalizationRegistry.[[Cells]], do
-
-    for (const cell of finalizationRegistry.Cells) {
-      // a. If cell.[[WeakRefTarget]] is empty, then
-      if (cell.WeakRefTarget === undefined) {
-        // i. Return true.
-        return Value.true;
-      }
-    } // 3. Return false.
-
-
-    return Value.false;
-  } // https://tc39.es/proposal-weakrefs/#sec-createfinalizationregistrycleanupiterator
-
-  function CreateFinalizationRegistryCleanupIterator(finalizationRegistry) {
-    let _temp = RequireInternalSlot(finalizationRegistry, 'Cells');
-
-    Assert(!(_temp instanceof AbruptCompletion), "RequireInternalSlot(finalizationRegistry, 'Cells')" + ' returned an abrupt completion');
-    /* istanbul ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    Assert(finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%'], "finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%']"); // 4. Let prototype be finalizationRegistry.[[Realm]].[[Intrinsics]].[[%FinalizationRegistryCleanupIteratorPrototype%]].
-
-    const prototype = finalizationRegistry.Realm.Intrinsics['%FinalizationRegistryCleanupIteratorPrototype%']; // 5. Let iterator be OrdinaryObjectCreate(prototype, « [[FinalizationRegistry]] »).
-
-    const iterator = OrdinaryObjectCreate(prototype, ['FinalizationRegistry']); // 6. Set iterator.[[FinalizationRegistry]] to finalizationRegistry.
-
-    iterator.FinalizationRegistry = finalizationRegistry; // 7. Return iterator.
-
-    return iterator;
   } // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
 
-
   function CleanupFinalizationRegistry(finalizationRegistry, callback) {
-    // 1. Assert: finalizationRegistry has [[Cells]], [[CleanupCallback]], and [[IsFinalizationRegistryCleanupJobActive]] internal slots.
-    Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. If CheckForEmptyCells(finalizationRegistry) is false, return.
-
-    if (CheckForEmptyCells(finalizationRegistry) === Value.false) {
-      return NormalCompletion(Value.undefined);
-    } // 3. Let iterator be ! CreateFinalizationRegistryCleanupIterator(finalizationRegistry).
-
-
-    let _temp2 = CreateFinalizationRegistryCleanupIterator(finalizationRegistry);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "CreateFinalizationRegistryCleanupIterator(finalizationRegistry)" + ' returned an abrupt completion');
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const iterator = _temp2; // 4. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
+    // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
+    Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
 
     if (callback === undefined || callback === Value.undefined) {
       callback = finalizationRegistry.CleanupCallback;
-    } // 5. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to true.
+    } // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, do
 
 
-    finalizationRegistry.IsFinalizationRegistryCleanupJobActive = true; // 6. Let result be Call(callback, undefined, « iterator »).
+    for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
+      // a. Choose any such _cell_.
+      const cell = finalizationRegistry.Cells[i];
 
-    const result = Call(callback, Value.undefined, [iterator]); // 7. Set finalizationRegistry.[[IsFinalizationRegistryCleanupJobActive]] to false.
+      if (cell.WeakRefTarget !== undefined) {
+        continue;
+      } // b. Remove cell from finalizationRegistry.[[Cells]].
 
-    finalizationRegistry.IsFinalizationRegistryCleanupJobActive = false; // 8. Set iterator.[[FinalizationRegistry]] to empty.
 
-    iterator.FinalizationRegistry = undefined; // 9. If result is an abrupt completion, return result.
+      finalizationRegistry.Cells.splice(i, 1);
+      i -= 1; // c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
 
-    if (result instanceof AbruptCompletion) {
-      return result;
-    } // 10. Else, return NormalCompletion(undefined).
+      let _temp = Call(callback, Value.undefined, [cell.HeldValue]);
+      /* istanbul ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* istanbul ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+    } // 4. Return NormalCompletion(undefined).
 
 
     return NormalCompletion(Value.undefined);
@@ -58213,7 +58099,6 @@
     IterableToList: IterableToList,
     ClearKeptObjects: ClearKeptObjects,
     AddToKeptObjects: AddToKeptObjects,
-    CheckForEmptyCells: CheckForEmptyCells,
     CleanupFinalizationRegistry: CleanupFinalizationRegistry
   });
 
@@ -58583,6 +58468,7 @@
     const fgs = new Set();
     const weakmaps = new Set();
     const weaksets = new Set();
+    const ephemeronQueue = [];
 
     const markCb = O => {
       if (typeof O !== 'object' || O === null) {
@@ -58610,6 +58496,9 @@
         weakmaps.add(O);
         markCb(O.properties);
         markCb(O.Prototype);
+        O.WeakMapData.forEach(r => {
+          ephemeronQueue.push(r);
+        });
       } else if ('WeakSetData' in O) {
         weaksets.add(O);
         markCb(O.properties);
@@ -58624,6 +58513,14 @@
     }
 
     markCb(surroundingAgent);
+
+    while (ephemeronQueue.length > 0) {
+      const item = ephemeronQueue.shift();
+
+      if (marked.has(item.Key)) {
+        markCb(item.Value);
+      }
+    }
 
     if (surroundingAgent.feature('WeakRefs')) {
       weakrefs.forEach(ref => {
