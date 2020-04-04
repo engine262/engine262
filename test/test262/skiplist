@@ -82,3 +82,6 @@ language/expressions/super/prop-dot-obj-val-from-eval.js
 language/expressions/super/prop-expr-cls-val-from-eval.js
 language/expressions/super/prop-expr-obj-val-from-eval.js
 language/expressions/super/prop-expr-cls-val.js
+
+// https://github.com/tc39/test262/pull/2575
+built-ins/RegExp/lookBehind/sliced-strings.js

@@ -82,7 +82,7 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
             result += '$<';
             i += 2;
           } else {
-            const groupName = new Value(replacementStr.substring(i + 1, nextSign));
+            const groupName = new Value(replacementStr.substring(i + 2, nextSign));
             const capture = Q(Get(namedCaptures, groupName));
             if (capture === Value.undefined) {
               // Replace the text with the empty string

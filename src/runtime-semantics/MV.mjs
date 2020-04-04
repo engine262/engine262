@@ -1,6 +1,6 @@
 import nearley from 'nearley';
 import { Assert } from '../abstract-ops/all.mjs';
-import { searchNotStrWhiteSpaceChar, reverseSearchNotStrWhiteSpaceChar } from '../grammar/numeric-string.mjs';
+import { searchNotStrWhiteSpaceChar, reverseSearchNotStrWhiteSpaceChar } from '../grammar/util.mjs';
 import grammar from '../grammar/StrNumericLiteral-gen.mjs';
 import { Value } from '../value.mjs';
 

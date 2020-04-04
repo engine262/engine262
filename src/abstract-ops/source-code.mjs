@@ -20,14 +20,19 @@ export function UTF16Encoding(cp) {
   return [cu1, cu2];
 }
 
-// 10.1.2 #sec-utf16decode
-export function UTF16Decode(lead, trail) {
+// 10.1.2 #sec-utf16encode
+export function UTF16Encode(text) {
+  return new Value(text.map(UTF16Encoding).join(''));
+}
+
+// 10.1.3 #sec-utf16decodesurrogatepair
+export function UTF16DecodeSurrogatePair(lead, trail) {
   Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail));
   const cp = (lead - 0xD800) * 0x400 + (trail - 0xDC00) + 0x10000;
   return cp;
 }
 
-// 10.1.3 #sec-codepointat
+// 10.1.4 #sec-codepointat
 export function CodePointAt(string, position) {
   const size = string.stringValue().length;
   Assert(position >= 0 && position < size);
@@ -55,10 +60,23 @@ export function CodePointAt(string, position) {
       IsUnpairedSurrogate: Value.true,
     };
   }
-  cp = X(UTF16Decode(first, second));
+  cp = X(UTF16DecodeSurrogatePair(first, second));
   return {
     CodePoint: new Value(cp),
     CodeUnitCount: new Value(2),
     IsUnpairedSurrogate: Value.false,
   };
+}
+
+// 10.1.5 #sec-utf16decodestring
+export function UTF16DecodeString(string) {
+  const codePoints = [];
+  const size = string.stringValue().length;
+  let position = 0;
+  while (position < size) {
+    const cp = X(CodePointAt(string, position));
+    codePoints.push(cp.CodePoint);
+    position += cp.CodeUnitCount;
+  }
+  return codePoints;
 }

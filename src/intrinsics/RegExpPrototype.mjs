@@ -9,6 +9,7 @@ import {
   EscapeRegExpPattern,
   Get,
   IsCallable,
+  OrdinaryObjectCreate,
   SameValue,
   Set,
   SpeciesConstructor,
@@ -21,7 +22,11 @@ import {
   ToUint32,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
-import { GetSubstitution } from '../runtime-semantics/all.mjs';
+import {
+  GetSubstitution,
+  MatchResultFailure,
+  State,
+} from '../runtime-semantics/all.mjs';
 import {
   Type,
   Value,
@@ -81,58 +86,71 @@ function RegExpBuiltinExec(R, S) {
       return Value.null;
     }
     r = matcher(S, lastIndex);
-    if (r === null) {
+    if (r === MatchResultFailure) {
       if (sticky) {
         Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
         return Value.null;
       }
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
     } else {
-      // Assert: r is a state
+      Assert(r instanceof State);
       matchSucceeded = true;
     }
   }
 
-  const e = r.endIndex;
-
+  let e = r.endIndex;
   if (fullUnicode) {
-    // TODO
+    const Input = Array.from(S.stringValue());
+    let eUTF = 0;
+    if (e >= Input.length) {
+      eUTF = S.stringValue().length;
+    } else {
+      for (let i = 0; i < e; i += 1) {
+        eUTF += Input[i].length;
+      }
+    }
+    e = eUTF;
   }
 
   if (global || sticky) {
-    Q(Set(R, new Value('lastIndex'), e, Value.true));
+    Q(Set(R, new Value('lastIndex'), new Value(e), Value.true));
   }
 
-  const n = r.captures.length;
+  const n = r.captures.length - 1;
   Assert(n < (2 ** 32) - 1);
   const A = X(ArrayCreate(new Value(n + 1)));
   // Assert: The value of A's "length" property is n + 1.
   X(CreateDataProperty(A, new Value('index'), lastIndex));
   X(CreateDataProperty(A, new Value('input'), S));
-  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e.numberValue());
+  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
   X(CreateDataProperty(A, new Value('0'), new Value(matchedSubstr)));
 
   let groups;
-  if (R.GroupName) {
-    // TODO
+  if (R.parsedRegExp.groupSpecifiers.size > 0) {
+    groups = OrdinaryObjectCreate(Value.null);
   } else {
     groups = Value.undefined;
   }
   X(CreateDataProperty(A, new Value('groups'), groups));
+
+  const capturingParens = R.parsedRegExp.capturingParens;
   for (let i = 1; i <= n; i += 1) {
-    const captureI = r.captures[i - 1];
-    let captureValue;
+    const captureI = r.captures[i];
+    let capturedValue;
     if (captureI === Value.undefined) {
-      captureValue = Value.undefined;
+      capturedValue = Value.undefined;
     } else if (fullUnicode) {
       // Assert: captureI is a List of code points.
-      captureValue = new Value(captureI.reduce((acc, codePoint) => acc + String.fromCodePoint(codePoint), ''));
+      capturedValue = new Value(captureI.join(''));
     } else {
       // Assert: captureI is a List of code units.
-      captureValue = new Value(captureI.reduce((acc, charCode) => acc + String.fromCharCode(charCode), ''));
+      capturedValue = new Value(captureI.join(''));
     }
-    X(CreateDataProperty(A, X(ToString(new Value(i))), captureValue));
-    // TODO
+    X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
+    if (capturingParens[i - 1].GroupSpecifier) {
+      const s = new Value(capturingParens[i - 1].GroupSpecifier);
+      X(CreateDataProperty(groups, s, capturedValue));
+    }
   }
 
   return A;
@@ -363,8 +381,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       if (global === Value.false) {
         done = true;
       } else {
-        const firstResult = Q(Get(result, new Value('0')));
-        const matchStr = Q(ToString(firstResult));
+        const matchStr = Q(ToString(Q(Get(result, new Value('0')))));
         if (matchStr.stringValue() === '') {
           const thisIndex = Q(ToLength(Q(Get(rx, new Value('lastIndex')))));
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
