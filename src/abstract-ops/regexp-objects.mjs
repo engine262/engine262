@@ -2,10 +2,16 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  ParseRegExp,
+} from '../parse.mjs';
+import {
   Descriptor,
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import {
+  getMatcher,
+} from '../runtime-semantics/all.mjs';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
@@ -46,59 +52,20 @@ export function RegExpInitialize(obj, pattern, flags) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
 
-  const BMP = !f.includes('u');
-  if (BMP) {
-    // TODO: parse P
-  } else {
-    // TODO: parse P
-  }
-
-  // TODO: remove this once internal parsing is implemented
+  let parsed;
   try {
-    new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
+    parsed = ParseRegExp(P.stringValue(), F.stringValue());
   } catch (e) {
-    if (e instanceof SyntaxError) {
-      return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
-    }
-    throw e;
+    return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
   }
 
   obj.OriginalSource = P;
   obj.OriginalFlags = F;
-  obj.RegExpMatcher = getMatcher(P, F);
+  obj.RegExpMatcher = getMatcher(parsed, F.stringValue());
+  obj.parsedRegExp = parsed;
 
   Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
   return obj;
-}
-
-// TODO: implement an independant matcher
-function getMatcher(P, F) {
-  const regex = new RegExp(P.stringValue(), F.stringValue());
-  const unicode = F.stringValue().includes('u');
-  return function RegExpMatcher(S, lastIndex) {
-    regex.lastIndex = lastIndex.numberValue();
-    const result = regex.exec(S.stringValue());
-    if (result === null) {
-      return null;
-    }
-    if (result.index > lastIndex.numberValue()) {
-      return null;
-    }
-    const captures = [];
-    for (const capture of result.slice(1)) {
-      if (capture === undefined) {
-        captures.push(Value.undefined);
-      } else if (unicode) {
-        captures.push(Array.from(capture).map((char) => char.codePointAt(0)));
-      } else {
-        captures.push(capture.split('').map((char) => char.charCodeAt(0)));
-      }
-    }
-    return {
-      endIndex: new Value(result.index + result[0].length),
-      captures,
-    };
-  };
 }
 
 // 21.2.3.2.3 #sec-regexpcreate

@@ -11,9 +11,9 @@ function isWhiteSpace(c) {
     || nonASCIIwhitespace.test(c);
 }
 
-const isLineTerminator = (c) => isNewLine(c.charCodeAt(0), false);
+export const isLineTerminator = (c) => isNewLine(c.charCodeAt(0), false);
 
-const isStrWhiteSpaceChar = (c) => isWhiteSpace(c) || isLineTerminator(c);
+export const isStrWhiteSpaceChar = (c) => isWhiteSpace(c) || isLineTerminator(c);
 
 // Returns index of first non-StrWhiteSpaceChar character.
 export function searchNotStrWhiteSpaceChar(str) {

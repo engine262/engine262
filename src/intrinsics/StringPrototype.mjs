@@ -5,6 +5,7 @@ import {
   Call,
   CodePointAt,
   CreateDataProperty,
+  Get,
   GetMethod,
   Invoke,
   IsCallable,
@@ -247,6 +248,14 @@ function StringProto_match([regexp = Value.undefined], { thisValue }) {
 function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (regexp !== Value.undefined && regexp !== Value.null) {
+    const isRegExp = Q(IsRegExp(regexp));
+    if (isRegExp === Value.true) {
+      const flags = Q(Get(regexp, new Value('flags')));
+      Q(RequireObjectCoercible(flags));
+      if (!Q(ToString(flags)).stringValue().includes('g')) {
+        return surroundingAgent.Throw('TypeError', 'Raw', 'The RegExp passed to String.prototype.matchAll must have the global flag');
+      }
+    }
     const matcher = Q(GetMethod(regexp, wellKnownSymbols.matchAll));
     if (matcher !== Value.undefined) {
       return Q(Call(matcher, regexp, [O]));

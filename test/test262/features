@@ -4,9 +4,7 @@ Atomics
 
 caller
 
-regexp-lookbehind
-regexp-named-groups
-regexp-unicode-property-escapes
+regexp-match-indices
 String.prototype.replaceAll
 
 SharedArrayBuffer
