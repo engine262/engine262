@@ -3,6 +3,12 @@ built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
 built-ins/Proxy/has/trap-is-missing-target-is-proxy.js
 
+// https://github.com/tc39/ecma262/pull/1408
+language/statements/for-of/iterator-close-throw-get-method-abrupt.js
+language/statements/for-of/iterator-close-throw-get-method-non-callable.js
+language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js
+language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js
+
 // https://github.com/tc39/ecma262/pull/1814
 built-ins/Proxy/create-target-is-revoked-proxy.js
 built-ins/Proxy/create-handler-is-revoked-proxy.js
