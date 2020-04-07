@@ -148,6 +148,10 @@ export class Lexer {
     return this.peekedToken;
   }
 
+  test(token) {
+    return this.peek().type === token;
+  }
+
   eat(token) {
     if (this.peek().type === token) {
       this.next();
@@ -260,12 +264,23 @@ export class Lexer {
         case Token.RBRACE:
         case Token.LBRACK:
         case Token.RBRACK:
-        case Token.CONDITIONAL:
         case Token.COLON:
         case Token.SEMICOLON:
         case Token.COMMA:
         case Token.BIT_NOT:
           return single;
+
+        case Token.CONDITIONAL:
+          // ? ?. ??
+          if (c1 === '.' && !isDecimalDigit(this.source[this.position + 2])) {
+            this.position += 1;
+            return Token.QUESTION_PERIOD;
+          }
+          if (c1 === '?') {
+            this.position += 1;
+            return Token.NULLISH;
+          }
+          return Token.CONDITIONAL;
 
         case Token.LT:
           // < <= << <<=

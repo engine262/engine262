@@ -109,14 +109,7 @@ export class ExpressionParser extends FunctionParser {
   //   CoalesceExpression
   // LogicalORExpression and CoalesceExpression start with BitwiseOR
   parseShortCircuitExpression() {
-    /*
-    const expression = this.parseBinaryExpression(6);
-    if (this.peek().type === Token.AND || this.peek().type === Token.OR) {
-    } else if (this.peek().type === Token.NULLISH) {
-    }
-    return expression;
-    */
-    return this.parseBinaryExpression(TokenPrecedence[Token.OR]);
+    return this.parseBinaryExpression(TokenPrecedence[Token.NULLISH]);
   }
 
   parseBinaryExpression(precedence) {
@@ -211,7 +204,7 @@ export class ExpressionParser extends FunctionParser {
 
   // LeftHandSideExpression
   parseLeftHandSideExpression() {
-    if (this.peek().type === Token.NEW) {
+    if (this.test(Token.NEW)) {
       return this.parseNewExpression();
     }
     return this.parseSubscripts(true);
@@ -219,7 +212,7 @@ export class ExpressionParser extends FunctionParser {
 
   // MemberExpression
   parseMemberExpression() {
-    if (this.peek().type === Token.NEW) {
+    if (this.test(Token.NEW)) {
       return this.parseNewExpression();
     }
     return this.parseSubscripts(false);
@@ -230,7 +223,7 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.NEW);
     node.MemberExpression = this.parseMemberExpression();
-    if (this.peek().type === Token.LPAREN) {
+    if (this.test(Token.LPAREN)) {
       node.Arguments = this.parseArguments();
     } else {
       node.Arguments = [];
@@ -286,7 +279,7 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     const token = this.peek();
     switch (token.type) {
-      case Token.SUPER: // not a PrimaryExpression, but estree is weird
+      case Token.SUPER:
         this.next();
         if (!this.isSuperScope) {
           this.error('Unexpected token: SUPER');
@@ -483,7 +476,7 @@ export class ExpressionParser extends FunctionParser {
     this.state.strict = true;
     const savedScopeBits = this.state.scopeBits;
     this.state.scopeBits |= ExpressionParser.ScopeBits.SUPER;
-    if (this.peek().type === Token.IDENTIFIER) {
+    if (this.test(Token.IDENTIFIER)) {
       node.id = this.parseBindingIdentifier();
     } else if (isExpression === false) {
       this.error('Expected class name');
@@ -551,7 +544,7 @@ export class ExpressionParser extends FunctionParser {
       method.computed = true;
       method.key = this.parseExpression();
       this.expect(Token.RBRACK);
-    } else if (this.peek().type === Token.STRING) {
+    } else if (this.test(Token.STRING)) {
       method.computed = false;
       method.key = this.parseExpression();
       if (method.key.value === 'constructor') {
@@ -592,7 +585,7 @@ export class ExpressionParser extends FunctionParser {
     }
     const expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    if (this.peek().type === Token.ARROW) {
+    if (this.test(Token.ARROW)) {
       const params = expression.type === 'SequenceExpression' ? expression.expressions : [expression];
       return this.parseArrowFunction(node, params, false);
     }

@@ -14,6 +14,7 @@ function forwardError(fn) {
   try {
     return fn();
   } catch (e) {
+    console.error('forwardError', e);
     if (e.name === 'SyntaxError') {
       return [surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value];
     } else {

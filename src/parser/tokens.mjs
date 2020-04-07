@@ -29,6 +29,7 @@ export const RawTokens = [
   ['LBRACK', '['],
   // END Property
   // END Member
+  ['QUESTION_PERIOD', '?.'],
   ['LPAREN', '('],
   // END PropertyOrCall
   ['RPAREN', ')'],
@@ -55,6 +56,7 @@ export const RawTokens = [
 
   // Binary operators by precidence
   ['COMMA', ',', 1],
+  ['NULLISH', '??', 3],
   ['OR', '||', 4],
   ['AND', '&&', 5],
 

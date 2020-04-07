@@ -217,17 +217,17 @@ export function isTaggedTemplate(node) {
 
 // Used in #prod-MemberExpression and #prod-CallExpression
 export function isActualMemberExpression(node) {
-  return node.type === 'MemberExpression' && node.object.type !== 'Super';
+  return node.type === 'MemberExpression';
 }
 
 // Used in #prod-MemberExpression and #prod-CallExpression
 export function isActualMemberExpressionWithBrackets(node) {
-  return isActualMemberExpression(node) && node.computed;
+  return isActualMemberExpression(node) && node.Expression !== undefined;
 }
 
 // Used in #prod-MemberExpression and #prod-CallExpression
 export function isActualMemberExpressionWithDot(node) {
-  return isActualMemberExpression(node) && !node.computed;
+  return isActualMemberExpression(node) && node.IdentifierName !== undefined;
 }
 
 // #prod-SuperProperty
@@ -261,12 +261,13 @@ export function isActualNewExpression(node) {
 
 // Used in #prod-CallExpression and #prod-CallMemberExpression
 export function isActualCallExpression(node) {
-  return node.type === 'CallExpression' && node.callee.type !== 'Super';
+  return node.type === 'CallExpression';
 }
 
 // #prod-SuperCall
 export function isSuperCall(node) {
-  return node.type === 'CallExpression' && node.callee.type === 'Super';
+  return false;
+  // return node.type === 'CallExpression' && node.callee.type === 'Super';
 }
 
 // #prod-ImportCall

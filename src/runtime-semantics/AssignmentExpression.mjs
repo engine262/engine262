@@ -25,10 +25,10 @@ import {
 //     LeftHandSideExpression `&&=` AssignmentExpression
 //     LeftHandSideExpression `||=` AssignmentExpression
 //     LeftHandSideExpression `??=` AssignmentExpression
-export function* Evaluate_AssignmentExpression(node) {
-  const LeftHandSideExpression = node.left;
-  const AssignmentExpression = node.right;
-  if (node.operator === '=') {
+export function* Evaluate_AssignmentExpression({
+  LeftHandSideExpression, AssignmentOperator, AssignmentExpression,
+}) {
+  if (AssignmentOperator === '=') {
     if (!isAssignmentPattern(LeftHandSideExpression)) {
       const lref = yield* Evaluate(LeftHandSideExpression);
       ReturnIfAbrupt(lref);
@@ -47,7 +47,7 @@ export function* Evaluate_AssignmentExpression(node) {
     const rval = Q(GetValue(rref));
     Q(yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rval));
     return rval;
-  } else if (node.operator === '&&=') {
+  } else if (AssignmentOperator === '&&=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -66,7 +66,7 @@ export function* Evaluate_AssignmentExpression(node) {
     Q(PutValue(lref, rval));
     // 8. Return rval.
     return rval;
-  } else if (node.operator === '||=') {
+  } else if (AssignmentOperator === '||=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -85,7 +85,7 @@ export function* Evaluate_AssignmentExpression(node) {
     Q(PutValue(lref, rval));
     // 8. Return rval.
     return rval;
-  } else if (node.operator === '??=') {
+  } else if (AssignmentOperator === '??=') {
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
     const lref = yield* Evaluate(LeftHandSideExpression);
     // 2. Let lval be ? GetValue(lref).
@@ -103,8 +103,6 @@ export function* Evaluate_AssignmentExpression(node) {
     // 7. Return rval.
     return rval;
   } else {
-    const AssignmentOperator = node.operator;
-
     const lref = yield* Evaluate(LeftHandSideExpression);
     const lval = Q(GetValue(lref));
     const rref = yield* Evaluate(AssignmentExpression);

@@ -1,7 +1,7 @@
 import { Token, isKeyword } from './tokens.mjs';
-import { Lexer } from './Lexer.mjs';
+import { BaseParser } from './BaseParser.mjs';
 
-export class IdentifierParser extends Lexer {
+export class IdentifierParser extends BaseParser {
   parseIdentifier(allowKeywords) {
     const node = this.startNode();
     const token = this.next();

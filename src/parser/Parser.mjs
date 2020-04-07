@@ -1,8 +1,9 @@
+import { surroundingAgent } from '../engine.mjs';
 import { Token } from './tokens.mjs';
 import { StatementParser } from './StatementParser.mjs';
 
 export class Parser extends StatementParser {
-  constructor(options = {}, source) {
+  constructor(options, source) {
     super(options, source);
     this.source = source;
     this.options = options;
@@ -13,11 +14,15 @@ export class Parser extends StatementParser {
   }
 
   static parseScript(source, options) {
-    return new Parser(options, source).parseScript();
+    return new Parser({ ...options, sourceType: 'script' }, source).parseScript();
   }
 
   static parseModule(source, options) {
     return new Parser({ ...options, sourceType: 'module' }, source).parseModule();
+  }
+
+  feature(name) {
+    return surroundingAgent.feature(name);
   }
 
   // Script : ScriptBody
@@ -56,9 +61,7 @@ export class Parser extends StatementParser {
         }),
       },
       strict: this.state.strict,
-      sourceText() {
-        return this.source.slice(this.location.startIndex, this.location.endIndex);
-      },
+      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex),
     };
     return node;
   }

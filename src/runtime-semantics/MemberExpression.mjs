@@ -50,11 +50,11 @@ export function* Evaluate_MemberExpression(MemberExpression) {
   switch (true) {
     case isActualMemberExpressionWithBrackets(MemberExpression):
       return yield* Evaluate_MemberExpression_Expression(
-        MemberExpression.object, MemberExpression.property,
+        MemberExpression.MemberExpression, MemberExpression.Expression,
       );
     case isActualMemberExpressionWithDot(MemberExpression):
       return yield* Evaluate_MemberExpression_IdentifierName(
-        MemberExpression.object, MemberExpression.property,
+        MemberExpression.MemberExpression, MemberExpression.IdentifierName,
       );
     default:
       throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);

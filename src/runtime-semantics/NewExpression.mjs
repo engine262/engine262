@@ -14,9 +14,9 @@ import { ArgumentListEvaluation } from './all.mjs';
 
 // 12.3.3.1.1 #sec-evaluatenew
 function* EvaluateNew(constructExpr, args = []) {
-  Assert(isActualNewExpression(constructExpr));
+  // Assert(isActualNewExpression(constructExpr));
   Assert(Array.isArray(args));
-  const ref = yield* Evaluate(constructExpr.callee);
+  const ref = yield* Evaluate(constructExpr);
   const constructor = Q(GetValue(ref));
   // We convert empty to [] as part of the default parameter.
   const argList = Q(yield* ArgumentListEvaluation(args));
@@ -31,5 +31,5 @@ function* EvaluateNew(constructExpr, args = []) {
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
 export function* Evaluate_NewExpression(NewExpression) {
-  return yield* EvaluateNew(NewExpression, NewExpression.arguments);
+  return yield* EvaluateNew(NewExpression.MemberExpression, NewExpression.Arguments);
 }

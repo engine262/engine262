@@ -26,20 +26,19 @@ export class StatementParser extends ExpressionParser {
     const savedStrict = this.state.strict;
     while (!this.eat(endToken)) {
       const statement = this.parseStatementListItem();
+      list.push(statement);
       if (!parsedNonDirective
-          && directives !== undefined
           && statement.type === 'ExpressionStatement'
-          && statement.expression.type === 'Literal'
-          && typeof statement.expression.value === 'string') {
-        list.push(statement);
-        directives.push(statement.expression.value);
-        if (statement.expression.value === 'use strict') {
+          && statement.Expression.type === 'StringLiteral') {
+        if (statement.Expression.value === 'use strict') {
           this.state.strict = true;
         }
-        continue;
+        if (directives !== undefined) {
+          directives.push(statement.Expression.value);
+        }
+      } else {
+        parsedNonDirective = true;
       }
-      parsedNonDirective = true;
-      list.push(statement);
     }
     this.state.strict = savedStrict;
     return list;
@@ -101,7 +100,7 @@ export class StatementParser extends ExpressionParser {
     return node;
   }
 
-  parseLexical(allowInitialization) {
+  parseLexical() {
     const node = this.startNode();
     const next = this.next();
     if (next.type !== Token.LET && next.type !== Token.CONST) {
@@ -115,9 +114,9 @@ export class StatementParser extends ExpressionParser {
       if (declarator.id.name === 'let') {
         this.error('`let` is disallowed as a lexically bound name');
       }
-      if (allowInitialization && this.eat(Token.ASSIGN)) {
+      if (this.eat(Token.ASSIGN)) {
         declarator.init = this.parseAssignmentExpression();
-      } else if (allowInitialization && next.type === Token.CONST) {
+      } else if (next.type === Token.CONST) {
         this.error('`const` declarations must have Initializers');
       } else {
         declarator.init = null;
@@ -196,7 +195,7 @@ export class StatementParser extends ExpressionParser {
     return node;
   }
 
-  parseVariable(allowInitialization) {
+  parseVariable() {
     const node = this.startNode();
     this.expect(Token.VAR);
     node.declarations = [];
@@ -204,7 +203,7 @@ export class StatementParser extends ExpressionParser {
     do {
       const declarator = this.startNode();
       declarator.id = this.parseBindingIdentifier();
-      if (allowInitialization && this.eat(Token.ASSIGN)) {
+      if (this.eat(Token.ASSIGN)) {
         declarator.init = this.parseAssignmentExpression();
       } else {
         declarator.init = null;
@@ -255,82 +254,61 @@ export class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'DoWhileStatement');
   }
 
+  // 1.  `for` `(` [lookahead != `let` `[`] Expression `;` Expression `;` Expression `)` Statement
+  // 2.  `for` `(` `var` VariableDeclarationList `;` Expression `;` Expression `)` Statement
+  // 3.  `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
+  // 4.  `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
+  // 5.  `for` `(` `var` ForBinding `in` Expression `)` Statement
+  // 6.  `for` `(` ForDeclaration `in` Expression `)` Statement
+  // 7.  `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // 8.  `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  // 9.  `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  // 10. `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // 11. `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  // 12. `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  //
+  // ForDeclaration : LetOrConst ForBinding
+  // ForBinding :
+  //   BindingIdentifier
+  //   BindingPattern
   parseForStatement() {
     const node = this.startNode();
-    this.expect(Token.FOR);
-    const isAsync = this.inAwaitScope && this.eat(Token.AWAIT);
+
+    this.eat(Token.FOR);
+    const isAwait = this.isAwaitScope && this.eat(Token.AWAIT);
     this.expect(Token.LPAREN);
-    if (this.eat(Token.SEMICOLON)) {
-      if (isAsync) {
-        this.error('Unexpected token: SEMICOLON');
-      }
-      return this.parseFor(node);
-    }
-    {
-      const peek = this.peek();
-      let init;
-      if (peek.type === Token.VAR) {
-        init = this.parseVariable(false);
-      } else if (peek.type === Token.CONST || peek.type === Token.LET) {
-        init = this.parseLexical(false);
-      }
-      if (init) {
-        const p = this.peek();
-        if ((p.type === Token.IN || p.type === Token.OF) && init.declarations.length === 1) {
-          return this.parseForIn(node, init, isAsync);
-        }
-        if (isAsync) {
-          this.error('Unexpected token');
-        }
-        return this.parseFor(node, init);
-      }
-    }
-    const init = this.parseExpression();
-    const peek = this.peek();
-    if (peek.type === Token.IN || peek.type === Token.OF) {
-      return this.parseForIn(node, init, isAsync);
-    }
-    if (isAsync) {
-      this.error('Unexpected token');
-    }
-    return this.parseFor(node, init);
-  }
 
-  parseFor(node, init) {
-    node.init = init;
-    this.expect(Token.SEMICOLON);
-    node.test = this.peek().type === Token.SEMICOLON ? null : this.parseExpression();
-    this.expect(Token.SEMICOLON);
-    node.update = this.peek().type === Token.SEMICOLON ? null : this.parseExpression();
-    this.expect(Token.RPAREN);
-    node.body = this.parseStatement();
-    return this.finishNode(node, 'ForStatement');
-  }
+    // 3.  `for` `(` LexicalDeclaration Expression `;` Expression `)` Statement
+    // 6.  `for` `(` ForDeclaration `in` Expression `)` Statement
+    // 9.  `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+    // 12. `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+    if (this.test(Token.LET) || this.test(Token.CONST)) {
+    }
 
-  parseForIn(node, init, isAsync) {
-    const next = this.next();
-    const isForIn = next.type === Token.IN;
-    if (isForIn && isAsync) {
-      this.error('Unexpected token');
-    } else {
-      node.await = isAsync;
+    // 10. `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+    if (isAwait) {
+      node.LeftHandSideExpression = this.parseLeftHandSideExpression();
+      const maybeOf = this.parseIdentifier();
+      if (maybeOf.name !== 'of') {
+        this.error(`Unexpected token: ${maybeOf.name}`);
+      }
+      node.AssignmentExpression = this.parseAssignmentExpression();
+      this.expect(Token.RPAREN);
+      node.Statement = this.parseStatement();
+      return this.finishNode(node, 'ForStatement');
     }
-    if (
-      init.type === 'VariableDeclaration'
-      && init.declarations[0].init != null
-      && (!isForIn
-        || init.kind !== 'var'
-        || init.declarations[0].id.type !== 'Identifier')
-    ) {
-      this.error('For loop variable declaration may not have an initializer');
-    } else if (init.type === 'AssignmentPattern') {
-      this.error('Invalid left-hand side in for loop');
+
+    // 2.  `for` `(` `var` VariableDeclarationList `;` Expression `;` Expression `)` Statement
+    // 5.  `for` `(` `var` ForBinding `in` Expression `)` Statement
+    // 8.  `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+    // 11. `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+    if (this.test(Token.VAR)) {
     }
-    node.left = init;
-    node.right = isForIn ? this.parseExpression() : this.parseAssignmentExpression();
-    this.expect(Token.RPAREN);
-    node.body = this.parseStatement();
-    return this.finishNode(node, isForIn ? 'ForInStatement' : 'ForOfStatement');
+
+
+    // 1. `for` `(` [lookahead != `let` `[`] Expression `;` Expression `;` Expression `)` Statement
+    // 4. `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
+    // 7. `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
   }
 
   // BreakStatement :

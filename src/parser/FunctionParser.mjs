@@ -39,7 +39,7 @@ export class FunctionParser extends IdentifierParser {
     node.expression = isExpression;
     node.generator = this.eat(Token.MUL);
     node.async = kind === FunctionKind.ASYNC;
-    if (this.peek().type === Token.IDENTIFIER) {
+    if (this.test(Token.IDENTIFIER)) {
       node.id = this.parseBindingIdentifier();
     } else if (isExpression === false) {
       this.error('Missing function name');
@@ -58,7 +58,7 @@ export class FunctionParser extends IdentifierParser {
     node.generator = false;
     node.async = isAsync;
     node.params = parameters;
-    node.body = this.peek().type === Token.LBRACE
+    node.body = this.test(Token.LBRACE)
       ? this.parseFunctionBody(isAsync, false)
       : this.parseExpression();
     return this.finishNode(node, 'ArrowFunctionExpression');

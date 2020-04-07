@@ -79,9 +79,9 @@ export function* Evaluate_CallExpression(CallExpression) {
   // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
   const expr = CallExpression;
   // 2. Let memberExpr be the MemberExpression of expr.
-  const memberExpr = expr.callee;
+  const memberExpr = expr.CallExpression;
   // 3. Let arguments be the Arguments of expr.
-  const args = expr.arguments;
+  const args = expr.Arguments;
   // 4. Let ref be the result of evaluating memberExpr.
   const ref = yield* Evaluate(memberExpr);
   // 5. Let func be ? GetValue(ref).
