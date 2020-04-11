@@ -56,6 +56,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   // 3. Let revoker be ! CreateBuiltinFunction(steps, « [[RevocableProxy]] »).
   const revoker = X(CreateBuiltinFunction(steps, ['RevocableProxy']));
   SetFunctionLength(revoker, new Value(0));
+  SetFunctionName(revoker, new Value(''));
   // 4. Set revoker.[[RevocableProxy]] to p.
   revoker.RevocableProxy = p;
   // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).

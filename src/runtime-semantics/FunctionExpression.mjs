@@ -11,6 +11,9 @@ import {
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Value } from '../value.mjs';
 import { X } from '../completion.mjs';
+import {
+  NamedEvaluation_FunctionExpression,
+} from './all.mjs';
 
 function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const {
@@ -23,8 +26,8 @@ function Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression) {
   const name = new Value(BindingIdentifier.name);
   envRec.CreateImmutableBinding(name, Value.false);
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', funcEnv));
-  MakeConstructor(closure);
   SetFunctionName(closure, name);
+  MakeConstructor(closure);
   closure.SourceText = sourceTextMatchedBy(FunctionExpression);
   envRec.InitializeBinding(name, closure);
   return closure;
@@ -34,12 +37,5 @@ export function Evaluate_FunctionExpression(FunctionExpression) {
   if (isFunctionExpressionWithBindingIdentifier(FunctionExpression)) {
     return Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression);
   }
-
-  const FormalParameters = FunctionExpression.params;
-
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', scope));
-  MakeConstructor(closure);
-  closure.SourceText = sourceTextMatchedBy(FunctionExpression);
-  return closure;
+  return NamedEvaluation_FunctionExpression(FunctionExpression, new Value(''));
 }

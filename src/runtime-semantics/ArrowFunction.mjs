@@ -1,19 +1,13 @@
-import {
-  surroundingAgent,
-} from '../engine.mjs';
-import { OrdinaryFunctionCreate, GetValue, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
-import { Q, X, ReturnCompletion } from '../completion.mjs';
+import { Value } from '../value.mjs';
+import { GetValue } from '../abstract-ops/all.mjs';
+import { Q, ReturnCompletion } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { NamedEvaluation_ArrowFunction } from './all.mjs';
 
 // #sec-arrow-function-definitions-runtime-semantics-evaluation
 //   ArrowFunction : ArrowParameters `=>` ConciseBody
 export function Evaluate_ArrowFunction(ArrowFunction) {
-  const { params: ArrowParameters } = ArrowFunction;
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  const parameters = ArrowParameters;
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope));
-  closure.SourceText = sourceTextMatchedBy(ArrowFunction);
-  return closure;
+  return NamedEvaluation_ArrowFunction(ArrowFunction, new Value(''));
 }
 
 // #sec-arrow-function-definitions-runtime-semantics-evaluation

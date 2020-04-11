@@ -162,6 +162,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   const realmF = surroundingAgent.currentRealmRecord;
   const scope = realmF.GlobalEnv;
   const F = X(OrdinaryFunctionCreate(proto, parameters, fabricatedFunctionNode, 'Normal', scope));
+  SetFunctionName(F, new Value('anonymous'));
   if (kind === 'generator') {
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
     X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
@@ -181,7 +182,6 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   } else if (kind === 'normal') {
     MakeConstructor(F);
   }
-  SetFunctionName(F, new Value('anonymous'));
   const prefix = DynamicFunctionSourceTextPrefixes[kind];
   const sourceText = `${prefix} anonymous(${P}\u000A) {${bodyText}}`;
   F.SourceText = new Value(sourceText);

@@ -28,8 +28,8 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
   } = FunctionDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope));
-  MakeConstructor(F);
   SetFunctionName(F, name);
+  MakeConstructor(F);
   F.SourceText = sourceTextMatchedBy(FunctionDeclaration);
   return F;
 }
@@ -45,6 +45,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   } = GeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorDeclaration, 'non-lexical-this', scope));
+  SetFunctionName(F, name);
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -52,7 +53,6 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
-  SetFunctionName(F, name);
   F.SourceText = sourceTextMatchedBy(GeneratorDeclaration);
   return F;
 }
@@ -76,6 +76,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   } = AsyncGeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorDeclaration, 'non-lexical-this', scope));
+  SetFunctionName(F, name);
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -83,7 +84,6 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
-  SetFunctionName(F, name);
   F.SourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
   return F;
 }

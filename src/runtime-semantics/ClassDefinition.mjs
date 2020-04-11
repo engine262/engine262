@@ -24,7 +24,7 @@ import {
   AbruptCompletion,
   Completion,
   NormalCompletion,
-  Q, X,
+  Q,
 } from '../completion.mjs';
 import {
   DefineMethod,
@@ -84,14 +84,12 @@ export function* ClassDefinitionEvaluation_ClassTail({ ClassHeritage, ClassBody 
   const constructorInfo = yield* DefineMethod(constructor, proto, constructorParent);
   Assert(!(constructorInfo instanceof AbruptCompletion));
   const F = constructorInfo.Closure;
+  SetFunctionName(F, className);
   MakeConstructor(F, false, proto);
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
   MakeClassConstructor(F);
-  if (className !== Value.undefined) {
-    X(SetFunctionName(F, className));
-  }
   CreateMethodProperty(proto, new Value('constructor'), F);
   let methods;
   if (!ClassBody) {
@@ -133,7 +131,7 @@ export function* Evaluate_ClassExpression(ClassExpression) {
 
   let className;
   if (!BindingIdentifier) {
-    className = Value.undefined;
+    className = new Value('');
   } else {
     className = new Value(BindingIdentifier.name);
   }

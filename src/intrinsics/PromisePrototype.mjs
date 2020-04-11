@@ -12,6 +12,7 @@ import {
   PerformPromiseThen,
   PromiseResolve,
   SetFunctionLength,
+  SetFunctionName,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
@@ -34,6 +35,7 @@ function ThenFinallyFunctions([value = Value.undefined]) {
   const promise = Q(PromiseResolve(C, result));
   const valueThunk = CreateBuiltinFunction(() => value, []);
   SetFunctionLength(valueThunk, new Value(0));
+  SetFunctionName(valueThunk, new Value(''));
   return Q(Invoke(promise, new Value('then'), [valueThunk]));
 }
 
@@ -47,6 +49,7 @@ function CatchFinallyFunctions([reason = Value.undefined]) {
   const promise = Q(PromiseResolve(C, result));
   const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
   SetFunctionLength(thrower, new Value(0));
+  SetFunctionName(thrower, new Value(''));
   return Q(Invoke(promise, new Value('then'), [thrower]));
 }
 
@@ -66,11 +69,13 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     const stepsThenFinally = ThenFinallyFunctions;
     thenFinally = X(CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']));
     SetFunctionLength(thenFinally, new Value(1));
+    SetFunctionName(thenFinally, new Value(''));
     thenFinally.Constructor = C;
     thenFinally.OnFinally = onFinally;
     const stepsCatchFinally = CatchFinallyFunctions;
     catchFinally = X(CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']));
     SetFunctionLength(catchFinally, new Value(1));
+    SetFunctionName(catchFinally, new Value(''));
     catchFinally.Constructor = C;
     catchFinally.OnFinally = onFinally;
   }

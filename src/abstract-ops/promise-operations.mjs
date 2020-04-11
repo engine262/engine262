@@ -23,6 +23,7 @@ import {
   IsConstructor,
   SameValue,
   SetFunctionLength,
+  SetFunctionName,
   GetFunctionRealm,
   isFunctionObject,
 } from './all.mjs';
@@ -59,11 +60,13 @@ export function CreateResolvingFunctions(promise) {
   const stepsResolve = PromiseResolveFunctions;
   const resolve = X(CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']));
   SetFunctionLength(resolve, new Value(1));
+  SetFunctionName(resolve, new Value(''));
   resolve.Promise = promise;
   resolve.AlreadyResolved = alreadyResolved;
   const stepsReject = PromiseRejectFunctions;
   const reject = X(CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']));
   SetFunctionLength(reject, new Value(1));
+  SetFunctionName(reject, new Value(''));
   reject.Promise = promise;
   reject.AlreadyResolved = alreadyResolved;
   return {
@@ -171,6 +174,7 @@ export function NewPromiseCapability(C) {
   const steps = GetCapabilitiesExecutorFunctions;
   const executor = X(CreateBuiltinFunction(steps, ['Capability']));
   SetFunctionLength(executor, new Value(2));
+  SetFunctionName(executor, new Value(''));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));
   if (IsCallable(promiseCapability.Resolve) === Value.false) {

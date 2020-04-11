@@ -19,6 +19,13 @@ export function BootstrapThrowTypeError(realmRec) {
     Configurable: Value.false,
   }));
 
+  ThrowTypeError.properties.set(new Value('name'), Descriptor({
+    Value: new Value(''),
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+  }));
+
   ThrowTypeError.Prototype = realmRec.Intrinsics['%Function.prototype%'];
 
   realmRec.Intrinsics['%ThrowTypeError%'] = ThrowTypeError;

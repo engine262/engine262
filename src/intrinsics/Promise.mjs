@@ -28,6 +28,7 @@ import {
   PromiseCapabilityRecord,
   PromiseResolve,
   SetFunctionLength,
+  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion, Completion,
@@ -125,6 +126,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
     ]));
     X(SetFunctionLength(resolveElement, new Value(1)));
+    X(SetFunctionName(resolveElement, new Value('')));
     resolveElement.AlreadyCalled = { Value: false };
     resolveElement.Index = index;
     resolveElement.Values = values;
@@ -235,6 +237,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability)
       'RemainingElements',
     ]));
     X(SetFunctionLength(resolveElement, new Value(1)));
+    X(SetFunctionName(resolveElement, new Value('')));
     const alreadyCalled = { Value: false };
     resolveElement.AlreadyCalled = alreadyCalled;
     resolveElement.Index = index;
@@ -250,6 +253,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability)
       'RemainingElements',
     ]));
     X(SetFunctionLength(rejectElement, new Value(1)));
+    X(SetFunctionName(rejectElement, new Value('')));
     rejectElement.AlreadyCalled = alreadyCalled;
     rejectElement.Index = index;
     rejectElement.Values = values;
@@ -376,6 +380,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
     // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
     const rejectElement = X(CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
     X(SetFunctionLength(rejectElement, new Value(1)));
+    X(SetFunctionName(rejectElement, new Value('')));
     // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     rejectElement.AlreadyCalled = { Value: false };
     // m. Set rejectElement.[[Index]] to index.

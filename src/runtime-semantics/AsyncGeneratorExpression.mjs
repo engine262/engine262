@@ -9,6 +9,7 @@ import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { Descriptor, Value } from '../value.mjs';
+import { NamedEvaluation_AsyncGeneratorExpression } from './all.mjs';
 
 // 14.4.14 #sec-generator-function-definitions-runtime-semantics-evaluation
 //   AsyncGeneratorExpression :
@@ -19,17 +20,16 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     id: BindingIdentifier,
     params: FormalParameters,
   } = AsyncGeneratorExpression;
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  let funcEnv = scope;
-  let envRec;
-  let name;
-  if (BindingIdentifier) {
-    funcEnv = NewDeclarativeEnvironment(scope);
-    envRec = funcEnv.EnvironmentRecord;
-    name = new Value(BindingIdentifier.name);
-    envRec.CreateImmutableBinding(name, Value.false);
+  if (!BindingIdentifier) {
+    return NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, new Value(''));
   }
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  const funcEnv = NewDeclarativeEnvironment(scope);
+  const envRec = funcEnv.EnvironmentRecord;
+  const name = new Value(BindingIdentifier.name);
+  envRec.CreateImmutableBinding(name, Value.false);
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv));
+  X(SetFunctionName(closure, name));
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
   X(DefinePropertyOrThrow(
     closure,
@@ -42,9 +42,6 @@ export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
     }),
   ));
   closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
-  if (BindingIdentifier) {
-    X(SetFunctionName(closure, name));
-    envRec.InitializeBinding(name, closure);
-  }
+  envRec.InitializeBinding(name, closure);
   return closure;
 }

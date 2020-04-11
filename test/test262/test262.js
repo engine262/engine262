@@ -189,9 +189,15 @@ if (!process.send) {
       attrs.includes.unshift('doneprintHandle.js');
     }
     attrs.includes.forEach((include) => {
-      const p = path.resolve(__dirname, `./test262/harness/${include}`);
-      const source = includeCache[include] || fs.readFileSync(p, 'utf8');
-      realm.evaluateScript(source, { specifier: p });
+      if (includeCache[include] === undefined) {
+        const p = path.resolve(__dirname, `./test262/harness/${include}`);
+        includeCache[include] = {
+          source: fs.readFileSync(p, 'utf8'),
+          specifier: p,
+        };
+      }
+      const entry = includeCache[include];
+      realm.evaluateScript(entry.source, { specifier: entry.specifier });
     });
 
     realm.evaluateScript(`
