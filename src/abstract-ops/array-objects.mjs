@@ -13,7 +13,7 @@ import {
   Construct,
   Get,
   GetFunctionRealm,
-  IsAccessorDescriptor,
+  IsDataDescriptor,
   IsArray,
   IsConstructor,
   OrdinaryDefineOwnProperty,
@@ -39,7 +39,8 @@ function ArrayDefineOwnProperty(P, Desc) {
     return Q(ArraySetLength(A, Desc));
   } else if (isArrayIndex(P)) {
     const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
-    Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
+    Assert(X(IsDataDescriptor(oldLenDesc)));
+    Assert(oldLenDesc.Configurable === Value.false);
     const oldLen = oldLenDesc.Value;
     const index = X(ToUint32(P));
     if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
@@ -137,7 +138,8 @@ export function ArraySetLength(A, Desc) {
   }
   newLenDesc.Value = new Value(newLen);
   const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
-  Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc));
+  Assert(X(IsDataDescriptor(oldLenDesc)));
+  Assert(oldLenDesc.Configurable === Value.false);
   const oldLen = oldLenDesc.Value.numberValue();
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
@@ -175,7 +177,8 @@ export function ArraySetLength(A, Desc) {
     }
   }
   if (newWritable === false) {
-    OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
+    const s = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
+    Assert(s === Value.true);
   }
   return Value.true;
 }
