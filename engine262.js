@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 0d0f32d24d085eff514559e8530637d7548ea89d
+ * engine262 0.0.1 5fb1007874dc58bf48ef09343e8a649e4e4a5f8b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1798,24 +1798,7 @@
   //   ArrowFunction : ArrowParameters `=>` ConciseBody
 
   function Evaluate_ArrowFunction(ArrowFunction) {
-    const {
-      params: ArrowParameters
-    } = ArrowFunction;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const parameters = ArrowParameters;
-
-    let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope);
-
-    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const closure = _temp;
-    closure.SourceText = sourceTextMatchedBy(ArrowFunction);
-    return closure;
+    return NamedEvaluation_ArrowFunction(ArrowFunction, new Value(''));
   } // #sec-arrow-function-definitions-runtime-semantics-evaluation
   //   ExpressionBody : AssignmentExpression
 
@@ -1824,21 +1807,21 @@
 
     const exprRef = yield* Evaluate(AssignmentExpression); // 2. Let exprValue be ? GetValue(exprRef).
 
-    let _temp2 = GetValue(exprRef);
+    let _temp = GetValue(exprRef);
     /* istanbul ignore if */
 
 
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
     }
     /* istanbul ignore if */
 
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
     }
 
-    const exprValue = _temp2; // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+    const exprValue = _temp; // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
 
     return new ReturnCompletion(exprValue);
   }
@@ -6245,24 +6228,7 @@
   //     CoverCallExpressionAndAsyncArrowHead `=>` AsyncConciseBody
 
   function Evaluate_AsyncArrowFunction(AsyncArrowFunction) {
-    const {
-      params: ArrowFormalParameters
-    } = AsyncArrowFunction;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    const parameters = ArrowFormalParameters;
-
-    let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope);
-
-    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const closure = _temp;
-    closure.SourceText = sourceTextMatchedBy(AsyncArrowFunction);
-    return closure;
+    return NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, new Value(''));
   }
 
   function Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpression) {
@@ -6318,22 +6284,7 @@
       return Evaluate_AsyncFunctionExpression_BindingIdentifier(AsyncFunctionExpression);
     }
 
-    const {
-      params: FormalParameters
-    } = AsyncFunctionExpression;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-
-    let _temp5 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', scope);
-
-    Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const closure = _temp5;
-    closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-    return closure;
+    return NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, new Value(''));
   }
 
   //   AsyncGeneratorExpression :
@@ -6345,17 +6296,16 @@
       id: BindingIdentifier,
       params: FormalParameters
     } = AsyncGeneratorExpression;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    let funcEnv = scope;
-    let envRec;
-    let name;
 
-    if (BindingIdentifier) {
-      funcEnv = NewDeclarativeEnvironment(scope);
-      envRec = funcEnv.EnvironmentRecord;
-      name = new Value(BindingIdentifier.name);
-      envRec.CreateImmutableBinding(name, Value.false);
+    if (!BindingIdentifier) {
+      return NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, new Value(''));
     }
+
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    const funcEnv = NewDeclarativeEnvironment(scope);
+    const envRec = funcEnv.EnvironmentRecord;
+    const name = new Value(BindingIdentifier.name);
+    envRec.CreateImmutableBinding(name, Value.false);
 
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', funcEnv);
 
@@ -6367,33 +6317,30 @@
     }
 
     const closure = _temp;
+
+    let _temp2 = SetFunctionName(closure, name);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
 
-    let _temp2 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    let _temp3 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false
     }));
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
+    Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
     closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
-
-    if (BindingIdentifier) {
-      let _temp3 = SetFunctionName(closure, name);
-
-      Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      envRec.InitializeBinding(name, closure);
-    }
-
+    envRec.InitializeBinding(name, closure);
     return closure;
   }
 
@@ -12571,6 +12518,7 @@
     const constructorInfo = yield* DefineMethod(constructor, proto, constructorParent);
     Assert(!(constructorInfo instanceof AbruptCompletion), "!(constructorInfo instanceof AbruptCompletion)");
     const F = constructorInfo.Closure;
+    SetFunctionName(F, className);
     MakeConstructor(F, false, proto);
 
     if (ClassHeritage) {
@@ -12578,18 +12526,6 @@
     }
 
     MakeClassConstructor(F);
-
-    if (className !== Value.undefined) {
-      let _temp3 = SetFunctionName(F, className);
-
-      Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(F, className)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-    }
-
     CreateMethodProperty(proto, new Value('constructor'), F);
     let methods;
 
@@ -12637,22 +12573,22 @@
     let className;
 
     if (!BindingIdentifier) {
-      className = Value.undefined;
+      className = new Value('');
     } else {
       className = new Value(BindingIdentifier.name);
     }
 
-    let _temp4 = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, className, className);
+    let _temp3 = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, className, className);
 
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
     }
 
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
 
-    const value = _temp4;
+    const value = _temp3;
     value.SourceText = sourceTextMatchedBy(ClassExpression);
     return value;
   } // 14.6.14 #sec-runtime-semantics-bindingclassdeclarationevaluation
@@ -12681,30 +12617,30 @@
       className = classBinding;
     }
 
-    let _temp5 = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, classBinding, className);
+    let _temp4 = yield* ClassDefinitionEvaluation_ClassTail(ClassTail, classBinding, className);
 
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
     }
 
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
 
-    const value = _temp5;
+    const value = _temp4;
     value.SourceText = sourceTextMatchedBy(ClassDeclaration);
 
     if (BindingIdentifier) {
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
 
-      let _temp6 = InitializeBoundName(className, value, env);
+      let _temp5 = InitializeBoundName(className, value, env);
 
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
       }
 
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
       }
     }
 
@@ -12713,14 +12649,14 @@
   //   ClassDeclaration : `class` BindingIdentifier ClassTail
 
   function* Evaluate_ClassDeclaration(ClassDeclaration) {
-    let _temp7 = yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration);
+    let _temp6 = yield* BindingClassDeclarationEvaluation_ClassDeclaration(ClassDeclaration);
 
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
 
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
     return new NormalCompletion(undefined);
   }
@@ -13020,6 +12956,7 @@
     }
 
     const F = _temp6;
+    SetFunctionName(F, new Value('anonymous'));
 
     if (kind === 'generator') {
       const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
@@ -13055,7 +12992,6 @@
       MakeConstructor(F);
     }
 
-    SetFunctionName(F, new Value('anonymous'));
     const prefix = DynamicFunctionSourceTextPrefixes[kind];
     const sourceText = `${prefix} anonymous(${P}\u000A) {${bodyText}}`;
     F.SourceText = new Value(sourceText);
@@ -15782,8 +15718,8 @@
     }
 
     const closure = _temp;
-    MakeConstructor(closure);
     SetFunctionName(closure, name);
+    MakeConstructor(closure);
     closure.SourceText = sourceTextMatchedBy(FunctionExpression);
     envRec.InitializeBinding(name, closure);
     return closure;
@@ -15794,21 +15730,7 @@
       return Evaluate_FunctionExpression_BindingIdentifier(FunctionExpression);
     }
 
-    const FormalParameters = FunctionExpression.params;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-
-    let _temp2 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', scope);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const closure = _temp2;
-    MakeConstructor(closure);
-    closure.SourceText = sourceTextMatchedBy(FunctionExpression);
-    return closure;
+    return NamedEvaluation_FunctionExpression(FunctionExpression, new Value(''));
   }
 
   //   FunctionStatementList : [empty]
@@ -15830,17 +15752,16 @@
       id: BindingIdentifier,
       params: FormalParameters
     } = GeneratorExpression;
-    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    let funcEnv = scope;
-    let envRec;
-    let name;
 
-    if (BindingIdentifier) {
-      funcEnv = NewDeclarativeEnvironment(scope);
-      envRec = funcEnv.EnvironmentRecord;
-      name = new Value(BindingIdentifier.name);
-      envRec.CreateImmutableBinding(name, Value.false);
+    if (!BindingIdentifier) {
+      return NamedEvaluation_GeneratorExpression(GeneratorExpression, new Value(''));
     }
+
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    const funcEnv = NewDeclarativeEnvironment(scope);
+    const envRec = funcEnv.EnvironmentRecord;
+    const name = new Value(BindingIdentifier.name);
+    envRec.CreateImmutableBinding(name, Value.false);
 
     let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', funcEnv);
 
@@ -15852,33 +15773,30 @@
     }
 
     const closure = _temp;
+
+    let _temp2 = SetFunctionName(closure, name);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
 
-    let _temp2 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    let _temp3 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false
     }));
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
+    Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
 
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
     closure.SourceText = sourceTextMatchedBy(GeneratorExpression);
-
-    if (BindingIdentifier) {
-      let _temp3 = SetFunctionName(closure, name);
-
-      Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      envRec.InitializeBinding(name, closure);
-    }
-
+    envRec.InitializeBinding(name, closure);
     return closure;
   }
 
@@ -16354,8 +16272,8 @@
     }
 
     const F = _temp;
-    MakeConstructor(F);
     SetFunctionName(F, name);
+    MakeConstructor(F);
     F.SourceText = sourceTextMatchedBy(FunctionDeclaration);
     return F;
   } // 14.4.11 #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
@@ -16379,6 +16297,7 @@
     }
 
     const F = _temp2;
+    SetFunctionName(F, name);
 
     let _temp3 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
 
@@ -16402,7 +16321,6 @@
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    SetFunctionName(F, name);
     F.SourceText = sourceTextMatchedBy(GeneratorDeclaration);
     return F;
   }
@@ -16442,6 +16360,7 @@
     }
 
     const F = _temp6;
+    SetFunctionName(F, name);
 
     let _temp7 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
 
@@ -16465,7 +16384,6 @@
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
     }
-    SetFunctionName(F, name);
     F.SourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
     return F;
   }
@@ -17883,66 +17801,140 @@
 
 
   function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
-    const closure = Evaluate_FunctionExpression(FunctionExpression);
+    const {
+      params: FormalParameters
+    } = FunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
 
-    let _temp = SetFunctionName(closure, name);
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let closure be OrdinaryFunctionCreate(%Function.prototype%, FormalParameters, FunctionBody, lexical-this, scope).
 
-    Assert(!(_temp instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionExpression, 'non-lexical-this', scope); // 3. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 4. Perform MakeConstructor(closure).
+
+    MakeConstructor(closure); // 5. Set closure.[[SourceText]] to the source text matched by FunctionExpression.
+
+    closure.SourceText = sourceTextMatchedBy(FunctionExpression); // 6. Return closure.
+
+    return closure;
+  } // 14.2.16 #sec-arrow-function-definitions-runtime-semantics-namedevaluation
+  //   ArrowFunction : ArrowParameters `=>` ConciseBody
+
+  function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
+    const {
+      params: ArrowParameters
+    } = ArrowFunction; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let parameters be CoveredFormalsList of ArrowParameters.
+
+    const parameters = ArrowParameters; // 3. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), parameters, ArrowFunction, 'lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Set closure.[[SourceText]] to the source text matched by ArrowFunction.
+
+    closure.SourceText = sourceTextMatchedBy(ArrowFunction); // 6. Return closure.
+
+    return closure;
+  } // 14.4.13 #sec-generator-function-definitions-runtime-semantics-namedevaluation
+  //   GeneratorExpression : `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
+
+  function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
+    const {
+      params: FormalParameters
+    } = GeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let closure be ! OrdinaryFunctionCreate(%Generator%, FormalParameters, GeneratorBody, non-lexical-this, scope).
+
+    let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', scope);
+
+    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorExpression, 'non-lexical-this', scope)" + ' returned an abrupt completion');
     /* istanbul ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
-    return closure;
-  } // 14.2.16 #sec-arrow-function-definitions-runtime-semantics-namedevaluation
-  //   ArrowFunction : ArrowParameters `=>` ConciseBody
 
+    const closure = _temp; // 3. Perform SetFunctionName(closure, name).
 
-  function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
-    const closure = Evaluate_ArrowFunction(ArrowFunction);
+    SetFunctionName(closure, name); // 4. Let prototype be ! OrdinaryObjectCreate(%Generator.prototype%).
 
-    let _temp2 = SetFunctionName(closure, name);
+    let _temp2 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'))" + ' returned an abrupt completion');
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    return closure;
-  } // 14.4.13 #sec-generator-function-definitions-runtime-semantics-namedevaluation
-  //   GeneratorExpression : `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 
+    const prototype = _temp2; // 5. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
-  function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
-    const closure = Evaluate_GeneratorExpression(GeneratorExpression);
+    let _temp3 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
 
-    let _temp3 = SetFunctionName(closure, name);
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
     }
+
+    closure.SourceText = sourceTextMatchedBy(GeneratorExpression); // 7. Return closure.
+
     return closure;
   } // 14.5.13 #sec-asyncgenerator-definitions-namedevaluation
   //   AsyncGeneratorExpression :
   //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 
-
   function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
-    const closure = Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression);
+    const {
+      params: FormalParameters
+    } = AsyncGeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
 
-    let _temp4 = SetFunctionName(closure, name);
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
 
-    Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    let _temp4 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', scope);
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorExpression, 'non-lexical-this', scope)" + ' returned an abrupt completion');
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
+
+    const closure = _temp4; // 3. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 4. Let prototype be ! OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+
+    let _temp5 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'))" + ' returned an abrupt completion');
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const prototype = _temp5; // 5. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    let _temp6 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression); // 7. Return closure.
+
     return closure;
   } // 14.6.15 #sec-class-definitions-runtime-semantics-namedevaluation
   //   ClassExpression : `class` ClassTail
-
 
   function* NamedEvaluation_ClassExpression(ClassExpression, name) {
     const {
@@ -17973,35 +17965,54 @@
 
 
   function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
-    const closure = Evaluate_AsyncFunctionExpression(AsyncFunctionExpression);
+    const {
+      params: FormalParameters
+    } = AsyncFunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
 
-    let _temp5 = SetFunctionName(closure, name);
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
 
-    Assert(!(_temp5 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    let _temp7 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', scope);
 
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    Assert(!(_temp7 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionExpression, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
+
+    const closure = _temp7; // 3. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 4. Set closure.[[SourceText]] to the source text matched by AsyncFunctionExpression.
+
+    closure.SourceText = sourceTextMatchedBy(AsyncFunctionExpression); // 5. Return closure.
+
     return closure;
   } // 14.8.15 #sec-async-arrow-function-definitions-runtime-semantics-namedevaluation
   //   AsyncArrowFunction :
   //     `async` AsyncArrowBindingIdentifier `=>` AsyncConciseBody
   //     CoverCallExpressionAndAsyncArrowHead `=>` AsyncConciseBody
 
-
   function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
-    const closure = Evaluate_AsyncArrowFunction(AsyncArrowFunction);
+    // 1. Let scope be the LexicalEnvironment of the running execution context.
+    const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let parameters be AsyncArrowBindingIdentifier.
 
-    let _temp6 = SetFunctionName(closure, name);
+    const parameters = AsyncArrowFunction.params; // 3. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, parameters, AsyncConciseBody, lexical-this, scope).
 
-    Assert(!(_temp6 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+    let _temp8 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope);
 
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
+    Assert(!(_temp8 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), parameters, AsyncArrowFunction, 'lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
     }
+
+    const closure = _temp8; // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Set closure.[[SourceText]] to the source text matched by AsyncArrowFunction.
+
+    closure.SourceText = sourceTextMatchedBy(AsyncArrowFunction); // 6. Return closure.
+
     return closure;
   } // (implicit)
-
 
   function* NamedEvaluation_Expression(Expression, name) {
     switch (true) {
@@ -18549,17 +18560,17 @@
 
           const closure = _temp9;
 
-          let _temp10 = MakeMethod(closure, object);
+          let _temp10 = SetFunctionName(closure, propKey, new Value('get'));
 
-          Assert(!(_temp10 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
+          Assert(!(_temp10 instanceof AbruptCompletion), "SetFunctionName(closure, propKey, new Value('get'))" + ' returned an abrupt completion');
 
           if (_temp10 instanceof Completion) {
             _temp10 = _temp10.Value;
           }
 
-          let _temp11 = SetFunctionName(closure, propKey, new Value('get'));
+          let _temp11 = MakeMethod(closure, object);
 
-          Assert(!(_temp11 instanceof AbruptCompletion), "SetFunctionName(closure, propKey, new Value('get'))" + ' returned an abrupt completion');
+          Assert(!(_temp11 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
 
           if (_temp11 instanceof Completion) {
             _temp11 = _temp11.Value;
@@ -18598,17 +18609,17 @@
 
           const closure = _temp12;
 
-          let _temp13 = MakeMethod(closure, object);
+          let _temp13 = SetFunctionName(closure, propKey, new Value('set'));
 
-          Assert(!(_temp13 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
+          Assert(!(_temp13 instanceof AbruptCompletion), "SetFunctionName(closure, propKey, new Value('set'))" + ' returned an abrupt completion');
 
           if (_temp13 instanceof Completion) {
             _temp13 = _temp13.Value;
           }
 
-          let _temp14 = SetFunctionName(closure, propKey, new Value('set'));
+          let _temp14 = MakeMethod(closure, object);
 
-          Assert(!(_temp14 instanceof AbruptCompletion), "SetFunctionName(closure, propKey, new Value('set'))" + ' returned an abrupt completion');
+          Assert(!(_temp14 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
 
           if (_temp14 instanceof Completion) {
             _temp14 = _temp14.Value;
@@ -18661,24 +18672,24 @@
 
     const closure = _temp15;
     MakeMethod(closure, object);
+
+    let _temp16 = SetFunctionName(closure, propKey);
+
+    Assert(!(_temp16 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
 
-    let _temp16 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    let _temp17 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false
     }));
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
-
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
-    }
-
-    let _temp17 = SetFunctionName(closure, propKey);
-
-    Assert(!(_temp17 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+    Assert(!(_temp17 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    new Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
 
     if (_temp17 instanceof Completion) {
       _temp17 = _temp17.Value;
@@ -18782,32 +18793,32 @@
       _temp22 = _temp22.Value;
     }
 
-    let _temp23 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+    let _temp23 = SetFunctionName(closure, propKey);
 
-    Assert(!(_temp23 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'))" + ' returned an abrupt completion');
+    Assert(!(_temp23 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
 
     if (_temp23 instanceof Completion) {
       _temp23 = _temp23.Value;
     }
 
-    const prototype = _temp23;
+    let _temp24 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
 
-    let _temp24 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+    Assert(!(_temp24 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'))" + ' returned an abrupt completion');
+
+    if (_temp24 instanceof Completion) {
+      _temp24 = _temp24.Value;
+    }
+
+    const prototype = _temp24;
+
+    let _temp25 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false
     }));
 
-    Assert(!(_temp24 instanceof AbruptCompletion), "DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp24 instanceof Completion) {
-      _temp24 = _temp24.Value;
-    }
-
-    let _temp25 = SetFunctionName(closure, propKey);
-
-    Assert(!(_temp25 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+    Assert(!(_temp25 instanceof AbruptCompletion), "DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
 
     if (_temp25 instanceof Completion) {
       _temp25 = _temp25.Value;
@@ -35294,6 +35305,7 @@
     const promise = _temp2;
     const valueThunk = CreateBuiltinFunction(() => value, []);
     SetFunctionLength(valueThunk, new Value(0));
+    SetFunctionName(valueThunk, new Value(''));
     return Invoke(promise, new Value('then'), [valueThunk]);
   }
 
@@ -35329,6 +35341,7 @@
     const promise = _temp4;
     const thrower = CreateBuiltinFunction(() => new ThrowCompletion(reason), []);
     SetFunctionLength(thrower, new Value(0));
+    SetFunctionName(thrower, new Value(''));
     return Invoke(promise, new Value('then'), [thrower]);
   }
 
@@ -35363,6 +35376,7 @@
 
       thenFinally = _temp5;
       SetFunctionLength(thenFinally, new Value(1));
+      SetFunctionName(thenFinally, new Value(''));
       thenFinally.Constructor = C;
       thenFinally.OnFinally = onFinally;
       const stepsCatchFinally = CatchFinallyFunctions;
@@ -35377,6 +35391,7 @@
 
       catchFinally = _temp6;
       SetFunctionLength(catchFinally, new Value(1));
+      SetFunctionName(catchFinally, new Value(''));
       catchFinally.Constructor = C;
       catchFinally.OnFinally = onFinally;
     }
@@ -35619,6 +35634,14 @@
       if (_temp7 instanceof Completion) {
         _temp7 = _temp7.Value;
       }
+
+      let _temp8 = SetFunctionName(resolveElement, new Value(''));
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "SetFunctionName(resolveElement, new Value(''))" + ' returned an abrupt completion');
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
       resolveElement.AlreadyCalled = {
         Value: false
       };
@@ -35628,14 +35651,14 @@
       resolveElement.RemainingElements = remainingElementsCount;
       remainingElementsCount.Value += 1;
 
-      let _temp8 = Invoke(nextPromise, new Value('then'), [resolveElement, resultCapability.Reject]);
+      let _temp9 = Invoke(nextPromise, new Value('then'), [resolveElement, resultCapability.Reject]);
 
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
+      if (_temp9 instanceof AbruptCompletion) {
+        return _temp9;
       }
 
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
       index += 1;
     }
@@ -35646,17 +35669,17 @@
   }) {
     const C = thisValue;
 
-    let _temp9 = NewPromiseCapability(C);
+    let _temp10 = NewPromiseCapability(C);
 
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
     }
 
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
 
-    const promiseCapability = _temp9;
+    const promiseCapability = _temp10;
     let iteratorRecord = GetIterator(iterable);
 
     /* istanbul ignore if */
@@ -35715,44 +35738,44 @@
     const promiseCapability = F.Capability;
     const remainingElementsCount = F.RemainingElements;
 
-    let _temp10 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    let _temp11 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
 
-    Assert(!(_temp10 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion');
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const obj = _temp10;
-
-    let _temp11 = CreateDataProperty(obj, new Value('status'), new Value('fulfilled'));
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('status'), new Value('fulfilled'))" + ' returned an abrupt completion');
+    Assert(!(_temp11 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion');
 
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
     }
 
-    let _temp12 = CreateDataProperty(obj, new Value('value'), x);
+    const obj = _temp11;
 
-    Assert(!(_temp12 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), x)" + ' returned an abrupt completion');
+    let _temp12 = CreateDataProperty(obj, new Value('status'), new Value('fulfilled'));
+
+    Assert(!(_temp12 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('status'), new Value('fulfilled'))" + ' returned an abrupt completion');
 
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
+    }
+
+    let _temp13 = CreateDataProperty(obj, new Value('value'), x);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), x)" + ' returned an abrupt completion');
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
     }
     values[index] = obj;
     remainingElementsCount.Value -= 1;
 
     if (remainingElementsCount.Value === 0) {
-      let _temp13 = CreateArrayFromList(values);
+      let _temp14 = CreateArrayFromList(values);
 
-      Assert(!(_temp13 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
+      Assert(!(_temp14 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
 
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
       }
 
-      const valuesArray = _temp13;
+      const valuesArray = _temp14;
       return Call(promiseCapability.Resolve, Value.undefined, [valuesArray]);
     }
 
@@ -35773,44 +35796,44 @@
     const promiseCapability = F.Capability;
     const remainingElementsCount = F.RemainingElements;
 
-    let _temp14 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+    let _temp15 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
 
-    Assert(!(_temp14 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion');
-
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-
-    const obj = _temp14;
-
-    let _temp15 = CreateDataProperty(obj, new Value('status'), new Value('rejected'));
-
-    Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('status'), new Value('rejected'))" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion');
 
     if (_temp15 instanceof Completion) {
       _temp15 = _temp15.Value;
     }
 
-    let _temp16 = CreateDataProperty(obj, new Value('reason'), x);
+    const obj = _temp15;
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('reason'), x)" + ' returned an abrupt completion');
+    let _temp16 = CreateDataProperty(obj, new Value('status'), new Value('rejected'));
+
+    Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('status'), new Value('rejected'))" + ' returned an abrupt completion');
 
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
+    }
+
+    let _temp17 = CreateDataProperty(obj, new Value('reason'), x);
+
+    Assert(!(_temp17 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('reason'), x)" + ' returned an abrupt completion');
+
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
     }
     values[index] = obj;
     remainingElementsCount.Value -= 1;
 
     if (remainingElementsCount.Value === 0) {
-      let _temp17 = CreateArrayFromList(values);
+      let _temp18 = CreateArrayFromList(values);
 
-      Assert(!(_temp17 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
+      Assert(!(_temp18 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
 
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
       }
 
-      const valuesArray = _temp17;
+      const valuesArray = _temp18;
       return Call(promiseCapability.Resolve, Value.undefined, [valuesArray]);
     }
 
@@ -35818,28 +35841,28 @@
   }
 
   function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability) {
-    let _temp18 = IsConstructor(constructor) === Value.true;
+    let _temp19 = IsConstructor(constructor) === Value.true;
 
-    Assert(!(_temp18 instanceof AbruptCompletion), "IsConstructor(constructor) === Value.true" + ' returned an abrupt completion');
-
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
-    }
-
-    Assert(_temp18, "X(IsConstructor(constructor) === Value.true)");
-    Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
-
-    let _temp19 = Get(constructor, new Value('resolve'));
-
-    if (_temp19 instanceof AbruptCompletion) {
-      return _temp19;
-    }
+    Assert(!(_temp19 instanceof AbruptCompletion), "IsConstructor(constructor) === Value.true" + ' returned an abrupt completion');
 
     if (_temp19 instanceof Completion) {
       _temp19 = _temp19.Value;
     }
 
-    const promiseResolve = _temp19;
+    Assert(_temp19, "X(IsConstructor(constructor) === Value.true)");
+    Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
+
+    let _temp20 = Get(constructor, new Value('resolve'));
+
+    if (_temp20 instanceof AbruptCompletion) {
+      return _temp20;
+    }
+
+    if (_temp20 instanceof Completion) {
+      _temp20 = _temp20.Value;
+    }
+
+    const promiseResolve = _temp20;
     const values = [];
     const remainingElementsCount = {
       Value: 1
@@ -35866,24 +35889,24 @@
         remainingElementsCount.Value -= 1;
 
         if (remainingElementsCount.Value === 0) {
-          let _temp20 = CreateArrayFromList(values);
+          let _temp21 = CreateArrayFromList(values);
 
-          Assert(!(_temp20 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
-
-          if (_temp20 instanceof Completion) {
-            _temp20 = _temp20.Value;
-          }
-
-          const valuesArray = _temp20;
-
-          let _temp21 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
-
-          if (_temp21 instanceof AbruptCompletion) {
-            return _temp21;
-          }
+          Assert(!(_temp21 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion');
 
           if (_temp21 instanceof Completion) {
             _temp21 = _temp21.Value;
+          }
+
+          const valuesArray = _temp21;
+
+          let _temp22 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
+
+          if (_temp22 instanceof AbruptCompletion) {
+            return _temp22;
+          }
+
+          if (_temp22 instanceof Completion) {
+            _temp22 = _temp22.Value;
           }
         }
 
@@ -35905,35 +35928,43 @@
       }
       values.push(Value.undefined);
 
-      let _temp22 = Call(promiseResolve, constructor, [nextValue]);
+      let _temp23 = Call(promiseResolve, constructor, [nextValue]);
 
-      if (_temp22 instanceof AbruptCompletion) {
-        return _temp22;
+      if (_temp23 instanceof AbruptCompletion) {
+        return _temp23;
       }
-
-      if (_temp22 instanceof Completion) {
-        _temp22 = _temp22.Value;
-      }
-
-      const nextPromise = _temp22;
-      const steps = PromiseAllSettledResolveElementFunctions;
-
-      let _temp23 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
-
-      Assert(!(_temp23 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
 
       if (_temp23 instanceof Completion) {
         _temp23 = _temp23.Value;
       }
 
-      const resolveElement = _temp23;
+      const nextPromise = _temp23;
+      const steps = PromiseAllSettledResolveElementFunctions;
 
-      let _temp24 = SetFunctionLength(resolveElement, new Value(1));
+      let _temp24 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
 
-      Assert(!(_temp24 instanceof AbruptCompletion), "SetFunctionLength(resolveElement, new Value(1))" + ' returned an abrupt completion');
+      Assert(!(_temp24 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
 
       if (_temp24 instanceof Completion) {
         _temp24 = _temp24.Value;
+      }
+
+      const resolveElement = _temp24;
+
+      let _temp25 = SetFunctionLength(resolveElement, new Value(1));
+
+      Assert(!(_temp25 instanceof AbruptCompletion), "SetFunctionLength(resolveElement, new Value(1))" + ' returned an abrupt completion');
+
+      if (_temp25 instanceof Completion) {
+        _temp25 = _temp25.Value;
+      }
+
+      let _temp26 = SetFunctionName(resolveElement, new Value(''));
+
+      Assert(!(_temp26 instanceof AbruptCompletion), "SetFunctionName(resolveElement, new Value(''))" + ' returned an abrupt completion');
+
+      if (_temp26 instanceof Completion) {
+        _temp26 = _temp26.Value;
       }
       const alreadyCalled = {
         Value: false
@@ -35945,22 +35976,30 @@
       resolveElement.RemainingElements = remainingElementsCount;
       const rejectSteps = PromiseAllSettledRejectElementFunctions;
 
-      let _temp25 = CreateBuiltinFunction(rejectSteps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+      let _temp27 = CreateBuiltinFunction(rejectSteps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
 
-      Assert(!(_temp25 instanceof AbruptCompletion), "CreateBuiltinFunction(rejectSteps, [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
+      Assert(!(_temp27 instanceof AbruptCompletion), "CreateBuiltinFunction(rejectSteps, [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
 
-      if (_temp25 instanceof Completion) {
-        _temp25 = _temp25.Value;
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
       }
 
-      const rejectElement = _temp25;
+      const rejectElement = _temp27;
 
-      let _temp26 = SetFunctionLength(rejectElement, new Value(1));
+      let _temp28 = SetFunctionLength(rejectElement, new Value(1));
 
-      Assert(!(_temp26 instanceof AbruptCompletion), "SetFunctionLength(rejectElement, new Value(1))" + ' returned an abrupt completion');
+      Assert(!(_temp28 instanceof AbruptCompletion), "SetFunctionLength(rejectElement, new Value(1))" + ' returned an abrupt completion');
 
-      if (_temp26 instanceof Completion) {
-        _temp26 = _temp26.Value;
+      if (_temp28 instanceof Completion) {
+        _temp28 = _temp28.Value;
+      }
+
+      let _temp29 = SetFunctionName(rejectElement, new Value(''));
+
+      Assert(!(_temp29 instanceof AbruptCompletion), "SetFunctionName(rejectElement, new Value(''))" + ' returned an abrupt completion');
+
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
       }
       rejectElement.AlreadyCalled = alreadyCalled;
       rejectElement.Index = index;
@@ -35969,14 +36008,14 @@
       rejectElement.RemainingElements = remainingElementsCount;
       remainingElementsCount.Value += 1;
 
-      let _temp27 = Invoke(nextPromise, new Value('then'), [resolveElement, rejectElement]);
+      let _temp30 = Invoke(nextPromise, new Value('then'), [resolveElement, rejectElement]);
 
-      if (_temp27 instanceof AbruptCompletion) {
-        return _temp27;
+      if (_temp30 instanceof AbruptCompletion) {
+        return _temp30;
       }
 
-      if (_temp27 instanceof Completion) {
-        _temp27 = _temp27.Value;
+      if (_temp30 instanceof Completion) {
+        _temp30 = _temp30.Value;
       }
       index += 1;
     }
@@ -35987,17 +36026,17 @@
   }) {
     const C = thisValue;
 
-    let _temp28 = NewPromiseCapability(C);
+    let _temp31 = NewPromiseCapability(C);
 
-    if (_temp28 instanceof AbruptCompletion) {
-      return _temp28;
+    if (_temp31 instanceof AbruptCompletion) {
+      return _temp31;
     }
 
-    if (_temp28 instanceof Completion) {
-      _temp28 = _temp28.Value;
+    if (_temp31 instanceof Completion) {
+      _temp31 = _temp31.Value;
     }
 
-    const promiseCapability = _temp28;
+    const promiseCapability = _temp31;
     let iteratorRecord = GetIterator(iterable);
 
     if (iteratorRecord instanceof AbruptCompletion) {
@@ -36080,16 +36119,16 @@
 
 
   function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
-    let _temp29 = IsConstructor(constructor);
+    let _temp32 = IsConstructor(constructor);
 
-    Assert(!(_temp29 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion');
+    Assert(!(_temp32 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion');
 
-    if (_temp29 instanceof Completion) {
-      _temp29 = _temp29.Value;
+    if (_temp32 instanceof Completion) {
+      _temp32 = _temp32.Value;
     }
 
     // 1. Assert: ! IsConstructor(constructor) is true.
-    Assert(_temp29 === Value.true, "X(IsConstructor(constructor)) === Value.true"); // 2. Assert: resultCapability is a PromiseCapability Record.
+    Assert(_temp32 === Value.true, "X(IsConstructor(constructor)) === Value.true"); // 2. Assert: resultCapability is a PromiseCapability Record.
 
     Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord"); // 3. Let errors be a new empty List.
 
@@ -36101,27 +36140,27 @@
 
     let index = 0; // 6. Let promiseResolve be ? Get(constructor, "resolve").
 
-    let _temp30 = Get(constructor, new Value('resolve'));
+    let _temp33 = Get(constructor, new Value('resolve'));
 
-    if (_temp30 instanceof AbruptCompletion) {
-      return _temp30;
+    if (_temp33 instanceof AbruptCompletion) {
+      return _temp33;
     }
 
-    if (_temp30 instanceof Completion) {
-      _temp30 = _temp30.Value;
+    if (_temp33 instanceof Completion) {
+      _temp33 = _temp33.Value;
     }
 
-    const promiseResolve = _temp30; // 7. If ! IsCallable(promiseResolve) is false, throw a TypeError exception.
+    const promiseResolve = _temp33; // 7. If ! IsCallable(promiseResolve) is false, throw a TypeError exception.
 
-    let _temp31 = IsCallable(promiseResolve);
+    let _temp34 = IsCallable(promiseResolve);
 
-    Assert(!(_temp31 instanceof AbruptCompletion), "IsCallable(promiseResolve)" + ' returned an abrupt completion');
+    Assert(!(_temp34 instanceof AbruptCompletion), "IsCallable(promiseResolve)" + ' returned an abrupt completion');
 
-    if (_temp31 instanceof Completion) {
-      _temp31 = _temp31.Value;
+    if (_temp34 instanceof Completion) {
+      _temp34 = _temp34.Value;
     }
 
-    if (_temp31 === Value.false) {
+    if (_temp34 === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
     } // 8. Repeat,
 
@@ -36180,36 +36219,44 @@
 
       errors.push(Value.undefined); // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
 
-      let _temp32 = Call(promiseResolve, constructor, [nextValue]);
+      let _temp35 = Call(promiseResolve, constructor, [nextValue]);
 
-      if (_temp32 instanceof AbruptCompletion) {
-        return _temp32;
+      if (_temp35 instanceof AbruptCompletion) {
+        return _temp35;
       }
 
-      if (_temp32 instanceof Completion) {
-        _temp32 = _temp32.Value;
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
       }
 
-      const nextPromise = _temp32; // j. Let steps be the algorithm steps defined in Promise.any Reject Element Functions.
+      const nextPromise = _temp35; // j. Let steps be the algorithm steps defined in Promise.any Reject Element Functions.
 
       const steps = PromiseAnyRejectElementFunctions; // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
 
-      let _temp33 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
+      let _temp36 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
 
-      Assert(!(_temp33 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion');
+      Assert(!(_temp36 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion');
 
-      if (_temp33 instanceof Completion) {
-        _temp33 = _temp33.Value;
+      if (_temp36 instanceof Completion) {
+        _temp36 = _temp36.Value;
       }
 
-      const rejectElement = _temp33;
+      const rejectElement = _temp36;
 
-      let _temp34 = SetFunctionLength(rejectElement, new Value(1));
+      let _temp37 = SetFunctionLength(rejectElement, new Value(1));
 
-      Assert(!(_temp34 instanceof AbruptCompletion), "SetFunctionLength(rejectElement, new Value(1))" + ' returned an abrupt completion');
+      Assert(!(_temp37 instanceof AbruptCompletion), "SetFunctionLength(rejectElement, new Value(1))" + ' returned an abrupt completion');
 
-      if (_temp34 instanceof Completion) {
-        _temp34 = _temp34.Value;
+      if (_temp37 instanceof Completion) {
+        _temp37 = _temp37.Value;
+      }
+
+      let _temp38 = SetFunctionName(rejectElement, new Value(''));
+
+      Assert(!(_temp38 instanceof AbruptCompletion), "SetFunctionName(rejectElement, new Value(''))" + ' returned an abrupt completion');
+
+      if (_temp38 instanceof Completion) {
+        _temp38 = _temp38.Value;
       }
 
       rejectElement.AlreadyCalled = {
@@ -36226,14 +36273,14 @@
 
       remainingElementsCount.Value += 1; // r. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], rejectElement »).
 
-      let _temp35 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]);
+      let _temp39 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, rejectElement]);
 
-      if (_temp35 instanceof AbruptCompletion) {
-        return _temp35;
+      if (_temp39 instanceof AbruptCompletion) {
+        return _temp39;
       }
 
-      if (_temp35 instanceof Completion) {
-        _temp35 = _temp35.Value;
+      if (_temp39 instanceof Completion) {
+        _temp39 = _temp39.Value;
       }
 
       index += 1;
@@ -36247,17 +36294,17 @@
     // 1. Let C be the this value.
     const C = thisValue; // 2. Let promiseCapability be ? NewPromiseCapability(C).
 
-    let _temp36 = NewPromiseCapability(C);
+    let _temp40 = NewPromiseCapability(C);
 
-    if (_temp36 instanceof AbruptCompletion) {
-      return _temp36;
+    if (_temp40 instanceof AbruptCompletion) {
+      return _temp40;
     }
 
-    if (_temp36 instanceof Completion) {
-      _temp36 = _temp36.Value;
+    if (_temp40 instanceof Completion) {
+      _temp40 = _temp40.Value;
     }
 
-    const promiseCapability = _temp36; // 3. Let iteratorRecord be GetIterator(iterable).
+    const promiseCapability = _temp40; // 3. Let iteratorRecord be GetIterator(iterable).
 
     let iteratorRecord = GetIterator(iterable); // 4. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
 
@@ -36308,17 +36355,17 @@
     Assert(IsConstructor(constructor) === Value.true, "IsConstructor(constructor) === Value.true");
     Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
 
-    let _temp37 = Get(constructor, new Value('resolve'));
+    let _temp41 = Get(constructor, new Value('resolve'));
 
-    if (_temp37 instanceof AbruptCompletion) {
-      return _temp37;
+    if (_temp41 instanceof AbruptCompletion) {
+      return _temp41;
     }
 
-    if (_temp37 instanceof Completion) {
-      _temp37 = _temp37.Value;
+    if (_temp41 instanceof Completion) {
+      _temp41 = _temp41.Value;
     }
 
-    const promiseResolve = _temp37;
+    const promiseResolve = _temp41;
 
     if (IsCallable(promiseResolve) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
@@ -36358,26 +36405,26 @@
         nextValue = nextValue.Value;
       }
 
-      let _temp38 = Call(promiseResolve, constructor, [nextValue]);
+      let _temp42 = Call(promiseResolve, constructor, [nextValue]);
 
-      if (_temp38 instanceof AbruptCompletion) {
-        return _temp38;
+      if (_temp42 instanceof AbruptCompletion) {
+        return _temp42;
       }
 
-      if (_temp38 instanceof Completion) {
-        _temp38 = _temp38.Value;
+      if (_temp42 instanceof Completion) {
+        _temp42 = _temp42.Value;
       }
 
-      const nextPromise = _temp38;
+      const nextPromise = _temp42;
 
-      let _temp39 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+      let _temp43 = Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
 
-      if (_temp39 instanceof AbruptCompletion) {
-        return _temp39;
+      if (_temp43 instanceof AbruptCompletion) {
+        return _temp43;
       }
 
-      if (_temp39 instanceof Completion) {
-        _temp39 = _temp39.Value;
+      if (_temp43 instanceof Completion) {
+        _temp43 = _temp43.Value;
       }
     }
   }
@@ -36387,17 +36434,17 @@
   }) {
     const C = thisValue;
 
-    let _temp40 = NewPromiseCapability(C);
+    let _temp44 = NewPromiseCapability(C);
 
-    if (_temp40 instanceof AbruptCompletion) {
-      return _temp40;
+    if (_temp44 instanceof AbruptCompletion) {
+      return _temp44;
     }
 
-    if (_temp40 instanceof Completion) {
-      _temp40 = _temp40.Value;
+    if (_temp44 instanceof Completion) {
+      _temp44 = _temp44.Value;
     }
 
-    const promiseCapability = _temp40;
+    const promiseCapability = _temp44;
     let iteratorRecord = GetIterator(iterable);
 
     if (iteratorRecord instanceof AbruptCompletion) {
@@ -36444,26 +36491,26 @@
   }) {
     const C = thisValue;
 
-    let _temp41 = NewPromiseCapability(C);
+    let _temp45 = NewPromiseCapability(C);
 
-    if (_temp41 instanceof AbruptCompletion) {
-      return _temp41;
+    if (_temp45 instanceof AbruptCompletion) {
+      return _temp45;
     }
 
-    if (_temp41 instanceof Completion) {
-      _temp41 = _temp41.Value;
+    if (_temp45 instanceof Completion) {
+      _temp45 = _temp45.Value;
     }
 
-    const promiseCapability = _temp41;
+    const promiseCapability = _temp45;
 
-    let _temp42 = Call(promiseCapability.Reject, Value.undefined, [r]);
+    let _temp46 = Call(promiseCapability.Reject, Value.undefined, [r]);
 
-    if (_temp42 instanceof AbruptCompletion) {
-      return _temp42;
+    if (_temp46 instanceof AbruptCompletion) {
+      return _temp46;
     }
 
-    if (_temp42 instanceof Completion) {
-      _temp42 = _temp42.Value;
+    if (_temp46 instanceof Completion) {
+      _temp46 = _temp46.Value;
     }
     return promiseCapability.Promise;
   }
@@ -36494,35 +36541,35 @@
       Configurable: Value.false
     }));
 
-    let _temp43 = Get(promiseConstructor, new Value('all'));
+    let _temp47 = Get(promiseConstructor, new Value('all'));
 
-    Assert(!(_temp43 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
+    Assert(!(_temp47 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
 
-    if (_temp43 instanceof Completion) {
-      _temp43 = _temp43.Value;
+    if (_temp47 instanceof Completion) {
+      _temp47 = _temp47.Value;
     }
 
-    realmRec.Intrinsics['%Promise.all%'] = _temp43;
+    realmRec.Intrinsics['%Promise.all%'] = _temp47;
 
-    let _temp44 = Get(promiseConstructor, new Value('reject'));
+    let _temp48 = Get(promiseConstructor, new Value('reject'));
 
-    Assert(!(_temp44 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
+    Assert(!(_temp48 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
 
-    if (_temp44 instanceof Completion) {
-      _temp44 = _temp44.Value;
+    if (_temp48 instanceof Completion) {
+      _temp48 = _temp48.Value;
     }
 
-    realmRec.Intrinsics['%Promise.reject%'] = _temp44;
+    realmRec.Intrinsics['%Promise.reject%'] = _temp48;
 
-    let _temp45 = Get(promiseConstructor, new Value('resolve'));
+    let _temp49 = Get(promiseConstructor, new Value('resolve'));
 
-    Assert(!(_temp45 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
+    Assert(!(_temp49 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
 
-    if (_temp45 instanceof Completion) {
-      _temp45 = _temp45.Value;
+    if (_temp49 instanceof Completion) {
+      _temp49 = _temp49.Value;
     }
 
-    realmRec.Intrinsics['%Promise.resolve%'] = _temp45;
+    realmRec.Intrinsics['%Promise.resolve%'] = _temp49;
     realmRec.Intrinsics['%Promise%'] = promiseConstructor;
   }
 
@@ -36592,7 +36639,8 @@
     }
 
     const revoker = _temp2;
-    SetFunctionLength(revoker, new Value(0)); // 4. Set revoker.[[RevocableProxy]] to p.
+    SetFunctionLength(revoker, new Value(0));
+    SetFunctionName(revoker, new Value('')); // 4. Set revoker.[[RevocableProxy]] to p.
 
     revoker.RevocableProxy = p; // 5. Let result be OrdinaryObjectCreate(%Object.prototype%).
 
@@ -42387,6 +42435,12 @@
       Enumerable: Value.false,
       Configurable: Value.false
     }));
+    ThrowTypeError.properties.set(new Value('name'), Descriptor({
+      Value: new Value(''),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
     ThrowTypeError.Prototype = realmRec.Intrinsics['%Function.prototype%'];
     realmRec.Intrinsics['%ThrowTypeError%'] = ThrowTypeError;
   }
@@ -47534,33 +47588,43 @@
       return ArraySetLength(A, Desc);
     } else if (isArrayIndex(P)) {
       const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
-      Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc), "Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc)");
-      const oldLen = oldLenDesc.Value;
 
-      let _temp = ToUint32(P);
+      let _temp = IsDataDescriptor(oldLenDesc);
 
-      Assert(!(_temp instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
+      Assert(!(_temp instanceof AbruptCompletion), "IsDataDescriptor(oldLenDesc)" + ' returned an abrupt completion');
       /* istanbul ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
 
-      const index = _temp;
+      Assert(_temp, "X(IsDataDescriptor(oldLenDesc))");
+      Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
+      const oldLen = oldLenDesc.Value;
 
-      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
-        return Value.false;
-      }
+      let _temp2 = ToUint32(P);
 
-      let _temp2 = OrdinaryDefineOwnProperty(A, P, Desc);
-
-      Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, P, Desc)" + ' returned an abrupt completion');
+      Assert(!(_temp2 instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
       }
 
-      const succeeded = _temp2;
+      const index = _temp2;
+
+      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+        return Value.false;
+      }
+
+      let _temp3 = OrdinaryDefineOwnProperty(A, P, Desc);
+
+      Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, P, Desc)" + ' returned an abrupt completion');
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      const succeeded = _temp3;
 
       if (succeeded === Value.false) {
         return Value.false;
@@ -47584,15 +47648,15 @@
   } // 9.4.2.2 #sec-arraycreate
 
   function ArrayCreate(length, proto) {
-    let _temp3 = IsNonNegativeInteger(length);
+    let _temp4 = IsNonNegativeInteger(length);
 
-    Assert(!(_temp3 instanceof AbruptCompletion), "IsNonNegativeInteger(length)" + ' returned an abrupt completion');
+    Assert(!(_temp4 instanceof AbruptCompletion), "IsNonNegativeInteger(length)" + ' returned an abrupt completion');
 
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
 
-    Assert(_temp3 === Value.true, "X(IsNonNegativeInteger(length)) === Value.true");
+    Assert(_temp4 === Value.true, "X(IsNonNegativeInteger(length)) === Value.true");
 
     if (Object.is(length.numberValue(), -0)) {
       length = new Value(0);
@@ -47606,29 +47670,29 @@
       proto = surroundingAgent.intrinsic('%Array.prototype%');
     }
 
-    let _temp4 = MakeBasicObject(['Prototype', 'Extensible']);
+    let _temp5 = MakeBasicObject(['Prototype', 'Extensible']);
 
-    Assert(!(_temp4 instanceof AbruptCompletion), "MakeBasicObject(['Prototype', 'Extensible'])" + ' returned an abrupt completion');
+    Assert(!(_temp5 instanceof AbruptCompletion), "MakeBasicObject(['Prototype', 'Extensible'])" + ' returned an abrupt completion');
 
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
     }
 
-    const A = _temp4;
+    const A = _temp5;
     A.Prototype = proto;
     A.DefineOwnProperty = ArrayDefineOwnProperty;
 
-    let _temp5 = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+    let _temp6 = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
       Value: length,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false
     }));
 
-    Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+    Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({\n    Value: length,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
 
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
     return A;
   } // 9.4.2.3 #sec-arrayspeciescreate
@@ -47640,62 +47704,42 @@
       length = new Value(+0);
     }
 
-    let _temp6 = IsArray(originalArray);
+    let _temp7 = IsArray(originalArray);
     /* istanbul ignore if */
 
-
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
-    /* istanbul ignore if */
-
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    const isArray = _temp6;
-
-    if (isArray === Value.false) {
-      return ArrayCreate(length);
-    }
-
-    let _temp7 = Get(originalArray, new Value('constructor'));
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
     }
+    /* istanbul ignore if */
+
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
 
-    let C = _temp7;
+    const isArray = _temp7;
+
+    if (isArray === Value.false) {
+      return ArrayCreate(length);
+    }
+
+    let _temp8 = Get(originalArray, new Value('constructor'));
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    let C = _temp8;
 
     if (IsConstructor(C) === Value.true) {
       const thisRealm = surroundingAgent.currentRealmRecord;
 
-      let _temp8 = GetFunctionRealm(C);
-
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
-      }
-
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-
-      const realmC = _temp8;
-
-      if (thisRealm !== realmC) {
-        if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
-          C = Value.undefined;
-        }
-      }
-    }
-
-    if (Type(C) === 'Object') {
-      let _temp9 = Get(C, wellKnownSymbols.species);
+      let _temp9 = GetFunctionRealm(C);
 
       if (_temp9 instanceof AbruptCompletion) {
         return _temp9;
@@ -47705,7 +47749,27 @@
         _temp9 = _temp9.Value;
       }
 
-      C = _temp9;
+      const realmC = _temp9;
+
+      if (thisRealm !== realmC) {
+        if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
+          C = Value.undefined;
+        }
+      }
+    }
+
+    if (Type(C) === 'Object') {
+      let _temp10 = Get(C, wellKnownSymbols.species);
+
+      if (_temp10 instanceof AbruptCompletion) {
+        return _temp10;
+      }
+
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
+      }
+
+      C = _temp10;
 
       if (C === Value.null) {
         C = Value.undefined;
@@ -47731,19 +47795,7 @@
     const newLenDesc = Descriptor({ ...Desc
     });
 
-    let _temp10 = ToUint32(Desc.Value);
-
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
-    }
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const newLen = _temp10.numberValue();
-
-    let _temp11 = ToNumber(Desc.Value);
+    let _temp11 = ToUint32(Desc.Value);
 
     if (_temp11 instanceof AbruptCompletion) {
       return _temp11;
@@ -47753,7 +47805,19 @@
       _temp11 = _temp11.Value;
     }
 
-    const numberLen = _temp11.numberValue();
+    const newLen = _temp11.numberValue();
+
+    let _temp12 = ToNumber(Desc.Value);
+
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    const numberLen = _temp12.numberValue();
 
     if (newLen !== numberLen) {
       return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
@@ -47761,7 +47825,17 @@
 
     newLenDesc.Value = new Value(newLen);
     const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
-    Assert(Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc), "Type(oldLenDesc) !== 'Undefined' && !IsAccessorDescriptor(oldLenDesc)");
+
+    let _temp13 = IsDataDescriptor(oldLenDesc);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "IsDataDescriptor(oldLenDesc)" + ' returned an abrupt completion');
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    Assert(_temp13, "X(IsDataDescriptor(oldLenDesc))");
+    Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
     const oldLen = oldLenDesc.Value.numberValue();
 
     if (newLen >= oldLen) {
@@ -47781,15 +47855,15 @@
       newLenDesc.Writable = Value.true;
     }
 
-    let _temp12 = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+    let _temp14 = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
 
-    Assert(!(_temp12 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc)" + ' returned an abrupt completion');
+    Assert(!(_temp14 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc)" + ' returned an abrupt completion');
 
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
     }
 
-    const succeeded = _temp12;
+    const succeeded = _temp14;
 
     if (succeeded === Value.false) {
       return Value.false;
@@ -47804,46 +47878,47 @@
     keys.sort((a, b) => Number(b.stringValue()) - Number(a.stringValue()));
 
     for (const P of keys) {
-      let _temp13 = A.Delete(P);
+      let _temp15 = A.Delete(P);
 
-      Assert(!(_temp13 instanceof AbruptCompletion), "A.Delete(P)" + ' returned an abrupt completion');
+      Assert(!(_temp15 instanceof AbruptCompletion), "A.Delete(P)" + ' returned an abrupt completion');
 
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
+      if (_temp15 instanceof Completion) {
+        _temp15 = _temp15.Value;
       }
 
-      const deleteSucceeded = _temp13;
+      const deleteSucceeded = _temp15;
 
       if (deleteSucceeded === Value.false) {
-        let _temp14 = ToUint32(P);
+        let _temp16 = ToUint32(P);
 
-        Assert(!(_temp14 instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
+        Assert(!(_temp16 instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
 
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
+        if (_temp16 instanceof Completion) {
+          _temp16 = _temp16.Value;
         }
 
-        newLenDesc.Value = new Value(_temp14.numberValue() + 1);
+        newLenDesc.Value = new Value(_temp16.numberValue() + 1);
 
         if (newWritable === false) {
           newLenDesc.Writable = Value.false;
         }
 
-        let _temp15 = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+        let _temp17 = OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
 
-        Assert(!(_temp15 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc)" + ' returned an abrupt completion');
+        Assert(!(_temp17 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc)" + ' returned an abrupt completion');
 
-        if (_temp15 instanceof Completion) {
-          _temp15 = _temp15.Value;
+        if (_temp17 instanceof Completion) {
+          _temp17 = _temp17.Value;
         }
         return Value.false;
       }
     }
 
     if (newWritable === false) {
-      OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+      const s = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
         Writable: Value.false
       }));
+      Assert(s === Value.true, "s === Value.true");
     }
 
     return Value.true;
@@ -47854,17 +47929,17 @@
       return Value.false;
     }
 
-    let _temp16 = Get(O, wellKnownSymbols.isConcatSpreadable);
+    let _temp18 = Get(O, wellKnownSymbols.isConcatSpreadable);
 
-    if (_temp16 instanceof AbruptCompletion) {
-      return _temp16;
+    if (_temp18 instanceof AbruptCompletion) {
+      return _temp18;
     }
 
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
     }
 
-    const spreadable = _temp16;
+    const spreadable = _temp18;
 
     if (spreadable !== Value.undefined) {
       return ToBoolean(spreadable);
@@ -47887,29 +47962,29 @@
     }
 
     if (comparefn !== Value.undefined) {
-      let _temp17 = Call(comparefn, Value.undefined, [x, y]);
+      let _temp19 = Call(comparefn, Value.undefined, [x, y]);
 
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
+      if (_temp19 instanceof AbruptCompletion) {
+        return _temp19;
       }
 
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp19 instanceof Completion) {
+        _temp19 = _temp19.Value;
       }
 
-      const callRes = _temp17;
+      const callRes = _temp19;
 
-      let _temp18 = ToNumber(callRes);
+      let _temp20 = ToNumber(callRes);
 
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
+      if (_temp20 instanceof AbruptCompletion) {
+        return _temp20;
       }
 
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
       }
 
-      const v = _temp18;
+      const v = _temp20;
 
       if (v.isNaN()) {
         return new Value(+0);
@@ -47918,29 +47993,29 @@
       return v;
     }
 
-    let _temp19 = ToString(x);
+    let _temp21 = ToString(x);
 
-    if (_temp19 instanceof AbruptCompletion) {
-      return _temp19;
+    if (_temp21 instanceof AbruptCompletion) {
+      return _temp21;
     }
 
-    if (_temp19 instanceof Completion) {
-      _temp19 = _temp19.Value;
+    if (_temp21 instanceof Completion) {
+      _temp21 = _temp21.Value;
     }
 
-    const xString = _temp19;
+    const xString = _temp21;
 
-    let _temp20 = ToString(y);
+    let _temp22 = ToString(y);
 
-    if (_temp20 instanceof AbruptCompletion) {
-      return _temp20;
+    if (_temp22 instanceof AbruptCompletion) {
+      return _temp22;
     }
 
-    if (_temp20 instanceof Completion) {
-      _temp20 = _temp20.Value;
+    if (_temp22 instanceof Completion) {
+      _temp22 = _temp22.Value;
     }
 
-    const yString = _temp20;
+    const yString = _temp22;
     const xSmaller = AbstractRelationalComparison(xString, yString);
 
     if (xSmaller === Value.true) {
@@ -53375,6 +53450,7 @@
 
     const resolve = _temp;
     SetFunctionLength(resolve, new Value(1));
+    SetFunctionName(resolve, new Value(''));
     resolve.Promise = promise;
     resolve.AlreadyResolved = alreadyResolved;
     const stepsReject = PromiseRejectFunctions;
@@ -53389,6 +53465,7 @@
 
     const reject = _temp2;
     SetFunctionLength(reject, new Value(1));
+    SetFunctionName(reject, new Value(''));
     reject.Promise = promise;
     reject.AlreadyResolved = alreadyResolved;
     return {
@@ -53520,6 +53597,7 @@
 
     const executor = _temp3;
     SetFunctionLength(executor, new Value(2));
+    SetFunctionName(executor, new Value(''));
     executor.Capability = promiseCapability;
 
     let _temp4 = Construct(C, [executor]);
