@@ -4,7 +4,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
+// import { BoundNames_FormalParameters } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {

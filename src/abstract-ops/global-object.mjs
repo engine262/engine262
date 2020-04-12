@@ -1,5 +1,5 @@
 import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
-import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
+// import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
 import { Type, Value } from '../value.mjs';
 import {
   AbruptCompletion, Completion,
@@ -8,28 +8,6 @@ import {
   X,
 } from '../completion.mjs';
 import { ParseScript } from '../parse.mjs';
-import {
-  BoundNames_BindingIdentifier,
-  BoundNames_Declaration,
-  BoundNames_ForBinding,
-  BoundNames_FunctionDeclaration,
-  BoundNames_VariableDeclaration,
-  IsConstantDeclaration,
-  IsStrict,
-  LexicallyScopedDeclarations_ScriptBody,
-  VarDeclaredNames_ScriptBody,
-  VarScopedDeclarations_ScriptBody,
-} from '../static-semantics/all.mjs';
-import {
-  isAsyncFunctionDeclaration,
-  isAsyncGeneratorDeclaration,
-  isBindingIdentifier,
-  isForBinding,
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
-  isVariableDeclaration,
-} from '../ast.mjs';
-import { Evaluate_Script } from '../evaluator.mjs';
 import {
   NewDeclarativeEnvironment,
   // FunctionEnvironmentRecord,

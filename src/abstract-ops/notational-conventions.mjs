@@ -43,13 +43,5 @@ export function sourceTextMatchedBy(node) {
 //    AsyncGenerator constructors is strict mode code if the last argument is a String that when processed is a
 //    FunctionBody that begins with a Directive Prologue that contains a Use Strict Directive.
 export function isStrictModeCode(node) {
-  if (node.strict === true) {
-    return true;
-  }
-
-  if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
-    return isStrictModeCode(node.body);
-  }
-
-  return false;
+  return node.strict;
 }

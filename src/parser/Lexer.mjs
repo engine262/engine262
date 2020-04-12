@@ -113,10 +113,15 @@ export class Lexer {
     this.peekedToken = null;
     this.currentToken = null;
     this.position = 0;
+    this.index = 0;
     this.line = 1;
-    this.column = 1;
-    this.value = undefined;
+    this.columnOffset = 0;
+    this.scannedValue = undefined;
     this.hasLineTerminatorBeforeNextFlag = false;
+  }
+
+  get column() {
+    return this.position - this.columnOffset;
   }
 
   advance() {
@@ -125,7 +130,7 @@ export class Lexer {
       type,
       name: TokenNames[type],
       value: type === Token.IDENTIFIER || type === Token.NUMBER || type === Token.STRING
-        ? this.value
+        ? this.scannedValue
         : RawTokens[type][1],
     };
   }
@@ -163,12 +168,8 @@ export class Lexer {
   expect(token) {
     const next = this.next();
     if (next.type !== token) {
-      this.error(`Unexpected token: ${next.name}`);
+      this.unexpected(next);
     }
-  }
-
-  current() {
-    return this.currentToken;
   }
 
   hasLineTerminatorBeforeNext() {
@@ -189,10 +190,14 @@ export class Lexer {
           if (this.source[this.position + 1] === '\n') {
             this.position += 1;
           }
+          this.line += 1;
+          this.columnOffset = this.position;
           this.hasLineTerminatorBeforeNextFlag = true;
           break;
         case '\n':
           this.position += 1;
+          this.line += 1;
+          this.columnOffset = this.position;
           this.hasLineTerminatorBeforeNextFlag = true;
           break;
         case '/':
@@ -223,6 +228,8 @@ export class Lexer {
       const c = this.source[this.position];
       this.position += 1;
       if (isNewline(c)) {
+        this.line += 1;
+        this.columnOffset = this.position;
         this.hasLineTerminatorBeforeNextFlag = true;
         break;
       }
@@ -230,16 +237,18 @@ export class Lexer {
   }
 
   skipBlockComment() {
-    this.position += 2;
     const end = this.source.indexOf('*/', this.position);
     if (end === -1) {
-      this.error('Unterminated comment');
+      this.report('UnterminatedComment');
     }
+    this.position += 2;
     {
       const re = /\r\n?|[\n\u2028\u2029]/g;
       re.lastIndex = this.position;
       const match = re.exec(this.source);
       if (match.index < end) {
+        this.line += 1;
+        this.columnOffset = this.position;
         this.hasLineTerminatorBeforeNextFlag = true;
       }
     }
@@ -251,9 +260,9 @@ export class Lexer {
     if (this.position >= this.source.length) {
       return Token.EOS;
     }
+    this.index = this.position;
     const c = this.source[this.position];
     this.position += 1;
-    this.column += 1;
     const c1 = this.source[this.position];
     if (c.charCodeAt(0) <= 127) {
       const single = SingleCharTokens[c];
@@ -464,7 +473,7 @@ export class Lexer {
           return this.scanIdentifierOrKeyword();
 
         default:
-          return this.error(`Unexpected token: ${c}`);
+          this.unexpected(c);
       }
     }
 
@@ -472,7 +481,7 @@ export class Lexer {
       return this.scanIdentifierOrKeyword();
     }
 
-    return this.error('Unexpected token');
+    return this.unexpected(c);
   }
 
   scanNumber(decimal) {
@@ -480,6 +489,7 @@ export class Lexer {
     let buffer = this.source[this.position - 1];
     let base = 10;
     let first = true;
+    let bigint = false;
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       if (first) {
@@ -498,6 +508,10 @@ export class Lexer {
           continue;
         }
       }
+      if (!afterDecimal && c === 'n') {
+        this.position += 1;
+        bigint = true;
+      }
       const single = SingleCharTokens[c];
       if (base === 10 && single === Token.PERIOD) {
         if (afterDecimal) {
@@ -511,9 +525,9 @@ export class Lexer {
       }
       if (single === Token.NUMBER) {
         if (base === 2 && !isBinaryDigit(c)) {
-          this.error('Invalid binary literal');
+          this.report('InvalidBinaryLiteral', this.position);
         } else if (base === 8 && !isOctalDigit(c)) {
-          this.error('Invalid octal literal');
+          this.report('InvalidOctalLiteral', this.position);
         }
         this.position += 1;
         buffer += c;
@@ -526,9 +540,16 @@ export class Lexer {
       }
       break;
     }
-    this.value = base === 10
+    if (bigint) {
+      this.scannedValue = BigInt(buffer);
+      return Token.BIGINT;
+    }
+    this.scannedValue = base === 10
       ? Number.parseFloat(buffer, base)
       : Number.parseInt(buffer, base);
+    if (this.buffer !== '') {
+      this.scannedValue *= (10 ** Number.parseInt(buffer, 10));
+    }
     return Token.NUMBER;
   }
 
@@ -536,23 +557,24 @@ export class Lexer {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
-        this.error('Unterminated string constant');
+        this.report('UnterminatedString');
       }
       const c = this.source[this.position];
-      this.position += 1;
       if (c === char) {
+        this.position += 1;
         break;
       }
       if (isNewline(c)) {
-        this.error('Unterminated string constant');
+        this.report('UnterminatedString');
       }
+      this.position += 1;
       if (c === '\\') {
         buffer += this.scanEscapeSequence();
       } else {
         buffer += c;
       }
     }
-    this.value = buffer;
+    this.scannedValue = buffer;
     return Token.STRING;
   }
 
@@ -583,7 +605,7 @@ export class Lexer {
       const end = this.source.indexOf('}', this.position);
       const code = this.scanHex(end - this.position);
       if (code > 0x10FFFF) {
-        this.error('Invalid code point');
+        this.report('InvalidCodePoint');
       }
       return code;
     }
@@ -613,7 +635,7 @@ export class Lexer {
     if (isKeywordRaw(buffer)) {
       return KeywordLookup[buffer];
     } else {
-      this.value = buffer;
+      this.scannedValue = buffer;
       return Token.IDENTIFIER;
     }
   }

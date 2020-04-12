@@ -5,10 +5,7 @@ import { Value } from '../value.mjs';
 
 // #sec-binary-logical-operators-runtime-semantics-evaluation
 // CoalesceExpression : CoalesceExpressionHead `??` BitwiseORExpression
-export function* Evaluate_CoalesceExpression({
-  left: CoalesceExpressionHead,
-  right: BitwiseORExpression,
-}) {
+export function* Evaluate_CoalesceExpression({ CoalesceExpressionHead, BitwiseORExpression }) {
   // 1. Let lref be the result of evaluating |CoalesceExpressionHead|.
   const lref = yield* Evaluate(CoalesceExpressionHead);
   // 2. Let lval be ? GetValue(lref).

@@ -2,17 +2,28 @@ import { Token, isKeyword } from './tokens.mjs';
 import { BaseParser } from './BaseParser.mjs';
 
 export class IdentifierParser extends BaseParser {
-  parseIdentifier(allowKeywords) {
+  parseIdentifierInternal(allowKeywords) {
     const node = this.startNode();
     const token = this.next();
     if (allowKeywords && isKeyword(token.type)) {
+      if ((token.value === 'yield' || token.value === 'await') && this.isStrictMode()) {
+        this.unexpected(token);
+      }
       node.name = token.value;
     } else if (token.type !== Token.IDENTIFIER) {
-      this.error(`Unexpected token: ${token.name}`);
+      this.unexpected(token);
     } else {
       node.name = token.value;
     }
     return this.finishNode(node, 'Identifier');
+  }
+
+  parseIdentifier() {
+    return this.parseIdentifierInternal(false);
+  }
+
+  parseIdentifierName() {
+    return this.parseIdentifierInternal(true);
   }
 
   parseBindingIdentifier() {
@@ -23,14 +34,24 @@ export class IdentifierParser extends BaseParser {
         node.name = token.value;
         break;
       case Token.YIELD:
+        if (this.isStrictMode()) {
+          this.unexpected(token);
+        }
         node.name = 'yield';
         break;
       case Token.AWAIT:
+        if (this.isStrictMode()) {
+          this.unexpected(token);
+        }
         node.name = 'await';
         break;
       default:
-        this.error(`Expected BindingIdentifier, got ${token.name}`);
+        this.unexpected(token);
     }
     return this.finishNode(node, 'Identifier');
+  }
+
+  parseIdentifierReference() {
+    return this.parseBindingIdentifier();
   }
 }

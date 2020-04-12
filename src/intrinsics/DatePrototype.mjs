@@ -31,7 +31,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { StringPad } from '../runtime-semantics/all.mjs';
+// import { StringPad } from '../runtime-semantics/all.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 

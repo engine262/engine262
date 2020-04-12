@@ -1,5 +1,6 @@
 import { Token, isAutomaticSemicolon } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
+import { FunctionKind } from './FunctionParser.mjs';
 
 export class StatementParser extends ExpressionParser {
   semicolon() {
@@ -11,37 +12,32 @@ export class StatementParser extends ExpressionParser {
     if (this.hasLineTerminatorBeforeNext() || isAutomaticSemicolon(token.type)) {
       return;
     }
-    if (this.current() === Token.AWAIT) {
-      this.error('Unexpected await outside async function');
-    }
-    this.error(`Unexpected token: ${token.name}`);
+    this.unexpected();
   }
 
   // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
-  parseStatementList(endToken, directives = undefined) {
-    const list = [];
-    let parsedNonDirective = false;
-    const savedStrict = this.state.strict;
+  parseStatementList(endToken) {
+    const statementList = [];
+    const directives = [];
+    let pastDirectives = false;
+
     while (!this.eat(endToken)) {
-      const statement = this.parseStatementListItem();
-      list.push(statement);
-      if (!parsedNonDirective
-          && statement.type === 'ExpressionStatement'
-          && statement.Expression.type === 'StringLiteral') {
-        if (statement.Expression.value === 'use strict') {
+      const stmt = this.parseStatementListItem();
+      statementList.push(stmt);
+      if (!pastDirectives
+          && stmt.type === 'ExpressionStatement'
+          && stmt.Expression.type === 'StringLiteral') {
+        directives.push(stmt.Expression.value);
+        if (stmt.Expression.value === 'use strict') {
           this.state.strict = true;
         }
-        if (directives !== undefined) {
-          directives.push(statement.Expression.value);
-        }
       } else {
-        parsedNonDirective = true;
+        pastDirectives = true;
       }
     }
-    this.state.strict = savedStrict;
-    return list;
+    return statementList;
   }
 
   // StatementListItem :
@@ -77,9 +73,9 @@ export class StatementParser extends ExpressionParser {
     const token = this.peek();
     switch (token.type) {
       case Token.FUNCTION:
-        return this.parseFunctionDeclaration(StatementParser.FunctionKind.NORMAL);
+        return this.parseFunctionDeclaration(FunctionKind.NORMAL);
       case Token.ASYNC:
-        return this.parseFunctionDeclaration(StatementParser.FunctionKind.ASYNC);
+        return this.parseFunctionDeclaration(FunctionKind.ASYNC);
       default:
         throw new Error('unreachable');
     }
@@ -89,41 +85,44 @@ export class StatementParser extends ExpressionParser {
   //   `class` BindingIdentifier ClassTail
   //   [+Default] `class` ClassTail
   parseClassDeclaration() {
-    this.expect(Token.CLASS);
     return this.parseClass(false);
   }
 
   // LexicalDeclaration : LetOrConst BindingList `;`
   parseLexicalDeclaration() {
-    const node = this.parseLexical(true);
-    this.semicolon();
-    return node;
-  }
-
-  parseLexical() {
     const node = this.startNode();
     const next = this.next();
     if (next.type !== Token.LET && next.type !== Token.CONST) {
-      this.error(`Unexpected token: ${next.name}`);
+      this.unexpected(next);
     }
-    node.kind = next.type === Token.LET ? 'let' : 'const';
-    node.declarations = [];
+    node.LetOrConst = next.type === Token.LET ? 'let' : 'const';
+    node.BindingList = this.parseBindingList();
+    this.semicolon();
+    return this.finishNode(node, 'LexicalDeclaration');
+  }
+
+  // BindingList :
+  //   LexicalBinding
+  //   BindingList `,` LexicalBinding
+  //
+  // LexicalBinding :
+  //   BindingIdentifier Initializer?
+  //   BindingPattern Initializer
+  parseBindingList() {
+    const bindingList = [];
     do {
-      const declarator = this.startNode();
-      declarator.id = this.parseBindingIdentifier();
-      if (declarator.id.name === 'let') {
-        this.error('`let` is disallowed as a lexically bound name');
-      }
-      if (this.eat(Token.ASSIGN)) {
-        declarator.init = this.parseAssignmentExpression();
-      } else if (next.type === Token.CONST) {
-        this.error('`const` declarations must have Initializers');
-      } else {
-        declarator.init = null;
-      }
-      node.declarations.push(this.finishNode(declarator, 'VariableDeclarator'));
+      const node = this.startNode();
+      node.BindingIdentifier = this.parseBindingIdentifier();
+      node.Initializer = this.test(Token.ASSIGN) ? this.parseInitializer() : null;
+      bindingList.push(this.finishNode(node, 'LexicalBinding'));
     } while (this.eat(Token.COMMA));
-    return this.finishNode(node, 'VariableDeclaration');
+    return bindingList;
+  }
+
+  // Initializer : `=` AssignmentExpression
+  parseInitializer() {
+    this.expect(Token.ASSIGN);
+    return this.parseAssignmentExpression();
   }
 
   // FunctionDeclaration
@@ -159,11 +158,7 @@ export class StatementParser extends ExpressionParser {
       case Token.BREAK:
         return this.parseBreakContinueStatement();
       case Token.RETURN:
-        if (this.isReturnScope()) { // [+Return]
-          return this.parseReturnStatement();
-        } else {
-          return this.error('Illegal return outside function');
-        }
+        return this.parseReturnStatement();
       case Token.WITH:
         return this.parseWithStatement();
       // LabelledStatement
@@ -190,27 +185,29 @@ export class StatementParser extends ExpressionParser {
 
   // VariableStatement : `var` VariableDeclarationList `;`
   parseVariableStatement() {
-    const node = this.parseVariable(true);
-    this.semicolon();
-    return node;
-  }
-
-  parseVariable() {
     const node = this.startNode();
     this.expect(Token.VAR);
-    node.declarations = [];
-    node.kind = 'var';
+    node.VariableDeclarationList = this.parseVariableDeclarationList();
+    this.semicolon();
+    return this.finishNode(node, 'VariableStatement');
+  }
+
+  // VariableDeclarationList :
+  //   VariableDeclaration
+  //   VariableDeclarationList `,` VariableDeclaration
+  //
+  // VariableDeclaration :
+  //   BindingIdentifier Initializer?
+  //   BindingPattern Initializer
+  parseVariableDeclarationList() {
+    const declarationList = [];
     do {
-      const declarator = this.startNode();
-      declarator.id = this.parseBindingIdentifier();
-      if (this.eat(Token.ASSIGN)) {
-        declarator.init = this.parseAssignmentExpression();
-      } else {
-        declarator.init = null;
-      }
-      node.declarations.push(this.finishNode(declarator, 'VariableDeclarator'));
+      const node = this.startNode();
+      node.BindingIdentifier = this.parseBindingIdentifier();
+      node.Initializer = this.test(Token.ASSIGN) ? this.parseInitializer() : null;
+      declarationList.push(this.finishNode(node, 'VariableDeclaration'));
     } while (this.eat(Token.COMMA));
-    return this.finishNode(node, 'VariableDeclaration');
+    return declarationList;
   }
 
   // IfStatement :
@@ -290,7 +287,7 @@ export class StatementParser extends ExpressionParser {
       node.LeftHandSideExpression = this.parseLeftHandSideExpression();
       const maybeOf = this.parseIdentifier();
       if (maybeOf.name !== 'of') {
-        this.error(`Unexpected token: ${maybeOf.name}`);
+        this.unexpected(maybeOf);
       }
       node.AssignmentExpression = this.parseAssignmentExpression();
       this.expect(Token.RPAREN);
@@ -324,14 +321,10 @@ export class StatementParser extends ExpressionParser {
     if (!isBreak) {
       this.expect(Token.CONTINUE);
     }
-    if (this.eat(Token.SEMICOLON) || this.semicolon()) {
+    if (this.eat(Token.SEMICOLON) || this.hasLineTerminatorBeforeNext()) {
       node.LabelIdentifier = null;
     } else {
-      const peek = this.peek();
-      if (peek.type !== Token.IDENTIFIER) {
-        this.error(`Unexpected token: ${peek.name}`);
-      }
-      node.LabelIdentifier = this.parseIdentifier(false);
+      node.LabelIdentifier = this.parseLabelIdentifier();
       this.semicolon();
     }
     return this.finishNode(node, isBreak ? 'BreakStatement' : 'ContinueStatement');
@@ -341,10 +334,16 @@ export class StatementParser extends ExpressionParser {
   //   `return` `;`
   //   `return` [no LineTerminator here] Expression `;`
   parseReturnStatement() {
+    if (!this.isReturnScope()) {
+      this.unexpected();
+    }
     const node = this.startNode();
     this.expect(Token.RETURN);
     if (this.eat(Token.SEMICOLON)) {
       node.Expression = null;
+    } else if (this.hasLineTerminatorBeforeNext()) {
+      node.Expression = null;
+      this.semicolon();
     } else {
       node.Expression = this.parseExpression();
       this.semicolon();
@@ -358,7 +357,7 @@ export class StatementParser extends ExpressionParser {
     const node = this.startNode();
     this.expect(Token.THROW);
     if (this.hasLineTerminatorBeforeNext()) {
-      this.error('Unexpected newline after `throw`');
+      this.report('NewlineAfterThrow');
     }
     node.Expression = this.parseExpression();
     this.semicolon();
@@ -403,7 +402,7 @@ export class StatementParser extends ExpressionParser {
       node.Finally = null;
     }
     if (!node.Catch && !node.Finally) {
-      this.error('Expected a catch or finally clause');
+      this.report('TryMissingCatchOrFinally');
     }
     return this.finishNode(node, 'TryStatement');
   }

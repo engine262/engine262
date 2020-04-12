@@ -5,7 +5,7 @@ import {
   EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
+// import { Evaluate_FunctionBody } from '../runtime-semantics/all.mjs';
 import { Value } from '../value.mjs';
 import { resume } from '../helpers.mjs';
 import {

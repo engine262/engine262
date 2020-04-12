@@ -2,39 +2,46 @@ import { Parser } from './parser/Parser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
+/*
 import {
   ModuleRequests_ModuleItemList,
   ImportEntries_ModuleItemList,
   ExportEntries_ModuleItemList,
   ImportedLocalNames,
 } from './static-semantics/all.mjs';
+*/
 import { ValueSet } from './helpers.mjs';
 
 function forwardError(fn) {
   try {
     return fn();
   } catch (e) {
-    console.error('forwardError', e);
     if (e.name === 'SyntaxError') {
-      return [surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value];
+      const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
+      return [v];
     } else {
       throw e;
     }
   }
 }
 
-export const emptyConstructorNode = {};
-export const forwardingConstructorNode = {};
+export { Parser };
 
-export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
-  const body = forwardError(() => Parser.parseScript(sourceText, {
-    strict,
-  }));
+function parseMethodDefinition(sourceText) {
+  const parser = new Parser(sourceText);
+  return parser.scope({ super: true }, () => parser.parseMethodDefinition());
+}
+export const emptyConstructorNode = parseMethodDefinition('constructor() {}');
+export const forwardingConstructorNode = parseMethodDefinition('constructor(...args) { super(...args); }');
+
+export function ParseScript(sourceText, realm, hostDefined = {}) {
+  const body = forwardError(() => {
+    const parser = new Parser(sourceText);
+    return parser.parseScript();
+  });
   if (Array.isArray(body)) {
     return body;
   }
-
-  console.log(body);
 
   return {
     Realm: realm,
@@ -50,7 +57,10 @@ export function ParseScript(sourceText, realm, hostDefined = {}, strict) {
 
 export function ParseModule(sourceText, realm, hostDefined = {}) {
   // Assert: sourceText is an ECMAScript source text (see clause 10).
-  const body = forwardError(() => Parser.parseModule(sourceText));
+  const body = forwardError(() => {
+    const parser = new Parser(sourceText);
+    return parser.parseModule();
+  });
   if (Array.isArray(body)) {
     return body;
   }

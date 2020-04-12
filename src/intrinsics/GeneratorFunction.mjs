@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
+// import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function GeneratorFunctionConstructor(args, { NewTarget }) {

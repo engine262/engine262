@@ -2,7 +2,7 @@ import {
   Token, TokenPrecedence, isPropertyOrCall, isMember,
   isKeywordRaw, isReservedWord, isReservedWordStrict,
 } from './tokens.mjs';
-import { FunctionParser } from './FunctionParser.mjs';
+import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
 
 export class ExpressionParser extends FunctionParser {
   // Expression :
@@ -33,7 +33,7 @@ export class ExpressionParser extends FunctionParser {
   //   *= /= %= += -= <<= >>= >>>= &= ^= |= **=
   parseAssignmentExpression() {
     const token = this.peek();
-    if (this.isYieldScope && token.type === Token.YIELD) {
+    if (token.type === Token.YIELD && this.isYieldScope()) {
       return this.parseYieldExpression();
     }
     const node = this.startNode();
@@ -64,18 +64,50 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
+  // YieldExpression :
+  //   `yield`
+  //   `yield` [no LineTerminator here] AssignmentExpression
+  //   `yield` [no LineTerminator here] `*` AssignmentExpression
+  parseYieldExpression() {
+    const node = this.startNode();
+    this.expect(Token.YIELD);
+    if (this.hasLineTerminatorBeforeNext()) {
+      node.isGenerator = false;
+      node.AssignmentExpression = null;
+    } else {
+      node.isGenerator = this.eat(Token.MUL);
+      if (node.isGenerator) {
+        node.AssignmentExpression = this.parseAssignmentExpression();
+      } else {
+        const peek = this.peek();
+        switch (peek.type) {
+          case Token.EOS:
+          case Token.SEMICOLON:
+          case Token.RBRACE:
+          case Token.RBRACK:
+          case Token.RPAREN:
+          case Token.COLON:
+          case Token.COMMA:
+          case Token.IN:
+            node.AssignmentExpression = null;
+            break;
+          default:
+            node.AssignmentExpression = this.parseAssignmentExpression();
+        }
+      }
+    }
+    return this.finishNode(node, 'YieldExpression');
+  }
+
   checkAssignmentTarget(node) {
     switch (node.type) {
       case 'Identifier':
-        if (this.state.strict) {
-          if (isKeywordRaw(node.name)) {
-            this.error('Invalid assignment to keyword in strict mode');
-          }
-          if (isReservedWordStrict(node.name)) {
-            this.error('Invalid assignment to reserved word in strict mode');
+        if (this.isStrictMode()) {
+          if (isKeywordRaw(node.name) || isReservedWordStrict(node.name)) {
+            this.report('AssignToReserved');
           }
         } else if (isReservedWord(node.name)) {
-          this.error('Invalid assignment to reserved word');
+          this.report('AssignToReserved');
         }
         break;
       case 'MemberExpression':
@@ -84,7 +116,7 @@ export class ExpressionParser extends FunctionParser {
         this.checkAssignmentTarget(node.expression);
         break;
       default:
-        this.error('Invalid left-hand side in assignment');
+        this.report('InvalidAssignmentTarget');
     }
   }
 
@@ -144,7 +176,7 @@ export class ExpressionParser extends FunctionParser {
   //   [+Await] AwaitExpression
   parseUnaryExpression() {
     const peek = this.peek();
-    if (peek.type === Token.AWAIT && this.isAwaitScope) {
+    if (peek.type === Token.AWAIT && this.isAwaitScope()) {
       return this.parseAwaitExpression();
     }
     const node = this.startNode();
@@ -250,7 +282,7 @@ export class ExpressionParser extends FunctionParser {
           case Token.PERIOD:
             this.next();
             node.MemberExpression = result;
-            node.IdentifierName = this.parseIdentifier(true);
+            node.IdentifierName = this.parseIdentifierName();
             result = this.finishNode(node, 'MemberExpression');
             break;
           case Token.LPAREN:
@@ -280,30 +312,22 @@ export class ExpressionParser extends FunctionParser {
     const token = this.peek();
     switch (token.type) {
       case Token.SUPER:
-        this.next();
-        if (!this.isSuperScope) {
-          this.error('Unexpected token: SUPER');
+        if (!this.isSuperScope()) {
+          this.unexpected();
         }
+        this.next();
         return this.finishNode(node, 'Super');
       case Token.THIS:
         this.next();
         return this.finishNode(node, 'ThisExpression');
       case Token.IDENTIFIER:
-        this.next();
-        node.name = token.value;
-        return this.finishNode(node, 'Identifier');
       case Token.YIELD:
-        this.next();
-        node.name = 'yield';
-        return this.finishNode(node, 'Identifier');
       case Token.AWAIT:
-        this.next();
-        node.name = 'await';
-        return this.finishNode(node, 'Identifier');
+        return this.parseIdentifierReference();
       case Token.NUMBER:
+      case Token.BIGINT:
         this.next();
         node.value = token.value;
-        node.raw = token.value.toString();
         return this.finishNode(node, 'NumericLiteral');
       case Token.STRING:
         this.next();
@@ -325,17 +349,17 @@ export class ExpressionParser extends FunctionParser {
       case Token.LBRACE:
         return this.parseObjectLiteral();
       case Token.FUNCTION:
-        return this.parseFunctionExpression(ExpressionParser.FunctionKind.NORMAL);
+        return this.parseFunctionExpression(FunctionKind.NORMAL);
       case Token.CLASS:
         return this.parseClassExpression();
       case Token.ASYNC:
-        return this.parseFunctionExpression(ExpressionParser.FunctionKind.ASYNC);
+        return this.parseFunctionExpression(FunctionKind.ASYNC);
       case Token.TEMPLATE_SPAN:
         return this.parseTemplateLiteral();
       case Token.LPAREN:
         return this.parseParenthesizedExpressionAndArrowParameterList();
       default:
-        return this.error(`Unexpected token: ${token.name}`);
+        return this.unexpected(token);
     }
   }
 
@@ -378,7 +402,7 @@ export class ExpressionParser extends FunctionParser {
       if (this.eat(Token.RBRACE)) {
         break;
       }
-      node.PropertyDefinitionList.push(this.parseProperty());
+      node.PropertyDefinitionList.push(this.parsePropertyDefinition());
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -387,55 +411,8 @@ export class ExpressionParser extends FunctionParser {
     return this.finishNode(node, 'ObjectLiteral');
   }
 
-  parseProperty() {
-    const node = this.startNode();
-    node.method = false;
-    node.shorthand = false;
-    if (this.eat(Token.ELLIPSIS)) {
-      node.argument = this.parseAssignmentExpression();
-      return this.finishNode(node, 'SpreadElement');
-    }
-    const isGenerator = this.eat(Token.MUL);
-    let isAsync = false;
-    let id;
-    if (!isGenerator && this.eat(Token.ASYNC)) {
-      const peek = this.peek();
-      if (peek.type === Token.LPAREN || peek.type === Token.COLON) {
-        id = this.finishNode({ name: 'async' }, 'Identifier');
-      } else {
-        isAsync = true;
-      }
-    }
-    if (!id) {
-      if (this.eat(Token.LBRACK)) {
-        node.computed = true;
-        node.key = this.parseAssignmentExpression();
-        this.expect(Token.RBRACK);
-      } else {
-        node.computed = false;
-        const peek = this.peek();
-        if (peek.type === Token.STRING || peek.type === Token.NUMBER) {
-          node.key = this.parsePrimaryExpression();
-        } else {
-          node.key = this.parseIdentifier(true);
-        }
-      }
-    }
-    if (this.eat(Token.COLON)) {
-      if (isGenerator || isAsync) {
-        this.error('Unexpected token: COLON');
-      }
-      node.value = this.parseAssignmentExpression();
-      node.kind = 'init';
-      return this.finishNode(node, 'Property');
-    }
-    if (!isGenerator && !isAsync && node.key.type === 'Identifier') {
-      node.shorthand = true;
-      node.value = node.key;
-      node.kind = 'init';
-      return this.finishNode(node, 'Property');
-    }
-    throw new Error();
+  parsePropertyDefinition() {
+    return this.parseBracketedDefinition('property');
   }
 
   parseFunctionExpression(kind) {
@@ -469,100 +446,75 @@ export class ExpressionParser extends FunctionParser {
     return params;
   }
 
+  // #sec-class-definitions
+  // ClassDeclaration :
+  //   `class` BindingIdentifier ClassTail
+  //   [+Default] `class` ClassTail
+  //
+  // ClassExpression :
+  //   `class` BindingIdentifier? ClassTail
   parseClass(isExpression) {
     const node = this.startNode();
+
     this.expect(Token.CLASS);
+
     const savedStrict = this.state.strict;
     this.state.strict = true;
-    const savedScopeBits = this.state.scopeBits;
-    this.state.scopeBits |= ExpressionParser.ScopeBits.SUPER;
+
     if (this.test(Token.IDENTIFIER)) {
-      node.id = this.parseBindingIdentifier();
+      node.BindingIdentifier = this.parseBindingIdentifier();
     } else if (isExpression === false) {
-      this.error('Expected class name');
+      this.unexpected();
     } else {
-      node.id = null;
+      node.BindingIdentifier = null;
     }
-    if (this.eat(Token.EXTENDS)) {
-      node.superClass = this.parseLeftHandSideExpression();
-    } else {
-      node.superClass = null;
-    }
-    this.expect(Token.LBRACE);
-    node.body = this.parseClassBody();
+    node.ClassTail = this.parseClassTail();
+
     this.state.strict = savedStrict;
-    this.state.scopeBits = savedScopeBits;
+
     return this.finishNode(node, isExpression ? 'ClassExpression' : 'ClassDeclaration');
   }
 
-  parseClassBody() {
+  // ClassTail : ClassHeritage? `{` ClassBody? `}`
+  // ClassHeritage : `extends` LeftHandSideExpression
+  // ClassBody : ClassElementList
+  parseClassTail() {
     const node = this.startNode();
-    node.body = [];
-    let sawConstructor = false;
-    while (!this.eat(Token.RBRACE)) {
-      const m = this.parseMethodDefinition();
-      if (m.kind === 'constructor') {
-        if (sawConstructor) {
-          this.error('Duplicate constructor in class definition');
-        }
-        sawConstructor = true;
-      }
-      node.body.push(m);
+
+    if (this.eat(Token.EXTENDS)) {
+      node.ClassHeritage = this.parseLeftHandSideExpression();
+    } else {
+      node.ClassHeritage = null;
     }
-    return this.finishNode(node, 'ClassBody');
+
+    this.scope({ super: node.ClassHeritage !== null }, () => {
+      this.expect(Token.LBRACE);
+      if (this.eat(Token.RBRACE)) {
+        node.ClassBody = null;
+      } else {
+        node.ClassBody = [];
+        while (!this.eat(Token.RBRACE)) {
+          const m = this.parseClassElement();
+          node.ClassBody.push(m);
+        }
+      }
+    });
+
+    return this.finishNode(node, 'ClassTail');
+  }
+
+  // ClassElement :
+  //   `static` MethodDefinition
+  //   MethodDefinition
+  parseClassElement() {
+    const node = this.startNode();
+    node.static = this.eat(Token.STATIC);
+    node.MethodDefinition = this.parseMethodDefinition();
+    return this.finishNode(node, 'ClassElement');
   }
 
   parseMethodDefinition() {
-    const method = this.startNode();
-    const node = this.startNode();
-    method.static = this.eat(Token.STATIC);
-    method.kind = 'method';
-    const peek = this.peek();
-    node.async = false;
-    switch (peek.type) {
-      case Token.GET:
-        this.next();
-        method.kind = 'get';
-        break;
-      case Token.SET:
-        this.next();
-        method.kind = 'set';
-        break;
-      case Token.ASYNC:
-        this.next();
-        node.async = true;
-        break;
-      default:
-        break;
-    }
-    if (method.kind === 'method') {
-      node.generator = this.eat(Token.MUL);
-    } else {
-      node.generator = false;
-    }
-    if (this.eat(Token.LBRACK)) {
-      method.computed = true;
-      method.key = this.parseExpression();
-      this.expect(Token.RBRACK);
-    } else if (this.test(Token.STRING)) {
-      method.computed = false;
-      method.key = this.parseExpression();
-      if (method.key.value === 'constructor') {
-        method.kind = 'constructor';
-      }
-    } else {
-      method.computed = false;
-      method.key = this.parseIdentifier(true);
-      if (method.key.name === 'constructor') {
-        method.kind = 'constructor';
-      }
-    }
-    node.params = this.parseFormalParameters();
-    node.body = this.parseFunctionBody(node.async, node.generatr);
-    node.id = null;
-    node.expression = false;
-    method.value = this.finishNode(node, 'FunctionExpression');
-    return this.finishNode(method, 'MethodDefinition');
+    return this.parseBracketedDefinition('method');
   }
 
   parseClassExpression() {
@@ -572,7 +524,7 @@ export class ExpressionParser extends FunctionParser {
   parseTemplateLiteral() {
     const next = this.next();
     if (next.type !== Token.TEMPLATE_SPAN) {
-      this.error(`Unexpected token: ${next.name}`);
+      this.unexpected(next);
     }
     return next.value;
   }
@@ -592,5 +544,74 @@ export class ExpressionParser extends FunctionParser {
     // FIXME: fail on `...Binding`
     node.expression = expression;
     return this.finishNode(node, 'ParenthesizedExpression');
+  }
+
+  // PropertyDefinition :
+  //   IdentifierReference
+  //   CoverInitializedName
+  //   PropertyName `:` AssignmentExpression
+  //   MethodDefinition
+  //   `...` AssignmentExpression
+  // MethodDefinition :
+  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+  //   GeneratorMethod
+  //   AsyncMethod
+  //   AsyncGeneratorMethod
+  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
+  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+  // GeneratorMethod :
+  //   `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+  // AsyncMethod :
+  //   `async` [no LineTerminator here] PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+  // AsyncGeneratorMethod :
+  //   `async` [no LineTerminator here] `*` Propertyname `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+  parseBracketedDefinition(type) {
+    const node = this.startNode();
+
+    if (type === 'property' && this.eat(Token.ELLIPSIS)) {
+      node.PropertyName = null;
+      node.AssignmentExpression = this.parseAssignmentExpression();
+      return this.finishNode(node, 'PropertyDefinition');
+    }
+
+    const leadingIdentifier = this.parsePropertyName();
+    const isAsync = leadingIdentifier.name === 'async';
+    const isGetter = leadingIdentifier.name === 'get';
+    const isSetter = leadingIdentifier.name === 'set';
+    const isGenerator = !isGetter && !isSetter && this.eat(Token.MUL);
+    const isMethod = isAsync || isGetter || isSetter || isGenerator;
+
+    if (!isGenerator && type === 'property') {
+      if (this.eat(Token.COLON)) {
+        node.PropertyName = leadingIdentifier;
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        return this.finishNode(node, 'PropertyDefinition');
+      }
+      if (this.test(Token.ASSIGN)) {
+        node.IdentifierReference = leadingIdentifier;
+        node.Initializer = this.parseInitialized();
+        return this.finishNode(node, 'CoverInitializedName');
+      }
+    }
+
+    node.PropertyName = isMethod ? this.parsePropertyName() : leadingIdentifier;
+
+    if (isGetter) {
+      this.expect(Token.LPAREN);
+      this.expect(Token.RPAREN);
+      node.PropertySetParameterList = null;
+      node.UniqueFormalParameters = null;
+    } else if (isSetter) {
+      node.PropertySetParameterList = this.parseFormalParameters();
+      node.UniqueFormalParameters = null;
+    } else {
+      node.PropertySetParameterList = null;
+      node.UniqueFormalParameters = this.parseUniqueFormalParameters();
+    }
+
+    node.FunctionBody = this.parseFunctionBody(isAsync, isGenerator);
+
+    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}`;
+    return this.finishNode(node, name);
   }
 }

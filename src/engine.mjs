@@ -19,7 +19,7 @@ import {
 } from './abstract-ops/all.mjs';
 import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
-import { Evaluate_Script } from './evaluator.mjs';
+// import { Evaluate_Script } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
 import { CallSite } from './helpers.mjs';
 import * as messages from './messages.mjs';

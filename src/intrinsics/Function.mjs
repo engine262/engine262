@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
-import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
+// import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 function FunctionConstructor(args, { NewTarget }) {

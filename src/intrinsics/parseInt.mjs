@@ -6,7 +6,7 @@ import {
   ToInt32,
   ToString,
 } from '../abstract-ops/all.mjs';
-import { TrimString } from '../runtime-semantics/all.mjs';
+// import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
 

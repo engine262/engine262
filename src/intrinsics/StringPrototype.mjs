@@ -23,7 +23,7 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
+// import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './Bootstrap.mjs';

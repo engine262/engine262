@@ -6,12 +6,6 @@ import {
   OrdinaryFunctionCreate,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
-import {
-  isAsyncFunctionDeclaration,
-  isFunctionDeclaration,
-  isGeneratorDeclaration,
-  isAsyncGeneratorDeclaration,
-} from '../ast.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -22,12 +16,9 @@ import { Descriptor, Value } from '../value.mjs';
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope) {
-  const {
-    id: BindingIdentifier,
-    params: FormalParameters,
-  } = FunctionDeclaration;
+  const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionDeclaration, 'non-lexical-this', scope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionBody, 'non-lexical-this', scope));
   SetFunctionName(F, name);
   MakeConstructor(F);
   F.SourceText = sourceTextMatchedBy(FunctionDeclaration);
@@ -39,12 +30,9 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope) {
-  const {
-    id: BindingIdentifier,
-    params: FormalParameters,
-  } = GeneratorDeclaration;
+  const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorDeclaration, 'non-lexical-this', scope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorBody, 'non-lexical-this', scope));
   SetFunctionName(F, name);
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
@@ -58,24 +46,18 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 }
 
 export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope) {
-  const {
-    id: BindingIdentifier,
-    params: FormalParameters,
-  } = AsyncFunctionDeclaration;
+  const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionDeclaration, 'non-lexical-this', scope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
   SetFunctionName(F, name);
   F.SourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   return F;
 }
 
 export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope) {
-  const {
-    id: BindingIdentifier,
-    params: FormalParameters,
-  } = AsyncGeneratorDeclaration;
+  const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   const name = new Value(BindingIdentifier ? BindingIdentifier.name : 'default');
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorDeclaration, 'non-lexical-this', scope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
   SetFunctionName(F, name);
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
@@ -89,17 +71,14 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
 }
 
 export function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
-  switch (true) {
-    case isFunctionDeclaration(AnyFunctionDeclaration):
+  switch (AnyFunctionDeclaration.type) {
+    case 'FunctionDeclaration':
       return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope);
-
-    case isGeneratorDeclaration(AnyFunctionDeclaration):
+    case 'GeneratorDeclaration':
       return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
-
-    case isAsyncFunctionDeclaration(AnyFunctionDeclaration):
+    case 'AsyncFunctionDeclaration':
       return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
-
-    case isAsyncGeneratorDeclaration(AnyFunctionDeclaration):
+    case 'AsyncGeneratorDeclaration':
       return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
     default:

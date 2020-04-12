@@ -1,67 +1,84 @@
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
 
-const ScopeBits = {
-  RETURN: 0b0001,
-  AWAIT: 0b0010,
-  YIELD: 0b0100,
-  SUPER: 0b1000,
-};
-
-const FunctionKind = {
+export const FunctionKind = {
   NORMAL: 0,
   ASYNC: 1,
 };
 
 export class FunctionParser extends IdentifierParser {
-  isReturnScope() {
-    return (this.state.scopeBits & ScopeBits.RETURN) !== 0;
-  }
-
-  isAwaitScope() {
-    return (this.state.scopeBits & ScopeBits.AWAIT) !== 0;
-  }
-
-  isYieldScope() {
-    return (this.state.scopeBits & ScopeBits.YIELD) !== 0;
-  }
-
-  isSuperScope() {
-    return (this.state.scopeBits & ScopeBits.SUPER) !== 0;
-  }
-
+  // FunctionDeclaration :
+  //   `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
+  //   [+Default] `function` `(` FormalParameters `)` `{` FunctionBody `}`
+  // FunctionExpression :
+  //   `function` BindingIdentifier? `(` FormalParameters `)` `{` FunctionBody `}`
+  // GeneratorDeclaration :
+  //   `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
+  //   [+Default] `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
+  // GeneratorExpression :
+  //   `function` BindingIdentifier? `(` FormalParameters `)` `{` GeneratorBody `}`
+  // AsyncGeneratorDeclaration :
+  //   `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
+  //   [+Default] `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
+  // AsyncGeneratorExpression :
+  //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
+  // AsyncFunctionDeclaration :
+  //   `async` `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
+  //   [+Default] `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+  // Async`FunctionExpression :
+  //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncFunctionBody `}`
   parseFunction(isExpression, kind) {
+    const isAsync = kind === FunctionKind.ASYNC;
     const node = this.startNode();
-    if (kind === FunctionKind.ASYNC) {
+    if (isAsync) {
       this.expect(Token.ASYNC);
     }
     this.expect(Token.FUNCTION);
-    node.expression = isExpression;
-    node.generator = this.eat(Token.MUL);
-    node.async = kind === FunctionKind.ASYNC;
+    const isGenerator = this.eat(Token.MUL);
     if (this.test(Token.IDENTIFIER)) {
-      node.id = this.parseBindingIdentifier();
+      node.BindingIdentifier = this.parseBindingIdentifier();
     } else if (isExpression === false) {
-      this.error('Missing function name');
+      this.unexpected();
     } else {
-      node.id = null;
+      node.BindingIdentifier = null;
     }
-    node.params = this.parseFormalParameters();
-    node.body = this.parseFunctionBody(node.async, node.generator);
-    return this.finishNode(node, isExpression ? 'FunctionExpression' : 'FunctionDeclaration');
+
+    node.FormalParameters = this.parseFormalParameters();
+
+    const body = this.parseFunctionBody(isAsync, isGenerator);
+    node[body.type] = body;
+
+    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}`;
+    return this.finishNode(node, name);
   }
 
   parseArrowFunction(node, parameters, isAsync) {
     this.expect(Token.ARROW);
-    node.id = null;
-    node.expression = true;
-    node.generator = false;
-    node.async = isAsync;
-    node.params = parameters;
-    node.body = this.test(Token.LBRACE)
-      ? this.parseFunctionBody(isAsync, false)
-      : this.parseExpression();
-    return this.finishNode(node, 'ArrowFunctionExpression');
+    node.ArrowParameters = parameters;
+    const body = this.parseConciseBody(isAsync);
+    node[body.type] = body;
+    return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
+  }
+
+  parsePropertyName() {
+    if (this.eat(Token.LBRACK)) {
+      const e = this.parseAssignmentExpression();
+      this.expect(Token.RBRACK);
+      return e;
+    }
+    return this.parseIdentifierName();
+  }
+
+  parseConciseBody(isAsync) {
+    const node = this.startNode();
+    if (this.test(Token.LBRACE)) {
+      node.ExpressionBody = null;
+      node.FunctionBody = this.parseFunctionBody(isAsync, false);
+    } else {
+      node.ExpressionBody = this.parseAssignmentExpression();
+      node.FunctionBody = null;
+    }
+    return this.finishNode(node, `${isAsync ? 'Async' : ''}ConciseBody`);
   }
 
   parseFormalParameters() {
@@ -91,23 +108,21 @@ export class FunctionParser extends IdentifierParser {
     return params;
   }
 
+  parseUniqueFormalParameters() {
+    return this.parseFormalParameters();
+  }
+
   parseFunctionBody(isAsync, isGenerator) {
-    const saved = this.state.scopeBits;
-    this.state.scopeBits |= ScopeBits.RETURN;
-    if (isAsync) {
-      this.state.scopeBits |= ScopeBits.AWAIT;
-    }
-    if (isGenerator) {
-      this.state.scopeBits |= ScopeBits.YIELD;
-    }
-    this.expect(Token.LBRACE);
     const node = this.startNode();
-    const directives = [];
-    node.body = this.parseStatementList(Token.RBRACE, directives);
-    this.state.scopeBits = saved;
-    return this.finishNode(node, 'BlockStatement');
+    this.expect(Token.LBRACE);
+    this.scope({
+      return: true,
+      async: isAsync,
+      yield: isGenerator,
+    }, () => {
+      node.FunctionStatementList = this.parseStatementList(Token.RBRACE);
+    });
+    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`;
+    return this.finishNode(node, name);
   }
 }
-
-FunctionParser.FunctionKind = FunctionKind;
-FunctionParser.ScopeBits = ScopeBits;

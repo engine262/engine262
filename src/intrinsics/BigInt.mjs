@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { ToPrimitive, ToBigInt, ToIndex } from '../abstract-ops/all.mjs';
-import { NumberToBigInt } from '../runtime-semantics/all.mjs';
+// import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 

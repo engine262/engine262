@@ -60,6 +60,7 @@ module.exports = {
     'lines-between-class-members': 'off',
     'max-classes-per-file': 'off',
     'max-len': 'off',
+    'no-bitwise': 'off',
     'no-constant-condition': 'off',
     'no-continue': 'off',
     'no-else-return': 'off',
