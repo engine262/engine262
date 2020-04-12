@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 5fb1007874dc58bf48ef09343e8a649e4e4a5f8b
+ * engine262 0.0.1 73f5004790ddfb68eede0cc237fb6cc4046457ff
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -11954,6 +11954,52 @@ const nullishCoalescingToken = {
   binop: 0
 };
 const skipWhiteSpace$1 = /(?:\s|\/\/.*|\/\*[^]*?\*\/)*/g;
+
+function isSyntaxCharacter$1(ch) {
+  return ch === 0x24
+  /* $ */
+  || ch >= 0x28
+  /* ( */
+  && ch <= 0x2B
+  /* + */
+  || ch === 0x2E
+  /* . */
+  || ch === 0x3F
+  /* ? */
+  || ch >= 0x5B
+  /* [ */
+  && ch <= 0x5E
+  /* ^ */
+  || ch >= 0x7B
+  /* { */
+  && ch <= 0x7D
+  /* } */
+  ;
+}
+
+function isCharacterClassEscape$1(ch) {
+  return ch === 0x64
+  /* d */
+  || ch === 0x44
+  /* D */
+  || ch === 0x73
+  /* s */
+  || ch === 0x53
+  /* S */
+  || ch === 0x77
+  /* w */
+  || ch === 0x57
+  /* W */
+  ;
+}
+
+function isOctalDigit$1(ch) {
+  return ch >= 0x30
+  /* 0 */
+  && ch <= 0x37;
+  /* 7 */
+}
+
 const Parser$1 = Parser.extend(P => class Parse262 extends P {
   constructor(options = {}, source) {
     super({ ...options,
@@ -12269,6 +12315,750 @@ const Parser$1 = Parser.extend(P => class Parse262 extends P {
     parser.adaptDirectivePrologue(body);
     deepFreeze(body);
     return body;
+  } // Acorn's RegExp parser is extended to create an interpretable AST.
+  // Some methods have to be entirely rewritten.
+
+
+  regexp_pattern(state) {
+    const Pattern = {
+      type: 'Pattern',
+      Disjunction: {
+        type: 'Disjunction',
+        Alternatives: []
+      }
+    };
+    state.Pattern = Pattern;
+    state.capturingParens = [];
+    state.groupSpecifiers = new Map();
+    state.Disjunction = Pattern.Disjunction;
+    state.Disjunctions = [];
+    state.Alternatives = [];
+    return super.regexp_pattern(state);
+  }
+
+  regexp_disjunction(state) {
+    const Disjunction = state.Disjunction;
+    state.Disjunctions.unshift(Disjunction);
+    const ret = super.regexp_disjunction(state);
+    state.Disjunctions.shift();
+    return ret;
+  }
+
+  regexp_alternative(state) {
+    const Alternative = {
+      type: 'Alternative',
+      Terms: []
+    };
+    state.Disjunctions[0].Alternatives.push(Alternative);
+    state.Alternatives.unshift(Alternative);
+    const ret = super.regexp_alternative(state);
+    state.Alternatives.shift();
+    return ret;
+  }
+
+  regexp_eatTerm(state) {
+    const Term = {
+      type: 'Term'
+    };
+    const Alternative = state.Alternatives[0];
+    const assertion = this.regexp_eatAssertion(state);
+
+    if (assertion) {
+      Term.subtype = 'Assertion';
+      Term.Assertion = assertion;
+      Alternative.Terms.push(Term);
+      return true;
+    }
+
+    const capturingParensBefore = state.capturingParens.length;
+    const atom = this.regexp_eatAtom(state);
+
+    if (atom) {
+      Term.subtype = 'Atom';
+      Term.Atom = atom;
+      Term.capturingParensBefore = capturingParensBefore;
+      const quantifier = this.regexp_eatQuantifier(state);
+
+      if (quantifier) {
+        Term.subtype = 'AtomQuantifier';
+        Term.Quantifier = quantifier;
+      }
+
+      Alternative.Terms.push(Term);
+      return true;
+    }
+
+    return false;
+  }
+
+  regexp_eatAssertion(state) {
+    const start = state.pos; // ^
+
+    if (state.eat(0x5E
+    /* ^ */
+    )) {
+      return {
+        type: 'Assertion',
+        subtype: '^'
+      };
+    } // $
+
+
+    if (state.eat(0x24
+    /* $ */
+    )) {
+      return {
+        type: 'Assertion',
+        subtype: '$'
+      };
+    } // \b \B
+
+
+    if (state.eat(0x5C
+    /* \ */
+    )) {
+      if (state.eat(0x62
+      /* b */
+      )) {
+        return {
+          type: 'Assertion',
+          subtype: '\\b'
+        };
+      }
+
+      if (state.eat(0x42
+      /* B */
+      )) {
+        return {
+          type: 'Assertion',
+          subtype: '\\B'
+        };
+      }
+
+      state.pos = start;
+    } // Lookahead / Lookbehind
+
+
+    if (state.eat(0x28
+    /* ( */
+    ) && state.eat(0x3F
+    /* ? */
+    )) {
+      let lookbehind = false;
+
+      if (this.options.ecmaVersion >= 9) {
+        lookbehind = state.eat(0x3C
+        /* < */
+        );
+      }
+
+      let eaten = false;
+      let Assertion;
+
+      if (state.eat(0x3D
+      /* = */
+      )) {
+        eaten = true;
+        Assertion = {
+          type: 'Assertion',
+          subtype: lookbehind ? '(?<=' : '(?='
+        };
+      } else if (state.eat(0x21
+      /* ! */
+      )) {
+        eaten = true;
+        Assertion = {
+          type: 'Assertion',
+          subtype: lookbehind ? '(?<!' : '(?!'
+        };
+      }
+
+      if (eaten) {
+        const Disjunction = {
+          type: 'Disjunction',
+          Alternatives: []
+        };
+        Assertion.Disjunction = Disjunction;
+        state.Disjunction = Disjunction;
+        this.regexp_disjunction(state);
+
+        if (!state.eat(0x29
+        /* ) */
+        )) {
+          state.raise('Unterminated group');
+        }
+
+        return Assertion;
+      }
+    }
+
+    state.pos = start;
+    return false;
+  }
+
+  regexp_eatAtom(state) {
+    if (this.regexp_eatPatternCharacter(state)) {
+      return state.Atom;
+    }
+
+    if (state.eat(0x2E
+    /* . */
+    )) {
+      return {
+        type: 'Atom',
+        subtype: '.'
+      };
+    }
+
+    if (this.regexp_eatReverseSolidusAtomEscape(state)) {
+      return {
+        type: 'Atom',
+        subtype: '\\',
+        AtomEscape: state.AtomEscape
+      };
+    }
+
+    if (this.regexp_eatCharacterClass(state)) {
+      return {
+        type: 'Atom',
+        subtype: 'CharacterClass',
+        CharacterClass: state.CharacterClass
+      };
+    }
+
+    const uncapturing = this.regexp_eatUncapturingGroup(state);
+
+    if (uncapturing) {
+      return uncapturing;
+    }
+
+    const capturing = this.regexp_eatCapturingGroup(state);
+
+    if (capturing) {
+      return capturing;
+    }
+
+    return false;
+  }
+
+  regexp_eatQuantifier(state, noError = false) {
+    const QuantifierPrefix = this.regexp_eatQuantifierPrefix(state, noError);
+
+    if (QuantifierPrefix) {
+      const greedy = !state.eat(0x3F
+      /* ? */
+      );
+      return {
+        type: 'Quantifier',
+        QuantifierPrefix,
+        greedy
+      };
+    }
+
+    return false;
+  }
+
+  regexp_eatQuantifierPrefix(state, noError) {
+    if (state.eat(0x2A
+    /* * */
+    )) {
+      return {
+        type: 'QuantifierPrefix',
+        subtype: '*'
+      };
+    }
+
+    if (state.eat(0x2B
+    /* + */
+    )) {
+      return {
+        type: 'QuantifierPrefix',
+        subtype: '+'
+      };
+    }
+
+    if (state.eat(0x3F
+    /* ? */
+    )) {
+      return {
+        type: 'QuantifierPrefix',
+        subtype: '?'
+      };
+    }
+
+    return this.regexp_eatBracedQuantifier(state, noError);
+  }
+
+  regexp_eatBracedQuantifier(state, noError) {
+    const start = state.pos;
+
+    if (state.eat(0x7B
+    /* { */
+    )) {
+      let min = 0;
+      let max = -1;
+
+      if (this.regexp_eatDecimalDigits(state)) {
+        min = state.lastIntValue;
+
+        if (state.eat(0x2C
+        /* , */
+        )) {
+          if (this.regexp_eatDecimalDigits(state)) {
+            max = state.lastIntValue;
+          } else {
+            max = Infinity;
+          }
+        }
+
+        if (state.eat(0x7D
+        /* } */
+        )) {
+          // SyntaxError in https://www.ecma-international.org/ecma-262/8.0/#sec-term
+          if (max !== -1 && max < min && !noError) {
+            state.raise('numbers out of order in {} quantifier');
+          }
+
+          if (max === -1) {
+            return {
+              type: 'QuantifierPrefix',
+              subtype: 'fixed',
+              value: min
+            };
+          }
+
+          if (max === Infinity) {
+            return {
+              type: 'QuantifierPrefix',
+              subtype: 'start',
+              start: min
+            };
+          }
+
+          return {
+            type: 'QuantifierPrefix',
+            subtype: 'range',
+            start: min,
+            end: max
+          };
+        }
+      }
+
+      if (state.switchU && !noError) {
+        state.raise('Incomplete quantifier');
+      }
+
+      state.pos = start;
+    }
+
+    return false;
+  }
+
+  regexp_eatUncapturingGroup(state) {
+    const start = state.pos;
+
+    if (state.eat(0x28
+    /* ( */
+    )) {
+      if (state.eat(0x3F
+      /* ? */
+      ) && state.eat(0x3A
+      /* : */
+      )) {
+        const Disjunction = {
+          type: 'Disjunction',
+          Alternatives: []
+        };
+        state.Disjunction = Disjunction;
+        this.regexp_disjunction(state);
+
+        if (state.eat(0x29
+        /* ) */
+        )) {
+          return {
+            type: 'Atom',
+            subtype: '(?:',
+            Disjunction
+          };
+        }
+
+        state.raise('Unterminated group');
+      }
+
+      state.pos = start;
+    }
+
+    return false;
+  }
+
+  regexp_eatCapturingGroup(state) {
+    if (state.eat(0x28
+    /* ( */
+    )) {
+      const result = {
+        type: 'Atom',
+        subtype: '(',
+        capturingParensBefore: state.capturingParens.length,
+        Disjunction: {
+          type: 'Disjunction',
+          Alternatives: []
+        }
+      };
+      state.capturingParens.push(result);
+
+      if (this.options.ecmaVersion >= 9) {
+        this.regexp_groupSpecifier(state);
+        result.GroupSpecifier = state.lastStringValue;
+
+        if (result.GroupSpecifier) {
+          state.groupSpecifiers.set(result.GroupSpecifier, state.capturingParens.length);
+        }
+      } else if (state.current() === 0x3F
+      /* ? */
+      ) {
+          state.raise('Invalid group');
+        }
+
+      const numCapturingParens = state.capturingParens.length;
+      state.Disjunction = result.Disjunction;
+      this.regexp_disjunction(state);
+
+      if (state.eat(0x29
+      /* ) */
+      )) {
+        result.enclosedCapturingParens = state.capturingParens.length - numCapturingParens;
+        state.numCapturingParens += 1;
+
+        if (state.numCapturingParens >= 2 ** 32 - 1) {
+          state.raise('Too many capturing parens');
+        }
+
+        return result;
+      }
+
+      state.raise('Unterminated group');
+    }
+
+    return false;
+  }
+
+  regexp_eatPatternCharacter(state) {
+    // Like regexp_eatPatternCharacters, but is not eager.
+    const ch = state.current();
+
+    if (!isSyntaxCharacter$1(ch)) {
+      state.Atom = {
+        type: 'Atom',
+        subtype: 'PatternCharacter',
+        PatternCharacter: ch
+      };
+      state.advance();
+      return true;
+    }
+
+    return false;
+  }
+
+  regexp_eatAtomEscape(state) {
+    if (this.regexp_eatBackReference(state)) {
+      state.AtomEscape = {
+        type: 'AtomEscape',
+        subtype: 'DecimalEscape',
+        DecimalEscape: state.DecimalEscape
+      };
+      return true;
+    }
+
+    if (this.regexp_eatCharacterClassEscape(state)) {
+      state.AtomEscape = {
+        type: 'AtomEscape',
+        subtype: 'CharacterClassEscape',
+        CharacterClassEscape: state.CharacterClassEscape
+      };
+      return true;
+    }
+
+    if (this.regexp_eatCharacterEscape(state)) {
+      state.AtomEscape = {
+        type: 'AtomEscape',
+        subtype: 'CharacterEscape',
+        CharacterEscape: state.CharacterEscape
+      };
+      return true;
+    }
+
+    if (state.switchN && this.regexp_eatKGroupName(state)) {
+      state.AtomEscape = {
+        type: 'AtomEscape',
+        subtype: 'k',
+        GroupName: state.backReferenceNames[state.backReferenceNames.length - 1]
+      };
+      return true;
+    }
+
+    if (state.switchU) {
+      // Make the same message as V8.
+      if (state.current() === 0x63
+      /* c */
+      ) {
+          state.raise('Invalid unicode escape');
+        }
+
+      state.raise('Invalid escape');
+    }
+
+    return false;
+  }
+
+  regexp_eatBackReference(state) {
+    if (this.regexp_eatDecimalEscape(state)) {
+      const n = state.lastIntValue;
+
+      if (n > state.maxBackReference) {
+        state.maxBackReference = n;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  regexp_eatDecimalEscape(state) {
+    const ret = super.regexp_eatDecimalEscape(state);
+
+    if (ret) {
+      state.DecimalEscape = {
+        type: 'DecimalEscape',
+        CapturingGroupNumber: state.lastIntValue
+      };
+    }
+
+    return ret;
+  }
+
+  regexp_eatCharacterClassEscape(state) {
+    const ch = state.current();
+
+    if (isCharacterClassEscape$1(ch)) {
+      state.lastIntValue = -1;
+      state.advance();
+      state.CharacterClassEscape = {
+        type: 'CharacterClassEscape',
+        subtype: String.fromCharCode(ch)
+      };
+      return true;
+    }
+
+    if (state.switchU && this.options.ecmaVersion >= 9 && (ch === 0x50
+    /* P */
+    || ch === 0x70
+    /* p */
+    )) {
+      state.lastIntValue = -1;
+      state.advance();
+
+      if (state.eat(0x7B
+      /* { */
+      ) && this.regexp_eatUnicodePropertyValueExpression(state) && state.eat(0x7D
+      /* } */
+      )) {
+        state.CharacterClassEscape = {
+          type: 'CharacterClassEscape',
+          subtype: ch === 0x50 ? 'P{' : 'p{',
+          UnicodePropertyValueExpression: state.UnicodePropertyValueExpression
+        };
+        return true;
+      }
+
+      state.raise('Invalid property name');
+    }
+
+    return false;
+  }
+
+  regexp_validateUnicodePropertyNameAndValue(state, name, value) {
+    state.UnicodePropertyValueExpression = {
+      type: 'UnicodePropertyValueExpression',
+      subtype: 'UnicodePropertyNameAndValue',
+      UnicodePropertyName: name,
+      UnicodePropertyValue: value
+    };
+    return super.regexp_validateUnicodePropertyNameAndValue(state, name, value);
+  }
+
+  regexp_validateUnicodePropertyNameOrValue(state, nameOrValue) {
+    state.UnicodePropertyValueExpression = {
+      type: 'UnicodePropertyValueExpression',
+      subtype: 'LoneUnicodePropertyNameOrValue',
+      LoneUnicodePropertyNameOrValue: nameOrValue
+    };
+    return super.regexp_validateUnicodePropertyNameOrValue(state, nameOrValue);
+  }
+
+  regexp_eatCharacterEscape(state) {
+    if (this.regexp_eatControlEscape(state) || this.regexp_eatCControlLetter(state) || this.regexp_eatZero(state) || this.regexp_eatHexEscapeSequence(state) || this.regexp_eatRegExpUnicodeEscapeSequence(state) || this.regexp_eatIdentityEscape(state)) {
+      state.CharacterEscape = {
+        type: 'CharacterEscape',
+        CharacterValue: state.lastIntValue
+      };
+      return true;
+    }
+
+    return false;
+  }
+
+  regexp_eatCharacterClass(state) {
+    if (state.eat(0x5B
+    /* [ */
+    )) {
+      state.CharacterClass = {
+        type: 'CharacterClass',
+        invert: false,
+        ClassRanges: []
+      };
+
+      if (state.eat(0x5E
+      /* ^ */
+      )) {
+        state.CharacterClass.invert = true;
+      }
+
+      this.regexp_classRanges(state);
+
+      if (state.eat(0x5D
+      /* ] */
+      )) {
+        return true;
+      } // Unreachable since it threw "unterminated regular expression" error before.
+
+
+      state.raise('Unterminated character class');
+    }
+
+    return false;
+  }
+
+  regexp_classRanges(state) {
+    while (this.regexp_eatClassAtom(state)) {
+      const left = state.lastIntValue;
+      const leftClassAtom = state.ClassAtom;
+
+      if (state.eat(0x2D
+      /* - */
+      ) && this.regexp_eatClassAtom(state)) {
+        const right = state.lastIntValue;
+
+        if (state.switchU && (left === -1 || right === -1)) {
+          state.raise('Invalid character class');
+        }
+
+        if (left !== -1 && right !== -1 && left > right) {
+          state.raise('Range out of order in character class');
+        }
+
+        state.CharacterClass.ClassRanges.push([leftClassAtom, state.ClassAtom]);
+      } else {
+        state.CharacterClass.ClassRanges.push(leftClassAtom);
+      }
+    }
+  }
+
+  regexp_eatClassAtom(state) {
+    const start = state.pos;
+
+    if (state.eat(0x5C
+    /* \ */
+    )) {
+      if (this.regexp_eatClassEscape(state)) {
+        state.ClassAtom = {
+          type: 'ClassAtom',
+          subtype: 'ClassEscape',
+          ClassEscape: state.ClassEscape
+        };
+        return true;
+      }
+
+      if (state.switchU) {
+        // Make the same message as V8.
+        const ch = state.current();
+
+        if (ch === 0x63
+        /* c */
+        || isOctalDigit$1(ch)) {
+          state.raise('Invalid class escape');
+        }
+
+        state.raise('Invalid escape');
+      }
+
+      state.pos = start;
+    }
+
+    const ch = state.current();
+
+    if (ch !== 0x5D
+    /* ] */
+    ) {
+        state.lastIntValue = ch;
+        state.advance();
+        state.ClassAtom = {
+          type: 'ClassAtom',
+          subtype: 'character',
+          character: ch
+        };
+        return true;
+      }
+
+    return false;
+  }
+
+  regexp_eatClassEscape(state) {
+    if (state.eat(0x62
+    /* b */
+    )) {
+      state.lastIntValue = 0x08;
+      /* <BS> */
+
+      state.ClassEscape = {
+        type: 'ClassEscape',
+        subtype: 'b'
+      };
+      return true;
+    }
+
+    if (state.switchU && state.eat(0x2D
+    /* - */
+    )) {
+      state.lastIntValue = 0x2D;
+      /* - */
+
+      state.ClassEscape = {
+        type: 'ClassEscape',
+        subtype: '-'
+      };
+      return true;
+    }
+
+    if (this.regexp_eatCharacterClassEscape(state)) {
+      state.ClassEscape = {
+        type: 'ClassEscape',
+        subtype: 'CharacterClassEscape',
+        CharacterClassEscape: state.CharacterClassEscape
+      };
+      return true;
+    }
+
+    if (this.regexp_eatCharacterEscape(state)) {
+      state.ClassEscape = {
+        type: 'ClassEscape',
+        subtype: 'CharacterEscape',
+        CharacterEscape: state.CharacterEscape
+      };
+      return true;
+    }
+
+    return false;
   }
 
 });
@@ -12420,6 +13210,51 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     DFSIndex: Value.undefined,
     DFSAncestorIndex: Value.undefined
   });
+}
+function ParseRegExp(source, flags) {
+  const parser = new Parser$1({
+    sourceType: 'script'
+  }, 'a/'); // Initialize RegExp state.
+
+  parser.readRegexp();
+  let escaped = false;
+  let inClass = false;
+  let pos = 0;
+
+  for (;;) {
+    if (pos >= source.length) {
+      if (inClass || escaped) {
+        parser.raise(0, 'Unterminated regular expression');
+      } else {
+        break;
+      }
+    }
+
+    const ch = source.charAt(pos);
+
+    if (!escaped) {
+      if (ch === '[') {
+        inClass = true;
+      } else if (ch === ']' && inClass) {
+        inClass = false;
+      }
+
+      escaped = ch === '\\';
+    } else {
+      escaped = false;
+    }
+
+    pos += 1;
+  }
+
+  const state = parser.regexpState;
+  state.reset(0, source, flags);
+  parser.validateRegExpPattern(state);
+  return {
+    pattern: state.Pattern,
+    capturingParens: state.capturingParens,
+    groupSpecifiers: state.groupSpecifiers
+  };
 }
 
 //   ClassTail : ClassHeritage `{` ClassBody `}`
@@ -15874,7 +16709,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
             result += '$<';
             i += 2;
           } else {
-            const groupName = new Value(replacementStr.substring(i + 1, nextSign));
+            const groupName = new Value(replacementStr.substring(i + 2, nextSign));
 
             let _temp = Get(namedCaptures, groupName);
             /* istanbul ignore if */
@@ -17558,9 +18393,7 @@ function isWhiteSpace(c) {
 }
 
 const isLineTerminator = c => isNewLine$1(c.charCodeAt(0), false);
-
 const isStrWhiteSpaceChar = c => isWhiteSpace(c) || isLineTerminator(c); // Returns index of first non-StrWhiteSpaceChar character.
-
 
 function searchNotStrWhiteSpaceChar(str) {
   for (let i = 0; i < str.length; i += 1) {
@@ -19136,6 +19969,891 @@ function RestBindingInitialization_BindingRestProperty(BindingRestProperty, valu
   }
 
   return InitializeReferencedBinding(lhs, restObj);
+}
+
+var symbols=new Map([['A','a'],['B','b'],['C','c'],['D','d'],['E','e'],['F','f'],['G','g'],['H','h'],['I','i'],['J','j'],['K','k'],['L','l'],['M','m'],['N','n'],['O','o'],['P','p'],['Q','q'],['R','r'],['S','s'],['T','t'],['U','u'],['V','v'],['W','w'],['X','x'],['Y','y'],['Z','z'],['\xB5','\u03BC'],['\xC0','\xE0'],['\xC1','\xE1'],['\xC2','\xE2'],['\xC3','\xE3'],['\xC4','\xE4'],['\xC5','\xE5'],['\xC6','\xE6'],['\xC7','\xE7'],['\xC8','\xE8'],['\xC9','\xE9'],['\xCA','\xEA'],['\xCB','\xEB'],['\xCC','\xEC'],['\xCD','\xED'],['\xCE','\xEE'],['\xCF','\xEF'],['\xD0','\xF0'],['\xD1','\xF1'],['\xD2','\xF2'],['\xD3','\xF3'],['\xD4','\xF4'],['\xD5','\xF5'],['\xD6','\xF6'],['\xD8','\xF8'],['\xD9','\xF9'],['\xDA','\xFA'],['\xDB','\xFB'],['\xDC','\xFC'],['\xDD','\xFD'],['\xDE','\xFE'],['\u0100','\u0101'],['\u0102','\u0103'],['\u0104','\u0105'],['\u0106','\u0107'],['\u0108','\u0109'],['\u010A','\u010B'],['\u010C','\u010D'],['\u010E','\u010F'],['\u0110','\u0111'],['\u0112','\u0113'],['\u0114','\u0115'],['\u0116','\u0117'],['\u0118','\u0119'],['\u011A','\u011B'],['\u011C','\u011D'],['\u011E','\u011F'],['\u0120','\u0121'],['\u0122','\u0123'],['\u0124','\u0125'],['\u0126','\u0127'],['\u0128','\u0129'],['\u012A','\u012B'],['\u012C','\u012D'],['\u012E','\u012F'],['\u0132','\u0133'],['\u0134','\u0135'],['\u0136','\u0137'],['\u0139','\u013A'],['\u013B','\u013C'],['\u013D','\u013E'],['\u013F','\u0140'],['\u0141','\u0142'],['\u0143','\u0144'],['\u0145','\u0146'],['\u0147','\u0148'],['\u014A','\u014B'],['\u014C','\u014D'],['\u014E','\u014F'],['\u0150','\u0151'],['\u0152','\u0153'],['\u0154','\u0155'],['\u0156','\u0157'],['\u0158','\u0159'],['\u015A','\u015B'],['\u015C','\u015D'],['\u015E','\u015F'],['\u0160','\u0161'],['\u0162','\u0163'],['\u0164','\u0165'],['\u0166','\u0167'],['\u0168','\u0169'],['\u016A','\u016B'],['\u016C','\u016D'],['\u016E','\u016F'],['\u0170','\u0171'],['\u0172','\u0173'],['\u0174','\u0175'],['\u0176','\u0177'],['\u0178','\xFF'],['\u0179','\u017A'],['\u017B','\u017C'],['\u017D','\u017E'],['\u017F','s'],['\u0181','\u0253'],['\u0182','\u0183'],['\u0184','\u0185'],['\u0186','\u0254'],['\u0187','\u0188'],['\u0189','\u0256'],['\u018A','\u0257'],['\u018B','\u018C'],['\u018E','\u01DD'],['\u018F','\u0259'],['\u0190','\u025B'],['\u0191','\u0192'],['\u0193','\u0260'],['\u0194','\u0263'],['\u0196','\u0269'],['\u0197','\u0268'],['\u0198','\u0199'],['\u019C','\u026F'],['\u019D','\u0272'],['\u019F','\u0275'],['\u01A0','\u01A1'],['\u01A2','\u01A3'],['\u01A4','\u01A5'],['\u01A6','\u0280'],['\u01A7','\u01A8'],['\u01A9','\u0283'],['\u01AC','\u01AD'],['\u01AE','\u0288'],['\u01AF','\u01B0'],['\u01B1','\u028A'],['\u01B2','\u028B'],['\u01B3','\u01B4'],['\u01B5','\u01B6'],['\u01B7','\u0292'],['\u01B8','\u01B9'],['\u01BC','\u01BD'],['\u01C4','\u01C6'],['\u01C5','\u01C6'],['\u01C7','\u01C9'],['\u01C8','\u01C9'],['\u01CA','\u01CC'],['\u01CB','\u01CC'],['\u01CD','\u01CE'],['\u01CF','\u01D0'],['\u01D1','\u01D2'],['\u01D3','\u01D4'],['\u01D5','\u01D6'],['\u01D7','\u01D8'],['\u01D9','\u01DA'],['\u01DB','\u01DC'],['\u01DE','\u01DF'],['\u01E0','\u01E1'],['\u01E2','\u01E3'],['\u01E4','\u01E5'],['\u01E6','\u01E7'],['\u01E8','\u01E9'],['\u01EA','\u01EB'],['\u01EC','\u01ED'],['\u01EE','\u01EF'],['\u01F1','\u01F3'],['\u01F2','\u01F3'],['\u01F4','\u01F5'],['\u01F6','\u0195'],['\u01F7','\u01BF'],['\u01F8','\u01F9'],['\u01FA','\u01FB'],['\u01FC','\u01FD'],['\u01FE','\u01FF'],['\u0200','\u0201'],['\u0202','\u0203'],['\u0204','\u0205'],['\u0206','\u0207'],['\u0208','\u0209'],['\u020A','\u020B'],['\u020C','\u020D'],['\u020E','\u020F'],['\u0210','\u0211'],['\u0212','\u0213'],['\u0214','\u0215'],['\u0216','\u0217'],['\u0218','\u0219'],['\u021A','\u021B'],['\u021C','\u021D'],['\u021E','\u021F'],['\u0220','\u019E'],['\u0222','\u0223'],['\u0224','\u0225'],['\u0226','\u0227'],['\u0228','\u0229'],['\u022A','\u022B'],['\u022C','\u022D'],['\u022E','\u022F'],['\u0230','\u0231'],['\u0232','\u0233'],['\u023A','\u2C65'],['\u023B','\u023C'],['\u023D','\u019A'],['\u023E','\u2C66'],['\u0241','\u0242'],['\u0243','\u0180'],['\u0244','\u0289'],['\u0245','\u028C'],['\u0246','\u0247'],['\u0248','\u0249'],['\u024A','\u024B'],['\u024C','\u024D'],['\u024E','\u024F'],['\u0345','\u03B9'],['\u0370','\u0371'],['\u0372','\u0373'],['\u0376','\u0377'],['\u037F','\u03F3'],['\u0386','\u03AC'],['\u0388','\u03AD'],['\u0389','\u03AE'],['\u038A','\u03AF'],['\u038C','\u03CC'],['\u038E','\u03CD'],['\u038F','\u03CE'],['\u0391','\u03B1'],['\u0392','\u03B2'],['\u0393','\u03B3'],['\u0394','\u03B4'],['\u0395','\u03B5'],['\u0396','\u03B6'],['\u0397','\u03B7'],['\u0398','\u03B8'],['\u0399','\u03B9'],['\u039A','\u03BA'],['\u039B','\u03BB'],['\u039C','\u03BC'],['\u039D','\u03BD'],['\u039E','\u03BE'],['\u039F','\u03BF'],['\u03A0','\u03C0'],['\u03A1','\u03C1'],['\u03A3','\u03C3'],['\u03A4','\u03C4'],['\u03A5','\u03C5'],['\u03A6','\u03C6'],['\u03A7','\u03C7'],['\u03A8','\u03C8'],['\u03A9','\u03C9'],['\u03AA','\u03CA'],['\u03AB','\u03CB'],['\u03C2','\u03C3'],['\u03CF','\u03D7'],['\u03D0','\u03B2'],['\u03D1','\u03B8'],['\u03D5','\u03C6'],['\u03D6','\u03C0'],['\u03D8','\u03D9'],['\u03DA','\u03DB'],['\u03DC','\u03DD'],['\u03DE','\u03DF'],['\u03E0','\u03E1'],['\u03E2','\u03E3'],['\u03E4','\u03E5'],['\u03E6','\u03E7'],['\u03E8','\u03E9'],['\u03EA','\u03EB'],['\u03EC','\u03ED'],['\u03EE','\u03EF'],['\u03F0','\u03BA'],['\u03F1','\u03C1'],['\u03F4','\u03B8'],['\u03F5','\u03B5'],['\u03F7','\u03F8'],['\u03F9','\u03F2'],['\u03FA','\u03FB'],['\u03FD','\u037B'],['\u03FE','\u037C'],['\u03FF','\u037D'],['\u0400','\u0450'],['\u0401','\u0451'],['\u0402','\u0452'],['\u0403','\u0453'],['\u0404','\u0454'],['\u0405','\u0455'],['\u0406','\u0456'],['\u0407','\u0457'],['\u0408','\u0458'],['\u0409','\u0459'],['\u040A','\u045A'],['\u040B','\u045B'],['\u040C','\u045C'],['\u040D','\u045D'],['\u040E','\u045E'],['\u040F','\u045F'],['\u0410','\u0430'],['\u0411','\u0431'],['\u0412','\u0432'],['\u0413','\u0433'],['\u0414','\u0434'],['\u0415','\u0435'],['\u0416','\u0436'],['\u0417','\u0437'],['\u0418','\u0438'],['\u0419','\u0439'],['\u041A','\u043A'],['\u041B','\u043B'],['\u041C','\u043C'],['\u041D','\u043D'],['\u041E','\u043E'],['\u041F','\u043F'],['\u0420','\u0440'],['\u0421','\u0441'],['\u0422','\u0442'],['\u0423','\u0443'],['\u0424','\u0444'],['\u0425','\u0445'],['\u0426','\u0446'],['\u0427','\u0447'],['\u0428','\u0448'],['\u0429','\u0449'],['\u042A','\u044A'],['\u042B','\u044B'],['\u042C','\u044C'],['\u042D','\u044D'],['\u042E','\u044E'],['\u042F','\u044F'],['\u0460','\u0461'],['\u0462','\u0463'],['\u0464','\u0465'],['\u0466','\u0467'],['\u0468','\u0469'],['\u046A','\u046B'],['\u046C','\u046D'],['\u046E','\u046F'],['\u0470','\u0471'],['\u0472','\u0473'],['\u0474','\u0475'],['\u0476','\u0477'],['\u0478','\u0479'],['\u047A','\u047B'],['\u047C','\u047D'],['\u047E','\u047F'],['\u0480','\u0481'],['\u048A','\u048B'],['\u048C','\u048D'],['\u048E','\u048F'],['\u0490','\u0491'],['\u0492','\u0493'],['\u0494','\u0495'],['\u0496','\u0497'],['\u0498','\u0499'],['\u049A','\u049B'],['\u049C','\u049D'],['\u049E','\u049F'],['\u04A0','\u04A1'],['\u04A2','\u04A3'],['\u04A4','\u04A5'],['\u04A6','\u04A7'],['\u04A8','\u04A9'],['\u04AA','\u04AB'],['\u04AC','\u04AD'],['\u04AE','\u04AF'],['\u04B0','\u04B1'],['\u04B2','\u04B3'],['\u04B4','\u04B5'],['\u04B6','\u04B7'],['\u04B8','\u04B9'],['\u04BA','\u04BB'],['\u04BC','\u04BD'],['\u04BE','\u04BF'],['\u04C0','\u04CF'],['\u04C1','\u04C2'],['\u04C3','\u04C4'],['\u04C5','\u04C6'],['\u04C7','\u04C8'],['\u04C9','\u04CA'],['\u04CB','\u04CC'],['\u04CD','\u04CE'],['\u04D0','\u04D1'],['\u04D2','\u04D3'],['\u04D4','\u04D5'],['\u04D6','\u04D7'],['\u04D8','\u04D9'],['\u04DA','\u04DB'],['\u04DC','\u04DD'],['\u04DE','\u04DF'],['\u04E0','\u04E1'],['\u04E2','\u04E3'],['\u04E4','\u04E5'],['\u04E6','\u04E7'],['\u04E8','\u04E9'],['\u04EA','\u04EB'],['\u04EC','\u04ED'],['\u04EE','\u04EF'],['\u04F0','\u04F1'],['\u04F2','\u04F3'],['\u04F4','\u04F5'],['\u04F6','\u04F7'],['\u04F8','\u04F9'],['\u04FA','\u04FB'],['\u04FC','\u04FD'],['\u04FE','\u04FF'],['\u0500','\u0501'],['\u0502','\u0503'],['\u0504','\u0505'],['\u0506','\u0507'],['\u0508','\u0509'],['\u050A','\u050B'],['\u050C','\u050D'],['\u050E','\u050F'],['\u0510','\u0511'],['\u0512','\u0513'],['\u0514','\u0515'],['\u0516','\u0517'],['\u0518','\u0519'],['\u051A','\u051B'],['\u051C','\u051D'],['\u051E','\u051F'],['\u0520','\u0521'],['\u0522','\u0523'],['\u0524','\u0525'],['\u0526','\u0527'],['\u0528','\u0529'],['\u052A','\u052B'],['\u052C','\u052D'],['\u052E','\u052F'],['\u0531','\u0561'],['\u0532','\u0562'],['\u0533','\u0563'],['\u0534','\u0564'],['\u0535','\u0565'],['\u0536','\u0566'],['\u0537','\u0567'],['\u0538','\u0568'],['\u0539','\u0569'],['\u053A','\u056A'],['\u053B','\u056B'],['\u053C','\u056C'],['\u053D','\u056D'],['\u053E','\u056E'],['\u053F','\u056F'],['\u0540','\u0570'],['\u0541','\u0571'],['\u0542','\u0572'],['\u0543','\u0573'],['\u0544','\u0574'],['\u0545','\u0575'],['\u0546','\u0576'],['\u0547','\u0577'],['\u0548','\u0578'],['\u0549','\u0579'],['\u054A','\u057A'],['\u054B','\u057B'],['\u054C','\u057C'],['\u054D','\u057D'],['\u054E','\u057E'],['\u054F','\u057F'],['\u0550','\u0580'],['\u0551','\u0581'],['\u0552','\u0582'],['\u0553','\u0583'],['\u0554','\u0584'],['\u0555','\u0585'],['\u0556','\u0586'],['\u10A0','\u2D00'],['\u10A1','\u2D01'],['\u10A2','\u2D02'],['\u10A3','\u2D03'],['\u10A4','\u2D04'],['\u10A5','\u2D05'],['\u10A6','\u2D06'],['\u10A7','\u2D07'],['\u10A8','\u2D08'],['\u10A9','\u2D09'],['\u10AA','\u2D0A'],['\u10AB','\u2D0B'],['\u10AC','\u2D0C'],['\u10AD','\u2D0D'],['\u10AE','\u2D0E'],['\u10AF','\u2D0F'],['\u10B0','\u2D10'],['\u10B1','\u2D11'],['\u10B2','\u2D12'],['\u10B3','\u2D13'],['\u10B4','\u2D14'],['\u10B5','\u2D15'],['\u10B6','\u2D16'],['\u10B7','\u2D17'],['\u10B8','\u2D18'],['\u10B9','\u2D19'],['\u10BA','\u2D1A'],['\u10BB','\u2D1B'],['\u10BC','\u2D1C'],['\u10BD','\u2D1D'],['\u10BE','\u2D1E'],['\u10BF','\u2D1F'],['\u10C0','\u2D20'],['\u10C1','\u2D21'],['\u10C2','\u2D22'],['\u10C3','\u2D23'],['\u10C4','\u2D24'],['\u10C5','\u2D25'],['\u10C7','\u2D27'],['\u10CD','\u2D2D'],['\u13F8','\u13F0'],['\u13F9','\u13F1'],['\u13FA','\u13F2'],['\u13FB','\u13F3'],['\u13FC','\u13F4'],['\u13FD','\u13F5'],['\u1C80','\u0432'],['\u1C81','\u0434'],['\u1C82','\u043E'],['\u1C83','\u0441'],['\u1C84','\u0442'],['\u1C85','\u0442'],['\u1C86','\u044A'],['\u1C87','\u0463'],['\u1C88','\uA64B'],['\u1C90','\u10D0'],['\u1C91','\u10D1'],['\u1C92','\u10D2'],['\u1C93','\u10D3'],['\u1C94','\u10D4'],['\u1C95','\u10D5'],['\u1C96','\u10D6'],['\u1C97','\u10D7'],['\u1C98','\u10D8'],['\u1C99','\u10D9'],['\u1C9A','\u10DA'],['\u1C9B','\u10DB'],['\u1C9C','\u10DC'],['\u1C9D','\u10DD'],['\u1C9E','\u10DE'],['\u1C9F','\u10DF'],['\u1CA0','\u10E0'],['\u1CA1','\u10E1'],['\u1CA2','\u10E2'],['\u1CA3','\u10E3'],['\u1CA4','\u10E4'],['\u1CA5','\u10E5'],['\u1CA6','\u10E6'],['\u1CA7','\u10E7'],['\u1CA8','\u10E8'],['\u1CA9','\u10E9'],['\u1CAA','\u10EA'],['\u1CAB','\u10EB'],['\u1CAC','\u10EC'],['\u1CAD','\u10ED'],['\u1CAE','\u10EE'],['\u1CAF','\u10EF'],['\u1CB0','\u10F0'],['\u1CB1','\u10F1'],['\u1CB2','\u10F2'],['\u1CB3','\u10F3'],['\u1CB4','\u10F4'],['\u1CB5','\u10F5'],['\u1CB6','\u10F6'],['\u1CB7','\u10F7'],['\u1CB8','\u10F8'],['\u1CB9','\u10F9'],['\u1CBA','\u10FA'],['\u1CBD','\u10FD'],['\u1CBE','\u10FE'],['\u1CBF','\u10FF'],['\u1E00','\u1E01'],['\u1E02','\u1E03'],['\u1E04','\u1E05'],['\u1E06','\u1E07'],['\u1E08','\u1E09'],['\u1E0A','\u1E0B'],['\u1E0C','\u1E0D'],['\u1E0E','\u1E0F'],['\u1E10','\u1E11'],['\u1E12','\u1E13'],['\u1E14','\u1E15'],['\u1E16','\u1E17'],['\u1E18','\u1E19'],['\u1E1A','\u1E1B'],['\u1E1C','\u1E1D'],['\u1E1E','\u1E1F'],['\u1E20','\u1E21'],['\u1E22','\u1E23'],['\u1E24','\u1E25'],['\u1E26','\u1E27'],['\u1E28','\u1E29'],['\u1E2A','\u1E2B'],['\u1E2C','\u1E2D'],['\u1E2E','\u1E2F'],['\u1E30','\u1E31'],['\u1E32','\u1E33'],['\u1E34','\u1E35'],['\u1E36','\u1E37'],['\u1E38','\u1E39'],['\u1E3A','\u1E3B'],['\u1E3C','\u1E3D'],['\u1E3E','\u1E3F'],['\u1E40','\u1E41'],['\u1E42','\u1E43'],['\u1E44','\u1E45'],['\u1E46','\u1E47'],['\u1E48','\u1E49'],['\u1E4A','\u1E4B'],['\u1E4C','\u1E4D'],['\u1E4E','\u1E4F'],['\u1E50','\u1E51'],['\u1E52','\u1E53'],['\u1E54','\u1E55'],['\u1E56','\u1E57'],['\u1E58','\u1E59'],['\u1E5A','\u1E5B'],['\u1E5C','\u1E5D'],['\u1E5E','\u1E5F'],['\u1E60','\u1E61'],['\u1E62','\u1E63'],['\u1E64','\u1E65'],['\u1E66','\u1E67'],['\u1E68','\u1E69'],['\u1E6A','\u1E6B'],['\u1E6C','\u1E6D'],['\u1E6E','\u1E6F'],['\u1E70','\u1E71'],['\u1E72','\u1E73'],['\u1E74','\u1E75'],['\u1E76','\u1E77'],['\u1E78','\u1E79'],['\u1E7A','\u1E7B'],['\u1E7C','\u1E7D'],['\u1E7E','\u1E7F'],['\u1E80','\u1E81'],['\u1E82','\u1E83'],['\u1E84','\u1E85'],['\u1E86','\u1E87'],['\u1E88','\u1E89'],['\u1E8A','\u1E8B'],['\u1E8C','\u1E8D'],['\u1E8E','\u1E8F'],['\u1E90','\u1E91'],['\u1E92','\u1E93'],['\u1E94','\u1E95'],['\u1E9B','\u1E61'],['\u1EA0','\u1EA1'],['\u1EA2','\u1EA3'],['\u1EA4','\u1EA5'],['\u1EA6','\u1EA7'],['\u1EA8','\u1EA9'],['\u1EAA','\u1EAB'],['\u1EAC','\u1EAD'],['\u1EAE','\u1EAF'],['\u1EB0','\u1EB1'],['\u1EB2','\u1EB3'],['\u1EB4','\u1EB5'],['\u1EB6','\u1EB7'],['\u1EB8','\u1EB9'],['\u1EBA','\u1EBB'],['\u1EBC','\u1EBD'],['\u1EBE','\u1EBF'],['\u1EC0','\u1EC1'],['\u1EC2','\u1EC3'],['\u1EC4','\u1EC5'],['\u1EC6','\u1EC7'],['\u1EC8','\u1EC9'],['\u1ECA','\u1ECB'],['\u1ECC','\u1ECD'],['\u1ECE','\u1ECF'],['\u1ED0','\u1ED1'],['\u1ED2','\u1ED3'],['\u1ED4','\u1ED5'],['\u1ED6','\u1ED7'],['\u1ED8','\u1ED9'],['\u1EDA','\u1EDB'],['\u1EDC','\u1EDD'],['\u1EDE','\u1EDF'],['\u1EE0','\u1EE1'],['\u1EE2','\u1EE3'],['\u1EE4','\u1EE5'],['\u1EE6','\u1EE7'],['\u1EE8','\u1EE9'],['\u1EEA','\u1EEB'],['\u1EEC','\u1EED'],['\u1EEE','\u1EEF'],['\u1EF0','\u1EF1'],['\u1EF2','\u1EF3'],['\u1EF4','\u1EF5'],['\u1EF6','\u1EF7'],['\u1EF8','\u1EF9'],['\u1EFA','\u1EFB'],['\u1EFC','\u1EFD'],['\u1EFE','\u1EFF'],['\u1F08','\u1F00'],['\u1F09','\u1F01'],['\u1F0A','\u1F02'],['\u1F0B','\u1F03'],['\u1F0C','\u1F04'],['\u1F0D','\u1F05'],['\u1F0E','\u1F06'],['\u1F0F','\u1F07'],['\u1F18','\u1F10'],['\u1F19','\u1F11'],['\u1F1A','\u1F12'],['\u1F1B','\u1F13'],['\u1F1C','\u1F14'],['\u1F1D','\u1F15'],['\u1F28','\u1F20'],['\u1F29','\u1F21'],['\u1F2A','\u1F22'],['\u1F2B','\u1F23'],['\u1F2C','\u1F24'],['\u1F2D','\u1F25'],['\u1F2E','\u1F26'],['\u1F2F','\u1F27'],['\u1F38','\u1F30'],['\u1F39','\u1F31'],['\u1F3A','\u1F32'],['\u1F3B','\u1F33'],['\u1F3C','\u1F34'],['\u1F3D','\u1F35'],['\u1F3E','\u1F36'],['\u1F3F','\u1F37'],['\u1F48','\u1F40'],['\u1F49','\u1F41'],['\u1F4A','\u1F42'],['\u1F4B','\u1F43'],['\u1F4C','\u1F44'],['\u1F4D','\u1F45'],['\u1F59','\u1F51'],['\u1F5B','\u1F53'],['\u1F5D','\u1F55'],['\u1F5F','\u1F57'],['\u1F68','\u1F60'],['\u1F69','\u1F61'],['\u1F6A','\u1F62'],['\u1F6B','\u1F63'],['\u1F6C','\u1F64'],['\u1F6D','\u1F65'],['\u1F6E','\u1F66'],['\u1F6F','\u1F67'],['\u1FB8','\u1FB0'],['\u1FB9','\u1FB1'],['\u1FBA','\u1F70'],['\u1FBB','\u1F71'],['\u1FBE','\u03B9'],['\u1FC8','\u1F72'],['\u1FC9','\u1F73'],['\u1FCA','\u1F74'],['\u1FCB','\u1F75'],['\u1FD8','\u1FD0'],['\u1FD9','\u1FD1'],['\u1FDA','\u1F76'],['\u1FDB','\u1F77'],['\u1FE8','\u1FE0'],['\u1FE9','\u1FE1'],['\u1FEA','\u1F7A'],['\u1FEB','\u1F7B'],['\u1FEC','\u1FE5'],['\u1FF8','\u1F78'],['\u1FF9','\u1F79'],['\u1FFA','\u1F7C'],['\u1FFB','\u1F7D'],['\u2126','\u03C9'],['\u212A','k'],['\u212B','\xE5'],['\u2132','\u214E'],['\u2160','\u2170'],['\u2161','\u2171'],['\u2162','\u2172'],['\u2163','\u2173'],['\u2164','\u2174'],['\u2165','\u2175'],['\u2166','\u2176'],['\u2167','\u2177'],['\u2168','\u2178'],['\u2169','\u2179'],['\u216A','\u217A'],['\u216B','\u217B'],['\u216C','\u217C'],['\u216D','\u217D'],['\u216E','\u217E'],['\u216F','\u217F'],['\u2183','\u2184'],['\u24B6','\u24D0'],['\u24B7','\u24D1'],['\u24B8','\u24D2'],['\u24B9','\u24D3'],['\u24BA','\u24D4'],['\u24BB','\u24D5'],['\u24BC','\u24D6'],['\u24BD','\u24D7'],['\u24BE','\u24D8'],['\u24BF','\u24D9'],['\u24C0','\u24DA'],['\u24C1','\u24DB'],['\u24C2','\u24DC'],['\u24C3','\u24DD'],['\u24C4','\u24DE'],['\u24C5','\u24DF'],['\u24C6','\u24E0'],['\u24C7','\u24E1'],['\u24C8','\u24E2'],['\u24C9','\u24E3'],['\u24CA','\u24E4'],['\u24CB','\u24E5'],['\u24CC','\u24E6'],['\u24CD','\u24E7'],['\u24CE','\u24E8'],['\u24CF','\u24E9'],['\u2C00','\u2C30'],['\u2C01','\u2C31'],['\u2C02','\u2C32'],['\u2C03','\u2C33'],['\u2C04','\u2C34'],['\u2C05','\u2C35'],['\u2C06','\u2C36'],['\u2C07','\u2C37'],['\u2C08','\u2C38'],['\u2C09','\u2C39'],['\u2C0A','\u2C3A'],['\u2C0B','\u2C3B'],['\u2C0C','\u2C3C'],['\u2C0D','\u2C3D'],['\u2C0E','\u2C3E'],['\u2C0F','\u2C3F'],['\u2C10','\u2C40'],['\u2C11','\u2C41'],['\u2C12','\u2C42'],['\u2C13','\u2C43'],['\u2C14','\u2C44'],['\u2C15','\u2C45'],['\u2C16','\u2C46'],['\u2C17','\u2C47'],['\u2C18','\u2C48'],['\u2C19','\u2C49'],['\u2C1A','\u2C4A'],['\u2C1B','\u2C4B'],['\u2C1C','\u2C4C'],['\u2C1D','\u2C4D'],['\u2C1E','\u2C4E'],['\u2C1F','\u2C4F'],['\u2C20','\u2C50'],['\u2C21','\u2C51'],['\u2C22','\u2C52'],['\u2C23','\u2C53'],['\u2C24','\u2C54'],['\u2C25','\u2C55'],['\u2C26','\u2C56'],['\u2C27','\u2C57'],['\u2C28','\u2C58'],['\u2C29','\u2C59'],['\u2C2A','\u2C5A'],['\u2C2B','\u2C5B'],['\u2C2C','\u2C5C'],['\u2C2D','\u2C5D'],['\u2C2E','\u2C5E'],['\u2C60','\u2C61'],['\u2C62','\u026B'],['\u2C63','\u1D7D'],['\u2C64','\u027D'],['\u2C67','\u2C68'],['\u2C69','\u2C6A'],['\u2C6B','\u2C6C'],['\u2C6D','\u0251'],['\u2C6E','\u0271'],['\u2C6F','\u0250'],['\u2C70','\u0252'],['\u2C72','\u2C73'],['\u2C75','\u2C76'],['\u2C7E','\u023F'],['\u2C7F','\u0240'],['\u2C80','\u2C81'],['\u2C82','\u2C83'],['\u2C84','\u2C85'],['\u2C86','\u2C87'],['\u2C88','\u2C89'],['\u2C8A','\u2C8B'],['\u2C8C','\u2C8D'],['\u2C8E','\u2C8F'],['\u2C90','\u2C91'],['\u2C92','\u2C93'],['\u2C94','\u2C95'],['\u2C96','\u2C97'],['\u2C98','\u2C99'],['\u2C9A','\u2C9B'],['\u2C9C','\u2C9D'],['\u2C9E','\u2C9F'],['\u2CA0','\u2CA1'],['\u2CA2','\u2CA3'],['\u2CA4','\u2CA5'],['\u2CA6','\u2CA7'],['\u2CA8','\u2CA9'],['\u2CAA','\u2CAB'],['\u2CAC','\u2CAD'],['\u2CAE','\u2CAF'],['\u2CB0','\u2CB1'],['\u2CB2','\u2CB3'],['\u2CB4','\u2CB5'],['\u2CB6','\u2CB7'],['\u2CB8','\u2CB9'],['\u2CBA','\u2CBB'],['\u2CBC','\u2CBD'],['\u2CBE','\u2CBF'],['\u2CC0','\u2CC1'],['\u2CC2','\u2CC3'],['\u2CC4','\u2CC5'],['\u2CC6','\u2CC7'],['\u2CC8','\u2CC9'],['\u2CCA','\u2CCB'],['\u2CCC','\u2CCD'],['\u2CCE','\u2CCF'],['\u2CD0','\u2CD1'],['\u2CD2','\u2CD3'],['\u2CD4','\u2CD5'],['\u2CD6','\u2CD7'],['\u2CD8','\u2CD9'],['\u2CDA','\u2CDB'],['\u2CDC','\u2CDD'],['\u2CDE','\u2CDF'],['\u2CE0','\u2CE1'],['\u2CE2','\u2CE3'],['\u2CEB','\u2CEC'],['\u2CED','\u2CEE'],['\u2CF2','\u2CF3'],['\uA640','\uA641'],['\uA642','\uA643'],['\uA644','\uA645'],['\uA646','\uA647'],['\uA648','\uA649'],['\uA64A','\uA64B'],['\uA64C','\uA64D'],['\uA64E','\uA64F'],['\uA650','\uA651'],['\uA652','\uA653'],['\uA654','\uA655'],['\uA656','\uA657'],['\uA658','\uA659'],['\uA65A','\uA65B'],['\uA65C','\uA65D'],['\uA65E','\uA65F'],['\uA660','\uA661'],['\uA662','\uA663'],['\uA664','\uA665'],['\uA666','\uA667'],['\uA668','\uA669'],['\uA66A','\uA66B'],['\uA66C','\uA66D'],['\uA680','\uA681'],['\uA682','\uA683'],['\uA684','\uA685'],['\uA686','\uA687'],['\uA688','\uA689'],['\uA68A','\uA68B'],['\uA68C','\uA68D'],['\uA68E','\uA68F'],['\uA690','\uA691'],['\uA692','\uA693'],['\uA694','\uA695'],['\uA696','\uA697'],['\uA698','\uA699'],['\uA69A','\uA69B'],['\uA722','\uA723'],['\uA724','\uA725'],['\uA726','\uA727'],['\uA728','\uA729'],['\uA72A','\uA72B'],['\uA72C','\uA72D'],['\uA72E','\uA72F'],['\uA732','\uA733'],['\uA734','\uA735'],['\uA736','\uA737'],['\uA738','\uA739'],['\uA73A','\uA73B'],['\uA73C','\uA73D'],['\uA73E','\uA73F'],['\uA740','\uA741'],['\uA742','\uA743'],['\uA744','\uA745'],['\uA746','\uA747'],['\uA748','\uA749'],['\uA74A','\uA74B'],['\uA74C','\uA74D'],['\uA74E','\uA74F'],['\uA750','\uA751'],['\uA752','\uA753'],['\uA754','\uA755'],['\uA756','\uA757'],['\uA758','\uA759'],['\uA75A','\uA75B'],['\uA75C','\uA75D'],['\uA75E','\uA75F'],['\uA760','\uA761'],['\uA762','\uA763'],['\uA764','\uA765'],['\uA766','\uA767'],['\uA768','\uA769'],['\uA76A','\uA76B'],['\uA76C','\uA76D'],['\uA76E','\uA76F'],['\uA779','\uA77A'],['\uA77B','\uA77C'],['\uA77D','\u1D79'],['\uA77E','\uA77F'],['\uA780','\uA781'],['\uA782','\uA783'],['\uA784','\uA785'],['\uA786','\uA787'],['\uA78B','\uA78C'],['\uA78D','\u0265'],['\uA790','\uA791'],['\uA792','\uA793'],['\uA796','\uA797'],['\uA798','\uA799'],['\uA79A','\uA79B'],['\uA79C','\uA79D'],['\uA79E','\uA79F'],['\uA7A0','\uA7A1'],['\uA7A2','\uA7A3'],['\uA7A4','\uA7A5'],['\uA7A6','\uA7A7'],['\uA7A8','\uA7A9'],['\uA7AA','\u0266'],['\uA7AB','\u025C'],['\uA7AC','\u0261'],['\uA7AD','\u026C'],['\uA7AE','\u026A'],['\uA7B0','\u029E'],['\uA7B1','\u0287'],['\uA7B2','\u029D'],['\uA7B3','\uAB53'],['\uA7B4','\uA7B5'],['\uA7B6','\uA7B7'],['\uA7B8','\uA7B9'],['\uA7BA','\uA7BB'],['\uA7BC','\uA7BD'],['\uA7BE','\uA7BF'],['\uA7C2','\uA7C3'],['\uA7C4','\uA794'],['\uA7C5','\u0282'],['\uA7C6','\u1D8E'],['\uA7C7','\uA7C8'],['\uA7C9','\uA7CA'],['\uA7F5','\uA7F6'],['\uAB70','\u13A0'],['\uAB71','\u13A1'],['\uAB72','\u13A2'],['\uAB73','\u13A3'],['\uAB74','\u13A4'],['\uAB75','\u13A5'],['\uAB76','\u13A6'],['\uAB77','\u13A7'],['\uAB78','\u13A8'],['\uAB79','\u13A9'],['\uAB7A','\u13AA'],['\uAB7B','\u13AB'],['\uAB7C','\u13AC'],['\uAB7D','\u13AD'],['\uAB7E','\u13AE'],['\uAB7F','\u13AF'],['\uAB80','\u13B0'],['\uAB81','\u13B1'],['\uAB82','\u13B2'],['\uAB83','\u13B3'],['\uAB84','\u13B4'],['\uAB85','\u13B5'],['\uAB86','\u13B6'],['\uAB87','\u13B7'],['\uAB88','\u13B8'],['\uAB89','\u13B9'],['\uAB8A','\u13BA'],['\uAB8B','\u13BB'],['\uAB8C','\u13BC'],['\uAB8D','\u13BD'],['\uAB8E','\u13BE'],['\uAB8F','\u13BF'],['\uAB90','\u13C0'],['\uAB91','\u13C1'],['\uAB92','\u13C2'],['\uAB93','\u13C3'],['\uAB94','\u13C4'],['\uAB95','\u13C5'],['\uAB96','\u13C6'],['\uAB97','\u13C7'],['\uAB98','\u13C8'],['\uAB99','\u13C9'],['\uAB9A','\u13CA'],['\uAB9B','\u13CB'],['\uAB9C','\u13CC'],['\uAB9D','\u13CD'],['\uAB9E','\u13CE'],['\uAB9F','\u13CF'],['\uABA0','\u13D0'],['\uABA1','\u13D1'],['\uABA2','\u13D2'],['\uABA3','\u13D3'],['\uABA4','\u13D4'],['\uABA5','\u13D5'],['\uABA6','\u13D6'],['\uABA7','\u13D7'],['\uABA8','\u13D8'],['\uABA9','\u13D9'],['\uABAA','\u13DA'],['\uABAB','\u13DB'],['\uABAC','\u13DC'],['\uABAD','\u13DD'],['\uABAE','\u13DE'],['\uABAF','\u13DF'],['\uABB0','\u13E0'],['\uABB1','\u13E1'],['\uABB2','\u13E2'],['\uABB3','\u13E3'],['\uABB4','\u13E4'],['\uABB5','\u13E5'],['\uABB6','\u13E6'],['\uABB7','\u13E7'],['\uABB8','\u13E8'],['\uABB9','\u13E9'],['\uABBA','\u13EA'],['\uABBB','\u13EB'],['\uABBC','\u13EC'],['\uABBD','\u13ED'],['\uABBE','\u13EE'],['\uABBF','\u13EF'],['\uFF21','\uFF41'],['\uFF22','\uFF42'],['\uFF23','\uFF43'],['\uFF24','\uFF44'],['\uFF25','\uFF45'],['\uFF26','\uFF46'],['\uFF27','\uFF47'],['\uFF28','\uFF48'],['\uFF29','\uFF49'],['\uFF2A','\uFF4A'],['\uFF2B','\uFF4B'],['\uFF2C','\uFF4C'],['\uFF2D','\uFF4D'],['\uFF2E','\uFF4E'],['\uFF2F','\uFF4F'],['\uFF30','\uFF50'],['\uFF31','\uFF51'],['\uFF32','\uFF52'],['\uFF33','\uFF53'],['\uFF34','\uFF54'],['\uFF35','\uFF55'],['\uFF36','\uFF56'],['\uFF37','\uFF57'],['\uFF38','\uFF58'],['\uFF39','\uFF59'],['\uFF3A','\uFF5A'],['\uD801\uDC00','\uD801\uDC28'],['\uD801\uDC01','\uD801\uDC29'],['\uD801\uDC02','\uD801\uDC2A'],['\uD801\uDC03','\uD801\uDC2B'],['\uD801\uDC04','\uD801\uDC2C'],['\uD801\uDC05','\uD801\uDC2D'],['\uD801\uDC06','\uD801\uDC2E'],['\uD801\uDC07','\uD801\uDC2F'],['\uD801\uDC08','\uD801\uDC30'],['\uD801\uDC09','\uD801\uDC31'],['\uD801\uDC0A','\uD801\uDC32'],['\uD801\uDC0B','\uD801\uDC33'],['\uD801\uDC0C','\uD801\uDC34'],['\uD801\uDC0D','\uD801\uDC35'],['\uD801\uDC0E','\uD801\uDC36'],['\uD801\uDC0F','\uD801\uDC37'],['\uD801\uDC10','\uD801\uDC38'],['\uD801\uDC11','\uD801\uDC39'],['\uD801\uDC12','\uD801\uDC3A'],['\uD801\uDC13','\uD801\uDC3B'],['\uD801\uDC14','\uD801\uDC3C'],['\uD801\uDC15','\uD801\uDC3D'],['\uD801\uDC16','\uD801\uDC3E'],['\uD801\uDC17','\uD801\uDC3F'],['\uD801\uDC18','\uD801\uDC40'],['\uD801\uDC19','\uD801\uDC41'],['\uD801\uDC1A','\uD801\uDC42'],['\uD801\uDC1B','\uD801\uDC43'],['\uD801\uDC1C','\uD801\uDC44'],['\uD801\uDC1D','\uD801\uDC45'],['\uD801\uDC1E','\uD801\uDC46'],['\uD801\uDC1F','\uD801\uDC47'],['\uD801\uDC20','\uD801\uDC48'],['\uD801\uDC21','\uD801\uDC49'],['\uD801\uDC22','\uD801\uDC4A'],['\uD801\uDC23','\uD801\uDC4B'],['\uD801\uDC24','\uD801\uDC4C'],['\uD801\uDC25','\uD801\uDC4D'],['\uD801\uDC26','\uD801\uDC4E'],['\uD801\uDC27','\uD801\uDC4F'],['\uD801\uDCB0','\uD801\uDCD8'],['\uD801\uDCB1','\uD801\uDCD9'],['\uD801\uDCB2','\uD801\uDCDA'],['\uD801\uDCB3','\uD801\uDCDB'],['\uD801\uDCB4','\uD801\uDCDC'],['\uD801\uDCB5','\uD801\uDCDD'],['\uD801\uDCB6','\uD801\uDCDE'],['\uD801\uDCB7','\uD801\uDCDF'],['\uD801\uDCB8','\uD801\uDCE0'],['\uD801\uDCB9','\uD801\uDCE1'],['\uD801\uDCBA','\uD801\uDCE2'],['\uD801\uDCBB','\uD801\uDCE3'],['\uD801\uDCBC','\uD801\uDCE4'],['\uD801\uDCBD','\uD801\uDCE5'],['\uD801\uDCBE','\uD801\uDCE6'],['\uD801\uDCBF','\uD801\uDCE7'],['\uD801\uDCC0','\uD801\uDCE8'],['\uD801\uDCC1','\uD801\uDCE9'],['\uD801\uDCC2','\uD801\uDCEA'],['\uD801\uDCC3','\uD801\uDCEB'],['\uD801\uDCC4','\uD801\uDCEC'],['\uD801\uDCC5','\uD801\uDCED'],['\uD801\uDCC6','\uD801\uDCEE'],['\uD801\uDCC7','\uD801\uDCEF'],['\uD801\uDCC8','\uD801\uDCF0'],['\uD801\uDCC9','\uD801\uDCF1'],['\uD801\uDCCA','\uD801\uDCF2'],['\uD801\uDCCB','\uD801\uDCF3'],['\uD801\uDCCC','\uD801\uDCF4'],['\uD801\uDCCD','\uD801\uDCF5'],['\uD801\uDCCE','\uD801\uDCF6'],['\uD801\uDCCF','\uD801\uDCF7'],['\uD801\uDCD0','\uD801\uDCF8'],['\uD801\uDCD1','\uD801\uDCF9'],['\uD801\uDCD2','\uD801\uDCFA'],['\uD801\uDCD3','\uD801\uDCFB'],['\uD803\uDC80','\uD803\uDCC0'],['\uD803\uDC81','\uD803\uDCC1'],['\uD803\uDC82','\uD803\uDCC2'],['\uD803\uDC83','\uD803\uDCC3'],['\uD803\uDC84','\uD803\uDCC4'],['\uD803\uDC85','\uD803\uDCC5'],['\uD803\uDC86','\uD803\uDCC6'],['\uD803\uDC87','\uD803\uDCC7'],['\uD803\uDC88','\uD803\uDCC8'],['\uD803\uDC89','\uD803\uDCC9'],['\uD803\uDC8A','\uD803\uDCCA'],['\uD803\uDC8B','\uD803\uDCCB'],['\uD803\uDC8C','\uD803\uDCCC'],['\uD803\uDC8D','\uD803\uDCCD'],['\uD803\uDC8E','\uD803\uDCCE'],['\uD803\uDC8F','\uD803\uDCCF'],['\uD803\uDC90','\uD803\uDCD0'],['\uD803\uDC91','\uD803\uDCD1'],['\uD803\uDC92','\uD803\uDCD2'],['\uD803\uDC93','\uD803\uDCD3'],['\uD803\uDC94','\uD803\uDCD4'],['\uD803\uDC95','\uD803\uDCD5'],['\uD803\uDC96','\uD803\uDCD6'],['\uD803\uDC97','\uD803\uDCD7'],['\uD803\uDC98','\uD803\uDCD8'],['\uD803\uDC99','\uD803\uDCD9'],['\uD803\uDC9A','\uD803\uDCDA'],['\uD803\uDC9B','\uD803\uDCDB'],['\uD803\uDC9C','\uD803\uDCDC'],['\uD803\uDC9D','\uD803\uDCDD'],['\uD803\uDC9E','\uD803\uDCDE'],['\uD803\uDC9F','\uD803\uDCDF'],['\uD803\uDCA0','\uD803\uDCE0'],['\uD803\uDCA1','\uD803\uDCE1'],['\uD803\uDCA2','\uD803\uDCE2'],['\uD803\uDCA3','\uD803\uDCE3'],['\uD803\uDCA4','\uD803\uDCE4'],['\uD803\uDCA5','\uD803\uDCE5'],['\uD803\uDCA6','\uD803\uDCE6'],['\uD803\uDCA7','\uD803\uDCE7'],['\uD803\uDCA8','\uD803\uDCE8'],['\uD803\uDCA9','\uD803\uDCE9'],['\uD803\uDCAA','\uD803\uDCEA'],['\uD803\uDCAB','\uD803\uDCEB'],['\uD803\uDCAC','\uD803\uDCEC'],['\uD803\uDCAD','\uD803\uDCED'],['\uD803\uDCAE','\uD803\uDCEE'],['\uD803\uDCAF','\uD803\uDCEF'],['\uD803\uDCB0','\uD803\uDCF0'],['\uD803\uDCB1','\uD803\uDCF1'],['\uD803\uDCB2','\uD803\uDCF2'],['\uD806\uDCA0','\uD806\uDCC0'],['\uD806\uDCA1','\uD806\uDCC1'],['\uD806\uDCA2','\uD806\uDCC2'],['\uD806\uDCA3','\uD806\uDCC3'],['\uD806\uDCA4','\uD806\uDCC4'],['\uD806\uDCA5','\uD806\uDCC5'],['\uD806\uDCA6','\uD806\uDCC6'],['\uD806\uDCA7','\uD806\uDCC7'],['\uD806\uDCA8','\uD806\uDCC8'],['\uD806\uDCA9','\uD806\uDCC9'],['\uD806\uDCAA','\uD806\uDCCA'],['\uD806\uDCAB','\uD806\uDCCB'],['\uD806\uDCAC','\uD806\uDCCC'],['\uD806\uDCAD','\uD806\uDCCD'],['\uD806\uDCAE','\uD806\uDCCE'],['\uD806\uDCAF','\uD806\uDCCF'],['\uD806\uDCB0','\uD806\uDCD0'],['\uD806\uDCB1','\uD806\uDCD1'],['\uD806\uDCB2','\uD806\uDCD2'],['\uD806\uDCB3','\uD806\uDCD3'],['\uD806\uDCB4','\uD806\uDCD4'],['\uD806\uDCB5','\uD806\uDCD5'],['\uD806\uDCB6','\uD806\uDCD6'],['\uD806\uDCB7','\uD806\uDCD7'],['\uD806\uDCB8','\uD806\uDCD8'],['\uD806\uDCB9','\uD806\uDCD9'],['\uD806\uDCBA','\uD806\uDCDA'],['\uD806\uDCBB','\uD806\uDCDB'],['\uD806\uDCBC','\uD806\uDCDC'],['\uD806\uDCBD','\uD806\uDCDD'],['\uD806\uDCBE','\uD806\uDCDE'],['\uD806\uDCBF','\uD806\uDCDF'],['\uD81B\uDE40','\uD81B\uDE60'],['\uD81B\uDE41','\uD81B\uDE61'],['\uD81B\uDE42','\uD81B\uDE62'],['\uD81B\uDE43','\uD81B\uDE63'],['\uD81B\uDE44','\uD81B\uDE64'],['\uD81B\uDE45','\uD81B\uDE65'],['\uD81B\uDE46','\uD81B\uDE66'],['\uD81B\uDE47','\uD81B\uDE67'],['\uD81B\uDE48','\uD81B\uDE68'],['\uD81B\uDE49','\uD81B\uDE69'],['\uD81B\uDE4A','\uD81B\uDE6A'],['\uD81B\uDE4B','\uD81B\uDE6B'],['\uD81B\uDE4C','\uD81B\uDE6C'],['\uD81B\uDE4D','\uD81B\uDE6D'],['\uD81B\uDE4E','\uD81B\uDE6E'],['\uD81B\uDE4F','\uD81B\uDE6F'],['\uD81B\uDE50','\uD81B\uDE70'],['\uD81B\uDE51','\uD81B\uDE71'],['\uD81B\uDE52','\uD81B\uDE72'],['\uD81B\uDE53','\uD81B\uDE73'],['\uD81B\uDE54','\uD81B\uDE74'],['\uD81B\uDE55','\uD81B\uDE75'],['\uD81B\uDE56','\uD81B\uDE76'],['\uD81B\uDE57','\uD81B\uDE77'],['\uD81B\uDE58','\uD81B\uDE78'],['\uD81B\uDE59','\uD81B\uDE79'],['\uD81B\uDE5A','\uD81B\uDE7A'],['\uD81B\uDE5B','\uD81B\uDE7B'],['\uD81B\uDE5C','\uD81B\uDE7C'],['\uD81B\uDE5D','\uD81B\uDE7D'],['\uD81B\uDE5E','\uD81B\uDE7E'],['\uD81B\uDE5F','\uD81B\uDE7F'],['\uD83A\uDD00','\uD83A\uDD22'],['\uD83A\uDD01','\uD83A\uDD23'],['\uD83A\uDD02','\uD83A\uDD24'],['\uD83A\uDD03','\uD83A\uDD25'],['\uD83A\uDD04','\uD83A\uDD26'],['\uD83A\uDD05','\uD83A\uDD27'],['\uD83A\uDD06','\uD83A\uDD28'],['\uD83A\uDD07','\uD83A\uDD29'],['\uD83A\uDD08','\uD83A\uDD2A'],['\uD83A\uDD09','\uD83A\uDD2B'],['\uD83A\uDD0A','\uD83A\uDD2C'],['\uD83A\uDD0B','\uD83A\uDD2D'],['\uD83A\uDD0C','\uD83A\uDD2E'],['\uD83A\uDD0D','\uD83A\uDD2F'],['\uD83A\uDD0E','\uD83A\uDD30'],['\uD83A\uDD0F','\uD83A\uDD31'],['\uD83A\uDD10','\uD83A\uDD32'],['\uD83A\uDD11','\uD83A\uDD33'],['\uD83A\uDD12','\uD83A\uDD34'],['\uD83A\uDD13','\uD83A\uDD35'],['\uD83A\uDD14','\uD83A\uDD36'],['\uD83A\uDD15','\uD83A\uDD37'],['\uD83A\uDD16','\uD83A\uDD38'],['\uD83A\uDD17','\uD83A\uDD39'],['\uD83A\uDD18','\uD83A\uDD3A'],['\uD83A\uDD19','\uD83A\uDD3B'],['\uD83A\uDD1A','\uD83A\uDD3C'],['\uD83A\uDD1B','\uD83A\uDD3D'],['\uD83A\uDD1C','\uD83A\uDD3E'],['\uD83A\uDD1D','\uD83A\uDD3F'],['\uD83A\uDD1E','\uD83A\uDD40'],['\uD83A\uDD1F','\uD83A\uDD41'],['\uD83A\uDD20','\uD83A\uDD42'],['\uD83A\uDD21','\uD83A\uDD43']]);
+
+var symbols$1=new Map([['\u1E9E','\xDF'],['\u1F88','\u1F80'],['\u1F89','\u1F81'],['\u1F8A','\u1F82'],['\u1F8B','\u1F83'],['\u1F8C','\u1F84'],['\u1F8D','\u1F85'],['\u1F8E','\u1F86'],['\u1F8F','\u1F87'],['\u1F98','\u1F90'],['\u1F99','\u1F91'],['\u1F9A','\u1F92'],['\u1F9B','\u1F93'],['\u1F9C','\u1F94'],['\u1F9D','\u1F95'],['\u1F9E','\u1F96'],['\u1F9F','\u1F97'],['\u1FA8','\u1FA0'],['\u1FA9','\u1FA1'],['\u1FAA','\u1FA2'],['\u1FAB','\u1FA3'],['\u1FAC','\u1FA4'],['\u1FAD','\u1FA5'],['\u1FAE','\u1FA6'],['\u1FAF','\u1FA7'],['\u1FBC','\u1FB3'],['\u1FCC','\u1FC3'],['\u1FFC','\u1FF3']]);
+
+class State {
+  constructor(endIndex, captures) {
+    this.endIndex = endIndex;
+    this.captures = captures;
+  }
+
+}
+function getMatcher(parsedRegex, flags) {
+  const {
+    pattern,
+    capturingParens,
+    groupSpecifiers
+  } = parsedRegex;
+  const DotAll = flags.includes('s');
+  const IgnoreCase = flags.includes('i');
+  const Multiline = flags.includes('m');
+  const Unicode = flags.includes('u');
+  const NcapturingParens = capturingParens.length;
+  const internalRegExpFlags = `${Unicode ? 'u' : ''}${IgnoreCase ? 'i' : ''}`; // 21.2.2.2 #sec-pattern
+
+  return function patternMatcher(str, mainIndex) {
+    const mainM = Evaluate_Disjunction(pattern.Disjunction, 1);
+    Assert(Type(str) === 'String', "Type(str) === 'String'");
+
+    let _temp = IsNonNegativeInteger(mainIndex);
+
+    Assert(!(_temp instanceof AbruptCompletion), "IsNonNegativeInteger(mainIndex)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    Assert(_temp === Value.true && mainIndex.numberValue() <= str.stringValue().length, "X(IsNonNegativeInteger(mainIndex)) === Value.true && mainIndex.numberValue() <= str.stringValue().length"); // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! UTF16DecodeString(str).
+    //    Otherwise, let Input be a List consisting of the sequence of code units that are the elements of str.
+
+    const Input = Unicode ? Array.from(str.stringValue()) : str.stringValue().split('');
+    const InputLength = Input.length; // d. Let listIndex be the index into Input of the character that was obtained from element index of str.
+
+    let listIndex = 0;
+    let seenChars = 0;
+
+    for (const char of Input) {
+      seenChars += char.length;
+
+      if (seenChars > mainIndex.numberValue()) {
+        break;
+      }
+
+      listIndex += 1;
+    }
+
+    function mainC(y) {
+      Assert(y instanceof State, "y instanceof State");
+      return y;
+    }
+
+    const mainCap = new Array(NcapturingParens + 1).fill(Value.undefined);
+    const mainX = new State(listIndex, mainCap);
+    return mainM(mainX, mainC); // 21.2.2.3 #sec-disjunction
+
+    function Evaluate_Disjunction(Disjunction, direction) {
+      if (Disjunction.Alternatives.length === 1) {
+        const m = Evaluate_Alternative(Disjunction.Alternatives[0], direction);
+        return m;
+      } else {
+        const M = Disjunction.Alternatives.map(Alternative => Evaluate_Alternative(Alternative, direction));
+        return function disjunctionAlternativeDisjunctionMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          for (const m of M) {
+            const r = m(x, c);
+
+            if (r !== 'failure') {
+              return r;
+            }
+          }
+
+          return 'failure';
+        };
+      }
+    } // 21.2.2.4 #sec-alternative
+
+
+    function Evaluate_Alternative(Alternative, direction) {
+      if (Alternative.Terms.length === 0) {
+        return function alternativeEmptyMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          return c(x);
+        };
+      }
+
+      if (Alternative.Terms.length === 1) {
+        return Evaluate_Term(Alternative.Terms[0], direction);
+      } else {
+        const M = Alternative.Terms.map(Term => Evaluate_Term(Term, direction));
+
+        if (direction === 1) {
+          return function alternativePositiveDirectionMatcher(x, c) {
+            Assert(x instanceof State, "x instanceof State");
+            Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+            const d = M.slice(1).reduceRight((prev, cur) => function alternativePositiveContinuation(y) {
+              Assert(y instanceof State, "y instanceof State");
+              return cur(y, prev);
+            }, c);
+            return M[0](x, d);
+          };
+        } else {
+          Assert(direction === -1, "direction === -1");
+          return function alternativeNegativeDirectionMatcher(x, c) {
+            Assert(x instanceof State, "x instanceof State");
+            Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+            const d = M.slice(0, -1).reduce((prev, cur) => function alternativeNegativeContinuation(y) {
+              Assert(y instanceof State, "y instanceof State");
+              return cur(y, prev);
+            }, c);
+            return M[M.length - 1](x, d);
+          };
+        }
+      }
+    } // 21.2.2.5 #sec-term
+
+
+    function Evaluate_Term(Term, direction) {
+      if (Term.subtype === 'Assertion') {
+        return Evaluate_Assertion(Term.Assertion);
+      }
+
+      if (Term.subtype === 'Atom') {
+        return Evaluate_Atom(Term.Atom, direction);
+      }
+
+      if (Term.subtype === 'AtomQuantifier') {
+        const m = Evaluate_Atom(Term.Atom, direction);
+        const {
+          min,
+          max,
+          greedy
+        } = Evaluate_Quantifier(Term.Quantifier);
+        Assert(!Number.isFinite(max) || max >= min, "!Number.isFinite(max) || max >= min");
+        const parenIndex = Term.capturingParensBefore;
+        const parenCount = Term.Atom.enclosedCapturingParens;
+        return function termAtomQuantifierMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          return RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount);
+        };
+      }
+
+      throw new Error('unreachable');
+    } // 21.2.2.5.1 #sec-runtime-semantics-repeatmatcher-abstract-operation
+
+
+    function RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) {
+      if (max === 0) {
+        return c(x);
+      }
+
+      const d = function repeatMatcherContinuation(y) {
+        Assert(y instanceof State, "y instanceof State");
+
+        if (min === 0 && y.endIndex === x.endIndex) {
+          return 'failure';
+        }
+
+        const min2 = min === 0 ? 0 : min - 1;
+        const max2 = max === Infinity ? Infinity : max - 1;
+        return RepeatMatcher(m, min2, max2, greedy, y, c, parenIndex, parenCount);
+      };
+
+      const cap = x.captures.slice();
+
+      for (let k = parenIndex + 1; k <= parenIndex + parenCount; k += 1) {
+        cap[k] = Value.undefined;
+      }
+
+      const e = x.endIndex;
+      const xr = new State(e, cap);
+
+      if (min !== 0) {
+        return m(xr, d);
+      }
+
+      if (greedy === false) {
+        const z = c(x);
+
+        if (z !== 'failure') {
+          return z;
+        }
+
+        return m(xr, d);
+      }
+
+      const z = m(xr, d);
+
+      if (z !== 'failure') {
+        return z;
+      }
+
+      return c(x);
+    } // 21.2.2.6 #sec-assertion
+
+
+    function Evaluate_Assertion(Assertion) {
+      if (Assertion.subtype === '^') {
+        return function assertionStartMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          const e = x.endIndex;
+
+          if (e === 0 || Multiline === true && isLineTerminator(Input[e - 1])) {
+            return c(x);
+          }
+
+          return 'failure';
+        };
+      }
+
+      if (Assertion.subtype === '$') {
+        return function assertionEndMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          const e = x.endIndex;
+
+          if (e === InputLength || Multiline === true && isLineTerminator(Input[e])) {
+            return c(x);
+          }
+
+          return 'failure';
+        };
+      }
+
+      if (Assertion.subtype === '\\b') {
+        return function assertionWordBoundaryMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          const e = x.endIndex;
+          const a = IsWordChar(e - 1);
+          const b = IsWordChar(e);
+
+          if (a === true && b === false || a === false && b === true) {
+            return c(x);
+          }
+
+          return 'failure';
+        };
+      }
+
+      if (Assertion.subtype === '\\B') {
+        return function assertionNonWordBoundaryMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          const e = x.endIndex;
+          const a = IsWordChar(e - 1);
+          const b = IsWordChar(e);
+
+          if (a === true && b === true || a === false && b === false) {
+            return c(x);
+          }
+
+          return 'failure';
+        };
+      }
+
+      if (Assertion.subtype === '(?=') {
+        const m = Evaluate_Disjunction(Assertion.Disjunction, 1);
+        return function assertionPositiveLookaheadMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          const d = function assertionPositiveLookaheadContinuation(y) {
+            Assert(y instanceof State, "y instanceof State");
+            return y;
+          };
+
+          const r = m(x, d);
+
+          if (r === 'failure') {
+            return 'failure';
+          }
+
+          const y = r;
+          const cap = y.captures;
+          const xe = x.endIndex;
+          const z = new State(xe, cap);
+          return c(z);
+        };
+      }
+
+      if (Assertion.subtype === '(?!') {
+        const m = Evaluate_Disjunction(Assertion.Disjunction, 1);
+        return function assertionNegativeLookaheadMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          const d = function assertionNegativeLookaheadContinuation(y) {
+            Assert(y instanceof State, "y instanceof State");
+            return y;
+          };
+
+          const r = m(x, d);
+
+          if (r !== 'failure') {
+            return 'failure';
+          }
+
+          return c(x);
+        };
+      }
+
+      if (Assertion.subtype === '(?<=') {
+        const m = Evaluate_Disjunction(Assertion.Disjunction, -1);
+        return function assertionPositiveLookbehindMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          const d = function assertionPositiveLookbehindContinuation(y) {
+            Assert(y instanceof State, "y instanceof State");
+            return y;
+          };
+
+          const r = m(x, d);
+
+          if (r === 'failure') {
+            return 'failure';
+          }
+
+          const y = r;
+          const cap = y.captures;
+          const xe = x.endIndex;
+          const z = new State(xe, cap);
+          return c(z);
+        };
+      }
+
+      if (Assertion.subtype === '(?<!') {
+        const m = Evaluate_Disjunction(Assertion.Disjunction, -1);
+        return function assertionNegativeLookbehindMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          const d = function assertionNegativeLookbehindContinuation(y) {
+            Assert(y instanceof State, "y instanceof State");
+            return y;
+          };
+
+          const r = m(x, d);
+
+          if (r !== 'failure') {
+            return 'failure';
+          }
+
+          return c(x);
+        };
+      }
+
+      throw new Error('unreachable');
+    } // 21.2.2.6.1 #sec-runtime-semantics-wordcharacters-abstract-operation
+
+
+    function WordCharacters() {
+      const wordChar = new RegExp('^\\w$', internalRegExpFlags);
+      return function testWordCharacters(cc) {
+        return wordChar.test(cc);
+      };
+    } // 21.2.2.6.2 #sec-runtime-semantics-iswordchar-abstract-operation
+
+
+    function IsWordChar(e) {
+      if (e === -1 || e === InputLength) {
+        return false;
+      }
+
+      const c = Input[e];
+
+      let _temp2 = WordCharacters();
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "WordCharacters()" + ' returned an abrupt completion');
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      const wordChars = _temp2;
+
+      if (wordChars(c)) {
+        return true;
+      }
+
+      return false;
+    } // 21.2.2.7 #sec-quantifier
+
+
+    function Evaluate_Quantifier(Quantifier) {
+      if (Quantifier.greedy) {
+        const {
+          min,
+          max
+        } = Evaluate_QuantifierPrefix(Quantifier.QuantifierPrefix);
+        return {
+          min,
+          max,
+          greedy: true
+        };
+      } else {
+        const {
+          min,
+          max
+        } = Evaluate_QuantifierPrefix(Quantifier.QuantifierPrefix);
+        return {
+          min,
+          max,
+          greedy: false
+        };
+      }
+    }
+
+    function Evaluate_QuantifierPrefix(QuantifierPrefix) {
+      if (QuantifierPrefix.subtype === '*') {
+        return {
+          min: 0,
+          max: Infinity
+        };
+      }
+
+      if (QuantifierPrefix.subtype === '+') {
+        return {
+          min: 1,
+          max: Infinity
+        };
+      }
+
+      if (QuantifierPrefix.subtype === '?') {
+        return {
+          min: 0,
+          max: 1
+        };
+      }
+
+      if (QuantifierPrefix.subtype === 'fixed') {
+        const i = QuantifierPrefix.value;
+        return {
+          min: i,
+          max: i
+        };
+      }
+
+      if (QuantifierPrefix.subtype === 'start') {
+        const i = QuantifierPrefix.start;
+        return {
+          min: i,
+          max: Infinity
+        };
+      }
+
+      if (QuantifierPrefix.subtype === 'range') {
+        const i = QuantifierPrefix.start;
+        const j = QuantifierPrefix.end;
+        return {
+          min: i,
+          max: j
+        };
+      }
+
+      throw new Error('unreachable');
+    } // 21.2.2.8 #sec-atom
+
+
+    function Evaluate_Atom(Atom, direction) {
+      if (Atom.subtype === 'PatternCharacter') {
+        const ch = Atom.PatternCharacter;
+        const A = singleCharSet(ch);
+        return CharacterSetMatcher(A, false, direction);
+      }
+
+      if (Atom.subtype === '.') {
+        let A;
+
+        if (DotAll === true) {
+          A = allCharSet();
+        } else {
+          A = noLineTerminatorCharSet();
+        }
+
+        return CharacterSetMatcher(A, false, direction);
+      }
+
+      if (Atom.subtype === '\\') {
+        return Evaluate_AtomEscape(Atom.AtomEscape, direction);
+      }
+
+      if (Atom.subtype === 'CharacterClass') {
+        const {
+          A,
+          invert
+        } = Evaluate_CharacterClass(Atom.CharacterClass);
+        return CharacterSetMatcher(A, invert, direction);
+      }
+
+      if (Atom.subtype === '(') {
+        const m = Evaluate_Disjunction(Atom.Disjunction, direction);
+        const parenIndex = Atom.capturingParensBefore;
+        return function atomCapturingParensMatcher(x, c) {
+          Assert(x instanceof State, "x instanceof State");
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+
+          const d = function atomCapturingParensContinuation(y) {
+            Assert(y instanceof State, "y instanceof State");
+            const cap = y.captures.slice();
+            const xe = x.endIndex;
+            const ye = y.endIndex;
+            let s;
+
+            if (direction === 1) {
+              Assert(xe <= ye, "xe <= ye");
+              s = Input.slice(xe, ye);
+            } else {
+              Assert(direction === -1, "direction === -1");
+              Assert(ye <= xe, "ye <= xe");
+              s = Input.slice(ye, xe);
+            }
+
+            cap[parenIndex + 1] = s;
+            const z = new State(ye, cap);
+            return c(z);
+          };
+
+          return m(x, d);
+        };
+      }
+
+      if (Atom.subtype === '(?:') {
+        return Evaluate_Disjunction(Atom.Disjunction, direction);
+      }
+
+      throw new Error('unreachable');
+    } // 21.2.2.8.1 #sec-runtime-semantics-charactersetmatcher-abstract-operation
+
+
+    function CharacterSetMatcher(A, invert, direction) {
+      return function characterSetMatcher(x, c) {
+        Assert(x instanceof State, "x instanceof State");
+        Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+        const e = x.endIndex;
+        const f = e + direction;
+
+        if (f < 0 || f > InputLength) {
+          return 'failure';
+        }
+
+        const index = Math.min(e, f);
+        const ch = Input[index];
+        const cc = Canonicalize(ch);
+
+        if (invert === false) {
+          if (!A(cc)) {
+            return 'failure';
+          }
+        } else {
+          Assert(invert === true, "invert === true");
+
+          if (A(cc)) {
+            return 'failure';
+          }
+        }
+
+        const cap = x.captures;
+        const y = new State(f, cap);
+        return c(y);
+      };
+    } // 21.2.2.8.2 #sec-runtime-semantics-canonicalize-ch
+
+
+    function Canonicalize(ch) {
+      if (IgnoreCase === false) {
+        return ch;
+      }
+
+      if (Unicode === true) {
+        if (symbols$1.has(ch)) {
+          return symbols$1.get(ch);
+        }
+
+        if (symbols.has(ch)) {
+          return symbols.get(ch);
+        }
+
+        return ch;
+      } else {
+        // Assert: ch is a UTF-16 code unit.
+        Assert(ch.length === 1, "ch.length === 1");
+        const s = ch;
+        const u = s.toUpperCase();
+
+        if (u.length !== 1) {
+          return ch;
+        }
+
+        const cu = u;
+
+        if (ch.codePointAt(0) >= 128 && cu.codePointAt(0) < 128) {
+          return ch;
+        }
+
+        return cu;
+      }
+    } // 21.2.2.9 #sec-atomescape
+
+
+    function Evaluate_AtomEscape(AtomEscape, direction) {
+      if (AtomEscape.subtype === 'DecimalEscape') {
+        const n = Evaluate_DecimalEscape(AtomEscape.DecimalEscape);
+        Assert(n <= NcapturingParens, "n <= NcapturingParens");
+        return BackreferenceMatcher(n, direction);
+      }
+
+      if (AtomEscape.subtype === 'CharacterEscape') {
+        const ch = Evaluate_CharacterEscape(AtomEscape.CharacterEscape);
+        const A = singleCharSet(ch);
+        return CharacterSetMatcher(A, false, direction);
+      }
+
+      if (AtomEscape.subtype === 'CharacterClassEscape') {
+        const A = Evaluate_CharacterClassEscape(AtomEscape.CharacterClassEscape);
+        return CharacterSetMatcher(A, false, direction);
+      }
+
+      if (AtomEscape.subtype === 'k') {
+        const groupSpecifierParens = groupSpecifiers.get(AtomEscape.GroupName);
+        Assert(typeof groupSpecifierParens === 'number', "typeof groupSpecifierParens === 'number'");
+        const parenIndex = groupSpecifierParens;
+        return BackreferenceMatcher(parenIndex, direction);
+      }
+
+      throw new Error('unreachable');
+    } // 21.2.2.9.1 #sec-backreference-matcher
+
+
+    function BackreferenceMatcher(n, direction) {
+      return function backreferenceMatcher(x, c) {
+        Assert(x instanceof State, "x instanceof State");
+        Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+        const cap = x.captures;
+        const s = cap[n];
+
+        if (s === Value.undefined) {
+          return c(x);
+        }
+
+        const e = x.endIndex;
+        const len = s.length;
+        const f = e + direction * len;
+
+        if (f < 0 || f > InputLength) {
+          return 'failure';
+        }
+
+        const g = Math.min(e, f);
+
+        for (let i = 0; i < len; i += 1) {
+          if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+            return 'failure';
+          }
+        }
+
+        const y = new State(f, cap);
+        return c(y);
+      };
+    } // 21.2.2.10 #sec-characterescape
+
+
+    function Evaluate_CharacterEscape(CharacterEscape) {
+      return CharacterEscape.CharacterValue;
+    } // 21.2.2.11 #sec-decimalescape
+
+
+    function Evaluate_DecimalEscape(DecimalEscape) {
+      return DecimalEscape.CapturingGroupNumber;
+    } // 21.2.2.12 #sec-characterclassescape
+
+
+    function Evaluate_CharacterClassEscape(CharacterClassEscape) {
+      if (CharacterClassEscape.subtype === 'd') {
+        return numberCharSet();
+      }
+
+      if (CharacterClassEscape.subtype === 'D') {
+        return invertCharSet(numberCharSet());
+      }
+
+      if (CharacterClassEscape.subtype === 's') {
+        return whitespaceCharSet();
+      }
+
+      if (CharacterClassEscape.subtype === 'S') {
+        return invertCharSet(whitespaceCharSet());
+      }
+
+      if (CharacterClassEscape.subtype === 'w') {
+        return WordCharacters();
+      }
+
+      if (CharacterClassEscape.subtype === 'W') {
+        return invertCharSet(WordCharacters());
+      }
+
+      if (CharacterClassEscape.subtype === 'p{') {
+        return Evaluate_UnicodePropertyValueExpression(CharacterClassEscape.UnicodePropertyValueExpression);
+      }
+
+      if (CharacterClassEscape.subtype === 'P{') {
+        return invertCharSet(Evaluate_UnicodePropertyValueExpression(CharacterClassEscape.UnicodePropertyValueExpression));
+      }
+
+      throw new Error('unreachable');
+    }
+
+    function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression) {
+      let value;
+
+      if (UnicodePropertyValueExpression.subtype === 'UnicodePropertyNameAndValue') {
+        value = `${UnicodePropertyValueExpression.UnicodePropertyName}=${UnicodePropertyValueExpression.UnicodePropertyValue}`;
+      } else if (UnicodePropertyValueExpression.subtype === 'LoneUnicodePropertyNameOrValue') {
+        value = UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue;
+      }
+
+      const regexp = new RegExp(`^\\p{${value}}$`, internalRegExpFlags);
+      return function testUnicodePropertyValue(cc) {
+        return regexp.test(cc);
+      };
+    } // 21.2.2.13 #sec-characterclass
+
+
+    function Evaluate_CharacterClass(CharacterClass) {
+      if (!CharacterClass.invert) {
+        const A = Evaluate_ClassRanges(CharacterClass.ClassRanges);
+        return {
+          A,
+          invert: false
+        };
+      } else {
+        const A = Evaluate_ClassRanges(CharacterClass.ClassRanges);
+        return {
+          A,
+          invert: true
+        };
+      }
+    } // 21.2.2.14 #sec-classranges
+
+
+    function Evaluate_ClassRanges(ClassRanges) {
+      if (ClassRanges.length === 0) {
+        return emptyCharSet();
+      }
+
+      const charSets = ClassRanges.map(range => {
+        if (Array.isArray(range)) {
+          if (range.length === 2) {
+            const classAtom1 = getClassAtom(range[0]);
+            const classAtom2 = getClassAtom(range[1]);
+            return CharacterRange(classAtom1, classAtom2);
+          }
+        } else {
+          return classRangeAtomCharSet(range);
+        }
+
+        throw new Error('unreachable');
+      });
+      return combinedCharSet(charSets);
+    } // 21.2.2.15.1 #sec-runtime-semantics-characterrange-abstract-operation
+
+
+    function CharacterRange(A, B) {
+      // 1. Assert: A and B each contain exactly one character.
+      Assert(typeof A === 'number' && typeof B === 'number', "typeof A === 'number' && typeof B === 'number'");
+      const i = A;
+      const j = B;
+      Assert(i <= j, "i <= j");
+      const set = new Set();
+
+      for (let codePoint = A; codePoint <= B; codePoint += 1) {
+        set.add(Canonicalize(String.fromCodePoint(codePoint)));
+      }
+
+      return function testCharacterRange(cc) {
+        return set.has(cc);
+      };
+    } // 21.2.2.19 #sec-classescape
+
+
+    function Evaluate_ClassEscape(ClassEscape) {
+      if (ClassEscape.subtype === 'b') {
+        return '\b'.charCodeAt(0);
+      }
+
+      if (ClassEscape.subtype === '-') {
+        return '-'.charCodeAt(0);
+      }
+
+      if (ClassEscape.subtype === 'CharacterEscape') {
+        return Evaluate_CharacterEscape(ClassEscape.CharacterEscape);
+      }
+
+      if (ClassEscape.subtype === 'CharacterClassEscape') {
+        return Evaluate_CharacterClassEscape(ClassEscape.CharacterClassEscape);
+      }
+
+      throw new Error('unreachable');
+    }
+
+    function singleCharSet(char) {
+      char = Canonicalize(String.fromCodePoint(char));
+      return function testSingleCharSet(cc) {
+        return char === cc;
+      };
+    }
+
+    function allCharSet() {
+      return function testAllCharSet() {
+        return true;
+      };
+    }
+
+    function noLineTerminatorCharSet() {
+      return function testNoLineTerminatorCharSet(cc) {
+        return !isLineTerminator(cc);
+      };
+    }
+
+    function numberCharSet() {
+      return function testNumberCharSet(cc) {
+        return /[0-9]/.test(cc);
+      };
+    }
+
+    function whitespaceCharSet() {
+      return function testWhitespaceCharSet(cc) {
+        return isStrWhiteSpaceChar(cc);
+      };
+    }
+
+    function emptyCharSet() {
+      return function testEmptyCharSet() {
+        return false;
+      };
+    }
+
+    function invertCharSet(charSet) {
+      return function testInvertCharSet(cc) {
+        return !charSet(cc);
+      };
+    }
+
+    function combinedCharSet(charSets) {
+      return function testCombinedCharSet(cc) {
+        return charSets.some(charSet => charSet(cc));
+      };
+    }
+
+    function classRangeAtomCharSet(classRange) {
+      const classAtom = getClassAtom(classRange);
+
+      if (typeof classAtom === 'function') {
+        return classAtom;
+      }
+
+      return singleCharSet(classAtom);
+    }
+
+    function getClassAtom(ClassAtom) {
+      if (ClassAtom.subtype === 'character') {
+        return ClassAtom.character;
+      } else {
+        return Evaluate_ClassEscape(ClassAtom.ClassEscape);
+      }
+    }
+  };
 }
 
 function* Evaluate_ReturnStatement({
@@ -33508,17 +35226,17 @@ function RegExpBuiltinExec(R, S) {
   Assert(Type(S) === 'String', "Type(S) === 'String'");
   const length = S.stringValue().length;
 
-  let _temp17 = Get(R, new Value('lastIndex'));
+  let _temp18 = Get(R, new Value('lastIndex'));
 
-  if (_temp17 instanceof AbruptCompletion) {
-    return _temp17;
+  if (_temp18 instanceof AbruptCompletion) {
+    return _temp18;
   }
 
-  if (_temp17 instanceof Completion) {
-    _temp17 = _temp17.Value;
+  if (_temp18 instanceof Completion) {
+    _temp18 = _temp18.Value;
   }
 
-  let _temp6 = ToLength(_temp17);
+  let _temp6 = ToLength(_temp18);
 
   if (_temp6 instanceof AbruptCompletion) {
     return _temp6;
@@ -33561,7 +35279,7 @@ function RegExpBuiltinExec(R, S) {
 
     r = matcher(S, lastIndex);
 
-    if (r === null) {
+    if (r === 'failure') {
       if (sticky) {
         let _temp8 = Set$1(R, new Value('lastIndex'), new Value(0), Value.true);
 
@@ -33577,15 +35295,30 @@ function RegExpBuiltinExec(R, S) {
 
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
     } else {
-      // Assert: r is a state
+      Assert(r instanceof State, "r instanceof State");
       matchSucceeded = true;
     }
   }
 
-  const e = r.endIndex;
+  let e = r.endIndex;
+
+  if (fullUnicode) {
+    const Input = Array.from(S.stringValue());
+    let eUTF = 0;
+
+    if (e >= Input.length) {
+      eUTF = S.stringValue().length;
+    } else {
+      for (let i = 0; i < e; i += 1) {
+        eUTF += Input[i].length;
+      }
+    }
+
+    e = eUTF;
+  }
 
   if (global || sticky) {
-    let _temp9 = Set$1(R, new Value('lastIndex'), e, Value.true);
+    let _temp9 = Set$1(R, new Value('lastIndex'), new Value(e), Value.true);
 
     if (_temp9 instanceof AbruptCompletion) {
       return _temp9;
@@ -33596,7 +35329,7 @@ function RegExpBuiltinExec(R, S) {
     }
   }
 
-  const n = r.captures.length;
+  const n = r.captures.length - 1;
   Assert(n < 2 ** 32 - 1, "n < (2 ** 32) - 1");
 
   let _temp10 = ArrayCreate(new Value(n + 1));
@@ -33625,7 +35358,7 @@ function RegExpBuiltinExec(R, S) {
   if (_temp12 instanceof Completion) {
     _temp12 = _temp12.Value;
   }
-  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e.numberValue());
+  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
 
   let _temp13 = CreateDataProperty(A, new Value('0'), new Value(matchedSubstr));
 
@@ -33636,7 +35369,9 @@ function RegExpBuiltinExec(R, S) {
   }
   let groups;
 
-  if (R.GroupName) ; else {
+  if (R.parsedRegExp.groupSpecifiers.size > 0) {
+    groups = OrdinaryObjectCreate(Value.null);
+  } else {
     groups = Value.undefined;
   }
 
@@ -33647,35 +35382,48 @@ function RegExpBuiltinExec(R, S) {
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
+  const capturingParens = R.parsedRegExp.capturingParens;
 
   for (let i = 1; i <= n; i += 1) {
-    const captureI = r.captures[i - 1];
-    let captureValue;
+    const captureI = r.captures[i];
+    let capturedValue;
 
     if (captureI === Value.undefined) {
-      captureValue = Value.undefined;
+      capturedValue = Value.undefined;
     } else if (fullUnicode) {
       // Assert: captureI is a List of code points.
-      captureValue = new Value(captureI.reduce((acc, codePoint) => acc + String.fromCodePoint(codePoint), ''));
+      capturedValue = new Value(captureI.join(''));
     } else {
       // Assert: captureI is a List of code units.
-      captureValue = new Value(captureI.reduce((acc, charCode) => acc + String.fromCharCode(charCode), ''));
+      capturedValue = new Value(captureI.join(''));
     }
 
-    let _temp16 = ToString(new Value(i));
+    let _temp17 = ToString(new Value(i));
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+    Assert(!(_temp17 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
 
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
     }
 
-    let _temp15 = CreateDataProperty(A, _temp16, captureValue);
+    let _temp15 = CreateDataProperty(A, _temp17, capturedValue);
 
-    Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), captureValue)" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
 
     if (_temp15 instanceof Completion) {
       _temp15 = _temp15.Value;
+    }
+
+    if (capturingParens[i - 1].GroupSpecifier) {
+      const s = new Value(capturingParens[i - 1].GroupSpecifier);
+
+      let _temp16 = CreateDataProperty(groups, s, capturedValue);
+
+      Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(groups, s, capturedValue)" + ' returned an abrupt completion');
+
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
+      }
     }
   }
 
@@ -33699,15 +35447,15 @@ function AdvanceStringIndex(S, index, unicode) {
     return new Value(index + 1);
   }
 
-  let _temp18 = CodePointAt(S, index);
+  let _temp19 = CodePointAt(S, index);
 
-  Assert(!(_temp18 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
+  Assert(!(_temp19 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
 
-  if (_temp18 instanceof Completion) {
-    _temp18 = _temp18.Value;
+  if (_temp19 instanceof Completion) {
+    _temp19 = _temp19.Value;
   }
 
-  const cp = _temp18;
+  const cp = _temp19;
   return new Value(index + cp.CodeUnitCount.numberValue());
 } // 21.2.5.3 #sec-get-regexp.prototype.dotAll
 
@@ -33749,23 +35497,7 @@ function RegExpProto_flagsGetter(args, {
 
   let result = '';
 
-  let _temp19 = Get(R, new Value('global'));
-
-  if (_temp19 instanceof AbruptCompletion) {
-    return _temp19;
-  }
-
-  if (_temp19 instanceof Completion) {
-    _temp19 = _temp19.Value;
-  }
-
-  const global = ToBoolean(_temp19);
-
-  if (global === Value.true) {
-    result += 'g';
-  }
-
-  let _temp20 = Get(R, new Value('ignoreCase'));
+  let _temp20 = Get(R, new Value('global'));
 
   if (_temp20 instanceof AbruptCompletion) {
     return _temp20;
@@ -33775,13 +35507,13 @@ function RegExpProto_flagsGetter(args, {
     _temp20 = _temp20.Value;
   }
 
-  const ignoreCase = ToBoolean(_temp20);
+  const global = ToBoolean(_temp20);
 
-  if (ignoreCase === Value.true) {
-    result += 'i';
+  if (global === Value.true) {
+    result += 'g';
   }
 
-  let _temp21 = Get(R, new Value('multiline'));
+  let _temp21 = Get(R, new Value('ignoreCase'));
 
   if (_temp21 instanceof AbruptCompletion) {
     return _temp21;
@@ -33791,13 +35523,13 @@ function RegExpProto_flagsGetter(args, {
     _temp21 = _temp21.Value;
   }
 
-  const multiline = ToBoolean(_temp21);
+  const ignoreCase = ToBoolean(_temp21);
 
-  if (multiline === Value.true) {
-    result += 'm';
+  if (ignoreCase === Value.true) {
+    result += 'i';
   }
 
-  let _temp22 = Get(R, new Value('dotAll'));
+  let _temp22 = Get(R, new Value('multiline'));
 
   if (_temp22 instanceof AbruptCompletion) {
     return _temp22;
@@ -33807,13 +35539,13 @@ function RegExpProto_flagsGetter(args, {
     _temp22 = _temp22.Value;
   }
 
-  const dotAll = ToBoolean(_temp22);
+  const multiline = ToBoolean(_temp22);
 
-  if (dotAll === Value.true) {
-    result += 's';
+  if (multiline === Value.true) {
+    result += 'm';
   }
 
-  let _temp23 = Get(R, new Value('unicode'));
+  let _temp23 = Get(R, new Value('dotAll'));
 
   if (_temp23 instanceof AbruptCompletion) {
     return _temp23;
@@ -33823,13 +35555,13 @@ function RegExpProto_flagsGetter(args, {
     _temp23 = _temp23.Value;
   }
 
-  const unicode = ToBoolean(_temp23);
+  const dotAll = ToBoolean(_temp23);
 
-  if (unicode === Value.true) {
-    result += 'u';
+  if (dotAll === Value.true) {
+    result += 's';
   }
 
-  let _temp24 = Get(R, new Value('sticky'));
+  let _temp24 = Get(R, new Value('unicode'));
 
   if (_temp24 instanceof AbruptCompletion) {
     return _temp24;
@@ -33839,7 +35571,23 @@ function RegExpProto_flagsGetter(args, {
     _temp24 = _temp24.Value;
   }
 
-  const sticky = ToBoolean(_temp24);
+  const unicode = ToBoolean(_temp24);
+
+  if (unicode === Value.true) {
+    result += 'u';
+  }
+
+  let _temp25 = Get(R, new Value('sticky'));
+
+  if (_temp25 instanceof AbruptCompletion) {
+    return _temp25;
+  }
+
+  if (_temp25 instanceof Completion) {
+    _temp25 = _temp25.Value;
+  }
+
+  const sticky = ToBoolean(_temp25);
 
   if (sticky === Value.true) {
     result += 'y';
@@ -33912,19 +35660,7 @@ function RegExpProto_match([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp25 = ToString(string);
-
-  if (_temp25 instanceof AbruptCompletion) {
-    return _temp25;
-  }
-
-  if (_temp25 instanceof Completion) {
-    _temp25 = _temp25.Value;
-  }
-
-  const S = _temp25;
-
-  let _temp26 = Get(rx, new Value('global'));
+  let _temp26 = ToString(string);
 
   if (_temp26 instanceof AbruptCompletion) {
     return _temp26;
@@ -33934,24 +35670,24 @@ function RegExpProto_match([string = Value.undefined], {
     _temp26 = _temp26.Value;
   }
 
-  const global = ToBoolean(_temp26);
+  const S = _temp26;
+
+  let _temp27 = Get(rx, new Value('global'));
+
+  if (_temp27 instanceof AbruptCompletion) {
+    return _temp27;
+  }
+
+  if (_temp27 instanceof Completion) {
+    _temp27 = _temp27.Value;
+  }
+
+  const global = ToBoolean(_temp27);
 
   if (global === Value.false) {
     return RegExpExec(rx, S);
   } else {
-    let _temp27 = Get(rx, new Value('unicode'));
-
-    if (_temp27 instanceof AbruptCompletion) {
-      return _temp27;
-    }
-
-    if (_temp27 instanceof Completion) {
-      _temp27 = _temp27.Value;
-    }
-
-    const fullUnicode = ToBoolean(_temp27);
-
-    let _temp28 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp28 = Get(rx, new Value('unicode'));
 
     if (_temp28 instanceof AbruptCompletion) {
       return _temp28;
@@ -33961,29 +35697,41 @@ function RegExpProto_match([string = Value.undefined], {
       _temp28 = _temp28.Value;
     }
 
-    let _temp29 = ArrayCreate(new Value(0));
+    const fullUnicode = ToBoolean(_temp28);
 
-    Assert(!(_temp29 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    let _temp29 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+
+    if (_temp29 instanceof AbruptCompletion) {
+      return _temp29;
+    }
 
     if (_temp29 instanceof Completion) {
       _temp29 = _temp29.Value;
     }
 
-    const A = _temp29;
+    let _temp30 = ArrayCreate(new Value(0));
+
+    Assert(!(_temp30 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+
+    if (_temp30 instanceof Completion) {
+      _temp30 = _temp30.Value;
+    }
+
+    const A = _temp30;
     let n = 0;
 
     while (true) {
-      let _temp30 = RegExpExec(rx, S);
+      let _temp31 = RegExpExec(rx, S);
 
-      if (_temp30 instanceof AbruptCompletion) {
-        return _temp30;
+      if (_temp31 instanceof AbruptCompletion) {
+        return _temp31;
       }
 
-      if (_temp30 instanceof Completion) {
-        _temp30 = _temp30.Value;
+      if (_temp31 instanceof Completion) {
+        _temp31 = _temp31.Value;
       }
 
-      const result = _temp30;
+      const result = _temp31;
 
       if (result === Value.null) {
         if (n === 0) {
@@ -33992,64 +35740,51 @@ function RegExpProto_match([string = Value.undefined], {
 
         return A;
       } else {
-        let _temp36 = Get(result, new Value('0'));
+        let _temp37 = Get(result, new Value('0'));
 
-        if (_temp36 instanceof AbruptCompletion) {
-          return _temp36;
+        if (_temp37 instanceof AbruptCompletion) {
+          return _temp37;
         }
 
-        if (_temp36 instanceof Completion) {
-          _temp36 = _temp36.Value;
+        if (_temp37 instanceof Completion) {
+          _temp37 = _temp37.Value;
         }
 
-        let _temp31 = ToString(_temp36);
+        let _temp32 = ToString(_temp37);
 
-        if (_temp31 instanceof AbruptCompletion) {
-          return _temp31;
+        if (_temp32 instanceof AbruptCompletion) {
+          return _temp32;
         }
-
-        if (_temp31 instanceof Completion) {
-          _temp31 = _temp31.Value;
-        }
-
-        const matchStr = _temp31;
-
-        let _temp32 = ToString(new Value(n));
-
-        Assert(!(_temp32 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
         if (_temp32 instanceof Completion) {
           _temp32 = _temp32.Value;
         }
 
-        const status = CreateDataProperty(A, _temp32, matchStr);
+        const matchStr = _temp32;
+
+        let _temp33 = ToString(new Value(n));
+
+        Assert(!(_temp33 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+
+        if (_temp33 instanceof Completion) {
+          _temp33 = _temp33.Value;
+        }
+
+        const status = CreateDataProperty(A, _temp33, matchStr);
         Assert(status === Value.true, "status === Value.true");
 
         if (matchStr.stringValue() === '') {
-          let _temp35 = Get(rx, new Value('lastIndex'));
+          let _temp36 = Get(rx, new Value('lastIndex'));
 
-          if (_temp35 instanceof AbruptCompletion) {
-            return _temp35;
+          if (_temp36 instanceof AbruptCompletion) {
+            return _temp36;
           }
 
-          if (_temp35 instanceof Completion) {
-            _temp35 = _temp35.Value;
+          if (_temp36 instanceof Completion) {
+            _temp36 = _temp36.Value;
           }
 
-          let _temp33 = ToLength(_temp35);
-
-          if (_temp33 instanceof AbruptCompletion) {
-            return _temp33;
-          }
-
-          if (_temp33 instanceof Completion) {
-            _temp33 = _temp33.Value;
-          }
-
-          const thisIndex = _temp33;
-          const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
-
-          let _temp34 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+          let _temp34 = ToLength(_temp36);
 
           if (_temp34 instanceof AbruptCompletion) {
             return _temp34;
@@ -34057,6 +35792,19 @@ function RegExpProto_match([string = Value.undefined], {
 
           if (_temp34 instanceof Completion) {
             _temp34 = _temp34.Value;
+          }
+
+          const thisIndex = _temp34;
+          const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
+
+          let _temp35 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+
+          if (_temp35 instanceof AbruptCompletion) {
+            return _temp35;
+          }
+
+          if (_temp35 instanceof Completion) {
+            _temp35 = _temp35.Value;
           }
         }
 
@@ -34076,19 +35824,7 @@ function RegExpProto_matchAll([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp37 = ToString(string);
-
-  if (_temp37 instanceof AbruptCompletion) {
-    return _temp37;
-  }
-
-  if (_temp37 instanceof Completion) {
-    _temp37 = _temp37.Value;
-  }
-
-  const S = _temp37;
-
-  let _temp38 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp38 = ToString(string);
 
   if (_temp38 instanceof AbruptCompletion) {
     return _temp38;
@@ -34098,19 +35834,9 @@ function RegExpProto_matchAll([string = Value.undefined], {
     _temp38 = _temp38.Value;
   }
 
-  const C = _temp38;
+  const S = _temp38;
 
-  let _temp44 = Get(R, new Value('flags'));
-
-  if (_temp44 instanceof AbruptCompletion) {
-    return _temp44;
-  }
-
-  if (_temp44 instanceof Completion) {
-    _temp44 = _temp44.Value;
-  }
-
-  let _temp39 = ToString(_temp44);
+  let _temp39 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
 
   if (_temp39 instanceof AbruptCompletion) {
     return _temp39;
@@ -34120,21 +35846,9 @@ function RegExpProto_matchAll([string = Value.undefined], {
     _temp39 = _temp39.Value;
   }
 
-  const flags = _temp39;
+  const C = _temp39;
 
-  let _temp40 = Construct(C, [R, flags]);
-
-  if (_temp40 instanceof AbruptCompletion) {
-    return _temp40;
-  }
-
-  if (_temp40 instanceof Completion) {
-    _temp40 = _temp40.Value;
-  }
-
-  const matcher = _temp40;
-
-  let _temp45 = Get(R, new Value('lastIndex'));
+  let _temp45 = Get(R, new Value('flags'));
 
   if (_temp45 instanceof AbruptCompletion) {
     return _temp45;
@@ -34144,7 +35858,19 @@ function RegExpProto_matchAll([string = Value.undefined], {
     _temp45 = _temp45.Value;
   }
 
-  let _temp41 = ToLength(_temp45);
+  let _temp40 = ToString(_temp45);
+
+  if (_temp40 instanceof AbruptCompletion) {
+    return _temp40;
+  }
+
+  if (_temp40 instanceof Completion) {
+    _temp40 = _temp40.Value;
+  }
+
+  const flags = _temp40;
+
+  let _temp41 = Construct(C, [R, flags]);
 
   if (_temp41 instanceof AbruptCompletion) {
     return _temp41;
@@ -34154,9 +35880,19 @@ function RegExpProto_matchAll([string = Value.undefined], {
     _temp41 = _temp41.Value;
   }
 
-  const lastIndex = _temp41;
+  const matcher = _temp41;
 
-  let _temp42 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
+  let _temp46 = Get(R, new Value('lastIndex'));
+
+  if (_temp46 instanceof AbruptCompletion) {
+    return _temp46;
+  }
+
+  if (_temp46 instanceof Completion) {
+    _temp46 = _temp46.Value;
+  }
+
+  let _temp42 = ToLength(_temp46);
 
   if (_temp42 instanceof AbruptCompletion) {
     return _temp42;
@@ -34164,6 +35900,18 @@ function RegExpProto_matchAll([string = Value.undefined], {
 
   if (_temp42 instanceof Completion) {
     _temp42 = _temp42.Value;
+  }
+
+  const lastIndex = _temp42;
+
+  let _temp43 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
+
+  if (_temp43 instanceof AbruptCompletion) {
+    return _temp43;
+  }
+
+  if (_temp43 instanceof Completion) {
+    _temp43 = _temp43.Value;
   }
   let global;
 
@@ -34181,15 +35929,15 @@ function RegExpProto_matchAll([string = Value.undefined], {
     fullUnicode = Value.false;
   }
 
-  let _temp43 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
+  let _temp44 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
 
-  Assert(!(_temp43 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
+  Assert(!(_temp44 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
 
-  if (_temp43 instanceof Completion) {
-    _temp43 = _temp43.Value;
+  if (_temp44 instanceof Completion) {
+    _temp44 = _temp44.Value;
   }
 
-  return _temp43;
+  return _temp44;
 } // 21.2.5.9 #sec-get-regexp.prototype.multiline
 
 
@@ -34229,61 +35977,49 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp46 = ToString(string);
+  let _temp47 = ToString(string);
 
-  if (_temp46 instanceof AbruptCompletion) {
-    return _temp46;
+  if (_temp47 instanceof AbruptCompletion) {
+    return _temp47;
   }
 
-  if (_temp46 instanceof Completion) {
-    _temp46 = _temp46.Value;
+  if (_temp47 instanceof Completion) {
+    _temp47 = _temp47.Value;
   }
 
-  const S = _temp46;
+  const S = _temp47;
   const lengthS = S.stringValue().length;
   const functionalReplace = IsCallable(replaceValue);
 
   if (functionalReplace === Value.false) {
-    let _temp47 = ToString(replaceValue);
+    let _temp48 = ToString(replaceValue);
 
-    if (_temp47 instanceof AbruptCompletion) {
-      return _temp47;
+    if (_temp48 instanceof AbruptCompletion) {
+      return _temp48;
     }
 
-    if (_temp47 instanceof Completion) {
-      _temp47 = _temp47.Value;
+    if (_temp48 instanceof Completion) {
+      _temp48 = _temp48.Value;
     }
 
-    replaceValue = _temp47;
+    replaceValue = _temp48;
   }
 
-  let _temp48 = Get(rx, new Value('global'));
+  let _temp49 = Get(rx, new Value('global'));
 
-  if (_temp48 instanceof AbruptCompletion) {
-    return _temp48;
+  if (_temp49 instanceof AbruptCompletion) {
+    return _temp49;
   }
 
-  if (_temp48 instanceof Completion) {
-    _temp48 = _temp48.Value;
+  if (_temp49 instanceof Completion) {
+    _temp49 = _temp49.Value;
   }
 
-  const global = ToBoolean(_temp48);
+  const global = ToBoolean(_temp49);
   let fullUnicode;
 
   if (global === Value.true) {
-    let _temp49 = Get(rx, new Value('unicode'));
-
-    if (_temp49 instanceof AbruptCompletion) {
-      return _temp49;
-    }
-
-    if (_temp49 instanceof Completion) {
-      _temp49 = _temp49.Value;
-    }
-
-    fullUnicode = ToBoolean(_temp49);
-
-    let _temp50 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp50 = Get(rx, new Value('unicode'));
 
     if (_temp50 instanceof AbruptCompletion) {
       return _temp50;
@@ -34292,13 +36028,10 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     if (_temp50 instanceof Completion) {
       _temp50 = _temp50.Value;
     }
-  }
 
-  const results = [];
-  let done = false;
+    fullUnicode = ToBoolean(_temp50);
 
-  while (!done) {
-    let _temp51 = RegExpExec(rx, S);
+    let _temp51 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
     if (_temp51 instanceof AbruptCompletion) {
       return _temp51;
@@ -34307,8 +36040,23 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     if (_temp51 instanceof Completion) {
       _temp51 = _temp51.Value;
     }
+  }
 
-    const result = _temp51;
+  const results = [];
+  let done = false;
+
+  while (!done) {
+    let _temp52 = RegExpExec(rx, S);
+
+    if (_temp52 instanceof AbruptCompletion) {
+      return _temp52;
+    }
+
+    if (_temp52 instanceof Completion) {
+      _temp52 = _temp52.Value;
+    }
+
+    const result = _temp52;
 
     if (result === Value.null) {
       done = true;
@@ -34318,19 +36066,17 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       if (global === Value.false) {
         done = true;
       } else {
-        let _temp52 = Get(result, new Value('0'));
+        let _temp57 = Get(result, new Value('0'));
 
-        if (_temp52 instanceof AbruptCompletion) {
-          return _temp52;
+        if (_temp57 instanceof AbruptCompletion) {
+          return _temp57;
         }
 
-        if (_temp52 instanceof Completion) {
-          _temp52 = _temp52.Value;
+        if (_temp57 instanceof Completion) {
+          _temp57 = _temp57.Value;
         }
 
-        const firstResult = _temp52;
-
-        let _temp53 = ToString(firstResult);
+        let _temp53 = ToString(_temp57);
 
         if (_temp53 instanceof AbruptCompletion) {
           return _temp53;
@@ -34384,31 +36130,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let nextSourcePosition = 0;
 
   for (const result of results) {
-    let _temp57 = LengthOfArrayLike(result);
-
-    if (_temp57 instanceof AbruptCompletion) {
-      return _temp57;
-    }
-
-    if (_temp57 instanceof Completion) {
-      _temp57 = _temp57.Value;
-    }
-
-    let nCaptures = _temp57.numberValue();
-
-    nCaptures = Math.max(nCaptures - 1, 0);
-
-    let _temp68 = Get(result, new Value('0'));
-
-    if (_temp68 instanceof AbruptCompletion) {
-      return _temp68;
-    }
-
-    if (_temp68 instanceof Completion) {
-      _temp68 = _temp68.Value;
-    }
-
-    let _temp58 = ToString(_temp68);
+    let _temp58 = LengthOfArrayLike(result);
 
     if (_temp58 instanceof AbruptCompletion) {
       return _temp58;
@@ -34418,10 +36140,11 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       _temp58 = _temp58.Value;
     }
 
-    const matched = _temp58;
-    const matchLength = matched.stringValue().length;
+    let nCaptures = _temp58.numberValue();
 
-    let _temp69 = Get(result, new Value('index'));
+    nCaptures = Math.max(nCaptures - 1, 0);
+
+    let _temp69 = Get(result, new Value('0'));
 
     if (_temp69 instanceof AbruptCompletion) {
       return _temp69;
@@ -34431,7 +36154,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       _temp69 = _temp69.Value;
     }
 
-    let _temp59 = ToInteger(_temp69);
+    let _temp59 = ToString(_temp69);
 
     if (_temp59 instanceof AbruptCompletion) {
       return _temp59;
@@ -34441,61 +36164,84 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       _temp59 = _temp59.Value;
     }
 
-    let position = _temp59;
+    const matched = _temp59;
+    const matchLength = matched.stringValue().length;
+
+    let _temp70 = Get(result, new Value('index'));
+
+    if (_temp70 instanceof AbruptCompletion) {
+      return _temp70;
+    }
+
+    if (_temp70 instanceof Completion) {
+      _temp70 = _temp70.Value;
+    }
+
+    let _temp60 = ToInteger(_temp70);
+
+    if (_temp60 instanceof AbruptCompletion) {
+      return _temp60;
+    }
+
+    if (_temp60 instanceof Completion) {
+      _temp60 = _temp60.Value;
+    }
+
+    let position = _temp60;
     position = new Value(Math.max(Math.min(position.numberValue(), lengthS), 0));
     let n = 1;
     const captures = [];
 
     while (n <= nCaptures) {
-      let _temp62 = ToString(new Value(n));
+      let _temp63 = ToString(new Value(n));
 
-      Assert(!(_temp62 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+      Assert(!(_temp63 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-      if (_temp62 instanceof Completion) {
-        _temp62 = _temp62.Value;
+      if (_temp63 instanceof Completion) {
+        _temp63 = _temp63.Value;
       }
 
-      let _temp60 = Get(result, _temp62);
+      let _temp61 = Get(result, _temp63);
 
-      if (_temp60 instanceof AbruptCompletion) {
-        return _temp60;
+      if (_temp61 instanceof AbruptCompletion) {
+        return _temp61;
       }
 
-      if (_temp60 instanceof Completion) {
-        _temp60 = _temp60.Value;
+      if (_temp61 instanceof Completion) {
+        _temp61 = _temp61.Value;
       }
 
-      let capN = _temp60;
+      let capN = _temp61;
 
       if (capN !== Value.undefined) {
-        let _temp61 = ToString(capN);
+        let _temp62 = ToString(capN);
 
-        if (_temp61 instanceof AbruptCompletion) {
-          return _temp61;
+        if (_temp62 instanceof AbruptCompletion) {
+          return _temp62;
         }
 
-        if (_temp61 instanceof Completion) {
-          _temp61 = _temp61.Value;
+        if (_temp62 instanceof Completion) {
+          _temp62 = _temp62.Value;
         }
 
-        capN = _temp61;
+        capN = _temp62;
       }
 
       captures.push(capN);
       n += 1;
     }
 
-    let _temp63 = Get(result, new Value('groups'));
+    let _temp64 = Get(result, new Value('groups'));
 
-    if (_temp63 instanceof AbruptCompletion) {
-      return _temp63;
+    if (_temp64 instanceof AbruptCompletion) {
+      return _temp64;
     }
 
-    if (_temp63 instanceof Completion) {
-      _temp63 = _temp63.Value;
+    if (_temp64 instanceof Completion) {
+      _temp64 = _temp64.Value;
     }
 
-    let namedCaptures = _temp63;
+    let namedCaptures = _temp64;
     let replacement;
 
     if (functionalReplace === Value.true) {
@@ -34507,19 +36253,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         replacerArgs.push(namedCaptures);
       }
 
-      let _temp64 = Call(replaceValue, Value.undefined, replacerArgs);
-
-      if (_temp64 instanceof AbruptCompletion) {
-        return _temp64;
-      }
-
-      if (_temp64 instanceof Completion) {
-        _temp64 = _temp64.Value;
-      }
-
-      const replValue = _temp64;
-
-      let _temp65 = ToString(replValue);
+      let _temp65 = Call(replaceValue, Value.undefined, replacerArgs);
 
       if (_temp65 instanceof AbruptCompletion) {
         return _temp65;
@@ -34529,33 +36263,45 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         _temp65 = _temp65.Value;
       }
 
-      replacement = _temp65;
+      const replValue = _temp65;
+
+      let _temp66 = ToString(replValue);
+
+      if (_temp66 instanceof AbruptCompletion) {
+        return _temp66;
+      }
+
+      if (_temp66 instanceof Completion) {
+        _temp66 = _temp66.Value;
+      }
+
+      replacement = _temp66;
     } else {
       if (namedCaptures !== Value.undefined) {
-        let _temp66 = ToObject(namedCaptures);
+        let _temp67 = ToObject(namedCaptures);
 
-        if (_temp66 instanceof AbruptCompletion) {
-          return _temp66;
+        if (_temp67 instanceof AbruptCompletion) {
+          return _temp67;
         }
 
-        if (_temp66 instanceof Completion) {
-          _temp66 = _temp66.Value;
+        if (_temp67 instanceof Completion) {
+          _temp67 = _temp67.Value;
         }
 
-        namedCaptures = _temp66;
+        namedCaptures = _temp67;
       }
 
-      let _temp67 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+      let _temp68 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
 
-      if (_temp67 instanceof AbruptCompletion) {
-        return _temp67;
+      if (_temp68 instanceof AbruptCompletion) {
+        return _temp68;
       }
 
-      if (_temp67 instanceof Completion) {
-        _temp67 = _temp67.Value;
+      if (_temp68 instanceof Completion) {
+        _temp68 = _temp68.Value;
       }
 
-      replacement = _temp67;
+      replacement = _temp68;
     }
 
     if (position.numberValue() >= nextSourcePosition) {
@@ -34581,19 +36327,7 @@ function RegExpProto_search([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp70 = ToString(string);
-
-  if (_temp70 instanceof AbruptCompletion) {
-    return _temp70;
-  }
-
-  if (_temp70 instanceof Completion) {
-    _temp70 = _temp70.Value;
-  }
-
-  const S = _temp70;
-
-  let _temp71 = Get(rx, new Value('lastIndex'));
+  let _temp71 = ToString(string);
 
   if (_temp71 instanceof AbruptCompletion) {
     return _temp71;
@@ -34603,33 +36337,33 @@ function RegExpProto_search([string = Value.undefined], {
     _temp71 = _temp71.Value;
   }
 
-  const previousLastIndex = _temp71;
+  const S = _temp71;
+
+  let _temp72 = Get(rx, new Value('lastIndex'));
+
+  if (_temp72 instanceof AbruptCompletion) {
+    return _temp72;
+  }
+
+  if (_temp72 instanceof Completion) {
+    _temp72 = _temp72.Value;
+  }
+
+  const previousLastIndex = _temp72;
 
   if (SameValue(previousLastIndex, new Value(0)) === Value.false) {
-    let _temp72 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp73 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp72 instanceof AbruptCompletion) {
-      return _temp72;
+    if (_temp73 instanceof AbruptCompletion) {
+      return _temp73;
     }
 
-    if (_temp72 instanceof Completion) {
-      _temp72 = _temp72.Value;
+    if (_temp73 instanceof Completion) {
+      _temp73 = _temp73.Value;
     }
   }
 
-  let _temp73 = RegExpExec(rx, S);
-
-  if (_temp73 instanceof AbruptCompletion) {
-    return _temp73;
-  }
-
-  if (_temp73 instanceof Completion) {
-    _temp73 = _temp73.Value;
-  }
-
-  const result = _temp73;
-
-  let _temp74 = Get(rx, new Value('lastIndex'));
+  let _temp74 = RegExpExec(rx, S);
 
   if (_temp74 instanceof AbruptCompletion) {
     return _temp74;
@@ -34639,17 +36373,29 @@ function RegExpProto_search([string = Value.undefined], {
     _temp74 = _temp74.Value;
   }
 
-  const currentLastIndex = _temp74;
+  const result = _temp74;
+
+  let _temp75 = Get(rx, new Value('lastIndex'));
+
+  if (_temp75 instanceof AbruptCompletion) {
+    return _temp75;
+  }
+
+  if (_temp75 instanceof Completion) {
+    _temp75 = _temp75.Value;
+  }
+
+  const currentLastIndex = _temp75;
 
   if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
-    let _temp75 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
+    let _temp76 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
 
-    if (_temp75 instanceof AbruptCompletion) {
-      return _temp75;
+    if (_temp76 instanceof AbruptCompletion) {
+      return _temp76;
     }
 
-    if (_temp75 instanceof Completion) {
-      _temp75 = _temp75.Value;
+    if (_temp76 instanceof Completion) {
+      _temp76 = _temp76.Value;
     }
   }
 
@@ -34694,19 +36440,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp76 = ToString(string);
-
-  if (_temp76 instanceof AbruptCompletion) {
-    return _temp76;
-  }
-
-  if (_temp76 instanceof Completion) {
-    _temp76 = _temp76.Value;
-  }
-
-  const S = _temp76;
-
-  let _temp77 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp77 = ToString(string);
 
   if (_temp77 instanceof AbruptCompletion) {
     return _temp77;
@@ -34716,9 +36450,9 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     _temp77 = _temp77.Value;
   }
 
-  const C = _temp77;
+  const S = _temp77;
 
-  let _temp78 = Get(rx, new Value('flags'));
+  let _temp78 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
 
   if (_temp78 instanceof AbruptCompletion) {
     return _temp78;
@@ -34728,9 +36462,9 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     _temp78 = _temp78.Value;
   }
 
-  const flagsValue = _temp78;
+  const C = _temp78;
 
-  let _temp79 = ToString(flagsValue);
+  let _temp79 = Get(rx, new Value('flags'));
 
   if (_temp79 instanceof AbruptCompletion) {
     return _temp79;
@@ -34740,12 +36474,9 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     _temp79 = _temp79.Value;
   }
 
-  const flags = _temp79.stringValue();
+  const flagsValue = _temp79;
 
-  const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
-  const newFlags = flags.includes('y') ? new Value(flags) : new Value(`${flags}y`);
-
-  let _temp80 = Construct(C, [rx, newFlags]);
+  let _temp80 = ToString(flagsValue);
 
   if (_temp80 instanceof AbruptCompletion) {
     return _temp80;
@@ -34755,34 +36486,49 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     _temp80 = _temp80.Value;
   }
 
-  const splitter = _temp80;
+  const flags = _temp80.stringValue();
 
-  let _temp81 = ArrayCreate(new Value(0));
+  const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
+  const newFlags = flags.includes('y') ? new Value(flags) : new Value(`${flags}y`);
 
-  Assert(!(_temp81 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  let _temp81 = Construct(C, [rx, newFlags]);
+
+  if (_temp81 instanceof AbruptCompletion) {
+    return _temp81;
+  }
 
   if (_temp81 instanceof Completion) {
     _temp81 = _temp81.Value;
   }
 
-  const A = _temp81;
+  const splitter = _temp81;
+
+  let _temp82 = ArrayCreate(new Value(0));
+
+  Assert(!(_temp82 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+
+  if (_temp82 instanceof Completion) {
+    _temp82 = _temp82.Value;
+  }
+
+  const A = _temp82;
   let lengthA = 0;
   let lim;
 
   if (limit === Value.undefined) {
     lim = 2 ** 32 - 1;
   } else {
-    let _temp82 = ToUint32(limit);
+    let _temp83 = ToUint32(limit);
 
-    if (_temp82 instanceof AbruptCompletion) {
-      return _temp82;
+    if (_temp83 instanceof AbruptCompletion) {
+      return _temp83;
     }
 
-    if (_temp82 instanceof Completion) {
-      _temp82 = _temp82.Value;
+    if (_temp83 instanceof Completion) {
+      _temp83 = _temp83.Value;
     }
 
-    lim = _temp82.numberValue();
+    lim = _temp83.numberValue();
   }
 
   const size = S.stringValue().length;
@@ -34793,28 +36539,28 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   }
 
   if (size === 0) {
-    let _temp83 = RegExpExec(splitter, S);
+    let _temp84 = RegExpExec(splitter, S);
 
-    if (_temp83 instanceof AbruptCompletion) {
-      return _temp83;
+    if (_temp84 instanceof AbruptCompletion) {
+      return _temp84;
     }
 
-    if (_temp83 instanceof Completion) {
-      _temp83 = _temp83.Value;
+    if (_temp84 instanceof Completion) {
+      _temp84 = _temp84.Value;
     }
 
-    const z = _temp83;
+    const z = _temp84;
 
     if (z !== Value.null) {
       return A;
     }
 
-    let _temp84 = CreateDataProperty(A, new Value('0'), S);
+    let _temp85 = CreateDataProperty(A, new Value('0'), S);
 
-    Assert(!(_temp84 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp85 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
 
-    if (_temp84 instanceof Completion) {
-      _temp84 = _temp84.Value;
+    if (_temp85 instanceof Completion) {
+      _temp85 = _temp85.Value;
     }
     return A;
   }
@@ -34822,17 +36568,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   let q = new Value(p);
 
   while (q.numberValue() < size) {
-    let _temp85 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
-
-    if (_temp85 instanceof AbruptCompletion) {
-      return _temp85;
-    }
-
-    if (_temp85 instanceof Completion) {
-      _temp85 = _temp85.Value;
-    }
-
-    let _temp86 = RegExpExec(splitter, S);
+    let _temp86 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
 
     if (_temp86 instanceof AbruptCompletion) {
       return _temp86;
@@ -34842,24 +36578,22 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
       _temp86 = _temp86.Value;
     }
 
-    const z = _temp86;
+    let _temp87 = RegExpExec(splitter, S);
+
+    if (_temp87 instanceof AbruptCompletion) {
+      return _temp87;
+    }
+
+    if (_temp87 instanceof Completion) {
+      _temp87 = _temp87.Value;
+    }
+
+    const z = _temp87;
 
     if (z === Value.null) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
-      let _temp87 = Get(splitter, new Value('lastIndex'));
-
-      if (_temp87 instanceof AbruptCompletion) {
-        return _temp87;
-      }
-
-      if (_temp87 instanceof Completion) {
-        _temp87 = _temp87.Value;
-      }
-
-      const lastIndex = _temp87;
-
-      let _temp88 = ToLength(lastIndex);
+      let _temp88 = Get(splitter, new Value('lastIndex'));
 
       if (_temp88 instanceof AbruptCompletion) {
         return _temp88;
@@ -34869,7 +36603,19 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
         _temp88 = _temp88.Value;
       }
 
-      let e = _temp88;
+      const lastIndex = _temp88;
+
+      let _temp89 = ToLength(lastIndex);
+
+      if (_temp89 instanceof AbruptCompletion) {
+        return _temp89;
+      }
+
+      if (_temp89 instanceof Completion) {
+        _temp89 = _temp89.Value;
+      }
+
+      let e = _temp89;
       e = new Value(Math.min(e.numberValue(), size));
 
       if (e.numberValue() === p) {
@@ -34877,20 +36623,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
       } else {
         const T = new Value(S.stringValue().substring(p, q.numberValue()));
 
-        let _temp95 = ToString(new Value(lengthA));
+        let _temp96 = ToString(new Value(lengthA));
 
-        Assert(!(_temp95 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+        Assert(!(_temp96 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-        if (_temp95 instanceof Completion) {
-          _temp95 = _temp95.Value;
+        if (_temp96 instanceof Completion) {
+          _temp96 = _temp96.Value;
         }
 
-        let _temp89 = CreateDataProperty(A, _temp95, T);
+        let _temp90 = CreateDataProperty(A, _temp96, T);
 
-        Assert(!(_temp89 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+        Assert(!(_temp90 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-        if (_temp89 instanceof Completion) {
-          _temp89 = _temp89.Value;
+        if (_temp90 instanceof Completion) {
+          _temp90 = _temp90.Value;
         }
         lengthA += 1;
 
@@ -34900,56 +36646,56 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
         p = e.numberValue();
 
-        let _temp90 = LengthOfArrayLike(z);
+        let _temp91 = LengthOfArrayLike(z);
 
-        if (_temp90 instanceof AbruptCompletion) {
-          return _temp90;
+        if (_temp91 instanceof AbruptCompletion) {
+          return _temp91;
         }
 
-        if (_temp90 instanceof Completion) {
-          _temp90 = _temp90.Value;
+        if (_temp91 instanceof Completion) {
+          _temp91 = _temp91.Value;
         }
 
-        let numberOfCaptures = _temp90.numberValue();
+        let numberOfCaptures = _temp91.numberValue();
 
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
 
         while (i <= numberOfCaptures) {
-          let _temp93 = ToString(new Value(i));
+          let _temp94 = ToString(new Value(i));
 
-          Assert(!(_temp93 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
-
-          if (_temp93 instanceof Completion) {
-            _temp93 = _temp93.Value;
-          }
-
-          let _temp91 = Get(z, _temp93);
-
-          if (_temp91 instanceof AbruptCompletion) {
-            return _temp91;
-          }
-
-          if (_temp91 instanceof Completion) {
-            _temp91 = _temp91.Value;
-          }
-
-          const nextCapture = _temp91;
-
-          let _temp94 = ToString(new Value(lengthA));
-
-          Assert(!(_temp94 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+          Assert(!(_temp94 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
 
           if (_temp94 instanceof Completion) {
             _temp94 = _temp94.Value;
           }
 
-          let _temp92 = CreateDataProperty(A, _temp94, nextCapture);
+          let _temp92 = Get(z, _temp94);
 
-          Assert(!(_temp92 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
+          if (_temp92 instanceof AbruptCompletion) {
+            return _temp92;
+          }
 
           if (_temp92 instanceof Completion) {
             _temp92 = _temp92.Value;
+          }
+
+          const nextCapture = _temp92;
+
+          let _temp95 = ToString(new Value(lengthA));
+
+          Assert(!(_temp95 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+
+          if (_temp95 instanceof Completion) {
+            _temp95 = _temp95.Value;
+          }
+
+          let _temp93 = CreateDataProperty(A, _temp95, nextCapture);
+
+          Assert(!(_temp93 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
+
+          if (_temp93 instanceof Completion) {
+            _temp93 = _temp93.Value;
           }
           i += 1;
           lengthA += 1;
@@ -34966,20 +36712,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
   const T = new Value(S.stringValue().substring(p, size));
 
-  let _temp97 = ToString(new Value(lengthA));
+  let _temp98 = ToString(new Value(lengthA));
 
-  Assert(!(_temp97 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+  Assert(!(_temp98 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+
+  if (_temp98 instanceof Completion) {
+    _temp98 = _temp98.Value;
+  }
+
+  let _temp97 = CreateDataProperty(A, _temp98, T);
+
+  Assert(!(_temp97 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
   if (_temp97 instanceof Completion) {
     _temp97 = _temp97.Value;
-  }
-
-  let _temp96 = CreateDataProperty(A, _temp97, T);
-
-  Assert(!(_temp96 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
-
-  if (_temp96 instanceof Completion) {
-    _temp96 = _temp96.Value;
   }
   return A;
 } // 21.2.5.14 #sec-get-regexp.prototype.sticky
@@ -35021,19 +36767,7 @@ function RegExpProto_test([S = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp98 = ToString(S);
-
-  if (_temp98 instanceof AbruptCompletion) {
-    return _temp98;
-  }
-
-  if (_temp98 instanceof Completion) {
-    _temp98 = _temp98.Value;
-  }
-
-  const string = _temp98;
-
-  let _temp99 = RegExpExec(R, string);
+  let _temp99 = ToString(S);
 
   if (_temp99 instanceof AbruptCompletion) {
     return _temp99;
@@ -35043,7 +36777,19 @@ function RegExpProto_test([S = Value.undefined], {
     _temp99 = _temp99.Value;
   }
 
-  const match = _temp99;
+  const string = _temp99;
+
+  let _temp100 = RegExpExec(R, string);
+
+  if (_temp100 instanceof AbruptCompletion) {
+    return _temp100;
+  }
+
+  if (_temp100 instanceof Completion) {
+    _temp100 = _temp100.Value;
+  }
+
+  const match = _temp100;
 
   if (match !== Value.null) {
     return Value.true;
@@ -35062,29 +36808,7 @@ function RegExpProto_toString(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp102 = Get(R, new Value('source'));
-
-  if (_temp102 instanceof AbruptCompletion) {
-    return _temp102;
-  }
-
-  if (_temp102 instanceof Completion) {
-    _temp102 = _temp102.Value;
-  }
-
-  let _temp100 = ToString(_temp102);
-
-  if (_temp100 instanceof AbruptCompletion) {
-    return _temp100;
-  }
-
-  if (_temp100 instanceof Completion) {
-    _temp100 = _temp100.Value;
-  }
-
-  const pattern = _temp100;
-
-  let _temp103 = Get(R, new Value('flags'));
+  let _temp103 = Get(R, new Value('source'));
 
   if (_temp103 instanceof AbruptCompletion) {
     return _temp103;
@@ -35104,7 +36828,29 @@ function RegExpProto_toString(args, {
     _temp101 = _temp101.Value;
   }
 
-  const flags = _temp101;
+  const pattern = _temp101;
+
+  let _temp104 = Get(R, new Value('flags'));
+
+  if (_temp104 instanceof AbruptCompletion) {
+    return _temp104;
+  }
+
+  if (_temp104 instanceof Completion) {
+    _temp104 = _temp104.Value;
+  }
+
+  let _temp102 = ToString(_temp104);
+
+  if (_temp102 instanceof AbruptCompletion) {
+    return _temp102;
+  }
+
+  if (_temp102 instanceof Completion) {
+    _temp102 = _temp102.Value;
+  }
+
+  const flags = _temp102;
   const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
   return new Value(result);
 } // 21.2.5.17 #sec-get-regexp.prototype.unicode
@@ -37686,7 +39432,7 @@ function StringProto_matchAll([regexp = Value.undefined], {
   const O = _temp40;
 
   if (regexp !== Value.undefined && regexp !== Value.null) {
-    let _temp41 = GetMethod(regexp, wellKnownSymbols.matchAll);
+    let _temp41 = IsRegExp(regexp);
 
     if (_temp41 instanceof AbruptCompletion) {
       return _temp41;
@@ -37696,36 +39442,86 @@ function StringProto_matchAll([regexp = Value.undefined], {
       _temp41 = _temp41.Value;
     }
 
-    const matcher = _temp41;
+    const isRegExp = _temp41;
+
+    if (isRegExp === Value.true) {
+      let _temp42 = Get(regexp, new Value('flags'));
+
+      if (_temp42 instanceof AbruptCompletion) {
+        return _temp42;
+      }
+
+      if (_temp42 instanceof Completion) {
+        _temp42 = _temp42.Value;
+      }
+
+      const flags = _temp42;
+
+      let _temp43 = RequireObjectCoercible(flags);
+
+      if (_temp43 instanceof AbruptCompletion) {
+        return _temp43;
+      }
+
+      if (_temp43 instanceof Completion) {
+        _temp43 = _temp43.Value;
+      }
+
+      let _temp44 = ToString(flags);
+
+      if (_temp44 instanceof AbruptCompletion) {
+        return _temp44;
+      }
+
+      if (_temp44 instanceof Completion) {
+        _temp44 = _temp44.Value;
+      }
+
+      if (!_temp44.stringValue().includes('g')) {
+        return surroundingAgent.Throw('TypeError', 'Raw', 'The RegExp passed to String.prototype.matchAll must have the global flag');
+      }
+    }
+
+    let _temp45 = GetMethod(regexp, wellKnownSymbols.matchAll);
+
+    if (_temp45 instanceof AbruptCompletion) {
+      return _temp45;
+    }
+
+    if (_temp45 instanceof Completion) {
+      _temp45 = _temp45.Value;
+    }
+
+    const matcher = _temp45;
 
     if (matcher !== Value.undefined) {
       return Call(matcher, regexp, [O]);
     }
   }
 
-  let _temp42 = ToString(O);
+  let _temp46 = ToString(O);
 
-  if (_temp42 instanceof AbruptCompletion) {
-    return _temp42;
+  if (_temp46 instanceof AbruptCompletion) {
+    return _temp46;
   }
 
-  if (_temp42 instanceof Completion) {
-    _temp42 = _temp42.Value;
+  if (_temp46 instanceof Completion) {
+    _temp46 = _temp46.Value;
   }
 
-  const S = _temp42;
+  const S = _temp46;
 
-  let _temp43 = RegExpCreate(regexp, new Value('g'));
+  let _temp47 = RegExpCreate(regexp, new Value('g'));
 
-  if (_temp43 instanceof AbruptCompletion) {
-    return _temp43;
+  if (_temp47 instanceof AbruptCompletion) {
+    return _temp47;
   }
 
-  if (_temp43 instanceof Completion) {
-    _temp43 = _temp43.Value;
+  if (_temp47 instanceof Completion) {
+    _temp47 = _temp47.Value;
   }
 
-  const rx = _temp43;
+  const rx = _temp47;
   return Invoke(rx, wellKnownSymbols.matchAll, [S]);
 } // 21.1.3.13 #sec-string.prototype.normalize
 
@@ -37733,44 +39529,44 @@ function StringProto_matchAll([regexp = Value.undefined], {
 function StringProto_normalize([form = Value.undefined], {
   thisValue
 }) {
-  let _temp44 = RequireObjectCoercible(thisValue);
+  let _temp48 = RequireObjectCoercible(thisValue);
 
-  if (_temp44 instanceof AbruptCompletion) {
-    return _temp44;
+  if (_temp48 instanceof AbruptCompletion) {
+    return _temp48;
   }
 
-  if (_temp44 instanceof Completion) {
-    _temp44 = _temp44.Value;
+  if (_temp48 instanceof Completion) {
+    _temp48 = _temp48.Value;
   }
 
-  const O = _temp44;
+  const O = _temp48;
 
-  let _temp45 = ToString(O);
+  let _temp49 = ToString(O);
 
-  if (_temp45 instanceof AbruptCompletion) {
-    return _temp45;
+  if (_temp49 instanceof AbruptCompletion) {
+    return _temp49;
   }
 
-  if (_temp45 instanceof Completion) {
-    _temp45 = _temp45.Value;
+  if (_temp49 instanceof Completion) {
+    _temp49 = _temp49.Value;
   }
 
-  const S = _temp45;
+  const S = _temp49;
 
   if (form === Value.undefined) {
     form = new Value('NFC');
   } else {
-    let _temp46 = ToString(form);
+    let _temp50 = ToString(form);
 
-    if (_temp46 instanceof AbruptCompletion) {
-      return _temp46;
+    if (_temp50 instanceof AbruptCompletion) {
+      return _temp50;
     }
 
-    if (_temp46 instanceof Completion) {
-      _temp46 = _temp46.Value;
+    if (_temp50 instanceof Completion) {
+      _temp50 = _temp50.Value;
     }
 
-    form = _temp46;
+    form = _temp50;
   }
 
   const f = form.stringValue();
@@ -37787,67 +39583,7 @@ function StringProto_normalize([form = Value.undefined], {
 function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], {
   thisValue
 }) {
-  let _temp47 = RequireObjectCoercible(thisValue);
-
-  if (_temp47 instanceof AbruptCompletion) {
-    return _temp47;
-  }
-
-  if (_temp47 instanceof Completion) {
-    _temp47 = _temp47.Value;
-  }
-
-  const O = _temp47;
-  return StringPad(O, maxLength, fillString, 'end');
-} // 21.1.3.15 #sec-string.prototype.padstart
-
-
-function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], {
-  thisValue
-}) {
-  let _temp48 = RequireObjectCoercible(thisValue);
-
-  if (_temp48 instanceof AbruptCompletion) {
-    return _temp48;
-  }
-
-  if (_temp48 instanceof Completion) {
-    _temp48 = _temp48.Value;
-  }
-
-  const O = _temp48;
-  return StringPad(O, maxLength, fillString, 'start');
-} // 21.1.3.16 #sec-string.prototype.repeat
-
-
-function StringProto_repeat([count = Value.undefined], {
-  thisValue
-}) {
-  let _temp49 = RequireObjectCoercible(thisValue);
-
-  if (_temp49 instanceof AbruptCompletion) {
-    return _temp49;
-  }
-
-  if (_temp49 instanceof Completion) {
-    _temp49 = _temp49.Value;
-  }
-
-  const O = _temp49;
-
-  let _temp50 = ToString(O);
-
-  if (_temp50 instanceof AbruptCompletion) {
-    return _temp50;
-  }
-
-  if (_temp50 instanceof Completion) {
-    _temp50 = _temp50.Value;
-  }
-
-  const S = _temp50;
-
-  let _temp51 = ToInteger(count);
+  let _temp51 = RequireObjectCoercible(thisValue);
 
   if (_temp51 instanceof AbruptCompletion) {
     return _temp51;
@@ -37857,7 +39593,67 @@ function StringProto_repeat([count = Value.undefined], {
     _temp51 = _temp51.Value;
   }
 
-  const n = _temp51;
+  const O = _temp51;
+  return StringPad(O, maxLength, fillString, 'end');
+} // 21.1.3.15 #sec-string.prototype.padstart
+
+
+function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], {
+  thisValue
+}) {
+  let _temp52 = RequireObjectCoercible(thisValue);
+
+  if (_temp52 instanceof AbruptCompletion) {
+    return _temp52;
+  }
+
+  if (_temp52 instanceof Completion) {
+    _temp52 = _temp52.Value;
+  }
+
+  const O = _temp52;
+  return StringPad(O, maxLength, fillString, 'start');
+} // 21.1.3.16 #sec-string.prototype.repeat
+
+
+function StringProto_repeat([count = Value.undefined], {
+  thisValue
+}) {
+  let _temp53 = RequireObjectCoercible(thisValue);
+
+  if (_temp53 instanceof AbruptCompletion) {
+    return _temp53;
+  }
+
+  if (_temp53 instanceof Completion) {
+    _temp53 = _temp53.Value;
+  }
+
+  const O = _temp53;
+
+  let _temp54 = ToString(O);
+
+  if (_temp54 instanceof AbruptCompletion) {
+    return _temp54;
+  }
+
+  if (_temp54 instanceof Completion) {
+    _temp54 = _temp54.Value;
+  }
+
+  const S = _temp54;
+
+  let _temp55 = ToInteger(count);
+
+  if (_temp55 instanceof AbruptCompletion) {
+    return _temp55;
+  }
+
+  if (_temp55 instanceof Completion) {
+    _temp55 = _temp55.Value;
+  }
+
+  const n = _temp55;
 
   if (n.numberValue() < 0) {
     return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
@@ -37884,73 +39680,73 @@ function StringProto_repeat([count = Value.undefined], {
 function StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined], {
   thisValue
 }) {
-  let _temp52 = RequireObjectCoercible(thisValue);
+  let _temp56 = RequireObjectCoercible(thisValue);
 
-  if (_temp52 instanceof AbruptCompletion) {
-    return _temp52;
+  if (_temp56 instanceof AbruptCompletion) {
+    return _temp56;
   }
 
-  if (_temp52 instanceof Completion) {
-    _temp52 = _temp52.Value;
+  if (_temp56 instanceof Completion) {
+    _temp56 = _temp56.Value;
   }
 
-  const O = _temp52;
+  const O = _temp56;
 
   if (searchValue !== Value.undefined && searchValue !== Value.null) {
-    let _temp53 = GetMethod(searchValue, wellKnownSymbols.replace);
+    let _temp57 = GetMethod(searchValue, wellKnownSymbols.replace);
 
-    if (_temp53 instanceof AbruptCompletion) {
-      return _temp53;
+    if (_temp57 instanceof AbruptCompletion) {
+      return _temp57;
     }
 
-    if (_temp53 instanceof Completion) {
-      _temp53 = _temp53.Value;
+    if (_temp57 instanceof Completion) {
+      _temp57 = _temp57.Value;
     }
 
-    const replacer = _temp53;
+    const replacer = _temp57;
 
     if (replacer !== Value.undefined) {
       return Call(replacer, searchValue, [O, replaceValue]);
     }
   }
 
-  let _temp54 = ToString(O);
+  let _temp58 = ToString(O);
 
-  if (_temp54 instanceof AbruptCompletion) {
-    return _temp54;
+  if (_temp58 instanceof AbruptCompletion) {
+    return _temp58;
   }
 
-  if (_temp54 instanceof Completion) {
-    _temp54 = _temp54.Value;
+  if (_temp58 instanceof Completion) {
+    _temp58 = _temp58.Value;
   }
 
-  const string = _temp54;
+  const string = _temp58;
 
-  let _temp55 = ToString(searchValue);
+  let _temp59 = ToString(searchValue);
 
-  if (_temp55 instanceof AbruptCompletion) {
-    return _temp55;
+  if (_temp59 instanceof AbruptCompletion) {
+    return _temp59;
   }
 
-  if (_temp55 instanceof Completion) {
-    _temp55 = _temp55.Value;
+  if (_temp59 instanceof Completion) {
+    _temp59 = _temp59.Value;
   }
 
-  const searchString = _temp55;
+  const searchString = _temp59;
   const functionalReplace = IsCallable(replaceValue);
 
   if (functionalReplace === Value.false) {
-    let _temp56 = ToString(replaceValue);
+    let _temp60 = ToString(replaceValue);
 
-    if (_temp56 instanceof AbruptCompletion) {
-      return _temp56;
+    if (_temp60 instanceof AbruptCompletion) {
+      return _temp60;
     }
 
-    if (_temp56 instanceof Completion) {
-      _temp56 = _temp56.Value;
+    if (_temp60 instanceof Completion) {
+      _temp60 = _temp60.Value;
     }
 
-    replaceValue = _temp56;
+    replaceValue = _temp60;
   }
 
   const pos = new Value(string.stringValue().indexOf(searchString.stringValue()));
@@ -37963,66 +39759,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   let replStr;
 
   if (functionalReplace === Value.true) {
-    let _temp57 = Call(replaceValue, Value.undefined, [matched, pos, string]);
-
-    if (_temp57 instanceof AbruptCompletion) {
-      return _temp57;
-    }
-
-    if (_temp57 instanceof Completion) {
-      _temp57 = _temp57.Value;
-    }
-
-    const replValue = _temp57;
-
-    let _temp58 = ToString(replValue);
-
-    if (_temp58 instanceof AbruptCompletion) {
-      return _temp58;
-    }
-
-    if (_temp58 instanceof Completion) {
-      _temp58 = _temp58.Value;
-    }
-
-    replStr = _temp58;
-  } else {
-    const captures = [];
-
-    let _temp59 = GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue);
-
-    Assert(!(_temp59 instanceof AbruptCompletion), "GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue)" + ' returned an abrupt completion');
-
-    if (_temp59 instanceof Completion) {
-      _temp59 = _temp59.Value;
-    }
-
-    replStr = _temp59;
-  }
-
-  const tailPos = pos.numberValue() + matched.stringValue().length;
-  const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
-  return new Value(newString);
-} // 21.1.3.19 #sec-string.prototype.slice
-
-
-function StringProto_search([regexp = Value.undefined], {
-  thisValue
-}) {
-  let _temp60 = RequireObjectCoercible(thisValue);
-
-  if (_temp60 instanceof AbruptCompletion) {
-    return _temp60;
-  }
-
-  if (_temp60 instanceof Completion) {
-    _temp60 = _temp60.Value;
-  }
-
-  const O = _temp60;
-
-  if (regexp !== Value.undefined && regexp !== Value.null) {
-    let _temp61 = GetMethod(regexp, wellKnownSymbols.search);
+    let _temp61 = Call(replaceValue, Value.undefined, [matched, pos, string]);
 
     if (_temp61 instanceof AbruptCompletion) {
       return _temp61;
@@ -38032,41 +39769,40 @@ function StringProto_search([regexp = Value.undefined], {
       _temp61 = _temp61.Value;
     }
 
-    const searcher = _temp61;
+    const replValue = _temp61;
 
-    if (searcher !== Value.undefined) {
-      return Call(searcher, regexp, [O]);
+    let _temp62 = ToString(replValue);
+
+    if (_temp62 instanceof AbruptCompletion) {
+      return _temp62;
     }
+
+    if (_temp62 instanceof Completion) {
+      _temp62 = _temp62.Value;
+    }
+
+    replStr = _temp62;
+  } else {
+    const captures = [];
+
+    let _temp63 = GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue);
+
+    Assert(!(_temp63 instanceof AbruptCompletion), "GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue)" + ' returned an abrupt completion');
+
+    if (_temp63 instanceof Completion) {
+      _temp63 = _temp63.Value;
+    }
+
+    replStr = _temp63;
   }
 
-  let _temp62 = ToString(O);
-
-  if (_temp62 instanceof AbruptCompletion) {
-    return _temp62;
-  }
-
-  if (_temp62 instanceof Completion) {
-    _temp62 = _temp62.Value;
-  }
-
-  const string = _temp62;
-
-  let _temp63 = RegExpCreate(regexp, Value.undefined);
-
-  if (_temp63 instanceof AbruptCompletion) {
-    return _temp63;
-  }
-
-  if (_temp63 instanceof Completion) {
-    _temp63 = _temp63.Value;
-  }
-
-  const rx = _temp63;
-  return Invoke(rx, wellKnownSymbols.search, [string]);
+  const tailPos = pos.numberValue() + matched.stringValue().length;
+  const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
+  return new Value(newString);
 } // 21.1.3.19 #sec-string.prototype.slice
 
 
-function StringProto_slice([start = Value.undefined, end = Value.undefined], {
+function StringProto_search([regexp = Value.undefined], {
   thisValue
 }) {
   let _temp64 = RequireObjectCoercible(thisValue);
@@ -38081,21 +39817,25 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], {
 
   const O = _temp64;
 
-  let _temp65 = ToString(O);
+  if (regexp !== Value.undefined && regexp !== Value.null) {
+    let _temp65 = GetMethod(regexp, wellKnownSymbols.search);
 
-  if (_temp65 instanceof AbruptCompletion) {
-    return _temp65;
+    if (_temp65 instanceof AbruptCompletion) {
+      return _temp65;
+    }
+
+    if (_temp65 instanceof Completion) {
+      _temp65 = _temp65.Value;
+    }
+
+    const searcher = _temp65;
+
+    if (searcher !== Value.undefined) {
+      return Call(searcher, regexp, [O]);
+    }
   }
 
-  if (_temp65 instanceof Completion) {
-    _temp65 = _temp65.Value;
-  }
-
-  const S = _temp65.stringValue();
-
-  const len = S.length;
-
-  let _temp66 = ToInteger(start);
+  let _temp66 = ToString(O);
 
   if (_temp66 instanceof AbruptCompletion) {
     return _temp66;
@@ -38105,24 +39845,80 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], {
     _temp66 = _temp66.Value;
   }
 
-  const intStart = _temp66.numberValue();
+  const string = _temp66;
+
+  let _temp67 = RegExpCreate(regexp, Value.undefined);
+
+  if (_temp67 instanceof AbruptCompletion) {
+    return _temp67;
+  }
+
+  if (_temp67 instanceof Completion) {
+    _temp67 = _temp67.Value;
+  }
+
+  const rx = _temp67;
+  return Invoke(rx, wellKnownSymbols.search, [string]);
+} // 21.1.3.19 #sec-string.prototype.slice
+
+
+function StringProto_slice([start = Value.undefined, end = Value.undefined], {
+  thisValue
+}) {
+  let _temp68 = RequireObjectCoercible(thisValue);
+
+  if (_temp68 instanceof AbruptCompletion) {
+    return _temp68;
+  }
+
+  if (_temp68 instanceof Completion) {
+    _temp68 = _temp68.Value;
+  }
+
+  const O = _temp68;
+
+  let _temp69 = ToString(O);
+
+  if (_temp69 instanceof AbruptCompletion) {
+    return _temp69;
+  }
+
+  if (_temp69 instanceof Completion) {
+    _temp69 = _temp69.Value;
+  }
+
+  const S = _temp69.stringValue();
+
+  const len = S.length;
+
+  let _temp70 = ToInteger(start);
+
+  if (_temp70 instanceof AbruptCompletion) {
+    return _temp70;
+  }
+
+  if (_temp70 instanceof Completion) {
+    _temp70 = _temp70.Value;
+  }
+
+  const intStart = _temp70.numberValue();
 
   let intEnd;
 
   if (end === Value.undefined) {
     intEnd = len;
   } else {
-    let _temp67 = ToInteger(end);
+    let _temp71 = ToInteger(end);
 
-    if (_temp67 instanceof AbruptCompletion) {
-      return _temp67;
+    if (_temp71 instanceof AbruptCompletion) {
+      return _temp71;
     }
 
-    if (_temp67 instanceof Completion) {
-      _temp67 = _temp67.Value;
+    if (_temp71 instanceof Completion) {
+      _temp71 = _temp71.Value;
     }
 
-    intEnd = _temp67.numberValue();
+    intEnd = _temp71.numberValue();
   }
 
   let from;
@@ -38149,102 +39945,102 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], {
 function StringProto_split([separator = Value.undefined, limit = Value.undefined], {
   thisValue
 }) {
-  let _temp68 = RequireObjectCoercible(thisValue);
+  let _temp72 = RequireObjectCoercible(thisValue);
 
-  if (_temp68 instanceof AbruptCompletion) {
-    return _temp68;
+  if (_temp72 instanceof AbruptCompletion) {
+    return _temp72;
   }
 
-  if (_temp68 instanceof Completion) {
-    _temp68 = _temp68.Value;
+  if (_temp72 instanceof Completion) {
+    _temp72 = _temp72.Value;
   }
 
-  const O = _temp68;
+  const O = _temp72;
 
   if (separator !== Value.undefined && separator !== Value.null) {
-    let _temp69 = GetMethod(separator, wellKnownSymbols.split);
+    let _temp73 = GetMethod(separator, wellKnownSymbols.split);
 
-    if (_temp69 instanceof AbruptCompletion) {
-      return _temp69;
+    if (_temp73 instanceof AbruptCompletion) {
+      return _temp73;
     }
 
-    if (_temp69 instanceof Completion) {
-      _temp69 = _temp69.Value;
+    if (_temp73 instanceof Completion) {
+      _temp73 = _temp73.Value;
     }
 
-    const splitter = _temp69;
+    const splitter = _temp73;
 
     if (splitter !== Value.undefined) {
       return Call(splitter, separator, [O, limit]);
     }
   }
 
-  let _temp70 = ToString(O);
+  let _temp74 = ToString(O);
 
-  if (_temp70 instanceof AbruptCompletion) {
-    return _temp70;
+  if (_temp74 instanceof AbruptCompletion) {
+    return _temp74;
   }
 
-  if (_temp70 instanceof Completion) {
-    _temp70 = _temp70.Value;
+  if (_temp74 instanceof Completion) {
+    _temp74 = _temp74.Value;
   }
 
-  const S = _temp70;
+  const S = _temp74;
 
-  let _temp71 = ArrayCreate(new Value(0));
+  let _temp75 = ArrayCreate(new Value(0));
 
-  Assert(!(_temp71 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  Assert(!(_temp75 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
 
-  if (_temp71 instanceof Completion) {
-    _temp71 = _temp71.Value;
+  if (_temp75 instanceof Completion) {
+    _temp75 = _temp75.Value;
   }
 
-  const A = _temp71;
+  const A = _temp75;
   let lengthA = 0;
   let lim;
 
   if (limit === Value.undefined) {
     lim = new Value(2 ** 32 - 1);
   } else {
-    let _temp72 = ToUint32(limit);
+    let _temp76 = ToUint32(limit);
 
-    if (_temp72 instanceof AbruptCompletion) {
-      return _temp72;
+    if (_temp76 instanceof AbruptCompletion) {
+      return _temp76;
     }
 
-    if (_temp72 instanceof Completion) {
-      _temp72 = _temp72.Value;
+    if (_temp76 instanceof Completion) {
+      _temp76 = _temp76.Value;
     }
 
-    lim = _temp72;
+    lim = _temp76;
   }
 
   const s = S.stringValue().length;
   let p = 0;
 
-  let _temp73 = ToString(separator);
+  let _temp77 = ToString(separator);
 
-  if (_temp73 instanceof AbruptCompletion) {
-    return _temp73;
+  if (_temp77 instanceof AbruptCompletion) {
+    return _temp77;
   }
 
-  if (_temp73 instanceof Completion) {
-    _temp73 = _temp73.Value;
+  if (_temp77 instanceof Completion) {
+    _temp77 = _temp77.Value;
   }
 
-  const R = _temp73;
+  const R = _temp77;
 
   if (lim.numberValue() === 0) {
     return A;
   }
 
   if (separator === Value.undefined) {
-    let _temp74 = CreateDataProperty(A, new Value('0'), S);
+    let _temp78 = CreateDataProperty(A, new Value('0'), S);
 
-    Assert(!(_temp74 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp78 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
 
-    if (_temp74 instanceof Completion) {
-      _temp74 = _temp74.Value;
+    if (_temp78 instanceof Completion) {
+      _temp78 = _temp78.Value;
     }
     return A;
   }
@@ -38256,12 +40052,12 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
       return A;
     }
 
-    let _temp75 = CreateDataProperty(A, new Value('0'), S);
+    let _temp79 = CreateDataProperty(A, new Value('0'), S);
 
-    Assert(!(_temp75 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp79 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
 
-    if (_temp75 instanceof Completion) {
-      _temp75 = _temp75.Value;
+    if (_temp79 instanceof Completion) {
+      _temp79 = _temp79.Value;
     }
     return A;
   }
@@ -38279,20 +40075,20 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
       } else {
         const T = new Value(S.stringValue().substring(p, q));
 
-        let _temp77 = ToString(new Value(lengthA));
+        let _temp81 = ToString(new Value(lengthA));
 
-        Assert(!(_temp77 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+        Assert(!(_temp81 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-        if (_temp77 instanceof Completion) {
-          _temp77 = _temp77.Value;
+        if (_temp81 instanceof Completion) {
+          _temp81 = _temp81.Value;
         }
 
-        let _temp76 = CreateDataProperty(A, _temp77, T);
+        let _temp80 = CreateDataProperty(A, _temp81, T);
 
-        Assert(!(_temp76 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+        Assert(!(_temp80 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-        if (_temp76 instanceof Completion) {
-          _temp76 = _temp76.Value;
+        if (_temp80 instanceof Completion) {
+          _temp80 = _temp80.Value;
         }
         lengthA += 1;
 
@@ -38308,20 +40104,20 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
 
   const T = new Value(S.stringValue().substring(p, s));
 
-  let _temp79 = ToString(new Value(lengthA));
+  let _temp83 = ToString(new Value(lengthA));
 
-  Assert(!(_temp79 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+  Assert(!(_temp83 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-  if (_temp79 instanceof Completion) {
-    _temp79 = _temp79.Value;
+  if (_temp83 instanceof Completion) {
+    _temp83 = _temp83.Value;
   }
 
-  let _temp78 = CreateDataProperty(A, _temp79, T);
+  let _temp82 = CreateDataProperty(A, _temp83, T);
 
-  Assert(!(_temp78 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+  Assert(!(_temp82 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-  if (_temp78 instanceof Completion) {
-    _temp78 = _temp78.Value;
+  if (_temp82 instanceof Completion) {
+    _temp82 = _temp82.Value;
   }
   return A;
 } // 21.1.3.20.1 #sec-splitmatch
@@ -38349,59 +40145,7 @@ function SplitMatch(S, q, R) {
 function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
-  let _temp80 = RequireObjectCoercible(thisValue);
-
-  if (_temp80 instanceof AbruptCompletion) {
-    return _temp80;
-  }
-
-  if (_temp80 instanceof Completion) {
-    _temp80 = _temp80.Value;
-  }
-
-  const O = _temp80;
-
-  let _temp81 = ToString(O);
-
-  if (_temp81 instanceof AbruptCompletion) {
-    return _temp81;
-  }
-
-  if (_temp81 instanceof Completion) {
-    _temp81 = _temp81.Value;
-  }
-
-  const S = _temp81.stringValue();
-
-  let _temp82 = IsRegExp(searchString);
-
-  if (_temp82 instanceof AbruptCompletion) {
-    return _temp82;
-  }
-
-  if (_temp82 instanceof Completion) {
-    _temp82 = _temp82.Value;
-  }
-
-  const isRegExp = _temp82;
-
-  if (isRegExp === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
-  }
-
-  let _temp83 = ToString(searchString);
-
-  if (_temp83 instanceof AbruptCompletion) {
-    return _temp83;
-  }
-
-  if (_temp83 instanceof Completion) {
-    _temp83 = _temp83.Value;
-  }
-
-  const searchStr = _temp83.stringValue();
-
-  let _temp84 = ToInteger(position);
+  let _temp84 = RequireObjectCoercible(thisValue);
 
   if (_temp84 instanceof AbruptCompletion) {
     return _temp84;
@@ -38411,7 +40155,59 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
     _temp84 = _temp84.Value;
   }
 
-  const pos = _temp84.numberValue();
+  const O = _temp84;
+
+  let _temp85 = ToString(O);
+
+  if (_temp85 instanceof AbruptCompletion) {
+    return _temp85;
+  }
+
+  if (_temp85 instanceof Completion) {
+    _temp85 = _temp85.Value;
+  }
+
+  const S = _temp85.stringValue();
+
+  let _temp86 = IsRegExp(searchString);
+
+  if (_temp86 instanceof AbruptCompletion) {
+    return _temp86;
+  }
+
+  if (_temp86 instanceof Completion) {
+    _temp86 = _temp86.Value;
+  }
+
+  const isRegExp = _temp86;
+
+  if (isRegExp === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
+  }
+
+  let _temp87 = ToString(searchString);
+
+  if (_temp87 instanceof AbruptCompletion) {
+    return _temp87;
+  }
+
+  if (_temp87 instanceof Completion) {
+    _temp87 = _temp87.Value;
+  }
+
+  const searchStr = _temp87.stringValue();
+
+  let _temp88 = ToInteger(position);
+
+  if (_temp88 instanceof AbruptCompletion) {
+    return _temp88;
+  }
+
+  if (_temp88 instanceof Completion) {
+    _temp88 = _temp88.Value;
+  }
+
+  const pos = _temp88.numberValue();
 
   Assert(!(position === Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
   const len = S.length;
@@ -38433,73 +40229,6 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
 
 
 function StringProto_substring([start = Value.undefined, end = Value.undefined], {
-  thisValue
-}) {
-  let _temp85 = RequireObjectCoercible(thisValue);
-
-  if (_temp85 instanceof AbruptCompletion) {
-    return _temp85;
-  }
-
-  if (_temp85 instanceof Completion) {
-    _temp85 = _temp85.Value;
-  }
-
-  const O = _temp85;
-
-  let _temp86 = ToString(O);
-
-  if (_temp86 instanceof AbruptCompletion) {
-    return _temp86;
-  }
-
-  if (_temp86 instanceof Completion) {
-    _temp86 = _temp86.Value;
-  }
-
-  const S = _temp86.stringValue();
-
-  const len = S.length;
-
-  let _temp87 = ToInteger(start);
-
-  if (_temp87 instanceof AbruptCompletion) {
-    return _temp87;
-  }
-
-  if (_temp87 instanceof Completion) {
-    _temp87 = _temp87.Value;
-  }
-
-  const intStart = _temp87.numberValue();
-
-  let intEnd;
-
-  if (end === Value.undefined) {
-    intEnd = len;
-  } else {
-    let _temp88 = ToInteger(end);
-
-    if (_temp88 instanceof AbruptCompletion) {
-      return _temp88;
-    }
-
-    if (_temp88 instanceof Completion) {
-      _temp88 = _temp88.Value;
-    }
-
-    intEnd = _temp88.numberValue();
-  }
-
-  const finalStart = Math.min(Math.max(intStart, 0), len);
-  const finalEnd = Math.min(Math.max(intEnd, 0), len);
-  const from = Math.min(finalStart, finalEnd);
-  const to = Math.max(finalStart, finalEnd);
-  return new Value(S.slice(from, to));
-} // 21.1.3.23 #sec-string.prototype.tolocalelowercase
-
-
-function StringProto_toLocaleLowerCase(args, {
   thisValue
 }) {
   let _temp89 = RequireObjectCoercible(thisValue);
@@ -38524,16 +40253,11 @@ function StringProto_toLocaleLowerCase(args, {
     _temp90 = _temp90.Value;
   }
 
-  const S = _temp90;
-  const L = S.stringValue().toLocaleLowerCase();
-  return new Value(L);
-} // 21.1.3.24 #sec-string.prototype.tolocaleuppercase
+  const S = _temp90.stringValue();
 
+  const len = S.length;
 
-function StringProto_toLocaleUpperCase(args, {
-  thisValue
-}) {
-  let _temp91 = RequireObjectCoercible(thisValue);
+  let _temp91 = ToInteger(start);
 
   if (_temp91 instanceof AbruptCompletion) {
     return _temp91;
@@ -38543,25 +40267,35 @@ function StringProto_toLocaleUpperCase(args, {
     _temp91 = _temp91.Value;
   }
 
-  const O = _temp91;
+  const intStart = _temp91.numberValue();
 
-  let _temp92 = ToString(O);
+  let intEnd;
 
-  if (_temp92 instanceof AbruptCompletion) {
-    return _temp92;
+  if (end === Value.undefined) {
+    intEnd = len;
+  } else {
+    let _temp92 = ToInteger(end);
+
+    if (_temp92 instanceof AbruptCompletion) {
+      return _temp92;
+    }
+
+    if (_temp92 instanceof Completion) {
+      _temp92 = _temp92.Value;
+    }
+
+    intEnd = _temp92.numberValue();
   }
 
-  if (_temp92 instanceof Completion) {
-    _temp92 = _temp92.Value;
-  }
-
-  const S = _temp92;
-  const L = S.stringValue().toLocaleUpperCase();
-  return new Value(L);
-} // 21.1.3.25 #sec-string.prototype.tolowercase
+  const finalStart = Math.min(Math.max(intStart, 0), len);
+  const finalEnd = Math.min(Math.max(intEnd, 0), len);
+  const from = Math.min(finalStart, finalEnd);
+  const to = Math.max(finalStart, finalEnd);
+  return new Value(S.slice(from, to));
+} // 21.1.3.23 #sec-string.prototype.tolocalelowercase
 
 
-function StringProto_toLowerCase(args, {
+function StringProto_toLocaleLowerCase(args, {
   thisValue
 }) {
   let _temp93 = RequireObjectCoercible(thisValue);
@@ -38587,19 +40321,12 @@ function StringProto_toLowerCase(args, {
   }
 
   const S = _temp94;
-  const L = S.stringValue().toLowerCase();
+  const L = S.stringValue().toLocaleLowerCase();
   return new Value(L);
-} // 21.1.3.26 #sec-string.prototype.tostring
+} // 21.1.3.24 #sec-string.prototype.tolocaleuppercase
 
 
-function StringProto_toString(args, {
-  thisValue
-}) {
-  return thisStringValue(thisValue);
-} // 21.1.3.27 #sec-string.prototype.touppercase
-
-
-function StringProto_toUpperCase(args, {
+function StringProto_toLocaleUpperCase(args, {
   thisValue
 }) {
   let _temp95 = RequireObjectCoercible(thisValue);
@@ -38625,6 +40352,75 @@ function StringProto_toUpperCase(args, {
   }
 
   const S = _temp96;
+  const L = S.stringValue().toLocaleUpperCase();
+  return new Value(L);
+} // 21.1.3.25 #sec-string.prototype.tolowercase
+
+
+function StringProto_toLowerCase(args, {
+  thisValue
+}) {
+  let _temp97 = RequireObjectCoercible(thisValue);
+
+  if (_temp97 instanceof AbruptCompletion) {
+    return _temp97;
+  }
+
+  if (_temp97 instanceof Completion) {
+    _temp97 = _temp97.Value;
+  }
+
+  const O = _temp97;
+
+  let _temp98 = ToString(O);
+
+  if (_temp98 instanceof AbruptCompletion) {
+    return _temp98;
+  }
+
+  if (_temp98 instanceof Completion) {
+    _temp98 = _temp98.Value;
+  }
+
+  const S = _temp98;
+  const L = S.stringValue().toLowerCase();
+  return new Value(L);
+} // 21.1.3.26 #sec-string.prototype.tostring
+
+
+function StringProto_toString(args, {
+  thisValue
+}) {
+  return thisStringValue(thisValue);
+} // 21.1.3.27 #sec-string.prototype.touppercase
+
+
+function StringProto_toUpperCase(args, {
+  thisValue
+}) {
+  let _temp99 = RequireObjectCoercible(thisValue);
+
+  if (_temp99 instanceof AbruptCompletion) {
+    return _temp99;
+  }
+
+  if (_temp99 instanceof Completion) {
+    _temp99 = _temp99.Value;
+  }
+
+  const O = _temp99;
+
+  let _temp100 = ToString(O);
+
+  if (_temp100 instanceof AbruptCompletion) {
+    return _temp100;
+  }
+
+  if (_temp100 instanceof Completion) {
+    _temp100 = _temp100.Value;
+  }
+
+  const S = _temp100;
   const L = S.stringValue().toUpperCase();
   return new Value(L);
 } // 21.1.3.28 #sec-string.prototype.trim
@@ -38664,29 +40460,29 @@ function StringProto_valueOf(args, {
 function StringProto_iterator(args, {
   thisValue
 }) {
-  let _temp97 = RequireObjectCoercible(thisValue);
+  let _temp101 = RequireObjectCoercible(thisValue);
 
-  if (_temp97 instanceof AbruptCompletion) {
-    return _temp97;
+  if (_temp101 instanceof AbruptCompletion) {
+    return _temp101;
   }
 
-  if (_temp97 instanceof Completion) {
-    _temp97 = _temp97.Value;
+  if (_temp101 instanceof Completion) {
+    _temp101 = _temp101.Value;
   }
 
-  const O = _temp97;
+  const O = _temp101;
 
-  let _temp98 = ToString(O);
+  let _temp102 = ToString(O);
 
-  if (_temp98 instanceof AbruptCompletion) {
-    return _temp98;
+  if (_temp102 instanceof AbruptCompletion) {
+    return _temp102;
   }
 
-  if (_temp98 instanceof Completion) {
-    _temp98 = _temp98.Value;
+  if (_temp102 instanceof Completion) {
+    _temp102 = _temp102.Value;
   }
 
-  const S = _temp98;
+  const S = _temp102;
   return CreateStringIterator(S);
 }
 
@@ -55325,23 +57121,18 @@ function RegExpInitialize(obj, pattern, flags) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
 
-  const BMP = !f.includes('u');
-    // TODO: remove this once internal parsing is implemented
-
+  let parsed;
 
   try {
-    new RegExp(P.stringValue(), F.stringValue()); // eslint-disable-line no-new
+    parsed = ParseRegExp(P.stringValue(), F.stringValue());
   } catch (e) {
-    if (e instanceof SyntaxError) {
-      return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
-    }
-
-    throw e;
+    return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
   }
 
   obj.OriginalSource = P;
   obj.OriginalFlags = F;
-  obj.RegExpMatcher = getMatcher(P, F);
+  obj.RegExpMatcher = getMatcher(parsed, F.stringValue());
+  obj.parsedRegExp = parsed;
 
   let _temp5 = Set$1(obj, new Value('lastIndex'), new Value(0), Value.true);
 
@@ -55353,42 +57144,7 @@ function RegExpInitialize(obj, pattern, flags) {
     _temp5 = _temp5.Value;
   }
   return obj;
-} // TODO: implement an independant matcher
-
-function getMatcher(P, F) {
-  const regex = new RegExp(P.stringValue(), F.stringValue());
-  const unicode = F.stringValue().includes('u');
-  return function RegExpMatcher(S, lastIndex) {
-    regex.lastIndex = lastIndex.numberValue();
-    const result = regex.exec(S.stringValue());
-
-    if (result === null) {
-      return null;
-    }
-
-    if (result.index > lastIndex.numberValue()) {
-      return null;
-    }
-
-    const captures = [];
-
-    for (const capture of result.slice(1)) {
-      if (capture === undefined) {
-        captures.push(Value.undefined);
-      } else if (unicode) {
-        captures.push(Array.from(capture).map(char => char.codePointAt(0)));
-      } else {
-        captures.push(capture.split('').map(char => char.charCodeAt(0)));
-      }
-    }
-
-    return {
-      endIndex: new Value(result.index + result[0].length),
-      captures
-    };
-  };
 } // 21.2.3.2.3 #sec-regexpcreate
-
 
 function RegExpCreate(P, F) {
   let _temp6 = RegExpAlloc(surroundingAgent.intrinsic('%RegExp%'));
@@ -55424,13 +57180,17 @@ function UTF16Encoding(cp) {
   const cu1 = Math.floor((cp - 0x10000) / 0x400) + 0xD800;
   const cu2 = (cp - 0x10000) % 0x400 + 0xDC00;
   return [cu1, cu2];
-} // 10.1.2 #sec-utf16decode
+} // 10.1.2 #sec-utf16encode
 
-function UTF16Decode(lead, trail) {
+function UTF16Encode(text) {
+  return new Value(text.map(UTF16Encoding).join(''));
+} // 10.1.3 #sec-utf16decodesurrogatepair
+
+function UTF16DecodeSurrogatePair(lead, trail) {
   Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail), "isLeadingSurrogate(lead) && isTrailingSurrogate(trail)");
   const cp = (lead - 0xD800) * 0x400 + (trail - 0xDC00) + 0x10000;
   return cp;
-} // 10.1.3 #sec-codepointat
+} // 10.1.4 #sec-codepointat
 
 function CodePointAt(string, position) {
   const size = string.stringValue().length;
@@ -55464,9 +57224,9 @@ function CodePointAt(string, position) {
     };
   }
 
-  let _temp = UTF16Decode(first, second);
+  let _temp = UTF16DecodeSurrogatePair(first, second);
 
-  Assert(!(_temp instanceof AbruptCompletion), "UTF16Decode(first, second)" + ' returned an abrupt completion');
+  Assert(!(_temp instanceof AbruptCompletion), "UTF16DecodeSurrogatePair(first, second)" + ' returned an abrupt completion');
   /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
@@ -55479,6 +57239,28 @@ function CodePointAt(string, position) {
     CodeUnitCount: new Value(2),
     IsUnpairedSurrogate: Value.false
   };
+} // 10.1.5 #sec-utf16decodestring
+
+function UTF16DecodeString(string) {
+  const codePoints = [];
+  const size = string.stringValue().length;
+  let position = 0;
+
+  while (position < size) {
+    let _temp2 = CodePointAt(string, position);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "CodePointAt(string, position)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const cp = _temp2;
+    codePoints.push(cp.CodePoint);
+    position += cp.CodeUnitCount;
+  }
+
+  return codePoints;
 }
 
 function IsAccessorDescriptor(Desc) {
@@ -58108,8 +59890,10 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   RegExpCreate: RegExpCreate,
   EscapeRegExpPattern: EscapeRegExpPattern,
   UTF16Encoding: UTF16Encoding,
-  UTF16Decode: UTF16Decode,
+  UTF16Encode: UTF16Encode,
+  UTF16DecodeSurrogatePair: UTF16DecodeSurrogatePair,
   CodePointAt: CodePointAt,
+  UTF16DecodeString: UTF16DecodeString,
   IsAccessorDescriptor: IsAccessorDescriptor,
   IsDataDescriptor: IsDataDescriptor,
   IsGenericDescriptor: IsGenericDescriptor,
