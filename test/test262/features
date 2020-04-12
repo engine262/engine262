@@ -4,7 +4,6 @@ Atomics
 
 caller
 
-regexp-match-indices
 String.prototype.replaceAll
 
 SharedArrayBuffer

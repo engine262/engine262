@@ -5,10 +5,12 @@ import {
   Call,
   CodePointAt,
   Construct,
+  CreateArrayFromList,
   CreateDataProperty,
   EscapeRegExpPattern,
   Get,
   IsCallable,
+  MatchRecord,
   OrdinaryObjectCreate,
   SameValue,
   Set,
@@ -63,95 +65,236 @@ export function RegExpExec(R, S) {
 
 // 21.2.5.2.2 #sec-regexpbuiltinexec
 function RegExpBuiltinExec(R, S) {
+  // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
+  // 2. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
+  // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
+  // 4. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
   let lastIndex = Q(ToLength(Q(Get(R, new Value('lastIndex')))));
+  // 5. Let flags be R.[[OriginalFlags]].
   const flags = R.OriginalFlags.stringValue();
+  // 6. If flags contains "g", let global be true; else let global be false.
   const global = flags.includes('g');
+  // 7. If flags contains "y", let sticky be true; else let sticky be false.
   const sticky = flags.includes('y');
+  // 8. If global is false and sticky is false, set lastIndex to 0.
   if (!global && !sticky) {
     lastIndex = new Value(0);
   }
+  // 9. Let matcher be R.[[RegExpMatcher]].
   const matcher = R.RegExpMatcher;
+  // 10. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
   const fullUnicode = flags.includes('u');
+  // 11. Let matchSucceeded be false.
   let matchSucceeded = false;
   let r;
+  // 12. Repeat, while matchSucceeded is false
   while (matchSucceeded === false) {
+    // a. If lastIndex > length, then
     if (lastIndex.numberValue() > length) {
+      // i. If global is true or sticky is true, then
       if (global || sticky) {
+        // 1. Perform ? Set(R, "lastIndex", 0, true).
         Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
       }
+      // ii. Return null.
       return Value.null;
     }
+    // b. Let r be matcher(S, lastIndex).
     r = matcher(S, lastIndex);
+    // c. If r is failure, then
     if (r === 'failure') {
+      // i. If sticky is true, then
       if (sticky) {
+        // 1. Perform ? Set(R, "lastIndex", 0, true).
         Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
+        // 2. Return null.
         return Value.null;
       }
+      // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
-    } else {
+    } else { // d. Else,
+      // i. Assert: r is a State.
       Assert(r instanceof State);
+      // ii. Set matchSucceeded to true.
       matchSucceeded = true;
     }
   }
-
+  // 13. Let e be r's endIndex value.
   let e = r.endIndex;
+  const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
+  // 14. If fullUnicode is true, then
   if (fullUnicode) {
-    const Input = Array.from(S.stringValue());
-    let eUTF = 0;
-    if (e >= Input.length) {
-      eUTF = S.stringValue().length;
+    // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
+      e = X(GetStringIndex(S, Input, e));
     } else {
-      for (let i = 0; i < e; i += 1) {
-        eUTF += Input[i].length;
+      // a. e is an index into the Input character list, derived from S, matched by matcher.
+      //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+      //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+      let eUTF = 0;
+      if (e >= Input.length) {
+        eUTF = S.stringValue().length;
+      } else {
+        for (let i = 0; i < e; i += 1) {
+          eUTF += Input[i].length;
+        }
       }
+      // b. Set e to eUTF.
+      e = eUTF;
     }
-    e = eUTF;
   }
-
+  // 15. If global is true or sticky is true, then
   if (global || sticky) {
+    // a. Perform ? Set(R, "lastIndex", e, true).
     Q(Set(R, new Value('lastIndex'), new Value(e), Value.true));
   }
-
+  // 16. Let n be the number of elements in r's captures List.
   const n = r.captures.length - 1;
+  // 17. Assert: n < 2^32 - 1.
   Assert(n < (2 ** 32) - 1);
+  // 18. Let A be ! ArrayCreate(n + 1).
   const A = X(ArrayCreate(new Value(n + 1)));
-  // Assert: The value of A's "length" property is n + 1.
+  // 19. Assert: The value of A's "length" property is n + 1.
+  Assert(X(Get(A, new Value('length'))).numberValue() === n + 1);
+  // 20. Perform ! CreateDataPropertyOrThrow(A, "index", lastIndex).
   X(CreateDataProperty(A, new Value('index'), lastIndex));
+  // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataProperty(A, new Value('input'), S));
-  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
-  X(CreateDataProperty(A, new Value('0'), new Value(matchedSubstr)));
-
-  let groups;
-  if (R.parsedRegExp.groupSpecifiers.size > 0) {
-    groups = OrdinaryObjectCreate(Value.null);
-  } else {
-    groups = Value.undefined;
-  }
-  X(CreateDataProperty(A, new Value('groups'), groups));
-
   const capturingParens = R.parsedRegExp.capturingParens;
-  for (let i = 1; i <= n; i += 1) {
-    const captureI = r.captures[i];
-    let capturedValue;
-    if (captureI === Value.undefined) {
-      capturedValue = Value.undefined;
-    } else if (fullUnicode) {
-      // Assert: captureI is a List of code points.
-      capturedValue = new Value(captureI.join(''));
-    } else {
-      // Assert: captureI is a List of code units.
-      capturedValue = new Value(captureI.join(''));
+  // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
+  if (surroundingAgent.feature('RegExpMatchIndices')) {
+    // Let indices be a new empty List.
+    const indices = [];
+    // Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    const match = new MatchRecord(lastIndex.numberValue(), e);
+    // Add match as the last element of indices.
+    indices.push(match);
+    // Let matchedValue be ! GetMatchString(S, match).
+    const matchedValue = X(GetMatchString(S, match));
+    // Perform ! CreateDataProperty(A, "0", matchedValue).
+    X(CreateDataProperty(A, new Value('0'), matchedValue));
+    let groups;
+    let groupNames;
+    // If R contains any GroupName, then
+    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+      // Let groups be OrdinaryObjectCreate(null).
+      groups = OrdinaryObjectCreate(Value.null);
+      // Let groupNames be a new empty List.
+      groupNames = [];
+      // TODO: add this to spec text.
+      groupNames.push(Value.undefined);
+    } else { // Else,
+      // Let groups be undefined.
+      groups = Value.undefined;
+      // Let groupNames be undefined.
+      groupNames = Value.undefined;
     }
-    X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
-    if (capturingParens[i - 1].GroupSpecifier) {
-      const s = new Value(capturingParens[i - 1].GroupSpecifier);
-      X(CreateDataProperty(groups, s, capturedValue));
+    // Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+    X(CreateDataProperty(A, new Value('groups'), groups));
+    // For each integer i such that i > 0 and i ≤ n, do
+    for (let i = 1; i <= n; i += 1) {
+      // Let captureI be ith element of r's captures List.
+      const captureI = r.captures[i];
+      let capturedValue;
+      // If captureI is undefined, then
+      if (captureI === Value.undefined) {
+        // Let capturedValue be undefined.
+        capturedValue = Value.undefined;
+        // Add undefined as the last element of indices.
+        indices.push(Value.undefined);
+      } else { // Else,
+        // Let captureStart be captureI's startIndex.
+        let captureStart = captureI.startIndex;
+        // Let captureEnd be captureI's endIndex.
+        let captureEnd = captureI.endIndex;
+        // If fullUnicode is true, then
+        if (fullUnicode) {
+          // Set captureStart to ! GetStringIndex(S, Input, captureStart).
+          captureStart = X(GetStringIndex(S, Input, captureStart));
+          // Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
+          captureEnd = X(GetStringIndex(S, Input, captureEnd));
+        }
+        // Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
+        const capture = new MatchRecord(captureStart, captureEnd);
+        // Append capture to indices.
+        indices.push(capture);
+        // Let capturedValue be ! GetMatchString(S, capture).
+        capturedValue = X(GetMatchString(S, capture));
+      }
+      // Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
+      X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
+      // If the ith capture of R was defined with a GroupName, then
+      if (capturingParens[i - 1].GroupSpecifier) {
+        // Let s be the StringValue of the corresponding RegExpIdentifierName.
+        const s = new Value(capturingParens[i - 1].GroupSpecifier);
+        // Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
+        X(CreateDataProperty(groups, s, capturedValue));
+        // Assert: groupNames is a List.
+        Assert(Array.isArray(groupNames));
+        // Append s to groupNames.
+        groupNames.push(s);
+      } else { // Else,
+        // If groupNames is a List, append undefined to groupNames.
+        if (Array.isArray(groupNames)) {
+          groupNames.push(Value.undefined);
+        }
+      }
+    }
+    // Let indicesArray be MakeIndicesArray(S, indices, groupNames).
+    const indicesArray = MakeIndicesArray(S, indices, groupNames);
+    // Perform ! CreateDataProperty(A, "indices", indicesArray).
+    X(CreateDataProperty(A, new Value('indices'), indicesArray));
+  } else {
+    // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
+    const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
+    // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
+    X(CreateDataProperty(A, new Value('0'), new Value(matchedSubstr)));
+    let groups;
+    // 24. If R contains any GroupName, then
+    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+      // a. Let groups be OrdinaryObjectCreate(null).
+      groups = OrdinaryObjectCreate(Value.null);
+    } else { // 25. Else,
+      // a. Let groups be undefined.
+      groups = Value.undefined;
+    }
+    // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+    X(CreateDataProperty(A, new Value('groups'), groups));
+    // 27. For each integer i such that i > 0 and i ≤ n, do
+    for (let i = 1; i <= n; i += 1) {
+      // a. Let captureI be ith element of r's captures List.
+      const captureI = r.captures[i];
+      let capturedValue;
+      // b. If captureI is undefined, let capturedValue be undefined.
+      if (captureI === Value.undefined) {
+        capturedValue = Value.undefined;
+      } else if (fullUnicode) { // c. Else if fullUnicode is true, then
+        // i. Assert: captureI is a List of code points.
+        // ii. Let capturedValue be ! UTF16Encode(captureI).
+        capturedValue = new Value(captureI.join(''));
+      } else { // d. Else,
+        // i. Assert: fullUnicode is false.
+        Assert(fullUnicode === false);
+        // ii. Assert: captureI is a List of code units.
+        // iii. Let capturedValue be the String value consisting of the code units of captureI.
+        capturedValue = new Value(captureI.join(''));
+      }
+      // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
+      X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
+      // f. If the ith capture of R was defined with a GroupName, then
+      if (capturingParens[i - 1].GroupSpecifier) {
+        // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
+        const s = new Value(capturingParens[i - 1].GroupSpecifier);
+        // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
+        X(CreateDataProperty(groups, s, capturedValue));
+      }
     }
   }
-
+  // 28. Return A.
   return A;
 }
 
@@ -173,6 +316,109 @@ export function AdvanceStringIndex(S, index, unicode) {
 
   const cp = X(CodePointAt(S, index));
   return new Value(index + cp.CodeUnitCount.numberValue());
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex
+function GetStringIndex(S, Input, e) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
+  Assert(Array.isArray(Input));
+  // 3. Assert: e is an integer value ≥ 0 and < the number of elements in Input.
+  // TODO: fix spec text.
+  Assert(e >= 0/* && e < Input.length */);
+  // 4. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+  //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+  let eUTF = 0;
+  if (e >= Input.length) {
+    eUTF = S.stringValue().length;
+  } else {
+    for (let i = 0; i < e; i += 1) {
+      eUTF += Input[i].length;
+    }
+  }
+  // 5. Return eUTF.
+  return eUTF;
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring
+function GetMatchString(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: match is a Match Record.
+  Assert(match instanceof MatchRecord);
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
+  return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
+function GetMatchIndicesArray(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: match is a Match Record.
+  Assert(match instanceof MatchRecord);
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
+  return CreateArrayFromList([new Value(match.StartIndex), new Value(match.EndIndex)]);
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
+function MakeIndicesArray(S, indices, groupNames) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: indices is a List.
+  Assert(Array.isArray(indices));
+  // 3. Assert: groupNames is a List or is undefined.
+  Assert(Array.isArray(groupNames) || groupNames === Value.undefined);
+  // 4. Let n be the number of elements in indices.
+  const n = indices.length;
+  // 5. Assert: n < 2^32-1.
+  Assert(n < 2 ** 32 - 1);
+  // 6. Set A to ! ArrayCreate(n).
+  const A = X(ArrayCreate(new Value(n)));
+  // 7. Assert: The value of A's "length" property is n.
+  Assert(X(Get(A, new Value('length'))).numberValue() === n);
+  let groups;
+  // 8. If groupNames is not undefined, then
+  if (groupNames !== Value.undefined) {
+    // a. Let groups be ! ObjectCreate(null).
+    groups = X(OrdinaryObjectCreate(Value.null));
+  } else { // 9. Else,
+    // b. Let groups be undefined.
+    groups = Value.undefined;
+  }
+  // 10. Perform ! CreateDataProperty(A, "groups", groups).
+  X(CreateDataProperty(A, new Value('groups'), groups));
+  // 11. For each integer i such that i ≥ 0 and i < n, do
+  for (let i = 0; i < n; i += 1) {
+    // a. Let matchIndices be indices[i].
+    const matchIndices = indices[i];
+    let matchIndicesArray;
+    // b. If matchIndices is not undefined, then
+    if (matchIndices !== Value.undefined) {
+      // i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
+      matchIndicesArray = X(GetMatchIndicesArray(S, matchIndices));
+    } else { // c. Else,
+      // i. Let matchIndicesArray be undefined.
+      matchIndicesArray = Value.undefined;
+    }
+    // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
+    X(CreateDataProperty(A, X(ToString(new Value(i))), matchIndicesArray));
+    // e. If groupNames is not undefined and groupNames[i] is not undefined, then
+    if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
+      // i. Perform ! CreateDataProperty(groups, groupNames[i], matchIndicesArray).
+      X(CreateDataProperty(groups, groupNames[i], matchIndicesArray));
+    }
+  }
+  // 12. Return A.
+  return A;
 }
 
 // 21.2.5.3 #sec-get-regexp.prototype.dotAll
