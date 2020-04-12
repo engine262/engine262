@@ -151,12 +151,89 @@ export class ExpressionParser extends FunctionParser {
       do {
         while (TokenPrecedence[this.peek().type] === p) {
           const node = this.startNode();
-          node.left = x;
+          const left = x;
           const op = this.next();
-          node.operator = op.value;
           const nextP = op.type === Token.EXP ? p : p + 1;
-          node.right = this.parseBinaryExpression(nextP);
-          x = this.finishNode(node, op.type === Token.AND || op.type === Token.OR ? 'LogicalExpression' : 'BinaryExpression');
+          const right = this.parseBinaryExpression(nextP);
+          let name;
+          switch (op.type) {
+            case Token.EXP:
+              name = 'ExponentiationExpression';
+              node.UpdateExpression = left;
+              node.ExponentiationExpression = right;
+              break;
+            case Token.MUL:
+            case Token.DIV:
+            case Token.MOD:
+              name = 'MultiplicativeExpression';
+              node.MultiplicativeExpression = left;
+              node.MultiplicativeOperator = op.value;
+              node.ExponentiationExpression = right;
+              break;
+            case Token.ADD:
+            case Token.SUB:
+              name = 'AdditiveExpression';
+              node.AdditiveExpression = left;
+              node.MultiplicativeExpression = right;
+              node.operator = op.value;
+              break;
+            case Token.SHL:
+            case Token.SAR:
+            case Token.SHR:
+              name = 'ShiftExpression';
+              node.ShiftExpression = left;
+              node.AdditiveExpression = right;
+              node.operator = op.value;
+              break;
+            case Token.LT:
+            case Token.GT:
+            case Token.LE:
+            case Token.GE:
+            case Token.INSTANCEOF:
+            case Token.IN:
+              name = 'RelationalExpression';
+              node.RelationalExpression = left;
+              node.ShiftExpression = right;
+              node.operator = op.value;
+              break;
+            case Token.EQ:
+            case Token.NE:
+            case Token.EQ_STRICT:
+            case Token.NE_STRICT:
+              name = 'EqualityExpression';
+              node.EqualityExpression = left;
+              node.RelationalExpression = right;
+              node.operator = op.value;
+              break;
+            case Token.BIT_AND:
+              name = 'BitwiseANDExpression';
+              node.BitwiseANDExpression = left;
+              node.EqualityExpression = right;
+              break;
+            case Token.BIT_XOR:
+              name = 'BitwiseXORExpression';
+              node.BitwiseXORExpression = left;
+              node.BitwiseANDExpression = right;
+              break;
+            case Token.BIT_OR:
+              name = 'BitwiseORExpression';
+              node.BitwiseORExpression = left;
+              node.BitwiseXORExpression = right;
+              break;
+            case Token.AND:
+              name = 'LogicalANDExpression';
+              node.LogicalANDExpression = left;
+              node.BitwiseORExpression = right;
+              break;
+            case Token.OR:
+              name = 'LogicalORExpression';
+              node.LogicalORExpression = left;
+              node.LogicalANDExpression = right;
+              break;
+            default:
+              throw new RangeError();
+          }
+          x = this.finishNode(node, name);
         }
         p -= 1;
       } while (p >= precedence);

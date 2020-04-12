@@ -18,3 +18,7 @@ export * from './ThrowStatement.mjs';
 export * from './UpdateExpression.mjs';
 export * from './GlobalDeclarationInstantiation.mjs';
 export * from './InstantiateFunctionObject.mjs';
+export * from './Script.mjs';
+export * from './ScriptBody.mjs';
+export * from './StatementList.mjs';
+export * from './ExpressionStatement.mjs';

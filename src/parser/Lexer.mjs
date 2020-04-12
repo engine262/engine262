@@ -547,9 +547,6 @@ export class Lexer {
     this.scannedValue = base === 10
       ? Number.parseFloat(buffer, base)
       : Number.parseInt(buffer, base);
-    if (this.buffer !== '') {
-      this.scannedValue *= (10 ** Number.parseInt(buffer, 10));
-    }
     return Token.NUMBER;
   }
 

@@ -10,8 +10,10 @@ import {
   Evaluate_UpdateExpression,
   Evaluate_CoalesceExpression,
   Evaluate_IfStatement,
+  Evaluate_Script,
+  Evaluate_ScriptBody,
+  Evaluate_ExpressionStatement,
 } from './runtime-semantics/all.mjs';
-
 
 export function* Evaluate(node) {
   surroundingAgent.runningExecutionContext.callSite.setLocation(node);
@@ -21,9 +23,15 @@ export function* Evaluate(node) {
   }
 
   switch (node.type) {
+    case 'Script':
+      return yield* Evaluate_Script(node);
+    case 'ScriptBody':
+      return yield* Evaluate_ScriptBody(node);
+    case 'ExpressionStatement':
+      return yield* Evaluate_ExpressionStatement(node);
     case 'IdentifierReference':
       return Evaluate_IdentifierReference(node);
-    case 'ThisKeyword':
+    case 'ThisExpression':
       return Evaluate_This(node);
     case 'NullLiteral':
     case 'BooleanLiteral':
