@@ -24,7 +24,6 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   GetSubstitution,
-  MatchResultFailure,
   State,
 } from '../runtime-semantics/all.mjs';
 import {
@@ -86,7 +85,7 @@ function RegExpBuiltinExec(R, S) {
       return Value.null;
     }
     r = matcher(S, lastIndex);
-    if (r === MatchResultFailure) {
+    if (r === 'failure') {
       if (sticky) {
         Q(Set(R, new Value('lastIndex'), new Value(0), Value.true));
         return Value.null;

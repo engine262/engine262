@@ -1,3 +1,5 @@
+import unicodeCaseFoldingCommon from 'unicode-13.0.0/Case_Folding/C/symbols.js';
+import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
 import {
   Assert,
   IsNonNegativeInteger,
@@ -11,11 +13,15 @@ import {
   isLineTerminator,
   isStrWhiteSpaceChar,
 } from '../grammar/util.mjs';
-import {
-  caseFoldingMapping,
-} from '../unicode/caseFoldingMapping-gen.mjs';
 
 // 21.2.2.1 #sec-notation
+export class State {
+  constructor(endIndex, captures) {
+    this.endIndex = endIndex;
+    this.captures = captures;
+  }
+}
+
 export function getMatcher(parsedRegex, flags) {
   const {
     pattern,
@@ -30,9 +36,8 @@ export function getMatcher(parsedRegex, flags) {
   const NcapturingParens = capturingParens.length;
   const internalRegExpFlags = `${Unicode ? 'u' : ''}${IgnoreCase ? 'i' : ''}`;
 
+  // 21.2.2.2 #sec-pattern
   return function patternMatcher(str, mainIndex) {
-    // 21.2.2.2 #sec-pattern
-
     const mainM = Evaluate_Disjunction(pattern.Disjunction, 1);
     Assert(Type(str) === 'String');
     Assert(X(IsNonNegativeInteger(mainIndex)) === Value.true && mainIndex.numberValue() <= str.stringValue().length);
@@ -55,7 +60,7 @@ export function getMatcher(parsedRegex, flags) {
     }
 
     function mainC(y) {
-      AssertState(y);
+      Assert(y instanceof State);
       return y;
     }
     const mainCap = new Array(NcapturingParens + 1).fill(Value.undefined);
@@ -70,15 +75,15 @@ export function getMatcher(parsedRegex, flags) {
       } else {
         const M = Disjunction.Alternatives.map((Alternative) => Evaluate_Alternative(Alternative, direction));
         return function disjunctionAlternativeDisjunctionMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           for (const m of M) {
             const r = m(x, c);
-            if (r !== MatchResultFailure) {
+            if (r !== 'failure') {
               return r;
             }
           }
-          return MatchResultFailure;
+          return 'failure';
         };
       }
     }
@@ -87,8 +92,8 @@ export function getMatcher(parsedRegex, flags) {
     function Evaluate_Alternative(Alternative, direction) {
       if (Alternative.Terms.length === 0) {
         return function alternativeEmptyMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           return c(x);
         };
       }
@@ -99,10 +104,10 @@ export function getMatcher(parsedRegex, flags) {
         const M = Alternative.Terms.map((Term) => Evaluate_Term(Term, direction));
         if (direction === 1) {
           return function alternativePositiveDirectionMatcher(x, c) {
-            AssertState(x);
-            AssertContinuation(c);
+            Assert(x instanceof State);
+            Assert(typeof c === 'function' && c.length === 1);
             const d = M.slice(1).reduceRight((prev, cur) => function alternativePositiveContinuation(y) {
-              AssertState(y);
+              Assert(y instanceof State);
               return cur(y, prev);
             }, c);
             return M[0](x, d);
@@ -110,10 +115,10 @@ export function getMatcher(parsedRegex, flags) {
         } else {
           Assert(direction === -1);
           return function alternativeNegativeDirectionMatcher(x, c) {
-            AssertState(x);
-            AssertContinuation(c);
+            Assert(x instanceof State);
+            Assert(typeof c === 'function' && c.length === 1);
             const d = M.slice(0, -1).reduce((prev, cur) => function alternativeNegativeContinuation(y) {
-              AssertState(y);
+              Assert(y instanceof State);
               return cur(y, prev);
             }, c);
             return M[M.length - 1](x, d);
@@ -139,8 +144,8 @@ export function getMatcher(parsedRegex, flags) {
         const parenIndex = Term.capturingParensBefore;
         const parenCount = Term.Atom.enclosedCapturingParens;
         return function termAtomQuantifierMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           return RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount);
         };
       }
@@ -155,9 +160,9 @@ export function getMatcher(parsedRegex, flags) {
       }
 
       const d = function repeatMatcherContinuation(y) {
-        AssertState(y);
+        Assert(y instanceof State);
         if (min === 0 && y.endIndex === x.endIndex) {
-          return MatchResultFailure;
+          return 'failure';
         }
         const min2 = min === 0 ? 0 : min - 1;
         const max2 = max === Infinity ? Infinity : max - 1;
@@ -175,13 +180,13 @@ export function getMatcher(parsedRegex, flags) {
       }
       if (greedy === false) {
         const z = c(x);
-        if (z !== MatchResultFailure) {
+        if (z !== 'failure') {
           return z;
         }
         return m(xr, d);
       }
       const z = m(xr, d);
-      if (z !== MatchResultFailure) {
+      if (z !== 'failure') {
         return z;
       }
       return c(x);
@@ -191,68 +196,68 @@ export function getMatcher(parsedRegex, flags) {
     function Evaluate_Assertion(Assertion) {
       if (Assertion.subtype === '^') {
         return function assertionStartMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const e = x.endIndex;
           if (e === 0 || (Multiline === true && isLineTerminator(Input[e - 1]))) {
             return c(x);
           }
-          return MatchResultFailure;
+          return 'failure';
         };
       }
 
       if (Assertion.subtype === '$') {
         return function assertionEndMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const e = x.endIndex;
           if (e === InputLength || (Multiline === true && isLineTerminator(Input[e]))) {
             return c(x);
           }
-          return MatchResultFailure;
+          return 'failure';
         };
       }
 
       if (Assertion.subtype === '\\b') {
         return function assertionWordBoundaryMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const e = x.endIndex;
           const a = IsWordChar(e - 1);
           const b = IsWordChar(e);
           if ((a === true && b === false) || (a === false && b === true)) {
             return c(x);
           }
-          return MatchResultFailure;
+          return 'failure';
         };
       }
 
       if (Assertion.subtype === '\\B') {
         return function assertionNonWordBoundaryMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const e = x.endIndex;
           const a = IsWordChar(e - 1);
           const b = IsWordChar(e);
           if ((a === true && b === true) || (a === false && b === false)) {
             return c(x);
           }
-          return MatchResultFailure;
+          return 'failure';
         };
       }
 
       if (Assertion.subtype === '(?=') {
         const m = Evaluate_Disjunction(Assertion.Disjunction, 1);
         return function assertionPositiveLookaheadMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const d = function assertionPositiveLookaheadContinuation(y) {
-            AssertState(y);
+            Assert(y instanceof State);
             return y;
           };
           const r = m(x, d);
-          if (r === MatchResultFailure) {
-            return MatchResultFailure;
+          if (r === 'failure') {
+            return 'failure';
           }
           const y = r;
           const cap = y.captures;
@@ -265,15 +270,15 @@ export function getMatcher(parsedRegex, flags) {
       if (Assertion.subtype === '(?!') {
         const m = Evaluate_Disjunction(Assertion.Disjunction, 1);
         return function assertionNegativeLookaheadMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const d = function assertionNegativeLookaheadContinuation(y) {
-            AssertState(y);
+            Assert(y instanceof State);
             return y;
           };
           const r = m(x, d);
-          if (r !== MatchResultFailure) {
-            return MatchResultFailure;
+          if (r !== 'failure') {
+            return 'failure';
           }
           return c(x);
         };
@@ -282,15 +287,15 @@ export function getMatcher(parsedRegex, flags) {
       if (Assertion.subtype === '(?<=') {
         const m = Evaluate_Disjunction(Assertion.Disjunction, -1);
         return function assertionPositiveLookbehindMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const d = function assertionPositiveLookbehindContinuation(y) {
-            AssertState(y);
+            Assert(y instanceof State);
             return y;
           };
           const r = m(x, d);
-          if (r === MatchResultFailure) {
-            return MatchResultFailure;
+          if (r === 'failure') {
+            return 'failure';
           }
           const y = r;
           const cap = y.captures;
@@ -303,15 +308,15 @@ export function getMatcher(parsedRegex, flags) {
       if (Assertion.subtype === '(?<!') {
         const m = Evaluate_Disjunction(Assertion.Disjunction, -1);
         return function assertionNegativeLookbehindMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const d = function assertionNegativeLookbehindContinuation(y) {
-            AssertState(y);
+            Assert(y instanceof State);
             return y;
           };
           const r = m(x, d);
-          if (r !== MatchResultFailure) {
-            return MatchResultFailure;
+          if (r !== 'failure') {
+            return 'failure';
           }
           return c(x);
         };
@@ -415,10 +420,10 @@ export function getMatcher(parsedRegex, flags) {
         const m = Evaluate_Disjunction(Atom.Disjunction, direction);
         const parenIndex = Atom.capturingParensBefore;
         return function atomCapturingParensMatcher(x, c) {
-          AssertState(x);
-          AssertContinuation(c);
+          Assert(x instanceof State);
+          Assert(typeof c === 'function' && c.length === 1);
           const d = function atomCapturingParensContinuation(y) {
-            AssertState(y);
+            Assert(y instanceof State);
             const cap = y.captures.slice();
             const xe = x.endIndex;
             const ye = y.endIndex;
@@ -449,24 +454,24 @@ export function getMatcher(parsedRegex, flags) {
     // 21.2.2.8.1 #sec-runtime-semantics-charactersetmatcher-abstract-operation
     function CharacterSetMatcher(A, invert, direction) {
       return function characterSetMatcher(x, c) {
-        AssertState(x);
-        AssertContinuation(c);
+        Assert(x instanceof State);
+        Assert(typeof c === 'function' && c.length === 1);
         const e = x.endIndex;
         const f = e + direction;
         if (f < 0 || f > InputLength) {
-          return MatchResultFailure;
+          return 'failure';
         }
         const index = Math.min(e, f);
         const ch = Input[index];
         const cc = Canonicalize(ch);
         if (invert === false) {
           if (!A(cc)) {
-            return MatchResultFailure;
+            return 'failure';
           }
         } else {
           Assert(invert === true);
           if (A(cc)) {
-            return MatchResultFailure;
+            return 'failure';
           }
         }
         const cap = x.captures;
@@ -482,8 +487,11 @@ export function getMatcher(parsedRegex, flags) {
       }
 
       if (Unicode === true) {
-        if (caseFoldingMapping[ch]) {
-          return caseFoldingMapping[ch];
+        if (unicodeCaseFoldingSimple.has(ch)) {
+          return unicodeCaseFoldingSimple.get(ch);
+        }
+        if (unicodeCaseFoldingCommon.has(ch)) {
+          return unicodeCaseFoldingCommon.get(ch);
         }
         return ch;
       } else {
@@ -534,8 +542,8 @@ export function getMatcher(parsedRegex, flags) {
     // 21.2.2.9.1 #sec-backreference-matcher
     function BackreferenceMatcher(n, direction) {
       return function backreferenceMatcher(x, c) {
-        AssertState(x);
-        AssertContinuation(c);
+        Assert(x instanceof State);
+        Assert(typeof c === 'function' && c.length === 1);
         const cap = x.captures;
         const s = cap[n];
         if (s === Value.undefined) {
@@ -545,12 +553,12 @@ export function getMatcher(parsedRegex, flags) {
         const len = s.length;
         const f = e + direction * len;
         if (f < 0 || f > InputLength) {
-          return MatchResultFailure;
+          return 'failure';
         }
         const g = Math.min(e, f);
         for (let i = 0; i < len; i += 1) {
           if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
-            return MatchResultFailure;
+            return 'failure';
           }
         }
         const y = new State(f, cap);
@@ -754,24 +762,4 @@ export function getMatcher(parsedRegex, flags) {
       }
     }
   };
-}
-
-class MatchResult {}
-
-export class State extends MatchResult {
-  constructor(endIndex, captures) {
-    super();
-    this.endIndex = endIndex;
-    this.captures = captures;
-  }
-}
-
-export const MatchResultFailure = new MatchResult();
-
-function AssertState(x) {
-  Assert(x instanceof State);
-}
-
-function AssertContinuation(c) {
-  Assert(typeof c === 'function' && c.length === 1);
 }
