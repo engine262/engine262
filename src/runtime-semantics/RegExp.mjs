@@ -1,5 +1,6 @@
 import unicodeCaseFoldingCommon from 'unicode-13.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   IsNonNegativeInteger,
@@ -15,6 +16,15 @@ import {
 } from '../grammar/util.mjs';
 
 // 21.2.2.1 #sec-notation
+// https://github.com/tc39/proposal-regexp-match-Indices
+class Range {
+  constructor(startIndex, endIndex) {
+    this.startIndex = startIndex;
+    this.endIndex = endIndex;
+  }
+}
+
+// 21.2.2.1 #sec-notation
 export class State {
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
@@ -22,6 +32,7 @@ export class State {
   }
 }
 
+// 21.2.2.1 #sec-notation
 export function getMatcher(parsedRegex, flags) {
   const {
     pattern,
@@ -416,30 +427,72 @@ export function getMatcher(parsedRegex, flags) {
         return CharacterSetMatcher(A, invert, direction);
       }
 
+      // The production Atom :: ( GroupSpecifier Disjunction ) evaluates as follows:
       if (Atom.subtype === '(') {
+        // 1. Evaluate Disjunction with argument direction to obtain a Matcher m.
         const m = Evaluate_Disjunction(Atom.Disjunction, direction);
+        // 2. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of this Atom.
         const parenIndex = Atom.capturingParensBefore;
+        // 3. Return a new Matcher with parameters (x, c) that captures direction, m, and parenIndex and performs the following steps when called:
         return function atomCapturingParensMatcher(x, c) {
+          // a. Assert: x is a State.
           Assert(x instanceof State);
+          // b. Assert: c is a Continuation.
           Assert(typeof c === 'function' && c.length === 1);
+          // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
           const d = function atomCapturingParensContinuation(y) {
+            // i. Assert: y is a State.
             Assert(y instanceof State);
+            // ii. Let cap be a copy of y's captures List.
             const cap = y.captures.slice();
+            // iii. Let xe be x's endIndex.
             const xe = x.endIndex;
+            // iv. Let ye be y's endIndex.
             const ye = y.endIndex;
-            let s;
-            if (direction === 1) {
-              Assert(xe <= ye);
-              s = Input.slice(xe, ye);
+            // https://tc39.es/proposal-regexp-match-indices/#sec-atom
+            if (surroundingAgent.feature('RegExpMatchIndices')) {
+              let r;
+              // If direction is equal to +1, then
+              if (direction === 1) {
+                // Assert: xe ≤ ye.
+                Assert(xe <= ye);
+                // Let r be the Range (xe, ye).
+                r = new Range(xe, ye);
+              } else { // vi. Else,
+                // Assert: direction is equal to -1.
+                Assert(direction === -1);
+                // Assert: ye ≤ xe.
+                Assert(ye <= xe);
+                // Let r be the Range (ye, xe).
+                r = new Range(ye, xe);
+              }
+              // Set cap[parenIndex + 1] to r.
+              cap[parenIndex + 1] = r;
             } else {
-              Assert(direction === -1);
-              Assert(ye <= xe);
-              s = Input.slice(ye, xe);
+              let s;
+              // v. If direction is equal to +1, then
+              if (direction === 1) {
+                // 1. Assert: xe ≤ ye.
+                Assert(xe <= ye);
+                // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
+                s = Input.slice(xe, ye);
+              } else { // vi. Else,
+                // 1. Assert: direction is equal to -1.
+                Assert(direction === -1);
+                // 2. Assert: ye ≤ xe.
+                Assert(ye <= xe);
+                // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
+                s = Input.slice(ye, xe);
+              }
+              // vii. Set cap[parenIndex + 1] to s.
+              cap[parenIndex + 1] = s;
             }
-            cap[parenIndex + 1] = s;
+            // viii. Let z be the State (ye, cap).
             const z = new State(ye, cap);
+            // ix. Call c(z) and return its result.
             return c(z);
           };
+          // d. Call m(x, d) and return its result.
           return m(x, d);
         };
       }
@@ -541,27 +594,74 @@ export function getMatcher(parsedRegex, flags) {
 
     // 21.2.2.9.1 #sec-backreference-matcher
     function BackreferenceMatcher(n, direction) {
+      // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
       return function backreferenceMatcher(x, c) {
+        // a. Assert: x is a State.
         Assert(x instanceof State);
+        // b. Assert: c is a Continuation.
         Assert(typeof c === 'function' && c.length === 1);
+        // c. Let cap be x's captures List.
         const cap = x.captures;
-        const s = cap[n];
-        if (s === Value.undefined) {
-          return c(x);
-        }
-        const e = x.endIndex;
-        const len = s.length;
-        const f = e + direction * len;
-        if (f < 0 || f > InputLength) {
-          return 'failure';
-        }
-        const g = Math.min(e, f);
-        for (let i = 0; i < len; i += 1) {
-          if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+        let f;
+        // https://tc39.es/proposal-regexp-match-indices/#sec-backreference-matcher
+        if (surroundingAgent.feature('RegExpMatchIndices')) {
+          // Let r be cap[n].
+          const r = cap[n];
+          // If r is undefined, return c(x).
+          if (r === Value.undefined) {
+            return c(x);
+          }
+          // Let e be x's endIndex.
+          const e = x.endIndex;
+          // Let rs be r's startIndex.
+          const rs = r.startIndex;
+          // Let re be r's endIndex.
+          const re = r.endIndex;
+          // Let len be re - rs.
+          const len = re - rs;
+          // Let f be e + direction × len.
+          f = e + direction * len;
+          // If f < 0 or f > InputLength, return failure.
+          if (f < 0 || f > InputLength) {
             return 'failure';
           }
+          // Let g be min(e, f).
+          const g = Math.min(e, f);
+          // If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(Input[rs + i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
+          for (let i = 0; i < len; i += 1) {
+            if (Canonicalize(Input[rs + i]) !== Canonicalize(Input[g + i])) {
+              return 'failure';
+            }
+          }
+        } else {
+          // d. Let s be cap[n].
+          const s = cap[n];
+          // e. If s is undefined, return c(x).
+          if (s === Value.undefined) {
+            return c(x);
+          }
+          // f. Let e be x's endIndex.
+          const e = x.endIndex;
+          // g. Let len be the number of elements in s.
+          const len = s.length;
+          // h. Let f be e + direction × len.
+          f = e + direction * len;
+          // i. If f < 0 or f > InputLength, return failure.
+          if (f < 0 || f > InputLength) {
+            return 'failure';
+          }
+          // j. Let g be min(e, f).
+          const g = Math.min(e, f);
+          // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
+          for (let i = 0; i < len; i += 1) {
+            if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+              return 'failure';
+            }
+          }
         }
+        // l. Let y be the State (f, cap).
         const y = new State(f, cap);
+        // m. Call c(y) and return its result.
         return c(y);
       };
     }

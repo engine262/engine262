@@ -41,6 +41,10 @@ export const FEATURES = Object.freeze([
     name: 'Promise.any',
     url: 'https://github.com/tc39/proposal-promise-any',
   },
+  {
+    name: 'RegExpMatchIndices',
+    url: 'https://github.com/tc39/proposal-regexp-match-Indices',
+  },
 ].map(Object.freeze));
 
 // #sec-agents
