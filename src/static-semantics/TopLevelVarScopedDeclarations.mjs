@@ -9,8 +9,9 @@ export function TopLevelVarScopedDeclarations(node) {
     return declarations;
   }
   switch (node.type) {
-    case 'LabelledStatement':
-      return TopLevelVarScopedDeclarations(node.LabelledItem);
+    case 'ClassDeclaration':
+    case 'LexicalDeclaration':
+      return [];
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':

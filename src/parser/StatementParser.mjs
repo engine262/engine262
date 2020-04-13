@@ -237,9 +237,9 @@ export class StatementParser extends ExpressionParser {
     const node = this.startNode();
     this.expect(Token.WHILE);
     this.expect(Token.LPAREN);
-    node.test = this.parseExpression();
+    node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    node.body = this.parseStatement();
+    node.Statement = this.parseStatement();
     return this.finishNode(node, 'WhileStatement');
   }
 
@@ -247,11 +247,12 @@ export class StatementParser extends ExpressionParser {
   parseDoWhileStatement() {
     const node = this.startNode();
     this.expect(Token.DO);
-    node.body = this.parseStatement();
+    node.Statement = this.parseStatement();
     this.expect(Token.WHILE);
     this.expect(Token.LPAREN);
-    node.test = this.parseExpression();
+    node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
+    this.semicolon();
     return this.finishNode(node, 'DoWhileStatement');
   }
 

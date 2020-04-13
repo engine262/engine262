@@ -7,6 +7,7 @@ import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
+import { NamedEvaluation } from './all.mjs';
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableDeclaration :
@@ -27,7 +28,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
     let value;
     if (IsAnonymousFunctionDefinition(Initializer)) {
       // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-      value = yield* NamedEvaluation_Expression(Initializer, bindingId);
+      value = yield* NamedEvaluation(Initializer, bindingId);
     } else { // 4. Else,
       // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);

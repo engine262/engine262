@@ -11,6 +11,7 @@ import {
   Evaluate_ReturnStatement,
   Evaluate_TryStatement,
   Evaluate_ThrowStatement,
+  Evaluate_BreakableStatement,
   Evaluate_ExpressionStatement,
   Evaluate_IdentifierReference,
   Evaluate_This,
@@ -71,6 +72,10 @@ export function* Evaluate(node) {
       return yield* Evaluate_TryStatement(node);
     case 'ThrowStatement':
       return yield* Evaluate_ThrowStatement(node);
+    case 'WhileStatement':
+    case 'DoWhileStatement':
+    case 'SwitchStatement':
+      return yield* Evaluate_BreakableStatement(node);
     // Expressions
     case 'IdentifierReference':
       return Evaluate_IdentifierReference(node);

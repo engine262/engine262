@@ -9,19 +9,15 @@ export function TopLevelVarDeclaredNames(node) {
     return names;
   }
   switch (node.type) {
-    case 'LabelledStatement':
-      if (node.LabelledItem.type === 'LabelledStatement') {
-        return TopLevelVarDeclaredNames(node.LabelledItem);
-      }
-      return VarDeclaredNames(node.LabelledItem);
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+      return [];
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
     case 'AsyncGeneratorDeclaration':
       return BoundNames(node);
     default:
-      return [];
+      return VarDeclaredNames(node);
   }
 }

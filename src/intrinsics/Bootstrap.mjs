@@ -33,12 +33,12 @@ export function assignProps(realmRec, obj, props) {
       ] = v;
       if (typeof getter === 'function') {
         getter = CreateBuiltinFunction(getter, [], realmRec);
-        X(SetFunctionName(getter, name, new Value('get')));
+        X(SetFunctionName(getter, name));
         X(SetFunctionLength(getter, new Value(0)));
       }
       if (typeof setter === 'function') {
         setter = CreateBuiltinFunction(setter, [], realmRec);
-        X(SetFunctionName(setter, name, new Value('set')));
+        X(SetFunctionName(setter, name));
         X(SetFunctionLength(setter, new Value(1)));
       }
       X(obj.DefineOwnProperty(name, Descriptor({

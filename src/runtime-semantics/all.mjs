@@ -54,3 +54,5 @@ export * from './SuperProperty.mjs';
 export * from './BindingInitialization.mjs';
 export * from './AsyncFunctionExpression.mjs';
 export * from './RelationalExpression.mjs';
+export * from './BreakableStatement.mjs';
+export * from './LabelledEvaluation.mjs';
