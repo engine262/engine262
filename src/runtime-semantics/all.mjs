@@ -49,3 +49,6 @@ export * from './LogicalANDExpression.mjs';
 export * from './LogicalORExpression.mjs';
 export * from './NewExpression.mjs';
 export * from './ShiftExpression.mjs';
+export * from './SuperCall.mjs';
+export * from './SuperProperty.mjs';
+export * from './BindingInitialization.mjs';

@@ -35,6 +35,8 @@ export function BoundNames(node) {
       return BoundNames(node.ImportClause);
     case 'SingleNameBinding':
       return BoundNames(node.BindingIdentifier);
+    case 'BindingRestElement':
+      return BoundNames(node.BindingIdentifier);
     default:
       return [];
   }

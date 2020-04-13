@@ -317,6 +317,27 @@ export class ExpressionParser extends FunctionParser {
     if (this.test(Token.NEW)) {
       return this.parseNewExpression();
     }
+    if (this.test(Token.SUPER)) {
+      const node = this.startNode();
+      this.next();
+      if (this.test(Token.LPAREN) && this.isSuperCallScope()) {
+        node.Arguments = this.parseArguments();
+        return this.finishNode(node, 'SuperCall');
+      }
+      if (!this.isSuperPropertyScope()) {
+        this.unexpected();
+      }
+      if (this.eat(Token.LBRACK)) {
+        node.Expression = this.parseExpression();
+        this.expect(Token.RBRACK);
+        node.IdentifierName = null;
+      } else {
+        this.expect(Token.DOT);
+        node.Expression = null;
+        node.IdentifierName = this.parseIdentifierName();
+      }
+      return this.finishNode(node, 'SuperProperty');
+    }
     return this.parseSubscripts(true);
   }
 
@@ -332,6 +353,14 @@ export class ExpressionParser extends FunctionParser {
   parseNewExpression() {
     const node = this.startNode();
     this.expect(Token.NEW);
+    if (this.isNewTargetScope() && this.eat(Token.PERIOD)) {
+      const { type, value } = this.peek();
+      if (type !== Token.IDENTIFIER || value !== 'target') {
+        this.unexpected();
+      }
+      this.next();
+      return this.finishNode(node, 'NewTarget');
+    }
     node.MemberExpression = this.parseMemberExpression();
     if (this.test(Token.LPAREN)) {
       node.Arguments = this.parseArguments();
@@ -391,12 +420,6 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     const token = this.peek();
     switch (token.type) {
-      case Token.SUPER:
-        if (!this.isSuperScope()) {
-          this.unexpected();
-        }
-        this.next();
-        return this.finishNode(node, 'Super');
       case Token.THIS:
         this.next();
         return this.finishNode(node, 'ThisExpression');
@@ -508,8 +531,8 @@ export class ExpressionParser extends FunctionParser {
     while (true) {
       const node = this.startNode();
       if (this.eat(Token.ELLIPSIS)) {
-        node.argument = this.parseAssignmentExpression();
-        params.push(this.finishNode(node, 'RestElement'));
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        params.push(this.finishNode(node, 'AssignmentRestElement'));
         this.expect(Token.RPAREN);
         break;
       } else {
@@ -567,7 +590,9 @@ export class ExpressionParser extends FunctionParser {
       node.ClassHeritage = null;
     }
 
-    this.scope({ super: node.ClassHeritage !== null }, () => {
+    this.scope({
+      superProperty: node.ClassHeritage !== null,
+    }, () => {
       this.expect(Token.LBRACE);
       if (this.eat(Token.RBRACE)) {
         node.ClassBody = null;
@@ -675,7 +700,7 @@ export class ExpressionParser extends FunctionParser {
     const isGetter = leadingIdentifier.name === 'get';
     const isSetter = leadingIdentifier.name === 'set';
     const isGenerator = !isGetter && !isSetter && this.eat(Token.MUL);
-    const isMethod = isAsync || isGetter || isSetter || isGenerator;
+    const isSpecialMethod = isAsync || isGetter || isSetter || isGenerator;
 
     if (!isGenerator && type === 'property') {
       if (this.eat(Token.COLON)) {
@@ -690,12 +715,12 @@ export class ExpressionParser extends FunctionParser {
       }
     }
 
-    if (type === 'property' && !isMethod && !this.test(Token.LPAREN)) {
+    if (type === 'property' && !isSpecialMethod && !this.test(Token.LPAREN)) {
       leadingIdentifier.type = 'IdentifierReference';
       return leadingIdentifier;
     }
 
-    node.PropertyName = isMethod ? this.parsePropertyName() : leadingIdentifier;
+    node.PropertyName = isSpecialMethod ? this.parsePropertyName() : leadingIdentifier;
 
     if (isGetter) {
       this.expect(Token.LPAREN);
@@ -710,7 +735,12 @@ export class ExpressionParser extends FunctionParser {
       node.UniqueFormalParameters = this.parseUniqueFormalParameters();
     }
 
-    node.FunctionBody = this.parseFunctionBody(isAsync, isGenerator);
+    node.FunctionBody = this.scope({
+      superCall: !isSpecialMethod && (
+        node.PropertyName.name === 'constructor'
+        || node.PropertyName.value === 'constructor'
+      ),
+    }, () => this.parseFunctionBody(isAsync, isGenerator));
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}`;
     return this.finishNode(node, name);

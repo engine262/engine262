@@ -29,7 +29,7 @@ export { Parser };
 
 function parseMethodDefinition(sourceText) {
   const parser = new Parser(sourceText);
-  return parser.scope({ super: true }, () => parser.parseMethodDefinition());
+  return parser.scope({ superCall: true }, () => parser.parseMethodDefinition());
 }
 export const emptyConstructorNode = parseMethodDefinition('constructor() {}');
 export const forwardingConstructorNode = parseMethodDefinition('constructor(...args) { super(...args); }');

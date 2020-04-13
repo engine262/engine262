@@ -73,9 +73,9 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
 //     `(` ArgumentList `,` `)`
 function* ArgumentListEvaluation_Arguments(Arguments) {
   const precedingArgs = [];
-  for (const AssignmentExpressionOrSpreadElement of Arguments) {
-    if (AssignmentExpressionOrSpreadElement.type === 'SpreadElement') {
-      const { AssignmentExpression } = AssignmentExpressionOrSpreadElement;
+  for (const element of Arguments) {
+    if (element.type === 'AssignmentRestElement') {
+      const { AssignmentExpression } = element;
       // 2. Let spreadRef be the result of evaluating AssignmentExpression.
       const spreadRef = yield* Evaluate(AssignmentExpression);
       // 3. Let spreadObj be ? GetValue(spreadRef).
@@ -96,7 +96,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
         precedingArgs.push(nextArg);
       }
     } else {
-      const AssignmentExpression = AssignmentExpressionOrSpreadElement;
+      const AssignmentExpression = element;
       // 2. Let ref be the result of evaluating AssignmentExpression.
       const ref = yield* Evaluate(AssignmentExpression);
       // 3. Let arg be ? GetValue(ref).

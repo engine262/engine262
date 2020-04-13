@@ -6,18 +6,22 @@ import {
   IteratorValue,
   PutValue,
   ResolveBinding,
+  ArrayCreate,
+  CreateDataPropertyOrThrow,
+  ToString,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion,
   NormalCompletion,
   ReturnIfAbrupt,
-  Q,
+  Q, X,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
   StringValue,
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
+import { NamedEvaluation } from './all.mjs';
 
 // #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 // FormalParameters :
@@ -34,8 +38,8 @@ export function* IteratorBindingInitialization_FormalParameters(FormalParameters
   }
 
   const last = FormalParameters[FormalParameters.length - 1];
-  if (last.type === 'RestElement') {
-    return yield* IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
+  if (last.type === 'BindingRestElement') {
+    return IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
   }
   return yield* IteratorBindingInitialization_FormalParameter(last, iteratorRecord, environment);
 }
@@ -43,6 +47,11 @@ export function* IteratorBindingInitialization_FormalParameters(FormalParameters
 // FormalParameter : BindingElement
 function IteratorBindingInitialization_FormalParameter(BindingElement, iteratorRecord, environment) {
   return IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
+}
+
+// FunctionRestParameter : BindingRestElement
+function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
+  return IteratorBindingInitialization_BindingRestElement(FunctionRestParameter, iteratorRecord, environment);
 }
 
 // BindingElement : SingleNameBinding
@@ -100,4 +109,54 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
   return InitializeReferencedBinding(lhs, v);
+}
+
+// BindingRestElement : `...` BindingIdentiifer.
+function IteratorBindingInitialization_BindingRestElement({ BindingIdentifier }, iteratorRecord, environment) {
+  // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
+  const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment));
+  // 2. Let A be ! ArrayCreate(0).
+  const A = X(ArrayCreate(new Value(0)));
+  // 3. Let n be 0.
+  let n = 0;
+  // 4. Repeat,
+  while (true) {
+    let next;
+    // a. If iteratorRecord.[[Done]] is false, then
+    if (iteratorRecord.Done === Value.false) {
+      // i. Let next be IteratorStep(iteratorRecord).
+      next = IteratorStep(iteratorRecord);
+      // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+      if (next instanceof AbruptCompletion) {
+        iteratorRecord.Done = Value.true;
+      }
+      // iii. ReturnIfAbrupt(next).
+      ReturnIfAbrupt(next);
+      // iv. If next is false, set iteratorRecord.[[Done]] to true.
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
+      }
+    }
+    // b. If iteratorRecord.[[Done]] is true, then
+    if (iteratorRecord.Done === Value.true) {
+      // i. If environment is undefined, return ? PutValue(lhs, A).
+      if (environment === Value.undefined) {
+        return Q(PutValue(lhs, A));
+      }
+      // ii. Return InitializeReferencedBinding(lhs, A).
+      return InitializeReferencedBinding(lhs, A);
+    }
+    // c. Let nextValue be IteratorValue(next).
+    const nextValue = IteratorValue(next);
+    // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+    if (nextValue instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    // e. ReturnIfAbrupt(nextValue).
+    ReturnIfAbrupt(nextValue);
+    // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), nextValue).
+    X(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), nextValue));
+    // g. Set n to n + 1.
+    n += 1;
+  }
 }

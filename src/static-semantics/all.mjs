@@ -24,3 +24,4 @@ export * from './ExpectedArgumentCount.mjs';
 export * from './HasInitializer.mjs';
 export * from './IsSimpleParameterList.mjs';
 export * from './ContainsExpression.mjs';
+export * from './IsStrict.mjs';

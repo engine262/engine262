@@ -10,7 +10,7 @@ import {
 import { BoundNames } from '../static-semantics/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
-// import { BindingInitialization } from './all.mjs';
+import { BindingInitialization } from './all.mjs';
 
 // #sec-try-statement-runtime-semantics-evaluation
 //   TryStatement :

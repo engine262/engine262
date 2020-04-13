@@ -14,7 +14,7 @@ import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/
 import { Evaluate } from '../evaluator.mjs';
 import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
+import { NamedEvaluation, DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
 // #sec-object-initializer-runtime-semantics-propertydefinitionevaluation
 //   PropertyDefinitionList :
@@ -87,7 +87,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
 //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` PropertyName `(` `)` `{` FunctionBody `}`
 //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (true) {
     case MethodDefinition.UniqueFormalParameters !== null: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -159,5 +159,16 @@ export function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition,
     }
     default:
       throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
+  }
+}
+
+export function PropertyDefinitionEvaluation(node, object, enumerable) {
+  switch (node.type) {
+    case 'MethodDefinition':
+      return PropertyDefinitionEvaluation_MethodDefinition(node, object, enumerable);
+    case 'ClassElement':
+      return PropertyDefinitionEvaluation(node.MethodDefinition, object, enumerable);
+    default:
+      throw new OutOfRange('PropertyDefinitionEvaluation', node);
   }
 }

@@ -30,6 +30,8 @@ import {
   Evaluate_CallExpression,
   Evaluate_NewExpression,
   Evaluate_MemberExpression,
+  Evaluate_SuperCall,
+  Evaluate_SuperProperty,
   Evaluate_ParenthesizedExpression,
   Evaluate_AssignmentExpression,
   Evaluate_UnaryExpression,
@@ -107,6 +109,10 @@ export function* Evaluate(node) {
       return yield* Evaluate_NewExpression(node);
     case 'MemberExpression':
       return yield* Evaluate_MemberExpression(node);
+    case 'SuperProperty':
+      return yield* Evaluate_SuperProperty(node);
+    case 'SuperCall':
+      return yield* Evaluate_SuperCall(node);
     case 'ParenthesizedExpression':
       return yield* Evaluate_ParenthesizedExpression(node);
     case 'AssignmentExpression':

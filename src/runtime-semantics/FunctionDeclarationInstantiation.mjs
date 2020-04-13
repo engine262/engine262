@@ -92,7 +92,6 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       argumentsObjectNeeded = false;
     }
   }
-
   let env;
   let envRec;
   // 19. If strict is true or if hasParameterExpressions is false, then
@@ -133,7 +132,6 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       }
     }
   }
-
   // 22. If argumentsObjectNeeded is true, then
   let parameterBindings;
   if (argumentsObjectNeeded === true) {

@@ -95,8 +95,8 @@ export class FunctionParser extends IdentifierParser {
     while (true) {
       const node = this.startNode();
       if (this.eat(Token.ELLIPSIS)) {
-        node.argument = this.parseBindingIdentifier();
-        params.push(this.finishNode(node, 'RestElement'));
+        node.BindingIdentifier = this.parseBindingIdentifier();
+        params.push(this.finishNode(node, 'BindingRestElement'));
         this.expect(Token.RPAREN);
         break;
       } else {
@@ -121,6 +121,7 @@ export class FunctionParser extends IdentifierParser {
     const node = this.startNode();
     this.expect(Token.LBRACE);
     this.scope({
+      newTarget: true,
       return: true,
       async: isAsync,
       yield: isGenerator,

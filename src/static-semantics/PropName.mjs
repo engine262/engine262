@@ -2,8 +2,10 @@ import { OutOfRange } from '../helpers.mjs';
 
 export function PropName(node) {
   switch (node.type) {
-    case 'PropertyName':
+    case 'IdentifierName':
       return node.name;
+    case 'StringLiteral':
+      return node.value;
     case 'MethodDefinition':
     case 'GeneratorMethod':
     case 'AsyncGeneratorMethod':

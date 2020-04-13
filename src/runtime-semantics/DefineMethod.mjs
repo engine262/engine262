@@ -1,10 +1,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 import { ReturnIfAbrupt } from '../completion.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
 
 // #sec-runtime-semantics-definemethod
-export function* DefineMethod(MethodDefinition, object, functionPrototype) {
+function* DefineMethod_MethodDefinition(MethodDefinition, object, functionPrototype) {
   const { PropertyName, UniqueFormalParameters, FunctionBody } = MethodDefinition;
   // 1. Let propKey be the result of evaluating PropertyName.
   const propKey = yield* Evaluate_PropertyName(PropertyName);
@@ -29,4 +30,15 @@ export function* DefineMethod(MethodDefinition, object, functionPrototype) {
   closure.SourceText = sourceTextMatchedBy(MethodDefinition);
   // 9. Return the Record { [[Key]]: propKey, [[Closure]]: closure }.
   return { Key: propKey, Closure: closure };
+}
+
+export function DefineMethod(node, object, functionPrototype) {
+  switch (node.type) {
+    case 'MethodDefinition':
+      return DefineMethod_MethodDefinition(node, object, functionPrototype);
+    case 'ClassElement':
+      return DefineMethod(node.MethodDefinition, object, functionPrototype);
+    default:
+      throw new OutOfRange('DefineMethod', node);
+  }
 }
