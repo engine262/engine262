@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 73f5004790ddfb68eede0cc237fb6cc4046457ff
+ * engine262 0.0.1 af79533d3207a47fed09a9cc26b1f7ff448058a2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -19975,13 +19975,25 @@ var symbols=new Map([['A','a'],['B','b'],['C','c'],['D','d'],['E','e'],['F','f']
 
 var symbols$1=new Map([['\u1E9E','\xDF'],['\u1F88','\u1F80'],['\u1F89','\u1F81'],['\u1F8A','\u1F82'],['\u1F8B','\u1F83'],['\u1F8C','\u1F84'],['\u1F8D','\u1F85'],['\u1F8E','\u1F86'],['\u1F8F','\u1F87'],['\u1F98','\u1F90'],['\u1F99','\u1F91'],['\u1F9A','\u1F92'],['\u1F9B','\u1F93'],['\u1F9C','\u1F94'],['\u1F9D','\u1F95'],['\u1F9E','\u1F96'],['\u1F9F','\u1F97'],['\u1FA8','\u1FA0'],['\u1FA9','\u1FA1'],['\u1FAA','\u1FA2'],['\u1FAB','\u1FA3'],['\u1FAC','\u1FA4'],['\u1FAD','\u1FA5'],['\u1FAE','\u1FA6'],['\u1FAF','\u1FA7'],['\u1FBC','\u1FB3'],['\u1FCC','\u1FC3'],['\u1FFC','\u1FF3']]);
 
+// https://github.com/tc39/proposal-regexp-match-Indices
+
+class Range {
+  constructor(startIndex, endIndex) {
+    this.startIndex = startIndex;
+    this.endIndex = endIndex;
+  }
+
+} // 21.2.2.1 #sec-notation
+
+
 class State {
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
     this.captures = captures;
   }
 
-}
+} // 21.2.2.1 #sec-notation
+
 function getMatcher(parsedRegex, flags) {
   const {
     pattern,
@@ -20474,35 +20486,79 @@ function getMatcher(parsedRegex, flags) {
           invert
         } = Evaluate_CharacterClass(Atom.CharacterClass);
         return CharacterSetMatcher(A, invert, direction);
-      }
+      } // The production Atom :: ( GroupSpecifier Disjunction ) evaluates as follows:
+
 
       if (Atom.subtype === '(') {
-        const m = Evaluate_Disjunction(Atom.Disjunction, direction);
-        const parenIndex = Atom.capturingParensBefore;
+        // 1. Evaluate Disjunction with argument direction to obtain a Matcher m.
+        const m = Evaluate_Disjunction(Atom.Disjunction, direction); // 2. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of this Atom.
+
+        const parenIndex = Atom.capturingParensBefore; // 3. Return a new Matcher with parameters (x, c) that captures direction, m, and parenIndex and performs the following steps when called:
+
         return function atomCapturingParensMatcher(x, c) {
-          Assert(x instanceof State, "x instanceof State");
-          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+          // a. Assert: x is a State.
+          Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
+
+          Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1"); // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
 
           const d = function atomCapturingParensContinuation(y) {
-            Assert(y instanceof State, "y instanceof State");
-            const cap = y.captures.slice();
-            const xe = x.endIndex;
-            const ye = y.endIndex;
-            let s;
+            // i. Assert: y is a State.
+            Assert(y instanceof State, "y instanceof State"); // ii. Let cap be a copy of y's captures List.
 
-            if (direction === 1) {
-              Assert(xe <= ye, "xe <= ye");
-              s = Input.slice(xe, ye);
+            const cap = y.captures.slice(); // iii. Let xe be x's endIndex.
+
+            const xe = x.endIndex; // iv. Let ye be y's endIndex.
+
+            const ye = y.endIndex; // https://tc39.es/proposal-regexp-match-indices/#sec-atom
+
+            if (surroundingAgent.feature('RegExpMatchIndices')) {
+              let r; // If direction is equal to +1, then
+
+              if (direction === 1) {
+                // Assert: xe ≤ ye.
+                Assert(xe <= ye, "xe <= ye"); // Let r be the Range (xe, ye).
+
+                r = new Range(xe, ye);
+              } else {
+                // vi. Else,
+                // Assert: direction is equal to -1.
+                Assert(direction === -1, "direction === -1"); // Assert: ye ≤ xe.
+
+                Assert(ye <= xe, "ye <= xe"); // Let r be the Range (ye, xe).
+
+                r = new Range(ye, xe);
+              } // Set cap[parenIndex + 1] to r.
+
+
+              cap[parenIndex + 1] = r;
             } else {
-              Assert(direction === -1, "direction === -1");
-              Assert(ye <= xe, "ye <= xe");
-              s = Input.slice(ye, xe);
-            }
+              let s; // v. If direction is equal to +1, then
 
-            cap[parenIndex + 1] = s;
-            const z = new State(ye, cap);
+              if (direction === 1) {
+                // 1. Assert: xe ≤ ye.
+                Assert(xe <= ye, "xe <= ye"); // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
+
+                s = Input.slice(xe, ye);
+              } else {
+                // vi. Else,
+                // 1. Assert: direction is equal to -1.
+                Assert(direction === -1, "direction === -1"); // 2. Assert: ye ≤ xe.
+
+                Assert(ye <= xe, "ye <= xe"); // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
+
+                s = Input.slice(ye, xe);
+              } // vii. Set cap[parenIndex + 1] to s.
+
+
+              cap[parenIndex + 1] = s;
+            } // viii. Let z be the State (ye, cap).
+
+
+            const z = new State(ye, cap); // ix. Call c(z) and return its result.
+
             return c(z);
-          };
+          }; // d. Call m(x, d) and return its result.
+
 
           return m(x, d);
         };
@@ -20616,33 +20672,79 @@ function getMatcher(parsedRegex, flags) {
 
 
     function BackreferenceMatcher(n, direction) {
+      // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
       return function backreferenceMatcher(x, c) {
-        Assert(x instanceof State, "x instanceof State");
-        Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1");
+        // a. Assert: x is a State.
+        Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
+
+        Assert(typeof c === 'function' && c.length === 1, "typeof c === 'function' && c.length === 1"); // c. Let cap be x's captures List.
+
         const cap = x.captures;
-        const s = cap[n];
+        let f; // https://tc39.es/proposal-regexp-match-indices/#sec-backreference-matcher
 
-        if (s === Value.undefined) {
-          return c(x);
-        }
+        if (surroundingAgent.feature('RegExpMatchIndices')) {
+          // Let r be cap[n].
+          const r = cap[n]; // If r is undefined, return c(x).
 
-        const e = x.endIndex;
-        const len = s.length;
-        const f = e + direction * len;
+          if (r === Value.undefined) {
+            return c(x);
+          } // Let e be x's endIndex.
 
-        if (f < 0 || f > InputLength) {
-          return 'failure';
-        }
 
-        const g = Math.min(e, f);
+          const e = x.endIndex; // Let rs be r's startIndex.
 
-        for (let i = 0; i < len; i += 1) {
-          if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+          const rs = r.startIndex; // Let re be r's endIndex.
+
+          const re = r.endIndex; // Let len be re - rs.
+
+          const len = re - rs; // Let f be e + direction × len.
+
+          f = e + direction * len; // If f < 0 or f > InputLength, return failure.
+
+          if (f < 0 || f > InputLength) {
             return 'failure';
-          }
-        }
+          } // Let g be min(e, f).
 
-        const y = new State(f, cap);
+
+          const g = Math.min(e, f); // If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(Input[rs + i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
+
+          for (let i = 0; i < len; i += 1) {
+            if (Canonicalize(Input[rs + i]) !== Canonicalize(Input[g + i])) {
+              return 'failure';
+            }
+          }
+        } else {
+          // d. Let s be cap[n].
+          const s = cap[n]; // e. If s is undefined, return c(x).
+
+          if (s === Value.undefined) {
+            return c(x);
+          } // f. Let e be x's endIndex.
+
+
+          const e = x.endIndex; // g. Let len be the number of elements in s.
+
+          const len = s.length; // h. Let f be e + direction × len.
+
+          f = e + direction * len; // i. If f < 0 or f > InputLength, return failure.
+
+          if (f < 0 || f > InputLength) {
+            return 'failure';
+          } // j. Let g be min(e, f).
+
+
+          const g = Math.min(e, f); // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
+
+          for (let i = 0; i < len; i += 1) {
+            if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+              return 'failure';
+            }
+          }
+        } // l. Let y be the State (f, cap).
+
+
+        const y = new State(f, cap); // m. Call c(y) and return its result.
+
         return c(y);
       };
     } // 21.2.2.10 #sec-characterescape
@@ -35222,21 +35324,24 @@ function RegExpExec(R, S) {
 } // 21.2.5.2.2 #sec-regexpbuiltinexec
 
 function RegExpBuiltinExec(R, S) {
-  Assert('RegExpMatcher' in R, "'RegExpMatcher' in R");
-  Assert(Type(S) === 'String', "Type(S) === 'String'");
-  const length = S.stringValue().length;
+  // 1. Assert: R is an initialized RegExp instance.
+  Assert('RegExpMatcher' in R, "'RegExpMatcher' in R"); // 2. Assert: Type(S) is String.
 
-  let _temp18 = Get(R, new Value('lastIndex'));
+  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 3. Let length be the number of code units in S.
 
-  if (_temp18 instanceof AbruptCompletion) {
-    return _temp18;
+  const length = S.stringValue().length; // 4. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
+
+  let _temp30 = Get(R, new Value('lastIndex'));
+
+  if (_temp30 instanceof AbruptCompletion) {
+    return _temp30;
   }
 
-  if (_temp18 instanceof Completion) {
-    _temp18 = _temp18.Value;
+  if (_temp30 instanceof Completion) {
+    _temp30 = _temp30.Value;
   }
 
-  let _temp6 = ToLength(_temp18);
+  let _temp6 = ToLength(_temp30);
 
   if (_temp6 instanceof AbruptCompletion) {
     return _temp6;
@@ -35246,22 +35351,30 @@ function RegExpBuiltinExec(R, S) {
     _temp6 = _temp6.Value;
   }
 
-  let lastIndex = _temp6;
-  const flags = R.OriginalFlags.stringValue();
-  const global = flags.includes('g');
-  const sticky = flags.includes('y');
+  let lastIndex = _temp6; // 5. Let flags be R.[[OriginalFlags]].
+
+  const flags = R.OriginalFlags.stringValue(); // 6. If flags contains "g", let global be true; else let global be false.
+
+  const global = flags.includes('g'); // 7. If flags contains "y", let sticky be true; else let sticky be false.
+
+  const sticky = flags.includes('y'); // 8. If global is false and sticky is false, set lastIndex to 0.
 
   if (!global && !sticky) {
     lastIndex = new Value(0);
-  }
+  } // 9. Let matcher be R.[[RegExpMatcher]].
 
-  const matcher = R.RegExpMatcher;
-  const fullUnicode = flags.includes('u');
+
+  const matcher = R.RegExpMatcher; // 10. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
+
+  const fullUnicode = flags.includes('u'); // 11. Let matchSucceeded be false.
+
   let matchSucceeded = false;
-  let r;
+  let r; // 12. Repeat, while matchSucceeded is false
 
   while (matchSucceeded === false) {
+    // a. If lastIndex > length, then
     if (lastIndex.numberValue() > length) {
+      // i. If global is true or sticky is true, then
       if (global || sticky) {
         let _temp7 = Set$1(R, new Value('lastIndex'), new Value(0), Value.true);
 
@@ -35272,14 +35385,17 @@ function RegExpBuiltinExec(R, S) {
         if (_temp7 instanceof Completion) {
           _temp7 = _temp7.Value;
         }
-      }
+      } // ii. Return null.
+
 
       return Value.null;
-    }
+    } // b. Let r be matcher(S, lastIndex).
 
-    r = matcher(S, lastIndex);
+
+    r = matcher(S, lastIndex); // c. If r is failure, then
 
     if (r === 'failure') {
+      // i. If sticky is true, then
       if (sticky) {
         let _temp8 = Set$1(R, new Value('lastIndex'), new Value(0), Value.true);
 
@@ -35290,142 +35406,356 @@ function RegExpBuiltinExec(R, S) {
         if (_temp8 instanceof Completion) {
           _temp8 = _temp8.Value;
         }
+
         return Value.null;
-      }
+      } // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
+
 
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
     } else {
-      Assert(r instanceof State, "r instanceof State");
+      // d. Else,
+      // i. Assert: r is a State.
+      Assert(r instanceof State, "r instanceof State"); // ii. Set matchSucceeded to true.
+
       matchSucceeded = true;
     }
-  }
+  } // 13. Let e be r's endIndex value.
+
 
   let e = r.endIndex;
+  const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split(''); // 14. If fullUnicode is true, then
 
   if (fullUnicode) {
-    const Input = Array.from(S.stringValue());
-    let eUTF = 0;
+    // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      let _temp9 = GetStringIndex(S, Input, e);
 
-    if (e >= Input.length) {
-      eUTF = S.stringValue().length;
-    } else {
-      for (let i = 0; i < e; i += 1) {
-        eUTF += Input[i].length;
+      Assert(!(_temp9 instanceof AbruptCompletion), "GetStringIndex(S, Input, e)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
+
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
-    }
 
-    e = eUTF;
-  }
+      // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
+      e = _temp9;
+    } else {
+      // a. e is an index into the Input character list, derived from S, matched by matcher.
+      //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+      //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+      let eUTF = 0;
+
+      if (e >= Input.length) {
+        eUTF = S.stringValue().length;
+      } else {
+        for (let i = 0; i < e; i += 1) {
+          eUTF += Input[i].length;
+        }
+      } // b. Set e to eUTF.
+
+
+      e = eUTF;
+    }
+  } // 15. If global is true or sticky is true, then
+
 
   if (global || sticky) {
-    let _temp9 = Set$1(R, new Value('lastIndex'), new Value(e), Value.true);
+    let _temp10 = Set$1(R, new Value('lastIndex'), new Value(e), Value.true);
 
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
     }
 
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
-  }
+  } // 16. Let n be the number of elements in r's captures List.
 
-  const n = r.captures.length - 1;
-  Assert(n < 2 ** 32 - 1, "n < (2 ** 32) - 1");
 
-  let _temp10 = ArrayCreate(new Value(n + 1));
+  const n = r.captures.length - 1; // 17. Assert: n < 2^32 - 1.
 
-  Assert(!(_temp10 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
-  /* istanbul ignore if */
+  Assert(n < 2 ** 32 - 1, "n < (2 ** 32) - 1"); // 18. Let A be ! ArrayCreate(n + 1).
 
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
-  }
+  let _temp11 = ArrayCreate(new Value(n + 1));
 
-  const A = _temp10; // Assert: The value of A's "length" property is n + 1.
-
-  let _temp11 = CreateDataProperty(A, new Value('index'), lastIndex);
-
-  Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('index'), lastIndex)" + ' returned an abrupt completion');
+  Assert(!(_temp11 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
 
   if (_temp11 instanceof Completion) {
     _temp11 = _temp11.Value;
   }
 
-  let _temp12 = CreateDataProperty(A, new Value('input'), S);
+  const A = _temp11; // 19. Assert: The value of A's "length" property is n + 1.
 
-  Assert(!(_temp12 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('input'), S)" + ' returned an abrupt completion');
+  let _temp12 = Get(A, new Value('length'));
+
+  Assert(!(_temp12 instanceof AbruptCompletion), "Get(A, new Value('length'))" + ' returned an abrupt completion');
 
   if (_temp12 instanceof Completion) {
     _temp12 = _temp12.Value;
   }
-  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
 
-  let _temp13 = CreateDataProperty(A, new Value('0'), new Value(matchedSubstr));
+  Assert(_temp12.numberValue() === n + 1, "X(Get(A, new Value('length'))).numberValue() === n + 1"); // 20. Perform ! CreateDataPropertyOrThrow(A, "index", lastIndex).
 
-  Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), new Value(matchedSubstr))" + ' returned an abrupt completion');
+  let _temp13 = CreateDataProperty(A, new Value('index'), lastIndex);
+
+  Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('index'), lastIndex)" + ' returned an abrupt completion');
 
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
   }
-  let groups;
 
-  if (R.parsedRegExp.groupSpecifiers.size > 0) {
-    groups = OrdinaryObjectCreate(Value.null);
-  } else {
-    groups = Value.undefined;
-  }
+  let _temp14 = CreateDataProperty(A, new Value('input'), S);
 
-  let _temp14 = CreateDataProperty(A, new Value('groups'), groups);
-
-  Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('groups'), groups)" + ' returned an abrupt completion');
+  Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('input'), S)" + ' returned an abrupt completion');
 
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
-  const capturingParens = R.parsedRegExp.capturingParens;
+  const capturingParens = R.parsedRegExp.capturingParens; // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
 
-  for (let i = 1; i <= n; i += 1) {
-    const captureI = r.captures[i];
-    let capturedValue;
+  if (surroundingAgent.feature('RegExpMatchIndices')) {
+    // Let indices be a new empty List.
+    const indices = []; // Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
 
-    if (captureI === Value.undefined) {
-      capturedValue = Value.undefined;
-    } else if (fullUnicode) {
-      // Assert: captureI is a List of code points.
-      capturedValue = new Value(captureI.join(''));
-    } else {
-      // Assert: captureI is a List of code units.
-      capturedValue = new Value(captureI.join(''));
-    }
+    const match = new MatchRecord(lastIndex.numberValue(), e); // Add match as the last element of indices.
 
-    let _temp17 = ToString(new Value(i));
+    indices.push(match); // Let matchedValue be ! GetMatchString(S, match).
 
-    Assert(!(_temp17 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+    let _temp15 = GetMatchString(S, match);
 
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
-    }
-
-    let _temp15 = CreateDataProperty(A, _temp17, capturedValue);
-
-    Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "GetMatchString(S, match)" + ' returned an abrupt completion');
 
     if (_temp15 instanceof Completion) {
       _temp15 = _temp15.Value;
     }
 
-    if (capturingParens[i - 1].GroupSpecifier) {
-      const s = new Value(capturingParens[i - 1].GroupSpecifier);
+    const matchedValue = _temp15; // Perform ! CreateDataProperty(A, "0", matchedValue).
 
-      let _temp16 = CreateDataProperty(groups, s, capturedValue);
+    let _temp16 = CreateDataProperty(A, new Value('0'), matchedValue);
 
-      Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(groups, s, capturedValue)" + ' returned an abrupt completion');
+    Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), matchedValue)" + ' returned an abrupt completion');
 
-      if (_temp16 instanceof Completion) {
-        _temp16 = _temp16.Value;
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
+    let groups;
+    let groupNames; // If R contains any GroupName, then
+
+    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+      // Let groups be OrdinaryObjectCreate(null).
+      groups = OrdinaryObjectCreate(Value.null); // Let groupNames be a new empty List.
+
+      groupNames = []; // TODO: add this to spec text.
+
+      groupNames.push(Value.undefined);
+    } else {
+      // Else,
+      // Let groups be undefined.
+      groups = Value.undefined; // Let groupNames be undefined.
+
+      groupNames = Value.undefined;
+    } // Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+
+
+    let _temp17 = CreateDataProperty(A, new Value('groups'), groups);
+
+    Assert(!(_temp17 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('groups'), groups)" + ' returned an abrupt completion');
+
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+
+    for (let i = 1; i <= n; i += 1) {
+      // Let captureI be ith element of r's captures List.
+      const captureI = r.captures[i];
+      let capturedValue; // If captureI is undefined, then
+
+      if (captureI === Value.undefined) {
+        // Let capturedValue be undefined.
+        capturedValue = Value.undefined; // Add undefined as the last element of indices.
+
+        indices.push(Value.undefined);
+      } else {
+        // Else,
+        // Let captureStart be captureI's startIndex.
+        let captureStart = captureI.startIndex; // Let captureEnd be captureI's endIndex.
+
+        let captureEnd = captureI.endIndex; // If fullUnicode is true, then
+
+        if (fullUnicode) {
+          let _temp18 = GetStringIndex(S, Input, captureStart);
+
+          Assert(!(_temp18 instanceof AbruptCompletion), "GetStringIndex(S, Input, captureStart)" + ' returned an abrupt completion');
+
+          if (_temp18 instanceof Completion) {
+            _temp18 = _temp18.Value;
+          }
+
+          // Set captureStart to ! GetStringIndex(S, Input, captureStart).
+          captureStart = _temp18; // Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
+
+          let _temp19 = GetStringIndex(S, Input, captureEnd);
+
+          Assert(!(_temp19 instanceof AbruptCompletion), "GetStringIndex(S, Input, captureEnd)" + ' returned an abrupt completion');
+
+          if (_temp19 instanceof Completion) {
+            _temp19 = _temp19.Value;
+          }
+
+          captureEnd = _temp19;
+        } // Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
+
+
+        const capture = new MatchRecord(captureStart, captureEnd); // Append capture to indices.
+
+        indices.push(capture); // Let capturedValue be ! GetMatchString(S, capture).
+
+        let _temp20 = GetMatchString(S, capture);
+
+        Assert(!(_temp20 instanceof AbruptCompletion), "GetMatchString(S, capture)" + ' returned an abrupt completion');
+
+        if (_temp20 instanceof Completion) {
+          _temp20 = _temp20.Value;
+        }
+
+        capturedValue = _temp20;
+      } // Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
+
+
+      let _temp23 = ToString(new Value(i));
+
+      Assert(!(_temp23 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+
+      if (_temp23 instanceof Completion) {
+        _temp23 = _temp23.Value;
+      }
+
+      let _temp21 = CreateDataProperty(A, _temp23, capturedValue);
+
+      Assert(!(_temp21 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
+
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
+      }
+
+      if (capturingParens[i - 1].GroupSpecifier) {
+        // Let s be the StringValue of the corresponding RegExpIdentifierName.
+        const s = new Value(capturingParens[i - 1].GroupSpecifier); // Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
+
+        let _temp22 = CreateDataProperty(groups, s, capturedValue);
+
+        Assert(!(_temp22 instanceof AbruptCompletion), "CreateDataProperty(groups, s, capturedValue)" + ' returned an abrupt completion');
+
+        if (_temp22 instanceof Completion) {
+          _temp22 = _temp22.Value;
+        }
+
+        Assert(Array.isArray(groupNames), "Array.isArray(groupNames)"); // Append s to groupNames.
+
+        groupNames.push(s);
+      } else {
+        // Else,
+        // If groupNames is a List, append undefined to groupNames.
+        if (Array.isArray(groupNames)) {
+          groupNames.push(Value.undefined);
+        }
+      }
+    } // Let indicesArray be MakeIndicesArray(S, indices, groupNames).
+
+
+    const indicesArray = MakeIndicesArray(S, indices, groupNames); // Perform ! CreateDataProperty(A, "indices", indicesArray).
+
+    let _temp24 = CreateDataProperty(A, new Value('indices'), indicesArray);
+
+    Assert(!(_temp24 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('indices'), indicesArray)" + ' returned an abrupt completion');
+
+    if (_temp24 instanceof Completion) {
+      _temp24 = _temp24.Value;
+    }
+  } else {
+    // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
+    const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e); // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
+
+    let _temp25 = CreateDataProperty(A, new Value('0'), new Value(matchedSubstr));
+
+    Assert(!(_temp25 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), new Value(matchedSubstr))" + ' returned an abrupt completion');
+
+    if (_temp25 instanceof Completion) {
+      _temp25 = _temp25.Value;
+    }
+    let groups; // 24. If R contains any GroupName, then
+
+    if (R.parsedRegExp.groupSpecifiers.size > 0) {
+      // a. Let groups be OrdinaryObjectCreate(null).
+      groups = OrdinaryObjectCreate(Value.null);
+    } else {
+      // 25. Else,
+      // a. Let groups be undefined.
+      groups = Value.undefined;
+    } // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+
+
+    let _temp26 = CreateDataProperty(A, new Value('groups'), groups);
+
+    Assert(!(_temp26 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('groups'), groups)" + ' returned an abrupt completion');
+
+    if (_temp26 instanceof Completion) {
+      _temp26 = _temp26.Value;
+    }
+
+    for (let i = 1; i <= n; i += 1) {
+      // a. Let captureI be ith element of r's captures List.
+      const captureI = r.captures[i];
+      let capturedValue; // b. If captureI is undefined, let capturedValue be undefined.
+
+      if (captureI === Value.undefined) {
+        capturedValue = Value.undefined;
+      } else if (fullUnicode) {
+        // c. Else if fullUnicode is true, then
+        // i. Assert: captureI is a List of code points.
+        // ii. Let capturedValue be ! UTF16Encode(captureI).
+        capturedValue = new Value(captureI.join(''));
+      } else {
+        // d. Else,
+        // i. Assert: fullUnicode is false.
+        Assert(fullUnicode === false, "fullUnicode === false"); // ii. Assert: captureI is a List of code units.
+        // iii. Let capturedValue be the String value consisting of the code units of captureI.
+
+        capturedValue = new Value(captureI.join(''));
+      } // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
+
+
+      let _temp29 = ToString(new Value(i));
+
+      Assert(!(_temp29 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
+      }
+
+      let _temp27 = CreateDataProperty(A, _temp29, capturedValue);
+
+      Assert(!(_temp27 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
+
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
+      }
+
+      if (capturingParens[i - 1].GroupSpecifier) {
+        // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
+        const s = new Value(capturingParens[i - 1].GroupSpecifier); // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
+
+        let _temp28 = CreateDataProperty(groups, s, capturedValue);
+
+        Assert(!(_temp28 instanceof AbruptCompletion), "CreateDataProperty(groups, s, capturedValue)" + ' returned an abrupt completion');
+
+        if (_temp28 instanceof Completion) {
+          _temp28 = _temp28.Value;
+        }
       }
     }
-  }
+  } // 28. Return A.
+
 
   return A;
 } // 21.2.5.2.3 #sec-advancestringindex
@@ -35447,17 +35777,188 @@ function AdvanceStringIndex(S, index, unicode) {
     return new Value(index + 1);
   }
 
-  let _temp19 = CodePointAt(S, index);
+  let _temp31 = CodePointAt(S, index);
 
-  Assert(!(_temp19 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
+  Assert(!(_temp31 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
 
-  if (_temp19 instanceof Completion) {
-    _temp19 = _temp19.Value;
+  if (_temp31 instanceof Completion) {
+    _temp31 = _temp31.Value;
   }
 
-  const cp = _temp19;
+  const cp = _temp31;
   return new Value(index + cp.CodeUnitCount.numberValue());
+} // https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex
+
+function GetStringIndex(S, Input, e) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
+
+  Assert(Array.isArray(Input), "Array.isArray(Input)"); // 3. Assert: e is an integer value ≥ 0 and < the number of elements in Input.
+  // TODO: fix spec text.
+
+  Assert(e >= 0
+  /* && e < Input.length */
+  , "e >= 0"); // 4. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+  //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+
+  let eUTF = 0;
+
+  if (e >= Input.length) {
+    eUTF = S.stringValue().length;
+  } else {
+    for (let i = 0; i < e; i += 1) {
+      eUTF += Input[i].length;
+    }
+  } // 5. Return eUTF.
+
+
+  return eUTF;
+} // https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring
+
+
+function GetMatchString(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: match is a Match Record.
+
+  Assert(match instanceof MatchRecord, "match instanceof MatchRecord"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  // TODO: fix spec text.
+
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+
+  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
+
+  return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+} // https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
+
+
+function GetMatchIndicesArray(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: match is a Match Record.
+
+  Assert(match instanceof MatchRecord, "match instanceof MatchRecord"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  // TODO: fix spect text.
+
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+
+  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
+
+  return CreateArrayFromList([new Value(match.StartIndex), new Value(match.EndIndex)]);
+} // https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
+
+
+function MakeIndicesArray(S, indices, groupNames) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: indices is a List.
+
+  Assert(Array.isArray(indices), "Array.isArray(indices)"); // 3. Assert: groupNames is a List or is undefined.
+
+  Assert(Array.isArray(groupNames) || groupNames === Value.undefined, "Array.isArray(groupNames) || groupNames === Value.undefined"); // 4. Let n be the number of elements in indices.
+
+  const n = indices.length; // 5. Assert: n < 2^32-1.
+
+  Assert(n < 2 ** 32 - 1, "n < 2 ** 32 - 1"); // 6. Set A to ! ArrayCreate(n).
+
+  let _temp32 = ArrayCreate(new Value(n));
+
+  Assert(!(_temp32 instanceof AbruptCompletion), "ArrayCreate(new Value(n))" + ' returned an abrupt completion');
+
+  if (_temp32 instanceof Completion) {
+    _temp32 = _temp32.Value;
+  }
+
+  const A = _temp32; // 7. Assert: The value of A's "length" property is n.
+
+  let _temp33 = Get(A, new Value('length'));
+
+  Assert(!(_temp33 instanceof AbruptCompletion), "Get(A, new Value('length'))" + ' returned an abrupt completion');
+
+  if (_temp33 instanceof Completion) {
+    _temp33 = _temp33.Value;
+  }
+
+  Assert(_temp33.numberValue() === n, "X(Get(A, new Value('length'))).numberValue() === n");
+  let groups; // 8. If groupNames is not undefined, then
+
+  if (groupNames !== Value.undefined) {
+    let _temp34 = OrdinaryObjectCreate(Value.null);
+
+    Assert(!(_temp34 instanceof AbruptCompletion), "OrdinaryObjectCreate(Value.null)" + ' returned an abrupt completion');
+
+    if (_temp34 instanceof Completion) {
+      _temp34 = _temp34.Value;
+    }
+
+    // a. Let groups be ! ObjectCreate(null).
+    groups = _temp34;
+  } else {
+    // 9. Else,
+    // b. Let groups be undefined.
+    groups = Value.undefined;
+  } // 10. Perform ! CreateDataProperty(A, "groups", groups).
+
+
+  let _temp35 = CreateDataProperty(A, new Value('groups'), groups);
+
+  Assert(!(_temp35 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('groups'), groups)" + ' returned an abrupt completion');
+
+  if (_temp35 instanceof Completion) {
+    _temp35 = _temp35.Value;
+  }
+
+  for (let i = 0; i < n; i += 1) {
+    // a. Let matchIndices be indices[i].
+    const matchIndices = indices[i];
+    let matchIndicesArray; // b. If matchIndices is not undefined, then
+
+    if (matchIndices !== Value.undefined) {
+      let _temp36 = GetMatchIndicesArray(S, matchIndices);
+
+      Assert(!(_temp36 instanceof AbruptCompletion), "GetMatchIndicesArray(S, matchIndices)" + ' returned an abrupt completion');
+
+      if (_temp36 instanceof Completion) {
+        _temp36 = _temp36.Value;
+      }
+
+      // i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
+      matchIndicesArray = _temp36;
+    } else {
+      // c. Else,
+      // i. Let matchIndicesArray be undefined.
+      matchIndicesArray = Value.undefined;
+    } // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
+
+
+    let _temp39 = ToString(new Value(i));
+
+    Assert(!(_temp39 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+
+    if (_temp39 instanceof Completion) {
+      _temp39 = _temp39.Value;
+    }
+
+    let _temp37 = CreateDataProperty(A, _temp39, matchIndicesArray);
+
+    Assert(!(_temp37 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), matchIndicesArray)" + ' returned an abrupt completion');
+
+    if (_temp37 instanceof Completion) {
+      _temp37 = _temp37.Value;
+    }
+
+    if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
+      let _temp38 = CreateDataProperty(groups, groupNames[i], matchIndicesArray);
+
+      Assert(!(_temp38 instanceof AbruptCompletion), "CreateDataProperty(groups, groupNames[i], matchIndicesArray)" + ' returned an abrupt completion');
+
+      if (_temp38 instanceof Completion) {
+        _temp38 = _temp38.Value;
+      }
+    }
+  } // 12. Return A.
+
+
+  return A;
 } // 21.2.5.3 #sec-get-regexp.prototype.dotAll
+
 
 function RegExpProto_dotAllGetter(args, {
   thisValue
@@ -35497,97 +35998,97 @@ function RegExpProto_flagsGetter(args, {
 
   let result = '';
 
-  let _temp20 = Get(R, new Value('global'));
+  let _temp40 = Get(R, new Value('global'));
 
-  if (_temp20 instanceof AbruptCompletion) {
-    return _temp20;
+  if (_temp40 instanceof AbruptCompletion) {
+    return _temp40;
   }
 
-  if (_temp20 instanceof Completion) {
-    _temp20 = _temp20.Value;
+  if (_temp40 instanceof Completion) {
+    _temp40 = _temp40.Value;
   }
 
-  const global = ToBoolean(_temp20);
+  const global = ToBoolean(_temp40);
 
   if (global === Value.true) {
     result += 'g';
   }
 
-  let _temp21 = Get(R, new Value('ignoreCase'));
+  let _temp41 = Get(R, new Value('ignoreCase'));
 
-  if (_temp21 instanceof AbruptCompletion) {
-    return _temp21;
+  if (_temp41 instanceof AbruptCompletion) {
+    return _temp41;
   }
 
-  if (_temp21 instanceof Completion) {
-    _temp21 = _temp21.Value;
+  if (_temp41 instanceof Completion) {
+    _temp41 = _temp41.Value;
   }
 
-  const ignoreCase = ToBoolean(_temp21);
+  const ignoreCase = ToBoolean(_temp41);
 
   if (ignoreCase === Value.true) {
     result += 'i';
   }
 
-  let _temp22 = Get(R, new Value('multiline'));
+  let _temp42 = Get(R, new Value('multiline'));
 
-  if (_temp22 instanceof AbruptCompletion) {
-    return _temp22;
+  if (_temp42 instanceof AbruptCompletion) {
+    return _temp42;
   }
 
-  if (_temp22 instanceof Completion) {
-    _temp22 = _temp22.Value;
+  if (_temp42 instanceof Completion) {
+    _temp42 = _temp42.Value;
   }
 
-  const multiline = ToBoolean(_temp22);
+  const multiline = ToBoolean(_temp42);
 
   if (multiline === Value.true) {
     result += 'm';
   }
 
-  let _temp23 = Get(R, new Value('dotAll'));
+  let _temp43 = Get(R, new Value('dotAll'));
 
-  if (_temp23 instanceof AbruptCompletion) {
-    return _temp23;
+  if (_temp43 instanceof AbruptCompletion) {
+    return _temp43;
   }
 
-  if (_temp23 instanceof Completion) {
-    _temp23 = _temp23.Value;
+  if (_temp43 instanceof Completion) {
+    _temp43 = _temp43.Value;
   }
 
-  const dotAll = ToBoolean(_temp23);
+  const dotAll = ToBoolean(_temp43);
 
   if (dotAll === Value.true) {
     result += 's';
   }
 
-  let _temp24 = Get(R, new Value('unicode'));
+  let _temp44 = Get(R, new Value('unicode'));
 
-  if (_temp24 instanceof AbruptCompletion) {
-    return _temp24;
+  if (_temp44 instanceof AbruptCompletion) {
+    return _temp44;
   }
 
-  if (_temp24 instanceof Completion) {
-    _temp24 = _temp24.Value;
+  if (_temp44 instanceof Completion) {
+    _temp44 = _temp44.Value;
   }
 
-  const unicode = ToBoolean(_temp24);
+  const unicode = ToBoolean(_temp44);
 
   if (unicode === Value.true) {
     result += 'u';
   }
 
-  let _temp25 = Get(R, new Value('sticky'));
+  let _temp45 = Get(R, new Value('sticky'));
 
-  if (_temp25 instanceof AbruptCompletion) {
-    return _temp25;
+  if (_temp45 instanceof AbruptCompletion) {
+    return _temp45;
   }
 
-  if (_temp25 instanceof Completion) {
-    _temp25 = _temp25.Value;
+  if (_temp45 instanceof Completion) {
+    _temp45 = _temp45.Value;
   }
 
-  const sticky = ToBoolean(_temp25);
+  const sticky = ToBoolean(_temp45);
 
   if (sticky === Value.true) {
     result += 'y';
@@ -35660,78 +36161,78 @@ function RegExpProto_match([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp26 = ToString(string);
+  let _temp46 = ToString(string);
 
-  if (_temp26 instanceof AbruptCompletion) {
-    return _temp26;
+  if (_temp46 instanceof AbruptCompletion) {
+    return _temp46;
   }
 
-  if (_temp26 instanceof Completion) {
-    _temp26 = _temp26.Value;
+  if (_temp46 instanceof Completion) {
+    _temp46 = _temp46.Value;
   }
 
-  const S = _temp26;
+  const S = _temp46;
 
-  let _temp27 = Get(rx, new Value('global'));
+  let _temp47 = Get(rx, new Value('global'));
 
-  if (_temp27 instanceof AbruptCompletion) {
-    return _temp27;
+  if (_temp47 instanceof AbruptCompletion) {
+    return _temp47;
   }
 
-  if (_temp27 instanceof Completion) {
-    _temp27 = _temp27.Value;
+  if (_temp47 instanceof Completion) {
+    _temp47 = _temp47.Value;
   }
 
-  const global = ToBoolean(_temp27);
+  const global = ToBoolean(_temp47);
 
   if (global === Value.false) {
     return RegExpExec(rx, S);
   } else {
-    let _temp28 = Get(rx, new Value('unicode'));
+    let _temp48 = Get(rx, new Value('unicode'));
 
-    if (_temp28 instanceof AbruptCompletion) {
-      return _temp28;
+    if (_temp48 instanceof AbruptCompletion) {
+      return _temp48;
     }
 
-    if (_temp28 instanceof Completion) {
-      _temp28 = _temp28.Value;
+    if (_temp48 instanceof Completion) {
+      _temp48 = _temp48.Value;
     }
 
-    const fullUnicode = ToBoolean(_temp28);
+    const fullUnicode = ToBoolean(_temp48);
 
-    let _temp29 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp49 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp29 instanceof AbruptCompletion) {
-      return _temp29;
+    if (_temp49 instanceof AbruptCompletion) {
+      return _temp49;
     }
 
-    if (_temp29 instanceof Completion) {
-      _temp29 = _temp29.Value;
+    if (_temp49 instanceof Completion) {
+      _temp49 = _temp49.Value;
     }
 
-    let _temp30 = ArrayCreate(new Value(0));
+    let _temp50 = ArrayCreate(new Value(0));
 
-    Assert(!(_temp30 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    Assert(!(_temp50 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
 
-    if (_temp30 instanceof Completion) {
-      _temp30 = _temp30.Value;
+    if (_temp50 instanceof Completion) {
+      _temp50 = _temp50.Value;
     }
 
-    const A = _temp30;
+    const A = _temp50;
     let n = 0;
 
     while (true) {
-      let _temp31 = RegExpExec(rx, S);
+      let _temp51 = RegExpExec(rx, S);
 
-      if (_temp31 instanceof AbruptCompletion) {
-        return _temp31;
+      if (_temp51 instanceof AbruptCompletion) {
+        return _temp51;
       }
 
-      if (_temp31 instanceof Completion) {
-        _temp31 = _temp31.Value;
+      if (_temp51 instanceof Completion) {
+        _temp51 = _temp51.Value;
       }
 
-      const result = _temp31;
+      const result = _temp51;
 
       if (result === Value.null) {
         if (n === 0) {
@@ -35740,71 +36241,71 @@ function RegExpProto_match([string = Value.undefined], {
 
         return A;
       } else {
-        let _temp37 = Get(result, new Value('0'));
+        let _temp57 = Get(result, new Value('0'));
 
-        if (_temp37 instanceof AbruptCompletion) {
-          return _temp37;
+        if (_temp57 instanceof AbruptCompletion) {
+          return _temp57;
         }
 
-        if (_temp37 instanceof Completion) {
-          _temp37 = _temp37.Value;
+        if (_temp57 instanceof Completion) {
+          _temp57 = _temp57.Value;
         }
 
-        let _temp32 = ToString(_temp37);
+        let _temp52 = ToString(_temp57);
 
-        if (_temp32 instanceof AbruptCompletion) {
-          return _temp32;
+        if (_temp52 instanceof AbruptCompletion) {
+          return _temp52;
         }
 
-        if (_temp32 instanceof Completion) {
-          _temp32 = _temp32.Value;
+        if (_temp52 instanceof Completion) {
+          _temp52 = _temp52.Value;
         }
 
-        const matchStr = _temp32;
+        const matchStr = _temp52;
 
-        let _temp33 = ToString(new Value(n));
+        let _temp53 = ToString(new Value(n));
 
-        Assert(!(_temp33 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+        Assert(!(_temp53 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-        if (_temp33 instanceof Completion) {
-          _temp33 = _temp33.Value;
+        if (_temp53 instanceof Completion) {
+          _temp53 = _temp53.Value;
         }
 
-        const status = CreateDataProperty(A, _temp33, matchStr);
+        const status = CreateDataProperty(A, _temp53, matchStr);
         Assert(status === Value.true, "status === Value.true");
 
         if (matchStr.stringValue() === '') {
-          let _temp36 = Get(rx, new Value('lastIndex'));
+          let _temp56 = Get(rx, new Value('lastIndex'));
 
-          if (_temp36 instanceof AbruptCompletion) {
-            return _temp36;
+          if (_temp56 instanceof AbruptCompletion) {
+            return _temp56;
           }
 
-          if (_temp36 instanceof Completion) {
-            _temp36 = _temp36.Value;
+          if (_temp56 instanceof Completion) {
+            _temp56 = _temp56.Value;
           }
 
-          let _temp34 = ToLength(_temp36);
+          let _temp54 = ToLength(_temp56);
 
-          if (_temp34 instanceof AbruptCompletion) {
-            return _temp34;
+          if (_temp54 instanceof AbruptCompletion) {
+            return _temp54;
           }
 
-          if (_temp34 instanceof Completion) {
-            _temp34 = _temp34.Value;
+          if (_temp54 instanceof Completion) {
+            _temp54 = _temp54.Value;
           }
 
-          const thisIndex = _temp34;
+          const thisIndex = _temp54;
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
 
-          let _temp35 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+          let _temp55 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
 
-          if (_temp35 instanceof AbruptCompletion) {
-            return _temp35;
+          if (_temp55 instanceof AbruptCompletion) {
+            return _temp55;
           }
 
-          if (_temp35 instanceof Completion) {
-            _temp35 = _temp35.Value;
+          if (_temp55 instanceof Completion) {
+            _temp55 = _temp55.Value;
           }
         }
 
@@ -35824,94 +36325,94 @@ function RegExpProto_matchAll([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp38 = ToString(string);
+  let _temp58 = ToString(string);
 
-  if (_temp38 instanceof AbruptCompletion) {
-    return _temp38;
+  if (_temp58 instanceof AbruptCompletion) {
+    return _temp58;
   }
 
-  if (_temp38 instanceof Completion) {
-    _temp38 = _temp38.Value;
+  if (_temp58 instanceof Completion) {
+    _temp58 = _temp58.Value;
   }
 
-  const S = _temp38;
+  const S = _temp58;
 
-  let _temp39 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp59 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
 
-  if (_temp39 instanceof AbruptCompletion) {
-    return _temp39;
+  if (_temp59 instanceof AbruptCompletion) {
+    return _temp59;
   }
 
-  if (_temp39 instanceof Completion) {
-    _temp39 = _temp39.Value;
+  if (_temp59 instanceof Completion) {
+    _temp59 = _temp59.Value;
   }
 
-  const C = _temp39;
+  const C = _temp59;
 
-  let _temp45 = Get(R, new Value('flags'));
+  let _temp65 = Get(R, new Value('flags'));
 
-  if (_temp45 instanceof AbruptCompletion) {
-    return _temp45;
+  if (_temp65 instanceof AbruptCompletion) {
+    return _temp65;
   }
 
-  if (_temp45 instanceof Completion) {
-    _temp45 = _temp45.Value;
+  if (_temp65 instanceof Completion) {
+    _temp65 = _temp65.Value;
   }
 
-  let _temp40 = ToString(_temp45);
+  let _temp60 = ToString(_temp65);
 
-  if (_temp40 instanceof AbruptCompletion) {
-    return _temp40;
+  if (_temp60 instanceof AbruptCompletion) {
+    return _temp60;
   }
 
-  if (_temp40 instanceof Completion) {
-    _temp40 = _temp40.Value;
+  if (_temp60 instanceof Completion) {
+    _temp60 = _temp60.Value;
   }
 
-  const flags = _temp40;
+  const flags = _temp60;
 
-  let _temp41 = Construct(C, [R, flags]);
+  let _temp61 = Construct(C, [R, flags]);
 
-  if (_temp41 instanceof AbruptCompletion) {
-    return _temp41;
+  if (_temp61 instanceof AbruptCompletion) {
+    return _temp61;
   }
 
-  if (_temp41 instanceof Completion) {
-    _temp41 = _temp41.Value;
+  if (_temp61 instanceof Completion) {
+    _temp61 = _temp61.Value;
   }
 
-  const matcher = _temp41;
+  const matcher = _temp61;
 
-  let _temp46 = Get(R, new Value('lastIndex'));
+  let _temp66 = Get(R, new Value('lastIndex'));
 
-  if (_temp46 instanceof AbruptCompletion) {
-    return _temp46;
+  if (_temp66 instanceof AbruptCompletion) {
+    return _temp66;
   }
 
-  if (_temp46 instanceof Completion) {
-    _temp46 = _temp46.Value;
+  if (_temp66 instanceof Completion) {
+    _temp66 = _temp66.Value;
   }
 
-  let _temp42 = ToLength(_temp46);
+  let _temp62 = ToLength(_temp66);
 
-  if (_temp42 instanceof AbruptCompletion) {
-    return _temp42;
+  if (_temp62 instanceof AbruptCompletion) {
+    return _temp62;
   }
 
-  if (_temp42 instanceof Completion) {
-    _temp42 = _temp42.Value;
+  if (_temp62 instanceof Completion) {
+    _temp62 = _temp62.Value;
   }
 
-  const lastIndex = _temp42;
+  const lastIndex = _temp62;
 
-  let _temp43 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
+  let _temp63 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
 
-  if (_temp43 instanceof AbruptCompletion) {
-    return _temp43;
+  if (_temp63 instanceof AbruptCompletion) {
+    return _temp63;
   }
 
-  if (_temp43 instanceof Completion) {
-    _temp43 = _temp43.Value;
+  if (_temp63 instanceof Completion) {
+    _temp63 = _temp63.Value;
   }
   let global;
 
@@ -35929,15 +36430,15 @@ function RegExpProto_matchAll([string = Value.undefined], {
     fullUnicode = Value.false;
   }
 
-  let _temp44 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
+  let _temp64 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
 
-  Assert(!(_temp44 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
+  Assert(!(_temp64 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
 
-  if (_temp44 instanceof Completion) {
-    _temp44 = _temp44.Value;
+  if (_temp64 instanceof Completion) {
+    _temp64 = _temp64.Value;
   }
 
-  return _temp44;
+  return _temp64;
 } // 21.2.5.9 #sec-get-regexp.prototype.multiline
 
 
@@ -35977,68 +36478,68 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp47 = ToString(string);
+  let _temp67 = ToString(string);
 
-  if (_temp47 instanceof AbruptCompletion) {
-    return _temp47;
+  if (_temp67 instanceof AbruptCompletion) {
+    return _temp67;
   }
 
-  if (_temp47 instanceof Completion) {
-    _temp47 = _temp47.Value;
+  if (_temp67 instanceof Completion) {
+    _temp67 = _temp67.Value;
   }
 
-  const S = _temp47;
+  const S = _temp67;
   const lengthS = S.stringValue().length;
   const functionalReplace = IsCallable(replaceValue);
 
   if (functionalReplace === Value.false) {
-    let _temp48 = ToString(replaceValue);
+    let _temp68 = ToString(replaceValue);
 
-    if (_temp48 instanceof AbruptCompletion) {
-      return _temp48;
+    if (_temp68 instanceof AbruptCompletion) {
+      return _temp68;
     }
 
-    if (_temp48 instanceof Completion) {
-      _temp48 = _temp48.Value;
+    if (_temp68 instanceof Completion) {
+      _temp68 = _temp68.Value;
     }
 
-    replaceValue = _temp48;
+    replaceValue = _temp68;
   }
 
-  let _temp49 = Get(rx, new Value('global'));
+  let _temp69 = Get(rx, new Value('global'));
 
-  if (_temp49 instanceof AbruptCompletion) {
-    return _temp49;
+  if (_temp69 instanceof AbruptCompletion) {
+    return _temp69;
   }
 
-  if (_temp49 instanceof Completion) {
-    _temp49 = _temp49.Value;
+  if (_temp69 instanceof Completion) {
+    _temp69 = _temp69.Value;
   }
 
-  const global = ToBoolean(_temp49);
+  const global = ToBoolean(_temp69);
   let fullUnicode;
 
   if (global === Value.true) {
-    let _temp50 = Get(rx, new Value('unicode'));
+    let _temp70 = Get(rx, new Value('unicode'));
 
-    if (_temp50 instanceof AbruptCompletion) {
-      return _temp50;
+    if (_temp70 instanceof AbruptCompletion) {
+      return _temp70;
     }
 
-    if (_temp50 instanceof Completion) {
-      _temp50 = _temp50.Value;
+    if (_temp70 instanceof Completion) {
+      _temp70 = _temp70.Value;
     }
 
-    fullUnicode = ToBoolean(_temp50);
+    fullUnicode = ToBoolean(_temp70);
 
-    let _temp51 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp71 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp51 instanceof AbruptCompletion) {
-      return _temp51;
+    if (_temp71 instanceof AbruptCompletion) {
+      return _temp71;
     }
 
-    if (_temp51 instanceof Completion) {
-      _temp51 = _temp51.Value;
+    if (_temp71 instanceof Completion) {
+      _temp71 = _temp71.Value;
     }
   }
 
@@ -36046,17 +36547,17 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let done = false;
 
   while (!done) {
-    let _temp52 = RegExpExec(rx, S);
+    let _temp72 = RegExpExec(rx, S);
 
-    if (_temp52 instanceof AbruptCompletion) {
-      return _temp52;
+    if (_temp72 instanceof AbruptCompletion) {
+      return _temp72;
     }
 
-    if (_temp52 instanceof Completion) {
-      _temp52 = _temp52.Value;
+    if (_temp72 instanceof Completion) {
+      _temp72 = _temp72.Value;
     }
 
-    const result = _temp52;
+    const result = _temp72;
 
     if (result === Value.null) {
       done = true;
@@ -36066,60 +36567,60 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       if (global === Value.false) {
         done = true;
       } else {
-        let _temp57 = Get(result, new Value('0'));
+        let _temp77 = Get(result, new Value('0'));
 
-        if (_temp57 instanceof AbruptCompletion) {
-          return _temp57;
+        if (_temp77 instanceof AbruptCompletion) {
+          return _temp77;
         }
 
-        if (_temp57 instanceof Completion) {
-          _temp57 = _temp57.Value;
+        if (_temp77 instanceof Completion) {
+          _temp77 = _temp77.Value;
         }
 
-        let _temp53 = ToString(_temp57);
+        let _temp73 = ToString(_temp77);
 
-        if (_temp53 instanceof AbruptCompletion) {
-          return _temp53;
+        if (_temp73 instanceof AbruptCompletion) {
+          return _temp73;
         }
 
-        if (_temp53 instanceof Completion) {
-          _temp53 = _temp53.Value;
+        if (_temp73 instanceof Completion) {
+          _temp73 = _temp73.Value;
         }
 
-        const matchStr = _temp53;
+        const matchStr = _temp73;
 
         if (matchStr.stringValue() === '') {
-          let _temp56 = Get(rx, new Value('lastIndex'));
+          let _temp76 = Get(rx, new Value('lastIndex'));
 
-          if (_temp56 instanceof AbruptCompletion) {
-            return _temp56;
+          if (_temp76 instanceof AbruptCompletion) {
+            return _temp76;
           }
 
-          if (_temp56 instanceof Completion) {
-            _temp56 = _temp56.Value;
+          if (_temp76 instanceof Completion) {
+            _temp76 = _temp76.Value;
           }
 
-          let _temp54 = ToLength(_temp56);
+          let _temp74 = ToLength(_temp76);
 
-          if (_temp54 instanceof AbruptCompletion) {
-            return _temp54;
+          if (_temp74 instanceof AbruptCompletion) {
+            return _temp74;
           }
 
-          if (_temp54 instanceof Completion) {
-            _temp54 = _temp54.Value;
+          if (_temp74 instanceof Completion) {
+            _temp74 = _temp74.Value;
           }
 
-          const thisIndex = _temp54;
+          const thisIndex = _temp74;
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
 
-          let _temp55 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+          let _temp75 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
 
-          if (_temp55 instanceof AbruptCompletion) {
-            return _temp55;
+          if (_temp75 instanceof AbruptCompletion) {
+            return _temp75;
           }
 
-          if (_temp55 instanceof Completion) {
-            _temp55 = _temp55.Value;
+          if (_temp75 instanceof Completion) {
+            _temp75 = _temp75.Value;
           }
         }
       }
@@ -36130,118 +36631,118 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let nextSourcePosition = 0;
 
   for (const result of results) {
-    let _temp58 = LengthOfArrayLike(result);
+    let _temp78 = LengthOfArrayLike(result);
 
-    if (_temp58 instanceof AbruptCompletion) {
-      return _temp58;
+    if (_temp78 instanceof AbruptCompletion) {
+      return _temp78;
     }
 
-    if (_temp58 instanceof Completion) {
-      _temp58 = _temp58.Value;
+    if (_temp78 instanceof Completion) {
+      _temp78 = _temp78.Value;
     }
 
-    let nCaptures = _temp58.numberValue();
+    let nCaptures = _temp78.numberValue();
 
     nCaptures = Math.max(nCaptures - 1, 0);
 
-    let _temp69 = Get(result, new Value('0'));
+    let _temp89 = Get(result, new Value('0'));
 
-    if (_temp69 instanceof AbruptCompletion) {
-      return _temp69;
+    if (_temp89 instanceof AbruptCompletion) {
+      return _temp89;
     }
 
-    if (_temp69 instanceof Completion) {
-      _temp69 = _temp69.Value;
+    if (_temp89 instanceof Completion) {
+      _temp89 = _temp89.Value;
     }
 
-    let _temp59 = ToString(_temp69);
+    let _temp79 = ToString(_temp89);
 
-    if (_temp59 instanceof AbruptCompletion) {
-      return _temp59;
+    if (_temp79 instanceof AbruptCompletion) {
+      return _temp79;
     }
 
-    if (_temp59 instanceof Completion) {
-      _temp59 = _temp59.Value;
+    if (_temp79 instanceof Completion) {
+      _temp79 = _temp79.Value;
     }
 
-    const matched = _temp59;
+    const matched = _temp79;
     const matchLength = matched.stringValue().length;
 
-    let _temp70 = Get(result, new Value('index'));
+    let _temp90 = Get(result, new Value('index'));
 
-    if (_temp70 instanceof AbruptCompletion) {
-      return _temp70;
+    if (_temp90 instanceof AbruptCompletion) {
+      return _temp90;
     }
 
-    if (_temp70 instanceof Completion) {
-      _temp70 = _temp70.Value;
+    if (_temp90 instanceof Completion) {
+      _temp90 = _temp90.Value;
     }
 
-    let _temp60 = ToInteger(_temp70);
+    let _temp80 = ToInteger(_temp90);
 
-    if (_temp60 instanceof AbruptCompletion) {
-      return _temp60;
+    if (_temp80 instanceof AbruptCompletion) {
+      return _temp80;
     }
 
-    if (_temp60 instanceof Completion) {
-      _temp60 = _temp60.Value;
+    if (_temp80 instanceof Completion) {
+      _temp80 = _temp80.Value;
     }
 
-    let position = _temp60;
+    let position = _temp80;
     position = new Value(Math.max(Math.min(position.numberValue(), lengthS), 0));
     let n = 1;
     const captures = [];
 
     while (n <= nCaptures) {
-      let _temp63 = ToString(new Value(n));
+      let _temp83 = ToString(new Value(n));
 
-      Assert(!(_temp63 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+      Assert(!(_temp83 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-      if (_temp63 instanceof Completion) {
-        _temp63 = _temp63.Value;
+      if (_temp83 instanceof Completion) {
+        _temp83 = _temp83.Value;
       }
 
-      let _temp61 = Get(result, _temp63);
+      let _temp81 = Get(result, _temp83);
 
-      if (_temp61 instanceof AbruptCompletion) {
-        return _temp61;
+      if (_temp81 instanceof AbruptCompletion) {
+        return _temp81;
       }
 
-      if (_temp61 instanceof Completion) {
-        _temp61 = _temp61.Value;
+      if (_temp81 instanceof Completion) {
+        _temp81 = _temp81.Value;
       }
 
-      let capN = _temp61;
+      let capN = _temp81;
 
       if (capN !== Value.undefined) {
-        let _temp62 = ToString(capN);
+        let _temp82 = ToString(capN);
 
-        if (_temp62 instanceof AbruptCompletion) {
-          return _temp62;
+        if (_temp82 instanceof AbruptCompletion) {
+          return _temp82;
         }
 
-        if (_temp62 instanceof Completion) {
-          _temp62 = _temp62.Value;
+        if (_temp82 instanceof Completion) {
+          _temp82 = _temp82.Value;
         }
 
-        capN = _temp62;
+        capN = _temp82;
       }
 
       captures.push(capN);
       n += 1;
     }
 
-    let _temp64 = Get(result, new Value('groups'));
+    let _temp84 = Get(result, new Value('groups'));
 
-    if (_temp64 instanceof AbruptCompletion) {
-      return _temp64;
+    if (_temp84 instanceof AbruptCompletion) {
+      return _temp84;
     }
 
-    if (_temp64 instanceof Completion) {
-      _temp64 = _temp64.Value;
+    if (_temp84 instanceof Completion) {
+      _temp84 = _temp84.Value;
     }
 
-    let namedCaptures = _temp64;
+    let namedCaptures = _temp84;
     let replacement;
 
     if (functionalReplace === Value.true) {
@@ -36253,55 +36754,55 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         replacerArgs.push(namedCaptures);
       }
 
-      let _temp65 = Call(replaceValue, Value.undefined, replacerArgs);
+      let _temp85 = Call(replaceValue, Value.undefined, replacerArgs);
 
-      if (_temp65 instanceof AbruptCompletion) {
-        return _temp65;
+      if (_temp85 instanceof AbruptCompletion) {
+        return _temp85;
       }
 
-      if (_temp65 instanceof Completion) {
-        _temp65 = _temp65.Value;
+      if (_temp85 instanceof Completion) {
+        _temp85 = _temp85.Value;
       }
 
-      const replValue = _temp65;
+      const replValue = _temp85;
 
-      let _temp66 = ToString(replValue);
+      let _temp86 = ToString(replValue);
 
-      if (_temp66 instanceof AbruptCompletion) {
-        return _temp66;
+      if (_temp86 instanceof AbruptCompletion) {
+        return _temp86;
       }
 
-      if (_temp66 instanceof Completion) {
-        _temp66 = _temp66.Value;
+      if (_temp86 instanceof Completion) {
+        _temp86 = _temp86.Value;
       }
 
-      replacement = _temp66;
+      replacement = _temp86;
     } else {
       if (namedCaptures !== Value.undefined) {
-        let _temp67 = ToObject(namedCaptures);
+        let _temp87 = ToObject(namedCaptures);
 
-        if (_temp67 instanceof AbruptCompletion) {
-          return _temp67;
+        if (_temp87 instanceof AbruptCompletion) {
+          return _temp87;
         }
 
-        if (_temp67 instanceof Completion) {
-          _temp67 = _temp67.Value;
+        if (_temp87 instanceof Completion) {
+          _temp87 = _temp87.Value;
         }
 
-        namedCaptures = _temp67;
+        namedCaptures = _temp87;
       }
 
-      let _temp68 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+      let _temp88 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
 
-      if (_temp68 instanceof AbruptCompletion) {
-        return _temp68;
+      if (_temp88 instanceof AbruptCompletion) {
+        return _temp88;
       }
 
-      if (_temp68 instanceof Completion) {
-        _temp68 = _temp68.Value;
+      if (_temp88 instanceof Completion) {
+        _temp88 = _temp88.Value;
       }
 
-      replacement = _temp68;
+      replacement = _temp88;
     }
 
     if (position.numberValue() >= nextSourcePosition) {
@@ -36327,75 +36828,75 @@ function RegExpProto_search([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp71 = ToString(string);
+  let _temp91 = ToString(string);
 
-  if (_temp71 instanceof AbruptCompletion) {
-    return _temp71;
+  if (_temp91 instanceof AbruptCompletion) {
+    return _temp91;
   }
 
-  if (_temp71 instanceof Completion) {
-    _temp71 = _temp71.Value;
+  if (_temp91 instanceof Completion) {
+    _temp91 = _temp91.Value;
   }
 
-  const S = _temp71;
+  const S = _temp91;
 
-  let _temp72 = Get(rx, new Value('lastIndex'));
+  let _temp92 = Get(rx, new Value('lastIndex'));
 
-  if (_temp72 instanceof AbruptCompletion) {
-    return _temp72;
+  if (_temp92 instanceof AbruptCompletion) {
+    return _temp92;
   }
 
-  if (_temp72 instanceof Completion) {
-    _temp72 = _temp72.Value;
+  if (_temp92 instanceof Completion) {
+    _temp92 = _temp92.Value;
   }
 
-  const previousLastIndex = _temp72;
+  const previousLastIndex = _temp92;
 
   if (SameValue(previousLastIndex, new Value(0)) === Value.false) {
-    let _temp73 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp93 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp73 instanceof AbruptCompletion) {
-      return _temp73;
+    if (_temp93 instanceof AbruptCompletion) {
+      return _temp93;
     }
 
-    if (_temp73 instanceof Completion) {
-      _temp73 = _temp73.Value;
+    if (_temp93 instanceof Completion) {
+      _temp93 = _temp93.Value;
     }
   }
 
-  let _temp74 = RegExpExec(rx, S);
+  let _temp94 = RegExpExec(rx, S);
 
-  if (_temp74 instanceof AbruptCompletion) {
-    return _temp74;
+  if (_temp94 instanceof AbruptCompletion) {
+    return _temp94;
   }
 
-  if (_temp74 instanceof Completion) {
-    _temp74 = _temp74.Value;
+  if (_temp94 instanceof Completion) {
+    _temp94 = _temp94.Value;
   }
 
-  const result = _temp74;
+  const result = _temp94;
 
-  let _temp75 = Get(rx, new Value('lastIndex'));
+  let _temp95 = Get(rx, new Value('lastIndex'));
 
-  if (_temp75 instanceof AbruptCompletion) {
-    return _temp75;
+  if (_temp95 instanceof AbruptCompletion) {
+    return _temp95;
   }
 
-  if (_temp75 instanceof Completion) {
-    _temp75 = _temp75.Value;
+  if (_temp95 instanceof Completion) {
+    _temp95 = _temp95.Value;
   }
 
-  const currentLastIndex = _temp75;
+  const currentLastIndex = _temp95;
 
   if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
-    let _temp76 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
+    let _temp96 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
 
-    if (_temp76 instanceof AbruptCompletion) {
-      return _temp76;
+    if (_temp96 instanceof AbruptCompletion) {
+      return _temp96;
     }
 
-    if (_temp76 instanceof Completion) {
-      _temp76 = _temp76.Value;
+    if (_temp96 instanceof Completion) {
+      _temp96 = _temp96.Value;
     }
   }
 
@@ -36440,95 +36941,95 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp77 = ToString(string);
+  let _temp97 = ToString(string);
 
-  if (_temp77 instanceof AbruptCompletion) {
-    return _temp77;
+  if (_temp97 instanceof AbruptCompletion) {
+    return _temp97;
   }
 
-  if (_temp77 instanceof Completion) {
-    _temp77 = _temp77.Value;
+  if (_temp97 instanceof Completion) {
+    _temp97 = _temp97.Value;
   }
 
-  const S = _temp77;
+  const S = _temp97;
 
-  let _temp78 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp98 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
 
-  if (_temp78 instanceof AbruptCompletion) {
-    return _temp78;
+  if (_temp98 instanceof AbruptCompletion) {
+    return _temp98;
   }
 
-  if (_temp78 instanceof Completion) {
-    _temp78 = _temp78.Value;
+  if (_temp98 instanceof Completion) {
+    _temp98 = _temp98.Value;
   }
 
-  const C = _temp78;
+  const C = _temp98;
 
-  let _temp79 = Get(rx, new Value('flags'));
+  let _temp99 = Get(rx, new Value('flags'));
 
-  if (_temp79 instanceof AbruptCompletion) {
-    return _temp79;
+  if (_temp99 instanceof AbruptCompletion) {
+    return _temp99;
   }
 
-  if (_temp79 instanceof Completion) {
-    _temp79 = _temp79.Value;
+  if (_temp99 instanceof Completion) {
+    _temp99 = _temp99.Value;
   }
 
-  const flagsValue = _temp79;
+  const flagsValue = _temp99;
 
-  let _temp80 = ToString(flagsValue);
+  let _temp100 = ToString(flagsValue);
 
-  if (_temp80 instanceof AbruptCompletion) {
-    return _temp80;
+  if (_temp100 instanceof AbruptCompletion) {
+    return _temp100;
   }
 
-  if (_temp80 instanceof Completion) {
-    _temp80 = _temp80.Value;
+  if (_temp100 instanceof Completion) {
+    _temp100 = _temp100.Value;
   }
 
-  const flags = _temp80.stringValue();
+  const flags = _temp100.stringValue();
 
   const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
   const newFlags = flags.includes('y') ? new Value(flags) : new Value(`${flags}y`);
 
-  let _temp81 = Construct(C, [rx, newFlags]);
+  let _temp101 = Construct(C, [rx, newFlags]);
 
-  if (_temp81 instanceof AbruptCompletion) {
-    return _temp81;
+  if (_temp101 instanceof AbruptCompletion) {
+    return _temp101;
   }
 
-  if (_temp81 instanceof Completion) {
-    _temp81 = _temp81.Value;
+  if (_temp101 instanceof Completion) {
+    _temp101 = _temp101.Value;
   }
 
-  const splitter = _temp81;
+  const splitter = _temp101;
 
-  let _temp82 = ArrayCreate(new Value(0));
+  let _temp102 = ArrayCreate(new Value(0));
 
-  Assert(!(_temp82 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  Assert(!(_temp102 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
 
-  if (_temp82 instanceof Completion) {
-    _temp82 = _temp82.Value;
+  if (_temp102 instanceof Completion) {
+    _temp102 = _temp102.Value;
   }
 
-  const A = _temp82;
+  const A = _temp102;
   let lengthA = 0;
   let lim;
 
   if (limit === Value.undefined) {
     lim = 2 ** 32 - 1;
   } else {
-    let _temp83 = ToUint32(limit);
+    let _temp103 = ToUint32(limit);
 
-    if (_temp83 instanceof AbruptCompletion) {
-      return _temp83;
+    if (_temp103 instanceof AbruptCompletion) {
+      return _temp103;
     }
 
-    if (_temp83 instanceof Completion) {
-      _temp83 = _temp83.Value;
+    if (_temp103 instanceof Completion) {
+      _temp103 = _temp103.Value;
     }
 
-    lim = _temp83.numberValue();
+    lim = _temp103.numberValue();
   }
 
   const size = S.stringValue().length;
@@ -36539,28 +37040,28 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   }
 
   if (size === 0) {
-    let _temp84 = RegExpExec(splitter, S);
+    let _temp104 = RegExpExec(splitter, S);
 
-    if (_temp84 instanceof AbruptCompletion) {
-      return _temp84;
+    if (_temp104 instanceof AbruptCompletion) {
+      return _temp104;
     }
 
-    if (_temp84 instanceof Completion) {
-      _temp84 = _temp84.Value;
+    if (_temp104 instanceof Completion) {
+      _temp104 = _temp104.Value;
     }
 
-    const z = _temp84;
+    const z = _temp104;
 
     if (z !== Value.null) {
       return A;
     }
 
-    let _temp85 = CreateDataProperty(A, new Value('0'), S);
+    let _temp105 = CreateDataProperty(A, new Value('0'), S);
 
-    Assert(!(_temp85 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp105 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
 
-    if (_temp85 instanceof Completion) {
-      _temp85 = _temp85.Value;
+    if (_temp105 instanceof Completion) {
+      _temp105 = _temp105.Value;
     }
     return A;
   }
@@ -36568,54 +37069,54 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   let q = new Value(p);
 
   while (q.numberValue() < size) {
-    let _temp86 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
+    let _temp106 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
 
-    if (_temp86 instanceof AbruptCompletion) {
-      return _temp86;
+    if (_temp106 instanceof AbruptCompletion) {
+      return _temp106;
     }
 
-    if (_temp86 instanceof Completion) {
-      _temp86 = _temp86.Value;
+    if (_temp106 instanceof Completion) {
+      _temp106 = _temp106.Value;
     }
 
-    let _temp87 = RegExpExec(splitter, S);
+    let _temp107 = RegExpExec(splitter, S);
 
-    if (_temp87 instanceof AbruptCompletion) {
-      return _temp87;
+    if (_temp107 instanceof AbruptCompletion) {
+      return _temp107;
     }
 
-    if (_temp87 instanceof Completion) {
-      _temp87 = _temp87.Value;
+    if (_temp107 instanceof Completion) {
+      _temp107 = _temp107.Value;
     }
 
-    const z = _temp87;
+    const z = _temp107;
 
     if (z === Value.null) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
-      let _temp88 = Get(splitter, new Value('lastIndex'));
+      let _temp108 = Get(splitter, new Value('lastIndex'));
 
-      if (_temp88 instanceof AbruptCompletion) {
-        return _temp88;
+      if (_temp108 instanceof AbruptCompletion) {
+        return _temp108;
       }
 
-      if (_temp88 instanceof Completion) {
-        _temp88 = _temp88.Value;
+      if (_temp108 instanceof Completion) {
+        _temp108 = _temp108.Value;
       }
 
-      const lastIndex = _temp88;
+      const lastIndex = _temp108;
 
-      let _temp89 = ToLength(lastIndex);
+      let _temp109 = ToLength(lastIndex);
 
-      if (_temp89 instanceof AbruptCompletion) {
-        return _temp89;
+      if (_temp109 instanceof AbruptCompletion) {
+        return _temp109;
       }
 
-      if (_temp89 instanceof Completion) {
-        _temp89 = _temp89.Value;
+      if (_temp109 instanceof Completion) {
+        _temp109 = _temp109.Value;
       }
 
-      let e = _temp89;
+      let e = _temp109;
       e = new Value(Math.min(e.numberValue(), size));
 
       if (e.numberValue() === p) {
@@ -36623,20 +37124,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
       } else {
         const T = new Value(S.stringValue().substring(p, q.numberValue()));
 
-        let _temp96 = ToString(new Value(lengthA));
+        let _temp116 = ToString(new Value(lengthA));
 
-        Assert(!(_temp96 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+        Assert(!(_temp116 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-        if (_temp96 instanceof Completion) {
-          _temp96 = _temp96.Value;
+        if (_temp116 instanceof Completion) {
+          _temp116 = _temp116.Value;
         }
 
-        let _temp90 = CreateDataProperty(A, _temp96, T);
+        let _temp110 = CreateDataProperty(A, _temp116, T);
 
-        Assert(!(_temp90 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+        Assert(!(_temp110 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-        if (_temp90 instanceof Completion) {
-          _temp90 = _temp90.Value;
+        if (_temp110 instanceof Completion) {
+          _temp110 = _temp110.Value;
         }
         lengthA += 1;
 
@@ -36646,56 +37147,56 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
         p = e.numberValue();
 
-        let _temp91 = LengthOfArrayLike(z);
+        let _temp111 = LengthOfArrayLike(z);
 
-        if (_temp91 instanceof AbruptCompletion) {
-          return _temp91;
+        if (_temp111 instanceof AbruptCompletion) {
+          return _temp111;
         }
 
-        if (_temp91 instanceof Completion) {
-          _temp91 = _temp91.Value;
+        if (_temp111 instanceof Completion) {
+          _temp111 = _temp111.Value;
         }
 
-        let numberOfCaptures = _temp91.numberValue();
+        let numberOfCaptures = _temp111.numberValue();
 
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
 
         while (i <= numberOfCaptures) {
-          let _temp94 = ToString(new Value(i));
+          let _temp114 = ToString(new Value(i));
 
-          Assert(!(_temp94 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+          Assert(!(_temp114 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
 
-          if (_temp94 instanceof Completion) {
-            _temp94 = _temp94.Value;
+          if (_temp114 instanceof Completion) {
+            _temp114 = _temp114.Value;
           }
 
-          let _temp92 = Get(z, _temp94);
+          let _temp112 = Get(z, _temp114);
 
-          if (_temp92 instanceof AbruptCompletion) {
-            return _temp92;
+          if (_temp112 instanceof AbruptCompletion) {
+            return _temp112;
           }
 
-          if (_temp92 instanceof Completion) {
-            _temp92 = _temp92.Value;
+          if (_temp112 instanceof Completion) {
+            _temp112 = _temp112.Value;
           }
 
-          const nextCapture = _temp92;
+          const nextCapture = _temp112;
 
-          let _temp95 = ToString(new Value(lengthA));
+          let _temp115 = ToString(new Value(lengthA));
 
-          Assert(!(_temp95 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+          Assert(!(_temp115 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-          if (_temp95 instanceof Completion) {
-            _temp95 = _temp95.Value;
+          if (_temp115 instanceof Completion) {
+            _temp115 = _temp115.Value;
           }
 
-          let _temp93 = CreateDataProperty(A, _temp95, nextCapture);
+          let _temp113 = CreateDataProperty(A, _temp115, nextCapture);
 
-          Assert(!(_temp93 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
+          Assert(!(_temp113 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
 
-          if (_temp93 instanceof Completion) {
-            _temp93 = _temp93.Value;
+          if (_temp113 instanceof Completion) {
+            _temp113 = _temp113.Value;
           }
           i += 1;
           lengthA += 1;
@@ -36712,20 +37213,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
   const T = new Value(S.stringValue().substring(p, size));
 
-  let _temp98 = ToString(new Value(lengthA));
+  let _temp118 = ToString(new Value(lengthA));
 
-  Assert(!(_temp98 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+  Assert(!(_temp118 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-  if (_temp98 instanceof Completion) {
-    _temp98 = _temp98.Value;
+  if (_temp118 instanceof Completion) {
+    _temp118 = _temp118.Value;
   }
 
-  let _temp97 = CreateDataProperty(A, _temp98, T);
+  let _temp117 = CreateDataProperty(A, _temp118, T);
 
-  Assert(!(_temp97 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+  Assert(!(_temp117 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-  if (_temp97 instanceof Completion) {
-    _temp97 = _temp97.Value;
+  if (_temp117 instanceof Completion) {
+    _temp117 = _temp117.Value;
   }
   return A;
 } // 21.2.5.14 #sec-get-regexp.prototype.sticky
@@ -36767,29 +37268,29 @@ function RegExpProto_test([S = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp99 = ToString(S);
+  let _temp119 = ToString(S);
 
-  if (_temp99 instanceof AbruptCompletion) {
-    return _temp99;
+  if (_temp119 instanceof AbruptCompletion) {
+    return _temp119;
   }
 
-  if (_temp99 instanceof Completion) {
-    _temp99 = _temp99.Value;
+  if (_temp119 instanceof Completion) {
+    _temp119 = _temp119.Value;
   }
 
-  const string = _temp99;
+  const string = _temp119;
 
-  let _temp100 = RegExpExec(R, string);
+  let _temp120 = RegExpExec(R, string);
 
-  if (_temp100 instanceof AbruptCompletion) {
-    return _temp100;
+  if (_temp120 instanceof AbruptCompletion) {
+    return _temp120;
   }
 
-  if (_temp100 instanceof Completion) {
-    _temp100 = _temp100.Value;
+  if (_temp120 instanceof Completion) {
+    _temp120 = _temp120.Value;
   }
 
-  const match = _temp100;
+  const match = _temp120;
 
   if (match !== Value.null) {
     return Value.true;
@@ -36808,49 +37309,49 @@ function RegExpProto_toString(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp103 = Get(R, new Value('source'));
+  let _temp123 = Get(R, new Value('source'));
 
-  if (_temp103 instanceof AbruptCompletion) {
-    return _temp103;
+  if (_temp123 instanceof AbruptCompletion) {
+    return _temp123;
   }
 
-  if (_temp103 instanceof Completion) {
-    _temp103 = _temp103.Value;
+  if (_temp123 instanceof Completion) {
+    _temp123 = _temp123.Value;
   }
 
-  let _temp101 = ToString(_temp103);
+  let _temp121 = ToString(_temp123);
 
-  if (_temp101 instanceof AbruptCompletion) {
-    return _temp101;
+  if (_temp121 instanceof AbruptCompletion) {
+    return _temp121;
   }
 
-  if (_temp101 instanceof Completion) {
-    _temp101 = _temp101.Value;
+  if (_temp121 instanceof Completion) {
+    _temp121 = _temp121.Value;
   }
 
-  const pattern = _temp101;
+  const pattern = _temp121;
 
-  let _temp104 = Get(R, new Value('flags'));
+  let _temp124 = Get(R, new Value('flags'));
 
-  if (_temp104 instanceof AbruptCompletion) {
-    return _temp104;
+  if (_temp124 instanceof AbruptCompletion) {
+    return _temp124;
   }
 
-  if (_temp104 instanceof Completion) {
-    _temp104 = _temp104.Value;
+  if (_temp124 instanceof Completion) {
+    _temp124 = _temp124.Value;
   }
 
-  let _temp102 = ToString(_temp104);
+  let _temp122 = ToString(_temp124);
 
-  if (_temp102 instanceof AbruptCompletion) {
-    return _temp102;
+  if (_temp122 instanceof AbruptCompletion) {
+    return _temp122;
   }
 
-  if (_temp102 instanceof Completion) {
-    _temp102 = _temp102.Value;
+  if (_temp122 instanceof Completion) {
+    _temp122 = _temp122.Value;
   }
 
-  const flags = _temp102;
+  const flags = _temp122;
   const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
   return new Value(result);
 } // 21.2.5.17 #sec-get-regexp.prototype.unicode
@@ -48265,6 +48766,9 @@ const FEATURES = Object.freeze([{
 }, {
   name: 'Promise.any',
   url: 'https://github.com/tc39/proposal-promise-any'
+}, {
+  name: 'RegExpMatchIndices',
+  url: 'https://github.com/tc39/proposal-regexp-match-Indices'
 }].map(Object.freeze)); // #sec-agents
 
 class Agent {
@@ -57046,6 +57550,16 @@ function InitializeReferencedBinding(V, W) {
   return base.InitializeBinding(GetReferencedName(V), W);
 }
 
+class MatchRecord {
+  constructor(StartIndex, EndIndex) {
+    Assert(Number.isInteger(StartIndex) && StartIndex >= 0, "Number.isInteger(StartIndex) && StartIndex >= 0");
+    Assert(Number.isInteger(EndIndex) && EndIndex >= StartIndex, "Number.isInteger(EndIndex) && EndIndex >= StartIndex");
+    this.StartIndex = StartIndex;
+    this.EndIndex = EndIndex;
+  }
+
+} // 21.2.3.2.1 #sec-regexpalloc
+
 function RegExpAlloc(newTarget) {
   let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
   /* istanbul ignore if */
@@ -59885,6 +60399,7 @@ var AbstractOps = /*#__PURE__*/Object.freeze({
   PutValue: PutValue,
   GetThisValue: GetThisValue,
   InitializeReferencedBinding: InitializeReferencedBinding,
+  MatchRecord: MatchRecord,
   RegExpAlloc: RegExpAlloc,
   RegExpInitialize: RegExpInitialize,
   RegExpCreate: RegExpCreate,
