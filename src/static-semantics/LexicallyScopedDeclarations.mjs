@@ -11,6 +11,8 @@ export function LexicallyScopedDeclarations(node) {
   switch (node.type) {
     case 'LabelledStatement':
       return LexicallyScopedDeclarations(node.LabelledItem);
+    case 'Script':
+      return LexicallyScopedDeclarations(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelLexicallyScopedDeclarations(node.StatementList);
     case 'ClassDeclaration':

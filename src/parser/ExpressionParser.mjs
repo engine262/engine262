@@ -1,6 +1,5 @@
 import {
   Token, TokenPrecedence, isPropertyOrCall, isMember,
-  isKeywordRaw, isReservedWord, isReservedWordStrict,
 } from './tokens.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
 
@@ -53,15 +52,38 @@ export class ExpressionParser extends FunctionParser {
       case Token.ASSIGN_BIT_XOR:
       case Token.ASSIGN_BIT_OR:
       case Token.ASSIGN_EXP:
-        this.checkAssignmentTarget(left);
+        node.LeftHandSideExpression = this.validateAssignmentTarget(left);
         this.next();
-        node.LeftHandSideExpression = left;
         node.AssignmentExpression = this.parseAssignmentExpression();
         node.AssignmentOperator = peek.value;
         return this.finishNode(node, 'AssignmentExpression');
       default:
         return left;
     }
+  }
+
+  validateAssignmentTarget(node) {
+    switch (node.type) {
+      case 'IdentifierReference':
+        return node;
+      case 'MemberExpression':
+        return node;
+      case 'ParenthesizedExpression':
+        return this.validateAssignmentTarget(node.Expression);
+      case 'ArrayLiteral':
+        node.type = 'ArrayBindingPattern';
+        node.BindingElementList = node.ElementList.map((p) => this.validateAssignmentTarget(p));
+        delete node.ElementList;
+        return node;
+      case 'ObjectLiteral':
+        node.type = 'ObjectBindingPattern';
+        node.BindingPropertyList = node.PropertyDefinitionList.map((p) => this.validateAssignmentTarget(p));
+        delete node.PropertyDefinitionList;
+        return node;
+      default:
+        break;
+    }
+    return this.report('InvalidAssignmentTarget');
   }
 
   // YieldExpression :
@@ -97,27 +119,6 @@ export class ExpressionParser extends FunctionParser {
       }
     }
     return this.finishNode(node, 'YieldExpression');
-  }
-
-  checkAssignmentTarget(node) {
-    switch (node.type) {
-      case 'Identifier':
-        if (this.isStrictMode()) {
-          if (isKeywordRaw(node.name) || isReservedWordStrict(node.name)) {
-            this.report('AssignToReserved');
-          }
-        } else if (isReservedWord(node.name)) {
-          this.report('AssignToReserved');
-        }
-        break;
-      case 'MemberExpression':
-        break;
-      case 'ParenthesizedExpression':
-        this.checkAssignmentTarget(node.expression);
-        break;
-      default:
-        this.report('InvalidAssignmentTarget');
-    }
   }
 
   // ConditionalExpression :
@@ -351,6 +352,7 @@ export class ExpressionParser extends FunctionParser {
           case Token.LBRACK: {
             this.next();
             node.MemberExpression = result;
+            node.IdentifierName = null;
             node.Expression = this.parseExpression();
             result = this.finishNode(node, 'MemberExpression');
             this.expect(Token.RBRACK);
@@ -360,6 +362,7 @@ export class ExpressionParser extends FunctionParser {
             this.next();
             node.MemberExpression = result;
             node.IdentifierName = this.parseIdentifierName();
+            node.Expression = null;
             result = this.finishNode(node, 'MemberExpression');
             break;
           case Token.LPAREN:
@@ -449,16 +452,16 @@ export class ExpressionParser extends FunctionParser {
   parseArrayLiteral() {
     const node = this.startNode();
     this.expect(Token.LBRACK);
-    node.elements = [];
+    node.ElementList = [];
     while (true) {
       while (this.eat(Token.COMMA)) {
-        node.elements.push(null);
+        node.ElementList.push(this.finishNode(this.startNode(), 'Elision'));
       }
       if (this.eat(Token.RBRACK)) {
         break;
       }
       const AssignmentExpression = this.parseAssignmentExpression();
-      node.elements.push(AssignmentExpression);
+      node.ElementList.push(AssignmentExpression);
       if (this.eat(Token.RBRACK)) {
         break;
       }
@@ -619,8 +622,24 @@ export class ExpressionParser extends FunctionParser {
       return this.parseArrowFunction(node, params, false);
     }
     // FIXME: fail on `...Binding`
-    node.expression = expression;
+    node.Expression = expression;
     return this.finishNode(node, 'ParenthesizedExpression');
+  }
+
+  // BindingElement :
+  //   SingleNameBinding
+  //   BindingPattern Initializer?
+  // SingleNameBinding :
+  //   BindingIdentifier Initializer?
+  parseBindingElement() {
+    const node = this.startNode();
+    node.BindingIdentifier = this.parseBindingIdentifier();
+    if (this.test(Token.ASSIGN)) {
+      node.Initializer = this.parseInitializer();
+    } else {
+      node.Initializer = null;
+    }
+    return this.finishNode(node, 'SingleNameBinding');
   }
 
   // PropertyDefinition :
@@ -671,6 +690,11 @@ export class ExpressionParser extends FunctionParser {
       }
     }
 
+    if (type === 'property' && !isMethod && !this.test(Token.LPAREN)) {
+      leadingIdentifier.type = 'IdentifierReference';
+      return leadingIdentifier;
+    }
+
     node.PropertyName = isMethod ? this.parsePropertyName() : leadingIdentifier;
 
     if (isGetter) {
@@ -679,7 +703,7 @@ export class ExpressionParser extends FunctionParser {
       node.PropertySetParameterList = null;
       node.UniqueFormalParameters = null;
     } else if (isSetter) {
-      node.PropertySetParameterList = this.parseFormalParameters();
+      node.PropertySetParameterList = [this.parseFormalParameter()];
       node.UniqueFormalParameters = null;
     } else {
       node.PropertySetParameterList = null;

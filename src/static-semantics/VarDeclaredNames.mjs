@@ -36,6 +36,8 @@ export function VarDeclaredNames(node) {
       }
       return names;
     }
+    case 'Script':
+      return VarDeclaredNames(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelVarDeclaredNames(node.StatementList);
     default:

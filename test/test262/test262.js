@@ -5,6 +5,7 @@
 require('@snek/source-map-support/register');
 const path = require('path');
 const fs = require('fs');
+const util = require('util');
 
 if (!process.send) {
   // supervisor
@@ -265,7 +266,7 @@ function $DONE(error) {
       p = p
         .then(() => run(test))
         .catch((e) => {
-          process.send({ description, status: 'FAIL', error: e.stack || e });
+          process.send({ description, status: 'FAIL', error: util.inspect(e) });
           process.exit(1);
         })
         .then((r) => {

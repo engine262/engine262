@@ -12,6 +12,8 @@ export function LexicallyDeclaredNames(node) {
     return names;
   }
   switch (node.type) {
+    case 'Script':
+      return LexicallyDeclaredNames(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelLexicallyDeclaredNames(node.StatementList);
     case 'LabelledStatement':

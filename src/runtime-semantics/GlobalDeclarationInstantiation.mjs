@@ -11,6 +11,7 @@ import {
 } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
 import { Q, NormalCompletion } from '../completion.mjs';
+import { ValueSet } from '../helpers.mjs';
 import { InstantiateFunctionObject } from './all.mjs';
 
 export function GlobalDeclarationInstantiation(script, env) {
@@ -51,7 +52,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   // 8. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
   // 9. Let declaredFunctionNames be a new empty List.
-  const declaredFunctionNames = [];
+  const declaredFunctionNames = new ValueSet();
   // 10. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -67,22 +68,22 @@ export function GlobalDeclarationInstantiation(script, env) {
       // iii. Let fn be the sole element of the BoundNames of d.
       const fn = BoundNames(d)[0];
       // iv. If fn is not an element of declaredFunctionNames, then
-      if (!declaredFunctionNames.includes(fn)) {
+      if (!declaredFunctionNames.has(fn)) {
         // 1. Let fnDefinable be ? envRec.CanDeclareGlobalFunction(fn).
-        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(new Value(fn)));
+        const fnDefinable = Q(envRec.CanDeclareGlobalFunction(fn));
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
         }
         // 3. Append fn to declaredFunctionNames.
-        declaredFunctionNames.push(fn);
+        declaredFunctionNames.add(fn);
         // 4. Insert d as the first element of functionsToInitialize.
         functionsToInitialize.unshift(d);
       }
     }
   }
   // 11. Let declaredVarNames be a new empty List.
-  const declaredVarNames = [];
+  const declaredVarNames = new ValueSet();
   // 12. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
@@ -90,9 +91,9 @@ export function GlobalDeclarationInstantiation(script, env) {
         || d.type === 'ForBinding'
         || d.type === 'BindingIdentifier') {
       // i. For each String vn in the BoundNames of d, do
-      for (const vn of BoundNames(d).map(Value)) {
+      for (const vn of BoundNames(d)) {
         // 1. If vn is not an element of declaredFunctionNames, then
-        if (!declaredFunctionNames.includes(vn)) {
+        if (!declaredFunctionNames.has(vn)) {
           // a. Let vnDefinable be ? envRec.CanDeclareGlobalVar(vn).
           const vnDefinable = Q(envRec.CanDeclareGlobalVar(vn));
           // b. If vnDefinable is false, throw a TypeError exception.
@@ -100,9 +101,9 @@ export function GlobalDeclarationInstantiation(script, env) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
           }
           // c. If vn is not an element of declaredVarNames, then
-          if (!declaredVarNames.includes(vn)) {
+          if (!declaredVarNames.has(vn)) {
             // i. Append vn to declaredVarNames.
-            declaredVarNames.push(vn);
+            declaredVarNames.add(vn);
           }
         }
       }
@@ -116,7 +117,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.
     // b. For each element dn of the BoundNames of d, do
-    for (const dn of BoundNames(d).map(Value)) {
+    for (const dn of BoundNames(d)) {
       // 1. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
         // 1. Perform ? envRec.CreateImmutableBinding(dn, true).
@@ -130,7 +131,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   // 17. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
-    const fn = new Value(BoundNames(f)[0]);
+    const fn = BoundNames(f)[0];
     // b. Let fo be InstantiateFunctionObject of f with argument env.
     const fo = InstantiateFunctionObject(f, env);
     // c. Perform ? envRec.CreateGlobalFunctionBinding(fn, fo, false).

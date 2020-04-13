@@ -1,4 +1,4 @@
-// import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
 
 export const ScopeBits = {
@@ -19,8 +19,7 @@ export class Parser extends LanguageParser {
   }
 
   feature(name) {
-    return false;
-    // return surroundingAgent.feature(name);
+    return surroundingAgent.feature(name);
   }
 
   isStrictMode() {
@@ -61,34 +60,29 @@ export class Parser extends LanguageParser {
   startNode() {
     const node = {
       type: undefined,
-      /*
       location: {
         startIndex: this.position,
         endIndex: this.position,
-        start: Object.freeze({
+        start: {
           line: this.line,
           column: this.column,
-        }),
+        },
       },
-      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex),
-      */
       strict: this.state.strict,
+      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex),
     };
     return node;
   }
 
   finishNode(node, type) {
     node.type = type;
-    /*
     node.location.endIndex = this.position + 1;
-    node.location.end = Object.freeze({
+    node.location.end = {
       line: this.line,
       column: this.column,
-    });
-    Object.freeze(node.location);
+    };
     node.strict = this.state.strict;
-    */
-    return Object.freeze(node);
+    return node;
   }
 
   report(template, index = this.index) {

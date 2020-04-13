@@ -175,12 +175,16 @@ export class StatementParser extends ExpressionParser {
   }
 
   // BlockStatement : Block
-  // Block : `{` StatementList `}`
   parseBlockStatement() {
+    return this.parseBlock();
+  }
+
+  // Block : `{` StatementList `}`
+  parseBlock() {
     const node = this.startNode();
     this.expect(Token.LBRACE);
-    node.Block = this.parseStatementList(Token.RBRACE);
-    return this.finishNode(node, 'BlockStatement');
+    node.StatementList = this.parseStatementList(Token.RBRACE);
+    return this.finishNode(node, 'Block');
   }
 
   // VariableStatement : `var` VariableDeclarationList `;`
@@ -371,7 +375,7 @@ export class StatementParser extends ExpressionParser {
   //
   // Catch :
   //   `catch` `(` CatchParameter `)` Block
-  //   `catch` BLock
+  //   `catch` Block
   //
   // Finally :
   //   `finally` Block
@@ -382,7 +386,7 @@ export class StatementParser extends ExpressionParser {
   parseTryStatement() {
     const node = this.startNode();
     this.expect(Token.TRY);
-    node.Block = this.parseBlockStatement();
+    node.Block = this.parseBlock();
     if (this.eat(Token.CATCH)) {
       const clause = this.startNode();
       if (this.eat(Token.LPAREN)) {
@@ -391,13 +395,13 @@ export class StatementParser extends ExpressionParser {
       } else {
         clause.CatchParameter = null;
       }
-      clause.Block = this.parseBlockStatement();
+      clause.Block = this.parseBlock();
       node.Catch = this.finishNode(clause, 'Catch');
     } else {
       node.Catch = null;
     }
     if (this.eat(Token.FINALLY)) {
-      node.Finally = this.parseBlockStatement();
+      node.Finally = this.parseBlock();
     } else {
       node.Finally = null;
     }

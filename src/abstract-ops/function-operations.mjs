@@ -9,12 +9,13 @@ import {
   Value,
 } from '../value.mjs';
 import {
-  EnsureCompletion, NormalCompletion, Q,
+  EnsureCompletion,
+  NormalCompletion,
   ReturnIfAbrupt,
-  X,
+  Q, X,
 } from '../completion.mjs';
-// import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
-// import { EvaluateBody } from '../runtime-semantics/all.mjs';
+import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
+import { EvaluateBody } from '../runtime-semantics/all.mjs';
 import {
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,

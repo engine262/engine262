@@ -1,3 +1,6 @@
+import { Value } from '../value.mjs';
+import { StringValue } from './all.mjs';
+
 export function BoundNames(node) {
   if (Array.isArray(node)) {
     const names = [];
@@ -7,6 +10,8 @@ export function BoundNames(node) {
     return names;
   }
   switch (node.type) {
+    case 'BindingIdentifier':
+      return [StringValue(node)];
     case 'LexicalDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
@@ -25,9 +30,11 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return ['*default*'];
+      return [new Value('*default*')];
     case 'ImportDeclaration':
       return BoundNames(node.ImportClause);
+    case 'SingleNameBinding':
+      return BoundNames(node.BindingIdentifier);
     default:
       return [];
   }

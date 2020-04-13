@@ -10,15 +10,11 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import {
-  getMatcher,
-} from '../runtime-semantics/all.mjs';
-import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   Set,
   ToString,
 } from './all.mjs';
-
 
 // 21.2.3.2.1 #sec-regexpalloc
 export function RegExpAlloc(newTarget) {

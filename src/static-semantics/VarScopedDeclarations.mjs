@@ -36,6 +36,8 @@ export function VarScopedDeclarations(node) {
       }
       return declarations;
     }
+    case 'Script':
+      return VarScopedDeclarations(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelVarScopedDeclarations(node.StatementList);
     default:

@@ -10,6 +10,8 @@ export function TopLevelLexicallyScopedDeclarations(node) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
       return [node];
+    case 'Script':
+      return TopLevelLexicallyScopedDeclarations(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelLexicallyScopedDeclarations(node.StatementList);
     default:

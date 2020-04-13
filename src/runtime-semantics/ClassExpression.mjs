@@ -18,7 +18,6 @@ export function* Evaluate_ClassExpression(ClassExpression) {
     // 3. Return value.
     return value;
   }
-
   // 1. Let className be StringValue of BindingIdentifier.
   const className = StringValue(BindingIdentifier);
   // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.

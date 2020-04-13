@@ -16,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 //   `[` AssignmentExpression `]`
 export function* Evaluate_PropertyName(PropertyName) {
   switch (PropertyName.type) {
-    case 'Identifier':
+    case 'IdentifierName':
       return StringValue(PropertyName);
     case 'StringLiteral':
       return new Value(PropertyName.value);

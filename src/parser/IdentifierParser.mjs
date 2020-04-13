@@ -15,7 +15,7 @@ export class IdentifierParser extends BaseParser {
     } else {
       node.name = token.value;
     }
-    return this.finishNode(node, 'Identifier');
+    return this.finishNode(node, allowKeywords ? 'IdentifierName' : 'Identifier');
   }
 
   parseIdentifier() {
@@ -48,10 +48,31 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    return this.finishNode(node, 'Identifier');
+    return this.finishNode(node, 'BindingIdentifier');
   }
 
   parseIdentifierReference() {
-    return this.parseBindingIdentifier();
+    const node = this.startNode();
+    const token = this.next();
+    switch (token.type) {
+      case Token.IDENTIFIER:
+        node.name = token.value;
+        break;
+      case Token.YIELD:
+        if (this.isStrictMode()) {
+          this.unexpected(token);
+        }
+        node.name = 'yield';
+        break;
+      case Token.AWAIT:
+        if (this.isStrictMode()) {
+          this.unexpected(token);
+        }
+        node.name = 'await';
+        break;
+      default:
+        this.unexpected(token);
+    }
+    return this.finishNode(node, 'IdentifierReference');
   }
 }

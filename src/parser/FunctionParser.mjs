@@ -81,6 +81,11 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ConciseBody`);
   }
 
+  // FormalParameter : BindingElement
+  parseFormalParameter() {
+    return this.parseBindingElement();
+  }
+
   parseFormalParameters() {
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
@@ -95,7 +100,7 @@ export class FunctionParser extends IdentifierParser {
         this.expect(Token.RPAREN);
         break;
       } else {
-        params.push(this.parseBindingIdentifier());
+        params.push(this.parseFormalParameter());
       }
       if (this.eat(Token.RPAREN)) {
         break;

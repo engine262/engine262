@@ -25,7 +25,7 @@ import {
 } from '../completion.mjs';
 import {
   DefineMethod,
-  // PropertyDefinitionEvaluation,
+  PropertyDefinitionEvaluation_MethodDefinition,
 } from './all.mjs';
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
@@ -105,7 +105,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 11. Set the running execution context's LexicalEnvironment to classScope.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
   // 12. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
-  const constructorInfo = X(DefineMethod(constructor, proto, constructorParent));
+  const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
   // 13. Let F be constructorInfo.[[Closure]].
   const F = constructorInfo.Closure;
   // 14. Perform SetFunctionName(F, className).
@@ -134,10 +134,10 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     // a. If IsStatic of m is false, then
     if (IsStatic(m) === Value.false) {
       // i. Let status be PropertyDefinitionEvaluation of m with arguments proto and false.
-      status = yield* PropertyDefinitionEvaluation(m, proto, Value.false);
+      status = yield* PropertyDefinitionEvaluation_MethodDefinition(m, proto, Value.false);
     } else { // b. Else,
       // i. Let status be PropertyDefinitionEvaluation of m with arguments F and false.
-      status = yield* PropertyDefinitionEvaluation(m, F, Value.false);
+      status = yield* PropertyDefinitionEvaluation_MethodDefinition(m, F, Value.false);
     }
     // c. If status is an abrupt completion, then
     if (status instanceof AbruptCompletion) {
