@@ -5,6 +5,7 @@ import {
   Completion,
   AbruptCompletion,
   UpdateEmpty,
+  EnsureCompletion,
   X,
 } from '../completion.mjs';
 import { BoundNames } from '../static-semantics/all.mjs';
@@ -33,11 +34,11 @@ export function Evaluate_TryStatement(TryStatement) {
 // TryStatement : `try` Block Catch
 function* Evaluate_TryStatement_BlockCatch({ Block, Catch }) {
   // 1. Let B be the result of evaluating Block.
-  const B = yield* Evaluate(Block);
+  const B = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
   let C;
   if (B.Type === 'throw') {
-    C = yield* CatchClauseEvaluation(Catch, B.Value);
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
@@ -48,9 +49,9 @@ function* Evaluate_TryStatement_BlockCatch({ Block, Catch }) {
 // TryStatement : `try` Block Finally
 function* Evaluate_TryStatement_BlockFinally({ Block, Finally }) {
   // 1. Let B be the result of evaluating Block.
-  const B = yield* Evaluate(Block);
+  const B = EnsureCompletion(yield* Evaluate(Block));
   // 1. Let F be the result of evaluating Finally.
-  let F = yield* Evaluate(Finally);
+  let F = EnsureCompletion(yield* Evaluate(Finally));
   // 1. If F.[[Type]] is normal, set F to B.
   if (F.Type === 'normal') {
     F = B;
@@ -62,16 +63,16 @@ function* Evaluate_TryStatement_BlockFinally({ Block, Finally }) {
 // TryStatement : `try` Block Catch Finally
 function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }) {
   // 1. Let B be the result of evaluating Block.
-  const B = yield* Evaluate(Block);
+  const B = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
   let C;
   if (B.Type === 'throw') {
-    C = yield* CatchClauseEvaluation(Catch, B.Value);
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
   // 4. Let F be the result of evaluating Finally.
-  let F = yield* Evaluate(Finally);
+  let F = EnsureCompletion(yield* Evaluate(Finally));
   // 5. If F.[[Type]] is normal, set F to C.
   if (F.Type === 'normal') {
     F = C;

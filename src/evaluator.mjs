@@ -19,12 +19,14 @@ import {
   Evaluate_ObjectLiteral,
   Evaluate_ClassExpression,
   Evaluate_FunctionExpression,
+  Evaluate_AsyncFunctionExpression,
   Evaluate_AdditiveExpression,
   Evaluate_MultiplicativeExpression,
   Evaluate_UpdateExpression,
   Evaluate_ShiftExpression,
   Evaluate_LogicalORExpression,
   Evaluate_LogicalANDExpression,
+  Evaluate_RelationalExpression,
   Evaluate_CoalesceExpression,
   Evaluate_EqualityExpression,
   Evaluate_CallExpression,
@@ -87,6 +89,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_ClassExpression(node);
     case 'FunctionExpression':
       return Evaluate_FunctionExpression(node);
+    case 'AsyncFunctionExpression':
+      return Evaluate_AsyncFunctionExpression(node);
     case 'AdditiveExpression':
       return yield* Evaluate_AdditiveExpression(node);
     case 'MultiplicativeExpression':
@@ -99,6 +103,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_LogicalORExpression(node);
     case 'LogicalANDExpression':
       return yield* Evaluate_LogicalANDExpression(node);
+    case 'RelationalExpression':
+      return yield* Evaluate_RelationalExpression(node);
     case 'CoalesceExpression':
       return yield* Evaluate_CoalesceExpression(node);
     case 'EqualityExpression':

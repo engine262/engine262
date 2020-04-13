@@ -52,3 +52,5 @@ export * from './ShiftExpression.mjs';
 export * from './SuperCall.mjs';
 export * from './SuperProperty.mjs';
 export * from './BindingInitialization.mjs';
+export * from './AsyncFunctionExpression.mjs';
+export * from './RelationalExpression.mjs';
