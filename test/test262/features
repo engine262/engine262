@@ -4,8 +4,6 @@ Atomics
 
 caller
 
-String.prototype.replaceAll
-
 SharedArrayBuffer
 
 tail-call-optimization

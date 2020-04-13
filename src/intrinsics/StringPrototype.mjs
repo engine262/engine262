@@ -23,7 +23,12 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
-import { GetSubstitution, TrimString, StringPad } from '../runtime-semantics/all.mjs';
+import {
+  GetSubstitution,
+  StringIndexOf,
+  StringPad,
+  TrimString,
+} from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './Bootstrap.mjs';
@@ -154,29 +159,48 @@ function StringProto_includes([searchString = Value.undefined, position = Value.
 
 // 21.1.3.8 #sec-string.prototype.indexof
 function StringProto_indexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
+  // 2. Let S be ? ToString(O).
   const S = Q(ToString(O)).stringValue();
-  const searchStr = Q(ToString(searchString)).stringValue();
+  // 3. Let searchStr be ? ToString(searchString).
+  const searchStr = Q(ToString(searchString));
+  // 4. Let pos be ? ToInteger(position).
   const pos = Q(ToInteger(position));
+  // 5. Assert: If position is undefined, then pos is 0.
   Assert(!(position === Value.undefined) || pos.numberValue() === 0);
+  // 6. Let len be the length of S.
   const len = S.length;
+  // 7. Let start be min(max(pos, 0), len).
   const start = Math.min(Math.max(pos.numberValue(), 0), len);
-  const searchLen = searchStr.length;
-  let k = start;
-  while (k + searchLen <= len) {
-    let match = true;
-    for (let j = 0; j < searchLen; j += 1) {
-      if (searchStr[j] !== S[k + j]) {
-        match = false;
-        break;
+  // 8. Let searchLen be the length of searchStr.
+  const searchLen = searchStr.stringValue().length;
+  // https://tc39.es/proposal-string-replaceall/#sec-string.prototype.indexof
+  if (surroundingAgent.feature('String.prototype.replaceAll')) {
+    // Let position be ! StringIndexOf(S, searchStr, start).
+    position = X(StringIndexOf(new Value(S), searchStr, start));
+    // Return position.
+    return position;
+  } else {
+    // 9. Return the smallest possible integer k not smaller than start such that k + searchLen is not greater than len,
+    //    and for all nonnegative integers j less than searchLen, the code unit at index k + j within S is the same as the code unit at index j within searchStr;
+    //    but if there is no such integer k, return the value -1.
+    let k = start;
+    while (k + searchLen <= len) {
+      let match = true;
+      for (let j = 0; j < searchLen; j += 1) {
+        if (searchStr[j] !== S[k + j]) {
+          match = false;
+          break;
+        }
       }
+      if (match) {
+        return new Value(k);
+      }
+      k += 1;
     }
-    if (match) {
-      return new Value(k);
-    }
-    k += 1;
+    return new Value(-1);
   }
-  return new Value(-1);
 }
 
 // 21.1.3.9 #sec-string.prototype.lastindexof
@@ -246,23 +270,36 @@ function StringProto_match([regexp = Value.undefined], { thisValue }) {
 
 // 21.1.3.12 #sec-string.prototype.matchall
 function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
+  // 2. If regexp is neither undefined nor null, then
   if (regexp !== Value.undefined && regexp !== Value.null) {
+    // a. Let isRegExp be ? IsRegExp(regexp).
     const isRegExp = Q(IsRegExp(regexp));
+    // b. If isRegExp is true, then
     if (isRegExp === Value.true) {
+      // i. Let flags be ? Get(regexp, "flags").
       const flags = Q(Get(regexp, new Value('flags')));
+      // ii. Perform ? RequireObjectCoercible(flags).
       Q(RequireObjectCoercible(flags));
+      // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
       if (!Q(ToString(flags)).stringValue().includes('g')) {
-        return surroundingAgent.Throw('TypeError', 'Raw', 'The RegExp passed to String.prototype.matchAll must have the global flag');
+        return surroundingAgent.Throw('TypeError', 'StringPrototypeMethodGlobalRegExp', 'matchAll');
       }
     }
+    // c. Let matcher be ? GetMethod(regexp, @@matchAll).
     const matcher = Q(GetMethod(regexp, wellKnownSymbols.matchAll));
+    // d. If matcher is not undefined, then
     if (matcher !== Value.undefined) {
+      // i. Return ? Call(matcher, regexp, « O »).
       return Q(Call(matcher, regexp, [O]));
     }
   }
+  // 3. Let S be ? ToString(O).
   const S = Q(ToString(O));
+  // 4. Let rx be ? RegExpCreate(regexp, "g").
   const rx = Q(RegExpCreate(regexp, new Value('g')));
+  // 5. Return ? Invoke(rx, @@matchAll, « S »).
   return Q(Invoke(rx, wellKnownSymbols.matchAll, [S]));
 }
 
@@ -347,6 +384,94 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   const tailPos = pos.numberValue() + matched.stringValue().length;
   const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
   return new Value(newString);
+}
+
+// https://tc39.es/proposal-string-replaceall/#sec-string.prototype.replaceall
+function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = Q(RequireObjectCoercible(thisValue));
+  // 2.If searchValue is neither undefined nor null, then
+  if (searchValue !== Value.undefined && searchValue !== Value.null) {
+    // a. Let isRegExp be ? IsRegExp(searchValue).
+    const isRegExp = Q(IsRegExp(searchValue));
+    // b. If isRegExp is true, then
+    if (isRegExp === Value.true) {
+      // i. Let flags be ? Get(searchValue, "flags").
+      const flags = Q(Get(searchValue, new Value('flags')));
+      // ii. Perform ? RequireObjectCoercible(flags).
+      Q(RequireObjectCoercible(flags));
+      // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
+      if (!Q(ToString(flags)).stringValue().includes('g')) {
+        return surroundingAgent.Throw('TypeError', 'StringPrototypeMethodGlobalRegExp', 'replaceAll');
+      }
+    }
+    // c. Let replacer be ? GetMethod(searchValue, @@replace).
+    const replacer = Q(GetMethod(searchValue, wellKnownSymbols.replace));
+    // d. If replacer is not undefined, then
+    if (replacer !== Value.undefined) {
+      // i. Return ? Call(replacer, searchValue, « O, replaceValue »).
+      return Q(Call(replacer, searchValue, [O, replaceValue]));
+    }
+  }
+  // 3. Let string be ? ToString(O).
+  const string = Q(ToString(O));
+  // 4. Let searchString be ? ToString(searchValue).
+  const searchString = Q(ToString(searchValue));
+  // 5. Let functionalReplace be IsCallable(replaceValue).
+  const functionalReplace = IsCallable(replaceValue);
+  // 6. If functionalReplace is false, then
+  if (functionalReplace === Value.false) {
+    // a. Let replaceValue be ? ToString(replaceValue).
+    replaceValue = Q(ToString(replaceValue));
+  }
+  // 7. Let searchLength be the length of searchString.
+  const searchLength = searchString.stringValue().length;
+  // 8. Let advanceBy be max(1, searchLength).
+  const advanceBy = Math.max(1, searchLength);
+  // 9. Let matchPositions be a new empty List.
+  const matchPositions = [];
+  // 10. Let position be ! StringIndexOf(string, searchString, 0).
+  let position = X(StringIndexOf(string, searchString, 0)).numberValue();
+  // 11. Repeat, while position is not -1
+  while (position !== -1) {
+    // a. Append position to the end of matchPositions.
+    matchPositions.push(position);
+    // b. Let position be ! StringIndexOf(string, searchString, position + advanceBy).
+    position = X(StringIndexOf(string, searchString, position + advanceBy)).numberValue();
+  }
+  // 12. Let endOfLastMatch be 0.
+  let endOfLastMatch = 0;
+  // 13. Let result be the empty string value.
+  let result = '';
+  // 14. For each position in matchPositions, do
+  for (position of matchPositions) {
+    let replacement;
+    // a. If functionalReplace is true, then
+    if (functionalReplace === Value.true) {
+      // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, position, string »).
+      replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, new Value(position), string]))));
+    } else { // b. Else,
+      // i. Assert: Type(replaceValue) is String.
+      Assert(Type(replaceValue) === 'String');
+      // ii. Let captures be a new empty List.
+      const captures = [];
+      // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
+      replacement = GetSubstitution(searchString, string, new Value(position), captures, Value.undefined, replaceValue);
+    }
+    // c. Let stringSlice be the substring of string consisting of the code units from endOfLastMatch (inclusive) up through position (exclusive).
+    const stringSlice = string.stringValue().slice(endOfLastMatch, position);
+    // d. Let result be the string-concatenation of result, stringSlice, and replacement.
+    result = result + stringSlice + replacement.stringValue();
+    // e. Let endOfLastMatch be position + searchLength.
+    endOfLastMatch = position + searchLength;
+  }
+  // 15. If endOfLastMatch < the length of string, then
+  if (endOfLastMatch < string.stringValue().length) {
+    // a. Let result be the string-concatenation of result and the substring of string consisting of the code units from endOfLastMatch (inclusive) up through the final code unit of string (inclusive).
+    result += string.stringValue().slice(endOfLastMatch);
+  }
+  // 16. Return result.
+  return new Value(result);
 }
 
 // 21.1.3.19 #sec-string.prototype.slice
@@ -601,6 +726,9 @@ export function BootstrapStringPrototype(realmRec) {
     ['padStart', StringProto_padStart, 1],
     ['repeat', StringProto_repeat, 1],
     ['replace', StringProto_replace, 2],
+    surroundingAgent.feature('String.prototype.replaceAll')
+      ? ['replaceAll', StringProto_replaceAll, 2]
+      : undefined,
     ['search', StringProto_search, 1],
     ['slice', StringProto_slice, 2],
     ['split', StringProto_split, 2],

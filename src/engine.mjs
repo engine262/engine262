@@ -45,6 +45,10 @@ export const FEATURES = Object.freeze([
     name: 'RegExpMatchIndices',
     url: 'https://github.com/tc39/proposal-regexp-match-Indices',
   },
+  {
+    name: 'String.prototype.replaceAll',
+    url: 'https://github.com/tc39/proposal-string-replaceall',
+  },
 ].map(Object.freeze));
 
 // #sec-agents
