@@ -2,11 +2,7 @@ import { TopLevelVarScopedDeclarations } from './all.mjs';
 
 export function VarScopedDeclarations(node) {
   if (Array.isArray(node)) {
-    const declarations = [];
-    for (const item of node) {
-      declarations.push(...VarScopedDeclarations(item));
-    }
-    return declarations;
+    return node.flatMap(VarScopedDeclarations);
   }
   switch (node.type) {
     case 'VariableDeclaration':
