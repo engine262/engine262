@@ -109,6 +109,7 @@ export const StrictModeDelete = (n) => `Cannot not delete property ${i(n)}`;
 export const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
 export const StringRepeatCount = (v) => `Count ${i(v)} is invalid`;
 export const StringCodePointInvalid = (n) => `Invalid code point ${i(n)}`;
+export const StringPrototypeMethodGlobalRegExp = (m) => `The RegExp passed to String.prototype.${m} must have the global flag`;
 export const SubclassLengthTooSmall = (v) => `Subclass constructor returned a smaller-than-requested object ${i(v)}`;
 export const SubclassSameValue = (v) => `Subclass constructor returned the same object ${i(v)}`;
 export const TargetMatchesHeldValue = (v) => `heldValue ${i(v)} matches target`;
