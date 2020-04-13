@@ -348,7 +348,8 @@ function GetMatchString(S, match) {
   // 2. Assert: match is a Match Record.
   Assert(match instanceof MatchRecord);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // TODO: fix spec text.
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
@@ -362,7 +363,8 @@ function GetMatchIndicesArray(S, match) {
   // 2. Assert: match is a Match Record.
   Assert(match instanceof MatchRecord);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // TODO: fix spect text.
+  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
