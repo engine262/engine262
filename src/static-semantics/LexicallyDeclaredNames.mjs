@@ -19,6 +19,11 @@ export function LexicallyDeclaredNames(node) {
       return LexicallyDeclaredNames(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelLexicallyDeclaredNames(node.StatementList);
+    case 'FunctionBody':
+    case 'GeneratorBody':
+    case 'AsyncFunctionBody':
+    case 'AsyncGeneratorBody':
+      return TopLevelLexicallyDeclaredNames(node.FunctionStatementList);
     case 'LabelledStatement':
       return LexicallyDeclaredNames(node.LabelledItem);
     case 'ClassDeclaration':
@@ -28,6 +33,25 @@ export function LexicallyDeclaredNames(node) {
     case 'AsyncFunctionDeclaration':
     case 'AsyncGeneratorDeclaration':
       return BoundNames(node);
+    case 'CaseBlock': {
+      const names = [];
+      if (node.CaseClauses_a !== null) {
+        names.push(...LexicallyDeclaredNames(node.CaseClauses_a));
+      }
+      if (node.DefaultClause !== null) {
+        names.push(...LexicallyDeclaredNames(node.DefaultClause));
+      }
+      if (node.CaseClauses_b !== null) {
+        names.push(...LexicallyDeclaredNames(node.CaseClauses_b));
+      }
+      return names;
+    }
+    case 'CaseClause':
+    case 'DefaultClause':
+      if (node.StatementList !== null) {
+        return LexicallyDeclaredNames(node.StatementList);
+      }
+      return [];
     default:
       return [];
   }

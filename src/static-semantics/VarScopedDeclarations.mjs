@@ -13,6 +13,8 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.VariableDeclarationList);
     case 'VariableDeclaration':
       return [node];
+    case 'Block':
+      return VarScopedDeclarations(node.StatementList);
     case 'IfStatement': {
       const declarations = VarScopedDeclarations(node.Statement_a);
       if (node.Statement_b !== null) {
@@ -26,6 +28,25 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.Statement);
     case 'SwitchStatement':
       return VarScopedDeclarations(node.CaseBlock);
+    case 'CaseBlock': {
+      const names = [];
+      if (node.CaseClauses_a !== null) {
+        names.push(...VarScopedDeclarations(node.CaseClauses_a));
+      }
+      if (node.DefaultClause !== null) {
+        names.push(...VarScopedDeclarations(node.DefaultClause));
+      }
+      if (node.CaseClauses_b !== null) {
+        names.push(...VarScopedDeclarations(node.CaseClauses_b));
+      }
+      return names;
+    }
+    case 'CaseClause':
+    case 'DefaultClause':
+      if (node.StatementList !== null) {
+        return VarScopedDeclarations(node.StatementList);
+      }
+      return [];
     case 'LabelledStatement':
       return VarScopedDeclarations(node.LabelledItem);
     case 'TryStatement': {
@@ -45,6 +66,11 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelVarScopedDeclarations(node.StatementList);
+    case 'FunctionBody':
+    case 'GeneratorBody':
+    case 'AsyncFunctionBody':
+    case 'AsyncGeneratorBody':
+      return TopLevelVarScopedDeclarations(node.FunctionStatementList);
     default:
       return [];
   }

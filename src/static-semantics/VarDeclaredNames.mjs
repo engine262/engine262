@@ -18,12 +18,33 @@ export function VarDeclaredNames(node) {
       }
       return names;
     }
+    case 'Block':
+      return VarDeclaredNames(node.StatementList);
     case 'IterationStatement':
       return VarDeclaredNames(node.Statement);
     case 'WithStatement':
       return VarDeclaredNames(node.Statement);
     case 'SwitchStatement':
       return VarDeclaredNames(node.CaseBlock);
+    case 'CaseBlock': {
+      const names = [];
+      if (node.CaseClauses_a !== null) {
+        names.push(...VarDeclaredNames(node.CaseClauses_a));
+      }
+      if (node.DefaultClause !== null) {
+        names.push(...VarDeclaredNames(node.DefaultClause));
+      }
+      if (node.CaseClauses_b !== null) {
+        names.push(...VarDeclaredNames(node.CaseClauses_b));
+      }
+      return names;
+    }
+    case 'CaseClause':
+    case 'DefaultClause':
+      if (node.StatementList !== null) {
+        return VarDeclaredNames(node.StatementList);
+      }
+      return [];
     case 'LabelledStatement':
       return VarDeclaredNames(node.LabelledItem);
     case 'TryStatement': {
@@ -43,6 +64,11 @@ export function VarDeclaredNames(node) {
       return VarDeclaredNames(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelVarDeclaredNames(node.StatementList);
+    case 'FunctionBody':
+    case 'GeneratorBody':
+    case 'AsyncFunctionBody':
+    case 'AsyncGeneratorBody':
+      return TopLevelVarDeclaredNames(node.FunctionStatementList);
     default:
       return [];
   }

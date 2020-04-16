@@ -75,3 +75,4 @@ export * from './StringPad.mjs';
 export * from './TrimString.mjs';
 export * from './NewTarget.mjs';
 export * from './AwaitExpression.mjs';
+export * from './ClassDeclaration.mjs';

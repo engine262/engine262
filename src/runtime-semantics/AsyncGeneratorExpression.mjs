@@ -16,11 +16,11 @@ import { NamedEvaluation } from './all.mjs';
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-export function Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
+export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
   if (BindingIdentifier === null) {
     // 1. Return the result of performing NamedEvaluation for this AsyncGeneratorExpression with argument "".
-    return NamedEvaluation(AsyncGeneratorExpression, new Value(''));
+    return yield* NamedEvaluation(AsyncGeneratorExpression, new Value(''));
   }
   // 1. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

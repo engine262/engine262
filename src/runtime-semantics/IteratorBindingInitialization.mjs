@@ -97,7 +97,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
   // 5. If Initializer is present and v is undefined, then
   if (Initializer !== null && v === Value.undefined) {
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      v = NamedEvaluation(Initializer, bindingId);
+      v = yield* NamedEvaluation(Initializer, bindingId);
     } else {
       const defaultValue = yield* Evaluate(Initializer);
       v = Q(GetValue(defaultValue));

@@ -47,7 +47,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 10. Let varDeclarations be the VarScopedDeclarations of code.
   const varDeclarations = VarScopedDeclarations(code);
   // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
-  const lexicalNames = LexicallyDeclaredNames(code);
+  const lexicalNames = new ValueSet(LexicallyDeclaredNames(code));
   // 12. Let functionNames be a new empty List.
   const functionNames = new ValueSet();
   // 13. Let functionNames be a new empty List.
@@ -87,7 +87,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-    if (functionNames.has(new Value('arguments')) || lexicalNames.includes('arguments')) {
+    if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
       // i. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     }
@@ -185,7 +185,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       // i. If n is not an element of instantiatedVarNames, then
       if (!instantiatedVarNames.has(n)) {
         // 1. Append n to instantiatedVarNames.
-        instantiatedVarNames.push(n);
+        instantiatedVarNames.add(n);
         // 2. Perform ! envRec.CreateMutableBinding(n, false).
         X(envRec.CreateMutableBinding(n, Value.false));
         // 3. Call envRec.InitializeBinding(n, undefined).

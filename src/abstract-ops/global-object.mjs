@@ -76,6 +76,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   //   f. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
   const parser = new Parser(x.stringValue());
   const script = forwardError(() => parser.scope({
+    strict: strictCaller,
     newTarget: inFunction,
     superPropety: inMethod,
     superCall: inDerivedConstructor,

@@ -16,11 +16,11 @@ import { NamedEvaluation } from './all.mjs';
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-export function Evaluate_GeneratorExpression(GeneratorExpression) {
+export function* Evaluate_GeneratorExpression(GeneratorExpression) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorExpression;
   if (BindingIdentifier === null) {
     // 1. Return the result of performing NamedEvaluation for this GeneratorExpression with argument "".
-    return NamedEvaluation(GeneratorExpression, new Value(''));
+    return yield* NamedEvaluation(GeneratorExpression, new Value(''));
   }
   // 1. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

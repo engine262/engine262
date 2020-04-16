@@ -184,13 +184,14 @@ export class Parser extends LanguageParser {
     }
     startIndex = Math.min(this.source.length - 1, startIndex);
     endIndex = Math.min(this.source.length - 1, endIndex);
-    let lineEnd = this.source.indexOf('\n', startIndex);
-    if (lineEnd === -1) {
-      lineEnd = this.source.length;
+
+    let lineStart = this.source.lastIndexOf('\n', startIndex - 1);
+    if (lineStart === -1) {
+      lineStart = 0;
     }
-    let lineStart = startIndex;
-    while (lineStart > 0 && this.source[lineStart - 1] !== '\n') {
-      lineStart -= 1;
+    let lineEnd = this.source.indexOf('\n', endIndex);
+    if (lineEnd === -1) {
+      lineEnd = this.source.length - 1;
     }
 
     const e = new SyntaxError(messages[template]());

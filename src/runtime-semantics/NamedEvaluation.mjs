@@ -8,8 +8,9 @@ import {
   DefinePropertyOrThrow,
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
+import { ReturnIfAbrupt, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { ClassDefinitionEvaluation } from './all.mjs';
 
 // #sec-function-definitions-runtime-semantics-namedevaluation
 //   FunctionExpression :
@@ -119,7 +120,21 @@ function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
   return closure;
 }
 
-export function NamedEvaluation(F, name) {
+// #sec-class-definitions-runtime-semantics-namedevaluation
+//   ClassExpression : `class` ClassTail
+function* NamedEvaluation_ClassExpression(ClassExpression, name) {
+  const { ClassTail } = ClassExpression;
+  // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
+  const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name);
+  // 2. ReturnIfAbrupt(value).
+  ReturnIfAbrupt(value);
+  // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
+  value.SourceText = sourceTextMatchedBy(ClassExpression);
+  // 4. Return value.
+  return value;
+}
+
+export function* NamedEvaluation(F, name) {
   switch (F.type) {
     case 'FunctionExpression':
       return NamedEvaluation_FunctionExpression(F, name);
@@ -131,6 +146,8 @@ export function NamedEvaluation(F, name) {
       return NamedEvaluation_AsyncGeneratorExpression(F, name);
     case 'ArrowFunction':
       return NamedEvaluation_ArrowFunction(F, name);
+    case 'ClassExpression':
+      return yield* NamedEvaluation_ClassExpression(F, name);
     default:
       throw new OutOfRange('NamedEvaluation', F);
   }

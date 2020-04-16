@@ -14,11 +14,11 @@ import { NamedEvaluation } from './all.mjs';
 //   AsyncFunctionExpression :
 //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
 //     `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-export function Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
+export function* Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
   const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
   if (BindingIdentifier === null) {
     // 1. Return the result of performing NamedEvaluation for this AsyncFunctionExpression with argument "".
-    return NamedEvaluation(AsyncFunctionExpression, new Value(''));
+    return yield* NamedEvaluation(AsyncFunctionExpression, new Value(''));
   }
   // 1. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

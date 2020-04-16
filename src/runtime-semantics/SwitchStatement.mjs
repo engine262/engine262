@@ -12,7 +12,10 @@ import {
   Q,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { BlockDeclarationInstantiation } from './all.mjs';
+import {
+  BlockDeclarationInstantiation,
+  Evaluate_StatementList,
+} from './all.mjs';
 
 // #sec-runtime-semantics-caseclauseisselected
 function* CaseClauseIsSelected(C, input) {
@@ -43,16 +46,16 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
       const A = CaseClauses_a;
       // 3. Let found be false.
-      let found = false;
+      let found = Value.false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
-        if (found === false) {
+        if (found === Value.false) {
           // i. Set found to ? CaseClauseIsSelected(C, input).
           found = Q(yield* CaseClauseIsSelected(C, input));
         }
         // b. If found is true, them
-        if (found === true) {
+        if (found === Value.true) {
           // i. Let R be the result of evaluating C.
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -80,16 +83,16 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         // a. Let A be « ».
         A = [];
       }
-      let found = false;
+      let found = Value.false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
-        if (found === false) {
+        if (found === Value.false) {
           // i. Set found to ? CaseClauseIsSelected(C, input).
           found = Q(yield* CaseClauseIsSelected(C, input));
         }
         // b. If found is true, them
-        if (found === true) {
+        if (found === Value.true) {
           // i. Let R be the result of evaluating C.
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -103,7 +106,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         }
       }
       // 6. Let foundInB be false.
-      let foundInB = false;
+      let foundInB = Value.false;
       // 7. If the second CaseClauses is present, then
       let B;
       if (CaseClauses_b !== null) {
@@ -114,16 +117,16 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         B = [];
       }
       // 9. If found is false, then
-      if (found === false) {
+      if (found === Value.false) {
         // a. For each CaseClause C in B, do
         for (const C of B) {
           // a. If foundInB is false, then
-          if (foundInB === false) {
+          if (foundInB === Value.false) {
             // i. Set foundInB to ? CaseClauseIsSelected(C, input).
             foundInB = Q(yield* CaseClauseIsSelected(C, input));
           }
           // b. If foundInB is true, them
-          if (foundInB === true) {
+          if (foundInB === Value.true) {
             // i. Let R be the result of evaluating C.
             const R = EnsureCompletion(yield* Evaluate(C));
             // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -138,7 +141,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         }
       }
       // 10. If foundInB is true, return NormalCompletion(V).
-      if (foundInB === true) {
+      if (foundInB === Value.true) {
         return NormalCompletion(V);
       }
       // 11. Let R be the result of evaluating DefaultClause.
@@ -196,4 +199,20 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 9. return R.
   return R;
+}
+
+// #sec-switch-statement-runtime-semantics-evaluation
+//   CaseClause :
+//     `case` Expression `:`
+//     `case` Expression `:` StatementList
+//   DefaultClause :
+//     `case` `default` `:`
+//     `case` `default` `:` StatementList
+export function* Evaluate_CaseClause({ StatementList }) {
+  if (StatementList === null) {
+    // 1. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+  // 1. Return the result of evaluating StatementList.
+  return yield* Evaluate_StatementList(StatementList);
 }

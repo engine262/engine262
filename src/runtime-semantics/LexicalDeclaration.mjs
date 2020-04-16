@@ -29,7 +29,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
     // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
     if (IsAnonymousFunctionDefinition(Initializer)) {
       // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-      value = NamedEvaluation(Initializer, bindingId);
+      value = yield* NamedEvaluation(Initializer, bindingId);
     } else { // 4. Else,
       // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);

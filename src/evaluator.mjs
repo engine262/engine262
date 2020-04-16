@@ -3,10 +3,11 @@ import { OutOfRange } from './helpers.mjs';
 import {
   Evaluate_Script,
   Evaluate_ScriptBody,
-  Evaluate_Block,
+  Evaluate_ClassDeclaration,
   Evaluate_LexicalDeclaration,
   Evaluate_FunctionDeclaration,
   Evaluate_HoistableDeclaration,
+  Evaluate_Block,
   Evaluate_VariableStatement,
   Evaluate_ExpressionStatement,
   Evaluate_EmptyStatement,
@@ -15,6 +16,7 @@ import {
   Evaluate_TryStatement,
   Evaluate_ThrowStatement,
   Evaluate_BreakableStatement,
+  Evaluate_CaseClause,
   Evaluate_BreakStatement,
   Evaluate_IdentifierReference,
   Evaluate_CommaOperator,
@@ -85,6 +87,9 @@ export function* Evaluate(node) {
     case 'ForStatement':
     case 'ForInStatement':
       return yield* Evaluate_BreakableStatement(node);
+    case 'CaseClause':
+    case 'DefaultClause':
+      return yield* Evaluate_CaseClause(node);
     case 'BreakStatement':
       return Evaluate_BreakStatement(node);
     case 'ReturnStatement':
@@ -94,6 +99,8 @@ export function* Evaluate(node) {
     case 'TryStatement':
       return yield* Evaluate_TryStatement(node);
     // Declarations
+    case 'ClassDeclaration':
+      return yield* Evaluate_ClassDeclaration(node);
     case 'LexicalDeclaration':
       return yield* Evaluate_LexicalDeclaration(node);
     case 'FunctionDeclaration':
@@ -119,15 +126,15 @@ export function* Evaluate(node) {
     case 'ObjectLiteral':
       return yield* Evaluate_ObjectLiteral(node);
     case 'FunctionExpression':
-      return Evaluate_FunctionExpression(node);
+      return yield* Evaluate_FunctionExpression(node);
     case 'ClassExpression':
       return yield* Evaluate_ClassExpression(node);
     case 'GeneratorExpression':
-      return Evaluate_GeneratorExpression(node);
+      return yield* Evaluate_GeneratorExpression(node);
     case 'AsyncFunctionExpression':
-      return Evaluate_AsyncFunctionExpression(node);
+      return yield* Evaluate_AsyncFunctionExpression(node);
     case 'AsyncGeneratorExpression':
-      return Evaluate_AsyncGeneratorExpression(node);
+      return yield* Evaluate_AsyncGeneratorExpression(node);
     case 'TemplateLiteral':
       return yield* Evaluate_TemplateLiteral(node);
     case 'ParenthesizedExpression':
@@ -175,7 +182,7 @@ export function* Evaluate(node) {
     case 'UnaryExpression':
       return yield* Evaluate_UnaryExpression(node);
     case 'ArrowFunction':
-      return Evaluate_ArrowFunction(node);
+      return yield* Evaluate_ArrowFunction(node);
     case 'ConditionalExpression':
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':

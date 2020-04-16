@@ -18,6 +18,11 @@ export function LexicallyScopedDeclarations(node) {
       return LexicallyScopedDeclarations(node.ScriptBody);
     case 'ScriptBody':
       return TopLevelLexicallyScopedDeclarations(node.StatementList);
+    case 'FunctionBody':
+    case 'GeneratorBody':
+    case 'AsyncFunctionBody':
+    case 'AsyncGeneratorBody':
+      return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
     case 'FunctionDeclaration':
@@ -25,6 +30,25 @@ export function LexicallyScopedDeclarations(node) {
     case 'AsyncFunctionDeclaration':
     case 'AsyncGeneratorDeclaration':
       return [DeclarationPart(node)];
+    case 'CaseBlock': {
+      const names = [];
+      if (node.CaseClauses_a !== null) {
+        names.push(...LexicallyScopedDeclarations(node.CaseClauses_a));
+      }
+      if (node.DefaultClause !== null) {
+        names.push(...LexicallyScopedDeclarations(node.DefaultClause));
+      }
+      if (node.CaseClauses_b !== null) {
+        names.push(...LexicallyScopedDeclarations(node.CaseClauses_b));
+      }
+      return names;
+    }
+    case 'CaseClause':
+    case 'DefaultClause':
+      if (node.StatementList !== null) {
+        return LexicallyScopedDeclarations(node.StatementList);
+      }
+      return [];
     default:
       return [];
   }

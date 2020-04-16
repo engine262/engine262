@@ -556,6 +556,26 @@ export class Lexer {
     if (bigint) {
       this.scannedValue = BigInt(buffer);
       return Token.BIGINT;
+    } else {
+      let c = this.source[this.position];
+      if (c === 'e' || c === 'E') {
+        this.position += 1;
+        buffer += c;
+        c = this.source[this.position];
+        if (c === '+' || c === '-') {
+          this.position += 1;
+          buffer += c;
+          c = this.source[this.position];
+        }
+        if (!isDecimalDigit(c)) {
+          this.report('UnterminatedNumber', this.position);
+        }
+        while (isDecimalDigit(c)) {
+          c = this.source[this.position];
+          this.position += 1;
+          buffer += c;
+        }
+      }
     }
     this.scannedValue = base === 10
       ? Number.parseFloat(buffer, base)
@@ -598,8 +618,10 @@ export class Lexer {
         this.position += 1;
         return '\r';
       case 'x':
-        return this.scanHex();
+        this.position += 1;
+        return String.fromCodePoint(this.scanHex(2));
       case 'u':
+        this.position += 1;
         return String.fromCodePoint(this.scanCodePoint());
       case 't':
         this.position += 1;
@@ -619,7 +641,9 @@ export class Lexer {
   scanCodePoint() {
     if (this.source[this.position] === '{') {
       const end = this.source.indexOf('}', this.position);
+      this.position += 1;
       const code = this.scanHex(end - this.position);
+      this.position += 1;
       if (code > 0x10FFFF) {
         this.report('InvalidCodePoint', this.position);
       }
@@ -628,10 +652,18 @@ export class Lexer {
     return this.scanHex(4);
   }
 
-  scanHex(n) {
-    for (let i = 0; i < n; i += 1) {
+  scanHex(length) {
+    let n = 0;
+    for (let i = 0; i < length; i += 1) {
       const c = this.source[this.position];
+      if (isHexDigit(c)) {
+        this.position += 1;
+        n = (n << 4) | Number.parseInt(c, 16);
+      } else {
+        this.unexpected(this.position);
+      }
     }
+    return n;
   }
 
   scanIdentifierOrKeyword() {

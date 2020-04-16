@@ -150,13 +150,7 @@ function oneShotEval(source, filename) {
     result = realm.evaluateScript(source, { specifier: filename });
   }
   if (result instanceof AbruptCompletion) {
-    let inspected;
-    if (Abstract.Type(result.Value) === 'Object') {
-      const errorToString = realm.realm.Intrinsics['%Error.prototype%'].properties.get(new Value(realm, 'toString')).Value;
-      inspected = Abstract.Call(errorToString, result.Value).stringValue();
-    } else {
-      inspected = inspect(result, realm);
-    }
+    const inspected = inspect(result, realm);
     process.stderr.write(`${inspected}\n`);
     process.exit(1);
   } else {

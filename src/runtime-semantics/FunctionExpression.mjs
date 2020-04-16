@@ -14,10 +14,10 @@ import { NamedEvaluation } from './all.mjs';
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function Evaluate_FunctionExpression(FunctionExpression) {
+export function* Evaluate_FunctionExpression(FunctionExpression) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
   if (BindingIdentifier === null) {
-    return NamedEvaluation(FunctionExpression, new Value(''));
+    return yield* NamedEvaluation(FunctionExpression, new Value(''));
   }
   // 1. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

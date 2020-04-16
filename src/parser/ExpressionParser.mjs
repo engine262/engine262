@@ -1,5 +1,8 @@
 import {
-  Token, TokenPrecedence, isPropertyOrCall, isMember,
+  Token, TokenPrecedence,
+  isPropertyOrCall,
+  isMember,
+  isReservedWordStrict,
 } from './tokens.mjs';
 import { isNewline } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
@@ -73,6 +76,9 @@ export class ExpressionParser extends FunctionParser {
   validateAssignmentTarget(node) {
     switch (node.type) {
       case 'IdentifierReference':
+        if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+          break;
+        }
         return node;
       case 'MemberExpression':
         return node;
