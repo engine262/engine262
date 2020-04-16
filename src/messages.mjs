@@ -123,6 +123,7 @@ export const TypedArrayTooSmall = () => 'Derived TypedArray constructor created 
 export const UnableToSeal = (o) => `Unable to seal object ${i(o)}`;
 export const UnableToFreeze = (o) => `Unable to freeze object ${i(o)}`;
 export const UnableToPreventExtensions = (o) => `Unable to prevent extensions on object ${i(o)}`;
+export const UnterminatedComment = () => 'Missing */ after comment';
 export const UnterminatedRegExp = () => 'Missing / after RegExp literal';
 export const UnterminatedString = () => 'Missing \' or " after string literal';
 export const UnterminatedTemplate = () => 'Missing ` after template literal';

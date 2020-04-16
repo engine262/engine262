@@ -1,4 +1,4 @@
-import { Token, isKeyword } from './tokens.mjs';
+import { Token, isKeyword, isReservedWordStrict } from './tokens.mjs';
 import { BaseParser } from './BaseParser.mjs';
 
 export class IdentifierParser extends BaseParser {
@@ -14,6 +14,11 @@ export class IdentifierParser extends BaseParser {
       this.unexpected(token);
     } else {
       node.name = token.value;
+    }
+    if (!allowKeywords
+        && this.isStrictMode()
+        && isReservedWordStrict(node.name)) {
+      this.unexpected(token);
     }
     return this.finishNode(node, allowKeywords ? 'IdentifierName' : 'Identifier');
   }
@@ -48,6 +53,9 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
+    if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+      this.unexpected(token);
+    }
     return this.finishNode(node, 'BindingIdentifier');
   }
 
@@ -72,6 +80,9 @@ export class IdentifierParser extends BaseParser {
         break;
       default:
         this.unexpected(token);
+    }
+    if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+      this.unexpected(token);
     }
     return this.finishNode(node, 'IdentifierReference');
   }

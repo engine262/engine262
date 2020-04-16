@@ -123,7 +123,9 @@ export class FunctionParser extends RegExpParser {
       await: isAsync,
       yield: isGenerator,
     }, () => {
-      node.FunctionStatementList = this.parseStatementList(Token.RBRACE);
+      const directives = [];
+      node.FunctionStatementList = this.parseStatementList(Token.RBRACE, directives);
+      node.strict = directives.includes('use strict');
     });
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`;
     return this.finishNode(node, name);

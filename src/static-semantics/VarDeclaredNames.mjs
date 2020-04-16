@@ -20,8 +20,21 @@ export function VarDeclaredNames(node) {
     }
     case 'Block':
       return VarDeclaredNames(node.StatementList);
-    case 'IterationStatement':
+    case 'WhileStatement':
       return VarDeclaredNames(node.Statement);
+    case 'DoWhileStatement':
+      return VarDeclaredNames(node.Statement);
+    case 'ForStatement':
+    case 'ForInStatement': {
+      const names = VarDeclaredNames(node.Statement);
+      if (node.VariableDeclarationList !== null) {
+        names.push(...VarDeclaredNames(node.VariableDeclarationList));
+      }
+      if (node.ForBinding !== null) {
+        names.push(...VarDeclaredNames(node.ForBinding));
+      }
+      return names;
+    }
     case 'WithStatement':
       return VarDeclaredNames(node.Statement);
     case 'SwitchStatement':

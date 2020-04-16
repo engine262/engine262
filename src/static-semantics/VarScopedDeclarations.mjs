@@ -22,8 +22,21 @@ export function VarScopedDeclarations(node) {
       }
       return declarations;
     }
-    case 'IterationStatement':
+    case 'WhileStatement':
       return VarScopedDeclarations(node.Statement);
+    case 'DoWhileStatement':
+      return VarScopedDeclarations(node.Statement);
+    case 'ForStatement':
+    case 'ForInStatement': {
+      const names = VarScopedDeclarations(node.Statement);
+      if (node.VariableDeclarationList !== null) {
+        names.push(...VarScopedDeclarations(node.VariableDeclarationList));
+      }
+      if (node.ForBinding !== null) {
+        names.push(...VarScopedDeclarations(node.ForBinding));
+      }
+      return names;
+    }
     case 'WithStatement':
       return VarScopedDeclarations(node.Statement);
     case 'SwitchStatement':

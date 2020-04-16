@@ -7,7 +7,7 @@ export class StatementParser extends ExpressionParser {
     if (this.eat(Token.SEMICOLON)) {
       return;
     }
-    if (this.hasLineTerminatorBeforeNext() || isAutomaticSemicolon(this.lookahead.type)) {
+    if (this.hasLineTerminatorBeforeNext() || isAutomaticSemicolon(this.peek().type)) {
       return;
     }
     this.unexpected();
@@ -16,25 +16,33 @@ export class StatementParser extends ExpressionParser {
   // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
-  parseStatementList(endToken) {
+  parseStatementList(endToken, directives) {
     const statementList = [];
-    const directives = [];
-    let pastDirectives = false;
+    const oldStrict = this.state.strict;
 
     while (!this.eat(endToken)) {
       const stmt = this.parseStatementListItem();
       statementList.push(stmt);
-      if (!pastDirectives
+      if (directives !== undefined
           && stmt.type === 'ExpressionStatement'
           && stmt.Expression.type === 'StringLiteral') {
-        directives.push(stmt.Expression.value);
-        if (stmt.Expression.value === 'use strict') {
+        const directive = this.source.slice(
+          stmt.Expression.location.startIndex + 1,
+          stmt.Expression.location.endIndex - 1,
+        );
+        directives.push(directive);
+        if (directive === 'use strict') {
+          stmt.strict = true;
+          stmt.Expression.strict = true;
           this.state.strict = true;
         }
       } else {
-        pastDirectives = true;
+        directives = undefined;
       }
     }
+
+    this.state.strict = oldStrict;
+
     return statementList;
   }
 
@@ -47,7 +55,7 @@ export class StatementParser extends ExpressionParser {
   //   ClassDeclaration
   //   LexicalDeclaration
   parseStatementListItem() {
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.FUNCTION:
       case Token.ASYNC:
         return this.parseHoistableDeclaration();
@@ -67,7 +75,7 @@ export class StatementParser extends ExpressionParser {
   //   AsyncFunctionDeclaration
   //   AsyncGeneratorDeclaration
   parseHoistableDeclaration() {
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.FUNCTION:
         return this.parseFunctionDeclaration(FunctionKind.NORMAL);
       case Token.ASYNC:
@@ -129,7 +137,7 @@ export class StatementParser extends ExpressionParser {
   // Statement :
   //   ...
   parseStatement() {
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.LBRACE:
         return this.parseBlockStatement();
       case Token.VAR:
@@ -433,6 +441,21 @@ export class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'ReturnStatement');
   }
 
+  // WithStatement :
+  //   `with` `(` Expression `)` Statement
+  parseWithStatement() {
+    if (this.isStrictMode()) {
+      this.unexpected();
+    }
+    const node = this.startNode();
+    this.expect(Token.WITH);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, 'WithStatement');
+  }
+
   // ThrowStatement :
   //   `throw` [no LineTerminator here] Expression `;`
   parseThrowStatement() {
@@ -586,7 +609,7 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.EXPORT);
     node.default = this.eat(Token.DEFAULT);
     if (node.default) {
-      switch (this.lookahead.type) {
+      switch (this.peek().type) {
         case Token.FUNCTION:
           node.HoistableDeclaration = this.parseFunctionExpression(FunctionKind.NORMAL);
           break;
@@ -602,7 +625,7 @@ export class StatementParser extends ExpressionParser {
           break;
       }
     } else {
-      switch (this.lookahead.type) {
+      switch (this.peek().type) {
         case Token.LET:
         case Token.CONST:
           node.Declaration = this.parseLexicalDeclaration();

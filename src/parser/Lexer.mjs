@@ -111,8 +111,8 @@ const SingleCharTokens = {
 
 export class Lexer {
   constructor() {
-    this.currentToken = null;
-    this.lookahead = null;
+    this.currentToken = undefined;
+    this.lookaheadToken = undefined;
     this.position = 0;
     this.line = 1;
     this.columnOffset = 0;
@@ -143,17 +143,24 @@ export class Lexer {
 
   next() {
     this.hasLineTerminatorBeforeNextFlag = false;
-    this.currentToken = this.lookahead;
-    this.lookahead = this.advance();
+    this.currentToken = this.lookaheadToken;
+    this.lookaheadToken = this.advance();
     return this.currentToken;
   }
 
+  peek() {
+    if (this.lookaheadToken === undefined) {
+      this.next();
+    }
+    return this.lookaheadToken;
+  }
+
   test(token) {
-    return this.lookahead.type === token;
+    return this.peek().type === token;
   }
 
   eat(token) {
-    if (this.lookahead.type === token) {
+    if (this.test(token)) {
       this.next();
       return true;
     }
@@ -180,21 +187,6 @@ export class Lexer {
         case '\t':
           this.position += 1;
           break;
-        case '\r':
-          this.position += 1;
-          if (this.source[this.position + 1] === '\n') {
-            this.position += 1;
-          }
-          this.line += 1;
-          this.columnOffset = this.position;
-          this.hasLineTerminatorBeforeNextFlag = true;
-          break;
-        case '\n':
-          this.position += 1;
-          this.line += 1;
-          this.columnOffset = this.position;
-          this.hasLineTerminatorBeforeNextFlag = true;
-          break;
         case '/':
           switch (this.source[this.position + 1]) {
             case '/':
@@ -210,11 +202,28 @@ export class Lexer {
         default:
           if (isWhitespace(c)) {
             this.position += 1;
+          } else if (isNewline(c)) {
+            this.position += 1;
+            if (c === '\r' && this.source[this.position] === '\n') {
+              this.position += 1;
+            }
+            this.line += 1;
+            this.columnOffset = this.position;
+            this.hasLineTerminatorBeforeNextFlag = true;
+            break;
           } else {
             break loop; // eslint-disable-line no-labels
           }
           break;
       }
+    }
+  }
+
+  skipHashbangComment() {
+    if (this.position === 0
+        && this.source[0] === '#'
+        && this.source[1] === '!') {
+      this.skipLineComment();
     }
   }
 
@@ -240,15 +249,11 @@ export class Lexer {
       this.report('UnterminatedComment', this.position);
     }
     this.position += 2;
-    {
-      const re = /\r\n?|[\n\u2028\u2029]/g;
-      re.lastIndex = this.position;
-      const match = re.exec(this.source);
-      if (match.index < end) {
-        this.line += 1;
-        this.columnOffset = this.position;
-        this.hasLineTerminatorBeforeNextFlag = true;
-      }
+    for (const match of this.source.slice(this.position, end).matchAll(/\r\n?|[\n\u2028\u2029]/ug)) {
+      this.position = match.index;
+      this.line += 1;
+      this.columnOffset = this.position;
+      this.hasLineTerminatorBeforeNextFlag = true;
     }
     this.position = end + 2;
   }
@@ -486,7 +491,8 @@ export class Lexer {
           return this.scanIdentifierOrKeyword();
 
         default:
-          this.unexpected(c);
+          this.unexpected(single);
+          break;
       }
     }
 
@@ -690,7 +696,7 @@ export class Lexer {
 
   scanRegularExpressionBody() {
     let inClass = false;
-    let buffer = this.lookahead.type === Token.ASSIGN_DIV ? '=' : '';
+    let buffer = this.peek().type === Token.ASSIGN_DIV ? '=' : '';
     while (true) {
       if (this.position >= this.source.length) {
         this.report('UnterminatedRegExp', this.position);

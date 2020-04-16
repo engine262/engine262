@@ -2,6 +2,7 @@ import {
   Token, TokenPrecedence,
   isPropertyOrCall,
   isMember,
+  isKeyword,
   isReservedWordStrict,
 } from './tokens.mjs';
 import { isNewline } from './Lexer.mjs';
@@ -39,7 +40,7 @@ export class ExpressionParser extends FunctionParser {
   // LogicalAssignmentOperator : one of
   //   &&= ||= ??=
   parseAssignmentExpression() {
-    if (this.lookahead.type === Token.YIELD && this.isYieldScope()) {
+    if (this.test(Token.YIELD) && this.isYieldScope()) {
       return this.parseYieldExpression();
     }
     const node = this.startNode();
@@ -47,7 +48,7 @@ export class ExpressionParser extends FunctionParser {
     if (!this.hasLineTerminatorBeforeNext() && this.test(Token.ARROW)) {
       return this.parseArrowFunction(node, [left], false);
     }
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.ASSIGN:
       case Token.ASSIGN_MUL:
       case Token.ASSIGN_DIV:
@@ -76,8 +77,13 @@ export class ExpressionParser extends FunctionParser {
   validateAssignmentTarget(node) {
     switch (node.type) {
       case 'IdentifierReference':
-        if (this.isStrictMode() && isReservedWordStrict(node.name)) {
-          break;
+        if (this.isStrictMode()) {
+          if (isReservedWordStrict(node.name)) {
+            break;
+          }
+          if (node.name === 'arguments' || node.name === 'eval') {
+            break;
+          }
         }
         return node;
       case 'MemberExpression':
@@ -120,7 +126,7 @@ export class ExpressionParser extends FunctionParser {
       if (node.isGenerator) {
         node.AssignmentExpression = this.parseAssignmentExpression();
       } else {
-        switch (this.lookahead.type) {
+        switch (this.peek().type) {
           case Token.EOS:
           case Token.SEMICOLON:
           case Token.RBRACE:
@@ -164,10 +170,10 @@ export class ExpressionParser extends FunctionParser {
 
   parseBinaryExpression(precedence) {
     let x = this.parseUnaryExpression();
-    let p = TokenPrecedence[this.lookahead.type];
+    let p = TokenPrecedence[this.peek().type];
     if (p >= precedence) {
       do {
-        while (TokenPrecedence[this.lookahead.type] === p) {
+        while (TokenPrecedence[this.peek().type] === p) {
           const node = this.startNode();
           const left = x;
           const op = this.next();
@@ -205,8 +211,8 @@ export class ExpressionParser extends FunctionParser {
               break;
             case Token.LT:
             case Token.GT:
-            case Token.LE:
-            case Token.GE:
+            case Token.LTE:
+            case Token.GTE:
             case Token.INSTANCEOF:
             case Token.IN:
               if (op.type === Token.IN && !this.isInScope()) {
@@ -276,11 +282,11 @@ export class ExpressionParser extends FunctionParser {
   //   `!` UnaryExpression
   //   [+Await] AwaitExpression
   parseUnaryExpression() {
-    if (this.lookahead.type === Token.AWAIT && this.isAwaitScope()) {
+    if (this.test(Token.AWAIT) && this.isAwaitScope()) {
       return this.parseAwaitExpression();
     }
     const node = this.startNode();
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.DELETE:
       case Token.VOID:
       case Token.TYPEOF:
@@ -311,8 +317,7 @@ export class ExpressionParser extends FunctionParser {
   //   `++` UnaryExpression
   //   `--` UnaryExpression
   parseUpdateExpression() {
-    if (this.lookahead.type === Token.INC
-        || this.lookahead.type === Token.DEC) {
+    if (this.test(Token.INC) || this.test(Token.DEC)) {
       const node = this.startNode();
       node.operator = this.next().value;
       node.LeftHandSideExpression = null;
@@ -321,8 +326,7 @@ export class ExpressionParser extends FunctionParser {
     }
     const argument = this.parseLeftHandSideExpression();
     if (!this.hasLineTerminatorBeforeNext()) {
-      if (this.lookahead.type === Token.INC
-          || this.lookahead.type === Token.DEC) {
+      if (this.test(Token.INC) || this.test(Token.DEC)) {
         const node = this.startNode();
         node.operator = this.next().value;
         node.LeftHandSideExpression = argument;
@@ -375,8 +379,8 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.NEW);
     if (this.isNewTargetScope() && this.eat(Token.PERIOD)) {
-      if (this.lookahead.type !== Token.IDENTIFIER
-          || this.lookahead.value !== 'target') {
+      if (this.peek().type !== Token.IDENTIFIER
+          || this.peek().value !== 'target') {
         this.unexpected();
       }
       this.next();
@@ -394,11 +398,11 @@ export class ExpressionParser extends FunctionParser {
   parseSubscripts(allowCalls) {
     const PrimaryExpression = this.parsePrimaryExpression();
     const check = allowCalls ? isPropertyOrCall : isMember;
-    if (check(this.lookahead.type)) {
+    if (check(this.peek().type)) {
       let result = PrimaryExpression;
       do {
         const node = this.startNode();
-        switch (this.lookahead.type) {
+        switch (this.peek().type) {
           case Token.LBRACK: {
             this.next();
             node.MemberExpression = result;
@@ -429,7 +433,7 @@ export class ExpressionParser extends FunctionParser {
             result = this.finishNode(node, 'TaggedTemplateExpression');
             break;
         }
-      } while (check(this.lookahead.type));
+      } while (check(this.peek().type));
       return result;
     }
     return PrimaryExpression;
@@ -439,7 +443,7 @@ export class ExpressionParser extends FunctionParser {
   //   ...
   parsePrimaryExpression() {
     const node = this.startNode();
-    switch (this.lookahead.type) {
+    switch (this.peek().type) {
       case Token.THIS:
         this.next();
         return this.finishNode(node, 'ThisExpression');
@@ -768,7 +772,10 @@ export class ExpressionParser extends FunctionParser {
       }
     }
 
-    if (type === 'property' && !isSpecialMethod && !this.test(Token.LPAREN)) {
+    if (type === 'property'
+        && !isSpecialMethod
+        && !this.test(Token.LPAREN)
+        && !isKeyword(leadingIdentifier.name)) {
       leadingIdentifier.type = 'IdentifierReference';
       return leadingIdentifier;
     }

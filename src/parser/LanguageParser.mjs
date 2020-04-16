@@ -4,6 +4,9 @@ import { Token } from './tokens.mjs';
 export class LanguageParser extends StatementParser {
   // Script : ScriptBody?
   parseScript() {
+    if (this.feature('hashbang')) {
+      this.skipHashbangComment();
+    }
     const node = this.startNode();
     if (this.eat(Token.EOS)) {
       node.ScriptBody = null;
@@ -19,20 +22,25 @@ export class LanguageParser extends StatementParser {
     this.scope({
       in: true,
     }, () => {
-      node.StatementList = this.parseStatementList(Token.EOS);
+      const directives = [];
+      node.StatementList = this.parseStatementList(Token.EOS, directives);
+      node.strict = directives.includes('use strict');
     });
     return this.finishNode(node, 'ScriptBody');
   }
 
   // Module : ModuleBody?
   parseModule() {
+    if (this.feature('hashbang')) {
+      this.skipHashbangComment();
+    }
     return this.scope({
       strict: true,
       in: true,
       await: this.feature('TopLevelAwait'),
     }, () => {
       const node = this.startNode();
-      if (this.eat(Token.EOL)) {
+      if (this.eat(Token.EOS)) {
         node.ModuleBody = null;
       } else {
         node.ModuleBody = this.parseModuleBody();
@@ -60,7 +68,7 @@ export class LanguageParser extends StatementParser {
   parseModuleItemList() {
     const moduleItemList = [];
     while (!this.eat(Token.EOS)) {
-      switch (this.lookahead.type) {
+      switch (this.peek().type) {
         case Token.IMPORT:
           moduleItemList.push(this.parseImportDeclaration());
           break;

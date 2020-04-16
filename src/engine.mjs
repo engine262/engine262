@@ -49,6 +49,10 @@ export const FEATURES = Object.freeze([
     name: 'String.prototype.replaceAll',
     url: 'https://github.com/tc39/proposal-string-replaceall',
   },
+  {
+    name: 'hashbang',
+    url: 'https://github.com/tc39/proposal-hashbang',
+  },
 ].map(Object.freeze));
 
 // #sec-agents

@@ -28,7 +28,6 @@ export class Parser extends LanguageParser {
       strict: false,
       scopeBits: 0,
     };
-    this.next(); // feed lexer to first token
   }
 
   feature(name) {
@@ -117,14 +116,15 @@ export class Parser extends LanguageParser {
   }
 
   startNode() {
+    this.peek();
     const node = {
       type: undefined,
       location: {
-        startIndex: this.lookahead.startIndex,
+        startIndex: this.lookaheadToken.startIndex,
         endIndex: -1,
         start: {
-          line: this.lookahead.line,
-          column: this.lookahead.column,
+          line: this.lookaheadToken.line,
+          column: this.lookaheadToken.column,
         },
         end: {
           line: -1,
@@ -142,11 +142,10 @@ export class Parser extends LanguageParser {
     node.location.endIndex = this.currentToken.endIndex;
     node.location.end.line = this.currentToken.line;
     node.location.end.column = this.currentToken.column;
-    node.strict = this.state.strict;
     return node;
   }
 
-  report(template, context = this.lookahead) {
+  report(template, context = this.peek()) {
     if (template === 'UnexpectedToken') {
       switch (context.type) {
         case Token.AWAIT:

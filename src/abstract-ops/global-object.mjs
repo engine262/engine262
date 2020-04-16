@@ -74,13 +74,15 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   //   d. If inFunction is false, and body Contains NewTarget, throw a SyntaxError exception.
   //   e. If inMethod is false, and body Contains SuperProperty, throw a SyntaxError exception.
   //   f. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
-  const parser = new Parser(x.stringValue());
-  const script = forwardError(() => parser.scope({
-    strict: strictCaller,
-    newTarget: inFunction,
-    superPropety: inMethod,
-    superCall: inDerivedConstructor,
-  }, () => parser.parseScript()));
+  const script = forwardError(() => {
+    const parser = new Parser(x.stringValue());
+    return parser.scope({
+      strict: strictCaller,
+      newTarget: inFunction,
+      superPropety: inMethod,
+      superCall: inDerivedConstructor,
+    }, () => parser.parseScript());
+  });
   if (Array.isArray(script)) {
     return surroundingAgent.Throw(script[0]);
   }
@@ -259,9 +261,9 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
             }
           }
           // b. If vn is not an element of declaredVarNames, then
-          if (!declaredVarNames.includes(vn)) {
+          if (!declaredVarNames.has(vn)) {
             // i. Append vn to declaredVarNames.
-            declaredVarNames.push(vn);
+            declaredVarNames.add(vn);
           }
         }
       }

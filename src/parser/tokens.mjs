@@ -129,7 +129,6 @@ export const RawTokens = [
   ['AWAIT', 'await'],
   ['YIELD', 'yield'],
   ['LET', 'let'],
-  ['STATIC', 'static'],
   // END AnyIdentifier
   // END Callable
   ['CLASS', 'class'],
@@ -137,6 +136,8 @@ export const RawTokens = [
   ['EXPORT', 'export'],
   ['EXTENDS', 'extends'],
   ['IMPORT', 'import'],
+
+  ['ENUM', 'enum'],
 ];
 
 export const Token = RawTokens
@@ -168,13 +169,10 @@ export const isPropertyOrCall = (t) => isInRange(t, Token.TEMPLATE, Token.LPAREN
 export const isKeyword = (t) => KeywordTokens.has(t);
 export const isKeywordRaw = (s) => Keywords.includes(s);
 
-const ReservedWords = [
-  'enum', 'implements', 'interface',
+const ReservedWordsStrict = [
+  'implements', 'interface',
   'package', 'private', 'protected',
-  'public',
+  'public', 'static',
 ];
 
-const ReservedWordsStrict = [...ReservedWords, 'eval', 'arguments'];
-
-export const isReservedWord = (s) => ReservedWords.includes(s);
 export const isReservedWordStrict = (s) => ReservedWordsStrict.includes(s);
