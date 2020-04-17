@@ -18,6 +18,7 @@ import {
   Evaluate_BreakableStatement,
   Evaluate_CaseClause,
   Evaluate_BreakStatement,
+  Evaluate_WithStatement,
   Evaluate_IdentifierReference,
   Evaluate_CommaOperator,
   Evaluate_This,
@@ -98,6 +99,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_ThrowStatement(node);
     case 'TryStatement':
       return yield* Evaluate_TryStatement(node);
+    case 'WithStatement':
+      return yield* Evaluate_WithStatement(node);
     // Declarations
     case 'ClassDeclaration':
       return yield* Evaluate_ClassDeclaration(node);
