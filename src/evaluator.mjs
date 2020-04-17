@@ -87,6 +87,8 @@ export function* Evaluate(node) {
     case 'SwitchStatement':
     case 'ForStatement':
     case 'ForInStatement':
+    case 'ForOfStatement':
+    case 'ForAwaitStatement':
       return yield* Evaluate_BreakableStatement(node);
     case 'CaseClause':
     case 'DefaultClause':

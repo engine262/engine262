@@ -24,12 +24,23 @@ export function VarDeclaredNames(node) {
       return VarDeclaredNames(node.Statement);
     case 'DoWhileStatement':
       return VarDeclaredNames(node.Statement);
-    case 'ForStatement':
-    case 'ForInStatement': {
+    case 'ForStatement': {
       const names = VarDeclaredNames(node.Statement);
       if (node.VariableDeclarationList !== null) {
         names.push(...VarDeclaredNames(node.VariableDeclarationList));
       }
+      return names;
+    }
+    case 'ForInStatement': {
+      const names = VarDeclaredNames(node.Statement);
+      if (node.ForBinding !== null) {
+        names.push(...VarDeclaredNames(node.ForBinding));
+      }
+      return names;
+    }
+    case 'ForOfStatement':
+    case 'ForAwaitStatement': {
+      const names = VarDeclaredNames(node.Statement);
       if (node.ForBinding !== null) {
         names.push(...VarDeclaredNames(node.ForBinding));
       }

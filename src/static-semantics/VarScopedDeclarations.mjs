@@ -26,12 +26,23 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.Statement);
     case 'DoWhileStatement':
       return VarScopedDeclarations(node.Statement);
-    case 'ForStatement':
-    case 'ForInStatement': {
+    case 'ForStatement': {
       const names = VarScopedDeclarations(node.Statement);
       if (node.VariableDeclarationList !== null) {
         names.push(...VarScopedDeclarations(node.VariableDeclarationList));
       }
+      return names;
+    }
+    case 'ForInStatement': {
+      const names = VarScopedDeclarations(node.Statement);
+      if (node.ForBinding !== null) {
+        names.push(...VarScopedDeclarations(node.ForBinding));
+      }
+      return names;
+    }
+    case 'ForOfStatement':
+    case 'ForAwaitStatement': {
+      const names = VarScopedDeclarations(node.Statement);
       if (node.ForBinding !== null) {
         names.push(...VarScopedDeclarations(node.ForBinding));
       }

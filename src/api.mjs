@@ -17,7 +17,7 @@ import {
   Type,
   Value,
 } from './value.mjs';
-import { ParseModule } from './parse.mjs';
+import { Parser, ParseModule } from './parse.mjs';
 import {
   AbruptCompletion,
   Completion,
@@ -35,6 +35,7 @@ const {
   ToPrimitive,
 } = Abstract;
 export {
+  Parser,
   AbruptCompletion,
   NormalCompletion,
   Completion,

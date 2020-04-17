@@ -284,6 +284,8 @@ export class StatementParser extends ExpressionParser {
       this.unexpected();
     }
     if (this.eat(Token.SEMICOLON)) {
+      node.VariableDeclarationList = null;
+      node.LexicalDeclaration = null;
       node.Expression_a = null;
       if (this.test(Token.SEMICOLON)) {
         node.Expression_b = null;
@@ -312,6 +314,8 @@ export class StatementParser extends ExpressionParser {
       if (list.length > 1) {
         node.BindingList = list;
         node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
+        node.VariableDeclarationList = null;
+        this.expect(Token.SEMICOLON);
         if (this.test(Token.SEMICOLON)) {
           node.Expression_a = null;
         } else {
@@ -324,11 +328,13 @@ export class StatementParser extends ExpressionParser {
           node.Expression_b = this.parseExpression();
         }
         this.expect(Token.RPAREN);
+        node.Expression_c = null;
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
       inner.ForBinding = list[0];
       node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
+      node.ForBinding = null;
       if (!isAwait && this.eat(Token.IN)) {
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
@@ -344,29 +350,45 @@ export class StatementParser extends ExpressionParser {
     if (this.eat(Token.VAR)) {
       if (isAwait) {
         node.ForBinding = this.parseBindingIdentifier();
+        node.ForDeclaration = null;
         this.expectOfKeyword();
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForAwaitStatement');
       }
-      node.VariableDeclarationList = this.parseVariableDeclarationList();
-      if (this.test(Token.SEMICOLON)) {
-        node.Expression_a = null;
-      } else {
-        node.Expression_a = this.parseExpression();
+      const list = this.parseVariableDeclarationList();
+      if (list.length > 1 || this.test(Token.SEMICOLON)) {
+        node.LexicalDeclaration = null;
+        node.VariableDeclarationList = list;
+        this.expect(Token.SEMICOLON);
+        if (this.test(Token.SEMICOLON)) {
+          node.Expression_a = null;
+        } else {
+          node.Expression_a = this.parseExpression();
+        }
+        this.expect(Token.SEMICOLON);
+        if (this.test(Token.RPAREN)) {
+          node.Expression_b = null;
+        } else {
+          node.Expression_b = this.parseExpression();
+        }
+        this.expect(Token.RPAREN);
+        node.Expression_c = null;
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, 'ForStatement');
       }
-      this.expect(Token.SEMICOLON);
-      if (this.test(Token.RPAREN)) {
-        node.Expression_b = null;
-      } else {
-        node.Expression_b = this.parseExpression();
-      }
+      this.expect(Token.IN);
+      node.ForBinding = list[0];
+      node.ForDeclaration = null;
+      node.Expression = this.parseExpression();
       this.expect(Token.RPAREN);
       node.Statement = this.parseStatement();
-      return this.finishNode(node, 'ForStatement');
+      return this.finishNode(node, 'ForInStatement');
     }
 
+    node.VariableDeclarationList = null;
+    node.LexicalDeclaration = null;
     node.Expression_a = this.parseExpression();
 
     if (!this.test(Token.SEMICOLON)) {
