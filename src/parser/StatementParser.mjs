@@ -115,10 +115,9 @@ export class StatementParser extends ExpressionParser {
   parseBindingList() {
     const bindingList = [];
     do {
-      const node = this.startNode();
-      node.BindingIdentifier = this.parseBindingIdentifier();
-      node.Initializer = this.test(Token.ASSIGN) ? this.parseInitializer() : null;
-      bindingList.push(this.finishNode(node, 'LexicalBinding'));
+      const node = this.parseBindingElement();
+      node.type = 'LexicalBinding';
+      bindingList.push(node);
     } while (this.eat(Token.COMMA));
     return bindingList;
   }

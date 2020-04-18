@@ -715,7 +715,16 @@ export class ExpressionParser extends FunctionParser {
   //   BindingIdentifier Initializer?
   parseBindingElement() {
     const node = this.startNode();
-    node.BindingIdentifier = this.parseBindingIdentifier();
+    if (this.test(Token.LBRACE)) {
+      node.BindingPattern = this.validateAssignmentTarget(this.parseObjectLiteral());
+      node.BindingIdentifier = null;
+    } else if (this.test(Token.LBRACK)) {
+      node.BindingPattern = this.validateAssignmentTarget(this.parseArrayLiteral());
+      node.BindingIdentifier = null;
+    } else {
+      node.BindingPattern = null;
+      node.BindingIdentifier = this.parseBindingIdentifier();
+    }
     if (this.test(Token.ASSIGN)) {
       node.Initializer = this.parseInitializer();
     } else {
