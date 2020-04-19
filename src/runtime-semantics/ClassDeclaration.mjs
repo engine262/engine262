@@ -9,9 +9,9 @@ import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mjs';
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
-function* BindingClassDeclarationEvaluation(ClassDeclaration) {
+export function* BindingClassDeclarationEvaluation(ClassDeclaration) {
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
     const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value('default')));
     // 2. Set value.[[SourceText]] to the source text matched by ClassDeclaration.

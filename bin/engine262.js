@@ -25,7 +25,6 @@ const {
   Object: APIObject,
   Abstract,
   Throw,
-  Parser,
   FEATURES,
 } = require('..');
 const { createRealm } = require('./test262_realm');
@@ -175,7 +174,7 @@ if (entry) {
   process.stdout.write(`${packageJson.name} v${packageJson.version}
 Please report bugs to ${packageJson.bugs.url}
 `);
-  const r = repl.start({
+  repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
       try {
@@ -193,25 +192,5 @@ Please report bugs to ${packageJson.bugs.url}
       }
       return util.inspect(o);
     },
-  });
-  r.defineCommand('ast', {
-    action(source) {
-      try {
-        const p = new Parser(source);
-        const ast = p.parseScript();
-        console.log(ast.ScriptBody.StatementList[0]);
-      } catch (e) {
-        if (e.name === 'SyntaxError') {
-          if (e.decoration !== undefined) {
-            e.stack = `${e.decoration}\n${e.stack}`;
-            delete e.decoration;
-            console.error(e);
-          }
-        } else {
-          throw e;
-        }
-      }
-      this.displayPrompt();
-    }
   });
 }

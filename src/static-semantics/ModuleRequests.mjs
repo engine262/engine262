@@ -1,10 +1,10 @@
 export function ModuleRequests(node) {
   switch (node.type) {
     case 'Module':
-      if (node.ModuleBody === null) {
-        return [];
+      if (node.ModuleBody) {
+        return ModuleRequests(node.ModuleBody);
       }
-      return ModuleRequests(node.ModuleBody);
+      return [];
     case 'ModuleBody': {
       const moduleNames = [];
       for (const item of node.ModuleItemList) {
@@ -15,7 +15,7 @@ export function ModuleRequests(node) {
     case 'ImportDeclaration':
       return ModuleRequests(node.FromClause);
     case 'ExportDeclaration':
-      if (node.FromClause !== null) {
+      if (node.FromClause) {
         return ModuleRequests(node.FromClause);
       }
       return [];

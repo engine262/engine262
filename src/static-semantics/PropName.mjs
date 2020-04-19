@@ -12,10 +12,10 @@ export function PropName(node) {
     case 'AsyncMethod':
       return PropName(node.PropertyName);
     case 'ClassElement':
-      if (node.MethodDefinition === null) {
-        return undefined;
+      if (node.MethodDefinition) {
+        return PropName(node.MethodDefinition);
       }
-      return PropName(node.MethodDefinition);
+      return undefined;
     default:
       throw new OutOfRange('PropName', node);
   }

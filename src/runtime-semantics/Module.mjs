@@ -2,13 +2,13 @@ import { Value } from '../value.mjs';
 import { NormalCompletion } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
-// #sec-script-semantics-runtime-semantics-evaluation
-// Script :
+// #sec-module-semantics-runtime-semantics-evaluation
+// Module :
 //   [empty]
-//   ScriptBody
-export function* Evaluate_Script({ ScriptBody }) {
-  if (!ScriptBody) {
+//   ModuleBody
+export function* Evaluate_Module({ ModuleBody }) {
+  if (!ModuleBody) {
     return NormalCompletion(Value.undefined);
   }
-  return yield* Evaluate(ScriptBody);
+  return yield* Evaluate(ModuleBody);
 }

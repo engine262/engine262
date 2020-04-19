@@ -158,7 +158,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
       received = EnsureCompletion(received);
     }
   }
-  if (AssignmentExpression !== null) {
+  if (AssignmentExpression) {
     // 2. Let exprRef be the result of evaluating AssignmentExpression.
     const exprRef = yield* Evaluate(AssignmentExpression);
     // 3. Let value be ? GetValue(exprRef).

@@ -156,7 +156,11 @@ export class Lexer {
   }
 
   test(token) {
-    return this.peek().type === token;
+    const peek = this.peek();
+    if (typeof token === 'string') {
+      return peek.type === Token.IDENTIFIER && peek.value === token;
+    }
+    return peek.type === token;
   }
 
   eat(token) {
@@ -168,9 +172,8 @@ export class Lexer {
   }
 
   expect(token) {
-    const next = this.next();
-    if (next.type !== token) {
-      this.unexpected(next);
+    if (!this.eat(token)) {
+      this.unexpected();
     }
   }
 
@@ -290,9 +293,9 @@ export class Lexer {
 
         case Token.CONDITIONAL:
           // ? ?. ?? ??=
-          if (c1 === '.' && !isDecimalDigit(this.source[this.position + 2])) {
+          if (c1 === '.' && !isDecimalDigit(this.source[this.position + 1])) {
             this.position += 1;
-            return Token.QUESTION_PERIOD;
+            return Token.OPTIONAL;
           }
           if (c1 === '?') {
             this.position += 1;

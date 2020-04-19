@@ -33,7 +33,7 @@ export const RawTokens = [
   ['LBRACK', '['],
   // END Property
   // END Member
-  ['QUESTION_PERIOD', '?.'],
+  ['OPTIONAL', '?.'],
   ['LPAREN', '('],
   // END PropertyOrCall
   ['RPAREN', ')'],

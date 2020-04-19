@@ -10,7 +10,7 @@ import { ClassDefinitionEvaluation } from './all.mjs';
 //   `class` BindingIdentifier ClassTail
 export function* Evaluate_ClassExpression(ClassExpression) {
   const { BindingIdentifier, ClassTail } = ClassExpression;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''
     const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value('')));
     // 2. Set value.[[SourceText]] to the source text matched by ClassExpression.

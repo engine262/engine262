@@ -42,9 +42,9 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
 //     CallExpression `.` IdentifierName
 export function Evaluate_MemberExpression(MemberExpression) {
   switch (true) {
-    case MemberExpression.Expression !== null:
+    case !!MemberExpression.Expression:
       return Evaluate_MemberExpression_Expression(MemberExpression);
-    case MemberExpression.IdentifierName !== null:
+    case !!MemberExpression.IdentifierName:
       return Evaluate_MemberExpression_IdentifierName(MemberExpression);
     default:
       throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);

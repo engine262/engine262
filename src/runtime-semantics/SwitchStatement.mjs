@@ -36,11 +36,11 @@ function* CaseClauseIsSelected(C, input) {
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
 function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, input) {
   switch (true) {
-    case CaseClauses_a === null && DefaultClause === null && CaseClauses_b === null: {
+    case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
       return NormalCompletion(Value.undefined);
     }
-    case CaseClauses_a !== null && DefaultClause === null && CaseClauses_b === null: {
+    case CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Let V be undefined.
       let V = Value.undefined;
       // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
@@ -71,12 +71,12 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       // 5. Return NormalCompletion(V).
       return NormalCompletion(V);
     }
-    case DefaultClause !== null: {
+    case DefaultClause: {
       // 1. Let V be undefined.
       let V = Value.undefined;
       // 2. If the first CaseClauses is present, then
       let A;
-      if (CaseClauses_a !== null) {
+      if (CaseClauses_a) {
         // a. Let A be the List of CaseClause items in the first CaseClauses, in source text order.
         A = CaseClauses_a;
       } else { // 3. Else,
@@ -109,7 +109,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       let foundInB = Value.false;
       // 7. If the second CaseClauses is present, then
       let B;
-      if (CaseClauses_b !== null) {
+      if (CaseClauses_b) {
         // a. Let B be the List of CaseClause items in the second CaseClauses, in source text order.
         B = CaseClauses_b;
       } else { // 8. Else,
@@ -209,7 +209,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
 //     `case` `default` `:`
 //     `case` `default` `:` StatementList
 export function* Evaluate_CaseClause({ StatementList }) {
-  if (StatementList === null) {
+  if (!StatementList) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

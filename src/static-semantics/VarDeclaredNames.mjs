@@ -13,7 +13,7 @@ export function VarDeclaredNames(node) {
       return BoundNames(node.VariableDeclarationList);
     case 'IfStatement': {
       const names = VarDeclaredNames(node.Statement_a);
-      if (node.Statement_b !== null) {
+      if (node.Statement_b) {
         names.push(...VarDeclaredNames(node.Statement_b));
       }
       return names;
@@ -26,14 +26,14 @@ export function VarDeclaredNames(node) {
       return VarDeclaredNames(node.Statement);
     case 'ForStatement': {
       const names = VarDeclaredNames(node.Statement);
-      if (node.VariableDeclarationList !== null) {
+      if (node.VariableDeclarationList) {
         names.push(...VarDeclaredNames(node.VariableDeclarationList));
       }
       return names;
     }
     case 'ForInStatement': {
       const names = VarDeclaredNames(node.Statement);
-      if (node.ForBinding !== null) {
+      if (node.ForBinding) {
         names.push(...VarDeclaredNames(node.ForBinding));
       }
       return names;
@@ -41,7 +41,7 @@ export function VarDeclaredNames(node) {
     case 'ForOfStatement':
     case 'ForAwaitStatement': {
       const names = VarDeclaredNames(node.Statement);
-      if (node.ForBinding !== null) {
+      if (node.ForBinding) {
         names.push(...VarDeclaredNames(node.ForBinding));
       }
       return names;
@@ -52,20 +52,20 @@ export function VarDeclaredNames(node) {
       return VarDeclaredNames(node.CaseBlock);
     case 'CaseBlock': {
       const names = [];
-      if (node.CaseClauses_a !== null) {
+      if (node.CaseClauses_a) {
         names.push(...VarDeclaredNames(node.CaseClauses_a));
       }
-      if (node.DefaultClause !== null) {
+      if (node.DefaultClause) {
         names.push(...VarDeclaredNames(node.DefaultClause));
       }
-      if (node.CaseClauses_b !== null) {
+      if (node.CaseClauses_b) {
         names.push(...VarDeclaredNames(node.CaseClauses_b));
       }
       return names;
     }
     case 'CaseClause':
     case 'DefaultClause':
-      if (node.StatementList !== null) {
+      if (node.StatementList) {
         return VarDeclaredNames(node.StatementList);
       }
       return [];
@@ -73,19 +73,19 @@ export function VarDeclaredNames(node) {
       return VarDeclaredNames(node.LabelledItem);
     case 'TryStatement': {
       const names = VarDeclaredNames(node.Block);
-      if (node.Catch !== null) {
+      if (node.Catch) {
         names.push(...VarDeclaredNames(node.Catch));
       }
-      if (node.Finally !== null) {
+      if (node.Finally) {
         names.push(...VarDeclaredNames(node.Finally));
       }
       return names;
     }
     case 'Script':
-      if (node.ScriptBody === null) {
-        return [];
+      if (node.ScriptBody) {
+        return VarDeclaredNames(node.ScriptBody);
       }
-      return VarDeclaredNames(node.ScriptBody);
+      return [];
     case 'ScriptBody':
       return TopLevelVarDeclaredNames(node.StatementList);
     case 'FunctionBody':

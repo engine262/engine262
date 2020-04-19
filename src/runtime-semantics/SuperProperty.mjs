@@ -40,7 +40,7 @@ export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }) 
   const env = GetThisEnvironment();
   // 2. Let actualThis be ? env.GetThisBinding().
   const actualThis = Q(env.GetThisBinding());
-  if (Expression !== null) {
+  if (Expression) {
     // 3. Let propertyNameReference be the result of evaluating Expression.
     const propertyNameReference = yield* Evaluate(Expression);
     // 4. Let propertyNameReference be the result of evaluating Expression.

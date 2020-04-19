@@ -20,11 +20,11 @@ import { BindingInitialization } from './all.mjs';
 //     `try` Block Catch Finally
 export function Evaluate_TryStatement(TryStatement) {
   switch (true) {
-    case TryStatement.Catch !== null && TryStatement.Finally === null:
+    case TryStatement.Catch && !TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatch(TryStatement);
-    case TryStatement.Catch === null && TryStatement.Finally !== null:
+    case !TryStatement.Catch && TryStatement.Finally:
       return Evaluate_TryStatement_BlockFinally(TryStatement);
-    case TryStatement.Catch !== null && TryStatement.Finally !== null:
+    case TryStatement.Catch && TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
     default:
       throw new OutOfRange('Evaluate_TryStatement', TryStatement);
@@ -86,7 +86,7 @@ function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }) {
 //    `catch` Block
 //    `catch` `(` CatchParameter `)` Block
 function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
-  if (CatchParameter === null) {
+  if (!CatchParameter) {
     // 1. Return the result of evaluating Block.
     return yield* Evaluate(Block);
   }

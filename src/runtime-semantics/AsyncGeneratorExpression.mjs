@@ -18,7 +18,7 @@ import { NamedEvaluation } from './all.mjs';
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     // 1. Return the result of performing NamedEvaluation for this AsyncGeneratorExpression with argument "".
     return yield* NamedEvaluation(AsyncGeneratorExpression, new Value(''));
   }
@@ -33,7 +33,7 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   // 5. Perform envRec.CreateImmutableBinding(name, false).
   envRec.CreateImmutableBinding(name, Value.false);
   // 6. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGenerator%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
   // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
   // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).

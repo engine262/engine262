@@ -19,7 +19,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier === null ? new Value('default') : StringValue(BindingIdentifier);
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let F be OrdinaryFunctionCreate(%Function.prototype%, FormalParameters, FunctionBody, non-lexical-this, scope).
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionBody, 'non-lexical-this', scope));
   // 3. Perform SetFunctionName(F, name).
@@ -39,7 +39,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier === null ? new Value('default') : StringValue(BindingIdentifier);
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let F be OrdinaryFunctionCreate(%Generator%, FormalParameters, GeneratorBody, non-lexical-this, scope).
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorBody, 'non-lexical-this', scope));
   // 3. Perform SetFunctionName(F, name).
@@ -66,7 +66,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope) {
   const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier === null ? new Value('default') : StringValue(BindingIdentifier);
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
   // 3. Perform ! SetFunctionName(F, name).
@@ -84,7 +84,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
 export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier === null ? new Value('default') : StringValue(BindingIdentifier);
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let F be ! OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
   // 3. Perform ! SetFunctionName(F, name).

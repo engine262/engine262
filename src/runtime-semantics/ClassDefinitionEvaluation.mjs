@@ -45,7 +45,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   let protoParent;
   let constructorParent;
   // 5. If ClassHeritage is not present, then
-  if (ClassHeritage === null) {
+  if (!ClassHeritage) {
     // a. Let protoParent be %Object.prototype%.
     protoParent = surroundingAgent.intrinsic('%Object.prototype%');
     // b. Let constructorParent be %Function.prototype%.
@@ -83,7 +83,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   const proto = OrdinaryObjectCreate(protoParent);
   let constructor;
   // 8. If ClassBody is not present, let constructor be empty.
-  if (ClassBody === null) {
+  if (!ClassBody) {
     constructor = undefined;
   } else { // 9. Else, let constructor be ConstructorMethod of ClassBody.
     constructor = ConstructorMethod(ClassBody);
@@ -91,7 +91,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 10. If constructor is empty, then
   if (constructor === undefined) {
     // a. If ClassHeritage is present, then
-    if (ClassHeritage !== null) {
+    if (ClassHeritage) {
       // i. Set constructor to the result of parsing the source text
       //    `constructor(...args) { super(...args); } using the syntactic grammar with the goal
       //    symbol MethodDefinition[~Yield, ~Await].
@@ -113,7 +113,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 15. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
   // 16. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
-  if (ClassHeritage !== null) {
+  if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
   // 17. Perform MakeClassConstructor(F).
@@ -122,7 +122,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   CreateMethodProperty(proto, new Value('constructor'), F);
   // 19. If ClassBody is not present, let methods be a new empty List.
   let methods;
-  if (ClassBody === null) {
+  if (!ClassBody) {
     methods = [];
   } else { // 20. Else, let methods be NonConstructorMethodDefinitions of ClassBody.
     methods = NonConstructorMethodDefinitions(ClassBody);

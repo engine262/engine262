@@ -3,6 +3,10 @@ import { OutOfRange } from './helpers.mjs';
 import {
   Evaluate_Script,
   Evaluate_ScriptBody,
+  Evaluate_Module,
+  Evaluate_ModuleBody,
+  Evaluate_ImportDeclaration,
+  Evaluate_ExportDeclaration,
   Evaluate_ClassDeclaration,
   Evaluate_LexicalDeclaration,
   Evaluate_FunctionDeclaration,
@@ -44,6 +48,8 @@ import {
   Evaluate_CallExpression,
   Evaluate_NewExpression,
   Evaluate_MemberExpression,
+  Evaluate_OptionalExpression,
+  Evaluate_TaggedTemplateExpression,
   Evaluate_SuperCall,
   Evaluate_SuperProperty,
   Evaluate_NewTarget,
@@ -71,6 +77,10 @@ export function* Evaluate(node) {
       return yield* Evaluate_Script(node);
     case 'ScriptBody':
       return yield* Evaluate_ScriptBody(node);
+    case 'Module':
+      return yield* Evaluate_Module(node);
+    case 'ModuleBody':
+      return yield* Evaluate_ModuleBody(node);
     // Statements
     case 'Block':
       return yield* Evaluate_Block(node);
@@ -104,6 +114,10 @@ export function* Evaluate(node) {
     case 'WithStatement':
       return yield* Evaluate_WithStatement(node);
     // Declarations
+    case 'ImportDeclaration':
+      return Evaluate_ImportDeclaration(node);
+    case 'ExportDeclaration':
+      return yield* Evaluate_ExportDeclaration(node);
     case 'ClassDeclaration':
       return yield* Evaluate_ClassDeclaration(node);
     case 'LexicalDeclaration':
@@ -172,6 +186,10 @@ export function* Evaluate(node) {
       return yield* Evaluate_NewExpression(node);
     case 'MemberExpression':
       return yield* Evaluate_MemberExpression(node);
+    case 'OptionalExpression':
+      return yield* Evaluate_OptionalExpression(node);
+    case 'TaggedTemplateExpression':
+      return yield* Evaluate_TaggedTemplateExpression(node);
     case 'SuperProperty':
       return yield* Evaluate_SuperProperty(node);
     case 'SuperCall':

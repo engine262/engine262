@@ -1,8 +1,3 @@
-// random issues in test262
-built-ins/Proxy/get/trap-is-missing-target-is-proxy.js
-built-ins/Proxy/set/trap-is-missing-target-is-proxy.js
-built-ins/Proxy/has/trap-is-missing-target-is-proxy.js
-
 // https://github.com/tc39/ecma262/pull/1408
 language/statements/for-of/iterator-close-throw-get-method-abrupt.js
 language/statements/for-of/iterator-close-throw-get-method-non-callable.js
@@ -21,16 +16,6 @@ built-ins/AsyncFromSyncIteratorPrototype/throw/absent-value-not-passed.js
 
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
-
-// https://github.com/acornjs/acorn/issues/934
-language/expressions/import.meta/syntax/escape-sequence-import.js
-language/expressions/dynamic-import/escape-sequence-import.js
-
-// https://github.com/acornjs/acorn/issues/938
-language/identifiers/start-unicode-13.0.0.js
-language/identifiers/part-unicode-13.0.0.js
-language/identifiers/part-unicode-13.0.0-escaped.js
-language/identifiers/start-unicode-13.0.0-escaped.js
 
 // TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js

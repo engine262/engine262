@@ -202,7 +202,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
     Statement,
   } = ForStatement;
   switch (true) {
-    case LexicalDeclaration !== null: {
+    case LexicalDeclaration: {
       // 1. Let oldEnv be the running execution context's LexicalEnvironment.
       const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
@@ -249,7 +249,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
       // 13. Return Completion(bodyResult).
       return Completion(bodyResult);
     }
-    case VariableDeclarationList !== null: {
+    case VariableDeclarationList: {
       // 1. Let varDcl be the result of evaluating VariableDeclarationList.
       const varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
       // 2. ReturnIfAbrupt(varDcl).
@@ -259,7 +259,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
     }
     default: {
       // 1. If the first Expression is present, then
-      if (Expression_a !== null) {
+      if (Expression_a) {
         // a. Let exprRef be the result of evaluating the first Expression.
         const exprRef = yield* Evaluate(Expression_a);
         // b. Perform ? GetValue(exprRef).
@@ -278,14 +278,14 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
     Statement,
   } = ForInStatement;
   switch (true) {
-    case LeftHandSideExpression !== null && Expression !== null: {
+    case LeftHandSideExpression && Expression: {
       // IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, enumerate, assignment, labelSet).
       return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet));
     }
-    case ForBinding !== null && Expression !== null: {
+    case ForBinding && Expression: {
       // IterationStatement :`for` `(` `var` ForBinding `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
@@ -306,7 +306,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   // 3. Repeat,
   while (true) {
     // a. If test is not [empty], then
-    if (test !== null) {
+    if (test) {
       // i. Let testRef be the result of evaluating test.
       const testRef = yield* Evaluate(test);
       // ii. Let testValue be ? GetValue(testRef).
@@ -329,7 +329,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
     // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
     Q(CreatePerIterationEnvironment(perIterationBindings));
     // f. If increment is not [empty], then
-    if (increment !== null) {
+    if (increment) {
       // i. Let incRef be the result of evaluating increment.
       const incRef = yield* Evaluate(increment);
       // ii. Perform ? GetValue(incRef).

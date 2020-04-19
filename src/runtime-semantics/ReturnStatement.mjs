@@ -12,7 +12,7 @@ import {
 //    `return` `;`
 //    `return` Expression `;`
 export function* Evaluate_ReturnStatement({ Expression }) {
-  if (Expression === null) {
+  if (!Expression) {
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
     return new ReturnCompletion(Value.undefined);
   }

@@ -40,7 +40,7 @@ function* EvaluateNew(constructExpr, args) {
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
 export function* Evaluate_NewExpression({ MemberExpression, Arguments }) {
-  if (Arguments === null) {
+  if (!Arguments) {
     // 1. Return ? EvaluateNew(NewExpression, empty).
     return Q(yield* EvaluateNew(MemberExpression, undefined));
   } else {

@@ -10,13 +10,14 @@ import { Token } from './tokens.mjs';
 //   - constructor (allows super call and new.target)
 /* eslint-disable key-spacing */
 export const ScopeBits = {
-  RETURN:     0b0000001,
-  AWAIT:      0b0000010,
-  YIELD:      0b0000100,
-  NEW_TARGET: 0b0001000,
-  SUPER_CALL: 0b0010000,
-  SUPER_PROP: 0b0100000,
-  IN:         0b1000000,
+  RETURN:      0b00000001,
+  AWAIT:       0b00000010,
+  YIELD:       0b00000100,
+  NEW_TARGET:  0b00001000,
+  IMPORT_META: 0b00010000,
+  SUPER_CALL:  0b00100000,
+  SUPER_PROP:  0b01000000,
+  IN:          0b10000000,
 };
 /* eslint-enable key-spacing */
 
@@ -27,6 +28,7 @@ export class Parser extends LanguageParser {
     this.state = {
       strict: false,
       scopeBits: 0,
+      exportedNames: [],
     };
   }
 
@@ -56,6 +58,10 @@ export class Parser extends LanguageParser {
 
   isNewTargetScope() {
     return (this.state.scopeBits & ScopeBits.NEW_TARGET) !== 0;
+  }
+
+  isImportMetaScope() {
+    return (this.state.scopeBits & ScopeBits.IMPORT_META) !== 0;
   }
 
   isSuperCallScope() {
@@ -92,6 +98,11 @@ export class Parser extends LanguageParser {
       this.state.scopeBits |= ScopeBits.NEW_TARGET;
     } else if (scope.newTarget === false) {
       this.state.scopeBits &= ~ScopeBits.NEW_TARGET;
+    }
+    if (scope.importMeta === true) {
+      this.state.scopeBits |= ScopeBits.IMPORT_META;
+    } else if (scope.importMeta === false) {
+      this.state.scopeBits &= ~ScopeBits.IMPORT_META;
     }
     if (scope.superCall === true) {
       this.state.scopeBits |= ScopeBits.SUPER_CALL;

@@ -16,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }) {
   switch (true) {
     // UpdateExpression : LeftHandSideExpression `++`
-    case operator === '++' && LeftHandSideExpression !== null: {
+    case operator === '++' && !!LeftHandSideExpression: {
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
       const lhs = yield* Evaluate(LeftHandSideExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
@@ -30,7 +30,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     }
 
     // UpdateExpression : LeftHandSideExpression `--`
-    case operator === '--' && LeftHandSideExpression !== null: {
+    case operator === '--' && !!LeftHandSideExpression: {
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
       const lhs = yield* Evaluate(LeftHandSideExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
@@ -44,7 +44,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     }
 
     // UpdateExpression : `++` UnaryExpression
-    case operator === '++' && UnaryExpression !== null: {
+    case operator === '++' && !!UnaryExpression: {
       // 1. Let expr be the result of evaluating UnaryExpression.
       const expr = yield* Evaluate(UnaryExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
@@ -58,7 +58,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     }
 
     // UpdateExpression : `--` UnaryExpression
-    case operator === '--' && UnaryExpression !== null: {
+    case operator === '--' && !!UnaryExpression: {
       // 1. Let expr be the result of evaluating UnaryExpression.
       const expr = yield* Evaluate(UnaryExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).

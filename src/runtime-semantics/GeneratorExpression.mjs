@@ -18,7 +18,7 @@ import { NamedEvaluation } from './all.mjs';
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 export function* Evaluate_GeneratorExpression(GeneratorExpression) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorExpression;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     // 1. Return the result of performing NamedEvaluation for this GeneratorExpression with argument "".
     return yield* NamedEvaluation(GeneratorExpression, new Value(''));
   }

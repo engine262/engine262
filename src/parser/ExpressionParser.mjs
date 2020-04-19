@@ -338,40 +338,121 @@ export class ExpressionParser extends FunctionParser {
   }
 
   // LeftHandSideExpression
-  parseLeftHandSideExpression() {
+  parseLeftHandSideExpression(allowCalls = true) {
+    let result;
     if (this.test(Token.NEW)) {
-      return this.parseNewExpression();
-    }
-    if (this.test(Token.SUPER)) {
+      result = this.parseNewExpression();
+    } else if (this.test(Token.SUPER)) {
       const node = this.startNode();
       this.next();
       if (this.test(Token.LPAREN) && this.isSuperCallScope()) {
         node.Arguments = this.parseArguments();
-        return this.finishNode(node, 'SuperCall');
-      }
-      if (!this.isSuperPropertyScope()) {
-        this.unexpected();
-      }
-      if (this.eat(Token.LBRACK)) {
-        node.Expression = this.parseExpression();
-        this.expect(Token.RBRACK);
-        node.IdentifierName = null;
+        result = this.finishNode(node, 'SuperCall');
       } else {
-        this.expect(Token.DOT);
-        node.Expression = null;
-        node.IdentifierName = this.parseIdentifierName();
+        if (!this.isSuperPropertyScope()) {
+          this.unexpected();
+        }
+        if (this.eat(Token.LBRACK)) {
+          node.Expression = this.parseExpression();
+          this.expect(Token.RBRACK);
+          node.IdentifierName = null;
+        } else {
+          this.expect(Token.PERIOD);
+          node.Expression = null;
+          node.IdentifierName = this.parseIdentifierName();
+        }
+        result = this.finishNode(node, 'SuperProperty');
       }
-      return this.finishNode(node, 'SuperProperty');
+    } else if (this.isImportMetaScope() && this.test(Token.IMPORT)) {
+      const node = this.startNode();
+      this.next();
+      this.expect(Token.PERIOD);
+      this.expect('meta');
+      result = this.finishNode(node, 'ImportMeta');
+    } else {
+      result = this.parsePrimaryExpression();
     }
-    return this.parseSubscripts(true);
+
+    const check = allowCalls ? isPropertyOrCall : isMember;
+    while (check(this.peek().type)) {
+      const node = this.startNode();
+      switch (this.peek().type) {
+        case Token.LBRACK: {
+          this.next();
+          node.MemberExpression = result;
+          node.IdentifierName = null;
+          node.Expression = this.parseExpression();
+          result = this.finishNode(node, 'MemberExpression');
+          this.expect(Token.RBRACK);
+          break;
+        }
+        case Token.PERIOD:
+          this.next();
+          node.MemberExpression = result;
+          node.IdentifierName = this.parseIdentifierName();
+          node.Expression = null;
+          result = this.finishNode(node, 'MemberExpression');
+          break;
+        case Token.LPAREN:
+          node.CallExpression = result;
+          node.Arguments = this.parseArguments();
+          result = this.finishNode(node, 'CallExpression');
+          break;
+        case Token.OPTIONAL:
+          node.MemberExpression = result;
+          node.OptionalChain = this.parseOptionalChain();
+          result = this.finishNode(node, 'OptionalExpression');
+          break;
+        case Token.TEMPLATE:
+          node.MemberExpression = result;
+          node.TemplateLiteral = this.parseTemplateLiteral();
+          result = this.finishNode(node, 'TaggedTemplateExpression');
+          break;
+        default:
+          this.unexpected();
+      }
+    }
+    return result;
   }
 
-  // MemberExpression
-  parseMemberExpression() {
-    if (this.test(Token.NEW)) {
-      return this.parseNewExpression();
+  // OptionalChain
+  parseOptionalChain() {
+    this.expect(Token.OPTIONAL);
+    let base = this.startNode();
+    base.OptionalChain = null;
+    if (this.test(Token.LPAREN)) {
+      base.Arguments = this.parseArguments();
+    } else if (this.eat(Token.LBRACK)) {
+      base.Expression = this.parseExpression();
+      this.expect(Token.RBRACK);
+    } else if (this.test(Token.TEMPLATE)) {
+      this.unexpected();
+    } else {
+      base.IdentifierName = this.parseIdentifierName();
     }
-    return this.parseSubscripts(false);
+    base = this.finishNode(base, 'OptionalChain');
+
+    while (true) {
+      const node = this.startNode();
+      if (this.test(Token.LPAREN)) {
+        node.OptionalChain = base;
+        node.Arguments = this.parseArguments();
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.eat(Token.LBRACK)) {
+        node.OptionalChain = base;
+        node.Expression = this.parseExpression();
+        this.expect(Token.RBRACK);
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.test(Token.TEMPLATE)) {
+        this.unexpected();
+      } else if (this.eat(Token.PERIOD)) {
+        node.OptionalChain = base;
+        node.IdentifierName = this.parseIdentifierName();
+        base = this.finishNode(node, 'OptionalChain');
+      } else {
+        return base;
+      }
+    }
   }
 
   // NewExpression
@@ -379,96 +460,56 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.NEW);
     if (this.isNewTargetScope() && this.eat(Token.PERIOD)) {
-      if (this.peek().type !== Token.IDENTIFIER
-          || this.peek().value !== 'target') {
-        this.unexpected();
-      }
-      this.next();
+      this.expect('target');
       return this.finishNode(node, 'NewTarget');
     }
-    node.MemberExpression = this.parseMemberExpression();
+    node.MemberExpression = this.parseLeftHandSideExpression(false);
     if (this.test(Token.LPAREN)) {
       node.Arguments = this.parseArguments();
     } else {
-      node.Arguments = [];
+      node.Arguments = null;
     }
     return this.finishNode(node, 'NewExpression');
-  }
-
-  parseSubscripts(allowCalls) {
-    const PrimaryExpression = this.parsePrimaryExpression();
-    const check = allowCalls ? isPropertyOrCall : isMember;
-    if (check(this.peek().type)) {
-      let result = PrimaryExpression;
-      do {
-        const node = this.startNode();
-        switch (this.peek().type) {
-          case Token.LBRACK: {
-            this.next();
-            node.MemberExpression = result;
-            node.IdentifierName = null;
-            node.Expression = this.parseExpression();
-            result = this.finishNode(node, 'MemberExpression');
-            this.expect(Token.RBRACK);
-            break;
-          }
-          case Token.PERIOD:
-            this.next();
-            node.MemberExpression = result;
-            node.IdentifierName = this.parseIdentifierName();
-            node.Expression = null;
-            result = this.finishNode(node, 'MemberExpression');
-            break;
-          case Token.LPAREN:
-            if (!allowCalls) {
-              throw new Error('State failure');
-            }
-            node.CallExpression = result;
-            node.Arguments = this.parseArguments();
-            result = this.finishNode(node, 'CallExpression');
-            break;
-          default:
-            node.MemberExpression = result;
-            node.TemplateLiteral = this.parseTemplateLiteral();
-            result = this.finishNode(node, 'TaggedTemplateExpression');
-            break;
-        }
-      } while (check(this.peek().type));
-      return result;
-    }
-    return PrimaryExpression;
   }
 
   // PrimaryExpression :
   //   ...
   parsePrimaryExpression() {
-    const node = this.startNode();
     switch (this.peek().type) {
-      case Token.THIS:
+      case Token.THIS: {
+        const node = this.startNode();
         this.next();
         return this.finishNode(node, 'ThisExpression');
+      }
       case Token.IDENTIFIER:
       case Token.YIELD:
       case Token.AWAIT:
         return this.parseIdentifierReference();
       case Token.NUMBER:
-      case Token.BIGINT:
+      case Token.BIGINT: {
+        const node = this.startNode();
         node.value = this.next().value;
         return this.finishNode(node, 'NumericLiteral');
+      }
       case Token.STRING:
-        node.value = this.next().value;
-        return this.finishNode(node, 'StringLiteral');
-      case Token.NULL:
+        return this.parseStringLiteral();
+      case Token.NULL: {
+        const node = this.startNode();
         this.next();
         return this.finishNode(node, 'NullLiteral');
-      case Token.TRUE:
+      }
+      case Token.TRUE: {
+        const node = this.startNode();
         this.next();
         node.value = true;
         return this.finishNode(node, 'BooleanLiteral');
-      case Token.FALSE:
+      }
+      case Token.FALSE: {
+        const node = this.startNode();
         this.next();
         node.value = false;
         return this.finishNode(node, 'BooleanLiteral');
+      }
       case Token.LBRACK:
         return this.parseArrayLiteral();
       case Token.LBRACE:
@@ -489,6 +530,16 @@ export class ExpressionParser extends FunctionParser {
       default:
         return this.unexpected();
     }
+  }
+
+  // StringLiteral
+  parseStringLiteral() {
+    const node = this.startNode();
+    if (!this.test(Token.STRING)) {
+      this.unexpected();
+    }
+    node.value = this.next().value;
+    return this.finishNode(node, 'StringLiteral');
   }
 
   // ArrayLiteral :
@@ -613,7 +664,7 @@ export class ExpressionParser extends FunctionParser {
     }
 
     this.scope({
-      superProperty: node.ClassHeritage !== null,
+      superProperty: true,
     }, () => {
       this.expect(Token.LBRACE);
       if (this.eat(Token.RBRACE)) {

@@ -12,17 +12,26 @@ export function LexicallyScopedDeclarations(node) {
     case 'LabelledStatement':
       return LexicallyScopedDeclarations(node.LabelledItem);
     case 'Script':
-      if (node.ScriptBody === null) {
-        return [];
+      if (node.ScriptBody) {
+        return LexicallyScopedDeclarations(node.ScriptBody);
       }
-      return LexicallyScopedDeclarations(node.ScriptBody);
+      return [];
     case 'ScriptBody':
       return TopLevelLexicallyScopedDeclarations(node.StatementList);
+    case 'Module':
+      if (node.ModuleBody) {
+        return LexicallyScopedDeclarations(node.ModuleBody);
+      }
+      return [];
+    case 'ModuleBody':
+      return LexicallyScopedDeclarations(node.ModuleItemList);
     case 'FunctionBody':
     case 'GeneratorBody':
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
+    case 'ImportDeclaration':
+      return [];
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
     case 'FunctionDeclaration':
@@ -32,20 +41,20 @@ export function LexicallyScopedDeclarations(node) {
       return [DeclarationPart(node)];
     case 'CaseBlock': {
       const names = [];
-      if (node.CaseClauses_a !== null) {
+      if (node.CaseClauses_a) {
         names.push(...LexicallyScopedDeclarations(node.CaseClauses_a));
       }
-      if (node.DefaultClause !== null) {
+      if (node.DefaultClause) {
         names.push(...LexicallyScopedDeclarations(node.DefaultClause));
       }
-      if (node.CaseClauses_b !== null) {
+      if (node.CaseClauses_b) {
         names.push(...LexicallyScopedDeclarations(node.CaseClauses_b));
       }
       return names;
     }
     case 'CaseClause':
     case 'DefaultClause':
-      if (node.StatementList !== null) {
+      if (node.StatementList) {
         return LexicallyScopedDeclarations(node.StatementList);
       }
       return [];

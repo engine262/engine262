@@ -86,7 +86,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   if (Array.isArray(script)) {
     return surroundingAgent.Throw(script[0]);
   }
-  if (script.ScriptBody === null) {
+  if (!script.ScriptBody) {
     return Value.undefined;
   }
   const body = script.ScriptBody;

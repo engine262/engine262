@@ -41,6 +41,7 @@ export const CouldNotResolveModule = (s) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 export const DateInvalidTime = () => 'Invalid time';
 export const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
+export const DuplicateExports = () => 'Module cannot contain duplicate exports';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
 export const InvalidArrayLength = (l) => `Invalid array length: ${i(l)}`;

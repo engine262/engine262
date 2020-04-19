@@ -15,8 +15,8 @@ import { NamedEvaluation } from './all.mjs';
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
 function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }) {
-  if (BindingIdentifier !== null) {
-    if (Initializer === null) {
+  if (BindingIdentifier) {
+    if (!Initializer) {
       // 1. Return NormalCompletion(empty).
       return new NormalCompletion(undefined);
     }

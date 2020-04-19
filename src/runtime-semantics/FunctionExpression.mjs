@@ -16,7 +16,7 @@ import { NamedEvaluation } from './all.mjs';
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 export function* Evaluate_FunctionExpression(FunctionExpression) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     return yield* NamedEvaluation(FunctionExpression, new Value(''));
   }
   // 1. Let scope be the running execution context's LexicalEnvironment.

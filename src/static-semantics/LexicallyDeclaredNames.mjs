@@ -13,10 +13,10 @@ export function LexicallyDeclaredNames(node) {
   }
   switch (node.type) {
     case 'Script':
-      if (node.ScriptBody === null) {
-        return [];
+      if (node.ScriptBody) {
+        return LexicallyDeclaredNames(node.ScriptBody);
       }
-      return LexicallyDeclaredNames(node.ScriptBody);
+      return [];
     case 'ScriptBody':
       return TopLevelLexicallyDeclaredNames(node.StatementList);
     case 'FunctionBody':
@@ -35,20 +35,20 @@ export function LexicallyDeclaredNames(node) {
       return BoundNames(node);
     case 'CaseBlock': {
       const names = [];
-      if (node.CaseClauses_a !== null) {
+      if (node.CaseClauses_a) {
         names.push(...LexicallyDeclaredNames(node.CaseClauses_a));
       }
-      if (node.DefaultClause !== null) {
+      if (node.DefaultClause) {
         names.push(...LexicallyDeclaredNames(node.DefaultClause));
       }
-      if (node.CaseClauses_b !== null) {
+      if (node.CaseClauses_b) {
         names.push(...LexicallyDeclaredNames(node.CaseClauses_b));
       }
       return names;
     }
     case 'CaseClause':
     case 'DefaultClause':
-      if (node.StatementList !== null) {
+      if (node.StatementList) {
         return LexicallyDeclaredNames(node.StatementList);
       }
       return [];

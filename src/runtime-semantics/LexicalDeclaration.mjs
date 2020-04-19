@@ -56,9 +56,9 @@ function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
 
 export function* Evaluate_LexicalBinding(LexicalBinding) {
   switch (true) {
-    case LexicalBinding.BindingIdentifier !== null:
+    case !!LexicalBinding.BindingIdentifier:
       return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
-    case LexicalBinding.BindingPattern !== null:
+    case !!LexicalBinding.BindingPattern:
       return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
     default:
       throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding);

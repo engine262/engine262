@@ -86,4 +86,10 @@ export class IdentifierParser extends BaseParser {
     }
     return this.finishNode(node, 'IdentifierReference');
   }
+
+  parseLabelIdentifier() {
+    const node = this.parseIdentifierReference();
+    node.type = 'LabelIdentifier';
+    return node;
+  }
 }

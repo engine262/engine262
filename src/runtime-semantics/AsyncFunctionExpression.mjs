@@ -16,7 +16,7 @@ import { NamedEvaluation } from './all.mjs';
 //     `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
 export function* Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
   const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
-  if (BindingIdentifier === null) {
+  if (!BindingIdentifier) {
     // 1. Return the result of performing NamedEvaluation for this AsyncFunctionExpression with argument "".
     return yield* NamedEvaluation(AsyncFunctionExpression, new Value(''));
   }

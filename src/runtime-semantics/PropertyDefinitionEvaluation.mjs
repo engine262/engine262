@@ -96,7 +96,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
 //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
 function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
   switch (true) {
-    case MethodDefinition.UniqueFormalParameters !== null: {
+    case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
       const methodDef = Q(yield* DefineMethod(MethodDefinition, object));
       // 2. Perform SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
@@ -111,7 +111,7 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       // 4. Return ? DefinePropertyOrThrow(object, methodDef.[[Key]], desc).
       return Q(DefinePropertyOrThrow(object, methodDef.Key, desc));
     }
-    case MethodDefinition.PropertySetParameterList !== null: {
+    case !!MethodDefinition.PropertySetParameterList: {
       const { PropertyName, PropertySetParameterList, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating PropertyName.
       const propKey = yield* Evaluate_PropertyName(PropertyName);
@@ -136,8 +136,7 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
-    case MethodDefinition.UniqueFormalParameters === null
-        && MethodDefinition.PropertySetParameterList === null: {
+    case !!MethodDefinition.UniqueFormalParameters && !!MethodDefinition.PropertySetParameterList: {
       const { PropertyName, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating PropertyName.
       const propKey = yield* Evaluate_PropertyName(PropertyName);

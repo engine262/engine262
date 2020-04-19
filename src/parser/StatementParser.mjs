@@ -227,8 +227,6 @@ export class StatementParser extends ExpressionParser {
     node.Statement_a = this.parseStatement();
     if (this.eat(Token.ELSE)) {
       node.Statement_b = this.parseStatement();
-    } else {
-      node.Statement_b = null;
     }
     return this.finishNode(node, 'IfStatement');
   }
@@ -283,18 +281,11 @@ export class StatementParser extends ExpressionParser {
       this.unexpected();
     }
     if (this.eat(Token.SEMICOLON)) {
-      node.VariableDeclarationList = null;
-      node.LexicalDeclaration = null;
-      node.Expression_a = null;
-      if (this.test(Token.SEMICOLON)) {
-        node.Expression_b = null;
-      } else {
+      if (!this.test(Token.SEMICOLON)) {
         node.Expression_b = this.parseExpression();
       }
       this.expect(Token.SEMICOLON);
-      if (this.test(Token.RPAREN)) {
-        node.Expression_c = null;
-      } else {
+      if (!this.test(Token.RPAREN)) {
         node.Expression_c = this.parseExpression();
       }
       this.expect(Token.RPAREN);
@@ -313,34 +304,27 @@ export class StatementParser extends ExpressionParser {
       if (list.length > 1) {
         node.BindingList = list;
         node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
-        node.VariableDeclarationList = null;
         this.expect(Token.SEMICOLON);
-        if (this.test(Token.SEMICOLON)) {
-          node.Expression_a = null;
-        } else {
+        if (!this.test(Token.SEMICOLON)) {
           node.Expression_a = this.parseExpression();
         }
         this.expect(Token.SEMICOLON);
-        if (this.test(Token.RPAREN)) {
-          node.Expression_b = null;
-        } else {
+        if (!this.test(Token.RPAREN)) {
           node.Expression_b = this.parseExpression();
         }
         this.expect(Token.RPAREN);
-        node.Expression_c = null;
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
       inner.ForBinding = list[0];
       node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
-      node.ForBinding = null;
       if (!isAwait && this.eat(Token.IN)) {
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
-      this.expectOfKeyword();
+      this.expect('of');
       node.AssignmentExpression = this.parseAssignmentExpression();
       this.expect(Token.RPAREN);
       node.Statement = this.parseStatement();
@@ -349,8 +333,7 @@ export class StatementParser extends ExpressionParser {
     if (this.eat(Token.VAR)) {
       if (isAwait) {
         node.ForBinding = this.parseBindingIdentifier();
-        node.ForDeclaration = null;
-        this.expectOfKeyword();
+        this.expect('of');
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
@@ -358,59 +341,39 @@ export class StatementParser extends ExpressionParser {
       }
       const list = this.parseVariableDeclarationList();
       if (list.length > 1 || this.test(Token.SEMICOLON)) {
-        node.LexicalDeclaration = null;
         node.VariableDeclarationList = list;
         this.expect(Token.SEMICOLON);
-        if (this.test(Token.SEMICOLON)) {
-          node.Expression_a = null;
-        } else {
+        if (!this.test(Token.SEMICOLON)) {
           node.Expression_a = this.parseExpression();
         }
         this.expect(Token.SEMICOLON);
-        if (this.test(Token.RPAREN)) {
-          node.Expression_b = null;
-        } else {
+        if (!this.test(Token.RPAREN)) {
           node.Expression_b = this.parseExpression();
         }
         this.expect(Token.RPAREN);
-        node.Expression_c = null;
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
       this.expect(Token.IN);
       node.ForBinding = list[0];
-      node.ForDeclaration = null;
       node.Expression = this.parseExpression();
       this.expect(Token.RPAREN);
       node.Statement = this.parseStatement();
       return this.finishNode(node, 'ForInStatement');
     }
 
-    node.VariableDeclarationList = null;
-    node.LexicalDeclaration = null;
     node.Expression_a = this.parseExpression();
 
     if (!this.test(Token.SEMICOLON)) {
       node.Expression_b = this.parseExpression();
-    } else {
-      node.Expression_b = null;
     }
     this.expect(Token.SEMICOLON);
     if (!this.test(Token.RPAREN)) {
       node.Expression_c = this.parseExpression();
-    } else {
-      node.Expression_c = null;
     }
     this.expect(Token.RPAREN);
     node.Statement = this.parseStatement();
     return this.finishNode(node, 'ForStatement');
-  }
-
-  expectOfKeyword() {
-    const node = this.parseIdentifierName();
-    if (node.name !== 'of') {
-      this.unexpected(node);
-    }
   }
 
   // SwitchStatement :
@@ -458,7 +421,6 @@ export class StatementParser extends ExpressionParser {
         }
         inner.Expression = this.parseExpression();
         this.expect(Token.COLON);
-        inner.StatementList = null;
         while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
           if (inner.StatementList === null) {
             inner.StatementList = [];
@@ -468,7 +430,6 @@ export class StatementParser extends ExpressionParser {
         selected.push(this.finishNode(inner, 'CaseClause'));
       } else if (node.DefaultClause === null && this.eat(Token.DEFAULT)) {
         this.expect(Token.COLON);
-        inner.StatementList = null;
         while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
           if (inner.StatementList === null) {
             inner.StatementList = [];
@@ -648,35 +609,31 @@ export class StatementParser extends ExpressionParser {
     if (this.test(Token.IDENTIFIER)) {
       node.ImportedDefaultBinding = this.parseBindingIdentifier();
     } else {
-      node.ImportedDefaultBinding = null;
-    }
-    if (node.ImportedDefaultBinding === null || this.eat(Token.COMMA)) {
-      if (this.eat(Token.MUL)) {
-        this.expect(Token.AS);
-        node.NameSpaceImport = this.parseBindingIdentifier();
-        node.NamedImports = null;
-      } else if (this.eat(Token.LBRACE)) {
-        node.NameSpaceImport = null;
-        node.NamedImports = [];
-        while (!this.eat(Token.RBRACE)) {
-          const inner = this.startNode();
-          const name = this.parseBindingIdentifier();
-          if (this.eat(Token.AS)) {
-            inner.IdentifierName = name;
-            inner.ImportedBinding = this.parseBindingIdentifier();
-            node.NamedImports.push(this.finishNode(inner, 'ImportSpecifier'));
-          } else {
-            node.NamedImports.push(name);
+      if (this.eat(Token.COMMA)) {
+        if (this.eat(Token.MUL)) {
+          this.expect(Token.AS);
+          node.NameSpaceImport = this.parseBindingIdentifier();
+        } else if (this.eat(Token.LBRACE)) {
+          node.NamedImports = [];
+          while (!this.eat(Token.RBRACE)) {
+            const inner = this.startNode();
+            const name = this.parseBindingIdentifier();
+            if (this.eat(Token.AS)) {
+              inner.IdentifierName = name;
+              inner.ImportedBinding = this.parseBindingIdentifier();
+              node.NamedImports.push(this.finishNode(inner, 'ImportSpecifier'));
+            } else {
+              node.NamedImports.push(name);
+            }
+            if (this.eat(Token.RBRACE)) {
+              break;
+            }
+            this.expect(Token.COMMA);
           }
-          if (this.eat(Token.RBRACE)) {
-            break;
-          }
-          this.expect(Token.COMMA);
         }
       }
     }
-    this.expect(Token.FROM);
-    node.FromClause = this.parsePrimaryExpression();
+    node.FromClause = this.parseFromClause();
     this.semicolon();
     return this.finishNode(node, 'ImportDeclaration');
   }
@@ -747,7 +704,7 @@ export class StatementParser extends ExpressionParser {
             }
             this.expect(Token.COMMA);
           }
-          if (this.test(Token.FROM)) {
+          if (this.test('from')) {
             node.FromClause = this.parseFromClause();
           }
           this.semicolon();
@@ -766,5 +723,11 @@ export class StatementParser extends ExpressionParser {
       }
     }
     return this.finishNode(node, 'ExportDeclaration');
+  }
+
+  // FromClause : `from` ModuleSpecifier
+  parseFromClause() {
+    this.expect('from');
+    return this.parseStringLiteral();
   }
 }

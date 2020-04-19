@@ -6,7 +6,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 //     `break` `;`
 //     `break` LabelIdentifier `;`
 export function Evaluate_BreakStatement({ LabelIdentifier }) {
-  if (LabelIdentifier === null) {
+  if (!LabelIdentifier) {
     // 1. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
     return new BreakCompletion(undefined);
   }

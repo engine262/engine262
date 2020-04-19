@@ -1,3 +1,5 @@
+import { ExportedNames, LexicallyDeclaredNames } from '../static-semantics/all.mjs';
+import { ValueSet } from '../helpers.mjs';
 import { StatementParser } from './StatementParser.mjs';
 import { Token } from './tokens.mjs';
 
@@ -37,6 +39,7 @@ export class LanguageParser extends StatementParser {
     return this.scope({
       strict: true,
       in: true,
+      importMeta: true,
       await: this.feature('TopLevelAwait'),
     }, () => {
       const node = this.startNode();
@@ -54,6 +57,18 @@ export class LanguageParser extends StatementParser {
   parseModuleBody() {
     const node = this.startNode();
     node.ModuleItemList = this.parseModuleItemList();
+    {
+      const names = ExportedNames(node.ModuleItemList);
+      if (new ValueSet(names).size !== names.length) {
+        this.report('DuplicateExports');
+      }
+    }
+    {
+      const names = LexicallyDeclaredNames(node.ModuleItemList);
+      if (new ValueSet(names).size !== names.length) {
+        this.report('AlreadyDeclared');
+      }
+    }
     return this.finishNode(node, 'ModuleBody');
   }
 

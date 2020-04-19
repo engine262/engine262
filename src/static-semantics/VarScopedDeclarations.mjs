@@ -17,7 +17,7 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.StatementList);
     case 'IfStatement': {
       const declarations = VarScopedDeclarations(node.Statement_a);
-      if (node.Statement_b !== null) {
+      if (node.Statement_b) {
         declarations.push(...VarScopedDeclarations(node.Statement_b));
       }
       return declarations;
@@ -28,14 +28,14 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.Statement);
     case 'ForStatement': {
       const names = VarScopedDeclarations(node.Statement);
-      if (node.VariableDeclarationList !== null) {
+      if (node.VariableDeclarationList) {
         names.push(...VarScopedDeclarations(node.VariableDeclarationList));
       }
       return names;
     }
     case 'ForInStatement': {
       const names = VarScopedDeclarations(node.Statement);
-      if (node.ForBinding !== null) {
+      if (node.ForBinding) {
         names.push(...VarScopedDeclarations(node.ForBinding));
       }
       return names;
@@ -43,7 +43,7 @@ export function VarScopedDeclarations(node) {
     case 'ForOfStatement':
     case 'ForAwaitStatement': {
       const names = VarScopedDeclarations(node.Statement);
-      if (node.ForBinding !== null) {
+      if (node.ForBinding) {
         names.push(...VarScopedDeclarations(node.ForBinding));
       }
       return names;
@@ -54,20 +54,20 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.CaseBlock);
     case 'CaseBlock': {
       const names = [];
-      if (node.CaseClauses_a !== null) {
+      if (node.CaseClauses_a) {
         names.push(...VarScopedDeclarations(node.CaseClauses_a));
       }
-      if (node.DefaultClause !== null) {
+      if (node.DefaultClause) {
         names.push(...VarScopedDeclarations(node.DefaultClause));
       }
-      if (node.CaseClauses_b !== null) {
+      if (node.CaseClauses_b) {
         names.push(...VarScopedDeclarations(node.CaseClauses_b));
       }
       return names;
     }
     case 'CaseClause':
     case 'DefaultClause':
-      if (node.StatementList !== null) {
+      if (node.StatementList) {
         return VarScopedDeclarations(node.StatementList);
       }
       return [];
@@ -75,21 +75,33 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.LabelledItem);
     case 'TryStatement': {
       const declarations = VarScopedDeclarations(node.Block);
-      if (node.Catch !== null) {
+      if (node.Catch) {
         declarations.push(...VarScopedDeclarations(node.Catch));
       }
-      if (node.Finally !== null) {
+      if (node.Finally) {
         declarations.push(...VarScopedDeclarations(node.Finally));
       }
       return declarations;
     }
-    case 'Script':
-      if (node.ScriptBody === null) {
-        return [];
+    case 'ExportDeclaration':
+      if (node.VariableStatement) {
+        return VarScopedDeclarations(node.VariableStatement);
       }
-      return VarScopedDeclarations(node.ScriptBody);
+      return [];
+    case 'Script':
+      if (node.ScriptBody) {
+        return VarScopedDeclarations(node.ScriptBody);
+      }
+      return [];
     case 'ScriptBody':
       return TopLevelVarScopedDeclarations(node.StatementList);
+    case 'Module':
+      if (node.ModuleBody) {
+        return VarScopedDeclarations(node.ModuleBody);
+      }
+      return [];
+    case 'ModuleBody':
+      return VarScopedDeclarations(node.ModuleItemList);
     case 'FunctionBody':
     case 'GeneratorBody':
     case 'AsyncFunctionBody':

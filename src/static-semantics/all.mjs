@@ -32,3 +32,5 @@ export * from './ImportEntries.mjs';
 export * from './ExportEntries.mjs';
 export * from './ImportedLocalNames.mjs';
 export * from './IsDestructuring.mjs';
+export * from './ExportedNames.mjs';
+export * from './TemplateStrings.mjs';
