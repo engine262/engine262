@@ -49,14 +49,13 @@ export const RawTokens = [
   ['EOS', 'EOS'],
   // END AutoSemicolon
 
-  // BEGIN ArrowOrAssignmentOp
+  // BEGIN ArrowOrAssign
   ['ARROW', '=>'],
-  // BEGIN AssignmentOp
-  ['INIT', '=init', 2],
+  // BEGIN Assign
   ['ASSIGN', '=', 2],
   ...MaybeAssignTokens.map((t) => [`ASSIGN_${t[0]}`, `${t[1]}=`, 2]),
-  // END AssignmentOp
-  // END ArrowOrAssignmentOp
+  // END Assign
+  // END ArrowOrAssign
 
   // Binary operators by precidence
   ['COMMA', ',', 1],

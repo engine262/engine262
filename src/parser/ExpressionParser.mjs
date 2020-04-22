@@ -46,7 +46,17 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     const left = this.parseConditionalExpression();
     if (!this.hasLineTerminatorBeforeNext() && this.test(Token.ARROW)) {
-      return this.parseArrowFunction(node, [left], false);
+      let params;
+      if (left.type === 'ParenthesizedExpression') {
+        if (left.Expression.type === 'CommaOperator') {
+          params = left.Expression.ExpressionList;
+        } else {
+          params = [left.Expression];
+        }
+      } else {
+        params = [left];
+      }
+      return this.parseArrowFunction(node, params, false);
     }
     switch (this.peek().type) {
       case Token.ASSIGN:
@@ -526,7 +536,7 @@ export class ExpressionParser extends FunctionParser {
       case Token.ASSIGN_DIV:
         return this.parseRegularExpressionLiteral();
       case Token.LPAREN:
-        return this.parseParenthesizedExpressionAndArrowParameterList();
+        return this.parseParenthesizedExpression();
       default:
         return this.unexpected();
     }
@@ -742,7 +752,7 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
-  parseParenthesizedExpressionAndArrowParameterList() {
+  parseParenthesizedExpression() {
     const node = this.startNode();
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
@@ -750,10 +760,6 @@ export class ExpressionParser extends FunctionParser {
     }
     const expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    if (this.test(Token.ARROW)) {
-      const params = expression.type === 'CommaOperator' ? expression.ExpressionList : [expression];
-      return this.parseArrowFunction(node, params, false);
-    }
     // FIXME: fail on `...Binding`
     node.Expression = expression;
     return this.finishNode(node, 'ParenthesizedExpression');
