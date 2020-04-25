@@ -406,9 +406,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     const env = NewModuleEnvironment(realm.GlobalEnv);
     // 7. Set module.[[Environment]] to env.
     module.Environment = env;
-    // 8. Let envRec be env's EnvironmentRecord.
-    const envRec = env.EnvironmentRecord;
-    // 9. For each ImportEntry Record in in module.[[ImportEntries]], do
+    // 8. For each ImportEntry Record in in module.[[ImportEntries]], do
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = X(HostResolveImportedModule(module, ie.ModuleRequest));
@@ -417,10 +415,10 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       if (ie.ImportName.stringValue() === '*') {
         // i. Let namespace be ? GetModuleNamespace(importedModule).
         const namespace = Q(GetModuleNamespace(importedModule));
-        // ii. Perform ! envRec.CreateImmutableBinding(in.[[LocalName]], true).
-        X(envRec.CreateImmutableBinding(ie.LocalName, Value.true));
-        // iii. Call envRec.InitializeBinding(in.[[LocalName]], namespace).
-        envRec.InitializeBinding(ie.LocalName, namespace);
+        // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
+        X(env.CreateImmutableBinding(ie.LocalName, Value.true));
+        // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
+        env.InitializeBinding(ie.LocalName, namespace);
       } else { // d. Else,
         // i. Let resolution be ? importedModule.ResolveExport(in.[[ImportName]]).
         const resolution = Q(importedModule.ResolveExport(ie.ImportName));
@@ -438,68 +436,68 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         if (resolution.BindingName.stringValue() === '*namespace*') {
           // 1. Let namespace be ? GetModuleNamespace(resolution.[[Module]]).
           const namespace = Q(GetModuleNamespace(resolution.Module));
-          // 2. Perform ! envRec.CreateImmutableBinding(in.[[LocalName]], true).
-          X(envRec.CreateImmutableBinding(ie.LocalName, Value.true));
-          // 3. Call envRec.InitializeBinding(in.[[LocalName]], namespace).
-          envRec.InitializeBinding(ie.LocalName, namespace);
+          // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
+          X(env.CreateImmutableBinding(ie.LocalName, Value.true));
+          // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
+          env.InitializeBinding(ie.LocalName, namespace);
         } else { // iv. Else,
-          // 1. Call envRec.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
-          envRec.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
+          // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
+          env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
         }
       }
     }
-    // 10. Let moduleContext be a new ECMAScript code execution context.
+    // 9. Let moduleContext be a new ECMAScript code execution context.
     const moduleContext = new ExecutionContext();
-    // 11. Set the Function of moduleContext to null.
+    // 10. Set the Function of moduleContext to null.
     moduleContext.Function = Value.null;
-    // 12. Assert: module.[[Realm]] is not undefined.
+    // 11. Assert: module.[[Realm]] is not undefined.
     Assert(module.Realm !== Value.undefined);
-    // 13. Set the Realm of moduleContext to module.[[Realm]].
+    // 12. Set the Realm of moduleContext to module.[[Realm]].
     moduleContext.Realm = module.Realm;
-    // 14. Set the ScriptOrModule of moduleContext to module.
+    // 13. Set the ScriptOrModule of moduleContext to module.
     moduleContext.ScriptOrModule = module;
-    // 15. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+    // 14. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     moduleContext.VariableEnvironment = module.Environment;
-    // 16. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+    // 15. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
-    // 17. Set module.[[Context]] to moduleContext.
+    // 16. Set module.[[Context]] to moduleContext.
     module.Context = moduleContext;
-    // 18. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
+    // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
-    // 19. Let code be module.[[ECMAScriptCode]].
+    // 18. Let code be module.[[ECMAScriptCode]].
     const code = module.ECMAScriptCode;
-    // 20. Let varDeclarations be the VarScopedDeclarations of code.
+    // 19. Let varDeclarations be the VarScopedDeclarations of code.
     const varDeclarations = VarScopedDeclarations(code);
-    // 21. Let declaredVarNames be a new empty List.
+    // 20. Let declaredVarNames be a new empty List.
     const declaredVarNames = new ValueSet();
-    // 22. For each element d in varDeclarations, do
+    // 21. For each element d in varDeclarations, do
     for (const d of varDeclarations) {
       // a. For each element dn of the BoundNames of d, do
       for (const dn of BoundNames(d)) {
         // i. If dn is not an element of declaredVarNames, then
         if (!declaredVarNames.has(dn)) {
-          // 1. Perform ! envRec.CreateMutableBinding(dn, false).
-          X(envRec.CreateMutableBinding(dn, Value.false));
-          // 2. Call envRec.InitializeBinding(dn, undefined).
-          envRec.InitializeBinding(dn, Value.undefined);
+          // 1. Perform ! env.CreateMutableBinding(dn, false).
+          X(env.CreateMutableBinding(dn, Value.false));
+          // 2. Call env.InitializeBinding(dn, undefined).
+          env.InitializeBinding(dn, Value.undefined);
           // 3. Append dn to declaredVarNames.
           declaredVarNames.add(dn);
         }
       }
     }
-    // 23. Let lexDeclarations be the LexicallyScopedDeclarations of code.
+    // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
     const lexDeclarations = LexicallyScopedDeclarations(code);
-    // 24. For each element d in lexDeclarations, do
+    // 23. For each element d in lexDeclarations, do
     for (const d of lexDeclarations) {
       // a. For each element dn of the BoundNames of d, do
       for (const dn of BoundNames(d)) {
         // i. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          // 1. Perform ! envRec.CreateImmutableBinding(dn, true).
-          Q(envRec.CreateImmutableBinding(dn, Value.true));
+          // 1. Perform ! env.CreateImmutableBinding(dn, true).
+          Q(env.CreateImmutableBinding(dn, Value.true));
         } else { // ii. Else,
-          // 1. Perform ! envRec.CreateMutableBinding(dn, false).
-          Q(envRec.CreateMutableBinding(dn, Value.false));
+          // 1. Perform ! env.CreateMutableBinding(dn, false).
+          Q(env.CreateMutableBinding(dn, Value.false));
         }
         // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
         if (d.type === 'FunctionDeclaration'
@@ -508,14 +506,14 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             || d.type === 'AsyncGeneratorDeclaration') {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
           const fo = InstantiateFunctionObject(d, env);
-          // 2. Call envRec.InitializeBinding(dn, fo).
-          envRec.InitializeBinding(dn, fo);
+          // 2. Call env.InitializeBinding(dn, fo).
+          env.InitializeBinding(dn, fo);
         }
       }
     }
-    // 25. Remove moduleContext from the execution context stack.
+    // 24. Remove moduleContext from the execution context stack.
     surroundingAgent.executionContextStack.pop(moduleContext);
-    // 26. Return NormalCompletion(empty).
+    // 25. Return NormalCompletion(empty).
     return new NormalCompletion(undefined);
   }
 

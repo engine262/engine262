@@ -12,23 +12,21 @@ import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mjs';
 
 // #sec-blockdeclarationinstantiation
 export function BlockDeclarationInstantiation(code, env) {
-  // 1. Let envRec be env's EnvironmentRecord.
-  const envRec = env.EnvironmentRecord;
-  // 2. Assert: envRec is a declarative Environment Record.
-  Assert(envRec instanceof DeclarativeEnvironmentRecord);
-  // 3. Let declarations be the LexicallyScopedDeclarations of code.
+  // 1. Assert: env is a declarative Environment Record.
+  Assert(env instanceof DeclarativeEnvironmentRecord);
+  // 2. Let declarations be the LexicallyScopedDeclarations of code.
   const declarations = LexicallyScopedDeclarations(code);
-  // 4. For each element d in declarations, do
+  // 3. For each element d in declarations, do
   for (const d of declarations) {
     // a. For each element dn of the BoundNames of d, do
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        // 1. Perform ! envRec.CreateImmutableBinding(dn, true).
-        X(envRec.CreateImmutableBinding(dn, Value.true));
+        // 1. Perform ! env.CreateImmutableBinding(dn, true).
+        X(env.CreateImmutableBinding(dn, Value.true));
       } else { // ii. Else,
-        // 1. Perform ! envRec.CreateMutableBinding(dn, false).
-        X(envRec.CreateMutableBinding(dn, false));
+        // 1. Perform ! env.CreateMutableBinding(dn, false).
+        X(env.CreateMutableBinding(dn, false));
       }
       // b. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
       if (d.type === 'FunctionDeclaration'
@@ -39,8 +37,8 @@ export function BlockDeclarationInstantiation(code, env) {
         const fn = BoundNames(d)[0];
         // ii. Let fo be InstantiateFunctionObject of d with argument env.
         const fo = InstantiateFunctionObject(d, env);
-        // iii. Perform envRec.InitializeBinding(fn, fo).
-        envRec.InitializeBinding(fn, fo);
+        // iii. Perform env.InitializeBinding(fn, fo).
+        env.InitializeBinding(fn, fo);
       }
     }
   }

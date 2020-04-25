@@ -3,23 +3,26 @@ import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
 import { Token } from './tokens.mjs';
 
-// Distinct scopes:
-//   - function    (allows control flow and new.target)
-//   - function    (allows new.target)
-//   - method      (allows super property and new.target)
-//   - constructor (allows super call and new.target)
 /* eslint-disable key-spacing */
 export const ScopeBits = {
-  RETURN:      0b00000001,
-  AWAIT:       0b00000010,
-  YIELD:       0b00000100,
-  NEW_TARGET:  0b00001000,
-  IMPORT_META: 0b00010000,
-  SUPER_CALL:  0b00100000,
-  SUPER_PROP:  0b01000000,
-  IN:          0b10000000,
+  __proto__: null,
 };
-/* eslint-enable key-spacing */
+[
+  'RETURN',
+  'AWAIT',
+  'YIELD',
+  'PARAMETERS', // disallows yield, await
+  'NEW_TARGET',
+  'IMPORT_META',
+  'SUPER_CALL',
+  'SUPER_PROP',
+  'IN',
+].forEach((name, i) => {
+  if (i > 31) {
+    throw new RangeError(name);
+  }
+  ScopeBits[name] = 1 << i;
+});
 
 export class Parser extends LanguageParser {
   constructor(source) {
@@ -49,11 +52,17 @@ export class Parser extends LanguageParser {
   }
 
   isAwaitScope() {
-    return (this.state.scopeBits & ScopeBits.AWAIT) !== 0;
+    return (this.state.scopeBits & ScopeBits.AWAIT) !== 0
+      && !this.isParametersScope();
   }
 
   isYieldScope() {
-    return (this.state.scopeBits & ScopeBits.YIELD) !== 0;
+    return (this.state.scopeBits & ScopeBits.YIELD) !== 0
+      && !this.isParametersScope();
+  }
+
+  isParametersScope() {
+    return (this.state.scopeBits & ScopeBits.PARAMETERS) !== 0;
   }
 
   isNewTargetScope() {
@@ -93,6 +102,11 @@ export class Parser extends LanguageParser {
       this.state.scopeBits |= ScopeBits.YIELD;
     } else if (scope.yield === false) {
       this.state.scopeBits &= ~ScopeBits.YIELD;
+    }
+    if (scope.parameters === true) {
+      this.state.scopeBits |= ScopeBits.PARAMETERS;
+    } else if (scope.parameters === false) {
+      this.state.scopeBits &= ~ScopeBits.PARAMETERS;
     }
     if (scope.newTarget === true) {
       this.state.scopeBits |= ScopeBits.NEW_TARGET;

@@ -291,7 +291,7 @@ export function SetDefaultGlobalBindings(realmRec) {
   });
 
   Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
-    Value: realmRec.GlobalEnv.EnvironmentRecord.GlobalThisValue,
+    Value: realmRec.GlobalEnv.GlobalThisValue,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,

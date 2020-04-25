@@ -51,16 +51,16 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   let inDerivedConstructor = false;
   // 8. If direct is true, then
   if (direct === true) {
-    // a. Let thisEnvRec be ! GetThisEnvironment().
-    const thisEnvRec = X(GetThisEnvironment());
-    // b. If thisEnvRec is a function Environment Record, then
-    if (thisEnvRec instanceof FunctionEnvironmentRecord) {
-      // i. Let F be thisEnvRec.[[FunctionObject]].
-      const F = thisEnvRec.FunctionObject;
+    // a. Let thisEnv be ! GetThisEnvironment().
+    const thisEnv = X(GetThisEnvironment());
+    // b. If thisEnv is a function Environment Record, then
+    if (thisEnv instanceof FunctionEnvironmentRecord) {
+      // i. Let F be thisEnv.[[FunctionObject]].
+      const F = thisEnv.FunctionObject;
       // ii. Let inFunction be true.
       inFunction = true;
-      // iii. Let inMethod be thisEnvRec.HasSuperBinding().
-      inMethod = thisEnvRec.HasSuperBinding() === Value.true;
+      // iii. Let inMethod be thisEnv.HasSuperBinding().
+      inMethod = thisEnv.HasSuperBinding() === Value.true;
       // iv. If F.[[ConstructorKind]] is derived, set inDerivedConstructor to true.
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
@@ -158,39 +158,33 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
 function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
-  // 2. Let varNames be the VarDeclaredNames of body.
+  // 2. Let varDeclarations be the VarScopedDeclarations of body.
   const varDeclarations = VarScopedDeclarations(body);
-  // 3. Let varDeclarations be the VarScopedDeclarations of body.
-  const lexEnvRec = lexEnv.EnvironmentRecord;
-  // 4. Let lexEnvRec be lexEnv's EnvironmentRecord.
-  const varEnvRec = varEnv.EnvironmentRecord;
-  // 5. If strict is false, then
+  // 3. If strict is false, then
   if (strict === false) {
-    // a. If strict is false, then
-    if (varEnvRec instanceof GlobalEnvironmentRecord) {
+    // a. If varEnv is a global Environment Record, then
+    if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. For each name in varNames, do
       for (const name of varNames) {
-        // 1. If varEnvRec.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-        if (varEnvRec.HasLexicalDeclaration(name) === Value.true) {
+        // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+        if (varEnv.HasLexicalDeclaration(name) === Value.true) {
           return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
         }
         // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
       }
     }
     // b. Let thisLex be lexEnv.
-    let thisLex = lexEnv;
+    let thisEnv = lexEnv;
     // c. Assert: The following loop will terminate.
-    // d. Repeat, while thisLex is not the same as varEnv,
-    while (thisLex !== varEnv) {
-      // i. Let thisEnvRec be thisLex's EnvironmentRecord.
-      const thisEnvRec = thisLex.EnvironmentRecord;
-      // ii. If thisEnvRec is not an object Environment Record, then
-      if (!(thisEnvRec instanceof ObjectEnvironmentRecord)) {
+    // d. Repeat, while thisEnv is not the same as varEnv,
+    while (thisEnv !== varEnv) {
+      // i. If thisEnv is not an object Environment Record, then
+      if (!(thisEnv instanceof ObjectEnvironmentRecord)) {
         // 1. NOTE: The environment of with statements cannot contain any lexical declaration so it doesn't need to be checked for var/let hoisting conflicts.
         // 2. For each name in varNames, do
         for (const name of varNames) {
-          // a. If thisEnvRec.HasBinding(name) is true, then
-          if (thisEnvRec.HasBinding(name) === Value.true) {
+          // a. If thisEnv.HasBinding(name) is true, then
+          if (thisEnv.HasBinding(name) === Value.true) {
             // i. Throw a SyntaxError exception.
             return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
             // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
@@ -198,15 +192,15 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
           // b. NOTE: A direct eval will not hoist var declaration over a like-named lexical declaration
         }
       }
-      // iii. Set thisLex to thisLex's outer environment reference.
-      thisLex = thisLex.outerEnvironmentReference;
+      // ii. Set thisEnv to thisEnv.[[OuterEnv]].
+      thisEnv = thisEnv.OuterEnv;
     }
   }
-  // 6. Let functionsToInitialize be a new empty List.
+  // 4. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
-  // 7. Let declaredFunctionNames be a new empty List.
+  // 5. Let declaredFunctionNames be a new empty List.
   const declaredFunctionNames = new ValueSet();
-  // 8. For each d in varDeclarations, in reverse list order, do
+  // 6. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
     if (d.type !== 'VariableDeclaration'
@@ -222,11 +216,11 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       const fn = BoundNames(d)[0];
       // iv. If fn is not an element of declaredFunctionNames, then
       if (!declaredFunctionNames.has(fn)) {
-        // 1. If varEnvRec is a global Environment Record, then
-        if (varEnvRec instanceof GlobalEnvironmentRecord) {
-          // a. Let fnDefinable be ? varEnvRec.CanDeclareGlobalFunction(fn).
-          const fnDefinable = Q(varEnvRec.CanDeclareGlobalFunction(fn));
-          // b. Let fnDefinable be ? varEnvRec.CanDeclareGlobalFunction(fn).
+        // 1. If varEnv is a global Environment Record, then
+        if (varEnv instanceof GlobalEnvironmentRecord) {
+          // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
+          const fnDefinable = Q(varEnv.CanDeclareGlobalFunction(fn));
+          // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
           if (fnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
           }
@@ -238,10 +232,10 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 9. NOTE: Annex B.3.3.3 adds additional steps at this point.
-  // 10. Let declaredVarNames be a new empty List.
+  // 7. NOTE: Annex B.3.3.3 adds additional steps at this point.
+  // 8. Let declaredVarNames be a new empty List.
   const declaredVarNames = new ValueSet();
-  // 11. For each d in varDeclarations, do
+  // 9. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
     if (d.type === 'VariableDeclaration'
@@ -251,10 +245,10 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       for (const vn of BoundNames(d)) {
         // 1. If vn is not an element of declaredFunctionNames, then
         if (!declaredFunctionNames.has(vn)) {
-          // a. If varEnvRec is a global Environment Record, then
-          if (varEnvRec instanceof GlobalEnvironmentRecord) {
-            // i. Let vnDefinable be ? varEnvRec.CanDeclareGlobalVar(vn).
-            const vnDefinable = Q(varEnvRec.CanDeclareGlobalVar(vn));
+          // a. If varEnv is a global Environment Record, then
+          if (varEnv instanceof GlobalEnvironmentRecord) {
+            // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
+            const vnDefinable = Q(varEnv.CanDeclareGlobalVar(vn));
             // ii. If vnDefinable is false, throw a TypeError exception.
             if (vnDefinable === Value.false) {
               return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
@@ -269,72 +263,72 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 12. NOTE: No abnormal terminations occur after this algorithm step unless
-  //     varEnvRec is a global Environment Record and the global object is a Proxy exotic object.
-  // 13. Let lexDeclarations be the LexicallyScopedDeclarations of body.
+  // 10. NOTE: No abnormal terminations occur after this algorithm step unless
+  //     varEnv is a global Environment Record and the global object is a Proxy exotic object.
+  // 11. Let lexDeclarations be the LexicallyScopedDeclarations of body.
   const lexDeclarations = LexicallyScopedDeclarations(body);
-  // 14. For each element d in lexDeclarations, do
+  // 12. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.
     // b. For each element dn of the BoundNames of d, do
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        // 1. Perform ? lexEnvRec.CreateImmutableBinding(dn, true).
-        Q(lexEnvRec.CreateImmutableBinding(dn, Value.true));
+        // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).
+        Q(lexEnv.CreateImmutableBinding(dn, Value.true));
       } else { // ii. Else,
-        // 1. Perform ? lexEnvRec.CreateMutableBinding(dn, false).
-        Q(lexEnvRec.CreateMutableBinding(dn, Value.false));
+        // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
+        Q(lexEnv.CreateMutableBinding(dn, Value.false));
       }
     }
   }
-  // 15. For each Parse Node f in functionsToInitialize, do
+  // 13. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
     // b. Let fn be the sole element of the BoundNames of f.
     const fo = InstantiateFunctionObject(f, lexEnv);
-    // c. If varEnvRec is a global Environment Record, then
-    if (varEnvRec instanceof GlobalEnvironmentRecord) {
-      // i. Perform ? varEnvRec.CreateGlobalFunctionBinding(fn, fo, true).
-      Q(varEnvRec.CreateGlobalFunctionBinding(fn, fo, Value.true));
+    // c. If varEnv is a global Environment Record, then
+    if (varEnv instanceof GlobalEnvironmentRecord) {
+      // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).
+      Q(varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true));
     } else { // d. Else,
-      // i. Let bindingExists be varEnvRec.HasBinding(fn).
-      const bindingExists = varEnvRec.HasBinding(fn);
-      // ii. Let bindingExists be varEnvRec.HasBinding(fn).
-      if (bindingExists === Value.false) {
-        // 1. Let status be ! varEnvRec.CreateMutableBinding(fn, true).
-        const status = X(varEnvRec.CreateMutableBinding(fn, Value.true));
-        // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
-        Assert(!(status instanceof AbruptCompletion));
-        // 3. Perform ! varEnvRec.InitializeBinding(fn, fo).
-        X(varEnvRec.InitializeBinding(fn, fo));
-      } else { // iii. Else,
-        // 1. Perform ! varEnvRec.SetMutableBinding(fn, fo, false).
-        X(varEnvRec.SetMutableBinding(fn, fo, Value.false));
-      }
-    }
-  }
-  // 16. For each String vn in declaredVarNames, in list order, do
-  for (const vn of declaredVarNames) {
-    // a. If varEnvRec is a global Environment Record, then
-    if (varEnvRec instanceof GlobalEnvironmentRecord) {
-      // i. Perform ? varEnvRec.CreateGlobalVarBinding(vn, true).
-      Q(varEnvRec.CreateGlobalVarBinding(vn, Value.true));
-    } else { // b. Else,
-      // i. Let bindingExists be varEnvRec.HasBinding(vn).
-      const bindingExists = varEnvRec.HasBinding(vn);
+      // i. Let bindingExists be varEnv.HasBinding(fn).
+      const bindingExists = varEnv.HasBinding(fn);
       // ii. If bindingExists is false, then
       if (bindingExists === Value.false) {
-        // 1. Let status be ! varEnvRec.CreateMutableBinding(vn, true).
-        const status = X(varEnvRec.CreateMutableBinding(vn, Value.true));
+        // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
+        const status = X(varEnv.CreateMutableBinding(fn, Value.true));
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
         Assert(!(status instanceof AbruptCompletion));
-        // 3. Perform ! varEnvRec.InitializeBinding(vn, undefined).
-        X(varEnvRec.InitializeBinding(vn, Value.undefined));
+        // 3. Perform ! varEnv.InitializeBinding(fn, fo).
+        X(varEnv.InitializeBinding(fn, fo));
+      } else { // iii. Else,
+        // 1. Perform ! varEnv.SetMutableBinding(fn, fo, false).
+        X(varEnv.SetMutableBinding(fn, fo, Value.false));
       }
     }
   }
-  // 17. Return NormalCompletion(empty).
+  // 14. For each String vn in declaredVarNames, in list order, do
+  for (const vn of declaredVarNames) {
+    // a. If varEnv is a global Environment Record, then
+    if (varEnv instanceof GlobalEnvironmentRecord) {
+      // i. Perform ? varEnv.CreateGlobalVarBinding(vn, true).
+      Q(varEnv.CreateGlobalVarBinding(vn, Value.true));
+    } else { // b. Else,
+      // i. Let bindingExists be varEnv.HasBinding(vn).
+      const bindingExists = varEnv.HasBinding(vn);
+      // ii. If bindingExists is false, then
+      if (bindingExists === Value.false) {
+        // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
+        const status = X(varEnv.CreateMutableBinding(vn, Value.true));
+        // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
+        Assert(!(status instanceof AbruptCompletion));
+        // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
+        X(varEnv.InitializeBinding(vn, Value.undefined));
+      }
+    }
+  }
+  // 15. Return NormalCompletion(empty).
   return new NormalCompletion(undefined);
 }

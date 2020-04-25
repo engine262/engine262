@@ -26,19 +26,17 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let funcEnv be NewDeclarativeEnvironment(scope).
   const funcEnv = NewDeclarativeEnvironment(scope);
-  // 3. Let envRec be funcEnv's EnvironmentRecord.
-  const envRec = funcEnv.EnvironmentRecord;
-  // 4. Let name be StringValue of BindingIdentifier.
+  // 3. Let name be StringValue of BindingIdentifier.
   const name = StringValue(BindingIdentifier);
-  // 5. Perform envRec.CreateImmutableBinding(name, false).
-  envRec.CreateImmutableBinding(name, Value.false);
-  // 6. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
+  // 4. Perform funcEnv.CreateImmutableBinding(name, false).
+  funcEnv.CreateImmutableBinding(name, Value.false);
+  // 5. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
-  // 7. Perform SetFunctionName(closure, name).
+  // 6. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  // 7. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
-  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
@@ -49,10 +47,10 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
-  // 10. Perform envRec.InitializeBinding(name, closure).
-  envRec.InitializeBinding(name, closure);
-  // 11. Set closure.[[SourceText]] to the source text matched by AsyncGeneratorExpression.
+  // 9. Perform funcEnv.InitializeBinding(name, closure).
+  funcEnv.InitializeBinding(name, closure);
+  // 10. Set closure.[[SourceText]] to the source text matched by AsyncGeneratorExpression.
   closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
-  // 12. Return closure.
+  // 11. Return closure.
   return closure;
 }

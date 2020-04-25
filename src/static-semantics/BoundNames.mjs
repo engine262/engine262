@@ -23,6 +23,8 @@ export function BoundNames(node) {
       return BoundNames(node.BindingIdentifier);
     case 'ForDeclaration':
       return BoundNames(node.ForBinding);
+    case 'ForBinding':
+      return BoundNames(node.BindingIdentifier);
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':

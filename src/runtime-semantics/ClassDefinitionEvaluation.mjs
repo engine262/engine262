@@ -31,32 +31,30 @@ import {
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
 export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   const { ClassHeritage, ClassBody } = ClassTail;
-  // 1. Let lex be the LexicalEnvironment of the running execution context.
-  const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let classScope be NewDeclarativeEnvironment(lex).
-  const classScope = NewDeclarativeEnvironment(lex);
-  // 3. Let classScopeEnvRec be classScope's EnvironmentRecord.
-  const classScopeEnvRec = classScope.EnvironmentRecord;
-  // 4. If classBinding is not undefined, then
+  // 1. Let env be the LexicalEnvironment of the running execution context.
+  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // 2. Let classScope be NewDeclarativeEnvironment(env).
+  const classScope = NewDeclarativeEnvironment(env);
+  // 3. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
-    // a. Perform classScopeEnvRec.CreateImmutableBinding(classBinding, true).
-    classScopeEnvRec.CreateImmutableBinding(classBinding, Value.true);
+    // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
+    classScope.CreateImmutableBinding(classBinding, Value.true);
   }
   let protoParent;
   let constructorParent;
-  // 5. If ClassHeritage is not present, then
+  // 4. If ClassHeritage is not present, then
   if (!ClassHeritage) {
     // a. Let protoParent be %Object.prototype%.
     protoParent = surroundingAgent.intrinsic('%Object.prototype%');
     // b. Let constructorParent be %Function.prototype%.
     constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
-  } else { // 6. Else,
+  } else { // 5. Else,
     // a. Set the running execution context's LexicalEnvironment to classScope.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
     // b. Let superclassRef be the result of evaluating ClassHeritage.
     const superclassRef = yield* Evaluate(ClassHeritage);
-    // c. Set the running execution context's LexicalEnvironment to lex.
-    surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
+    // c. Set the running execution context's LexicalEnvironment to env.
+    surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
     // d. Let superclass be ? GetValue(superclassRef).
     const superclass = Q(GetValue(superclassRef));
     // e. If superclass is null, then
@@ -79,16 +77,16 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       constructorParent = superclass;
     }
   }
-  // 7. Let proto be OrdinaryObjectCreate(protoParent).
+  // 6. Let proto be OrdinaryObjectCreate(protoParent).
   const proto = OrdinaryObjectCreate(protoParent);
   let constructor;
-  // 8. If ClassBody is not present, let constructor be empty.
+  // 7. If ClassBody is not present, let constructor be empty.
   if (!ClassBody) {
     constructor = undefined;
-  } else { // 9. Else, let constructor be ConstructorMethod of ClassBody.
+  } else { // 8. Else, let constructor be ConstructorMethod of ClassBody.
     constructor = ConstructorMethod(ClassBody);
   }
-  // 10. If constructor is empty, then
+  // 9. If constructor is empty, then
   if (constructor === undefined) {
     // a. If ClassHeritage is present, then
     if (ClassHeritage) {
@@ -102,32 +100,32 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       constructor = emptyConstructorNode;
     }
   }
-  // 11. Set the running execution context's LexicalEnvironment to classScope.
+  // 10. Set the running execution context's LexicalEnvironment to classScope.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
-  // 12. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
+  // 11. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
   const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
-  // 13. Let F be constructorInfo.[[Closure]].
+  // 12. Let F be constructorInfo.[[Closure]].
   const F = constructorInfo.Closure;
-  // 14. Perform SetFunctionName(F, className).
+  // 13. Perform SetFunctionName(F, className).
   SetFunctionName(F, className);
-  // 15. Perform MakeConstructor(F, false, proto).
+  // 14. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
-  // 16. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
+  // 15. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  // 17. Perform MakeClassConstructor(F).
+  // 16. Perform MakeClassConstructor(F).
   MakeClassConstructor(F);
-  // 18. Perform CreateMethodProperty(proto, "constructor", F).
+  // 17. Perform CreateMethodProperty(proto, "constructor", F).
   CreateMethodProperty(proto, new Value('constructor'), F);
-  // 19. If ClassBody is not present, let methods be a new empty List.
+  // 18. If ClassBody is not present, let methods be a new empty List.
   let methods;
   if (!ClassBody) {
     methods = [];
-  } else { // 20. Else, let methods be NonConstructorMethodDefinitions of ClassBody.
+  } else { // 19. Else, let methods be NonConstructorMethodDefinitions of ClassBody.
     methods = NonConstructorMethodDefinitions(ClassBody);
   }
-  // 21. For each ClassElement m in order from methods, do
+  // 20. For each ClassElement m in order from methods, do
   for (const m of methods) {
     let status;
     // a. If IsStatic of m is false, then
@@ -140,19 +138,19 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     }
     // c. If status is an abrupt completion, then
     if (status instanceof AbruptCompletion) {
-      // i. Set the running execution context's LexicalEnvironment to lex.
-      surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
+      // i. Set the running execution context's LexicalEnvironment to env.
+      surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
       // ii. Return Completion(status).
       return Completion(status);
     }
   }
-  // 22. Set the running execution context's LexicalEnvironment to lex.
-  surroundingAgent.runningExecutionContext.LexicalEnvironment = lex;
-  // 23. If classBinding is not undefined, then
+  // 21. Set the running execution context's LexicalEnvironment to env.
+  surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
+  // 22. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
-    // a. Perform classScopeEnvRec.InitializeBinding(classBinding, F).
-    classScopeEnvRec.InitializeBinding(classBinding, F);
+    // a. Perform classScope.InitializeBinding(classBinding, F).
+    classScope.InitializeBinding(classBinding, F);
   }
-  // 24. Return F.
+  // 23. Return F.
   return F;
 }

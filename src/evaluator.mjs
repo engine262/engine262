@@ -20,6 +20,7 @@ import {
   Evaluate_TryStatement,
   Evaluate_ThrowStatement,
   Evaluate_BreakableStatement,
+  Evaluate_ForBinding,
   Evaluate_CaseClause,
   Evaluate_BreakStatement,
   Evaluate_WithStatement,
@@ -37,6 +38,7 @@ import {
   Evaluate_AsyncGeneratorExpression,
   Evaluate_AdditiveExpression,
   Evaluate_MultiplicativeExpression,
+  Evaluate_ExponentiationExpression,
   Evaluate_UpdateExpression,
   Evaluate_ShiftExpression,
   Evaluate_LogicalORExpression,
@@ -100,6 +102,8 @@ export function* Evaluate(node) {
     case 'ForOfStatement':
     case 'ForAwaitStatement':
       return yield* Evaluate_BreakableStatement(node);
+    case 'ForBinding':
+      return Evaluate_ForBinding(node);
     case 'CaseClause':
     case 'DefaultClause':
       return yield* Evaluate_CaseClause(node);
@@ -162,6 +166,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_AdditiveExpression(node);
     case 'MultiplicativeExpression':
       return yield* Evaluate_MultiplicativeExpression(node);
+    case 'ExponentiationExpression':
+      return yield* Evaluate_ExponentiationExpression(node);
     case 'UpdateExpression':
       return yield* Evaluate_UpdateExpression(node);
     case 'ShiftExpression':

@@ -6,7 +6,8 @@ export class IdentifierParser extends BaseParser {
     const node = this.startNode();
     const token = this.next();
     if (allowKeywords && isKeyword(token.type)) {
-      if ((token.value === 'yield' || token.value === 'await') && this.isStrictMode()) {
+      if ((token.value === 'yield' || token.value === 'await')
+          && (this.isStrictMode() || this.isParametersScope())) {
         this.unexpected(token);
       }
       node.name = token.value;
@@ -39,13 +40,13 @@ export class IdentifierParser extends BaseParser {
         node.name = token.value;
         break;
       case Token.YIELD:
-        if (this.isStrictMode()) {
+        if (this.isStrictMode() || this.isParametersScope()) {
           this.unexpected(token);
         }
         node.name = 'yield';
         break;
       case Token.AWAIT:
-        if (this.isStrictMode()) {
+        if (this.isStrictMode() || this.isParametersScope()) {
           this.unexpected(token);
         }
         node.name = 'await';
@@ -67,13 +68,13 @@ export class IdentifierParser extends BaseParser {
         node.name = token.value;
         break;
       case Token.YIELD:
-        if (this.isStrictMode()) {
+        if (this.isStrictMode() || this.isParametersScope()) {
           this.unexpected(token);
         }
         node.name = 'yield';
         break;
       case Token.AWAIT:
-        if (this.isStrictMode()) {
+        if (this.isStrictMode() || this.isParametersScope()) {
           this.unexpected(token);
         }
         node.name = 'await';

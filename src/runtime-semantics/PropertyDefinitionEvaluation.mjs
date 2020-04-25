@@ -136,7 +136,7 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
       return Q(DefinePropertyOrThrow(object, propKey, desc));
     }
-    case !!MethodDefinition.UniqueFormalParameters && !!MethodDefinition.PropertySetParameterList: {
+    case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList: {
       const { PropertyName, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating PropertyName.
       const propKey = yield* Evaluate_PropertyName(PropertyName);

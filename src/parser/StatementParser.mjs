@@ -295,14 +295,14 @@ export class StatementParser extends ExpressionParser {
     if (this.test(Token.LET) || this.test(Token.CONST)) {
       const inner = this.startNode();
       if (this.eat(Token.LET)) {
-        node.LetOrConst = 'let';
+        inner.LetOrConst = 'let';
       } else {
         this.expect(Token.CONST);
-        node.LetOrConst = 'const';
+        inner.LetOrConst = 'const';
       }
       const list = this.parseBindingList();
-      if (list.length > 1) {
-        node.BindingList = list;
+      if (list.length > 1 || this.test(Token.SEMICOLON)) {
+        inner.BindingList = list;
         node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
         this.expect(Token.SEMICOLON);
         if (!this.test(Token.SEMICOLON)) {
@@ -317,6 +317,7 @@ export class StatementParser extends ExpressionParser {
         return this.finishNode(node, 'ForStatement');
       }
       inner.ForBinding = list[0];
+      inner.ForBinding.type = 'ForBinding';
       node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
       if (!isAwait && this.eat(Token.IN)) {
         node.Expression = this.parseExpression();
@@ -356,6 +357,7 @@ export class StatementParser extends ExpressionParser {
       }
       this.expect(Token.IN);
       node.ForBinding = list[0];
+      node.ForBinding.type = 'ForBinding';
       node.Expression = this.parseExpression();
       this.expect(Token.RPAREN);
       node.Statement = this.parseStatement();
@@ -363,15 +365,18 @@ export class StatementParser extends ExpressionParser {
     }
 
     node.Expression_a = this.parseExpression();
+    this.expect(Token.SEMICOLON);
 
     if (!this.test(Token.SEMICOLON)) {
       node.Expression_b = this.parseExpression();
     }
     this.expect(Token.SEMICOLON);
+
     if (!this.test(Token.RPAREN)) {
       node.Expression_c = this.parseExpression();
     }
     this.expect(Token.RPAREN);
+
     node.Statement = this.parseStatement();
     return this.finishNode(node, 'ForStatement');
   }
@@ -406,6 +411,7 @@ export class StatementParser extends ExpressionParser {
     node.CaseClauses_b = null;
     while (!this.eat(Token.RBRACE)) {
       const inner = this.startNode();
+      inner.StatementList = null;
       if (this.eat(Token.CASE)) {
         let selected;
         if (node.DefaultClause !== null) {

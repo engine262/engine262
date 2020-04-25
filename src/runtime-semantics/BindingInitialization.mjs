@@ -14,11 +14,9 @@ export function InitializeBoundName(name, value, environment) {
   Assert(Type(name) === 'String');
   // 2. If environment is not undefined, then
   if (environment !== Value.undefined) {
-    // a. If environment is not undefined, then
-    const env = environment.EnvironmentRecord;
-    // b. Perform env.InitializeBinding(name, value).
-    env.InitializeBinding(name, value);
-    // c. Perform env.InitializeBinding(name, value).
+    // a. Perform environment.InitializeBinding(name, value).
+    environment.InitializeBinding(name, value);
+    // b. Return NormalCompletion(undefined).
     return new NormalCompletion(Value.undefined);
   } else {
     // a. Let lhs be ResolveBinding(name).

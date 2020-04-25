@@ -23,22 +23,17 @@ import {
 import { NormalCompletion, Q, X } from './completion.mjs';
 import { ValueMap } from './helpers.mjs';
 
-// #sec-lexical-environments
-export class LexicalEnvironment {
+// #sec-environment-records
+export class EnvironmentRecord {
   constructor() {
-    this.EnvironmentRecord = undefined;
-    this.outerEnvironmentReference = undefined;
+    this.OuterEnv = undefined;
   }
 
   // NON-SPEC
   mark(m) {
-    m(this.EnvironmentRecord);
-    m(this.outerEnvironmentReference);
+    m(this.OuterEnv);
   }
 }
-
-// #sec-environment-records
-export class EnvironmentRecord {}
 
 // #sec-declarative-environment-records
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
@@ -817,10 +812,8 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       if (targetEnv === Value.undefined) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
-      // d. Let targetER be targetEnv's EnvironmentRecord.
-      const targetER = targetEnv.EnvironmentRecord;
-      // e. Return ? targetER.GetBindingValue(N2, true).
-      return Q(targetER.GetBindingValue(N2, Value.true));
+      // d. Return ? targetEnv.GetBindingValue(N2, true).
+      return Q(targetEnv.GetBindingValue(N2, Value.true));
     }
     // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
@@ -872,9 +865,9 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 }
 
 // 8.1.2.1 #sec-getidentifierreference
-export function GetIdentifierReference(lex, name, strict) {
+export function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
-  if (lex === Value.null) {
+  if (env === Value.null) {
     // a. Return a value of type Reference whose base value component is undefined, whose
     //    referenced name component is name, and whose strict reference flag is strict.
     return new Reference({
@@ -883,124 +876,101 @@ export function GetIdentifierReference(lex, name, strict) {
       StrictReference: strict,
     });
   }
-  // 2. Let envRec be lex's EnvironmentRecord.
-  const envRec = lex.EnvironmentRecord;
-  // 3. Let exists be ? envRec.HasBinding(name).
-  const exists = Q(envRec.HasBinding(name));
-  // 4. If exists is true, then
+  // 2. Let exists be ? envRec.HasBinding(name).
+  const exists = Q(env.HasBinding(name));
+  // 3. If exists is true, then
   if (exists === Value.true) {
     // a. Return a value of type Reference whose base value component is envRec, whose
     //    referenced name component is name, and whose strict reference flag is strict.
     return new Reference({
-      BaseValue: envRec,
+      BaseValue: env,
       ReferencedName: name,
       StrictReference: strict,
     });
   } else {
-    // a. Let outer be the value of lex's outer environment reference.
-    const outer = lex.outerEnvironmentReference;
+    // a. Let outer be env.[[OuterEnv]].
+    const outer = env.OuterEnv;
     // b. Return ? GetIdentifierReference(outer, name, strict).
     return Q(GetIdentifierReference(outer, name, strict));
   }
 }
 
-// 8.1.2.2 #sec-newdeclarativeenvironment
+// #sec-newdeclarativeenvironment
 export function NewDeclarativeEnvironment(E) {
-  // 1. Let env be a new Lexical Environment.
-  const env = new LexicalEnvironment();
-  // 2. Let envRec be a new declarative Environment Record containing no bindings.
-  const envRec = new DeclarativeEnvironmentRecord();
-  // 3. Set env's EnvironmentRecord to envRec.
-  env.EnvironmentRecord = envRec;
-  // 4. Set env's EnvironmentRecord to envRec.
-  env.outerEnvironmentReference = E;
-  // 5. Return env.
+  // 1. Let env be a new declarative Environment Record containing O as the binding object.
+  const env = new DeclarativeEnvironmentRecord();
+  // 2. Set env.[[OuterEnv]] to E.
+  env.OuterEnv = E;
+  // 3. Return env.
   return env;
 }
 
-// 8.1.2.3 #sec-newobjectenvironment
+// #sec-newobjectenvironment
 export function NewObjectEnvironment(O, E) {
-  // 1. Let env be a new Lexical Environment.
-  const env = new LexicalEnvironment();
-  // 2. Let envRec be a new object Environment Record containing O as the binding object.
-  const envRec = new ObjectEnvironmentRecord(O);
-  // 3. Set env's EnvironmentRecord to envRec.
-  env.EnvironmentRecord = envRec;
-  // 4. Set env's EnvironmentRecord to envRec.
-  env.outerEnvironmentReference = E;
-  // 5. Return env.
+  // 1. Let env be a new object Environment Record containing O as the binding object.
+  const env = new ObjectEnvironmentRecord(O);
+  // 2. Set env.[[OuterEnv]] to E.
+  env.OuterEnv = E;
+  // 3. Return env.
   return env;
 }
 
-// 8.1.2.4 #sec-newfunctionenvironment
+// #sec-newfunctionenvironment
 export function NewFunctionEnvironment(F, newTarget) {
   // 1. Assert: F is an ECMAScript function.
   Assert(isECMAScriptFunctionObject(F));
   // 2. Assert: Type(newTarget) is Undefined or Object.
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
-  // 3. Let env be a new Lexical Environment.
-  const env = new LexicalEnvironment();
-  // 4. Let envRec be a new function Environment Record containing no bindings.
-  const envRec = new FunctionEnvironmentRecord();
-  // 5. Set envRec.[[FunctionObject]] to F.
-  envRec.FunctionObject = F;
-  // 6. If F.[[ThisMode]] is lexical, set envRec.[[ThisBindingStatus]] to lexical.
-  // 7. Else, set envRec.[[ThisBindingStatus]] to uninitialized.
+  // 3. Let env be a new function Environment Record containing no bindings.
+  const env = new FunctionEnvironmentRecord();
+  // 4. Set env.[[FunctionObject]] to F.
+  env.FunctionObject = F;
+  // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
   if (F.ThisMode === 'lexical') {
-    envRec.ThisBindingStatus = 'lexical';
-  } else {
-    envRec.ThisBindingStatus = 'uninitialized';
+    env.ThisBindingStatus = 'lexical';
+  } else { // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
+    env.ThisBindingStatus = 'uninitialized';
   }
-  // 8. Let home be F.[[HomeObject]].
+  // 7. Let home be F.[[HomeObject]].
   const home = F.HomeObject;
-  // 9. Set envRec.[[HomeObject]] to home.
-  envRec.HomeObject = home;
-  // 10. Set envRec.[[NewTarget]] to newTarget.
-  envRec.NewTarget = newTarget;
-  // 11. Set env's EnvironmentRecord to envRec.
-  env.EnvironmentRecord = envRec;
-  // 12. Set the outer lexical environment reference of env to F.[[Environment]].
-  env.outerEnvironmentReference = F.Environment;
-  // 13. Return env.
+  // 8. Set env.[[HomeObject]] to home.
+  env.HomeObject = home;
+  // 9. Set env.[[NewTarget]] to newTarget.
+  env.NewTarget = newTarget;
+  // 10. Set env.[[OuterEnv]] to F.[[Environment]].
+  env.OuterEnv = F.Environment;
+  // 11. Return env.
   return env;
 }
 
 // #sec-newglobalenvironment
 export function NewGlobalEnvironment(G, thisValue) {
-  // 1. Let env be a new Lexical Environment.
-  const env = new LexicalEnvironment();
-  // 2. Let objRec be a new object Environment Record containing G as the binding object.
+  // 1. Let objRec be a new object Environment Record containing G as the binding object.
   const objRec = new ObjectEnvironmentRecord(G);
-  // 3. Let dclRec be a new declarative Environment Record containing no bindings.
+  // 2. Let dclRec be a new declarative Environment Record containing no bindings.
   const dclRec = new DeclarativeEnvironmentRecord();
-  // 4. Let dclRec be a new declarative Environment Record containing no bindings.
-  const globalRec = new GlobalEnvironmentRecord();
-  // 5. Set globalRec.[[ObjectRecord]] to objRec.
-  globalRec.ObjectRecord = objRec;
-  // 6. Set globalRec.[[GlobalThisValue]] to thisValue.
-  globalRec.GlobalThisValue = thisValue;
-  // 7. Set globalRec.[[DeclarativeRecord]] to dclRec.
-  globalRec.DeclarativeRecord = dclRec;
-  // 8. Set globalRec.[[VarNames]] to a new empty List.
-  globalRec.VarNames = [];
-  // 9. Set env's EnvironmentRecord to globalRec.
-  env.EnvironmentRecord = globalRec;
-  // 10. Set the outer lexical environment reference of env to null.
-  env.outerEnvironmentReference = Value.null;
-  // 11. Return env.
+  // 3. Let env be a new global Environment Record.
+  const env = new GlobalEnvironmentRecord();
+  // 4. Set env.[[ObjectRecord]] to objRec.
+  env.ObjectRecord = objRec;
+  // 5. Set env.[[GlobalThisValue]] to thisValue.
+  env.GlobalThisValue = thisValue;
+  // 6. Set env.[[DeclarativeRecord]] to dclRec.
+  env.DeclarativeRecord = dclRec;
+  // 7. Set env.[[VarNames]] to a new empty List.
+  env.VarNames = [];
+  // 8. Set env.[[OuterEnv]] to null.
+  env.OuterEnv = Value.null;
+  // 9. Return env.
   return env;
 }
 
 // #sec-newmoduleenvironment
 export function NewModuleEnvironment(E) {
-  // 1. Let env be a new Lexical Environment.
-  const env = new LexicalEnvironment();
-  // 2. Let envRec be a new module Environment Record containing no bindings.
-  const envRec = new ModuleEnvironmentRecord();
-  // 3. Set env's EnvironmentRecord to envRec.
-  env.EnvironmentRecord = envRec;
-  // 4. Set the outer lexical environment reference of env to E.
-  env.outerEnvironmentReference = E;
-  // 5. Return env.
+  // 1. Let env be a new module Environment Record containing no bindings.
+  const env = new ModuleEnvironmentRecord();
+  // 2. Set env.[[OuterEnv]] to E.
+  env.OuterEnv = E;
+  // 3. Return env.
   return env;
 }

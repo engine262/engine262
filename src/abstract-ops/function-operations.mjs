@@ -51,76 +51,109 @@ export function isFunctionObject(O) {
   return 'Call' in O;
 }
 
-// 9.2.1.1 #sec-prepareforordinarycall
+// #sec-prepareforordinarycall
 function PrepareForOrdinaryCall(F, newTarget) {
+  // 1. Assert: Type(newTarget) is Undefined or Object.
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  // 2. Let callerContext be the running execution context.
   // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let calleeContext be a new ECMAScript code execution context.
   const calleeContext = new ExecutionContext();
+  // 4. Set the Function of calleeContext to F.
   calleeContext.Function = F;
+  // 5. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
+  // 6. Set the Realm of calleeContext to calleeRealm.
   calleeContext.Realm = calleeRealm;
+  // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
   calleeContext.ScriptOrModule = F.ScriptOrModule;
+  // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
   const localEnv = NewFunctionEnvironment(F, newTarget);
+  // 9. Set the LexicalEnvironment of calleeContext to localEnv.
   calleeContext.LexicalEnvironment = localEnv;
+  // 10. Set the VariableEnvironment of calleeContext to localEnv.
   calleeContext.VariableEnvironment = localEnv;
-  // Suspend(callerContext);
+  // 11. Set the VariableEnvironment of calleeContext to localEnv.
+  // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
   surroundingAgent.executionContextStack.push(calleeContext);
+  // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
+  // 14. Return calleeContext.
   return calleeContext;
 }
 
-// 9.2.1.2 #sec-ordinarycallbindthis
+// #sec-ordinarycallbindthis
 function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+  // 1. Let thisMode be F.[[ThisMode]].
   const thisMode = F.ThisMode;
+  // 2. If thisMode is lexical, return NormalCompletion(undefined).
   if (thisMode === 'lexical') {
     return new NormalCompletion(Value.undefined);
   }
+  // 3. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
+  // 4. Let localEnv be the LexicalEnvironment of calleeContext.
   const localEnv = calleeContext.LexicalEnvironment;
   let thisValue;
+  // 5. If thisMode is strict, let thisValue be thisArgument.
   if (thisMode === 'strict') {
     thisValue = thisArgument;
-  } else {
+  } else { // 6. Else,
+    // a. If thisArgument is undefined or null, then
     if (thisArgument === Value.undefined || thisArgument === Value.null) {
+      // i. Let globalEnv be calleeRealm.[[GlobalEnv]].
       const globalEnv = calleeRealm.GlobalEnv;
-      const globalEnvRec = globalEnv.EnvironmentRecord;
-      Assert(globalEnvRec instanceof GlobalEnvironmentRecord);
-      thisValue = globalEnvRec.GlobalThisValue;
-    } else {
+      // ii. Assert: globalEnv is a global Environment Record.
+      Assert(globalEnv instanceof GlobalEnvironmentRecord);
+      // iii. Let thisValue be globalEnv.[[GlobalThisValue]].
+      thisValue = globalEnv.GlobalThisValue;
+    } else { // b. Else,
+      // i. Let thisValue be ! ToObject(thisArgument).
       thisValue = X(ToObject(thisArgument));
-      // NOTE: ToObject produces wrapper objects using calleeRealm.
+      // ii. NOTE: ToObject produces wrapper objects using calleeRealm.
     }
   }
-  const envRec = localEnv.EnvironmentRecord;
-  Assert(envRec instanceof FunctionEnvironmentRecord);
-  Assert(envRec.ThisBindingStatus !== 'initialized');
-  return envRec.BindThisValue(thisValue);
+  // 7. Assert: localEnv is a function Environment Record.
+  Assert(localEnv instanceof FunctionEnvironmentRecord);
+  // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
+  Assert(localEnv.ThisBindingStatus !== 'initialized');
+  // 10. Return localEnv.BindThisValue(thisValue).
+  return localEnv.BindThisValue(thisValue);
 }
 
-// 9.2.1.3 #sec-ordinarycallevaluatebody
+// #sec-ordinarycallevaluatebody
 export function OrdinaryCallEvaluateBody(F, argumentsList) {
+  // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
   return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
 }
 
-// 9.2.1 #sec-ecmascript-function-objects-call-thisargument-argumentslist
+// #sec-ecmascript-function-objects-call-thisargument-argumentslist
 function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
+  // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
+  // 2. If F.[[IsClassConstructor]] is true, throw a TypeError exception.
   if (F.IsClassConstructor === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
   }
-  // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let callerContext be the running execution context.
+  // 4. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
+  // 5. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  // 6. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
+  // 7. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
   const result = OrdinaryCallEvaluateBody(F, argumentsList);
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+  // 8. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  // 9. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
   if (result.Type === 'return') {
     return new NormalCompletion(result.Value);
   }
+  // 10. ReturnIfAbrupt(result).
   ReturnIfAbrupt(result);
+  // 11. Return NormalCompletion(undefined).
   return new NormalCompletion(Value.undefined);
 }
 
@@ -128,40 +161,53 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 function FunctionConstructSlot(argumentsList, newTarget) {
   const F = this;
 
+  // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
+  // 2. Assert: Type(newTarget) is Object.
   Assert(Type(newTarget) === 'Object');
-  // const callerContext = surroundingAgent.runningExecutionContext;
+  // 3. Let callerContext be the running execution context.
+  // 4. Let kind be F.[[ConstructorKind]].
   const kind = F.ConstructorKind;
   let thisArgument;
+  // 5. If kind is base, then
   if (kind === 'base') {
+    // a. Let thisArgument be ? OrdinaryCreateFromConstructor(newTarget, "%Object.prototype%").
     thisArgument = Q(OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%'));
   }
+  // 6. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
   const calleeContext = PrepareForOrdinaryCall(F, newTarget);
+  // 7. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   surroundingAgent.runningExecutionContext.callSite.constructCall = true;
+  // 8. If kind is base, perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
   if (kind === 'base') {
     OrdinaryCallBindThis(F, calleeContext, thisArgument);
   }
+  // 9. Let constructorEnv be the LexicalEnvironment of calleeContext.
   const constructorEnv = calleeContext.LexicalEnvironment;
-  const envRec = constructorEnv.EnvironmentRecord;
+  // 10. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
   const result = OrdinaryCallEvaluateBody(F, argumentsList);
-  // Remove calleeContext from the execution context stack and
-  // restore callerContext as the running execution context.
+  // 11. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  // 12. If result.[[Type]] is return, then
   if (result.Type === 'return') {
+    // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
     if (Type(result.Value) === 'Object') {
       return new NormalCompletion(result.Value);
     }
+    // b. If kind is base, return NormalCompletion(thisArgument).
     if (kind === 'base') {
       return new NormalCompletion(thisArgument);
     }
-    if (Type(result.Value) !== 'Undefined') {
+    // c. If result.[[Value]] is not undefined, throw a TypeError exception.
+    if (result.Value !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
-  } else {
+  } else { // 13. Else, ReturnIfAbrupt(result).
     ReturnIfAbrupt(result);
   }
-  return Q(envRec.GetThisBinding());
+  // 14. Return ? constructorEnv.GetThisBinding().
+  return Q(constructorEnv.GetThisBinding());
 }
 
 // 9.2.3 #sec-functionallocate

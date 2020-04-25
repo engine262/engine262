@@ -40,7 +40,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       // 1. Return NormalCompletion(undefined).
       return NormalCompletion(Value.undefined);
     }
-    case CaseClauses_a && !DefaultClause && !CaseClauses_b: {
+    case !!CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Let V be undefined.
       let V = Value.undefined;
       // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
@@ -71,7 +71,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       // 5. Return NormalCompletion(V).
       return NormalCompletion(V);
     }
-    case DefaultClause: {
+    case !!DefaultClause: {
       // 1. Let V be undefined.
       let V = Value.undefined;
       // 2. If the first CaseClauses is present, then

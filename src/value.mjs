@@ -16,11 +16,8 @@ import {
   ToInt32,
   ToUint32,
 } from './abstract-ops/all.mjs';
-import { EnvironmentRecord, LexicalEnvironment } from './environment.mjs';
-import {
-  Completion,
-  X,
-} from './completion.mjs';
+import { EnvironmentRecord } from './environment.mjs';
+import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange } from './helpers.mjs';
 
 export function Value(value) {
@@ -820,10 +817,6 @@ export function Type(val) {
 
   if (val instanceof EnvironmentRecord) {
     return 'EnvironmentRecord';
-  }
-
-  if (val instanceof LexicalEnvironment) {
-    return 'LexicalEnvironment';
   }
 
   if (val instanceof Descriptor) {

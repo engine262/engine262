@@ -94,28 +94,26 @@ function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
   const catchEnv = NewDeclarativeEnvironment(oldEnv);
-  // 3. Let catchEnvRec be catchEnv's EnvironmentRecord.
-  const catchEnvRec = catchEnv.EnvironmentRecord;
-  // 4. For each element argName of the BoundNames of CatchParameter, do
+  // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
-    // a. Perform ! catchEnvRec.CreateMutableBinding(argName, false).
-    X(catchEnvRec.CreateMutableBinding(argName, Value.false));
+    // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
+    X(catchEnv.CreateMutableBinding(argName, Value.false));
   }
-  // 5. Set the running execution context's LexicalEnvironment to catchEnv.
+  // 4. Set the running execution context's LexicalEnvironment to catchEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
-  // 6. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
+  // 5. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
   const status = BindingInitialization(CatchParameter, thrownValue, catchEnv);
-  // 7. If status is an abrupt completion, then
+  // 6. If status is an abrupt completion, then
   if (status instanceof AbruptCompletion) {
-    // 1. Set the running execution context's LexicalEnvironment to oldEnv.
+    // a. Set the running execution context's LexicalEnvironment to oldEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-    // 1. Return Completion(status).
+    // b. Return Completion(status).
     return Completion(status);
   }
-  // 8. Let B be the result of evaluating Block.
+  // 7. Let B be the result of evaluating Block.
   const B = yield* Evaluate(Block);
-  // 9. Set the running execution context's LexicalEnvironment to oldEnv.
+  // 8. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-  // 10. Return Completion(B).
+  // 9. Return Completion(B).
   return Completion(B);
 }

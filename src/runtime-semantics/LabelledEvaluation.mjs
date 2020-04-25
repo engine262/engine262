@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
 import {
   Assert,
   Call,
@@ -21,6 +21,7 @@ import {
   BoundNames,
   IsConstantDeclaration,
   IsDestructuring,
+  StringValue,
 } from '../static-semantics/all.mjs';
 import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mjs';
 import {
@@ -75,7 +76,8 @@ export function* LabelledEvaluation_BreakableStatement(BreakableStatement, label
     case 'DoWhileStatement':
     case 'WhileStatement':
     case 'ForStatement':
-    case 'ForInStatement': {
+    case 'ForInStatement':
+    case 'ForOfStatement': {
       // 1. Let stmtResult be LabelledEvaluation of IterationStatement with argument labelSet.
       let stmtResult = yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet);
       // 2. If stmtResult.[[Type]] is break, then
@@ -126,6 +128,8 @@ function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
       return LabelledEvaluation_BreakableStatement_ForStatement(IterationStatement, labelSet);
     case 'ForInStatement':
       return LabelledEvaluation_IterationStatement_ForInStatement(IterationStatement, labelSet);
+    case 'ForOfStatement':
+      return LabelledEvaluation_IterationStatement_ForOfStatement(IterationStatement, labelSet);
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
   }
@@ -202,60 +206,58 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
     Statement,
   } = ForStatement;
   switch (true) {
-    case LexicalDeclaration: {
+    case !!LexicalDeclaration: {
       // 1. Let oldEnv be the running execution context's LexicalEnvironment.
       const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
       const loopEnv = NewDeclarativeEnvironment(oldEnv);
-      // 3. Let loopEnvRec be loopEnv's EnvironmentRecord.
-      const loopEnvRec = loopEnv.EnvironmentRecord;
-      // 4. Let isConst be IsConstantDeclaration of LexicalDeclaration.
+      // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
       const isConst = IsConstantDeclaration(LexicalDeclaration);
-      // 5. Let boundNames be the BoundNames of LexicalDeclaration.
+      // 4. Let boundNames be the BoundNames of LexicalDeclaration.
       const boundNames = BoundNames(LexicalDeclaration);
-      // 6. For each element dn of boundNames, do
+      // 5. For each element dn of boundNames, do
       for (const dn of boundNames) {
-        // a.     If isConst is true, then
+        // a. If isConst is true, then
         if (isConst) {
-          // i. Perform ! loopEnvRec.CreateImmutableBinding(dn, true).
-          X(loopEnvRec.CreateImmutableBinding(dn, Value.true));
+          // i. Perform ! loopEnv.CreateImmutableBinding(dn, true).
+          X(loopEnv.CreateImmutableBinding(dn, Value.true));
         } else { // b. Else,
-          // i. Perform ! loopEnvRec.CreateMutableBinding(dn, false).
-          X(loopEnvRec.CreateMutableBinding(dn, Value.false));
+          // i. Perform ! loopEnv.CreateMutableBinding(dn, false).
+          X(loopEnv.CreateMutableBinding(dn, Value.false));
         }
       }
-      // 7. Set the running execution context's LexicalEnvironment to loopEnv.
+      // 6. Set the running execution context's LexicalEnvironment to loopEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv;
-      // 8. Let forDcl be the result of evaluating LexicalDeclaration.
+      // 7. Let forDcl be the result of evaluating LexicalDeclaration.
       const forDcl = yield* Evaluate(LexicalDeclaration);
-      // 9. If forDcl is an abrupt completion, then
+      // 8. If forDcl is an abrupt completion, then
       if (forDcl instanceof AbruptCompletion) {
         // a. Set the running execution context's LexicalEnvironment to oldEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         // b. Return Completion(forDcl).
         return Completion(forDcl);
       }
-      // 10. If isConst is false, let perIterationLets be boundNames; otherwise let perIterationLets be « ».
+      // 9. If isConst is false, let perIterationLets be boundNames; otherwise let perIterationLets be « ».
       let perIterationLets;
       if (isConst === false) {
         perIterationLets = boundNames;
       } else {
         perIterationLets = [];
       }
-      // 11. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
-      const bodyResult = yield* ForBodyEvaluation(Expression_b, Expression_c, Statement, perIterationLets, labelSet);
-      // 12. Set the running execution context's LexicalEnvironment to oldEnv.
+      // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
+      const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+      // 11. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
-      // 13. Return Completion(bodyResult).
+      // 12. Return Completion(bodyResult).
       return Completion(bodyResult);
     }
-    case VariableDeclarationList: {
+    case !!VariableDeclarationList: {
       // 1. Let varDcl be the result of evaluating VariableDeclarationList.
       const varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
       // 2. ReturnIfAbrupt(varDcl).
       ReturnIfAbrupt(varDcl);
       // 3. Return ? ForBodyEvaluation(the first Expression, the second Expression, Statement, « », labelSet).
-      return Q(yield* ForBodyEvaluation(Expression_b, Expression_c, Statement, [], labelSet));
+      return Q(yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, [], labelSet));
     }
     default: {
       // 1. If the first Expression is present, then
@@ -278,14 +280,14 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
     Statement,
   } = ForInStatement;
   switch (true) {
-    case LeftHandSideExpression && Expression: {
+    case !!LeftHandSideExpression && !!Expression: {
       // IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, enumerate, assignment, labelSet).
       return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet));
     }
-    case ForBinding && Expression: {
+    case !!ForBinding && !!Expression: {
       // IterationStatement :`for` `(` `var` ForBinding `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
@@ -294,6 +296,43 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
     }
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
+  }
+}
+
+// #sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+// IterationStatement :
+//   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+//   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, labelSet) {
+  const {
+    LeftHandSideExpression,
+    ForBinding,
+    ForDeclaration,
+    AssignmentExpression,
+    Statement,
+  } = ForOfStatement;
+  switch (true) {
+    case !!LeftHandSideExpression: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet).
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet));
+    }
+    case !!ForBinding: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet).
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet));
+    }
+    case !!ForDeclaration: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet).
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
+    }
+    default:
+      throw new OutOfRange('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
   }
 }
 
@@ -344,26 +383,22 @@ function CreatePerIterationEnvironment(perIterationBindings) {
   if (perIterationBindings.length > 0) {
     // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
     const lastIterationEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    // b. Let lastIterationEnvRec be lastIterationEnv's EnvironmentRecord.
-    const lastIterationEnvRec = lastIterationEnv.EnvironmentRecord;
-    // c. Let outer be lastIterationEnv's outer environment reference.
-    const outer = lastIterationEnv.outerEnvironmentReference;
-    // d. Assert: outer is not null.
+    // b. Let outer be lastIterationEnv.[[OuterEnv]].
+    const outer = lastIterationEnv.OuterEnv;
+    // c. Assert: outer is not null.
     Assert(outer !== Value.null);
-    // e. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
+    // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
     const thisIterationEnv = NewDeclarativeEnvironment(outer);
-    // f. Let thisIterationEnvRec be thisIterationEnv's EnvironmentRecord.
-    const thisIterationEnvRec = thisIterationEnv.EnvironmentRecord;
-    // g. For each element bn of perIterationBindings, do
+    // e. For each element bn of perIterationBindings, do
     for (const bn of perIterationBindings) {
-      // i. Perform ! thisIterationEnvRec.CreateMutableBinding(bn, false).
-      X(thisIterationEnvRec.CreateMutableBinding(bn, Value.false));
-      // ii. Let lastValue be ? lastIterationEnvRec.GetBindingValue(bn, true).
-      const lastValue = Q(lastIterationEnvRec.GetBindingValue(bn, Value.true));
-      // iii. Perform thisIterationEnvRec.InitializeBinding(bn, lastValue).
-      thisIterationEnvRec.InitializeBinding(bn, lastValue);
+      // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
+      X(thisIterationEnv.CreateMutableBinding(bn, Value.false));
+      // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
+      const lastValue = Q(lastIterationEnv.GetBindingValue(bn, Value.true));
+      // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
+      thisIterationEnv.InitializeBinding(bn, lastValue);
     }
-    // h. Set the running execution context's LexicalEnvironment to thisIterationEnv.
+    // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
   }
   // 2. Return undefined.
@@ -379,14 +414,12 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     // a. Assert: uninitializedBoundNames has no duplicate entries.
     // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
     const newEnv = NewDeclarativeEnvironment(oldEnv);
-    // c. Let newEnvRec be newEnv's EnvironmentRecord.
-    const newEnvRec = newEnv.EnvironmentRecord;
-    // d. For each string name in uninitializedBoundNames, do
+    // c. For each string name in uninitializedBoundNames, do
     for (const name of uninitializedBoundNames) {
-      // i. Perform ! newEnvRec.CreateMutableBinding(name, false).
-      X(newEnvRec.CreateMutableBinding(name, Value.false));
+      // i. Perform ! newEnv.CreateMutableBinding(name, false).
+      X(newEnv.CreateMutableBinding(name, Value.false));
     }
-    // e. Set the running execution context's LexicalEnvironment to newEnv.
+    // d. Set the running execution context's LexicalEnvironment to newEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   }
   // 3. Let exprRef be the result of evaluating expr.
@@ -572,5 +605,27 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
 
 // #sec-runtime-semantics-bindinginstantiation
 //   ForDeclaration : LetOrConst ForBinding
-function BindingInstantiation(ForDeclaration, Environment) {
+function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
+  // 1. Assert: environment is a declarative Environment Record.
+  Assert(environment instanceof DeclarativeEnvironmentRecord);
+  // 2. For each element name of the BoundNames of ForBinding, do
+  for (const name of BoundNames(ForBinding)) {
+    // a. If IsConstantDeclaration of LetOrConst is true, then
+    if (IsConstantDeclaration(LetOrConst)) {
+      // i. Perform ! environment.CreateImmutableBinding(name, true).
+      X(environment.CreateImmutableBinding(name, Value.true));
+    } else { // b. Else,
+      // i. Perform ! environment.CreateMutableBinding(name, false).
+      X(environment.CreateMutableBinding(name, Value.false));
+    }
+  }
+}
+
+// #sec-for-in-and-for-of-statements-runtime-semantics-evaluation
+//   ForBinding : BindingIdentifier
+export function Evaluate_ForBinding({ BindingIdentifier, strict }) {
+  // 1. Let bindingId be StringValue of BindingIdentifier.
+  const bindingId = StringValue(BindingIdentifier);
+  // 2. Return ? ResolveBinding(bindingId).
+  return Q(ResolveBinding(bindingId, undefined, strict));
 }

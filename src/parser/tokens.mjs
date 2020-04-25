@@ -122,8 +122,6 @@ export const RawTokens = [
   ['SUPER', 'super'],
   // BEGIN AnyIdentifier
   ['IDENTIFIER', null],
-  ['GET', 'get'],
-  ['SET', 'set'],
   ['ASYNC', 'async'],
   ['AWAIT', 'await'],
   ['YIELD', 'yield'],

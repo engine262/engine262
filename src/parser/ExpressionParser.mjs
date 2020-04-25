@@ -752,13 +752,15 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
+  // ParenthesizedExpression :
+  //   `(` Expression `)`
   parseParenthesizedExpression() {
     const node = this.startNode();
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
       return this.parseArrowFunction(node, [], false);
     }
-    const expression = this.parseExpression();
+    const expression = this.scope({ in: true }, () => this.parseExpression());
     this.expect(Token.RPAREN);
     // FIXME: fail on `...Binding`
     node.Expression = expression;
@@ -854,7 +856,9 @@ export class ExpressionParser extends FunctionParser {
       node.PropertySetParameterList = null;
       node.UniqueFormalParameters = null;
     } else if (isSpecialMethod && isSetter) {
+      this.expect(Token.LPAREN);
       node.PropertySetParameterList = [this.parseFormalParameter()];
+      this.expect(Token.RPAREN);
       node.UniqueFormalParameters = null;
     } else {
       node.PropertySetParameterList = null;

@@ -2,12 +2,9 @@ import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
   GetIdentifierReference,
-  LexicalEnvironment,
+  EnvironmentRecord,
 } from '../environment.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Assert } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -26,33 +23,36 @@ export function GetActiveScriptOrModule() {
 
 // 8.3.2 #sec-resolvebinding
 export function ResolveBinding(name, env, strict) {
-  if (!env || Type(env) === 'Undefined') {
+  // 1. If env is not present or if env is undefined, then
+  if (env === undefined || env === Value.undefined) {
+    // a. Set env to the running execution context's LexicalEnvironment.
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
-  Assert(env instanceof LexicalEnvironment);
+  // 2. Assert: env is an Environment Record.
+  Assert(env instanceof EnvironmentRecord);
+  // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
+  // 4. Return ? GetIdentifierReference(env, name, strict).
   return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
 // #sec-getthisenvironment
 export function GetThisEnvironment() {
-  // 1. Let lex be the running execution context's LexicalEnvironment.
-  let lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // 1. Let env be the running execution context's LexicalEnvironment.
+  let env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Repeat,
   while (true) {
-    // a. Let envRec be lex's EnvironmentRecord.
-    const envRec = lex.EnvironmentRecord;
-    // b. Let exists be envRec.HasThisBinding().
-    const exists = envRec.HasThisBinding();
-    // c. If exists is true, return envRec.
+    // a. Let exists be env.HasThisBinding().
+    const exists = env.HasThisBinding();
+    // b. If exists is true, return envRec.
     if (exists === Value.true) {
-      return envRec;
+      return env;
     }
-    // d. Let outer be the value of lex's outer environment reference.
-    const outer = lex.outerEnvironmentReference;
-    // e. Assert: outer is not null.
+    // c. Let outer be env.[[OuterEnv]].
+    const outer = env.OuterEnv;
+    // d. Assert: outer is not null.
     Assert(outer !== Value.null);
-    // f. Set lex to outer.
-    lex = outer;
+    // e. Set env to outer.
+    env = outer;
   }
 }
 

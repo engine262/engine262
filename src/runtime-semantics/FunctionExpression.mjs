@@ -23,22 +23,20 @@ export function* Evaluate_FunctionExpression(FunctionExpression) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let funcEnv be NewDeclarativeEnvironment(scope).
   const funcEnv = NewDeclarativeEnvironment(scope);
-  // 3. Let envRec be funcEnv's EnvironmentRecord.
-  const envRec = funcEnv.EnvironmentRecord;
-  // 4. Let name be StringValue of BindingIdentifier.
+  // 3. Let name be StringValue of BindingIdentifier.
   const name = StringValue(BindingIdentifier);
-  // 5. Perform envRec.CreateImmutableBinding(name, false).
-  envRec.CreateImmutableBinding(name, Value.false);
-  // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
+  // 4. Perform funcEnv.CreateImmutableBinding(name, false).
+  funcEnv.CreateImmutableBinding(name, Value.false);
+  // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
   const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionBody, 'non-lexical-this', funcEnv);
-  // 7. Perform SetFunctionName(closure, name).
+  // 6. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 8. Perform MakeConstructor(closure).
+  // 7. Perform MakeConstructor(closure).
   MakeConstructor(closure);
-  // 9. Set closure.[[SourceText]] to the source text matched by FunctionExpression.
+  // 8. Set closure.[[SourceText]] to the source text matched by FunctionExpression.
   closure.SourceText = sourceTextMatchedBy(FunctionExpression);
-  // 10. Perform envRec.InitializeBinding(name, closure).
-  envRec.InitializeBinding(name, closure);
-  // 11. Return closure.
+  // 9. Perform funcEnv.InitializeBinding(name, closure).
+  funcEnv.InitializeBinding(name, closure);
+  // 10. Return closure.
   return closure;
 }

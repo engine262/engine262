@@ -54,7 +54,19 @@ export class FunctionParser extends RegExpParser {
 
   parseArrowFunction(node, parameters, isAsync) {
     this.expect(Token.ARROW);
-    node.ArrowParameters = parameters.map((p) => this.validateAssignmentTarget(p));
+    node.ArrowParameters = parameters.map((p) => {
+      switch (p.type) {
+        case 'IdentifierReference': {
+          p.type = 'BindingIdentifier';
+          const container = this.startNode();
+          container.BindingIdentifier = p;
+          container.Initializer = null;
+          return this.finishNode(container, 'SingleNameBinding');
+        }
+        default:
+          return this.unexpected(p);
+      }
+    });
     const body = this.parseConciseBody(isAsync);
     node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
@@ -89,24 +101,26 @@ export class FunctionParser extends RegExpParser {
       return [];
     }
     const params = [];
-    while (true) {
-      const node = this.startNode();
-      if (this.eat(Token.ELLIPSIS)) {
-        node.BindingIdentifier = this.parseBindingIdentifier();
-        params.push(this.finishNode(node, 'BindingRestElement'));
-        this.expect(Token.RPAREN);
-        break;
-      } else {
-        params.push(this.parseFormalParameter());
+    this.scope({ parameters: true }, () => {
+      while (true) {
+        const node = this.startNode();
+        if (this.eat(Token.ELLIPSIS)) {
+          node.BindingIdentifier = this.parseBindingIdentifier();
+          params.push(this.finishNode(node, 'BindingRestElement'));
+          this.expect(Token.RPAREN);
+          break;
+        } else {
+          params.push(this.parseFormalParameter());
+        }
+        if (this.eat(Token.RPAREN)) {
+          break;
+        }
+        this.expect(Token.COMMA);
+        if (this.eat(Token.RPAREN)) {
+          break;
+        }
       }
-      if (this.eat(Token.RPAREN)) {
-        break;
-      }
-      this.expect(Token.COMMA);
-      if (this.eat(Token.RPAREN)) {
-        break;
-      }
-    }
+    });
     return params;
   }
 

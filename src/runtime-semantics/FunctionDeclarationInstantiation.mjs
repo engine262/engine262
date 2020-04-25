@@ -93,14 +93,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     }
   }
   let env;
-  let envRec;
   // 19. If strict is true or if hasParameterExpressions is false, then
   if (strict || hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
     // b. Let env be the LexicalEnvironment of calleeContext.
     env = calleeContext.LexicalEnvironment;
-    // c. Let envRec be env's EnvironmentRecord.
-    envRec = env.EnvironmentRecord;
   } else {
     // a. NOTE: A separate Environment Record is needed to ensure that bindings created by direct eval
     //    calls in the formal parameter list are outside the environment where parameters are declared.
@@ -108,27 +105,25 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     const calleeEnv = calleeContext.LexicalEnvironment;
     // c. Let env be NewDeclarativeEnvironment(calleeEnv).
     env = NewDeclarativeEnvironment(calleeEnv);
-    // d. Let envRec be env's EnvironmentRecord.
-    envRec = env.EnvironmentRecord;
-    // e. Assert: The VariableEnvironment of calleeContext is calleeEnv.
+    // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
     Assert(calleeContext.VariableEnvironment === calleeEnv);
-    // f. Set the LexicalEnvironment of calleeContext to env.
+    // e. Set the LexicalEnvironment of calleeContext to env.
     calleeContext.LexicalEnvironment = env;
   }
   // 21. For each String paramName in parameterNames, do
   for (const paramName of parameterNames) {
-    // a. Let alreadyDeclared be envRec.HasBinding(paramName).
-    const alreadyDeclared = envRec.HasBinding(paramName);
+    // a. Let alreadyDeclared be env.HasBinding(paramName).
+    const alreadyDeclared = env.HasBinding(paramName);
     // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
     //    non-strict functions that do not have parameter default values or rest parameters.
     // c. If alreadyDeclared is false, then
     if (alreadyDeclared === Value.false) {
-      // i. Perform ! envRec.CreateMutableBinding(paramName, false).
-      X(envRec.CreateMutableBinding(paramName, Value.false));
+      // i. Perform ! env.CreateMutableBinding(paramName, false).
+      X(env.CreateMutableBinding(paramName, Value.false));
       // ii. If hasDuplicates is true, then
       if (hasDuplicates === true) {
-        // 1. Perform ! envRec.InitializeBinding(paramName, undefined).
-        X(envRec.InitializeBinding(paramName, Value.undefined));
+        // 1. Perform ! env.InitializeBinding(paramName, undefined).
+        X(env.InitializeBinding(paramName, Value.undefined));
       }
     }
   }
@@ -144,19 +139,19 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       // i. NOTE: mapped argument object is only provided for non-strict functions
       //    that don't have a rest parameter, any parameter default value initializers,
       //    or any destructured parameters.
-      // ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, envRec).
-      ao = CreateMappedArgumentsObject(func, formals, argumentsList, envRec);
+      // ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
+      ao = CreateMappedArgumentsObject(func, formals, argumentsList, env);
     }
     // c. If strict is true, then
     if (strict) {
-      // i. Perform ! envRec.CreateImmutableBinding("arguments", false).
-      X(envRec.CreateImmutableBinding(new Value('arguments'), Value.false));
+      // i. Perform ! env.CreateImmutableBinding("arguments", false).
+      X(env.CreateImmutableBinding(new Value('arguments'), Value.false));
     } else {
-      // i. Perform ! envRec.CreateMutableBinding("arguments", false).
-      X(envRec.CreateMutableBinding(new Value('arguments'), Value.false));
+      // i. Perform ! env.CreateMutableBinding("arguments", false).
+      X(env.CreateMutableBinding(new Value('arguments'), Value.false));
     }
-    // e. Call envRec.InitializeBinding("arguments", ao).
-    envRec.InitializeBinding(new Value('arguments'), ao);
+    // e. Call env.InitializeBinding("arguments", ao).
+    env.InitializeBinding(new Value('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
     parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
   } else {
@@ -174,7 +169,6 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     Q(yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env));
   }
   let varEnv;
-  let varEnvRec;
   // 27. If hasParameterExpressions is false, then
   if (hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
@@ -186,45 +180,41 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       if (!instantiatedVarNames.has(n)) {
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
-        // 2. Perform ! envRec.CreateMutableBinding(n, false).
-        X(envRec.CreateMutableBinding(n, Value.false));
-        // 3. Call envRec.InitializeBinding(n, undefined).
-        envRec.InitializeBinding(n, Value.undefined);
+        // 2. Perform ! env.CreateMutableBinding(n, false).
+        X(env.CreateMutableBinding(n, Value.false));
+        // 3. Call env.InitializeBinding(n, undefined).
+        env.InitializeBinding(n, Value.undefined);
       }
     }
     // d. Let varEnv be env.
     varEnv = env;
-    // e. Let varEnvRec be envRec.
-    varEnvRec = envRec;
   } else {
     // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
     //    in the formal parameter list do not have visibility of declarations in the function body.
     // b. Let varEnv be NewDeclarativeEnvironment(env).
     varEnv = NewDeclarativeEnvironment(env);
-    // c. Let varEnvRec be varEnv's EnvironmentRecord.
-    varEnvRec = varEnv.EnvironmentRecord;
-    // d. Set the VariableEnvironment of calleeContext to varEnv.
+    // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
-    // e. Let instantiatedVarNames be a new empty List.
+    // d. Let instantiatedVarNames be a new empty List.
     const instantiatedVarNames = new ValueSet();
-    // For each n in varNames, do
+    // e. For each n in varNames, do
     for (const n of varNames) {
       // If n is not an element of instantiatedVarNames, then
       if (!instantiatedVarNames.has(n)) {
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
-        // 2. Perform ! varEnvRec.CreateMutableBinding(n, false).
-        X(varEnvRec.CreateMutableBinding(n, Value.false));
+        // 2. Perform ! varEnv.CreateMutableBinding(n, false).
+        X(varEnv.CreateMutableBinding(n, Value.false));
         let initialValue;
         // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
         if (!parameterBindings.has(n) || functionNames.has(n)) {
           initialValue = Value.undefined;
         } else {
-          // a. Let initialValue be ! envRec.GetBindingValue(n, false).
-          initialValue = X(envRec.GetBindingValue(n, Value.false));
+          // a. Let initialValue be ! env.GetBindingValue(n, false).
+          initialValue = X(env.GetBindingValue(n, Value.false));
         }
-        // 5. Call varEnvRec.InitializeBinding(n, initialValue).
-        varEnvRec.InitializeBinding(n, initialValue);
+        // 5. Call varEnv.InitializeBinding(n, initialValue).
+        varEnv.InitializeBinding(n, initialValue);
         // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
       }
     }
@@ -243,13 +233,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. Else, let lexEnv be varEnv.
     lexEnv = varEnv;
   }
-  // 32. Let lexEnvRec be lexEnv's EnvironmentRecord.
-  const lexEnvRec = lexEnv.EnvironmentRecord;
-  // 33. Set the LexicalEnvironment of calleeContext to lexEnv.
+  // 32. Set the LexicalEnvironment of calleeContext to lexEnv.
   calleeContext.LexicalEnvironment = lexEnv;
-  // 34. Let lexDeclarations be the LexicallyScopedDeclarations of code.
+  // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
   const lexDeclarations = LexicallyScopedDeclarations(code);
-  // 35. For each element d in lexDeclarations, do
+  // 34. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal
     //    parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
@@ -257,23 +245,23 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        // 1. Perform ! lexEnvRec.CreateImmutableBinding(dn, true).
-        X(lexEnvRec.CreateImmutableBinding(dn, Value.true));
+        // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
+        X(lexEnv.CreateImmutableBinding(dn, Value.true));
       } else {
-        // 1. Perform ! lexEnvRec.CreateMutableBinding(dn, false).
-        X(lexEnvRec.CreateMutableBinding(dn, Value.false));
+        // 1. Perform ! lexEnv.CreateMutableBinding(dn, false).
+        X(lexEnv.CreateMutableBinding(dn, Value.false));
       }
     }
   }
-  // 36. For each Parse Node f in functionsToInitialize, do
+  // 35. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
     // b. Let fo be InstantiateFunctionObject of f with argument lexEnv.
     const fo = InstantiateFunctionObject(f, lexEnv);
-    // c. Perform ! varEnvRec.SetMutableBinding(fn, fo, false).
-    X(varEnvRec.SetMutableBinding(fn, fo, Value.false));
+    // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
+    X(varEnv.SetMutableBinding(fn, fo, Value.false));
   }
-  // 37. Return NormalCompletion(empty).
+  // 36. Return NormalCompletion(empty).
   return new NormalCompletion(undefined);
 }
