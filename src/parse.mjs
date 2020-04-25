@@ -1,4 +1,5 @@
 import { Parser } from './parser/Parser.mjs';
+import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
@@ -161,5 +162,14 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   });
 }
 
-export function ParseRegExp(_source, _flags) {
+export function ParseRegExp(pattern, BMP) {
+  const p = new RegExpParser(pattern.stringValue(), BMP);
+  try {
+    return p.parsePattern();
+  } catch (e) {
+    if (e.name === 'SyntaxError') {
+      return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
+    }
+    throw e;
+  }
 }

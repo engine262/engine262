@@ -1,12 +1,12 @@
 import { Token } from './tokens.mjs';
-import { RegExpParser } from './RegExpParser.mjs';
+import { IdentifierParser } from './IdentifierParser.mjs';
 
 export const FunctionKind = {
   NORMAL: 0,
   ASYNC: 1,
 };
 
-export class FunctionParser extends RegExpParser {
+export class FunctionParser extends IdentifierParser {
   // FunctionDeclaration :
   //   `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
   //   [+Default] `function` `(` FormalParameters `)` `{` FunctionBody `}`
