@@ -1,10 +1,13 @@
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
+const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 
 export class RegExpParser {
   constructor(source, BMP) {
     this.source = source;
     this.position = 0;
     this.plusU = !BMP;
+    this.capturingGroups = [];
+    this.groupSpecifiers = new Map();
   }
 
   peek() {
@@ -34,10 +37,14 @@ export class RegExpParser {
   // Pattern ::
   //   Disjunction
   parsePattern() {
-    return {
+    const node = {
       type: 'Pattern',
-      Disjunction: this.parseDisjunction(),
+      groupSpecifiers: this.groupSpecifiers,
+      capturingGroups: this.capturingGroups,
+      Disjunction: undefined,
     };
+    node.Disjunction = this.parseDisjunction();
+    return node;
   }
 
   // Disjunction ::
@@ -145,21 +152,64 @@ export class RegExpParser {
       };
     }
 
-    const term = {
+    return {
       type: 'Term',
+      capturingParenthesesBefore: this.capturingGroups.length,
       Atom: this.parseAtom(),
-      Quantifier: undefined,
+      Quantifier: this.parseQuantifier(),
     };
+  }
+
+  // Quantifier ::
+  //   QuantifierPrefix
+  //   QuantifierPrefix `?`
+  // QuantifierPrefix ::
+  //   `*`
+  //   `+`
+  //   `?`
+  //   `{` DecimalDigits `}`
+  //   `{` DecimalDigits `,` `}`
+  //   `{` DecimalDigits `,` DecimalDigits `}`
+  parseQuantifier() {
+    let QuantifierPrefix;
 
     if (this.eat('*')) {
-      term.Quantifier = '*';
+      QuantifierPrefix = '*';
     } else if (this.eat('+')) {
-      term.Quantifier = '+';
+      QuantifierPrefix = '+';
     } else if (this.eat('?')) {
-      term.Quantifier = '?';
+      QuantifierPrefix = '?';
+    } else if (this.eat('{')) {
+      QuantifierPrefix = {
+        DecimalDigits_a: undefined,
+        DecimalDigits_b: undefined,
+      };
+      QuantifierPrefix.DecimalDigits_a = this.parseDecimalDigits();
+      if (this.eat(',')) {
+        if (!this.test('}')) {
+          QuantifierPrefix.DecimalDigits_b = this.parseDecimalDigits();
+        }
+      }
+      this.expect('}');
     }
 
-    return term;
+    if (QuantifierPrefix) {
+      return {
+        type: 'Quantifier',
+        QuantifierPrefix,
+        greedy: this.eat('?'),
+      };
+    }
+
+    return undefined;
+  }
+
+  parseDecimalDigits() {
+    let n = '';
+    while (isDecimalDigit(this.peek())) {
+      n += this.next();
+    }
+    return n;
   }
 
   // Atom ::
@@ -176,30 +226,55 @@ export class RegExpParser {
   //  `<` RegExpIdentifierName `>`
   parseAtom() {
     if (this.eat('.')) {
-      return { type: 'Atom', subtype: '.' };
+      return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
     }
     if (this.eat('(')) {
       const node = {
         type: 'Atom',
         subtype: 'group',
-        capturing: false,
+        capturingParenthesesBefore: this.capturingGroups.length,
+        enclosedCapturingParentheses: 0,
+        capturing: true,
         GroupSpecifier: undefined,
         Disjunction: undefined,
       };
       if (this.eat('?')) {
         if (this.eat(':')) {
-          node.capturing = true;
+          node.capturing = false;
         } else {
           this.expect('<');
           node.GroupSpecifier = this.parseIdentifierName();
           this.expect('>');
         }
       }
+      if (node.capturing) {
+        this.capturingGroups.push(node);
+      }
+      if (node.GroupSpecifier) {
+        this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
+      }
       node.Disjunction = this.parseDisjunction();
       this.expect(')');
+      node.enclosedCapturingParentheses = this.capturingGroups.length - node.capturingParenthesesBefore - 1;
       return node;
     }
-    return { type: 'Atom', subtype: 'PatternCharacter', value: this.next() };
+    if (this.eat('[')) {
+      const node = {
+        type: 'Atom',
+        subtype: 'CharacterClass',
+        enclosedCapturingParentheses: 0,
+        inverse: this.eat('^'),
+        ClassRanges: this.parseClassRanges(),
+      };
+      this.expect(']');
+      return node;
+    }
+    return {
+      type: 'Atom',
+      subtype: 'PatternCharacter',
+      enclosedCapturingParentheses: 0,
+      value: this.next(),
+    };
   }
 
   // RegExpidentifierName ::

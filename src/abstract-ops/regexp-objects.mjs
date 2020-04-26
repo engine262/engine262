@@ -59,6 +59,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   //      pText were not matched by the parse, or if any Early Error conditions exist.
   //   c. Let patternCharacters be a List whose elements are the code points of pText.
   const patternCharacters = Q(ParseRegExp(pattern, BMP));
+  obj.parsedPattern = patternCharacters;
   // 9. Set obj.[[OriginalSource]] to P.
   obj.OriginalSource = P;
   // 10. Set obj.[[OriginalFlags]] to F.

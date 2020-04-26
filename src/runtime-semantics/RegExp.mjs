@@ -38,7 +38,7 @@ export function Evaluate_Pattern(Pattern) {
   //   * Unicode is true if the RegExp object's [[OriginalFlags]] internal slot contains "u" and otherwise is false.
   let Input;
   let InputLength;
-  const NcapturingParens = -1;
+  const NcapturingParens = Pattern.capturingGroups.length;
   const DotAll = false;
   const IgnoreCase = false;
   const Multiline = false;
@@ -58,9 +58,9 @@ export function Evaluate_Pattern(Pattern) {
       //    Otherwise, let Input be a List consisting of the sequence of code units that are the elements of str.
       //    Input will be used throughout the algorithms in 21.2.2. Each element of Input is considered to be a character.
       if (Unicode) {
-        Input = '';
+        Input = Array.from(str.stringValue());
       } else {
-        Input = '';
+        Input = str.stringValue().split('');
       }
       // d. Let InputLength be the number of characters contained in Input. This variable will be used throughout the algorithms in 21.2.2.
       InputLength = Input.length;
@@ -154,15 +154,14 @@ export function Evaluate_Pattern(Pattern) {
         // ii. Assert: c is a Continuation.
         Assert(typeof c === 'function');
         // iii. Let d be a new Continuation with parameters (y) that captures c and m2 and performs the following steps when called:
-        const m1 = mN.shift();
-        const d = mN.reduceRight((m2, cN) => (y) => {
+        const d = mN.slice(1).reduceRight((cN, m2) => (y) => {
           // 1. Assert: y is a State.
           Assert(y instanceof State);
           // 2. Call m2(y, c) and return its result.
           return m2(y, cN);
         }, c);
         // iv. Call m1(x, d) and return its result.
-        return m1(x, d);
+        return mN[0](x, d);
       };
     } else { // 4. Else,
       // a. Assert: direction is equal to -1.
@@ -174,15 +173,14 @@ export function Evaluate_Pattern(Pattern) {
         // ii. Assert: c is a Continuation.
         Assert(typeof c === 'function');
         // iii. Let d be a new Continuation with parameters (y) that captures c and m1 and performs the following steps when called:
-        const m2 = mN.pop();
-        const d = mN.reduce((m1, cN) => (y) => {
+        const d = mN.slice(0, -1).reduce((cN, m1) => (y) => {
           // 1. Assert: y is a State.
           Assert(y instanceof State);
           // 2. Call m1(y, c) and return its result.
           return m1(y, cN);
         });
         // iv. Call m2(x, d) and return its result.
-        return m2(x, d);
+        return mN[mN.length - 1](x, d);
       };
     }
   }
@@ -192,7 +190,8 @@ export function Evaluate_Pattern(Pattern) {
   //     Assertion
   //     Atom
   //     Atom Quantifier
-  function Evaluate_Term({ Assertion, Atom, Quantifier }, direction) {
+  function Evaluate_Term(Term, direction) {
+    const { Assertion, Atom, Quantifier } = Term;
     if (Assertion) {
       // 1. Return the Matcher that is the result of evaluating Assertion.
       return Evaluate_Assertion(Assertion);
@@ -204,14 +203,16 @@ export function Evaluate_Pattern(Pattern) {
     // 1. Evaluate Atom with argument direction to obtain a Matcher m.
     const m = Evaluate_Atom(Atom, direction);
     // 2. Evaluate Quantifier to obtain the three results: an integer min, an integer (or ∞) max, and Boolean greedy.
-    const { min, max, greedy } = Evaluate_Quantifier(Quantifier);
+    const [min, max, greedy] = Evaluate_Quantifier(Quantifier);
     // 3. Assert: If max is finite, then max is not less than min.
     Assert(!Number.isFinite(max) || (max >= min));
     // 4. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the
     //    left of this Term. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to
     //    or enclosing this Term.
+    const parenIndex = Term.capturingParenthesesBefore;
     // 5. Let parenCount be the number of left-capturing parentheses in Atom. This is the total number of
     //    Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes enclosed by Atom.
+    const parenCount = Atom.enclosedCapturingParentheses;
     // 6. Return a new Matcher with parameters (x, c) that captures m, min, max, greedy, parenIndex, and parenCount and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
@@ -223,7 +224,71 @@ export function Evaluate_Pattern(Pattern) {
     };
   }
 
-  function RepeatMatcher() {}
+  // #sec-runtime-semantics-repeatmatcher-abstract-operation
+  function RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) {
+    // 1. If max is zero, return c(x).
+    if (max === 0) {
+      return c(x);
+    }
+    // 2. Let d be a new Continuation with parameters (y) that captures m, min, max, greedy, x, c, parenIndex, and parenCount and performs the following steps when called:
+    const d = (y) => {
+      // a. Assert: y is a State.
+      Assert(y instanceof State);
+      // b. If min is zero and y's endIndex is equal to x's endIndex, return failure.
+      if (min === 0 && y.endIndex === x.endIndex) {
+        return 'failure';
+      }
+      // c. If min is zero, let min2 be zero; otherwise let min2 be min - 1.
+      let min2;
+      if (min === 0) {
+        min2 = 0;
+      } else {
+        min2 = min - 1;
+      }
+      // d. If max is ∞, let max2 be ∞; otherwise let max2 be max - 1.
+      let max2;
+      if (max === Infinity) {
+        max2 = Infinity;
+      } else {
+        max2 = max - 1;
+      }
+      // e. Call RepeatMatcher(m, min2, max2, greedy, y, c, parenIndex, parenCount) and return its result.
+      return RepeatMatcher(m, min2, max2, greedy, y, c, parenIndex, parenCount);
+    };
+    // 3. Let cap be a copy of x's captures List.
+    const cap = [...x.captures];
+    // 4. For each integer k that satisfies parenIndex < k and k ≤ parenIndex + parenCount, set cap[k] to undefined.
+    for (let k = parenIndex + 1; k <= parenIndex + parenCount; k += 1) {
+      cap[k] = Value.undefined;
+    }
+    // 5. Let e be x's endIndex.
+    const e = x.endIndex;
+    // 6. Let xr be the State (e, cap).
+    const xr = new State(e, cap);
+    // 7. If min is not zero, return m(xr, d).
+    if (min !== 0) {
+      return m(xr, d);
+    }
+    // 8. If greedy is false, then
+    if (greedy === false) {
+      // a. Call c(x) and let z be its result.
+      const z = c(x);
+      // b. If z is not failure, return z.
+      if (z !== 'failure') {
+        return z;
+      }
+      // c. Call m(xr, d) and return its result.
+      return m(xr, d);
+    }
+    // 9. Call m(xr, d) and let z be its result.
+    const z = m(xr, d);
+    // 10. If z is not failure, return z.
+    if (z !== 'failure') {
+      return z;
+    }
+    // 11. Call c(x) and return its result.
+    return c(x);
+  }
 
   // #sec-assertion
   //   Assertion ::
@@ -521,7 +586,7 @@ export function Evaluate_Pattern(Pattern) {
     switch (Atom.subtype) {
       case 'PatternCharacter': {
         // 1. Let ch be the character matched by PatternCharacter.
-        const ch = '';
+        const ch = Atom.value;
         // 2. Let A be a one-element CharSet containing the character ch.
         const A = [ch];
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
@@ -556,7 +621,7 @@ export function Evaluate_Pattern(Pattern) {
         return CharacterSetMatcher(A, invert, direction);
       }
       case 'group': {
-        const { capturing, Disjunction } = Atom;
+        const { capturingParenthesesBefore, capturing, Disjunction } = Atom;
         if (!capturing) {
           // 1. Return the Matcher that is the result of evaluating Disjunction with argument direction.
           return Evaluate_Disjunction(Disjunction, direction);
@@ -566,7 +631,7 @@ export function Evaluate_Pattern(Pattern) {
         // 2. Let parenIndex be the number of left-capturing parentheses in the entire regular expression
         //    that occur to the left of this Atom. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)`
         //    Parse Nodes prior to or enclosing this Atom.
-        let parenIndex;
+        const parenIndex = capturingParenthesesBefore;
         // 3. Return a new Matcher with parameters (x, c) that captures direction, m, and parenIndex and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
