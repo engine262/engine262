@@ -1,16 +1,27 @@
 import { surroundingAgent } from '../engine.mjs';
-import { ParseRegExp } from '../parse.mjs';
+import { ParseRegExp, isLineTerminator } from '../parse.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
 import {
+  Assert,
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   Set,
   ToString,
 } from './all.mjs';
 
-// 21.2.3.2.1 #sec-regexpalloc
+// https://tc39.es/proposal-regexp-match-indices/#sec-match-records
+export class MatchRecord {
+  constructor(StartIndex, EndIndex) {
+    Assert(Number.isInteger(StartIndex) && StartIndex >= 0);
+    Assert(Number.isInteger(EndIndex) && EndIndex >= StartIndex);
+    this.StartIndex = StartIndex;
+    this.EndIndex = EndIndex;
+  }
+}
+
+// #sec-regexpalloc
 export function RegExpAlloc(newTarget) {
   const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
   X(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
@@ -21,7 +32,7 @@ export function RegExpAlloc(newTarget) {
   return obj;
 }
 
-// 21.2.3.2.2 #sec-regexpinitialize
+// #sec-regexpinitialize
 export function RegExpInitialize(obj, pattern, flags) {
   let P;
   // 1. If pattern is undefined, let P be the empty String.
@@ -58,7 +69,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   //      Throw a SyntaxError exception if pText did not conform to the grammar, if any elements of
   //      pText were not matched by the parse, or if any Early Error conditions exist.
   //   c. Let patternCharacters be a List whose elements are the code points of pText.
-  const patternCharacters = Q(ParseRegExp(pattern, BMP));
+  const patternCharacters = Q(ParseRegExp(P, BMP));
   obj.parsedPattern = patternCharacters;
   // 9. Set obj.[[OriginalSource]] to P.
   obj.OriginalSource = P;
@@ -67,7 +78,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   // 11. Set obj.[[RegExpMatcher]] to the abstract closure that evaluates the above parse by
   //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
   //     List of SourceCharacter values and F as the flag parameters.
-  obj.RegExpMatcher = Evaluate_Pattern(patternCharacters);
+  obj.RegExpMatcher = Evaluate_Pattern(patternCharacters, F.stringValue());
   // 12. Perform ? Set(obj, "lastIndex", 0, true).
   Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
   // 13. Return obj.
@@ -81,8 +92,64 @@ export function RegExpCreate(P, F) {
 }
 
 // #sec-escaperegexppattern
-export function EscapeRegExpPattern(P, F) {
-  // TODO: implement this without host
-  const re = new RegExp(P.stringValue(), F.stringValue());
-  return new Value(re.source);
+export function EscapeRegExpPattern(P, _F) {
+  const source = P.stringValue();
+  if (source === '') {
+    return new Value('(:?)');
+  }
+  let index = 0;
+  let escaped = '';
+  let inClass = false;
+  while (index < source.length) {
+    const c = source[index];
+    switch (c) {
+      case '\\':
+        index += 1;
+        if (isLineTerminator(source[index])) {
+          // nothing
+        } else {
+          escaped += '\\';
+        }
+        break;
+      case '/':
+        index += 1;
+        if (inClass) {
+          escaped += '/';
+        } else {
+          escaped += '\\/';
+        }
+        break;
+      case '[':
+        inClass = true;
+        index += 1;
+        escaped += '[';
+        break;
+      case ']':
+        inClass = false;
+        index += 1;
+        escaped += ']';
+        break;
+      case '\n':
+        index += 1;
+        escaped += '\\n';
+        break;
+      case '\r':
+        index += 1;
+        escaped += '\\r';
+        break;
+      case '\u2028':
+        index += 1;
+        escaped += '\\u2028';
+        break;
+      case '\u2029':
+        index += 1;
+        escaped += '\\u2029';
+        break;
+      default:
+        index += 1;
+        escaped += c;
+        break;
+    }
+  }
+  return new Value(escaped);
 }

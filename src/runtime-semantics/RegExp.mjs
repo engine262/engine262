@@ -21,7 +21,7 @@ let cachedWordCharacters;
 
 // #sec-pattern
 //   Pattern :: Disjunction
-export function Evaluate_Pattern(Pattern) {
+export function Evaluate_Pattern(Pattern, flags) {
   // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
@@ -39,10 +39,10 @@ export function Evaluate_Pattern(Pattern) {
   let Input;
   let InputLength;
   const NcapturingParens = Pattern.capturingGroups.length;
-  const DotAll = false;
-  const IgnoreCase = false;
-  const Multiline = false;
-  const Unicode = false;
+  const DotAll = flags.includes('s');
+  const IgnoreCase = flags.includes('i');
+  const Multiline = flags.includes('m');
+  const Unicode = flags.includes('u');
 
   {
     // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.

@@ -20,11 +20,11 @@ import { BindingInitialization } from './all.mjs';
 //     `try` Block Catch Finally
 export function Evaluate_TryStatement(TryStatement) {
   switch (true) {
-    case TryStatement.Catch && !TryStatement.Finally:
+    case !!TryStatement.Catch && !TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatch(TryStatement);
-    case !TryStatement.Catch && TryStatement.Finally:
+    case !TryStatement.Catch && !!TryStatement.Finally:
       return Evaluate_TryStatement_BlockFinally(TryStatement);
-    case TryStatement.Catch && TryStatement.Finally:
+    case !!TryStatement.Catch && !!TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
     default:
       throw new OutOfRange('Evaluate_TryStatement', TryStatement);

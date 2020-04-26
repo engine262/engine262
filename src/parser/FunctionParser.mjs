@@ -63,6 +63,8 @@ export class FunctionParser extends IdentifierParser {
           container.Initializer = null;
           return this.finishNode(container, 'SingleNameBinding');
         }
+        case 'BindingRestElement':
+          return p;
         default:
           return this.unexpected(p);
       }
@@ -70,15 +72,6 @@ export class FunctionParser extends IdentifierParser {
     const body = this.parseConciseBody(isAsync);
     node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
-  }
-
-  parsePropertyName() {
-    if (this.eat(Token.LBRACK)) {
-      const e = this.parseAssignmentExpression();
-      this.expect(Token.RBRACK);
-      return e;
-    }
-    return this.parseIdentifierName();
   }
 
   parseConciseBody(isAsync) {
@@ -139,7 +132,7 @@ export class FunctionParser extends IdentifierParser {
     }, () => {
       const directives = [];
       node.FunctionStatementList = this.parseStatementList(Token.RBRACE, directives);
-      node.strict = directives.includes('use strict');
+      node.strict = node.strict || directives.includes('use strict');
     });
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`;
     return this.finishNode(node, name);

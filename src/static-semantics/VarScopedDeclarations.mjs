@@ -27,26 +27,22 @@ export function VarScopedDeclarations(node) {
     case 'DoWhileStatement':
       return VarScopedDeclarations(node.Statement);
     case 'ForStatement': {
-      const names = VarScopedDeclarations(node.Statement);
+      const names = [];
       if (node.VariableDeclarationList) {
         names.push(...VarScopedDeclarations(node.VariableDeclarationList));
       }
+      names.push(...VarScopedDeclarations(node.Statement));
       return names;
     }
-    case 'ForInStatement': {
-      const names = VarScopedDeclarations(node.Statement);
-      if (node.ForBinding) {
-        names.push(...VarScopedDeclarations(node.ForBinding));
-      }
-      return names;
-    }
+    case 'ForInStatement':
     case 'ForOfStatement':
     case 'ForAwaitStatement': {
-      const names = VarScopedDeclarations(node.Statement);
+      const declarations = [];
       if (node.ForBinding) {
-        names.push(...VarScopedDeclarations(node.ForBinding));
+        declarations.push(node.ForBinding);
       }
-      return names;
+      declarations.push(...VarScopedDeclarations(node.Statement));
+      return declarations;
     }
     case 'WithStatement':
       return VarScopedDeclarations(node.Statement);
@@ -83,6 +79,8 @@ export function VarScopedDeclarations(node) {
       }
       return declarations;
     }
+    case 'Catch':
+      return VarScopedDeclarations(node.Block);
     case 'ExportDeclaration':
       if (node.VariableStatement) {
         return VarScopedDeclarations(node.VariableStatement);

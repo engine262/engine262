@@ -25,25 +25,21 @@ export function VarDeclaredNames(node) {
     case 'DoWhileStatement':
       return VarDeclaredNames(node.Statement);
     case 'ForStatement': {
-      const names = VarDeclaredNames(node.Statement);
+      const names = [];
       if (node.VariableDeclarationList) {
         names.push(...VarDeclaredNames(node.VariableDeclarationList));
       }
+      names.push(...VarDeclaredNames(node.Statement));
       return names;
     }
-    case 'ForInStatement': {
-      const names = VarDeclaredNames(node.Statement);
-      if (node.ForBinding) {
-        names.push(...VarDeclaredNames(node.ForBinding));
-      }
-      return names;
-    }
+    case 'ForInStatement':
     case 'ForOfStatement':
     case 'ForAwaitStatement': {
-      const names = VarDeclaredNames(node.Statement);
+      const names = [];
       if (node.ForBinding) {
-        names.push(...VarDeclaredNames(node.ForBinding));
+        names.push(...BoundNames(node.ForBinding));
       }
+      names.push(...VarDeclaredNames(node.Statement));
       return names;
     }
     case 'WithStatement':
@@ -81,6 +77,8 @@ export function VarDeclaredNames(node) {
       }
       return names;
     }
+    case 'Catch':
+      return VarDeclaredNames(node.Block);
     case 'Script':
       if (node.ScriptBody) {
         return VarDeclaredNames(node.ScriptBody);

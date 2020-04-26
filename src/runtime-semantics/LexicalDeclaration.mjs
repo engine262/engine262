@@ -47,7 +47,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
-  const { id: BindingPattern, init: Initializer } = LexicalBinding;
+  const { BindingPattern, Initializer } = LexicalBinding;
   const rhs = yield* Evaluate(Initializer);
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;

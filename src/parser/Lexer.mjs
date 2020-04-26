@@ -579,8 +579,11 @@ export class Lexer {
         if (!isDecimalDigit(c)) {
           this.report('UnterminatedNumber', this.position);
         }
-        while (isDecimalDigit(c)) {
+        while (true) {
           c = this.source[this.position];
+          if (!isDecimalDigit(c)) {
+            break;
+          }
           this.position += 1;
           buffer += c;
         }
@@ -719,7 +722,7 @@ export class Lexer {
           break;
         case '/':
           this.position += 1;
-          if (inClass) {
+          if (inClass || this.source[this.position - 2] === '\\') {
             buffer += c;
             break;
           }

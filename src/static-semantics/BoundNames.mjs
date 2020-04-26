@@ -16,7 +16,10 @@ export function BoundNames(node) {
     case 'LexicalDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
-      return BoundNames(node.BindingIdentifier);
+      if (node.BindingIdentifier) {
+        return BoundNames(node.BindingIdentifier);
+      }
+      return BoundNames(node.BindingPattern);
     case 'VariableStatement':
       return BoundNames(node.VariableDeclarationList);
     case 'VariableDeclaration':

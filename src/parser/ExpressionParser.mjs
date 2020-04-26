@@ -57,6 +57,19 @@ export class ExpressionParser extends FunctionParser {
         params = [left];
       }
       return this.parseArrowFunction(node, params, false);
+    } else {
+      if (left.type === 'ParenthesizedExpression') {
+        if (left.Expression.type === 'CommaOperator') {
+          const { ExpressionList } = left.Expression;
+          if (ExpressionList[ExpressionList.length - 1].type === 'RestBindingElement') {
+            this.unexpected(ExpressionList[ExpressionList.length - 1]);
+          }
+        } else {
+          if (left.Expression.type === 'RestBindingElement') {
+            this.unexpected(left.Expression);
+          }
+        }
+      }
     }
     switch (this.peek().type) {
       case Token.ASSIGN:
@@ -496,11 +509,8 @@ export class ExpressionParser extends FunctionParser {
       case Token.AWAIT:
         return this.parseIdentifierReference();
       case Token.NUMBER:
-      case Token.BIGINT: {
-        const node = this.startNode();
-        node.value = this.next().value;
-        return this.finishNode(node, 'NumericLiteral');
-      }
+      case Token.BIGINT:
+        return this.parseNumericLiteral();
       case Token.STRING:
         return this.parseStringLiteral();
       case Token.NULL: {
@@ -540,6 +550,16 @@ export class ExpressionParser extends FunctionParser {
       default:
         return this.unexpected();
     }
+  }
+
+  // NumericLiteral
+  parseNumericLiteral() {
+    const node = this.startNode();
+    if (!this.test(Token.NUMBER) && !this.test(Token.BIGINT)) {
+      this.unexpected();
+    }
+    node.value = this.next().value;
+    return this.finishNode(node, 'NumericLiteral');
   }
 
   // StringLiteral
@@ -774,14 +794,32 @@ export class ExpressionParser extends FunctionParser {
   //   `(` Expression `)`
   parseParenthesizedExpression() {
     const node = this.startNode();
+    const commaOp = this.startNode();
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
       return this.parseArrowFunction(node, [], false);
     }
-    const expression = this.scope({ in: true }, () => this.parseExpression());
+    const expressions = [];
+    while (true) {
+      if (this.test(Token.ELLIPSIS)) {
+        const inner = this.startNode();
+        this.next();
+        inner.BindingIdentifier = this.parseBindingIdentifier();
+        expressions.push(this.finishNode(inner, 'BindingRestElement'));
+        break;
+      }
+      expressions.push(this.parseAssignmentExpression());
+      if (!this.eat(Token.COMMA)) {
+        break;
+      }
+    }
     this.expect(Token.RPAREN);
-    // FIXME: fail on `...Binding`
-    node.Expression = expression;
+    if (expressions.length === 1) {
+      node.Expression = expressions[0];
+    } else {
+      commaOp.ExpressionList = expressions;
+      node.Expression = this.finishNode(commaOp, 'CommaOperator');
+    }
     return this.finishNode(node, 'ParenthesizedExpression');
   }
 
@@ -808,6 +846,30 @@ export class ExpressionParser extends FunctionParser {
       node.Initializer = null;
     }
     return this.finishNode(node, 'SingleNameBinding');
+  }
+
+  // PropertyName :
+  //   LiteralPropertyName
+  //   ComputedPropertyName
+  // LiteralPropertyName :
+  //   IdentifierName
+  //   StringLiteral
+  //   NumericLiteral
+  // ComputedPropertyName :
+  //   `[` AssignmentExpression `]`
+  parsePropertyName() {
+    if (this.eat(Token.LBRACK)) {
+      const e = this.parseAssignmentExpression();
+      this.expect(Token.RBRACK);
+      return e;
+    }
+    if (this.test(Token.STRING)) {
+      return this.parseStringLiteral();
+    }
+    if (this.test(Token.NUMBER) || this.test(Token.BIGINT)) {
+      return this.parseNumericLiteral();
+    }
+    return this.parseIdentifierName();
   }
 
   // PropertyDefinition :
@@ -838,35 +900,50 @@ export class ExpressionParser extends FunctionParser {
       return this.finishNode(node, 'PropertyDefinition');
     }
 
-    const leadingIdentifier = this.parsePropertyName();
-    const isAsync = leadingIdentifier.name === 'async';
-    const isGetter = leadingIdentifier.name === 'get';
-    const isSetter = leadingIdentifier.name === 'set';
+    const firstName = this.parsePropertyName();
+    let isAsync = false;
+    let isGetter = false;
+    let isSetter = false;
+    if (firstName.type === 'IdentifierName') {
+      switch (firstName.name) {
+        case 'async':
+          isAsync = true;
+          break;
+        case 'get':
+          isGetter = true;
+          break;
+        case 'set':
+          isSetter = true;
+          break;
+        default:
+          break;
+      }
+    }
     const isGenerator = !isGetter && !isSetter && this.eat(Token.MUL);
     const isSpecialMethod = isGenerator || ((isSetter || isGetter || isAsync) && !this.test(Token.LPAREN));
 
     if (!isGenerator && type === 'property') {
       if (this.eat(Token.COLON)) {
-        node.PropertyName = leadingIdentifier;
+        node.PropertyName = firstName;
         node.AssignmentExpression = this.parseAssignmentExpression();
         return this.finishNode(node, 'PropertyDefinition');
       }
       if (this.test(Token.ASSIGN)) {
-        node.IdentifierReference = leadingIdentifier;
+        node.IdentifierReference = firstName;
         node.Initializer = this.parseInitialized();
         return this.finishNode(node, 'CoverInitializedName');
       }
+
+      if (!isSpecialMethod
+          && firstName.type === 'IdentifierName'
+          && !this.test(Token.LPAREN)
+          && !isKeyword(firstName.name)) {
+        firstName.type = 'IdentifierReference';
+        return firstName;
+      }
     }
 
-    if (type === 'property'
-        && !isSpecialMethod
-        && !this.test(Token.LPAREN)
-        && !isKeyword(leadingIdentifier.name)) {
-      leadingIdentifier.type = 'IdentifierReference';
-      return leadingIdentifier;
-    }
-
-    node.PropertyName = isSpecialMethod ? this.parsePropertyName() : leadingIdentifier;
+    node.PropertyName = isSpecialMethod ? this.parsePropertyName() : firstName;
 
     if (isSpecialMethod && isGetter) {
       this.expect(Token.LPAREN);

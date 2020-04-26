@@ -14,8 +14,12 @@ export class RegExpParser {
     return this.source[this.position];
   }
 
+  test(c) {
+    return this.source[this.position] === c;
+  }
+
   eat(c) {
-    if (this.source[this.position] === c) {
+    if (this.test(c)) {
       this.next();
       return true;
     }
@@ -197,7 +201,7 @@ export class RegExpParser {
       return {
         type: 'Quantifier',
         QuantifierPrefix,
-        greedy: this.eat('?'),
+        greedy: !this.eat('?'),
       };
     }
 
@@ -223,7 +227,10 @@ export class RegExpParser {
   //   [empty]
   //   `?` GroupName
   // GroupName ::
-  //  `<` RegExpIdentifierName `>`
+  //   `<` RegExpIdentifierName `>`
+  // CharacterClass ::
+  //   `[` ClassRanges `]`
+  //   `[` `^` ClassRanges `]`
   parseAtom() {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
@@ -275,6 +282,16 @@ export class RegExpParser {
       enclosedCapturingParentheses: 0,
       value: this.next(),
     };
+  }
+
+  // ClassRanges ::
+  //   [empty]
+  //   NonemptyClassRanges
+  parseClassRanges() {
+    if (this.test(']')) {
+      return undefined;
+    }
+    const atom = this.parseClassAtom();
   }
 
   // RegExpidentifierName ::

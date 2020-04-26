@@ -24,7 +24,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  // GetSubstitution,
+  GetSubstitution,
   TrimString,
   StringPad,
   StringIndexOf,

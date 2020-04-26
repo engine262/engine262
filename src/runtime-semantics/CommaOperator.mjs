@@ -7,11 +7,10 @@ import { Q } from '../completion.mjs';
 //     AssignmentExpression
 //     Expression `,` AssignmentExpression
 export function* Evaluate_CommaOperator({ ExpressionList }) {
-  const AssignmentExpression = ExpressionList.pop();
+  let result;
   for (const Expression of ExpressionList) {
     const lref = yield* Evaluate(Expression);
-    Q(GetValue(lref));
+    result = Q(GetValue(lref));
   }
-  const rref = yield* Evaluate(AssignmentExpression);
-  return Q(GetValue(rref));
+  return result;
 }

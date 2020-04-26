@@ -3,6 +3,7 @@ import { Type, Value, wellKnownSymbols } from './value.mjs';
 import { Realm as APIRealm } from './api.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
+  EscapeRegExpPattern,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 
@@ -93,6 +94,12 @@ const INSPECTORS = {
         e = X(Call(toString, v));
       }
       return e.stringValue();
+    }
+
+    if ('RegExpMatcher' in v) {
+      const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
+      const F = v.OriginalFlags.stringValue();
+      return `/${P}/${F}`;
     }
 
     if ('BooleanData' in v) {

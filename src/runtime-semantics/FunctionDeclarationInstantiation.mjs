@@ -37,7 +37,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 5. Let parameterNames be BoundNames of formals.
   const parameterNames = BoundNames(formals);
   // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
-  const hasDuplicates = parameterNames.some((e) => parameterNames.indexOf(e) !== parameterNames.lastIndexOf(e));
+  const hasDuplicates = new ValueSet(parameterNames).size !== parameterNames.length;
   // 7. Let simpleParameterList be IsSimpleParameterList of formals.
   const simpleParameterList = IsSimpleParameterList(formals);
   // 8. Let hasParameterExpressions be ContainsExpression of formals.
@@ -173,8 +173,8 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   if (hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
     // b. Let instantiatedVarNames be a copy of the List parameterBindings.
-    const instantiatedVarNames = new ValueSet([...parameterBindings]);
-    // c. Let instantiatedVarNames be a copy of the List parameterBindings.
+    const instantiatedVarNames = new ValueSet(parameterBindings);
+    // c. For each n in varNames, do
     for (const n of varNames) {
       // i. If n is not an element of instantiatedVarNames, then
       if (!instantiatedVarNames.has(n)) {
