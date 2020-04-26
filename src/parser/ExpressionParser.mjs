@@ -5,7 +5,7 @@ import {
   isKeyword,
   isReservedWordStrict,
 } from './tokens.mjs';
-import { isNewline } from './Lexer.mjs';
+import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
 
 export class ExpressionParser extends FunctionParser {
@@ -739,7 +739,7 @@ export class ExpressionParser extends FunctionParser {
           break;
         default:
           this.position += 1;
-          if (isNewline(c)) {
+          if (isLineTerminator(c)) {
             if (c === '\r' && this.source[this.position] === '\n') {
               this.position += 1;
             }

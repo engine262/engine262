@@ -11,7 +11,7 @@ const isHexDigit = (c) => /[\da-f]/ui.test(c);
 const isOctalDigit = (c) => /[0-7]/u.test(c);
 const isBinaryDigit = (c) => c === '0' || c === '1';
 const isWhitespace = (c) => /[\u0009\u000B\u000C\u0020\u00A0\uFEFF]|\p{Space_Separator}/u.test(c); // eslint-disable-line no-control-regex
-export const isNewline = (c) => /\r\n?|[\n\u2028\u2029]/u.test(c);
+export const isLineTerminator = (c) => /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => (isIdentifierContinue(c) || c === '$');
 
 const SingleCharTokens = {
@@ -205,7 +205,7 @@ export class Lexer {
         default:
           if (isWhitespace(c)) {
             this.position += 1;
-          } else if (isNewline(c)) {
+          } else if (isLineTerminator(c)) {
             this.position += 1;
             if (c === '\r' && this.source[this.position] === '\n') {
               this.position += 1;
@@ -234,7 +234,7 @@ export class Lexer {
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       this.position += 1;
-      if (isNewline(c)) {
+      if (isLineTerminator(c)) {
         if (c === '\r' && this.source[this.position] === '\n') {
           this.position += 1;
         }
@@ -603,7 +603,7 @@ export class Lexer {
         this.position += 1;
         break;
       }
-      if (isNewline(c)) {
+      if (isLineTerminator(c)) {
         this.report('UnterminatedString', this.position);
       }
       this.position += 1;
@@ -726,7 +726,7 @@ export class Lexer {
           this.scannedValue = buffer;
           return;
         default:
-          if (isNewline(c)) {
+          if (isLineTerminator(c)) {
             this.report('UnterminatedRegExp', this.position);
           }
           this.position += 1;

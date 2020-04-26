@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { ParseRegExp } from '../parse.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { getMatcher } from '../runtime-semantics/all.mjs';
+import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
@@ -66,7 +66,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   // 11. Set obj.[[RegExpMatcher]] to the abstract closure that evaluates the above parse by
   //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
   //     List of SourceCharacter values and F as the flag parameters.
-  obj.RegExpMatcher = getMatcher(patternCharacters, F);
+  obj.RegExpMatcher = Evaluate_Pattern(patternCharacters);
   // 12. Perform ? Set(obj, "lastIndex", 0, true).
   Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
   // 13. Return obj.

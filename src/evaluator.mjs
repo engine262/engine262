@@ -215,7 +215,7 @@ export function* Evaluate(node) {
     case 'ConditionalExpression':
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':
-      return yield* Evaluate_RegularExpressionLiteral(node);
+      return Evaluate_RegularExpressionLiteral(node);
     case 'AsyncFunctionBody':
     case 'GeneratorBody':
     case 'AsyncGeneratorBody':

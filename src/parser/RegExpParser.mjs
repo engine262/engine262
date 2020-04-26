@@ -34,7 +34,10 @@ export class RegExpParser {
   // Pattern ::
   //   Disjunction
   parsePattern() {
-    return this.parseDisjunction();
+    return {
+      type: 'Pattern',
+      Disjunction: this.parseDisjunction(),
+    };
   }
 
   // Disjunction ::
@@ -82,20 +85,20 @@ export class RegExpParser {
   //   `(` `?` `<!` Disjunction `)`
   parseTerm() {
     if (this.eat('^')) {
-      return { type: 'Assertion', value: '^' };
+      return { type: 'Assertion', subtype: '^' };
     }
     if (this.eat('$')) {
-      return { type: 'Assertion', value: '$' };
+      return { type: 'Assertion', subtype: '$' };
     }
 
     const look2 = this.source.slice(this.position, this.position + 2);
     if (look2 === '\\b') {
       this.position += 2;
-      return { type: 'Assertion', value: 'b' };
+      return { type: 'Assertion', subtype: 'b' };
     }
     if (look2 === '\\B') {
       this.position += 2;
-      return { type: 'Assertion', value: 'B' };
+      return { type: 'Assertion', subtype: 'B' };
     }
 
     const look3 = this.source.slice(this.position, this.position + 3);
@@ -105,7 +108,7 @@ export class RegExpParser {
       this.expect(')');
       return {
         type: 'Assertion',
-        value: '?=',
+        subtype: '?=',
         Disjunction: d,
       };
     }
@@ -115,7 +118,7 @@ export class RegExpParser {
       this.expect(')');
       return {
         type: 'Assertion',
-        value: '?!',
+        subtype: '?!',
         Disjunction: d,
       };
     }
@@ -127,7 +130,7 @@ export class RegExpParser {
       this.expect(')');
       return {
         type: 'Assertion',
-        value: '?<=',
+        subtype: '?<=',
         Disjunction: d,
       };
     }
@@ -137,7 +140,7 @@ export class RegExpParser {
       this.expect(')');
       return {
         type: 'Assertion',
-        value: '?<!',
+        subtype: '?<!',
         Disjunction: d,
       };
     }
@@ -173,18 +176,19 @@ export class RegExpParser {
   //  `<` RegExpIdentifierName `>`
   parseAtom() {
     if (this.eat('.')) {
-      return { type: 'Atom', value: '.' };
+      return { type: 'Atom', subtype: '.' };
     }
     if (this.eat('(')) {
       const node = {
-        type: 'Group',
-        nonCapturing: false,
+        type: 'Atom',
+        subtype: 'group',
+        capturing: false,
         GroupSpecifier: undefined,
         Disjunction: undefined,
       };
       if (this.eat('?')) {
         if (this.eat(':')) {
-          node.nonCapturing = true;
+          node.capturing = true;
         } else {
           this.expect('<');
           node.GroupSpecifier = this.parseIdentifierName();
@@ -195,7 +199,7 @@ export class RegExpParser {
       this.expect(')');
       return node;
     }
-    return { type: 'PatternCharacter', value: this.next() };
+    return { type: 'Atom', subtype: 'PatternCharacter', value: this.next() };
   }
 
   // RegExpidentifierName ::

@@ -24,7 +24,7 @@ import {
   ToUint32,
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
-// import { GetSubstitution } from '../runtime-semantics/all.mjs';
+import { RegExpState as State } from '../runtime-semantics/all.mjs';
 import {
   Type,
   Value,

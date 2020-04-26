@@ -3,6 +3,8 @@ import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
 import { Token } from './tokens.mjs';
 
+export { isLineTerminator } from './Lexer.mjs';
+
 /* eslint-disable key-spacing */
 export const ScopeBits = {
   __proto__: null,
