@@ -84,3 +84,4 @@ export * from './ExportDeclaration.mjs';
 export * from './OptionalExpression.mjs';
 export * from './TaggedTemplateExpression.mjs';
 export * from './GetSubstitution.mjs';
+export * from './ContinueStatement.mjs';

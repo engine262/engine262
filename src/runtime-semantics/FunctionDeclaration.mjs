@@ -6,5 +6,5 @@ import { NormalCompletion } from '../completion.mjs';
 //   function ( FormalParameters ) { FunctionBody }
 export function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
   // 1. Return NormalCompletion(empty).
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

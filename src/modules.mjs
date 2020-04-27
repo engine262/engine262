@@ -514,7 +514,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 24. Remove moduleContext from the execution context stack.
     surroundingAgent.executionContextStack.pop(moduleContext);
     // 25. Return NormalCompletion(empty).
-    return new NormalCompletion(undefined);
+    return NormalCompletion(undefined);
   }
 
   // #sec-source-text-module-record-execute-module

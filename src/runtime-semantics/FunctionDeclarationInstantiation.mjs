@@ -263,5 +263,5 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     X(varEnv.SetMutableBinding(fn, fo, Value.false));
   }
   // 36. Return NormalCompletion(empty).
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

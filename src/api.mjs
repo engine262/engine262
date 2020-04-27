@@ -298,7 +298,7 @@ class APIRealm {
       },
     }));
     if (Array.isArray(module)) {
-      return new ThrowCompletion(module[0]);
+      return ThrowCompletion(module[0]);
     }
     module.HostDefined.public.module = module;
     return module.HostDefined.public;
@@ -359,7 +359,7 @@ export function Throw(realm, V, ...args) {
       // eslint-disable-next-line engine262/valid-throw
       return surroundingAgent.Throw(V, 'Raw', args[0]);
     }
-    return new ThrowCompletion(V);
+    return ThrowCompletion(V);
   });
 }
 

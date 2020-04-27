@@ -2,9 +2,10 @@ import {
   Assert,
   Get,
   ToString,
+  IsNonNegativeInteger,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
 
 // #sec-getsubstitution
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {

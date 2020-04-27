@@ -10,9 +10,10 @@ import {
   IsConstantDeclaration,
 } from '../static-semantics/all.mjs';
 import {
-  AbruptCompletion,
   Completion,
+  AbruptCompletion,
   NormalCompletion,
+  EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
 import { Parser, forwardError } from '../parse.mjs';
@@ -136,16 +137,16 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   // 24. Push evalContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(evalContext);
   // 25. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval).
-  let result = EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval);
+  let result = EnsureCompletion(EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval));
   // 26. If result.[[Type]] is normal, then
   if (result.Type === 'normal') {
     // a. Set result to the result of evaluating body.
-    result = unwind(Evaluate(body));
+    result = EnsureCompletion(unwind(Evaluate(body)));
   }
   // 27. If result.[[Type]] is normal and result.[[Value]] is empty, then
   if (result.Type === 'normal' && result.Value === undefined) {
     // a. Set result to NormalCompletion(undefined).
-    result = new NormalCompletion(Value.undefined);
+    result = NormalCompletion(Value.undefined);
   }
   // 28. Suspend evalContext and remove it from the execution context stack.
   // 29. Resume the context that is now on the top of the execution context stack as the running execution context.
@@ -330,5 +331,5 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
     }
   }
   // 15. Return NormalCompletion(empty).
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

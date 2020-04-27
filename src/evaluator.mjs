@@ -23,6 +23,7 @@ import {
   Evaluate_ForBinding,
   Evaluate_CaseClause,
   Evaluate_BreakStatement,
+  Evaluate_ContinueStatement,
   Evaluate_WithStatement,
   Evaluate_IdentifierReference,
   Evaluate_CommaOperator,
@@ -109,6 +110,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_CaseClause(node);
     case 'BreakStatement':
       return Evaluate_BreakStatement(node);
+    case 'ContinueStatement':
+      return Evaluate_ContinueStatement(node);
     case 'ReturnStatement':
       return yield* Evaluate_ReturnStatement(node);
     case 'ThrowStatement':

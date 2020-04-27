@@ -3,10 +3,14 @@ import {
   Assert,
   PutValue,
   ResolveBinding,
+  RequireObjectCoercible,
+  GetIterator,
+  IteratorClose,
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { IteratorBindingInitialization_ArrayBindingPattern } from './all.mjs';
 
 // #sec-initializeboundname
 export function InitializeBoundName(name, value, environment) {
@@ -17,13 +21,25 @@ export function InitializeBoundName(name, value, environment) {
     // a. Perform environment.InitializeBinding(name, value).
     environment.InitializeBinding(name, value);
     // b. Return NormalCompletion(undefined).
-    return new NormalCompletion(Value.undefined);
+    return NormalCompletion(Value.undefined);
   } else {
     // a. Let lhs be ResolveBinding(name).
     const lhs = ResolveBinding(name, undefined, false);
     // b. Return ? PutValue(lhs, value).
     return Q(PutValue(lhs, value));
   }
+}
+
+// ObjectBindingPattern :
+//   `{` `}`
+//   `{` BindingPropertyList `}`
+//   `{` BindingRestProperty `}`
+//   `{` BindingPropertyList `,` BindingRestProperty `}`
+function BindingInitialization_ObjectBindingPattern({ BindingPropertyList }, value, environment) {
+  // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
+  Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
+  // 2. Return NormalCompletion(empty).
+  return NormalCompletion(undefined);
 }
 
 export function BindingInitialization(node, value, environment) {
@@ -33,6 +49,24 @@ export function BindingInitialization(node, value, environment) {
       const name = StringValue(node);
       // 2. Return ? InitializeBoundName(name, value, environment).
       return Q(InitializeBoundName(name, value, environment));
+    }
+    case 'ObjectBindingPattern': {
+      // 1. Perform ? RequireObjectCoercible(value).
+      Q(RequireObjectCoercible(value));
+      // 2. Return the result of performing BindingInitialization for ObjectBindingPattern using value and environment as arguments.
+      return BindingInitialization_ObjectBindingPattern(node, value, environment);
+    }
+    case 'ArrayBindingPattern': {
+      // 1. Let iteratorRecord be ? GetIterator(value).
+      const iteratorRecord = Q(GetIterator(value));
+      // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
+      const result = IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
+      // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
+      if (iteratorRecord.Done === Value.true) {
+        return Q(IteratorClose(iteratorRecord, result));
+      }
+      // 4. Return result.
+      return result;
     }
     default:
       throw new OutOfRange('BindingInitialization', node);

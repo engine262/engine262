@@ -2,9 +2,9 @@ import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mjs';
 import {
-  Q, X,
-  ReturnCompletion,
+  Completion,
   Await,
+  Q, X,
 } from '../completion.mjs';
 
 // #sec-return-statement-runtime-semantics-evaluation
@@ -14,7 +14,7 @@ import {
 export function* Evaluate_ReturnStatement({ Expression }) {
   if (!Expression) {
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
-    return new ReturnCompletion(Value.undefined);
+    return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });
   }
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
@@ -25,5 +25,5 @@ export function* Evaluate_ReturnStatement({ Expression }) {
     exprValue = Q(Await(exprValue));
   }
   // 1. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-  return new ReturnCompletion(exprValue);
+  return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }

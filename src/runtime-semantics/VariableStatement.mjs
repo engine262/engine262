@@ -18,7 +18,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
   if (BindingIdentifier) {
     if (!Initializer) {
       // 1. Return NormalCompletion(empty).
-      return new NormalCompletion(undefined);
+      return NormalCompletion(undefined);
     }
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(BindingIdentifier);
@@ -65,5 +65,5 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
 export function* Evaluate_VariableStatement({ VariableDeclarationList }) {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
   ReturnIfAbrupt(next);
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

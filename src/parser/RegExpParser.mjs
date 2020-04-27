@@ -1,11 +1,12 @@
+const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 
 export class RegExpParser {
-  constructor(source, BMP) {
+  constructor(source, flags) {
     this.source = source;
     this.position = 0;
-    this.plusU = !BMP;
+    this.plusU = flags.includes('u');
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
   }
@@ -275,6 +276,9 @@ export class RegExpParser {
       };
       this.expect(']');
       return node;
+    }
+    if (isSyntaxCharacter(this.peek())) {
+      throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
     }
     return {
       type: 'Atom',

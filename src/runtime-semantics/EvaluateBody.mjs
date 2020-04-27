@@ -10,8 +10,8 @@ import {
   GetValue,
 } from '../abstract-ops/all.mjs';
 import {
+  Completion,
   AbruptCompletion,
-  ReturnCompletion,
   Q, X,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -42,7 +42,7 @@ function* Evaluate_ExpressionBody(AssignmentExpression) {
   // 2. Let exprValue be ? GetValue(exprRef).
   const exprValue = Q(GetValue(exprRef));
   // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-  return new ReturnCompletion(exprValue);
+  return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }
 
 // #sec-arrow-function-definitions-runtime-semantics-evaluatebody
@@ -64,7 +64,7 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   // 3. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
   // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
-  return new ReturnCompletion(G);
+  return new Completion({ Type: 'return', Value: G, Target: undefined });
 }
 
 // #sec-asyncgenerator-definitions-evaluatebody
@@ -81,7 +81,7 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, a
   // 3. Perform ! AsyncGeneratorStart(generator, FunctionBody).
   X(AsyncGeneratorStart(generator, FunctionBody));
   // 4. Return Completion { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.
-  return new ReturnCompletion(generator);
+  return new Completion({ Type: 'return', Value: generator, Target: undefined });
 }
 
 // #sec-async-function-definitions-EvaluateBody
@@ -100,7 +100,7 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
   // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-  return new ReturnCompletion(promiseCapability.Promise);
+  return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
 // FunctionBody : FunctionStatementList

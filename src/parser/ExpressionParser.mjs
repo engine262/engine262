@@ -7,6 +7,7 @@ import {
 } from './tokens.mjs';
 import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
+import { RegExpParser } from './RegExpParser.mjs';
 
 export class ExpressionParser extends FunctionParser {
   // Expression :
@@ -199,6 +200,9 @@ export class ExpressionParser extends FunctionParser {
         while (TokenPrecedence[this.peek().type] === p) {
           const node = this.startNode();
           const left = x;
+          if (this.peek().type === Token.IN && !this.isInScope()) {
+            return left;
+          }
           const op = this.next();
           const nextP = op.type === Token.EXP ? p : p + 1;
           const right = this.parseBinaryExpression(nextP);
@@ -238,9 +242,6 @@ export class ExpressionParser extends FunctionParser {
             case Token.GTE:
             case Token.INSTANCEOF:
             case Token.IN:
-              if (op.type === Token.IN && !this.isInScope()) {
-                this.unexpected(op);
-              }
               name = 'RelationalExpression';
               node.RelationalExpression = left;
               node.ShiftExpression = right;
@@ -780,6 +781,11 @@ export class ExpressionParser extends FunctionParser {
     node.RegularExpressionBody = this.scannedValue;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue;
+    {
+      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags);
+      // throws if invalid
+      p.parsePattern();
+    }
     const fakeToken = {
       endIndex: this.position - 1,
       line: this.line - 1,

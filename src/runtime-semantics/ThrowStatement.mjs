@@ -17,5 +17,5 @@ export function* Evaluate_ThrowStatement({ Expression }) {
   // 2. Let exprValue be ? GetValue(exprRef).
   const exprValue = Q(GetValue(exprRef));
   // 3. Return ThrowCompletion(exprValue).
-  return new ThrowCompletion(exprValue);
+  return ThrowCompletion(exprValue);
 }

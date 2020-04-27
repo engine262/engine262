@@ -4,5 +4,5 @@ import { NormalCompletion } from '../completion.mjs';
 //   EmptyStatement : `;`
 export function Evaluate_EmptyStatement(_EmptyStatement) {
   // 1. Return NormalCompletion(empty).
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

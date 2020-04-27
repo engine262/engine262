@@ -54,7 +54,6 @@ export function RegExpInitialize(obj, pattern, flags) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
   // 6. If F contains "u", let BMP be false; else let BMP be true.
-  const BMP = !f.includes('u');
   // 7. If BMP is true, then
   //   a. Let pText be the sequence of code points resulting from interpreting each of the 16-bit
   //      elements of P as a Unicode BMP code point. UTF-16 decoding is not applied to the elements.
@@ -69,7 +68,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   //      Throw a SyntaxError exception if pText did not conform to the grammar, if any elements of
   //      pText were not matched by the parse, or if any Early Error conditions exist.
   //   c. Let patternCharacters be a List whose elements are the code points of pText.
-  const patternCharacters = Q(ParseRegExp(P, BMP));
+  const patternCharacters = Q(ParseRegExp(P.stringValue(), f));
   obj.parsedPattern = patternCharacters;
   // 9. Set obj.[[OriginalSource]] to P.
   obj.OriginalSource = P;

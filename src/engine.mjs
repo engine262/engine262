@@ -117,7 +117,7 @@ export class Agent {
   // Generate a throw completion using message templates
   Throw(type, template, ...templateArgs) {
     if (type instanceof Value) {
-      return new ThrowCompletion(type);
+      return ThrowCompletion(type);
     }
     const message = messages[template](...templateArgs);
     const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
@@ -130,7 +130,7 @@ export class Agent {
     } else {
       error = X(Construct(cons, [new Value(message)]));
     }
-    return new ThrowCompletion(error);
+    return ThrowCompletion(error);
   }
 
   queueJob(queueName, job) {
@@ -230,7 +230,7 @@ export function ScriptEvaluation(scriptRecord) {
   }
 
   if (result.Type === 'normal' && !result.Value) {
-    result = new NormalCompletion(Value.undefined);
+    result = NormalCompletion(Value.undefined);
   }
 
   // Suspend scriptCtx
@@ -243,7 +243,7 @@ export function ScriptEvaluation(scriptRecord) {
 export function evaluateScript(sourceText, realm, hostDefined) {
   const s = ParseScript(sourceText, realm, hostDefined);
   if (Array.isArray(s)) {
-    return new ThrowCompletion(s[0]);
+    return ThrowCompletion(s[0]);
   }
 
   return EnsureCompletion(ScriptEvaluation(s));
@@ -278,7 +278,7 @@ export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm));
   }
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }
 
 export function HostPromiseRejectionTracker(promise, operation) {
@@ -368,7 +368,7 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
     }
     FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
   });
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // #sec-hostgetimportmetaproperties
@@ -403,5 +403,5 @@ export function HostCleanupFinalizationRegistry(fg) {
       });
     }
   }
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

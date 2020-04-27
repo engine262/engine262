@@ -226,7 +226,7 @@ function AsyncModuleExecutionRejected(module, error) {
     return Value.undefined;
   }
   Assert(module.EvaluationError === Value.undefined);
-  module.EvaluationError = new ThrowCompletion(error);
+  module.EvaluationError = ThrowCompletion(error);
   module.AsyncEvaluating = Value.false;
   for (const m of module.AsyncParentModules) {
     if (module.DFSIndex !== module.DFSAncestorIndex) {

@@ -9,7 +9,7 @@ import {
 // #sec-block-runtime-semantics-evaluation
 export function* Evaluate_StatementList(StatementList) {
   if (StatementList.length === 0) {
-    return new NormalCompletion(undefined);
+    return NormalCompletion(undefined);
   }
 
   let sl = yield* Evaluate(StatementList[0]);

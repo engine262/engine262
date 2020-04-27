@@ -10,7 +10,7 @@ import { BootstrapPrototype } from './Bootstrap.mjs';
 
 function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) {
   const generator = thisValue;
-  const completion = new NormalCompletion(value);
+  const completion = NormalCompletion(value);
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 
@@ -22,7 +22,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
 
 function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValue }) {
   const generator = thisValue;
-  const completion = new ThrowCompletion(exception);
+  const completion = ThrowCompletion(exception);
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 

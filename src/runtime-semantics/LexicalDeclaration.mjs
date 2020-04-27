@@ -13,7 +13,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { NamedEvaluation } from './all.mjs';
+import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
 // #sec-let-and-const-declarations-runtime-semantics-evaluation
 //   LexicalBinding :
@@ -51,7 +51,7 @@ function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const rhs = yield* Evaluate(Initializer);
   const value = Q(GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  return yield* BindingInitialization_BindingPattern(BindingPattern, value, env);
+  return yield* BindingInitialization(BindingPattern, value, env);
 }
 
 export function* Evaluate_LexicalBinding(LexicalBinding) {
@@ -90,5 +90,5 @@ export function* Evaluate_LexicalDeclaration({ BindingList }) {
   // 2. ReturnIfAbrupt(next).
   ReturnIfAbrupt(next);
   // 3. Return NormalCompletion(empty).
-  return new NormalCompletion(undefined);
+  return NormalCompletion(undefined);
 }

@@ -87,7 +87,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   const thisMode = F.ThisMode;
   // 2. If thisMode is lexical, return NormalCompletion(undefined).
   if (thisMode === 'lexical') {
-    return new NormalCompletion(Value.undefined);
+    return NormalCompletion(Value.undefined);
   }
   // 3. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
@@ -149,12 +149,12 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   surroundingAgent.executionContextStack.pop(calleeContext);
   // 9. If result.[[Type]] is return, return NormalCompletion(result.[[Value]]).
   if (result.Type === 'return') {
-    return new NormalCompletion(result.Value);
+    return NormalCompletion(result.Value);
   }
   // 10. ReturnIfAbrupt(result).
   ReturnIfAbrupt(result);
   // 11. Return NormalCompletion(undefined).
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.2 #sec-ecmascript-function-objects-construct-argumentslist-newtarget
@@ -193,11 +193,11 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   if (result.Type === 'return') {
     // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
     if (Type(result.Value) === 'Object') {
-      return new NormalCompletion(result.Value);
+      return NormalCompletion(result.Value);
     }
     // b. If kind is base, return NormalCompletion(thisArgument).
     if (kind === 'base') {
-      return new NormalCompletion(thisArgument);
+      return NormalCompletion(thisArgument);
     }
     // c. If result.[[Value]] is not undefined, throw a TypeError exception.
     if (result.Value !== Value.undefined) {
@@ -275,7 +275,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.11 #sec-makeclassconstructor
@@ -283,7 +283,7 @@ export function MakeClassConstructor(F) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.12 #sec-makemethod
@@ -291,7 +291,7 @@ export function MakeMethod(F, homeObject) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(Type(homeObject) === 'Object');
   F.HomeObject = homeObject;
-  return new NormalCompletion(Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // 9.2.13 #sec-setfunctionname

@@ -111,7 +111,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
     return Completion(status);
   }
   // 7. Let B be the result of evaluating Block.
-  const B = yield* Evaluate(Block);
+  const B = EnsureCompletion(yield* Evaluate(Block));
   // 8. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 9. Return Completion(B).

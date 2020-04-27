@@ -19,7 +19,6 @@ import {
   Await,
   Completion,
   NormalCompletion,
-  ReturnCompletion,
   EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
@@ -146,7 +145,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
           // 1. Let value be ? IteratorValue(innerReturnResult).
           const innerValue = Q(IteratorValue(innerReturnResult));
           // 2. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-          return new ReturnCompletion(innerValue);
+          return new Completion({ Type: 'return', Value: innerValue, Target: undefined });
         }
         // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {

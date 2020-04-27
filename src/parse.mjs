@@ -19,10 +19,12 @@ export function forwardError(fn) {
   } catch (e) {
     if (e.name === 'SyntaxError') {
       const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
-      const stackString = new Value('stack');
-      const stack = X(Get(v, stackString)).stringValue();
-      const newStackString = `${e.decoration}\n${stack}`;
-      X(Set(v, stackString, new Value(newStackString), Value.true));
+      if (e.decoration) {
+        const stackString = new Value('stack');
+        const stack = X(Get(v, stackString)).stringValue();
+        const newStackString = `${e.decoration}\n${stack}`;
+        X(Set(v, stackString, new Value(newStackString), Value.true));
+      }
       return [v];
     } else {
       throw e;
@@ -162,8 +164,8 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   });
 }
 
-export function ParseRegExp(pattern, BMP) {
-  const p = new RegExpParser(pattern.stringValue(), BMP);
+export function ParseRegExp(pattern, flags) {
+  const p = new RegExpParser(pattern, flags);
   try {
     return p.parsePattern();
   } catch (e) {

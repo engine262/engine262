@@ -364,7 +364,23 @@ export class StatementParser extends ExpressionParser {
       return this.finishNode(node, 'ForInStatement');
     }
 
-    node.Expression_a = this.parseExpression();
+    const expression = this.scope({ in: false }, () => this.parseExpression());
+    if (!isAwait && this.eat(Token.IN)) {
+      node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
+      node.Expression = this.parseExpression();
+      this.expect(Token.RPAREN);
+      node.Statement = this.parseStatement();
+      return this.finishNode(node, 'ForInStatement');
+    }
+    if (this.eat(Token.OF)) {
+      node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
+      node.Expression = this.parseExpression();
+      this.expect(Token.RPAREN);
+      node.Statement = this.parseStatement();
+      return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+    }
+
+    node.Expression_a = expression;
     this.expect(Token.SEMICOLON);
 
     if (!this.test(Token.SEMICOLON)) {

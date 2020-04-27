@@ -28,7 +28,6 @@ import {
   Completion,
   NormalCompletion,
   AbruptCompletion,
-  BreakCompletion,
   UpdateEmpty,
   EnsureCompletion,
   ReturnIfAbrupt,
@@ -433,7 +432,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     // a. If exprValue is undefined or null, then
     if (exprValue === Value.undefined || exprValue === Value.null) {
       // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
-      return BreakCompletion(undefined);
+      return new Completion({ Type: 'break', Value: undefined, Target: undefined });
     }
     // b. Let obj be ! ToObject(exprValue).
     const obj = X(ToObject(exprValue));

@@ -54,9 +54,11 @@ function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParamet
   return IteratorBindingInitialization_BindingRestElement(FunctionRestParameter, iteratorRecord, environment);
 }
 
-// BindingElement : SingleNameBinding
-function IteratorBindingInitialization_BindingElement(SingleNameBinding, iteratorRecord, environment) {
-  return IteratorBindingInitialization_SingleNameBinding(SingleNameBinding, iteratorRecord, environment);
+// BindingElement :
+//   SingleNameBinding
+//   BindingPattern
+function IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
+  return IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
 }
 
 // SingleNameBinding : BindingIdentifier Initializer?
@@ -159,4 +161,21 @@ function IteratorBindingInitialization_BindingRestElement({ BindingIdentifier },
     // g. Set n to n + 1.
     n += 1;
   }
+}
+
+export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList }, iteratorRecord, environment) {
+  if (BindingElementList.length === 0) {
+    // 1. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+
+  for (const BindingElement of BindingElementList.slice(0, -1)) {
+    Q(yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment));
+  }
+
+  const last = BindingElementList[BindingElementList.length - 1];
+  if (last.type === 'BindingRestElement') {
+    return IteratorBindingInitialization_BindingRestElement(last, iteratorRecord, environment);
+  }
+  return yield* IteratorBindingInitialization_BindingElement(last, iteratorRecord, environment);
 }

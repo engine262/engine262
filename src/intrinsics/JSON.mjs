@@ -50,7 +50,7 @@ class JSONValidator {
     if (this.pos < this.input.length) {
       return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedToken');
     }
-    return new NormalCompletion(undefined);
+    return NormalCompletion(undefined);
   }
 
   advance() {

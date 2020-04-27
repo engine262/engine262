@@ -108,7 +108,7 @@ export function IteratorClose(iteratorRecord, completion) {
   if (ret === Value.undefined) {
     return Completion(completion);
   }
-  const innerResult = EnsureCompletion(Call(ret, iterator));
+  const innerResult = Call(ret, iterator);
   if (completion.Type === 'throw') {
     return Completion(completion);
   }
@@ -130,7 +130,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   if (ret === Value.undefined) {
     return Completion(completion);
   }
-  let innerResult = EnsureCompletion(Call(ret, iterator));
+  let innerResult = Call(ret, iterator);
   if (innerResult.Type === 'normal') {
     innerResult = EnsureCompletion(yield* Await(innerResult.Value));
   }
