@@ -1,5 +1,5 @@
 import { ValueSet } from '../helpers.mjs';
-import { LabelledEvaluation_BreakableStatement } from './all.mjs';
+import { LabelledEvaluation } from './all.mjs';
 
 // #sec-statement-semantics-runtime-semantics-evaluation
 //   BreakableStatement :
@@ -13,5 +13,5 @@ export function Evaluate_BreakableStatement(BreakableStatement) {
   // 1. Let newLabelSet be a new empty List.
   const newLabelSet = new ValueSet();
   // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
-  return LabelledEvaluation_BreakableStatement(BreakableStatement, newLabelSet);
+  return LabelledEvaluation(BreakableStatement, newLabelSet);
 }

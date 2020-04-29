@@ -16,6 +16,7 @@ import {
   AsyncIteratorClose,
   ToBoolean,
   ToObject,
+  SameValue,
 } from '../abstract-ops/all.mjs';
 import {
   BoundNames,
@@ -47,7 +48,7 @@ function LoopContinues(completion, labelSet) {
     return Value.true;
   }
   // 2. If completion.[[Type]] is not continue, return false.
-  if (completion.type !== 'continue') {
+  if (completion.Type !== 'continue') {
     return Value.false;
   }
   // 3. If completion.[[Target]] is empty, return true.
@@ -62,6 +63,58 @@ function LoopContinues(completion, labelSet) {
   return Value.false;
 }
 
+export function LabelledEvaluation(node, labelSet) {
+  switch (node.type) {
+    case 'DoWhileStatement':
+    case 'WhileStatement':
+    case 'ForStatement':
+    case 'ForInStatement':
+    case 'ForOfStatement':
+    case 'SwitchStatement':
+      return LabelledEvaluation_BreakableStatement(node, labelSet);
+    case 'LabelledStatement':
+      return LabelledEvaluation_LabelledStatement(node, labelSet);
+    default:
+      throw new OutOfRange('LabelledEvaluation', node);
+  }
+}
+
+// #sec-labelled-statements-runtime-semantics-labelledevaluation
+//   LabelledStatement : LabelIdentifier `:` LabelledItem
+function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }, labelSet) {
+  // 1. Let label be the StringValue of LabelIdentifier.
+  const label = StringValue(LabelIdentifier);
+  // 2. Append label as an element of labelSet.
+  labelSet.add(label);
+  // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
+  let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet));
+  // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
+  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === Value.true) {
+    // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+    stmtResult = NormalCompletion(stmtResult.Value);
+  }
+  // 5. Return Completion(stmtResult).
+  return Completion(stmtResult);
+}
+
+// LabelledItem :
+//   Statement
+//   FunctionDeclaration
+function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
+  switch (LabelledItem.type) {
+    case 'DoWhileStatement':
+    case 'WhileStatement':
+    case 'ForStatement':
+    case 'ForInStatement':
+    case 'ForOfStatement':
+    case 'SwitchStatement':
+    case 'LabelledStatement':
+      return LabelledEvaluation(LabelledItem, labelSet);
+    default:
+      return Evaluate(LabelledItem);
+  }
+}
+
 // #sec-statement-semantics-runtime-semantics-labelledevaluation
 //  BreakableStatement :
 //    IterationStatement
@@ -70,7 +123,7 @@ function LoopContinues(completion, labelSet) {
 //  IterationStatement :
 //    (DoWhileStatement)
 //    (WhileStatement)
-export function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   switch (BreakableStatement.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -78,7 +131,7 @@ export function* LabelledEvaluation_BreakableStatement(BreakableStatement, label
     case 'ForInStatement':
     case 'ForOfStatement': {
       // 1. Let stmtResult be LabelledEvaluation of IterationStatement with argument labelSet.
-      let stmtResult = yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet);
+      let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet));
       // 2. If stmtResult.[[Type]] is break, then
       if (stmtResult.Type === 'break') {
         // a. If stmtResult.[[Target]] is empty, then
@@ -96,7 +149,7 @@ export function* LabelledEvaluation_BreakableStatement(BreakableStatement, label
     }
     case 'SwitchStatement': {
       // 1. Let stmtResult be LabelledEvaluation of SwitchStatement.
-      let stmtResult = yield* Evaluate_SwitchStatement(BreakableStatement);
+      let stmtResult = EnsureCompletion(yield* Evaluate_SwitchStatement(BreakableStatement));
       // 2. If stmtResult.[[Type]] is break, then
       if (stmtResult.Type === 'break') {
         // a. If stmtResult.[[Target]] is empty, then

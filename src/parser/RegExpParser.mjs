@@ -229,9 +229,6 @@ export class RegExpParser {
   //   `?` GroupName
   // GroupName ::
   //   `<` RegExpIdentifierName `>`
-  // CharacterClass ::
-  //   `[` ClassRanges `]`
-  //   `[` `^` ClassRanges `]`
   parseAtom() {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
@@ -266,36 +263,120 @@ export class RegExpParser {
       node.enclosedCapturingParentheses = this.capturingGroups.length - node.capturingParenthesesBefore - 1;
       return node;
     }
-    if (this.eat('[')) {
-      const node = {
-        type: 'Atom',
-        subtype: 'CharacterClass',
-        enclosedCapturingParentheses: 0,
-        inverse: this.eat('^'),
-        ClassRanges: this.parseClassRanges(),
-      };
-      this.expect(']');
-      return node;
+    if (this.test('[')) {
+      return this.parseCharacterClass();
     }
     if (isSyntaxCharacter(this.peek())) {
       throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
     }
+    const character = this.eat('\\') ? this.parseCharacterEscape() : this.next();
     return {
       type: 'Atom',
       subtype: 'PatternCharacter',
       enclosedCapturingParentheses: 0,
-      value: this.next(),
+      value: character,
     };
+  }
+
+  // CharacterClass ::
+  //   `[` ClassRanges `]`
+  //   `[` `^` ClassRanges `]`
+  parseCharacterClass() {
+    this.expect('[');
+    const node = {
+      type: 'Atom',
+      subtype: 'CharacterClass',
+      enclosedCapturingParentheses: 0,
+      invert: false,
+      ClassRanges: this.parseClassRanges(),
+    };
+    node.invert = this.eat('^');
+    this.expect(']');
+    return node;
   }
 
   // ClassRanges ::
   //   [empty]
   //   NonemptyClassRanges
   parseClassRanges() {
-    if (this.test(']')) {
-      return undefined;
+    const ranges = [];
+    while (!this.test(']')) {
+      if (this.position >= this.source.length) {
+        throw new SyntaxError('Unexpected end of CharacterClass');
+      }
+      const atom = this.parseClassAtom();
+      if (this.eat('-')) {
+        const atom2 = this.parseClassAtom();
+        if (atom > atom2) {
+          throw new SyntaxError(`${atom}-${atom2} is not a valid class range`);
+        }
+        ranges.push([atom, atom2]);
+      } else {
+        ranges.push(atom);
+      }
     }
-    const atom = this.parseClassAtom();
+    return ranges;
+  }
+
+  // ClassAtom ::
+  //   `-`
+  //   ClassAtomNoDash
+  // ClassAtomNoDash ::
+  //   SourceCharacter but not one of `\` or `]` or `-`
+  //   `\` ClassEscape
+  // ClassEscape :
+  //   `b`
+  //   [+U] `-`
+  //   CharacterClassEscape
+  //   CharacterEscape
+  parseClassAtom() {
+    if (this.eat('\\')) {
+      if (this.eat('b')) {
+        return '\u{0008}';
+      }
+      if (this.eat('-')) {
+        return '\u{002D}';
+      }
+      return this.parseCharacterEscape();
+    }
+    return this.next();
+  }
+
+  // CharacterEscape :;
+  //   ControlEscape
+  //   `c` ControlLetter
+  //   `0` [lookahead ∉ DecimalDigit]
+  //   HexEscapeSequence
+  //   RegExpUnicodeEscapeSequence
+  //   IdentityEscape
+  parseCharacterEscape() {
+    switch (this.peek()) {
+      case 'f':
+        this.next();
+        return '\u{000C}';
+      case 'n':
+        this.next();
+        return '\u{000A}';
+      case 'r':
+        this.next();
+        return '\u{000D}';
+      case 't':
+        this.next();
+        return '\u{0009}';
+      case 'v':
+        this.next();
+        return '\u{000B}';
+      case 'c': {
+        const c = this.next();
+        const p = c.codePointAt(0);
+        if ((p >= 95 && p <= 90) || (p >= 97 && p <= 122)) {
+          return p % 32;
+        }
+        return c;
+      }
+      default:
+        return this.next();
+    }
   }
 
   // RegExpidentifierName ::

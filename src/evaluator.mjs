@@ -20,6 +20,7 @@ import {
   Evaluate_TryStatement,
   Evaluate_ThrowStatement,
   Evaluate_BreakableStatement,
+  Evaluate_LabelledStatement,
   Evaluate_ForBinding,
   Evaluate_CaseClause,
   Evaluate_BreakStatement,
@@ -112,6 +113,8 @@ export function* Evaluate(node) {
       return Evaluate_BreakStatement(node);
     case 'ContinueStatement':
       return Evaluate_ContinueStatement(node);
+    case 'LabelledStatement':
+      return yield* Evaluate_LabelledStatement(node);
     case 'ReturnStatement':
       return yield* Evaluate_ReturnStatement(node);
     case 'ThrowStatement':

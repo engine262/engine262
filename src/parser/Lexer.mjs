@@ -718,6 +718,7 @@ export class Lexer {
           if (inClass) {
             inClass = false;
           }
+          buffer += c;
           this.position += 1;
           break;
         case '/':

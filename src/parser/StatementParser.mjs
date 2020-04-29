@@ -163,7 +163,6 @@ export class StatementParser extends ExpressionParser {
         return this.parseReturnStatement();
       case Token.WITH:
         return this.parseWithStatement();
-      // LabelledStatement
       case Token.THROW:
         return this.parseThrowStatement();
       case Token.TRY:
@@ -589,7 +588,18 @@ export class StatementParser extends ExpressionParser {
   //   [lookahead != `{`, `function`, `async` [no LineTerminator here] `function`, `class`, `let` `[` ] Expression `;`
   parseExpressionStatement() {
     const node = this.startNode();
-    node.Expression = this.parseExpression();
+    const expression = this.parseExpression();
+    if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
+      expression.type = 'LabelIdentifier';
+      node.LabelIdentifier = expression;
+      if (this.test(Token.FUNCTION)) {
+        node.LabelledItem = this.parseFunctionDeclaration();
+      } else {
+        node.LabelledItem = this.parseStatement();
+      }
+      return this.finishNode(node, 'LabelledStatement');
+    }
+    node.Expression = expression;
     this.semicolon();
     return this.finishNode(node, 'ExpressionStatement');
   }

@@ -7,6 +7,7 @@ export function StringValue(node) {
     case 'IdentifierName':
     case 'BindingIdentifier':
     case 'IdentifierReference':
+    case 'LabelIdentifier':
       return new Value(node.name);
     case 'StringLiteral':
       return new Value(node.value);

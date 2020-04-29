@@ -191,11 +191,11 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     Atom
   //     Atom Quantifier
   function Evaluate_Term(Term, direction) {
-    const { Assertion, Atom, Quantifier } = Term;
-    if (Assertion) {
+    if (Term.type === 'Assertion') {
       // 1. Return the Matcher that is the result of evaluating Assertion.
-      return Evaluate_Assertion(Assertion);
+      return Evaluate_Assertion(Term);
     }
+    const { Atom, Quantifier } = Term;
     if (!Quantifier) {
       // 1. Return the Matcher that is the result of evaluating Atom with argument direction.
       return Evaluate_Atom(Atom, direction);
@@ -614,9 +614,8 @@ export function Evaluate_Pattern(Pattern, flags) {
         return CharacterSetMatcher(A, false, direction);
       }
       case 'CharacterClass': {
-        const { CharacterClass } = Atom;
         // 1. Evaluate CharacterClass to obtain a CharSet A and a Boolean invert.
-        const { A, invert } = Evaluate_CharacterClass(CharacterClass);
+        const { A, invert } = Evaluate_CharacterClass(Atom);
         // 2. Call CharacterSetMatcher(A, invert, direction) and return its Matcher result.
         return CharacterSetMatcher(A, invert, direction);
       }
@@ -770,7 +769,35 @@ export function Evaluate_Pattern(Pattern, flags) {
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
   function Evaluate_CharacterClass({ invert, ClassRanges }) {
-    const A = ClassRanges;
+    const A = [];
+    for (const range of ClassRanges) {
+      if (Array.isArray(range)) {
+        A.push(...CharacterRange(range[0], range[1]));
+      } else {
+        A.push(range);
+      }
+    }
     return { A, invert };
+  }
+
+  // #sec-runtime-semantics-characterrange-abstract-operation
+  function CharacterRange(A, B) {
+    // 1. Assert: A and B each contain exactly one character.
+    // 2. Let a be the one character in CharSet A.
+    const a = A;
+    // 3. Let b be the one character in CharSet B.
+    const b = B;
+    // 4. Let i be the character value of character a.
+    const i = a.codePointAt(0);
+    // 5. Let j be the character value of character b.
+    const j = b.codePointAt(0);
+    // 6. Assert: i ≤ j.
+    Assert(i <= j);
+    // 7. Return the set containing all characters numbered i through j, inclusive.
+    const set = [];
+    for (let k = i; k <= j; k += 1) {
+      set.push(Canonicalize(String.fromCodePoint(k)));
+    }
+    return set;
   }
 }
