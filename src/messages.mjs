@@ -58,6 +58,7 @@ export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
 export const JSONUnexpectedChar = (c) => `Unexpected character ${c} in JSON`;
 export const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
 export const NegativeIndex = (n) => `${n} cannot be negative`;
+export const NewlineAfterThrow = () => 'Illegal newline after throw';
 export const NormalizeInvalidForm = () => 'Invalid normalization form';
 export const NotAConstructor = (v) => `${i(v)} is not a constructor`;
 export const NotAFunction = (v) => `${i(v)} is not a function`;

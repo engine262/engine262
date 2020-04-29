@@ -20,9 +20,9 @@ import { NamedEvaluation, BindingInitialization } from './all.mjs';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }) {
-  // 1. Let bindingId be StringValue of BindingIdentifier.
-  const bindingId = StringValue(BindingIdentifier);
   if (Initializer) {
+    // 1. Let bindingId be StringValue of BindingIdentifier.
+    const bindingId = StringValue(BindingIdentifier);
     // 2. Let lhs be ResolveBinding(bindingId).
     const lhs = X(ResolveBinding(bindingId, undefined, strict));
     let value;
@@ -39,8 +39,10 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
     // 5. Return InitializeReferencedBinding(lhs, value).
     return InitializeReferencedBinding(lhs, value);
   } else {
-    // 2. Return InitializeReferencedBinding(StringValue of BindingIdentifier, undefined).
-    return InitializeReferencedBinding(StringValue(BindingIdentifier), Value.undefined);
+    // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
+    const lhs = ResolveBinding(StringValue(BindingIdentifier), undefined, strict);
+    // 2. Return InitializeReferencedBinding(lhs, undefined).
+    return InitializeReferencedBinding(lhs, Value.undefined);
   }
 }
 

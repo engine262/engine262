@@ -248,7 +248,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  // 4. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
   // 5. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));

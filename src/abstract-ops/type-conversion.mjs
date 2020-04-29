@@ -10,6 +10,7 @@ import {
 } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
 import {
   Assert,
   Call,
@@ -134,7 +135,6 @@ export function ToNumber(argument) {
     case 'Number':
       return argument;
     case 'String':
-      return new Value(Number(argument.stringValue()));
       return MV_StringNumericLiteral(argument.stringValue());
     case 'BigInt':
       return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');

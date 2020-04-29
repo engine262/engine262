@@ -91,6 +91,11 @@ export function VarDeclaredNames(node) {
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelVarDeclaredNames(node.FunctionStatementList);
+    case 'ExportDeclaration':
+      if (node.VariableStatement) {
+        return BoundNames(node);
+      }
+      return [];
     default:
       return [];
   }

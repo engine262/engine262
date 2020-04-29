@@ -101,7 +101,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   // 9. Let starExportEntries be a new empty List.
   const starExportEntries = [];
   // 10. Let exportEntries be ExportEntries of body.
-  const exportEntries = ExportEntries(body.body);
+  const exportEntries = ExportEntries(body);
   // 11. For each ExportEntry Record ee in exportEntries, do
   for (const ee of exportEntries) {
     // a. If ee.[[ModuleRequest]] is null, then

@@ -1,4 +1,4 @@
-const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
+const isSyntaxCharacter = (c) => '^$.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 
@@ -288,9 +288,10 @@ export class RegExpParser {
       subtype: 'CharacterClass',
       enclosedCapturingParentheses: 0,
       invert: false,
-      ClassRanges: this.parseClassRanges(),
+      ClassRanges: undefined,
     };
     node.invert = this.eat('^');
+    node.ClassRanges = this.parseClassRanges();
     this.expect(']');
     return node;
   }

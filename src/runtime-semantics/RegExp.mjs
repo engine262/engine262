@@ -1,5 +1,6 @@
 import unicodeCaseFoldingCommon from 'unicode-13.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
+import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
@@ -11,6 +12,14 @@ class State {
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
     this.captures = captures;
+  }
+}
+
+// https://tc39.es/proposal-regexp-match-indices/
+class Range {
+  constructor(startIndex, endIndex) {
+    this.startIndex = startIndex;
+    this.endIndex = endIndex;
   }
 }
 
@@ -401,7 +410,7 @@ export function Evaluate_Pattern(Pattern, flags) {
             return 'failure';
           }
           // f. Let y be r's State.
-          const y = r.State;
+          const y = r;
           // g. Let cap be y's captures List.
           const cap = y.captures;
           // h. Let xe be x's endIndex.
@@ -461,7 +470,7 @@ export function Evaluate_Pattern(Pattern, flags) {
             return 'failure';
           }
           // f. Let y be r's State.
-          const y = r.State;
+          const y = r;
           // g. Let cap be y's captures List.
           const cap = y.captures;
           // h. Let xe be x's endIndex.
@@ -652,15 +661,27 @@ export function Evaluate_Pattern(Pattern, flags) {
             if (direction === +1) {
               // 1. Assert: xe ≤ ye.
               Assert(xe <= ye);
-              // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
-              s = Input.slice(xe, ye);
+              if (surroundingAgent.feature('RegExpMatchIndices')) {
+                // https://tc39.es/proposal-regexp-match-indices/#sec-atom
+                // 2. Let r be the Range (xe, ye).
+                s = new Range(xe, ye);
+              } else {
+                // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
+                s = Input.slice(xe, ye);
+              }
             } else { // vi. Else,
               // 1. Assert: direction is equal to -1.
               Assert(direction === -1);
               // 2. Assert: ye ≤ xe.
               Assert(ye <= xe);
-              // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
-              s = Input.slice(ye, xe);
+              if (surroundingAgent.feature('RegExpMatchIndices')) {
+                // https://tc39.es/proposal-regexp-match-indices/#sec-atom
+                // 3. Let r be the Range (ye, xe).
+                s = new Range(ye, xe);
+              } else {
+                // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
+                s = Input.slice(ye, xe);
+              }
             }
             // vii. Set cap[parenIndex + 1] to s.
             cap[parenIndex + 1] = s;

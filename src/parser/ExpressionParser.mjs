@@ -838,12 +838,9 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     if (this.test(Token.LBRACE)) {
       node.BindingPattern = this.validateAssignmentTarget(this.parseObjectLiteral());
-      node.BindingIdentifier = null;
     } else if (this.test(Token.LBRACK)) {
       node.BindingPattern = this.validateAssignmentTarget(this.parseArrayLiteral());
-      node.BindingIdentifier = null;
     } else {
-      node.BindingPattern = null;
       node.BindingIdentifier = this.parseBindingIdentifier();
     }
     if (this.test(Token.ASSIGN)) {
@@ -851,7 +848,7 @@ export class ExpressionParser extends FunctionParser {
     } else {
       node.Initializer = null;
     }
-    return this.finishNode(node, 'SingleNameBinding');
+    return this.finishNode(node, node.BindingPattern ? 'BindingElement' : 'SingleNameBinding');
   }
 
   // PropertyName :
@@ -966,7 +963,7 @@ export class ExpressionParser extends FunctionParser {
       node.UniqueFormalParameters = this.parseUniqueFormalParameters();
     }
 
-    node.FunctionBody = this.scope({
+    node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = this.scope({
       superCall: !isSpecialMethod && (
         node.PropertyName.name === 'constructor'
         || node.PropertyName.value === 'constructor'

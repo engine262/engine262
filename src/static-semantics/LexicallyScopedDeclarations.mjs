@@ -58,6 +58,20 @@ export function LexicallyScopedDeclarations(node) {
         return LexicallyScopedDeclarations(node.StatementList);
       }
       return [];
+    case 'ExportDeclaration':
+      if (node.Declaration) {
+        return [DeclarationPart(node.Declaration)];
+      }
+      if (node.HoistableDeclaration) {
+        return [DeclarationPart(node.HoistableDeclaration)];
+      }
+      if (node.ClassDeclaration) {
+        return [node.ClassDeclaration];
+      }
+      if (node.AssignmentExpression) {
+        return [node];
+      }
+      return [];
     default:
       return [];
   }

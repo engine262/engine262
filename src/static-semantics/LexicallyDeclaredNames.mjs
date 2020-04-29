@@ -52,6 +52,13 @@ export function LexicallyDeclaredNames(node) {
         return LexicallyDeclaredNames(node.StatementList);
       }
       return [];
+    case 'ImportDeclaration':
+      return BoundNames(node);
+    case 'ExportDeclaration':
+      if (node.VariableStatement) {
+        return [];
+      }
+      return BoundNames(node);
     default:
       return [];
   }
