@@ -1,4 +1,4 @@
-import { Parser, isLineTerminator } from './parser/Parser.mjs';
+import { Parser, Token, isLineTerminator } from './parser/Parser.mjs';
 import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
@@ -32,14 +32,7 @@ export function forwardError(fn) {
   }
 }
 
-export { Parser, isLineTerminator };
-
-function parseMethodDefinition(sourceText) {
-  const parser = new Parser(sourceText);
-  return parser.scope({ superCall: true }, () => parser.parseMethodDefinition());
-}
-export const emptyConstructorNode = parseMethodDefinition('constructor() {}');
-export const forwardingConstructorNode = parseMethodDefinition('constructor(...args) { super(...args); }');
+export { Parser, Token, isLineTerminator };
 
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).

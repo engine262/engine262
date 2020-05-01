@@ -1,3 +1,5 @@
+import { BoundNames } from '../static-semantics/all.mjs';
+import { ValueSet } from '../helpers.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
 
@@ -100,6 +102,8 @@ export class FunctionParser extends IdentifierParser {
         if (this.eat(Token.ELLIPSIS)) {
           node.BindingIdentifier = this.parseBindingIdentifier();
           params.push(this.finishNode(node, 'BindingRestElement'));
+          this.expect(Token.RPAREN);
+          break;
         } else {
           params.push(this.parseFormalParameter());
         }
@@ -116,7 +120,12 @@ export class FunctionParser extends IdentifierParser {
   }
 
   parseUniqueFormalParameters() {
-    return this.parseFormalParameters();
+    const params = this.parseFormalParameters();
+    const names = BoundNames(params);
+    if (names.length !== new ValueSet(names).size) {
+      this.report('AlreadyDeclared');
+    }
+    return params;
   }
 
   parseFunctionBody(isAsync, isGenerator) {

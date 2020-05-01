@@ -13,7 +13,7 @@ import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
 } from '../engine.mjs';
-import { Parser, forwardError } from '../parse.mjs';
+import { Parser, Token, forwardError } from '../parse.mjs';
 import { Descriptor, Type, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -126,10 +126,12 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   let parameters;
   let body;
   {
-    // FIXME: break apart into parseFunctionBody and parseFormalParameters
-    //        so that a trailing `}` in bodyString is caught correctly.
     const parser = new Parser(sourceString);
-    const f = forwardError(() => parser.parseExpression());
+    const f = forwardError(() => {
+      const p = parser.parseExpression();
+      parser.expect(Token.EOS);
+      return p;
+    });
     if (Array.isArray(f)) {
       return surroundingAgent.Throw(f[0]);
     }

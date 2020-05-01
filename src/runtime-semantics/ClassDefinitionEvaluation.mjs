@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { forwardingConstructorNode, emptyConstructorNode } from '../parse.mjs';
+import { Parser } from '../parse.mjs';
 import { Value, Type } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
@@ -27,6 +27,11 @@ import {
   DefineMethod,
   PropertyDefinitionEvaluation,
 } from './all.mjs';
+
+function parseMethodDefinition(sourceText) {
+  const parser = new Parser(sourceText);
+  return parser.scope({ superCall: true }, () => parser.parseMethodDefinition());
+}
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
 export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
@@ -93,11 +98,11 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       // i. Set constructor to the result of parsing the source text
       //    `constructor(...args) { super(...args); } using the syntactic grammar with the goal
       //    symbol MethodDefinition[~Yield, ~Await].
-      constructor = forwardingConstructorNode;
+      constructor = parseMethodDefinition('constructor(...args) { super(...args); }');
     } else { // b. Else,
       // i. Set constructor to the result of parsing the source text `constructor() {}` using the
       //    syntactic grammar with the goal symbol MethodDefinition[~Yield, ~Await].
-      constructor = emptyConstructorNode;
+      constructor = parseMethodDefinition('constructor() {}');
     }
   }
   // 10. Set the running execution context's LexicalEnvironment to classScope.

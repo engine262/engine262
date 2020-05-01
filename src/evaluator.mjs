@@ -57,6 +57,7 @@ import {
   Evaluate_SuperCall,
   Evaluate_SuperProperty,
   Evaluate_NewTarget,
+  Evaluate_ImportMeta,
   Evaluate_AwaitExpression,
   Evaluate_YieldExpression,
   Evaluate_ParenthesizedExpression,
@@ -208,6 +209,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_SuperCall(node);
     case 'NewTarget':
       return Evaluate_NewTarget(node);
+    case 'ImportMeta':
+      return Evaluate_ImportMeta(node);
     case 'AssignmentExpression':
       return yield* Evaluate_AssignmentExpression(node);
     case 'YieldExpression':

@@ -80,6 +80,7 @@ const SingleCharTokens = {
   'Z': Token.IDENTIFIER,
   '$': Token.IDENTIFIER,
   '_': Token.IDENTIFIER,
+  '\\': Token.IDENTIFIER,
   '.': Token.PERIOD,
   ',': Token.COMMA,
   ':': Token.COLON,
@@ -158,7 +159,15 @@ export class Lexer {
   test(token) {
     const peek = this.peek();
     if (typeof token === 'string') {
-      return peek.type === Token.IDENTIFIER && peek.value === token;
+      if (peek.type === Token.IDENTIFIER && peek.value === token) {
+        const escapeIndex = this.source.slice(peek.startIndex, peek.endIndex).indexOf('\\');
+        if (escapeIndex !== -1) {
+          this.unexpected(escapeIndex + peek.startIndex);
+        }
+        return true;
+      } else {
+        return false;
+      }
     }
     return peek.type === token;
   }
@@ -172,9 +181,10 @@ export class Lexer {
   }
 
   expect(token) {
-    if (!this.eat(token)) {
-      this.unexpected();
+    if (this.test(token)) {
+      return this.next();
     }
+    return this.unexpected();
   }
 
   hasLineTerminatorBeforeNext() {
@@ -491,6 +501,7 @@ export class Lexer {
           return this.scanNumber(false);
 
         case Token.IDENTIFIER:
+          this.position -= 1;
           return this.scanIdentifierOrKeyword();
 
         default:
@@ -500,6 +511,7 @@ export class Lexer {
     }
 
     if (isIdentifierStart(c)) {
+      this.position -= 1;
       return this.scanIdentifierOrKeyword();
     }
 
@@ -679,20 +691,37 @@ export class Lexer {
   }
 
   scanIdentifierOrKeyword() {
-    let buffer = this.source[this.position - 1];
+    let buffer = '';
+    let escapeIndex = -1;
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       const single = SingleCharTokens[c];
       if (single === Token.IDENTIFIER || single === Token.NUMBER) {
-        buffer += c;
+        if (c === '\\') {
+          if (escapeIndex === -1) {
+            escapeIndex = this.position;
+          }
+          this.position += 1;
+          if (this.source[this.position] !== 'u') {
+            this.unexpected(this.position);
+          }
+          this.position += 1;
+          buffer += String.fromCodePoint(this.scanCodePoint());
+        } else {
+          this.position += 1;
+          buffer += c;
+        }
       } else if (isIdentifierContinue(c)) {
+        this.position += 1;
         buffer += c;
       } else {
         break;
       }
-      this.position += 1;
     }
     if (isKeywordRaw(buffer)) {
+      if (escapeIndex !== -1) {
+        this.unexpected(escapeIndex);
+      }
       return KeywordLookup[buffer];
     } else {
       this.scannedValue = buffer;

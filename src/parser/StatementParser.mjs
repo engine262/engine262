@@ -633,7 +633,15 @@ export class StatementParser extends ExpressionParser {
   //   BindingIdentifier
   parseImportDeclaration() {
     const node = this.startNode();
-    this.expect(Token.IMPORT);
+    const importNode = this.expect(Token.IMPORT);
+    if (this.test(Token.PERIOD) || this.test(Token.LPAREN)) {
+      this.position = importNode.startIndex;
+      this.lookaheadToken = this.peek();
+      this.next();
+      node.Expression = this.parseExpression();
+      this.semicolon();
+      return this.finishNode(node, 'ExpressionStatement');
+    }
     if (this.test(Token.STRING)) {
       node.ModuleSpecifier = this.parsePrimaryExpression();
       return this.finishNode(node, 'ImportDeclaration');

@@ -24,6 +24,7 @@ import {
   Completion,
   NormalCompletion,
   AbruptCompletion,
+  EnsureCompletion,
   Q, X,
 } from './completion.mjs';
 import { ValueSet, unwind } from './helpers.mjs';
@@ -529,7 +530,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
       // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
-      const result = unwind(Evaluate(module.ECMAScriptCode));
+      const result = EnsureCompletion(unwind(Evaluate(module.ECMAScriptCode)));
       // 6. Suspend moduleContext and remove it from the execution context stack.
       // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
       surroundingAgent.executionContextStack.pop(moduleContext);

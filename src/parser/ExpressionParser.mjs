@@ -640,8 +640,6 @@ export class ExpressionParser extends FunctionParser {
       if (this.eat(Token.ELLIPSIS)) {
         node.AssignmentExpression = this.parseAssignmentExpression();
         params.push(this.finishNode(node, 'AssignmentRestElement'));
-        this.expect(Token.RPAREN);
-        break;
       } else {
         params.push(this.parseAssignmentExpression());
       }
