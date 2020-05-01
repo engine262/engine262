@@ -83,6 +83,7 @@ if (!process.send) {
     if (/annexB|intl402/.test(test.file)
       || (test.attrs.features && test.attrs.features.some((feature) => features.includes(feature)))
       || test.attrs.includes.includes('nativeFunctionMatcher.js')
+      || /\b(reg ?exp?)\b/i.test(test.attrs.description) || /\b(reg ?exp?)\b/.test(test.contents)
       || skiplist.includes(test.file)) {
       skip();
       return;

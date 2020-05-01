@@ -97,52 +97,83 @@ export function IteratorStep(iteratorRecord) {
   return EnsureCompletion(result);
 }
 
-// 7.4.6 #sec-iteratorclose
+// #sec-iteratorclose
 export function IteratorClose(iteratorRecord, completion) {
+  // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
+  Assert(Type(iteratorRecord.Iterator) === 'Object');
+  // 2. Assert: completion is a Completion Record.
   // TODO: completion should be a Completion Record so this should not be necessary
   completion = EnsureCompletion(completion);
-  Assert(Type(iteratorRecord.Iterator) === 'Object');
   Assert(completion instanceof Completion);
+  // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
-  const ret = Q(GetMethod(iterator, new Value('return')));
-  if (ret === Value.undefined) {
-    return Completion(completion);
+  // 4. Let innerResult be GetMethod(iterator, "return").
+  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
+  // 5. If innerResult.[[Type]] is normal, then
+  if (innerResult.Type === 'normal') {
+    // a. Let return be innerResult.[[Value]].
+    const ret = innerResult.Value;
+    // b. If return is undefined, return Completion(completion).
+    if (ret === Value.undefined) {
+      return Completion(completion);
+    }
+    // c. Set innerResult to Call(return, iterator).
+    innerResult = Call(ret, iterator);
   }
-  const innerResult = Call(ret, iterator);
+  // 6. If completion.[[Type]] is throw, return Completion(completion).
   if (completion.Type === 'throw') {
     return Completion(completion);
   }
+  // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
   if (innerResult.Type === 'throw') {
     return Completion(innerResult);
   }
+  // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
   if (Type(innerResult.Value) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
+  // 9. Return Completion(completion).
   return Completion(completion);
 }
 
-// 7.4.7 #sec-asynciteratorclose
+// #sec-asynciteratorclose
 export function* AsyncIteratorClose(iteratorRecord, completion) {
+  // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
   Assert(Type(iteratorRecord.Iterator) === 'Object');
+  // 2. Assert: completion is a Completion Record.
   Assert(completion instanceof Completion);
+  // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
-  const ret = Q(GetMethod(iterator, new Value('return')));
-  if (ret === Value.undefined) {
-    return Completion(completion);
-  }
-  let innerResult = Call(ret, iterator);
+  // 4. Let innerResult be GetMethod(iterator, "return").
+  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
+  // 5. If innerResult.[[Type]] is normal, then
   if (innerResult.Type === 'normal') {
-    innerResult = EnsureCompletion(yield* Await(innerResult.Value));
+    // a. Let return be innerResult.[[Value]].
+    const ret = innerResult.Value;
+    // b. If return is undefined, return Completion(completion).
+    if (ret === Value.undefined) {
+      return Completion(completion);
+    }
+    // c. Set innerResult to Call(return, iterator).
+    innerResult = Call(ret, iterator);
+    // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
+    if (innerResult.Type === 'normal') {
+      innerResult = EnsureCompletion(yield* Await(innerResult.Value));
+    }
   }
+  // 6. If completion.[[Type]] is throw, return Completion(completion).
   if (completion.Type === 'throw') {
     return Completion(completion);
   }
+  // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
   if (innerResult.Type === 'throw') {
     return Completion(innerResult);
   }
+  // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
   if (Type(innerResult.Value) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
+  // 9. Return Completion(completion).
   return Completion(completion);
 }
 

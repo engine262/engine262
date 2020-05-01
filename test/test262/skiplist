@@ -1,14 +1,3 @@
-// https://github.com/tc39/ecma262/pull/1408
-language/statements/for-of/iterator-close-throw-get-method-abrupt.js
-language/statements/for-of/iterator-close-throw-get-method-non-callable.js
-language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js
-language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js
-
-// https://github.com/tc39/ecma262/pull/1814
-built-ins/Proxy/create-target-is-revoked-proxy.js
-built-ins/Proxy/create-handler-is-revoked-proxy.js
-built-ins/Proxy/create-target-is-revoked-function-proxy.js
-
 // https://github.com/tc39/ecma262/pull/1776
 built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
 built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
@@ -62,5 +51,4 @@ language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
 // https://github.com/tc39/test262/pull/2575
 built-ins/RegExp/lookBehind/sliced-strings.js
 
-built-ins/RegExp/named-groups/unicode-property-names-valid.js
-built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
+built-ins/RegExp/**/*.js

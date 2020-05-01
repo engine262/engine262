@@ -87,3 +87,5 @@ export * from './GetSubstitution.mjs';
 export * from './ContinueStatement.mjs';
 export * from './LabelledStatement.mjs';
 export * from './MV.mjs';
+export * from './ApplyStringOrNumericBinaryOperator.mjs';
+export * from './EvaluateStringOrNumericBinaryExpression.mjs';

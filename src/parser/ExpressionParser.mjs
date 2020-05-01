@@ -671,12 +671,12 @@ export class ExpressionParser extends FunctionParser {
     this.scope({ strict: true }, () => {
       if (this.test(Token.IDENTIFIER)) {
         node.BindingIdentifier = this.parseBindingIdentifier();
-      } else if (isExpression === false) {
+      } else if (isExpression === false && !this.isDefaultScope()) {
         this.unexpected();
       } else {
         node.BindingIdentifier = null;
       }
-      node.ClassTail = this.parseClassTail();
+      node.ClassTail = this.scope({ default: false }, () => this.parseClassTail());
     });
 
     return this.finishNode(node, isExpression ? 'ClassExpression' : 'ClassDeclaration');
@@ -717,7 +717,7 @@ export class ExpressionParser extends FunctionParser {
   //   MethodDefinition
   parseClassElement() {
     const node = this.startNode();
-    node.static = this.eat(Token.STATIC);
+    node.static = this.eat('static');
     node.MethodDefinition = this.parseMethodDefinition();
     return this.finishNode(node, 'ClassElement');
   }
@@ -903,26 +903,31 @@ export class ExpressionParser extends FunctionParser {
       return this.finishNode(node, 'PropertyDefinition');
     }
 
+    let isGenerator = this.eat(Token.MUL);
     const firstName = this.parsePropertyName();
     let isAsync = false;
     let isGetter = false;
     let isSetter = false;
-    if (firstName.type === 'IdentifierName') {
-      switch (firstName.name) {
-        case 'async':
-          isAsync = true;
-          break;
-        case 'get':
-          isGetter = true;
-          break;
-        case 'set':
-          isSetter = true;
-          break;
-        default:
-          break;
+    if (!isGenerator) {
+      if (firstName.type === 'IdentifierName') {
+        switch (firstName.name) {
+          case 'async':
+            isAsync = true;
+            break;
+          case 'get':
+            isGetter = true;
+            break;
+          case 'set':
+            isSetter = true;
+            break;
+          default:
+            break;
+        }
       }
     }
-    const isGenerator = !isGetter && !isSetter && this.eat(Token.MUL);
+    if (!isGenerator && !isGetter && !isSetter) {
+      isGenerator = this.eat(Token.MUL);
+    }
     const isSpecialMethod = isGenerator || ((isSetter || isGetter || isAsync) && !this.test(Token.LPAREN));
 
     if (!isGenerator && type === 'property') {

@@ -211,7 +211,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 }
 
 // 9.2.3 #sec-functionallocate
-export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, thisMode, Scope) {
+export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope) {
   Assert(Type(functionPrototype) === 'Object');
   const internalSlotsList = [
     'Environment',
@@ -228,6 +228,7 @@ export function OrdinaryFunctionCreate(functionPrototype, ParameterList, Body, t
   ];
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
   F.Call = FunctionCallSlot;
+  F.SourceText = sourceText;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
   F.ECMAScriptCode = Body;

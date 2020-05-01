@@ -37,7 +37,7 @@ export class FunctionParser extends IdentifierParser {
     const isGenerator = this.eat(Token.MUL);
     if (this.test(Token.IDENTIFIER)) {
       node.BindingIdentifier = this.parseBindingIdentifier();
-    } else if (isExpression === false) {
+    } else if (isExpression === false && !this.isDefaultScope()) {
       this.unexpected();
     } else {
       node.BindingIdentifier = null;
@@ -100,8 +100,6 @@ export class FunctionParser extends IdentifierParser {
         if (this.eat(Token.ELLIPSIS)) {
           node.BindingIdentifier = this.parseBindingIdentifier();
           params.push(this.finishNode(node, 'BindingRestElement'));
-          this.expect(Token.RPAREN);
-          break;
         } else {
           params.push(this.parseFormalParameter());
         }

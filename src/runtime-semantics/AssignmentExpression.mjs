@@ -11,17 +11,9 @@ import {
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
 import {
   NamedEvaluation,
-  EvaluateBinopValues_AdditiveExpression_Minus,
-  EvaluateBinopValues_AdditiveExpression_Plus,
-  EvaluateBinopValues_BitwiseANDExpression,
-  EvaluateBinopValues_BitwiseORExpression,
-  EvaluateBinopValues_BitwiseXORExpression,
-  EvaluateBinopValues_ExponentiationExpression,
-  EvaluateBinopValues_MultiplicativeExpression,
-  EvaluateBinopValues_ShiftExpression,
+  ApplyStringOrNumericBinaryOperator,
 } from './all.mjs';
 
 // #sec-assignment-operators-runtime-semantics-evaluation
@@ -132,47 +124,28 @@ export function* Evaluate_AssignmentExpression({
     const rref = yield* Evaluate(AssignmentExpression);
     // 4. Let rval be ? GetValue(rref).
     const rval = Q(GetValue(rref));
-    // 5. Let op be the @ where AssignmentOperator is @=.
-    const op = AssignmentOperator.slice(0, -1);
-    // 6. Let r be the result of applying op to lval and rval
-    //    as if evaluating the expression lval op rval.
-    const r = EvaluateBinopValues(op, lval, rval);
-    // 7. Perform ? PutValue(lref, r).
+    // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
+    const assignmentOpText = AssignmentOperator;
+    // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
+    const opText = {
+      '**=': '**',
+      '*=': '*',
+      '/=': '/',
+      '%=': '%',
+      '+=': '+',
+      '-=': '-',
+      '<<=': '<<',
+      '>>=': '>>',
+      '>>>=': '>>>',
+      '&=': '&',
+      '^=': '^',
+      '|=': '|',
+    }[assignmentOpText];
+    // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
+    const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval);
+    // 8. Perform ? PutValue(lref, r).
     Q(PutValue(lref, r));
-    // 8. Return r.
+    // 9. Return r.
     return r;
-  }
-}
-
-export function EvaluateBinopValues(operator, lval, rval) {
-  switch (operator) {
-    case '*':
-    case '/':
-    case '%':
-      return EvaluateBinopValues_MultiplicativeExpression(operator, lval, rval);
-
-    case '+':
-      return EvaluateBinopValues_AdditiveExpression_Plus(lval, rval);
-
-    case '-':
-      return EvaluateBinopValues_AdditiveExpression_Minus(lval, rval);
-
-    case '<<':
-    case '>>':
-    case '>>>':
-      return EvaluateBinopValues_ShiftExpression(operator, lval, rval);
-
-    case '&':
-      return EvaluateBinopValues_BitwiseANDExpression(lval, rval);
-    case '^':
-      return EvaluateBinopValues_BitwiseXORExpression(lval, rval);
-    case '|':
-      return EvaluateBinopValues_BitwiseORExpression(lval, rval);
-
-    case '**':
-      return EvaluateBinopValues_ExponentiationExpression(lval, rval);
-
-    default:
-      throw new OutOfRange('EvaluateBinopValues', operator);
   }
 }

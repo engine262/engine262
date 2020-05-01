@@ -80,7 +80,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    Q(InitializeBoundName(new Value('*default*', value, env)));
+    Q(InitializeBoundName(new Value('*default*'), value, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

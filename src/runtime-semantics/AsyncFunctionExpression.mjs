@@ -28,14 +28,14 @@ export function* Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
   const name = StringValue(BindingIdentifier);
   // 4. Perform ! funcEnv.CreateImmutableBinding(name, false).
   X(funcEnv.CreateImmutableBinding(name, Value.false));
-  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv));
-  // 6. Perform ! SetFunctionName(closure, name).
+  // 5. Let sourceText be the source text matched by AsyncFunctionExpression.
+  const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
+  // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv));
+  // 7. Perform ! SetFunctionName(closure, name).
   X(SetFunctionName(closure, name));
-  // 7. Perform ! funcEnv.InitializeBinding(name, closure).
+  // 8. Perform ! funcEnv.InitializeBinding(name, closure).
   X(funcEnv.InitializeBinding(name, closure));
-  // 8. Set closure.[[SourceText]] to the source text matched by AsyncFunctionExpression.
-  closure.sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
   // 9. Return closure.
   return closure;
 }

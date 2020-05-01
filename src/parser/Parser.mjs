@@ -19,6 +19,7 @@ export const ScopeBits = {
   'SUPER_CALL',
   'SUPER_PROP',
   'IN',
+  'DEFAULT',
 ].forEach((name, i) => {
   if (i > 31) {
     throw new RangeError(name);
@@ -83,6 +84,10 @@ export class Parser extends LanguageParser {
     return (this.state.scopeBits & ScopeBits.SUPER_PROP) !== 0;
   }
 
+  isDefaultScope() {
+    return (this.state.scopeBits & ScopeBits.DEFAULT) !== 0;
+  }
+
   scope(scope, f) {
     const oldBits = this.state.scopeBits;
     if (scope.in === true) {
@@ -129,6 +134,11 @@ export class Parser extends LanguageParser {
       this.state.scopeBits |= ScopeBits.SUPER_PROP;
     } else if (scope.superProperty === false) {
       this.state.scopeBits &= ~ScopeBits.SUPER_PROP;
+    }
+    if (scope.default === true) {
+      this.state.scopeBits |= ScopeBits.DEFAULT;
+    } else if (scope.default === false) {
+      this.state.scopeBits &= ~ScopeBits.DEFAULT;
     }
     const oldStrict = this.state.strict;
     if (scope.strict === true) {

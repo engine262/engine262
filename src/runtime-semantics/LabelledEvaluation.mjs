@@ -8,6 +8,7 @@ import {
   GetIterator,
   GetValue,
   PutValue,
+  GetV,
   ResolveBinding,
   InitializeReferencedBinding,
   IteratorComplete,
@@ -489,8 +490,12 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     }
     // b. Let obj be ! ToObject(exprValue).
     const obj = X(ToObject(exprValue));
-    // c. Return ? EnumerateObjectProperties(obj).
-    return Q(EnumerateObjectProperties(obj));
+    // c. Let iterator be ? EnumerateObjectProperties(obj).
+    const iterator = Q(EnumerateObjectProperties(obj));
+    // d. Let nextMethod be ! GetV(iterator, "next").
+    const nextMethod = X(GetV(iterator, new Value('next')));
+    // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+    return { Iterator: iterator, NextMethod: nextMethod, Done: Value.false };
   } else { // 7. Else,
     // a. Assert: iterationKind is iterate or async-iterate.
     Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate');
@@ -504,8 +509,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
 
 // #sec-enumerate-object-properties
 function EnumerateObjectProperties(O) {
-  const it = CreateForInIterator(O);
-  return X(GetIterator(it));
+  return CreateForInIterator(O);
 }
 
 // #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset

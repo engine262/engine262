@@ -30,13 +30,15 @@ export function* Evaluate_GeneratorExpression(GeneratorExpression) {
   const name = StringValue(BindingIdentifier);
   // 4. Perform funcEnv.CreateImmutableBinding(name, false).
   funcEnv.CreateImmutableBinding(name, Value.false);
-  // 5. Let closure be OrdinaryFunctionCreate(%Generator%, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv));
-  // 6. Perform SetFunctionName(closure, name).
+  // 5. Let sourceText be the source text matched by GeneratorExpression.
+  const sourceText = sourceTextMatchedBy(GeneratorExpression);
+  // 6. Let closure be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv));
+  // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 7. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
-  // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
@@ -47,10 +49,8 @@ export function* Evaluate_GeneratorExpression(GeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
-  // 9. Perform funcEnv.InitializeBinding(name, closure).
+  // 10. Perform funcEnv.InitializeBinding(name, closure).
   funcEnv.InitializeBinding(name, closure);
-  // 10. Set closure.[[SourceText]] to the source text matched by GeneratorExpression.
-  closure.SourceText = sourceTextMatchedBy(GeneratorExpression);
   // 11. Return closure.
   return closure;
 }

@@ -30,13 +30,15 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   const name = StringValue(BindingIdentifier);
   // 4. Perform funcEnv.CreateImmutableBinding(name, false).
   funcEnv.CreateImmutableBinding(name, Value.false);
-  // 5. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
-  // 6. Perform SetFunctionName(closure, name).
+  // 5. Let source text be the source textmatched by AsyncGeneratorExpression.
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
+  // 6. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
+  // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 7. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
-  // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,
     new Value('prototype'),
@@ -47,10 +49,8 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
       Configurable: Value.false,
     }),
   ));
-  // 9. Perform funcEnv.InitializeBinding(name, closure).
+  // 10. Perform funcEnv.InitializeBinding(name, closure).
   funcEnv.InitializeBinding(name, closure);
-  // 10. Set closure.[[SourceText]] to the source text matched by AsyncGeneratorExpression.
-  closure.SourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
   // 11. Return closure.
   return closure;
 }

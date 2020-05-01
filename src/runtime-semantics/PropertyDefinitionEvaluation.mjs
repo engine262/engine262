@@ -119,14 +119,14 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       ReturnIfAbrupt(propKey);
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      // 4. Let closure be OrdinaryFunctionCreate(%Function.prototype%, PropertySetParameterList, FunctionBody, non-lexical-this, scope).
-      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), PropertySetParameterList, FunctionBody, 'non-lexical-this', scope);
-      // 5. Perform MakeMethod(closure, object).
+      // 4. Let sourceText be the source text matched by MethodDefinition.
+      const sourceText = sourceTextMatchedBy(MethodDefinition);
+      // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, PropertySetParameterList, FunctionBody, non-lexical-this, scope).
+      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, PropertySetParameterList, FunctionBody, 'non-lexical-this', scope);
+      // 6. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
-      // 6. Perform SetFunctionName(closure, propKey, "get").
+      // 7. Perform SetFunctionName(closure, propKey, "get").
       SetFunctionName(closure, propKey, new Value('set'));
-      // 7. Set closure.[[SourceText]] to the source text matched by MethodDefinition.
-      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
       // 8. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
       const desc = Descriptor({
         Set: closure,
@@ -146,14 +146,14 @@ function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let formalParameterList be an instance of the production FormalParameters : [empty].
       const formalParameterList = [];
-      // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, formalParameterList, FunctionBody, non-lexical-this, scope).
-      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), formalParameterList, FunctionBody, 'non-lexical-this', scope);
-      // 6. Perform MakeMethod(closure, object).
+      // 5. Let sourceText be the source text matched by MethodDefinition.
+      const sourceText = sourceTextMatchedBy(MethodDefinition);
+      // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameterList, FunctionBody, non-lexical-this, scope).
+      const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, formalParameterList, FunctionBody, 'non-lexical-this', scope);
+      // 7. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
-      // 7. Perform SetFunctionName(closure, propKey, "get").
+      // 8. Perform SetFunctionName(closure, propKey, "get").
       SetFunctionName(closure, propKey, new Value('get'));
-      // 8. Set closure.[[SourceText]] to the source text matched by MethodDefinition.
-      closure.SourceText = sourceTextMatchedBy(MethodDefinition);
       // 9. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
       const desc = Descriptor({
         Get: closure,
@@ -179,14 +179,14 @@ function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerab
   ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
-  // 5. Perform ! MakeMethod(closure, object).
+  // 4. Let sourceText be the source text matched by AsyncMethod.
+  const sourceText = sourceTextMatchedBy(AsyncMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
-  // 6. Perform ! SetFunctionName(closure, propKey).
+  // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  // 7. Set closure.[[SourceText]] to the source text matched by AsyncMethod.
-  closure.SourceText = sourceTextMatchedBy(AsyncMethod);
   // 8. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
   const desc = Descriptor({
     Value: closure,
@@ -209,23 +209,23 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let closure be ! OrdinaryFunctionCreate(%Generator%, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope));
-  // 5. Perform ! MakeMethod(closure, object).
+  // 4. Let sourceText be the source text matched by GeneratorMethod.
+  const sourceText = sourceTextMatchedBy(GeneratorMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%Generator%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
-  // 6. Perform ! SetFunctionName(closure, propKey).
+  // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  // 7. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
-  // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
   }));
-  // 9. Set closure.[[SourceText]] to the source text matched by GeneratorMethod.
-  closure.SourceText = sourceTextMatchedBy(GeneratorMethod);
   // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
   const desc = Descriptor({
     Value: closure,
@@ -248,23 +248,23 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 4. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
-  // 5. Perform ! MakeMethod(closure, object).
+  // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
+  // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
-  // 6. Perform ! SetFunctionName(closure, propKey).
+  // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  // 7. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
-  // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
   }));
-  // 9. Set closure.[[SourceText]] to the source text matched by AsyncGeneratorMethod.
-  closure.SourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
   // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
   const desc = Descriptor({
     Value: closure,

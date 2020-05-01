@@ -371,9 +371,9 @@ export class StatementParser extends ExpressionParser {
       node.Statement = this.parseStatement();
       return this.finishNode(node, 'ForInStatement');
     }
-    if (this.eat(Token.OF)) {
+    if (this.eat('of')) {
       node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
-      node.Expression = this.parseExpression();
+      node.AssignmentExpression = this.parseAssignmentExpression();
       this.expect(Token.RPAREN);
       node.Statement = this.parseStatement();
       return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
@@ -638,19 +638,22 @@ export class StatementParser extends ExpressionParser {
       node.ModuleSpecifier = this.parsePrimaryExpression();
       return this.finishNode(node, 'ImportDeclaration');
     }
-    if (this.test(Token.IDENTIFIER)) {
+    if (this.eat(Token.MUL)) {
+      this.expect('as');
+      node.NameSpaceImport = this.parseBindingIdentifier();
+    } else if (this.test(Token.IDENTIFIER)) {
       node.ImportedDefaultBinding = this.parseBindingIdentifier();
     } else {
       if (this.eat(Token.COMMA)) {
         if (this.eat(Token.MUL)) {
-          this.expect(Token.AS);
+          this.expect('as');
           node.NameSpaceImport = this.parseBindingIdentifier();
         } else if (this.eat(Token.LBRACE)) {
           node.NamedImports = [];
           while (!this.eat(Token.RBRACE)) {
             const inner = this.startNode();
             const name = this.parseBindingIdentifier();
-            if (this.eat(Token.AS)) {
+            if (this.eat('as')) {
               inner.IdentifierName = name;
               inner.ImportedBinding = this.parseBindingIdentifier();
               node.NamedImports.push(this.finishNode(inner, 'ImportSpecifier'));
@@ -690,13 +693,13 @@ export class StatementParser extends ExpressionParser {
     if (node.default) {
       switch (this.peek().type) {
         case Token.FUNCTION:
-          node.HoistableDeclaration = this.parseFunctionExpression(FunctionKind.NORMAL);
+          node.HoistableDeclaration = this.scope({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.NORMAL));
           break;
         case Token.ASYNC:
-          node.HoistableDeclaration = this.parseFunctionExpression(FunctionKind.ASYNC);
+          node.HoistableDeclaration = this.scope({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.ASYNC));
           break;
         case Token.CLASS:
-          node.ClassDeclaration = this.parseClassExpression();
+          node.ClassDeclaration = this.scope({ default: true }, () => this.parseClassDeclaration());
           break;
         default:
           node.AssignmentExpression = this.parseAssignmentExpression();
@@ -720,6 +723,7 @@ export class StatementParser extends ExpressionParser {
           node.VariableStatement = this.parseVariableStatement();
           break;
         case Token.LBRACE:
+          this.next();
           node.NamedExports = [];
           while (!this.eat(Token.RBRACE)) {
             const inner = this.startNode();

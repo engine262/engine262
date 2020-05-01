@@ -27,14 +27,14 @@ export function* Evaluate_FunctionExpression(FunctionExpression) {
   const name = StringValue(BindingIdentifier);
   // 4. Perform funcEnv.CreateImmutableBinding(name, false).
   funcEnv.CreateImmutableBinding(name, Value.false);
-  // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), FormalParameters, FunctionBody, 'non-lexical-this', funcEnv);
-  // 6. Perform SetFunctionName(closure, name).
+  // 5. Let sourceText be the source text matched by FunctionExpression.
+  const sourceText = sourceTextMatchedBy(FunctionExpression);
+  // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
+  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', funcEnv);
+  // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 7. Perform MakeConstructor(closure).
+  // 8. Perform MakeConstructor(closure).
   MakeConstructor(closure);
-  // 8. Set closure.[[SourceText]] to the source text matched by FunctionExpression.
-  closure.SourceText = sourceTextMatchedBy(FunctionExpression);
   // 9. Perform funcEnv.InitializeBinding(name, closure).
   funcEnv.InitializeBinding(name, closure);
   // 10. Return closure.

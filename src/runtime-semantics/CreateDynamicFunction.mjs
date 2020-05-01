@@ -100,7 +100,13 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   }
   // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
   const bodyString = `\u{000A}${Q(ToString(bodyArg)).stringValue()}\u{000A}`;
-  // 17. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
+  // 17. Let prefix be the prefix associated with kind in Table 48.
+  const prefix = DynamicFunctionSourceTextPrefixes[kind];
+  // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
+  const sourceString = `${prefix} anonymous(${P}\u000A) {${bodyString}}`;
+  // 19. Let sourceText be ! UTF16DecodeString(sourceString).
+  const sourceText = new Value(sourceString);
+  // 20. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
   //   a. Let parameters be the result of parsing ! UTF16DecodeString(P), using parameterGoal as the goal symbol. Throw a SyntaxError exception if the parse fails.
   //   b. Let body be the result of parsing ! UTF16DecodeString(bodyString), using goal as the goal symbol. Throw a SyntaxError exception if the parse fails.
   //   c. Let strict be ContainsUseStrict of body.
@@ -122,9 +128,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   {
     // FIXME: break apart into parseFunctionBody and parseFormalParameters
     //        so that a trailing `}` in bodyString is caught correctly.
-    const prefix = DynamicFunctionSourceTextPrefixes[kind];
-    const sourceText = `${prefix} anonymous(${P}\u{000A}) {${bodyString}}`;
-    const parser = new Parser(sourceText);
+    const parser = new Parser(sourceString);
     const f = forwardError(() => parser.parseExpression());
     if (Array.isArray(f)) {
       return surroundingAgent.Throw(f[0]);
@@ -147,17 +151,17 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
         throw new OutOfRange('kind', kind);
     }
   }
-  // 18. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
+  // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
   const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
-  // 19. Let realmF be the current Realm Record.
+  // 22. Let realmF be the current Realm Record.
   const realmF = surroundingAgent.currentRealmRecord;
-  // 20. Let scope be realmF.[[GlobalEnv]].
+  // 23. Let scope be realmF.[[GlobalEnv]].
   const scope = realmF.GlobalEnv;
-  // 21. Let F be ! OrdinaryFunctionCreate(proto, parameters, body, non-lexical-this, scope).
-  const F = X(OrdinaryFunctionCreate(proto, parameters, body, 'non-lexical-this', scope));
-  // 22. Perform SetFunctionName(F, "anonymous").
+  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope).
+  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope));
+  // 25. Perform SetFunctionName(F, "anonymous").
   SetFunctionName(F, new Value('anonymous'));
-  // 23. If kind is generator, then
+  // 26. If kind is generator, then
   if (kind === 'generator') {
     // a. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
@@ -168,7 +172,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       Enumerable: Value.false,
       Configurable: Value.false,
     }));
-  } else if (kind === 'asyncGenerator') { // 24. Else if kind is asyncGenerator, then
+  } else if (kind === 'asyncGenerator') { // 27. Else if kind is asyncGenerator, then
     // a. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
@@ -178,16 +182,10 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       Enumerable: Value.false,
       Configurable: Value.false,
     }));
-  } else if (kind === 'normal') { // 25. Else if kind is normal, then perform MakeConstructor(F).
+  } else if (kind === 'normal') { // 28. Else if kind is normal, then perform MakeConstructor(F).
     MakeConstructor(F);
   }
-  // 26. NOTE: Async functions are not constructable and do not have a [[Construct]] internal method or a "prototype" property.
-  // 27. Let prefix be the prefix associated with kind in Table 48.
-  const prefix = DynamicFunctionSourceTextPrefixes[kind];
-  // 28. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
-  const sourceString = `${prefix} anonymous(${P}\u000A) {${bodyString}}`;
-  // 29. Set F.[[SourceText]] to ! UTF16DecodeString(sourceString).
-  F.SourceText = sourceString;
-  // 30. Return F.
+  // 29. NOTE: Functions whose kind is async are not constructible and do not have a [[Construct]] internal method or a "prototype" property.
+  // 20. Return F.
   return F;
 }

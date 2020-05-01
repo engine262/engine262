@@ -1,4 +1,4 @@
-import { ExportedNames, LexicallyDeclaredNames } from '../static-semantics/all.mjs';
+import { ExportedNames, LexicallyDeclaredNames, VarDeclaredNames } from '../static-semantics/all.mjs';
 import { ValueSet } from '../helpers.mjs';
 import { StatementParser } from './StatementParser.mjs';
 import { Token } from './tokens.mjs';
@@ -64,10 +64,17 @@ export class LanguageParser extends StatementParser {
       }
     }
     {
-      const names = LexicallyDeclaredNames(node.ModuleItemList);
-      if (new ValueSet(names).size !== names.length) {
+      const lexNames = LexicallyDeclaredNames(node.ModuleItemList);
+      const lexNamesSet = new ValueSet(lexNames);
+      if (lexNamesSet.size !== lexNames.length) {
         this.report('AlreadyDeclared');
       }
+      const varNames = VarDeclaredNames(node.ModuleItemList);
+      varNames.forEach((name) => {
+        if (lexNamesSet.has(name)) {
+          this.report('AlreadyDeclared');
+        }
+      });
     }
     return this.finishNode(node, 'ModuleBody');
   }

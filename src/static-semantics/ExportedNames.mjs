@@ -24,6 +24,9 @@ export function ExportedNames(node) {
       if (node.Declaration) {
         return BoundNames(node.Declaration);
       }
+      if (node.NamedExports) {
+        return [];
+      }
       throw new OutOfRange('ExportedNames', node);
     default:
       return [];
