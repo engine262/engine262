@@ -85,3 +85,5 @@ language/expressions/super/prop-expr-cls-val.js
 
 // https://github.com/tc39/test262/pull/2575
 built-ins/RegExp/lookBehind/sliced-strings.js
+
+built-ins/RegExp/named-groups/unicode-property-names-valid.js

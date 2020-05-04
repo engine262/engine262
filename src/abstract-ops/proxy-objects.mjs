@@ -542,21 +542,13 @@ export function ProxyCreate(target, handler) {
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'target');
   }
-  // 2. If target is a Proxy exotic object and target.[[ProxyHandler]] is null, throw a TypeError exception.
-  if (isProxyExoticObject(target) && target.ProxyHandler === Value.null) {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'revoked proxy', 'target');
-  }
-  // 3. If Type(handler) is not Object, throw a TypeError exception.
+  // 2. If Type(handler) is not Object, throw a TypeError exception.
   if (Type(handler) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'handler');
   }
-  // 4. If handler is a Proxy exotic object and handler.[[ProxyHandler]] is null, throw a TypeError exception.
-  if (isProxyExoticObject(handler) && handler.ProxyHandler === Value.null) {
-    return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'revoked proxy', 'handler');
-  }
-  // 5. Let P be ! MakeBasicObject(« [[ProxyHandler]], [[ProxyTarget]] »).
+  // 3. Let P be ! MakeBasicObject(« [[ProxyHandler]], [[ProxyTarget]] »).
   const P = X(MakeBasicObject(['ProxyHandler', 'ProxyTarget']));
-  // 6. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 9.5.
+  // 4. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 9.5.
   P.GetPrototypeOf = ProxyGetPrototypeOf;
   P.SetPrototypeOf = ProxySetPrototypeOf;
   P.IsExtensible = ProxyIsExtensible;
@@ -568,7 +560,7 @@ export function ProxyCreate(target, handler) {
   P.Set = ProxySet;
   P.Delete = ProxyDelete;
   P.OwnPropertyKeys = ProxyOwnPropertyKeys;
-  // 7. If IsCallable(target) is true, then
+  // 5. If IsCallable(target) is true, then
   if (IsCallable(target) === Value.true) {
     // a. Set P.[[Call]] as specified in #sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist.
     P.Call = ProxyCall;
@@ -578,10 +570,10 @@ export function ProxyCreate(target, handler) {
       P.Construct = ProxyConstruct;
     }
   }
-  // 8. Set P.[[ProxyTarget]] to target.
+  // 6. Set P.[[ProxyTarget]] to target.
   P.ProxyTarget = target;
-  // 9. Set P.[[ProxyHandler]] to handler.
+  // 7. Set P.[[ProxyHandler]] to handler.
   P.ProxyHandler = handler;
-  // 10. Return P.
+  // 8. Return P.
   return P;
 }

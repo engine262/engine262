@@ -1,6 +1,7 @@
 // blacklist
 
 Atomics
+Atomics.waitAsync
 
 caller
 
