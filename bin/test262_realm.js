@@ -91,6 +91,12 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue())],
     ['detachArrayBuffer', ([arrayBuffer]) => Abstract.DetachArrayBuffer(arrayBuffer)],
     ['gc', () => Value.undefined],
+    ['spec', ([v]) => {
+      if (v.nativeFunction && v.nativeFunction.section) {
+        return new Value(realm, v.nativeFunction.section);
+      }
+      return Value.undefined;
+    }],
   ].forEach(([name, value]) => {
     const v = value instanceof Value ? value : new Value(realm, value);
     Abstract.CreateDataProperty($262, new Value(realm, name), v);

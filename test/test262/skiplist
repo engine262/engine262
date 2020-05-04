@@ -87,3 +87,4 @@ language/expressions/super/prop-expr-cls-val.js
 built-ins/RegExp/lookBehind/sliced-strings.js
 
 built-ins/RegExp/named-groups/unicode-property-names-valid.js
+built-ins/RegExp/named-groups/non-unicode-property-names-valid.js

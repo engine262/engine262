@@ -231,6 +231,22 @@ module.exports = ({ types: t, template }) => {
           path.node.leadingComments.push({ type: 'CommentBlock', value: 'istanbul ignore next' });
         }
       },
+      FunctionDeclaration(path) {
+        if (path.node.leadingComments) {
+          outer: // eslint-disable-line no-labels
+          for (const c of path.node.leadingComments) {
+            const lines = c.value.split('\n');
+            for (const line of lines) {
+              if (/#sec/.test(line)) {
+                const section = line.split(' ').find((l) => l.includes('#sec'));
+                const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
+                path.insertAfter(template.ast(`${path.node.id.name}.section = '${url}';`));
+                break outer; // eslint-disable-line no-labels
+              }
+            }
+          }
+        }
+      },
     },
   };
 };
