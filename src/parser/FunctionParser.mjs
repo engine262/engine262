@@ -1,5 +1,3 @@
-import { BoundNames } from '../static-semantics/all.mjs';
-import { ValueSet } from '../helpers.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
 
@@ -121,10 +119,6 @@ export class FunctionParser extends IdentifierParser {
 
   parseUniqueFormalParameters() {
     const params = this.parseFormalParameters();
-    const names = BoundNames(params);
-    if (names.length !== new ValueSet(names).size) {
-      this.report('AlreadyDeclared');
-    }
     return params;
   }
 
