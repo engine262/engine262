@@ -90,3 +90,4 @@ export * from './MV.mjs';
 export * from './ApplyStringOrNumericBinaryOperator.mjs';
 export * from './EvaluateStringOrNumericBinaryExpression.mjs';
 export * from './ImportMeta.mjs';
+export * from './DebuggerStatement.mjs';

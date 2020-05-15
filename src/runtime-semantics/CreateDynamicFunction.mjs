@@ -103,7 +103,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 17. Let prefix be the prefix associated with kind in Table 48.
   const prefix = DynamicFunctionSourceTextPrefixes[kind];
   // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
-  const sourceString = `${prefix} anonymous(${P}\u000A) {${bodyString}}`;
+  const sourceString = `${prefix} anonymous(${P}\u{000A}) {${bodyString}}`;
   // 19. Let sourceText be ! UTF16DecodeString(sourceString).
   const sourceText = new Value(sourceString);
   // 20. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:

@@ -1,4 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
+import { BoundNames } from '../static-semantics/all.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
 import { Token } from './tokens.mjs';
@@ -35,7 +37,8 @@ export class Parser extends LanguageParser {
     this.state = {
       strict: false,
       scopeBits: 0,
-      exportedNames: [],
+      lexicalScopes: [new Set()],
+      variableScopes: [new Set()],
     };
   }
 
@@ -141,13 +144,30 @@ export class Parser extends LanguageParser {
     } else if (scope.default === false) {
       this.state.scopeBits &= ~ScopeBits.DEFAULT;
     }
+
+    if (scope.lexical === true) {
+      this.state.lexicalScopes.push(new Set());
+    }
+    if (scope.variable === true) {
+      this.state.variableScopes.push(new Set());
+    }
+
     const oldStrict = this.state.strict;
     if (scope.strict === true) {
       this.state.strict = true;
     } else if (scope.strict === false) {
       this.state.strict = false;
     }
+
     const r = f();
+
+    if (scope.lexical === true) {
+      this.state.lexicalScopes.pop();
+    }
+    if (scope.variable === true) {
+      this.state.variableScopes.pop();
+    }
+
     this.state.scopeBits = oldBits;
     this.state.strict = oldStrict;
     return r;
@@ -183,7 +203,39 @@ export class Parser extends LanguageParser {
     return node;
   }
 
-  report(template, context = this.peek()) {
+  get lexicalScope() {
+    return this.state.lexicalScopes[this.state.lexicalScopes.length - 1];
+  }
+
+  get variableScope() {
+    return this.state.variableScopes[this.state.variableScopes.length - 1];
+  }
+
+  declare(node, type) {
+    for (const sName of BoundNames(node)) {
+      const name = sName.stringValue();
+      switch (type) {
+        case 'lexical':
+        case 'import':
+        case 'parameter':
+          if (this.lexicalScope.has(name) || this.variableScope.has(name)) {
+            this.report('AlreadyDeclared', node, name);
+          }
+          this.lexicalScope.add(name);
+          break;
+        case 'variable':
+          if (this.lexicalScope.has(name)) {
+            this.report('AlreadyDeclared', node, name);
+          }
+          this.variableScope.add(name);
+          break;
+        default:
+          throw new OutOfRange('Parser.declare', type);
+      }
+    }
+  }
+
+  report(template, context = this.peek(), ...templateArgs) {
     if (template === 'UnexpectedToken') {
       switch (context.type) {
         case Token.AWAIT:
@@ -231,7 +283,7 @@ export class Parser extends LanguageParser {
       lineEnd = this.source.length - 1;
     }
 
-    const e = new SyntaxError(messages[template]());
+    const e = new SyntaxError(messages[template](...templateArgs));
     e.decoration = `${this.source.slice(lineStart, lineEnd)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
     throw e;

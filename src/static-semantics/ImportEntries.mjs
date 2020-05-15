@@ -1,7 +1,9 @@
+import { ImportEntriesForModule, ModuleRequests } from './all.mjs';
+
 export function ImportEntries(node) {
   switch (node.type) {
     case 'Module':
-      if (module.ModuleBody) {
+      if (node.ModuleBody) {
         return ImportEntries(node.ModuleBody);
       }
       return [];
@@ -13,7 +15,11 @@ export function ImportEntries(node) {
       return entries;
     }
     case 'ImportDeclaration':
-      throw new Error();
+      if (node.FromClause) {
+        const module = ModuleRequests(node.FromClause)[0];
+        return ImportEntriesForModule(node.ImportClause, module);
+      }
+      return [];
     default:
       return [];
   }

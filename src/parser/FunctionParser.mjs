@@ -43,10 +43,15 @@ export class FunctionParser extends IdentifierParser {
       node.BindingIdentifier = null;
     }
 
-    node.FormalParameters = this.parseFormalParameters();
+    this.scope({
+      lexical: true,
+      variable: true,
+    }, () => {
+      node.FormalParameters = this.parseFormalParameters();
 
-    const body = this.parseFunctionBody(isAsync, isGenerator);
-    node[body.type] = body;
+      const body = this.parseFunctionBody(isAsync, isGenerator);
+      node[body.type] = body;
+    });
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}`;
     return this.finishNode(node, name);
@@ -99,11 +104,14 @@ export class FunctionParser extends IdentifierParser {
         const node = this.startNode();
         if (this.eat(Token.ELLIPSIS)) {
           node.BindingIdentifier = this.parseBindingIdentifier();
+          this.declare(node.BindingIdentifier, 'parameter');
           params.push(this.finishNode(node, 'BindingRestElement'));
           this.expect(Token.RPAREN);
           break;
         } else {
-          params.push(this.parseFormalParameter());
+          const formal = this.parseFormalParameter();
+          this.declare(formal, 'parameter');
+          params.push(formal);
         }
         if (this.eat(Token.RPAREN)) {
           break;

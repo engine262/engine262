@@ -15,120 +15,176 @@ import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
+// #sec-reflect.apply
 function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
+  // 1. If IsCallable(target) is false, throw a TypeError exception.
   if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
+  // 2. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(CreateListFromArrayLike(argumentsList));
+  // 3. Perform PrepareForTailCall().
   PrepareForTailCall();
+  // 4. Return ? Call(target, thisArgument, args).
   return Q(Call(target, thisArgument, args));
 }
 
+// #sec-reflect.construct
 function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
+  // 1. If IsConstructor(target) is false, throw a TypeError exception.
   if (IsConstructor(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
   }
+  // 2. If newTarget is not present, set newTarget to target.
   if (newTarget === undefined) {
     newTarget = target;
-  } else if (IsConstructor(newTarget) === Value.false) {
+  } else if (IsConstructor(newTarget) === Value.false) { // 3. Else if IsConstructor(newTarget) is false, throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', newTarget);
   }
+  // 4. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(CreateListFromArrayLike(argumentsList));
+  // 5. Return ? Construct(target, args, newTarget).
   return Q(Construct(target, args, newTarget));
 }
 
+// #sec-reflect.defineproperty
 function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. Let desc be ? ToPropertyDescriptor(attributes).
   const desc = Q(ToPropertyDescriptor(attributes));
+  // 4. Return ? target.[[DefineOwnProperty]](key, desc).
   return Q(target.DefineOwnProperty(key, desc));
 }
 
+// #sec-reflect.deleteproperty
 function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. Return ? target.[[Delete]](key).
   return Q(target.Delete(key));
 }
 
+// #sec-reflect.get
 function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. If receiver is not present, then
   if (receiver === undefined) {
+    // a. Set receiver to target.
     receiver = target;
   }
+  // 4. Return ? target.[[Get]](key, receiver).
   return Q(target.Get(key, receiver));
 }
 
+// #sec-reflect.getownpropertydescriptor
 function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. Let desc be ? target.[[GetOwnProperty]](key).
   const desc = Q(target.GetOwnProperty(key));
+  // 4. Return FromPropertyDescriptor(desc).
   return FromPropertyDescriptor(desc);
 }
 
+// #sec-reflect.getprototypeof
 function Reflect_getPrototypeOf([target = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Return ? target.[[GetPrototypeOf]]().
   return Q(target.GetPrototypeOf());
 }
 
+// #sec-reflect.has
 function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. Return ? target.[[HasProperty]](key).
   return Q(target.HasProperty(key));
 }
 
+// #sec-reflect.isextensible
 function Reflect_isExtensible([target = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Return ? target.[[IsExtensible]]().
   return Q(target.IsExtensible());
 }
 
+// #sec-reflect.ownkeys
 function Reflect_ownKeys([target = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let keys be ? target.[[OwnPropertyKeys]]().
   const keys = Q(target.OwnPropertyKeys());
+  // 3. Return CreateArrayFromList(keys).
   return CreateArrayFromList(keys);
 }
 
+// #sec-reflect.preventextensions
 function Reflect_preventExtensions([target = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Return ? target.[[PreventExtensions]]().
   return Q(target.PreventExtensions());
 }
 
+// #sec-reflect.set
 function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
+  // 2. Let key be ? ToPropertyKey(propertyKey).
   const key = Q(ToPropertyKey(propertyKey));
+  // 3. If receiver is not present, then
   if (receiver === undefined) {
     receiver = target;
   }
+  // 4. Return ? target.[[Set]](key, V, receiver).
   return Q(target.Set(key, V, receiver));
 }
 
+// #sec-reflect.setprototypeof
 function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
+  // 1. If Type(target) is not Object, throw a TypeError exception.
   if (Type(target) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
-  if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
+  // 2. If Type(proto) is not Object and proto is not null, throw a TypeError exception.
+  if (Type(proto) !== 'Object' && proto !== Value.null) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
+  // 3. Return ? target.[[SetPrototypeOf]](proto).
   return Q(target.SetPrototypeOf(proto));
 }
 

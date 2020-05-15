@@ -1,11 +1,13 @@
 'use strict';
 
+require('@snek/source-map-support/register');
 const assert = require('assert');
 const {
   Abstract,
   Agent,
   Realm,
   Value,
+  FEATURES,
 } = require('..');
 const { total, pass, fail } = require('./base');
 
@@ -165,6 +167,74 @@ Error: owo
     module.Evaluate();
     const result = Abstract.Get(realm.global, new Value(realm, 'result'));
     assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+  },
+  () => {
+    const agent = new Agent({
+      features: FEATURES.map((f) => f.name),
+    });
+    agent.enter();
+    const realm = new Realm();
+    Abstract.CreateDataProperty(
+      realm.global,
+      new Value(realm, 'spec'),
+      new Value(realm, ([v]) => {
+        if (v && v.nativeFunction && v.nativeFunction.section) {
+          return new Value(realm, v.nativeFunction.section);
+        }
+        return Value.undefined;
+      }),
+    );
+    Abstract.CreateDataProperty(
+      realm.global,
+      new Value(realm, 'fail'),
+      new Value(realm, ([path]) => {
+        throw new Error(`${path.stringValue()} did not have a section`);
+      }),
+    );
+    const result = realm.evaluateScript(`
+'use strict';
+
+{
+  const spec = globalThis.spec;
+  delete globalThis.spec;
+  const fail = globalThis.fail;
+  delete globalThis.fail;
+
+  const scanned = new Set();
+  const scan = (ns, path) => {
+    if (scanned.has(ns)) {
+      return;
+    }
+    scanned.add(ns);
+    if (typeof ns === 'function') {
+      if (spec(ns) === undefined) {
+        fail(path);
+      }
+    }
+    if (typeof ns !== 'function' && (typeof ns !== 'object' || ns === null)) {
+      return;
+    }
+
+    const descriptors = Object.getOwnPropertyDescriptors(ns);
+    Reflect.ownKeys(descriptors)
+      .forEach((name) => {
+        const desc = descriptors[name];
+        const p = typeof name === 'symbol'
+          ? path + '[Symbol(' + name.description + ')]'
+          : path + '.' + name;
+        if ('value' in desc) {
+          scan(desc.value, p);
+        } else {
+          scan(desc.get, p);
+          scan(desc.set, p);
+        }
+      });
+  };
+
+  scan(globalThis, 'globalThis');
+}
+    `);
+    assert.strictEqual(result.Value, Value.undefined);
   },
 ].forEach((test) => {
   total();

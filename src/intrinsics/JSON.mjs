@@ -255,6 +255,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
   return Q(Call(reviver, holder, [name, val]));
 }
 
+// #sec-json.parse
 function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 1. Let jsonString be ? ToString(text).
   const jsonString = Q(ToString(text));
@@ -462,6 +463,7 @@ function SerializeJSONArray(state, value) {
   return final;
 }
 
+// #sec-json.stringify
 function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
   const stack = [];
   const indent = '';

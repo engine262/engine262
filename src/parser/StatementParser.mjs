@@ -116,6 +116,7 @@ export class StatementParser extends ExpressionParser {
     const bindingList = [];
     do {
       const node = this.parseBindingElement();
+      this.declare(node, 'lexical');
       node.type = 'LexicalBinding';
       bindingList.push(node);
     } while (this.eat(Token.COMMA));
@@ -208,6 +209,7 @@ export class StatementParser extends ExpressionParser {
     do {
       const node = this.startNode();
       node.BindingIdentifier = this.parseBindingIdentifier();
+      this.declare(node.BindingIdentifier, 'variable');
       node.Initializer = this.test(Token.ASSIGN) ? this.parseInitializer() : null;
       declarationList.push(this.finishNode(node, 'VariableDeclaration'));
     } while (this.eat(Token.COMMA));
@@ -561,15 +563,18 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.TRY);
     node.Block = this.parseBlock();
     if (this.eat(Token.CATCH)) {
-      const clause = this.startNode();
-      if (this.eat(Token.LPAREN)) {
-        clause.CatchParameter = this.parseBindingIdentifier();
-        this.expect(Token.RPAREN);
-      } else {
-        clause.CatchParameter = null;
-      }
-      clause.Block = this.parseBlock();
-      node.Catch = this.finishNode(clause, 'Catch');
+      this.scope({ lexical: true }, () => {
+        const clause = this.startNode();
+        if (this.eat(Token.LPAREN)) {
+          clause.CatchParameter = this.parseBindingIdentifier();
+          this.declare(clause.CatchParameter, 'lexical');
+          this.expect(Token.RPAREN);
+        } else {
+          clause.CatchParameter = null;
+        }
+        clause.Block = this.parseBlock();
+        node.Catch = this.finishNode(clause, 'Catch');
+      });
     } else {
       node.Catch = null;
     }
@@ -582,6 +587,14 @@ export class StatementParser extends ExpressionParser {
       this.report('TryMissingCatchOrFinally');
     }
     return this.finishNode(node, 'TryStatement');
+  }
+
+  // DebuggerStatement : `debugger` `;`
+  parseDebuggerStatement() {
+    const node = this.startNode();
+    this.expect(Token.DEBUGGER);
+    this.semicolon();
+    return this.finishNode(node, 'DebuggerStatement');
   }
 
   // ExpressionStatement :
@@ -607,7 +620,27 @@ export class StatementParser extends ExpressionParser {
   // ImportDeclaration :
   //   `import` ImportClause FromClause `;`
   //   `import` ModuleSpecifier `;`
-  //
+  parseImportDeclaration() {
+    const node = this.startNode();
+    const importNode = this.expect(Token.IMPORT);
+    if (this.test(Token.PERIOD) || this.test(Token.LPAREN)) {
+      this.position = importNode.startIndex;
+      this.lookaheadToken = this.peek();
+      this.next();
+      node.Expression = this.parseExpression();
+      this.semicolon();
+      return this.finishNode(node, 'ExpressionStatement');
+    }
+    if (this.test(Token.STRING)) {
+      node.ModuleSpecifier = this.parsePrimaryExpression();
+    } else {
+      node.ImportClause = this.parseImportClause();
+      node.FromClause = this.parseFromClause();
+    }
+    this.semicolon();
+    return this.finishNode(node, 'ImportDeclaration');
+  }
+
   // ImportClause :
   //   ImportedDefaultBinding
   //   NameSpaceImport
@@ -626,59 +659,43 @@ export class StatementParser extends ExpressionParser {
   //   `{` ImportsList `}`
   //   `{` ImportsList `,` `}`
   //
-  // FromClause :
-  //   `from` ModuleSpecifier
-  //
   // ImportedBinding :
   //   BindingIdentifier
-  parseImportDeclaration() {
+  parseImportClause() {
     const node = this.startNode();
-    const importNode = this.expect(Token.IMPORT);
-    if (this.test(Token.PERIOD) || this.test(Token.LPAREN)) {
-      this.position = importNode.startIndex;
-      this.lookaheadToken = this.peek();
-      this.next();
-      node.Expression = this.parseExpression();
-      this.semicolon();
-      return this.finishNode(node, 'ExpressionStatement');
+    if (this.test(Token.IDENTIFIER)) {
+      node.ImportedDefaultBinding = this.parseBindingIdentifier();
+      this.declare(node.ImportedDefaultBinding, 'import');
+      if (!this.eat(Token.COMMA)) {
+        return this.finishNode(node, 'ImportClause');
+      }
     }
-    if (this.test(Token.STRING)) {
-      node.ModuleSpecifier = this.parsePrimaryExpression();
-      return this.finishNode(node, 'ImportDeclaration');
-    }
+
     if (this.eat(Token.MUL)) {
       this.expect('as');
       node.NameSpaceImport = this.parseBindingIdentifier();
-    } else if (this.test(Token.IDENTIFIER)) {
-      node.ImportedDefaultBinding = this.parseBindingIdentifier();
-    } else {
-      if (this.eat(Token.COMMA)) {
-        if (this.eat(Token.MUL)) {
-          this.expect('as');
-          node.NameSpaceImport = this.parseBindingIdentifier();
-        } else if (this.eat(Token.LBRACE)) {
-          node.NamedImports = [];
-          while (!this.eat(Token.RBRACE)) {
-            const inner = this.startNode();
-            const name = this.parseBindingIdentifier();
-            if (this.eat('as')) {
-              inner.IdentifierName = name;
-              inner.ImportedBinding = this.parseBindingIdentifier();
-              node.NamedImports.push(this.finishNode(inner, 'ImportSpecifier'));
-            } else {
-              node.NamedImports.push(name);
-            }
-            if (this.eat(Token.RBRACE)) {
-              break;
-            }
-            this.expect(Token.COMMA);
-          }
+      this.declare(node.NameSpaceImport, 'import');
+    } else if (this.eat(Token.LBRACE)) {
+      node.NamedImports = [];
+      while (!this.eat(Token.RBRACE)) {
+        const inner = this.startNode();
+        const name = this.parseBindingIdentifier();
+        if (this.eat('as')) {
+          inner.IdentifierName = name;
+          inner.ImportedBinding = this.parseBindingIdentifier();
+          this.declare(inner.ImportedBinding, 'import');
+          node.NamedImports.push(this.finishNode(inner, 'ImportSpecifier'));
+        } else {
+          this.declare(name, 'import');
+          node.NamedImports.push(name);
         }
+        if (this.eat(Token.RBRACE)) {
+          break;
+        }
+        this.expect(Token.COMMA);
       }
     }
-    node.FromClause = this.parseFromClause();
-    this.semicolon();
-    return this.finishNode(node, 'ImportDeclaration');
+    return this.finishNode(node, 'ImportClause');
   }
 
   // ExportDeclaration :
@@ -769,7 +786,8 @@ export class StatementParser extends ExpressionParser {
     return this.finishNode(node, 'ExportDeclaration');
   }
 
-  // FromClause : `from` ModuleSpecifier
+  // FromClause :
+  //   `from` ModuleSpecifier
   parseFromClause() {
     this.expect('from');
     return this.parseStringLiteral();

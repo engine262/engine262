@@ -1,3 +1,5 @@
+import { StringValue } from './all.mjs';
+
 export function ModuleRequests(node) {
   switch (node.type) {
     case 'Module':
@@ -13,12 +15,17 @@ export function ModuleRequests(node) {
       return moduleNames;
     }
     case 'ImportDeclaration':
-      return ModuleRequests(node.FromClause);
+      if (node.FromClause) {
+        return ModuleRequests(node.FromClause);
+      }
+      return [StringValue(node.ModuleSpecifier)];
     case 'ExportDeclaration':
       if (node.FromClause) {
         return ModuleRequests(node.FromClause);
       }
       return [];
+    case 'StringLiteral':
+      return [StringValue(node)];
     default:
       return [];
   }

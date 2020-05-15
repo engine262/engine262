@@ -28,16 +28,32 @@ import {
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './Bootstrap.mjs';
 
-function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue: func }) {
+// #sec-properties-of-the-function-prototype-object
+function FunctionProto(_args, _meta) {
+  // * accepts any arguments and returns undefined when invoked.
+  return Value.undefined;
+}
+
+// #sec-function.prototype.apply
+function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue }) {
+  // 1. Let func be the this value.
+  const func = thisValue;
+  // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
-  if (Type(argArray) === 'Undefined' || Type(argArray) === 'Null') {
+  // 3. If argArray is undefined or null, then
+  if (argArray === Value.undefined || argArray === Value.null) {
+    // a. Perform PrepareForTailCall().
     PrepareForTailCall();
+    // b. Return ? Call(func, thisArg).
     return Q(Call(func, thisArg));
   }
+  // 4. Let argList be ? CreateListFromArrayLike(argArray).
   const argList = Q(CreateListFromArrayLike(argArray));
+  // 5. Perform PrepareForTailCall().
   PrepareForTailCall();
+  // 6. Return ? Call(func, thisArg, argList).
   return Q(Call(func, thisArg, argList));
 }
 
@@ -64,7 +80,7 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   return Q(Construct(target, args, newTarget));
 }
 
-// 9.4.1.3 #sec-boundfunctioncreate
+// #sec-boundfunctioncreate
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   // 1. Assert: Type(targetFunction) is Object.
   Assert(Type(targetFunction) === 'Object');
@@ -181,7 +197,7 @@ function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
 }
 
 export function BootstrapFunctionPrototype(realmRec) {
-  const proto = CreateBuiltinFunction(() => Value.undefined, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
+  const proto = CreateBuiltinFunction(FunctionProto, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Function.prototype%'] = proto;
 
   SetFunctionLength(proto, new Value(0));

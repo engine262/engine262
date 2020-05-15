@@ -19,6 +19,7 @@ import {
   Evaluate_ReturnStatement,
   Evaluate_TryStatement,
   Evaluate_ThrowStatement,
+  Evaluate_DebuggerStatement,
   Evaluate_BreakableStatement,
   Evaluate_LabelledStatement,
   Evaluate_ForBinding,
@@ -122,6 +123,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_ThrowStatement(node);
     case 'TryStatement':
       return yield* Evaluate_TryStatement(node);
+    case 'DebuggerStatement':
+      return Evaluate_DebuggerStatement(node);
     case 'WithStatement':
       return yield* Evaluate_WithStatement(node);
     // Declarations

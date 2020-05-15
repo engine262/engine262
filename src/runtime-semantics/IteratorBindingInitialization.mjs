@@ -21,7 +21,7 @@ import {
   StringValue,
   IsAnonymousFunctionDefinition,
 } from '../static-semantics/all.mjs';
-import { NamedEvaluation } from './all.mjs';
+import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
 // #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
 // FormalParameters :
@@ -58,6 +58,9 @@ function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParamet
 //   SingleNameBinding
 //   BindingPattern
 function IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
+  if (BindingElement.BindingPattern) {
+    return IteratorBindingInitialization_BindingPattern(BindingElement, iteratorRecord, environment);
+  }
   return IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
 }
 
@@ -161,6 +164,47 @@ function IteratorBindingInitialization_BindingRestElement({ BindingIdentifier },
     // g. Set n to n + 1.
     n += 1;
   }
+}
+
+function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }, iteratorRecord, environment) {
+  let v;
+  // 1. If iteratorRecord.[[Done]] is false, then
+  if (iteratorRecord.Done === Value.false) {
+    // a. Let next be IteratorStep(iteratorRecord).
+    const next = IteratorStep(iteratorRecord);
+    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+    if (next instanceof AbruptCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    // c. ReturnIfAbrupt(next).
+    ReturnIfAbrupt(next);
+    // d. If next is false, set iteratorRecord.[[Done]] to true.
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
+    } else { // e. Else,
+      // i. Let v be IteratorValue(next).
+      v = IteratorValue(next);
+      // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
+      if (v instanceof AbruptCompletion) {
+        iteratorRecord.Done = Value.true;
+      }
+      // iii. ReturnIfAbrupt(v).
+      ReturnIfAbrupt(v);
+    }
+  }
+  // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
+  if (iteratorRecord.Done === Value.true) {
+    v = Value.undefined;
+  }
+  // 3. If Initializer is present and v is undefined, then
+  if (Initializer && v === Value.undefined) {
+    // a. Let defaultValue be the result of evaluating Initializer.
+    const defaultValue = yield* Evaluate(Initializer);
+    // b. Set v to ? GetValue(defaultValue).
+    v = Q(GetValue(defaultValue));
+  }
+  // 4. Return the result of performing BindingInitialization of BindingPattern with v and environment as the arguments.
+  return yield* BindingInitialization(BindingPattern, v, environment);
 }
 
 export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList }, iteratorRecord, environment) {

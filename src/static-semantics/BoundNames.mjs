@@ -38,9 +38,15 @@ export function BoundNames(node) {
       }
       return [new Value('*default*')];
     case 'ImportDeclaration': {
+      if (node.ImportClause) {
+        return BoundNames(node.ImportClause);
+      }
+      return [];
+    }
+    case 'ImportClause': {
       const names = [];
-      if (node.ImportedBinding) {
-        names.push(...BoundNames(node.ImportedBinding));
+      if (node.ImportedDefaultBinding) {
+        names.push(...BoundNames(node.ImportedDefaultBinding));
       }
       if (node.NameSpaceImport) {
         names.push(...BoundNames(node.NameSpaceImport));

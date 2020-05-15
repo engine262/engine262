@@ -191,8 +191,9 @@ export class CallSite {
   }
 
   isAsync() {
-    if (this.context.Function !== Value.null) {
-      return this.context.Function.ECMAScriptCode && this.context.Function.ECMAScriptCode.async;
+    if (this.context.Function !== Value.null && this.context.Function.ECMAScriptCode) {
+      const code = this.context.Function.ECMAScriptCode;
+      return code.type === 'AsyncFunctionBody' || code.type === 'AsyncGeneratorBody';
     }
     return false;
   }

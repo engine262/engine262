@@ -115,12 +115,14 @@ export function BootstrapMath(realmRec) {
     ['trunc', 1],
   ].forEach(([name, length]) => {
     // TODO(18): Math
-    const func = CreateBuiltinFunction(((args) => {
+    // #sec-function-properties-of-the-math-object
+    const method = (args) => {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();
       }
       return new Value(Math[name](...args));
-    }), [], realmRec);
+    };
+    const func = CreateBuiltinFunction(method, [], realmRec);
     X(SetFunctionName(func, new Value(name)));
     X(SetFunctionLength(func, new Value(length)));
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
