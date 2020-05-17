@@ -188,6 +188,7 @@ export class Lexer {
   }
 
   hasLineTerminatorBeforeNext() {
+    this.peek();
     return this.hasLineTerminatorBeforeNextFlag;
   }
 

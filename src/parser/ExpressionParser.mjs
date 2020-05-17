@@ -346,11 +346,13 @@ export class ExpressionParser extends FunctionParser {
       node.operator = this.next().value;
       node.LeftHandSideExpression = null;
       node.UnaryExpression = this.parseUnaryExpression();
+      this.validateAssignmentTarget(node.UnaryExpression);
       return this.finishNode(node, 'UpdateExpression');
     }
     const argument = this.parseLeftHandSideExpression();
     if (!this.hasLineTerminatorBeforeNext()) {
       if (this.test(Token.INC) || this.test(Token.DEC)) {
+        this.validateAssignmentTarget(argument);
         const node = this.startNode();
         node.operator = this.next().value;
         node.LeftHandSideExpression = argument;
@@ -949,29 +951,38 @@ export class ExpressionParser extends FunctionParser {
       }
     }
 
-    node.PropertyName = isSpecialMethod ? this.parsePropertyName() : firstName;
+    node.PropertyName = (isSpecialMethod && (!isGenerator || isAsync)) ? this.parsePropertyName() : firstName;
 
-    if (isSpecialMethod && isGetter) {
-      this.expect(Token.LPAREN);
-      this.expect(Token.RPAREN);
-      node.PropertySetParameterList = null;
-      node.UniqueFormalParameters = null;
-    } else if (isSpecialMethod && isSetter) {
-      this.expect(Token.LPAREN);
-      node.PropertySetParameterList = [this.parseFormalParameter()];
-      this.expect(Token.RPAREN);
-      node.UniqueFormalParameters = null;
-    } else {
-      node.PropertySetParameterList = null;
-      node.UniqueFormalParameters = this.parseUniqueFormalParameters();
-    }
+    this.scope({
+      lexical: true,
+      variable: true,
+    }, () => {
+      if (isSpecialMethod && isGetter) {
+        this.expect(Token.LPAREN);
+        this.expect(Token.RPAREN);
+        node.PropertySetParameterList = null;
+        node.UniqueFormalParameters = null;
+      } else if (isSpecialMethod && isSetter) {
+        this.expect(Token.LPAREN);
+        node.PropertySetParameterList = [this.parseFormalParameter()];
+        this.expect(Token.RPAREN);
+        node.UniqueFormalParameters = null;
+      } else {
+        node.PropertySetParameterList = null;
+        node.UniqueFormalParameters = this.parseUniqueFormalParameters();
+      }
 
-    node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = this.scope({
-      superCall: !isSpecialMethod && (
-        node.PropertyName.name === 'constructor'
-        || node.PropertyName.value === 'constructor'
-      ),
-    }, () => this.parseFunctionBody(isAsync, isGenerator));
+      this.scope({
+        superCall: !isSpecialMethod && (
+          node.PropertyName.name === 'constructor'
+          || node.PropertyName.value === 'constructor'
+        ),
+      }, () => {
+        const body = this.parseFunctionBody(isAsync, isGenerator);
+        this.validateFunctionParameters(node, node.UniqueFormalParameters || node.PropertySetParameterList, body.strict);
+        node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
+      });
+    });
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}`;
     return this.finishNode(node, name);

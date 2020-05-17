@@ -54,8 +54,13 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    if (this.isStrictMode() && isReservedWordStrict(node.name)) {
-      this.unexpected(token);
+    if (this.isStrictMode()) {
+      if (isReservedWordStrict(node.name)) {
+        this.unexpected(token);
+      }
+      if (node.name === 'arguments' || node.name === 'eval') {
+        this.unexpected(token);
+      }
     }
     return this.finishNode(node, 'BindingIdentifier');
   }

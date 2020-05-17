@@ -1,4 +1,5 @@
-import { Token } from './tokens.mjs';
+import { BoundNames } from '../static-semantics/all.mjs';
+import { Token, isReservedWordStrict } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
 
 export const FunctionKind = {
@@ -50,11 +51,26 @@ export class FunctionParser extends IdentifierParser {
       node.FormalParameters = this.parseFormalParameters();
 
       const body = this.parseFunctionBody(isAsync, isGenerator);
+
+      this.validateFunctionParameters(node, node.FormalParameters, body.strict);
+
       node[body.type] = body;
     });
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}`;
     return this.finishNode(node, name);
+  }
+
+  validateFunctionParameters(f, parameters, strict) {
+    if (!strict || !parameters) {
+      return;
+    }
+    for (const sName of BoundNames(parameters)) {
+      const name = sName.stringValue();
+      if (isReservedWordStrict(name) || name === 'arguments' || name === 'eval') {
+        this.unexpected(f);
+      }
+    }
   }
 
   parseArrowFunction(node, parameters, isAsync) {
@@ -93,7 +109,7 @@ export class FunctionParser extends IdentifierParser {
     return this.parseBindingElement();
   }
 
-  parseFormalParameters() {
+  parseFormalParameters(unique = false) {
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
       return [];
@@ -126,8 +142,7 @@ export class FunctionParser extends IdentifierParser {
   }
 
   parseUniqueFormalParameters() {
-    const params = this.parseFormalParameters();
-    return params;
+    return this.parseFormalParameters(true);
   }
 
   parseFunctionBody(isAsync, isGenerator) {

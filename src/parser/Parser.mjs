@@ -37,8 +37,8 @@ export class Parser extends LanguageParser {
     this.state = {
       strict: false,
       scopeBits: 0,
-      lexicalScopes: [new Set()],
-      variableScopes: [new Set()],
+      lexicalScopes: [],
+      variableScopes: [],
     };
   }
 
@@ -161,11 +161,16 @@ export class Parser extends LanguageParser {
 
     const r = f();
 
+    if (scope.variable === true) {
+      const vscope = this.state.variableScopes.pop();
+      vscope.forEach((name) => {
+        if (this.lexicalScope.has(name)) {
+          this.report('AlreadyDeclared', name, name);
+        }
+      });
+    }
     if (scope.lexical === true) {
       this.state.lexicalScopes.pop();
-    }
-    if (scope.variable === true) {
-      this.state.variableScopes.pop();
     }
 
     this.state.scopeBits = oldBits;
@@ -215,18 +220,17 @@ export class Parser extends LanguageParser {
     for (const sName of BoundNames(node)) {
       const name = sName.stringValue();
       switch (type) {
+        case 'parameter':
+          this.lexicalScope.add(name);
+          break;
         case 'lexical':
         case 'import':
-        case 'parameter':
-          if (this.lexicalScope.has(name) || this.variableScope.has(name)) {
+          if (this.lexicalScope.has(name)) {
             this.report('AlreadyDeclared', node, name);
           }
           this.lexicalScope.add(name);
           break;
         case 'variable':
-          if (this.lexicalScope.has(name)) {
-            this.report('AlreadyDeclared', node, name);
-          }
           this.variableScope.add(name);
           break;
         default:

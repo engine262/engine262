@@ -252,7 +252,8 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    this.semicolon();
+    // Semicolons are completely optional after a do-while, even without a newline
+    this.eat(Token.SEMICOLON);
     return this.finishNode(node, 'DoWhileStatement');
   }
 
@@ -274,128 +275,130 @@ export class StatementParser extends ExpressionParser {
   //   BindingIdentifier
   //   BindingPattern
   parseForStatement() {
-    const node = this.startNode();
-    this.expect(Token.FOR);
-    const isAwait = this.isAwaitScope() && this.eat(Token.AWAIT);
-    this.expect(Token.LPAREN);
-    if (isAwait && this.test(Token.SEMICOLON)) {
-      this.unexpected();
-    }
-    if (this.eat(Token.SEMICOLON)) {
-      if (!this.test(Token.SEMICOLON)) {
-        node.Expression_b = this.parseExpression();
+    return this.scope({ lexical: true }, () => {
+      const node = this.startNode();
+      this.expect(Token.FOR);
+      const isAwait = this.isAwaitScope() && this.eat(Token.AWAIT);
+      this.expect(Token.LPAREN);
+      if (isAwait && this.test(Token.SEMICOLON)) {
+        this.unexpected();
       }
-      this.expect(Token.SEMICOLON);
-      if (!this.test(Token.RPAREN)) {
-        node.Expression_c = this.parseExpression();
-      }
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
-      return this.finishNode(node, 'ForStatement');
-    }
-    if (this.test(Token.LET) || this.test(Token.CONST)) {
-      const inner = this.startNode();
-      if (this.eat(Token.LET)) {
-        inner.LetOrConst = 'let';
-      } else {
-        this.expect(Token.CONST);
-        inner.LetOrConst = 'const';
-      }
-      const list = this.parseBindingList();
-      if (list.length > 1 || this.test(Token.SEMICOLON)) {
-        inner.BindingList = list;
-        node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
-        this.expect(Token.SEMICOLON);
+      if (this.eat(Token.SEMICOLON)) {
         if (!this.test(Token.SEMICOLON)) {
-          node.Expression_a = this.parseExpression();
+          node.Expression_b = this.parseExpression();
         }
         this.expect(Token.SEMICOLON);
         if (!this.test(Token.RPAREN)) {
-          node.Expression_b = this.parseExpression();
+          node.Expression_c = this.parseExpression();
         }
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
-      inner.ForBinding = list[0];
-      inner.ForBinding.type = 'ForBinding';
-      node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
-      if (!isAwait && this.eat(Token.IN)) {
+      if (this.test(Token.LET) || this.test(Token.CONST)) {
+        const inner = this.startNode();
+        if (this.eat(Token.LET)) {
+          inner.LetOrConst = 'let';
+        } else {
+          this.expect(Token.CONST);
+          inner.LetOrConst = 'const';
+        }
+        const list = this.parseBindingList();
+        if (list.length > 1 || this.test(Token.SEMICOLON)) {
+          inner.BindingList = list;
+          node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
+          this.expect(Token.SEMICOLON);
+          if (!this.test(Token.SEMICOLON)) {
+            node.Expression_a = this.parseExpression();
+          }
+          this.expect(Token.SEMICOLON);
+          if (!this.test(Token.RPAREN)) {
+            node.Expression_b = this.parseExpression();
+          }
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForStatement');
+        }
+        inner.ForBinding = list[0];
+        inner.ForBinding.type = 'ForBinding';
+        node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
+        if (!isAwait && this.eat(Token.IN)) {
+          node.Expression = this.parseExpression();
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForInStatement');
+        }
+        this.expect('of');
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+      }
+      if (this.eat(Token.VAR)) {
+        if (isAwait) {
+          node.ForBinding = this.parseBindingIdentifier();
+          this.expect('of');
+          node.AssignmentExpression = this.parseAssignmentExpression();
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForAwaitStatement');
+        }
+        const list = this.parseVariableDeclarationList();
+        if (list.length > 1 || this.test(Token.SEMICOLON)) {
+          node.VariableDeclarationList = list;
+          this.expect(Token.SEMICOLON);
+          if (!this.test(Token.SEMICOLON)) {
+            node.Expression_a = this.parseExpression();
+          }
+          this.expect(Token.SEMICOLON);
+          if (!this.test(Token.RPAREN)) {
+            node.Expression_b = this.parseExpression();
+          }
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForStatement');
+        }
+        this.expect(Token.IN);
+        node.ForBinding = list[0];
+        node.ForBinding.type = 'ForBinding';
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
-      this.expect('of');
-      node.AssignmentExpression = this.parseAssignmentExpression();
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
-      return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
-    }
-    if (this.eat(Token.VAR)) {
-      if (isAwait) {
-        node.ForBinding = this.parseBindingIdentifier();
-        this.expect('of');
+
+      const expression = this.scope({ in: false }, () => this.parseExpression());
+      if (!isAwait && this.eat(Token.IN)) {
+        node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
+        node.Expression = this.parseExpression();
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, 'ForInStatement');
+      }
+      if (this.eat('of')) {
+        node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForAwaitStatement');
+        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
       }
-      const list = this.parseVariableDeclarationList();
-      if (list.length > 1 || this.test(Token.SEMICOLON)) {
-        node.VariableDeclarationList = list;
-        this.expect(Token.SEMICOLON);
-        if (!this.test(Token.SEMICOLON)) {
-          node.Expression_a = this.parseExpression();
-        }
-        this.expect(Token.SEMICOLON);
-        if (!this.test(Token.RPAREN)) {
-          node.Expression_b = this.parseExpression();
-        }
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForStatement');
+
+      node.Expression_a = expression;
+      this.expect(Token.SEMICOLON);
+
+      if (!this.test(Token.SEMICOLON)) {
+        node.Expression_b = this.parseExpression();
       }
-      this.expect(Token.IN);
-      node.ForBinding = list[0];
-      node.ForBinding.type = 'ForBinding';
-      node.Expression = this.parseExpression();
+      this.expect(Token.SEMICOLON);
+
+      if (!this.test(Token.RPAREN)) {
+        node.Expression_c = this.parseExpression();
+      }
       this.expect(Token.RPAREN);
+
       node.Statement = this.parseStatement();
-      return this.finishNode(node, 'ForInStatement');
-    }
-
-    const expression = this.scope({ in: false }, () => this.parseExpression());
-    if (!isAwait && this.eat(Token.IN)) {
-      node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
-      node.Expression = this.parseExpression();
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
-      return this.finishNode(node, 'ForInStatement');
-    }
-    if (this.eat('of')) {
-      node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
-      node.AssignmentExpression = this.parseAssignmentExpression();
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
-      return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
-    }
-
-    node.Expression_a = expression;
-    this.expect(Token.SEMICOLON);
-
-    if (!this.test(Token.SEMICOLON)) {
-      node.Expression_b = this.parseExpression();
-    }
-    this.expect(Token.SEMICOLON);
-
-    if (!this.test(Token.RPAREN)) {
-      node.Expression_c = this.parseExpression();
-    }
-    this.expect(Token.RPAREN);
-
-    node.Statement = this.parseStatement();
-    return this.finishNode(node, 'ForStatement');
+      return this.finishNode(node, 'ForStatement');
+    });
   }
 
   // SwitchStatement :

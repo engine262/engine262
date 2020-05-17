@@ -21,6 +21,8 @@ export class LanguageParser extends StatementParser {
     const node = this.startNode();
     this.scope({
       in: true,
+      lexical: true,
+      variable: true,
     }, () => {
       const directives = [];
       node.StatementList = this.parseStatementList(Token.EOS, directives);
@@ -39,6 +41,8 @@ export class LanguageParser extends StatementParser {
       in: true,
       importMeta: true,
       await: this.feature('TopLevelAwait'),
+      lexical: true,
+      variable: true,
     }, () => {
       const node = this.startNode();
       if (this.eat(Token.EOS)) {
