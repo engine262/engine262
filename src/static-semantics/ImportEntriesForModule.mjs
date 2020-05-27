@@ -30,7 +30,7 @@ export function ImportEntriesForModule(ImportClause, module) {
           LocalName: localName,
         });
       } else {
-        const localName = BoundNames(i);
+        const localName = BoundNames(i)[0];
         entries.push({
           ModuleRequest: module,
           ImportName: localName,

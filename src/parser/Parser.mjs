@@ -39,6 +39,7 @@ export class Parser extends LanguageParser {
       scopeBits: 0,
       lexicalScopes: [],
       variableScopes: [],
+      exportedNames: new Set(),
     };
   }
 
@@ -229,6 +230,12 @@ export class Parser extends LanguageParser {
             this.report('AlreadyDeclared', node, name);
           }
           this.lexicalScope.add(name);
+          break;
+        case 'export':
+          if (this.state.exportedNames.has(name)) {
+            this.report('AlreadyDeclared', node, name);
+          }
+          this.state.exportedNames.add(name);
           break;
         case 'variable':
           this.variableScope.add(name);

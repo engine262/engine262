@@ -10,7 +10,10 @@ import {
 import { StringValue } from '../static-semantics/all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { IteratorBindingInitialization_ArrayBindingPattern } from './all.mjs';
+import {
+  IteratorBindingInitialization_ArrayBindingPattern,
+  PropertyBindingInitialization,
+} from './all.mjs';
 
 // #sec-initializeboundname
 export function InitializeBoundName(name, value, environment) {
@@ -35,14 +38,14 @@ export function InitializeBoundName(name, value, environment) {
 //   `{` BindingPropertyList `}`
 //   `{` BindingRestProperty `}`
 //   `{` BindingPropertyList `,` BindingRestProperty `}`
-function BindingInitialization_ObjectBindingPattern({ BindingPropertyList }, value, environment) {
+function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList }, value, environment) {
   // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
-  Q(PropertyBindingInitialization(BindingPropertyList, value, environment));
+  Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
   // 2. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }
 
-export function BindingInitialization(node, value, environment) {
+export function* BindingInitialization(node, value, environment) {
   switch (node.type) {
     case 'BindingIdentifier': {
       // 1. Let name be StringValue of Identifier.
@@ -54,7 +57,7 @@ export function BindingInitialization(node, value, environment) {
       // 1. Perform ? RequireObjectCoercible(value).
       Q(RequireObjectCoercible(value));
       // 2. Return the result of performing BindingInitialization for ObjectBindingPattern using value and environment as arguments.
-      return BindingInitialization_ObjectBindingPattern(node, value, environment);
+      return yield* BindingInitialization_ObjectBindingPattern(node, value, environment);
     }
     case 'ArrayBindingPattern': {
       // 1. Let iteratorRecord be ? GetIterator(value).

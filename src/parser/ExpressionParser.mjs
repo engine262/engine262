@@ -110,6 +110,9 @@ export class ExpressionParser extends FunctionParser {
           }
         }
         return node;
+      case 'CoverInitializedName':
+        node.type = 'BindingElement';
+        return node;
       case 'MemberExpression':
         return node;
       case 'ParenthesizedExpression':
@@ -124,11 +127,12 @@ export class ExpressionParser extends FunctionParser {
         delete node.PropertyDefinitionList;
         node.type = 'ObjectBindingPattern';
         return node;
-      case 'PropertyDefinition':
+      case 'PropertyDefinition': {
         node.BindingElement = this.validateAssignmentTarget(node.AssignmentExpression);
         delete node.AssignmentExpression;
         node.type = 'BindingProperty';
         return node;
+      }
       default:
         break;
     }
@@ -937,8 +941,8 @@ export class ExpressionParser extends FunctionParser {
         return this.finishNode(node, 'PropertyDefinition');
       }
       if (this.test(Token.ASSIGN)) {
-        node.IdentifierReference = firstName;
-        node.Initializer = this.parseInitialized();
+        node.BindingIdentifier = firstName;
+        node.Initializer = this.parseInitializer();
         return this.finishNode(node, 'CoverInitializedName');
       }
 
@@ -978,7 +982,7 @@ export class ExpressionParser extends FunctionParser {
           || node.PropertyName.value === 'constructor'
         ),
       }, () => {
-        const body = this.parseFunctionBody(isAsync, isGenerator);
+        const body = this.parseFunctionBody(isAsync, isGenerator, false);
         this.validateFunctionParameters(node, node.UniqueFormalParameters || node.PropertySetParameterList, body.strict);
         node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
       });

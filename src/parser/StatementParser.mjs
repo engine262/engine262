@@ -746,9 +746,11 @@ export class StatementParser extends ExpressionParser {
         case Token.FUNCTION:
         case Token.ASYNC:
           node.Declaration = this.parseHoistableDeclaration();
+          this.declare(node.Declaration, 'export');
           break;
         case Token.VAR:
           node.VariableStatement = this.parseVariableStatement();
+          this.declare(node.VariableStatement, 'export');
           break;
         case Token.LBRACE:
           this.next();
@@ -756,11 +758,13 @@ export class StatementParser extends ExpressionParser {
           while (!this.eat(Token.RBRACE)) {
             const inner = this.startNode();
             const name = this.parseIdentifierName();
-            if (this.eat(Token.AS)) {
+            if (this.eat('as')) {
               inner.IdentifierName_a = name;
               inner.IdentifierName_b = this.parseIdentifierName();
+              this.declare(inner.IdentifierName_b, 'export');
               node.NamedExports.push(this.finishNode(node, 'NamedSpecifier'));
             } else {
+              this.declare(name, 'export');
               node.NamedExports.push(name);
             }
             if (this.eat(Token.RBRACE)) {
@@ -775,6 +779,7 @@ export class StatementParser extends ExpressionParser {
           break;
         case Token.MUL: {
           const inner = this.startNode();
+          this.next();
           if (this.eat(Token.AS)) {
             inner.IdentifierName = this.parseIdentifierName();
           }

@@ -50,7 +50,7 @@ export class FunctionParser extends IdentifierParser {
     }, () => {
       node.FormalParameters = this.parseFormalParameters();
 
-      const body = this.parseFunctionBody(isAsync, isGenerator);
+      const body = this.parseFunctionBody(isAsync, isGenerator, false);
 
       this.validateFunctionParameters(node, node.FormalParameters, body.strict);
 
@@ -97,7 +97,7 @@ export class FunctionParser extends IdentifierParser {
 
   parseConciseBody(isAsync) {
     if (this.test(Token.LBRACE)) {
-      return this.parseFunctionBody(isAsync, false);
+      return this.parseFunctionBody(isAsync, false, true);
     }
     const node = this.startNode();
     node.ExpressionBody = this.parseAssignmentExpression();
@@ -145,11 +145,11 @@ export class FunctionParser extends IdentifierParser {
     return this.parseFormalParameters(true);
   }
 
-  parseFunctionBody(isAsync, isGenerator) {
+  parseFunctionBody(isAsync, isGenerator, isArrow) {
     const node = this.startNode();
     this.expect(Token.LBRACE);
     this.scope({
-      newTarget: true,
+      newTarget: isArrow ? undefined : true,
       return: true,
       await: isAsync,
       yield: isGenerator,

@@ -4,15 +4,15 @@ import {
   isKeywordRaw,
 } from './tokens.mjs';
 
-const isIdentifierStart = (c) => /\p{ID_Start}/u.test(c);
-const isIdentifierContinue = (c) => /\p{ID_Continue}/u.test(c);
+const isIdentifierStart = (c) => /[\p{ID_Start}$_]/u.test(c);
+const isIdentifierPart = (c) => /[\p{ID_Continue}$]/u.test(c);
 const isDecimalDigit = (c) => /\d/u.test(c);
 const isHexDigit = (c) => /[\da-f]/ui.test(c);
 const isOctalDigit = (c) => /[0-7]/u.test(c);
 const isBinaryDigit = (c) => c === '0' || c === '1';
 const isWhitespace = (c) => /[\u0009\u000B\u000C\u0020\u00A0\uFEFF]|\p{Space_Separator}/u.test(c); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => /[\r\n\u2028\u2029]/u.test(c);
-const isRegularExpressionFlagPart = (c) => (isIdentifierContinue(c) || c === '$');
+const isRegularExpressionFlagPart = (c) => (isIdentifierPart(c) || c === '$');
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -697,22 +697,24 @@ export class Lexer {
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       const single = SingleCharTokens[c];
-      if (single === Token.IDENTIFIER || single === Token.NUMBER) {
-        if (c === '\\') {
-          if (escapeIndex === -1) {
-            escapeIndex = this.position;
-          }
-          this.position += 1;
-          if (this.source[this.position] !== 'u') {
-            this.unexpected(this.position);
-          }
-          this.position += 1;
-          buffer += String.fromCodePoint(this.scanCodePoint());
-        } else {
-          this.position += 1;
-          buffer += c;
+      if (c === '\\') {
+        if (escapeIndex === -1) {
+          escapeIndex = this.position;
         }
-      } else if (isIdentifierContinue(c)) {
+        this.position += 1;
+        if (this.source[this.position] !== 'u') {
+          this.unexpected(this.position);
+        }
+        this.position += 1;
+        const raw = String.fromCodePoint(this.scanCodePoint());
+        if (!isIdentifierPart(raw)) {
+          this.unexpected(escapeIndex);
+        }
+        buffer += raw;
+      } else if (single === Token.IDENTIFIER || single === Token.NUMBER) {
+        this.position += 1;
+        buffer += c;
+      } else if (isIdentifierPart(c)) {
         this.position += 1;
         buffer += c;
       } else {

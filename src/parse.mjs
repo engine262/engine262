@@ -122,7 +122,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
           }));
         }
       }
-    } else if (ee.ImportName.stringValue() === '*') { // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
+    } else if (ee.ImportName && ee.ImportName.stringValue() === '*') { // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
     } else { // c. Else,

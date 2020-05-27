@@ -91,3 +91,5 @@ export * from './ApplyStringOrNumericBinaryOperator.mjs';
 export * from './EvaluateStringOrNumericBinaryExpression.mjs';
 export * from './ImportMeta.mjs';
 export * from './DebuggerStatement.mjs';
+export * from './PropertyBindingInitialization.mjs';
+export * from './KeyedBindingInitialization.mjs';

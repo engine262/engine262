@@ -102,7 +102,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
   // 4. Set the running execution context's LexicalEnvironment to catchEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv;
   // 5. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
-  const status = BindingInitialization(CatchParameter, thrownValue, catchEnv);
+  const status = yield* BindingInitialization(CatchParameter, thrownValue, catchEnv);
   // 6. If status is an abrupt completion, then
   if (status instanceof AbruptCompletion) {
     // a. Set the running execution context's LexicalEnvironment to oldEnv.
