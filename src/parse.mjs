@@ -157,14 +157,10 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   });
 }
 
-export function ParseRegExp(pattern, flags) {
-  const p = new RegExpParser(pattern, flags);
-  try {
+// #sec-parsepattern
+export function ParsePattern(patternText, u) {
+  return forwardError(() => {
+    const p = new RegExpParser(patternText, u);
     return p.parsePattern();
-  } catch (e) {
-    if (e.name === 'SyntaxError') {
-      return surroundingAgent.Throw('SyntaxError', 'Raw', e.message);
-    }
-    throw e;
-  }
+  });
 }

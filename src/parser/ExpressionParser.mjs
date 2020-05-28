@@ -127,12 +127,11 @@ export class ExpressionParser extends FunctionParser {
         delete node.PropertyDefinitionList;
         node.type = 'ObjectBindingPattern';
         return node;
-      case 'PropertyDefinition': {
+      case 'PropertyDefinition':
         node.BindingElement = this.validateAssignmentTarget(node.AssignmentExpression);
         delete node.AssignmentExpression;
         node.type = 'BindingProperty';
         return node;
-      }
       default:
         break;
     }

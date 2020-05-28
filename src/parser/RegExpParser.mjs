@@ -3,10 +3,10 @@ const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 
 export class RegExpParser {
-  constructor(source, flags) {
+  constructor(source, plusU) {
     this.source = source;
     this.position = 0;
-    this.plusU = flags.includes('u');
+    this.plusU = plusU;
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
   }
