@@ -82,7 +82,7 @@ Or, you can install it locally and use the API:
 ```js
 'use strict';
 
-const { Agent, Realm } = require('engine262');
+const { Agent, Realm, Abstract, Value, inspect } = require('engine262');
 
 const agent = new Agent({
   // onDebugger() {},
@@ -100,6 +100,13 @@ const realm = new Realm({
   // finalizeImportMeta() {},
   // randomSeed() {},
 });
+
+// Add print function from host
+const print = new Value(realm, (args) => {
+  console.log(...args.map((tmp) => inspect(tmp)));
+  return Value.undefined;
+});
+Abstract.CreateDataProperty(realm.global, new Value(realm, 'print'), print);
 
 realm.evaluateScript(`
 'use strict';
