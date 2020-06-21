@@ -7,7 +7,6 @@ import {
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import {
-  MV_StrDecimalLiteral,
   TrimString,
 } from '../runtime-semantics/all.mjs';
 
@@ -23,9 +22,55 @@ function ParseFloat([string = Value.undefined]) {
   // 6. If mathFloat = 0ℝ, then
   //   a. If the first code unit of trimmedString is the code unit 0x002D (HYPHEN-MINUS), return -0.
   //   b. Return +0.
-  const mathFloat = MV_StrDecimalLiteral(trimmedString);
   // 7. Return the Number value for mathFloat.
-  return mathFloat;
+  let numberString = trimmedString;
+  if (/^[+-]/.test(numberString)) {
+    numberString = numberString.slice(1);
+  }
+  const multiplier = trimmedString.startsWith('-') ? -1 : 1;
+  if (numberString.startsWith('Infinity')) {
+    return new Value(Infinity * multiplier);
+  }
+  let index = 0;
+  done: { // eslint-disable-line no-labels
+    // Eat leading zeros
+    while (numberString[index] === '0') {
+      index += 1;
+      if (index === numberString.length) {
+        return new Value(0 * multiplier);
+      }
+    }
+    // Eat integer part
+    if (numberString[index] !== '.') {
+      while (/[0-9]/.test(numberString[index])) {
+        index += 1;
+      }
+    }
+    // Eat fractional part
+    if (numberString[index] === '.') {
+      if (!/[0-9eE]/.test(numberString[index + 1])) {
+        break done; // eslint-disable-line no-labels
+      }
+      index += 1;
+      while (/[0-9]/.test(numberString[index])) {
+        index += 1;
+      }
+    }
+    // Eat exponent part
+    if (numberString[index] === 'e' || numberString[index] === 'E') {
+      if (!/[-+0-9]/.test(numberString[index + 1])) {
+        break done; // eslint-disable-line no-labels
+      }
+      index += 1;
+      if (numberString[index] === '-' || numberString[index] === '+') {
+        index += 1;
+      }
+      while (/[0-9]/.test(numberString[index])) {
+        index += 1;
+      }
+    }
+  }
+  return new Value(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
 export function BootstrapParseFloat(realmRec) {

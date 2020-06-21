@@ -222,6 +222,9 @@ export class Parser extends LanguageParser {
       const name = sName.stringValue();
       switch (type) {
         case 'parameter':
+          if (this.isStrictMode() && this.lexicalScope.has(name)) {
+            this.report('AlreadyDeclared', node, name);
+          }
           this.lexicalScope.add(name);
           break;
         case 'lexical':

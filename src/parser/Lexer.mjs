@@ -636,9 +636,21 @@ export class Lexer {
   scanEscapeSequence() {
     const c = this.source[this.position];
     switch (c) {
+      case 'b':
+        this.position += 1;
+        return '\b';
+      case 't':
+        this.position += 1;
+        return '\t';
       case 'n':
         this.position += 1;
         return '\n';
+      case 'v':
+        this.position += 1;
+        return '\v';
+      case 'f':
+        this.position += 1;
+        return '\f';
       case 'r':
         this.position += 1;
         return '\r';
@@ -648,15 +660,6 @@ export class Lexer {
       case 'u':
         this.position += 1;
         return String.fromCodePoint(this.scanCodePoint());
-      case 't':
-        this.position += 1;
-        return '\t';
-      case 'b':
-        this.position += 1;
-        return '\b';
-      case 'v':
-        this.position += 1;
-        return '\v';
       default:
         this.position += 1;
         return c;

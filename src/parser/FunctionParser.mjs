@@ -65,8 +65,13 @@ export class FunctionParser extends IdentifierParser {
     if (!strict || !parameters) {
       return;
     }
+    const seen = new Set();
     for (const sName of BoundNames(parameters)) {
       const name = sName.stringValue();
+      if (seen.has(name)) {
+        this.report('AlreadyDeclared', parameters, name);
+      }
+      seen.add(name);
       if (isReservedWordStrict(name) || name === 'arguments' || name === 'eval') {
         this.unexpected(f);
       }
