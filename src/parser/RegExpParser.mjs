@@ -1,3 +1,5 @@
+import { isIdentifierStart, isIdentifierContinue } from './Lexer.mjs';
+
 const isSyntaxCharacter = (c) => '^$.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
@@ -385,8 +387,13 @@ export class RegExpParser {
   //   RegExpIdentifierName RegExpIdentifierPart
   parseIdentifierName() {
     let name = '';
-    while (/\p{ID_Start}|\p{ID_Continue}|\$/u.test(this.peek())) {
-      name += this.next();
+    while (true) {
+      const c = this.peek();
+      if (isIdentifierStart(c) || isIdentifierContinue(c) || c === '$') {
+        name += this.next();
+      } else {
+        break;
+      }
     }
     return name;
   }

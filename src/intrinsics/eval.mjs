@@ -7,7 +7,6 @@ import {
   PerformEval,
   SetFunctionLength,
   SetFunctionName,
-  // GetThisEnvironment,
 } from '../abstract-ops/all.mjs';
 
 // #sec-eval-x

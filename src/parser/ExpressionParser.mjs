@@ -150,7 +150,7 @@ export class ExpressionParser extends FunctionParser {
       node.AssignmentExpression = null;
     } else {
       node.hasStar = this.eat(Token.MUL);
-      if (node.isGenerator) {
+      if (node.hasStar) {
         node.AssignmentExpression = this.parseAssignmentExpression();
       } else {
         switch (this.peek().type) {
