@@ -2,6 +2,7 @@ import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { GetValue, ToString } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { TV } from '../static-semantics/all.mjs';
 
 // 12.2.9.6 #sec-template-literals-runtime-semantics-evaluation
 //   TemplateLiteral : NoSubstitutionTemplate
@@ -17,7 +18,7 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }) 
   let str = '';
   for (let i = 0; i < TemplateSpanList.length - 1; i += 1) {
     const Expression = ExpressionList[i];
-    const head = TemplateSpanList[i];
+    const head = TV(TemplateSpanList[i]);
     // 2. Let subRef be the result of evaluating Expression.
     const subRef = yield* Evaluate(Expression);
     // 3. Let sub be ? GetValue(subRef).
@@ -27,6 +28,6 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }) 
     str += head;
     str += middle.stringValue();
   }
-  const tail = TemplateSpanList[TemplateSpanList.length - 1];
+  const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
   return new Value(str + tail);
 }

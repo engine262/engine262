@@ -6,7 +6,7 @@ import { LanguageParser } from './LanguageParser.mjs';
 import { Token } from './tokens.mjs';
 
 export { Token };
-export { isLineTerminator } from './Lexer.mjs';
+export { isLineTerminator, isHexDigit } from './Lexer.mjs';
 
 /* eslint-disable key-spacing */
 export const ScopeBits = {

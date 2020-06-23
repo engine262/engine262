@@ -8,6 +8,7 @@ import {
 import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
 import { RegExpParser } from './RegExpParser.mjs';
+import { TV } from '../static-semantics/all.mjs';
 
 export class ExpressionParser extends FunctionParser {
   // Expression :
@@ -434,7 +435,7 @@ export class ExpressionParser extends FunctionParser {
           break;
         case Token.TEMPLATE:
           node.MemberExpression = result;
-          node.TemplateLiteral = this.parseTemplateLiteral();
+          node.TemplateLiteral = this.parseTemplateLiteral(true);
           result = this.finishNode(node, 'TaggedTemplateExpression');
           break;
         default:
@@ -733,7 +734,7 @@ export class ExpressionParser extends FunctionParser {
     return this.parseClass(true);
   }
 
-  parseTemplateLiteral() {
+  parseTemplateLiteral(tagged = false) {
     const node = this.startNode();
     node.TemplateSpanList = [];
     node.ExpressionList = [];
@@ -748,6 +749,13 @@ export class ExpressionParser extends FunctionParser {
           this.position += 1;
           node.TemplateSpanList.push(buffer);
           this.next();
+          if (!tagged) {
+            node.TemplateSpanList.forEach((s) => {
+              if (TV(s) === undefined) {
+                this.unexpected(node);
+              }
+            });
+          }
           return this.finishNode(node, 'TemplateLiteral');
         case '$':
           this.position += 1;

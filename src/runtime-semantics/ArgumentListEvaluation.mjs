@@ -17,13 +17,11 @@ import { TemplateStrings } from '../static-semantics/all.mjs';
 
 // #sec-gettemplateobjec
 function GetTemplateObject(templateLiteral) {
-  // 1. Let rawStrings be TemplateStrings of templateLiteral with argument true.
-  const rawStrings = TemplateStrings(templateLiteral, true);
-  // 2. Let realm be the current Realm Record.
+  // 1. Let realm be the current Realm Record.
   const realm = surroundingAgent.currentRealmRecord;
-  // 3. Let templateRegistry be realm.[[TemplateMap]].
+  // 2. Let templateRegistry be realm.[[TemplateMap]].
   const templateRegistry = realm.TemplateMap;
-  // 4. For each element e of templateRegistry, do
+  // 3. For each element e of templateRegistry, do
   for (const e of templateRegistry) {
     // a. If e.[[Site]] is the same Parse Node as templateLiteral, then
     if (e.Site === templateLiteral) {
@@ -31,6 +29,8 @@ function GetTemplateObject(templateLiteral) {
       return e.Array;
     }
   }
+  // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
+  const rawStrings = TemplateStrings(templateLiteral, true);
   // 5. Let cookedStrings be TemplateStrings of templateLiteral with argument false.
   const cookedStrings = TemplateStrings(templateLiteral, false);
   // 6. Let count be the number of elements in the List cookedStrings.

@@ -94,6 +94,8 @@ export class Realm {
     this.GlobalEnv = undefined;
     this.TemplateMap = undefined;
     this.HostDefined = undefined;
+
+    this.randomState = undefined;
   }
 
   mark(m) {

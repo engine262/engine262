@@ -7,15 +7,15 @@ import {
   isKeywordRaw,
 } from './tokens.mjs';
 
-export const isIdentifierStart = (c) => isIdentifierStartRegex.test(c);
-export const isIdentifierContinue = (c) => isIdentifierContinueRegex.test(c);
-const isDecimalDigit = (c) => /\d/u.test(c);
-const isHexDigit = (c) => /[\da-f]/ui.test(c);
-const isOctalDigit = (c) => /[0-7]/u.test(c);
+export const isIdentifierStart = (c) => c && isIdentifierStartRegex.test(c);
+export const isIdentifierContinue = (c) => c && isIdentifierContinueRegex.test(c);
+const isDecimalDigit = (c) => c && /\d/u.test(c);
+export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
+const isOctalDigit = (c) => c && /[0-7]/u.test(c);
 const isBinaryDigit = (c) => c === '0' || c === '1';
-const isWhitespace = (c) => /[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c); // eslint-disable-line no-control-regex
-export const isLineTerminator = (c) => /[\r\n\u2028\u2029]/u.test(c);
-const isRegularExpressionFlagPart = (c) => (isIdentifierContinue(c) || c === '$');
+const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
+export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
+const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
 
 const SingleCharTokens = {
   '__proto__': null,

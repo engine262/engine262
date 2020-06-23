@@ -114,7 +114,7 @@ export class FunctionParser extends IdentifierParser {
     return this.parseBindingElement();
   }
 
-  parseFormalParameters(unique = false) {
+  parseFormalParameters() {
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
       return [];
@@ -147,7 +147,16 @@ export class FunctionParser extends IdentifierParser {
   }
 
   parseUniqueFormalParameters() {
-    return this.parseFormalParameters(true);
+    const parameters = this.parseFormalParameters();
+    const seen = new Set();
+    for (const sName of BoundNames(parameters)) {
+      const name = sName.stringValue();
+      if (seen.has(name)) {
+        this.report('AlreadyDeclared', parameters, name);
+      }
+      seen.add(name);
+    }
+    return parameters;
   }
 
   parseFunctionBody(isAsync, isGenerator, isArrow) {

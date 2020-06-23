@@ -1,4 +1,4 @@
-import { Parser, Token, isLineTerminator } from './parser/Parser.mjs';
+import { Parser, Token, isLineTerminator, isHexDigit } from './parser/Parser.mjs';
 import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
@@ -32,7 +32,7 @@ export function forwardError(fn) {
   }
 }
 
-export { Parser, Token, isLineTerminator };
+export { Parser, Token, isLineTerminator, isHexDigit };
 
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).

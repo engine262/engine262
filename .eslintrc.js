@@ -19,7 +19,7 @@ module.exports = {
   plugins: ['engine262'],
   parser: 'babel-eslint',
   parserOptions: {
-    ecmaVersion: 2019,
+    ecmaVersion: 2020,
   },
   overrides: [
     {
@@ -28,11 +28,11 @@ module.exports = {
     },
   ],
   globals: {
-    BigInt: false,
-    Atomics: false,
-    SharedArrayBuffer: false,
-    WeakRef: false,
     globalThis: false,
+    Atomics: false,
+    BigInt: false,
+    BigUint64Array: false,
+    SharedArrayBuffer: false,
   },
   rules: {
     'arrow-parens': ['error', 'always'],
