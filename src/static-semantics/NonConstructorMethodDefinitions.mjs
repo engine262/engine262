@@ -5,5 +5,10 @@ import { PropName } from './all.mjs';
 //   ClassElement
 //   ClassElementList ClassElement
 export function NonConstructorMethodDefinitions(ClassElementList) {
-  return ClassElementList.filter((ClassElement) => !(ClassElement.static === true && PropName(ClassElement) === 'constructor'));
+  return ClassElementList.filter((ClassElement) => {
+    if (ClassElement.static === false && PropName(ClassElement) === 'constructor') {
+      return false;
+    }
+    return true;
+  });
 }

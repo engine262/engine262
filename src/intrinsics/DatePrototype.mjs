@@ -125,7 +125,7 @@ function DateProto_getTimezoneOffset(args, { thisValue }) {
   if (t.isNaN()) {
     return new Value(NaN);
   }
-  return new Value(t.numberValue() - LocalTime(t).numberValue() / msPerMinute);
+  return new Value((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
 }
 
 // 20.3.4.12 #sec-date.prototype.getutcdate

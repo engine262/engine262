@@ -122,7 +122,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 16. Perform MakeClassConstructor(F).
   MakeClassConstructor(F);
   // 17. Perform CreateMethodProperty(proto, "constructor", F).
-  CreateMethodProperty(proto, new Value('constructor'), F);
+  X(CreateMethodProperty(proto, new Value('constructor'), F));
   // 18. If ClassBody is not present, let methods be a new empty List.
   let methods;
   if (!ClassBody) {

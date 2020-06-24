@@ -1,3 +1,4 @@
+import { TV } from '../static-semantics/all.mjs';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -8,7 +9,6 @@ import {
 import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
 import { RegExpParser } from './RegExpParser.mjs';
-import { TV } from '../static-semantics/all.mjs';
 
 export class ExpressionParser extends FunctionParser {
   // Expression :
@@ -192,12 +192,37 @@ export class ExpressionParser extends FunctionParser {
   // ShortCircuitExpression :
   //   LogicalORExpression
   //   CoalesceExpression
+  //
+  // CoalesceExpression :
+  //   CoalesceExpressionHead `??` BitwiseORExpression
+  //
+  // CoalesceExpressionHead :
+  //   CoalesceExpression
+  //   BitwiseORExpression
   parseShortCircuitExpression() {
-    return this.parseBinaryExpression(TokenPrecedence[Token.NULLISH]);
+    // Start parse at BIT_OR, right above AND/OR/NULLISH
+    const expression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
+    switch (this.peek().type) {
+      case Token.AND:
+      case Token.OR:
+        // Drop into normal binary chain starting at OR
+        return this.parseBinaryExpression(TokenPrecedence[Token.OR], expression);
+      case Token.NULLISH: {
+        let x = expression;
+        while (this.eat(Token.NULLISH)) {
+          const node = this.startNode();
+          node.CoalesceExpressionHead = x;
+          node.BitwiseORExpression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
+          x = this.finishNode(node, 'CoalesceExpression');
+        }
+        return x;
+      }
+      default:
+        return expression;
+    }
   }
 
-  parseBinaryExpression(precedence) {
-    let x = this.parseUnaryExpression();
+  parseBinaryExpression(precedence, x = this.parseUnaryExpression()) {
     let p = TokenPrecedence[this.peek().type];
     if (p >= precedence) {
       do {
