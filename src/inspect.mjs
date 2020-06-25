@@ -102,6 +102,14 @@ const INSPECTORS = {
       return `/${P}/${F}`;
     }
 
+    if ('DateValue' in v) {
+      const d = new Date(v.DateValue.numberValue());
+      if (Number.isNaN(d.getTime())) {
+        return '[Date Invalid]';
+      }
+      return `[Date ${d.toISOString()}]`;
+    }
+
     if ('BooleanData' in v) {
       return `[Boolean ${i(v.BooleanData)}]`;
     }
