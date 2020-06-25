@@ -30,34 +30,30 @@ features can be quickly prototyped and explored. As an example, adding
 ```diff
 --- a/src/evaluator.mjs
 +++ b/src/evaluator.mjs
-@@ -416,6 +416,9 @@ function* Inner_Evaluate_Expression(Expression) {
-     case isExpressionWithComma(Expression):
-       return yield* Evaluate_ExpressionWithComma(Expression);
-
-+    case Expression.type === 'DoExpression':
-+      return yield* Evaluate_BlockStatement(Expression.body);
-+
+@@ -232,6 +232,8 @@ export function* Evaluate(node) {
+     case 'GeneratorBody':
+     case 'AsyncGeneratorBody':
+       return yield* Evaluate_AnyFunctionBody(node);
++    case 'DoExpression':
++      return yield* Evaluate_Block(node.Block);
      default:
-       throw new OutOfRange('Evaluate_Expression', Expression);
+       throw new OutOfRange('Evaluate', node);
    }
---- a/src/parse.mjs
-+++ b/src/parse.mjs
-@@ -11,6 +11,17 @@ const Parser = acorn.Parser.extend((P) => class Parse262 extends P {
-     node.source = () => this.input.slice(node.start, node.end);
-     return ret;
-   }
-+
-+  parseExprAtom(refDestructuringErrors) {
-+    if (this.value === 'do') {
-+      // DoExpression : `do` Block
-+      this.next();
-+      const node = this.startNode();
-+      node.body = this.parseBlock();
-+      return this.finishNode(node, 'DoExpression');
-+    }
-+    return super.parseExprAtom(refDestructuringErrors);
-+  }
- });
+--- a/src/parser/ExpressionParser.mjs
++++ b/src/parser/ExpressionParser.mjs
+@@ -579,6 +579,12 @@ export class ExpressionParser extends FunctionParser {
+         return this.parseRegularExpressionLiteral();
+       case Token.LPAREN:
+         return this.parseParenthesizedExpression();
++      case Token.DO: {
++        const node = this.startNode();
++        this.next();
++        node.Block = this.parseBlock();
++        return this.finishNode(node, 'DoExpression');
++      }
+       default:
+         return this.unexpected();
+     }
 ```
 
 This simplicity applies to many other proposals, such as [optional chaining][],
@@ -102,6 +98,7 @@ const realm = new Realm({
   // resolveImportedModule() {},
   // getImportMetaProperties() {},
   // finalizeImportMeta() {},
+  // randomSeed() {},
 });
 
 realm.evaluateScript(`
@@ -142,7 +139,6 @@ included here for reference, though engine262 is not based on any of them.
 [do expressions]: https://github.com/tc39/proposal-do-expressions
 [irc]: ircs://chat.freenode.net:6697/engine262
 [irc-webchat]: https://webchat.freenode.net/?channels=engine262
-[nodejs/node#25221]: https://github.com/nodejs/node/issues/25221
 [optional chaining]: https://github.com/tc39/proposal-optional-chaining
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
