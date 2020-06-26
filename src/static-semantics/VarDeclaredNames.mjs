@@ -11,6 +11,8 @@ export function VarDeclaredNames(node) {
   switch (node.type) {
     case 'VariableStatement':
       return BoundNames(node.VariableDeclarationList);
+    case 'VariableDeclaration':
+      return BoundNames(node);
     case 'IfStatement': {
       const names = VarDeclaredNames(node.Statement_a);
       if (node.Statement_b) {
