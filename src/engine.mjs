@@ -46,10 +46,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-regexp-match-Indices',
   },
   {
-    name: 'String.prototype.replaceAll',
-    url: 'https://github.com/tc39/proposal-string-replaceall',
-  },
-  {
     name: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
   },

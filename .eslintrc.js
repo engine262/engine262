@@ -68,6 +68,7 @@ module.exports = {
     'no-continue': 'off',
     'no-else-return': 'off',
     'no-lonely-if': 'off',
+    'no-loop-func': 'off',
     'no-param-reassign': 'off',
     'no-restricted-syntax': 'off',
     'no-underscore-dangle': 'off',

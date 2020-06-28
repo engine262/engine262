@@ -131,5 +131,6 @@ export const UnterminatedString = () => 'Missing \' or " after string literal';
 export const UnterminatedTemplate = () => 'Missing ` after template literal';
 export const UnexpectedEOS = () => 'Unexpected end of source';
 export const UnexpectedToken = () => 'Unexpected token';
+export const URIMalformed = () => 'URI malformed';
 export const WeakCollectionNotObject = (v) => `${i(v)} is not a valid weak collectection entry object`;
 export const YieldNotInGenerator = () => 'yield is only valid in generators';

@@ -18,19 +18,6 @@ built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
 harness/assertRelativeDateMs.js
 
-// TODO: Missing {decode|encode}URI{Component}
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js
-built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js
-built-ins/decodeURI/**/*.js
-built-ins/decodeURIComponent/**/*.js
-built-ins/encodeURI/**/*.js
-built-ins/encodeURIComponent/**/*.js
-built-ins/global/S10.2.3_A1.1_T2.js
-built-ins/global/S10.2.3_A1.2_T2.js
-built-ins/global/S10.2.3_A1.3_T2.js
-
 // TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
@@ -47,8 +34,3 @@ language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
-
-// https://github.com/tc39/test262/pull/2575
-built-ins/RegExp/lookBehind/sliced-strings.js
-
-built-ins/RegExp/**/*.js

@@ -1,4 +1,8 @@
-import { isIdentifierStart, isIdentifierContinue } from './Lexer.mjs';
+import {
+  isIdentifierStart,
+  isIdentifierContinue,
+  isHexDigit,
+} from './Lexer.mjs';
 
 const isSyntaxCharacter = (c) => '^$.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
@@ -191,10 +195,13 @@ export class RegExpParser {
         DecimalDigits_a: undefined,
         DecimalDigits_b: undefined,
       };
-      QuantifierPrefix.DecimalDigits_a = this.parseDecimalDigits();
+      QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
       if (this.eat(',')) {
         if (!this.test('}')) {
-          QuantifierPrefix.DecimalDigits_b = this.parseDecimalDigits();
+          QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
+          if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
+            throw new SyntaxError('Numbers out of order in {} quantifier');
+          }
         }
       }
       this.expect('}');
@@ -345,7 +352,7 @@ export class RegExpParser {
     return this.next();
   }
 
-  // CharacterEscape :;
+  // CharacterEscape ::
   //   ControlEscape
   //   `c` ControlLetter
   //   `0` [lookahead ∉ DecimalDigit]
@@ -377,12 +384,33 @@ export class RegExpParser {
         }
         return c;
       }
+      case 'x':
+        this.next();
+        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1])) {
+          const c1 = this.next();
+          const c2 = this.next();
+          return String.fromCharCode(Number.parseInt(`${c1}${c2}`, 16));
+        }
+        return 'x';
+      case 'u':
+        this.next();
+        if (isHexDigit(this.source[this.position])
+            && isHexDigit(this.source[this.position + 1])
+            && isHexDigit(this.source[this.position + 2])
+            && isHexDigit(this.source[this.position + 3])) {
+          const c1 = this.next();
+          const c2 = this.next();
+          const c3 = this.next();
+          const c4 = this.next();
+          return String.fromCharCode(Number.parseInt(`${c1}${c2}${c3}${c4}`, 16));
+        }
+        return 'u';
       default:
         return this.next();
     }
   }
 
-  // RegExpidentifierName ::
+  // RegExpIdentifierName ::
   //   RegExpIdentifierStart
   //   RegExpIdentifierName RegExpIdentifierPart
   parseIdentifierName() {

@@ -67,6 +67,7 @@ import { BootstrapIsFinite } from './intrinsics/isFinite.mjs';
 import { BootstrapIsNaN } from './intrinsics/isNaN.mjs';
 import { BootstrapParseFloat } from './intrinsics/parseFloat.mjs';
 import { BootstrapParseInt } from './intrinsics/parseInt.mjs';
+import { BootstrapURIHandling } from './intrinsics/URIHandling.mjs';
 import { BootstrapThrowTypeError } from './intrinsics/ThrowTypeError.mjs';
 import { BootstrapTypedArray } from './intrinsics/TypedArray.mjs';
 import { BootstrapTypedArrayPrototype } from './intrinsics/TypedArrayPrototype.mjs';
@@ -137,7 +138,7 @@ function AddRestrictedFunctionProperties(F, realm) {
   })));
 }
 
-// 8.2.2 #sec-createintrinsics
+// #sec-createintrinsics
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
@@ -153,6 +154,7 @@ export function CreateIntrinsics(realmRec) {
   BootstrapIsNaN(realmRec);
   BootstrapParseFloat(realmRec);
   BootstrapParseInt(realmRec);
+  BootstrapURIHandling(realmRec);
 
   BootstrapObject(realmRec);
 
@@ -306,10 +308,10 @@ export function SetDefaultGlobalBindings(realmRec) {
     'isNaN',
     'parseFloat',
     'parseInt',
-    // 'decodeURI',
-    // 'decodeURIComponent',
-    // 'encodeURI',
-    // 'encodeURIComponent',
+    'decodeURI',
+    'decodeURIComponent',
+    'encodeURI',
+    'encodeURIComponent',
 
     // Constructor Properties of the Global Object
     'Array',

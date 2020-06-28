@@ -684,6 +684,9 @@ export class Lexer {
   }
 
   scanHex(length) {
+    if (length === 0) {
+      this.report('InvalidCodePoint', this.position);
+    }
     let n = 0;
     for (let i = 0; i < length; i += 1) {
       const c = this.source[this.position];
