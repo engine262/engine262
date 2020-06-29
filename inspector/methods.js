@@ -71,7 +71,10 @@ module.exports = {
         return context.createEvaluationResult(properties, options);
       }
 
-      return { result: properties };
+      return {
+        result: properties.properties,
+        internalProperties: properties.internalProperties,
+      };
     },
     globalLexicalScopeNames({ executionContextId }) {
       const context = getContext(executionContextId);

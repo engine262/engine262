@@ -113,18 +113,91 @@ class InspectorContext {
         && result.subtype !== 'null'
         && !this.previewStack.includes(object)) {
       this.previewStack.push(object);
+      const properties = this.getPropertyPreview(object, options);
+      let entries;
+      if ('MapData' in object) {
+        entries = object.MapData.map((d) => ({
+          key: this.toRemoteObject(d.Key, options).preview,
+          value: this.toRemoteObject(d.Value, options).preview,
+        }));
+      }
+      this.previewStack.pop();
       result.preview = {
         type: result.type,
         subtype: result.subtype,
-        overflow: false,
-        properties: this.getProperties(object, options),
+        overflow: properties.length > 5,
+        properties: properties.slice(0, 5),
+        entries,
       };
-      this.previewStack.pop();
     }
     return result;
   }
 
   getProperties(object, options) {
+    const wrap = (v) => this.toRemoteObject(v, options);
+
+    const properties = [];
+    const internalProperties = [];
+
+    let p = object;
+    while (p !== engine262.Value.null) {
+      const keys = p.OwnPropertyKeys();
+      if (keys instanceof engine262.AbruptCompletion) {
+        return keys;
+      }
+
+      for (const key of keys) {
+        const desc = p.GetOwnProperty(key);
+        if (desc instanceof engine262.AbruptCompletion) {
+          return desc;
+        }
+        if (options.accessorPropertiesOnly && desc.Value) {
+          continue;
+        }
+        const descriptor = {
+          name: key.stringValue
+            ? key.stringValue()
+            : undefined,
+          value: desc.Value ? wrap(desc.Value) : undefined,
+          writable: desc.Writable === engine262.Value.true,
+          get: desc.Get ? wrap(desc.Get) : undefined,
+          set: desc.Set ? wrap(desc.Set) : undefined,
+          configurable: desc.Configurable === engine262.Value.true,
+          enumerable: desc.Enumerable === engine262.Value.true,
+          wasThrown: false,
+          isOwn: p === object,
+          symbol: key.stringValue ? undefined : wrap(key),
+        };
+        properties.push(descriptor);
+      }
+
+      if (options.ownProperties) {
+        break;
+      }
+      p = p.GetPrototypeOf();
+      if (p instanceof engine262.AbruptCompletion) {
+        return p;
+      }
+    }
+
+    if ('PromiseState' in object) {
+      internalProperties.push({
+        name: '[[PromiseState]]',
+        value: {
+          type: 'string',
+          value: object.PromiseState,
+        },
+      });
+      internalProperties.push({
+        name: '[[PromiseResult]]',
+        value: wrap(object.PromiseResult),
+      });
+    }
+
+    return { properties, internalProperties };
+  }
+
+  getPropertyPreview(object, options) {
     const wrap = (v) => this.toRemoteObject(v, options);
 
     const keys = object.OwnPropertyKeys();
@@ -141,18 +214,88 @@ class InspectorContext {
       const descriptor = {
         name: key.stringValue
           ? key.stringValue()
-          : undefined,
-        value: desc.Value ? wrap(desc.Value) : undefined,
-        writable: desc.Writable === engine262.Value.true,
-        get: desc.Get ? wrap(desc.Get) : undefined,
-        set: desc.Set ? wrap(desc.Set) : undefined,
-        configurable: desc.Configurable === engine262.Value.true,
-        enumerable: desc.Enumerable === engine262.Value.true,
-        wasThrown: false,
-        isOwn: true,
-        symbol: key.stringValue ? undefined : wrap(key),
+          : `Symbol(${key.Description.stringValue ? key.Description.stringValue() : ''})`,
       };
+      if (desc.Value) {
+        desc.valuePreview = wrap(desc.Value).preview;
+        switch (engine262.Abstract.Type(desc.Value)) {
+          case 'Object':
+            if ('Call' in desc.Value) {
+              descriptor.type = 'function';
+            } else {
+              descriptor.type = 'object';
+              if ('PromiseState' in desc.Value) {
+                descriptor.subtype = 'promise';
+              } else if ('MapData' in desc.Value) {
+                descriptor.subtype = 'map';
+              } else if ('SetData' in desc.Value) {
+                descriptor.subtype = 'set';
+              } else if ('ErrorData' in desc.Value) {
+                descriptor.subtype = 'error';
+              } else if ('TypedArrayName' in desc.Value) {
+                descriptor.subtype = 'typedarray';
+              } else if ('DataView' in desc.Value) {
+                descriptor.subtype = 'dataview';
+              } else if ('ProxyTarget' in desc.Value) {
+                descriptor.subtype = 'proxy';
+              } else if ('DateValue' in desc.Value) {
+                descriptor.subtype = 'date';
+              } else if ('GeneratorState' in desc.Value) {
+                descriptor.subtype = 'generator';
+              } else if (engine262.Abstract.IsArray(desc.Value) === engine262.Value.true) {
+                descriptor.subtype = 'array';
+              }
+            }
+            break;
+          case 'Null':
+            descriptor.type = 'object';
+            descriptor.subtype = 'null';
+            descriptor.value = 'null';
+            break;
+          case 'Undefined':
+            descriptor.type = 'undefined';
+            descriptor.value = 'undefined';
+            break;
+          case 'String':
+            descriptor.type = 'string';
+            descriptor.value = desc.Value.stringValue();
+            break;
+          case 'Number': {
+            descriptor.type = 'number';
+            descriptor.value = desc.Value.numberValue().toString();
+            break;
+          }
+          case 'Boolean':
+            descriptor.type = 'boolean';
+            descriptor.value = desc.Value.booleanValue().toString();
+            break;
+          case 'BigInt':
+            descriptor.type = 'bigint';
+            descriptor.value = `${desc.Value.bigintValue().toString()}n`;
+            break;
+          case 'Symbol': {
+            descriptor.type = 'symbol';
+            const description = desc.Value.Description === engine262.Value.undefined
+              ? ''
+              : desc.Value.Description.stringValue();
+            descriptor.value = `Symbol(${description})`;
+            break;
+          }
+          default:
+            throw new RangeError();
+        }
+      } else {
+        desc.type = 'accessor';
+      }
       properties.push(descriptor);
+    }
+
+    if ('PromiseState' in object) {
+      properties.push({
+        name: '[[PromiseState]]',
+        type: 'string',
+        value: object.PromiseState,
+      });
     }
 
     return properties;
