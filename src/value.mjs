@@ -425,7 +425,7 @@ export class BigIntValue extends PrimitiveValue {
     return BigIntValue.leftShift(x, new Value(-y.bigintValue()));
   }
 
-  // #sec-numeric-types-bigint-unsighedRightShift
+  // #sec-numeric-types-bigint-unsignedRightShift
   static unsignedRightShift(_x, _y) {
     return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
   }
