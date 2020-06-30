@@ -1,8 +1,3 @@
-// https://github.com/tc39/ecma262/pull/1776
-built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js
-built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js
-built-ins/AsyncFromSyncIteratorPrototype/throw/absent-value-not-passed.js
-
 // https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
