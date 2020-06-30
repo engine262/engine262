@@ -132,7 +132,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   return newTypedArray;
 }
 
-// #sec-allocatedtypedarray
+// #sec-allocatetypedarray
 export function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
   // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
   const proto = Q(GetPrototypeFromConstructor(newTarget, defaultProto));
@@ -193,7 +193,7 @@ export function AllocateTypedArrayBuffer(O, length) {
   return O;
 }
 
-// #sec-typedarray-species-create
+// #typedarray-species-create
 export function TypedArraySpeciesCreate(exemplar, argumentList) {
   // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
   Assert(Type(exemplar) === 'Object'

@@ -90,7 +90,7 @@ export class Agent {
     }
   }
 
-  // #sec-running-execution-context
+  // #running-execution-context
   get runningExecutionContext() {
     return this.executionContextStack[this.executionContextStack.length - 1];
   }
