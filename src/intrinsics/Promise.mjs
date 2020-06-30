@@ -88,16 +88,27 @@ function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-// 25.6.4.1.1 #sec-performpromiseall
-function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
-  Assert(IsConstructor(constructor) === Value.true);
-  Assert(resultCapability instanceof PromiseCapabilityRecord);
-  const values = [];
-  const remainingElementsCount = { Value: 1 };
-  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+// 25.6.4.1.1 #sec-getpromiseresolve
+function GetPromiseResolve(promiseConstructor) {
+  // 1. Assert: IsConstructor(promiseConstructor) is true.
+  Assert(IsConstructor(promiseConstructor) === Value.true);
+  // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
+  const promiseResolve = Q(Get(promiseConstructor, new Value('resolve')));
+  // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
   if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
+  // 4. Return promiseResolve.
+  return promiseResolve;
+}
+
+// 25.6.4.1.1 #sec-performpromiseall
+function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
+  Assert(IsConstructor(constructor) === Value.true);
+  Assert(resultCapability instanceof PromiseCapabilityRecord);
+  Assert(X(IsCallable(promiseResolve)) === Value.true);
+  const values = [];
+  const remainingElementsCount = { Value: 1 };
   let index = 0;
   while (true) {
     const next = IteratorStep(iteratorRecord);
@@ -141,9 +152,11 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability) {
 function Promise_all([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   const promiseCapability = Q(NewPromiseCapability(C));
+  const promiseResolve = GetPromiseResolve(C);
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
-  let result = PerformPromiseAll(iteratorRecord, C, promiseCapability);
+  let result = PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve);
   if (result instanceof AbruptCompletion) {
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
@@ -199,10 +212,10 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability) {
+function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
   Assert(X(IsConstructor(constructor) === Value.true));
   Assert(resultCapability instanceof PromiseCapabilityRecord);
-  const promiseResolve = Q(Get(constructor, new Value('resolve')));
+  Assert(X(IsCallable(promiseResolve)) === Value.true);
   const values = [];
   const remainingElementsCount = { Value: 1 };
   let index = 0;
@@ -268,9 +281,11 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability)
 function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   const promiseCapability = Q(NewPromiseCapability(C));
+  const promiseResolve = GetPromiseResolve(C);
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
-  let result = PerformPromiseAllSettled(iteratorRecord, C, promiseCapability);
+  let result = PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
   if (result instanceof AbruptCompletion) {
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
@@ -318,24 +333,20 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
 }
 
 // https://tc39.es/proposal-promise-any/#sec-performpromiseany
-function PerformPromiseAny(iteratorRecord, constructor, resultCapability) {
+function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor)) === Value.true);
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
-  // 3. Let errors be a new empty List.
+  // 3. Assert: ! IsCallable(promiseResolve) is true.
+  Assert(X(IsCallable(promiseResolve)) === Value.true);
+  // 4. Let errors be a new empty List.
   const errors = [];
-  // 4. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
+  // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
   const remainingElementsCount = { Value: 1 };
-  // 5. Let index be 0.
+  // 6. Let index be 0.
   let index = 0;
-  // 6. Let promiseResolve be ? Get(constructor, "resolve").
-  const promiseResolve = Q(Get(constructor, new Value('resolve')));
-  // 7. If ! IsCallable(promiseResolve) is false, throw a TypeError exception.
-  if (X(IsCallable(promiseResolve)) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
-  }
-  // 8. Repeat,
+  // 7. Repeat,
   while (true) {
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
@@ -406,13 +417,18 @@ function Promise_any([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
-  // 3. Let iteratorRecord be GetIterator(iterable).
+  // 3. Let promiseResolve be GetPromiseResolve(C).
+  const promiseResolve = GetPromiseResolve(C);
+  // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
+  // 5. Let iteratorRecord be GetIterator(iterable).
   const iteratorRecord = GetIterator(iterable);
-  // 4. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
+  // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
-  // 5. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
-  let result = PerformPromiseAny(iteratorRecord, C, promiseCapability);
-  // 6. If result is an abrupt completion, then
+  // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve).
+  let result = PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve);
+
+  // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
     if (iteratorRecord.Done === Value.false) {
@@ -421,17 +437,14 @@ function Promise_any([iterable = Value.undefined], { thisValue }) {
     // b. IfAbruptRejectPromise(result, promiseCapability).
     IfAbruptRejectPromise(result, promiseCapability);
   }
-  // 1. Return Completion(result).
+  // 9. Return Completion(result).
   return Completion(result);
 }
 
-function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
+function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
   Assert(IsConstructor(constructor) === Value.true);
   Assert(resultCapability instanceof PromiseCapabilityRecord);
-  const promiseResolve = Q(Get(constructor, new Value('resolve')));
-  if (IsCallable(promiseResolve) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
-  }
+  Assert(X(IsCallable(promiseResolve)) === Value.true);
   while (true) {
     const next = IteratorStep(iteratorRecord);
     if (next instanceof AbruptCompletion) {
@@ -455,9 +468,11 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability) {
 function Promise_race([iterable = Value.undefined], { thisValue }) {
   const C = thisValue;
   const promiseCapability = Q(NewPromiseCapability(C));
+  const promiseResolve = GetPromiseResolve(C);
+  IfAbruptRejectPromise(promiseResolve, promiseCapability);
   const iteratorRecord = GetIterator(iterable);
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
-  let result = PerformPromiseRace(iteratorRecord, C, promiseCapability);
+  let result = PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve);
   if (result instanceof AbruptCompletion) {
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
