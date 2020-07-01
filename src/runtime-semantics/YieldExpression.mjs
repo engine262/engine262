@@ -70,7 +70,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         } else { // vii. Else, set received to GeneratorYield(innerResult).
           received = yield* GeneratorYield(innerResult);
         }
-      } else if (received.type === 'throw') { // b. Else if received.[[Type]] is throw, then
+      } else if (received.Type === 'throw') { // b. Else if received.[[Type]] is throw, then
         // i. Let throw be ? GetMethod(iterator, "throw").
         const thr = Q(GetMethod(iterator, new Value('throw')));
         // ii. If throw is not undefined, then

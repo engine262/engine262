@@ -71,6 +71,7 @@ export function LabelledEvaluation(node, labelSet) {
     case 'ForStatement':
     case 'ForInStatement':
     case 'ForOfStatement':
+    case 'ForAwaitStatement':
     case 'SwitchStatement':
       return LabelledEvaluation_BreakableStatement(node, labelSet);
     case 'LabelledStatement':
@@ -130,7 +131,8 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
     case 'WhileStatement':
     case 'ForStatement':
     case 'ForInStatement':
-    case 'ForOfStatement': {
+    case 'ForOfStatement':
+    case 'ForAwaitStatement': {
       // 1. Let stmtResult be LabelledEvaluation of IterationStatement with argument labelSet.
       let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet));
       // 2. If stmtResult.[[Type]] is break, then
@@ -183,6 +185,8 @@ function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
       return LabelledEvaluation_IterationStatement_ForInStatement(IterationStatement, labelSet);
     case 'ForOfStatement':
       return LabelledEvaluation_IterationStatement_ForOfStatement(IterationStatement, labelSet);
+    case 'ForAwaitStatement':
+      return LabelledEvaluation_IterationStatement_ForAwaitStatement(IterationStatement, labelSet);
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
   }
@@ -349,6 +353,42 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
     }
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
+  }
+}
+
+// IterationStatement :
+//   `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+//   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+//   `for` `await` `(` ForDeclaration`of` AssignmentExpression `)` Statement
+function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement, labelSet) {
+  const {
+    LeftHandSideExpression,
+    ForBinding,
+    ForDeclaration,
+    AssignmentExpression,
+    Statement,
+  } = ForAwaitStatement;
+  switch (true) {
+    case !!LeftHandSideExpression: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet, async).
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, 'async'));
+    }
+    case !!ForBinding: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet, async).
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, 'async'));
+    }
+    case !!ForDeclaration: {
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, async-iterate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'async-iterate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet, async).
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, 'async'));
+    }
+    default:
+      throw new OutOfRange('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
   }
 }
 
@@ -534,7 +574,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
     let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
     // b. If iteratorKind is async, then set nextResult to ? Await(nextResult).
-    if (iterationKind === 'async') {
+    if (iteratorKind === 'async') {
       nextResult = Q(yield* Await(nextResult));
     }
     // c. If Type(nextResult) is not Object, throw a TypeError exception.
