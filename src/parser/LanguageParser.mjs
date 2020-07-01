@@ -50,6 +50,7 @@ export class LanguageParser extends StatementParser {
       } else {
         node.ModuleBody = this.parseModuleBody();
       }
+      node.hasTopLevelAwait = this.state.hasTopLevelAwait;
       return this.finishNode(node, 'Module');
     });
   }

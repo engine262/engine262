@@ -59,6 +59,7 @@ import {
   Evaluate_SuperProperty,
   Evaluate_NewTarget,
   Evaluate_ImportMeta,
+  Evaluate_ImportCall,
   Evaluate_AwaitExpression,
   Evaluate_YieldExpression,
   Evaluate_ParenthesizedExpression,
@@ -214,6 +215,8 @@ export function* Evaluate(node) {
       return Evaluate_NewTarget(node);
     case 'ImportMeta':
       return Evaluate_ImportMeta(node);
+    case 'ImportCall':
+      return yield* Evaluate_ImportCall(node);
     case 'AssignmentExpression':
       return yield* Evaluate_AssignmentExpression(node);
     case 'YieldExpression':

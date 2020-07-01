@@ -22,7 +22,7 @@ export function* Evaluate_ReturnStatement({ Expression }) {
   let exprValue = Q(GetValue(exprRef));
   // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
   if (X(GetGeneratorKind()) === 'async') {
-    exprValue = Q(Await(exprValue));
+    exprValue = Q(yield* Await(exprValue));
   }
   // 1. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: exprValue, Target: undefined });

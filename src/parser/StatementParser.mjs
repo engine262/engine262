@@ -279,6 +279,9 @@ export class StatementParser extends ExpressionParser {
       const node = this.startNode();
       this.expect(Token.FOR);
       const isAwait = this.isAwaitScope() && this.eat(Token.AWAIT);
+      if (isAwait && !this.isReturnScope()) {
+        this.state.hasTopLevelAwait = true;
+      }
       this.expect(Token.LPAREN);
       if (isAwait && this.test(Token.SEMICOLON)) {
         this.unexpected();

@@ -1,3 +1,4 @@
+import { Value } from '../value.mjs';
 import { ModuleRequests, BoundNames } from './all.mjs';
 
 function ExportEntriesForModule(node, module) {
@@ -29,8 +30,8 @@ export function ExportEntries(node) {
         const names = BoundNames(node.VariableStatement);
         for (const name of names) {
           entries.push({
-            ModuleRequest: null,
-            ImportName: null,
+            ModuleRequest: Value.null,
+            ImportName: Value.null,
             LocalName: name,
             ExportName: name,
           });

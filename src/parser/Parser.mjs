@@ -35,6 +35,7 @@ export class Parser extends LanguageParser {
     super(source);
     this.source = source;
     this.state = {
+      hasTopLevelAwait: false,
       strict: false,
       scopeBits: 0,
       lexicalScopes: [],

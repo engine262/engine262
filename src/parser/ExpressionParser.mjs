@@ -360,6 +360,9 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.AWAIT);
     node.UnaryExpression = this.parseUnaryExpression();
+    if (!this.isReturnScope()) {
+      this.state.hasTopLevelAwait = true;
+    }
     return this.finishNode(node, 'AwaitExpression');
   }
 
@@ -418,12 +421,18 @@ export class ExpressionParser extends FunctionParser {
         }
         result = this.finishNode(node, 'SuperProperty');
       }
-    } else if (this.isImportMetaScope() && this.test(Token.IMPORT)) {
+    } else if (this.test(Token.IMPORT)) {
       const node = this.startNode();
       this.next();
-      this.expect(Token.PERIOD);
-      this.expect('meta');
-      result = this.finishNode(node, 'ImportMeta');
+      if (this.isImportMetaScope() && this.eat(Token.PERIOD)) {
+        this.expect('meta');
+        result = this.finishNode(node, 'ImportMeta');
+      } else {
+        this.expect(Token.LPAREN);
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        this.expect(Token.RPAREN);
+        result = this.finishNode(node, 'ImportCall');
+      }
     } else {
       result = this.parsePrimaryExpression();
     }
