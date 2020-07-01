@@ -1,7 +1,7 @@
-// https://github.com/tc39/ecma262/issues/1426
+# https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
-// TODO(7): Missing Date.
+# TODO(7): Missing Date.
 built-ins/Date/S15.9.3.1_A5_T*.js
 built-ins/Date/parse/time-value-maximum-range.js
 built-ins/Date/parse/without-utc-offset.js
@@ -13,7 +13,7 @@ built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
 built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
 harness/assertRelativeDateMs.js
 
-// TODO(46): Missing Number
+# TODO(46): Missing Number
 built-ins/Number/prototype/*.js
 built-ins/Number/prototype/toExponential/*.js
 built-ins/Number/prototype/toFixed/*.js

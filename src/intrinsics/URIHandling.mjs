@@ -2,6 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { isHexDigit } from '../parse.mjs';
 import { Value } from '../value.mjs';
 import {
+  Assert,
   CodePointAt,
   CreateBuiltinFunction,
   SetFunctionLength,
@@ -133,7 +134,7 @@ function Encode(string, unescapedSet) {
       R = `${R}${C}`;
     } else { // d. Else,
       // i. Let cp be ! CodePointAt(string, k).
-      const cp = X(CodePointAt(string, k));
+      const cp = X(CodePointAt(new Value(string), k));
       // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
       if (cp.IsUnpairedSurrogate === Value.true) {
         return surroundingAgent.Throw('URIError', 'URIMalformed');
@@ -305,7 +306,7 @@ function encodeURIComponent([uriComponent = Value.undefined]) {
   // 2. Let unescapedURIComponentSet be a String containing one instance of each code unit valid in uriUnescaped.
   const unescapedURIComponentSet = uriUnescaped;
   // 3. Return ? Encode(componentString, unescapedURIComponentSet).
-  return Q(Encode(componentString.stringValue(), unescapedURIComponentSet));
+  return Q(Encode(componentString, unescapedURIComponentSet));
 }
 
 export function BootstrapURIHandling(realmRec) {

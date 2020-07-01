@@ -1,21 +1,44 @@
-// blacklist
+# https://github.com/tc39/test262/blob/master/features.txt
 
-Atomics
-Atomics.waitAsync
+# Start with `-` to skip feature
+# Map feature to engine262 feature using `feature = engine262featurename`
 
-caller
+-Atomics
+-Atomics.waitAsync
 
-SharedArrayBuffer
+-caller
 
-tail-call-optimization
+-SharedArrayBuffer
 
-u180e
+-tail-call-optimization
 
-class-fields-public
-class-fields-private
-class-methods-private
-class-static-fields-public
-class-static-fields-private
-class-static-methods-private
+-u180e
 
-numeric-separator-literal
+-class-fields-public
+-class-fields-private
+-class-methods-private
+-class-static-fields-public
+-class-static-fields-private
+-class-static-methods-private
+
+-numeric-separator-literal
+
+# https://github.com/tc39/proposal-top-level-await
+top-level-await = TopLevelAwait
+
+# https://github.com/tc39/proposal-weakrefs
+WeakRef = WeakRefs
+FinalizationRegistry = WeakRefs
+
+# https://github.com/tc39/proposal-logical-assignment
+logical-assignment-operators = LogicalAssignment
+
+# https://github.com/tc39/proposal-promise-any
+Promise.any = Promise.any
+AggregateError = Promise.any
+
+# https://github.com/tc39/proposal-regexp-match-Indices
+regexp-match-indices = RegExpMatchIndices
+
+# https://github.com/tc39/proposal-hashbang
+hashbang = hashbang
