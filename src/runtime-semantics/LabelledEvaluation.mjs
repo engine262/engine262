@@ -333,7 +333,9 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
 function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, labelSet) {
   const {
     LeftHandSideExpression,
-    ForBinding, Expression,
+    ForBinding,
+    ForDeclaration,
+    Expression,
     Statement,
   } = ForInStatement;
   switch (true) {
@@ -350,6 +352,13 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, enumerate, varBinding, labelSet).
       return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet));
+    }
+    case !!ForDeclaration && !!Expression: {
+      // IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
+      // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, Expression, enumerate).
+      const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), Expression, 'enumerate'));
+      // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, enumerate, lexicalBinding, labelSet).
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
     }
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
