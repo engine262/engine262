@@ -176,7 +176,6 @@ if (!process.send) {
       features,
     });
 
-    const startTime = performance.now();
     const r = agent.scope(() => {
       const {
         realm, trackedPromises,
@@ -279,11 +278,6 @@ if (!process.send) {
         return { status: 'PASS' };
       }
     });
-
-    const duration = performance.now() - startTime;
-    if (duration > 5000) {
-      console.warn(`${test.file} took ${duration}ms`);
-    }
 
     return r;
   };

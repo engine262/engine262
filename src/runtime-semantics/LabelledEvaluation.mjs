@@ -40,6 +40,7 @@ import { OutOfRange } from '../helpers.mjs';
 import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
+  BindingInitialization,
 } from './all.mjs';
 
 // #sec-loopcontinues

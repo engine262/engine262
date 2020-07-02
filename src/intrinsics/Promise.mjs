@@ -14,6 +14,7 @@ import {
   CreateBuiltinFunction,
   CreateDataProperty,
   CreateResolvingFunctions,
+  DefinePropertyOrThrow,
   Get,
   GetIterator,
   Invoke,
@@ -419,8 +420,13 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   if (remainingElementsCount.Value === 0) {
     // a. Let error be a newly created AggregateError object.
     const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
-    // b. Set error.[[AggregateErrors]] to errors.
-    error.AggregateErrors = errors;
+    // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
+    X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+      Configurable: Value.true,
+      Enmerable: Value.false,
+      Writable: Value.true,
+      Value: X(CreateArrayFromList(errors)),
+    })));
     // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
     return Q(Call(promiseCapability.Reject, Value.undefined, [error]));
   }
@@ -462,8 +468,13 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
       if (remainingElementsCount.Value === 0) {
         // 1. Let error be a newly created AggregateError object.
         const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
-        // 2. Set error.[[AggregateErrors]] to errors.
-        error.AggregateErrors = errors;
+        // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
+        X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+          Configurable: Value.true,
+          Enmerable: Value.false,
+          Writable: Value.true,
+          Value: X(CreateArrayFromList(errors)),
+        })));
         // 3. Return ThrowCompletion(error).
         return ThrowCompletion(error);
       }

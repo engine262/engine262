@@ -16,6 +16,7 @@ import {
   PerformPromiseThen, CreateBuiltinFunction,
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
+  CreateArrayFromList,
 } from './abstract-ops/all.mjs';
 import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
@@ -120,7 +121,7 @@ export class Agent {
     let error;
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
-        Symbol.for('engine262.placeholder'),
+        X(CreateArrayFromList([])),
         new Value(message),
       ]));
     } else {
