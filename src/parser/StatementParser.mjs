@@ -783,7 +783,7 @@ export class StatementParser extends ExpressionParser {
         case Token.MUL: {
           const inner = this.startNode();
           this.next();
-          if (this.eat(Token.AS)) {
+          if (this.eat('as')) {
             inner.IdentifierName = this.parseIdentifierName();
           }
           node.FromClause = this.parseFromClause();

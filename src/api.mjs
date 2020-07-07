@@ -157,17 +157,12 @@ function mark() {
 
 // https://tc39.es/ecma262/#sec-jobs
 function runJobQueue() {
-  if (surroundingAgent.executionContextStack.length !== 0) {
-    return;
-  }
-
   // At some future point in time, when there is no running execution context
   // and the execution context stack is empty, the implementation must:
-
-  while (true) { // eslint-disable-line no-constant-condition
-    if (surroundingAgent.jobQueue.length === 0) {
-      break;
-    }
+  if (surroundingAgent.executionContextStack.length > 0) {
+    return;
+  }
+  while (surroundingAgent.jobQueue.length > 0) { // eslint-disable-line no-constant-condition
     const {
       job: abstractClosure,
       callerRealm,
@@ -368,18 +363,20 @@ export function ToString(realm, value) {
     while (true) {
       const type = Type(value);
       switch (type) {
-        case 'String':
-          return value.stringValue();
-        case 'Number':
-          return value.numberValue().toString();
-        case 'Boolean':
-          return value === Value.true ? 'true' : 'false';
         case 'Undefined':
           return 'undefined';
         case 'Null':
           return 'null';
+        case 'Boolean':
+          return value === Value.true ? 'true' : 'false';
+        case 'Number':
+          return value.numberValue().toString();
+        case 'String':
+          return value.stringValue();
         case 'Symbol':
           return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
+        case 'BigInt':
+          return value.bigintValue().toString();
         default:
           value = Q(ToPrimitive(value, 'String'));
           break;
