@@ -27,6 +27,10 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
+    name: 'Object.prototype.__AnnexB__',
+    url: 'https://tc39.es/ecma262/#sec-additional-properties-of-the-object.prototype-object',
+  },
+  {
     name: 'TopLevelAwait',
     url: 'https://github.com/tc39/proposal-top-level-await',
   },
