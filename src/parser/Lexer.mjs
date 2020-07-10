@@ -123,13 +123,14 @@ export class Lexer {
     this.line = 1;
     this.columnOffset = 0;
     this.scannedValue = undefined;
-    this.hasLineTerminatorBeforeNextFlag = false;
+    this.lineTerminatorBeforeNextToken = false;
     this.positionForNextToken = 0;
     this.lineForNextToken = 0;
     this.columnForNextToken = 0;
   }
 
   advance() {
+    this.lineTerminatorBeforeNextToken = false;
     const type = this.nextToken();
     return {
       type,
@@ -137,6 +138,7 @@ export class Lexer {
       endIndex: this.position,
       line: this.lineForNextToken,
       column: this.columnForNextToken,
+      hadLineTerminatorBefore: this.lineTerminatorBeforeNextToken,
       name: TokenNames[type],
       value: (
         type === Token.IDENTIFIER
@@ -148,7 +150,6 @@ export class Lexer {
   }
 
   next() {
-    this.hasLineTerminatorBeforeNextFlag = false;
     this.currentToken = this.peekToken;
     if (this.peekAheadToken !== undefined) {
       this.peekToken = this.peekAheadToken;
@@ -212,11 +213,6 @@ export class Lexer {
     return this.unexpected();
   }
 
-  hasLineTerminatorBeforeNext() {
-    this.peek();
-    return this.hasLineTerminatorBeforeNextFlag;
-  }
-
   skipSpace() {
     loop: // eslint-disable-line no-labels
     while (this.position < this.source.length) {
@@ -248,7 +244,7 @@ export class Lexer {
             }
             this.line += 1;
             this.columnOffset = this.position;
-            this.hasLineTerminatorBeforeNextFlag = true;
+            this.lineTerminatorBeforeNextToken = true;
             break;
           } else {
             break loop; // eslint-disable-line no-labels
@@ -276,7 +272,7 @@ export class Lexer {
         }
         this.line += 1;
         this.columnOffset = this.position;
-        this.hasLineTerminatorBeforeNextFlag = true;
+        this.lineTerminatorBeforeNextToken = true;
         break;
       }
     }
@@ -292,7 +288,7 @@ export class Lexer {
       this.position = match.index;
       this.line += 1;
       this.columnOffset = this.position;
-      this.hasLineTerminatorBeforeNextFlag = true;
+      this.lineTerminatorBeforeNextToken = true;
     }
     this.position = end + 2;
   }

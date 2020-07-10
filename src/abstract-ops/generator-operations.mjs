@@ -149,7 +149,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion) {
   // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
   //     result of the operation that suspended it. Let result be the completion record
   //     returned by the resumed computation.
-  const result = resume(genContext, abruptCompletion);
+  const result = EnsureCompletion(resume(genContext, abruptCompletion));
   // 11. Assert: When we return here, genContext has already been removed from the
   //     execution context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);

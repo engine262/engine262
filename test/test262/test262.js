@@ -80,7 +80,7 @@ if (!process.send) {
     longRunningWorker = createWorker();
   }
 
-  const longlist = readListPaths('longlist');
+  const slowlist = readListPaths('slowlist');
   const skiplist = readListPaths('skiplist');
 
   const stream = new TestStream(path.resolve(__dirname, 'test262'), {
@@ -101,7 +101,7 @@ if (!process.send) {
       return;
     }
 
-    if (longlist.includes(test.file)) {
+    if (slowlist.includes(test.file)) {
       if (RUN_LONG) {
         longRunningWorker.send(test, () => 0);
       } else {

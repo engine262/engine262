@@ -7,7 +7,7 @@ export class StatementParser extends ExpressionParser {
     if (this.eat(Token.SEMICOLON)) {
       return;
     }
-    if (this.hasLineTerminatorBeforeNext() || isAutomaticSemicolon(this.peek().type)) {
+    if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
       return;
     }
     this.unexpected();
@@ -486,7 +486,7 @@ export class StatementParser extends ExpressionParser {
     }
     if (this.eat(Token.SEMICOLON)) {
       node.LabelIdentifier = null;
-    } else if (this.hasLineTerminatorBeforeNext()) {
+    } else if (this.peek().hadLineTerminatorBefore) {
       node.LabelIdentifier = null;
       this.semicolon();
     } else {
@@ -511,7 +511,7 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.RETURN);
     if (this.eat(Token.SEMICOLON)) {
       node.Expression = null;
-    } else if (this.hasLineTerminatorBeforeNext()) {
+    } else if (this.peek().hadLineTerminatorBefore) {
       node.Expression = null;
       this.semicolon();
     } else {
@@ -541,7 +541,7 @@ export class StatementParser extends ExpressionParser {
   parseThrowStatement() {
     const node = this.startNode();
     this.expect(Token.THROW);
-    if (this.hasLineTerminatorBeforeNext()) {
+    if (this.peek().hadLineTerminatorBefore) {
       this.report('NewlineAfterThrow');
     }
     node.Expression = this.parseExpression();
@@ -628,9 +628,12 @@ export class StatementParser extends ExpressionParser {
   //   `import` ModuleSpecifier `;`
   parseImportDeclaration() {
     if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
+      // `import` `(`
+      // `import` `.`
       return this.parseExpressionStatement();
     }
     const node = this.startNode();
+    this.next();
     if (this.test(Token.STRING)) {
       node.ModuleSpecifier = this.parsePrimaryExpression();
     } else {
@@ -670,7 +673,6 @@ export class StatementParser extends ExpressionParser {
         return this.finishNode(node, 'ImportClause');
       }
     }
-
     if (this.eat(Token.MUL)) {
       this.expect('as');
       node.NameSpaceImport = this.parseBindingIdentifier();
@@ -694,6 +696,8 @@ export class StatementParser extends ExpressionParser {
         }
         this.expect(Token.COMMA);
       }
+    } else {
+      this.unexpected();
     }
     return this.finishNode(node, 'ImportClause');
   }

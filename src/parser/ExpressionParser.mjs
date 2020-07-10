@@ -120,7 +120,7 @@ export class ExpressionParser extends FunctionParser {
   parseYieldExpression() {
     const node = this.startNode();
     this.expect(Token.YIELD);
-    if (this.hasLineTerminatorBeforeNext()) {
+    if (this.peek().hadLineTerminatorBefore) {
       node.hasStar = false;
       node.AssignmentExpression = null;
     } else {
@@ -356,7 +356,7 @@ export class ExpressionParser extends FunctionParser {
       return this.finishNode(node, 'UpdateExpression');
     }
     const argument = this.parseLeftHandSideExpression();
-    if (!this.hasLineTerminatorBeforeNext()) {
+    if (!this.peek().hadLineTerminatorBefore) {
       if (this.test(Token.INC) || this.test(Token.DEC)) {
         this.validateAssignmentTarget(argument);
         const node = this.startNode();
@@ -435,7 +435,7 @@ export class ExpressionParser extends FunctionParser {
           // `async` `(`
           const couldBeArrow = this.currentToken.type === Token.ASYNC
               && result.type === 'IdentifierReference'
-              && !this.hasLineTerminatorBeforeNext();
+              && !this.peek().hadLineTerminatorBefore;
 
           const args = this.parseArguments();
 
@@ -530,24 +530,26 @@ export class ExpressionParser extends FunctionParser {
       case Token.IDENTIFIER:
       case Token.YIELD:
       case Token.AWAIT:
-      case Token.ASYNC:
-        if (!this.hasLineTerminatorBeforeNext()) {
-          if (this.test(Token.ASYNC) && this.testAhead(Token.FUNCTION)) {
-            return this.parseFunctionExpression(FunctionKind.ASYNC);
-          }
-          const node = this.startNode();
-          const ident = this.parseIdentifierReference();
-          if (this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW)) {
-            return this.parseArrowFunction(node, [
-              this.parseIdentifierReference(),
-            ], FunctionKind.ASYNC);
-          }
-          if (this.test(Token.ARROW)) {
-            return this.parseArrowFunction(node, [ident], FunctionKind.NORMAL);
-          }
-          return ident;
+      case Token.ASYNC: {
+        // `async` [no LineTerminator here] `function`
+        if (this.test(Token.ASYNC) && this.testAhead(Token.FUNCTION)
+            && !this.peekAhead().hadLineTerminatorBefore) {
+          return this.parseFunctionExpression(FunctionKind.ASYNC);
         }
-        return this.parseIdentifierReference();
+        const node = this.startNode();
+        const ident = this.parseIdentifierReference();
+        // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
+        if (ident.name === 'async' && this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW)) {
+          return this.parseArrowFunction(node, [
+            this.parseIdentifierReference(),
+          ], FunctionKind.ASYNC);
+        }
+        // IdentifierReference [no LineTerminator here] `=>`
+        if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+          return this.parseArrowFunction(node, [ident], FunctionKind.NORMAL);
+        }
+        return ident;
+      }
       case Token.THIS: {
         const node = this.startNode();
         this.next();
@@ -814,7 +816,12 @@ export class ExpressionParser extends FunctionParser {
             this.line += 1;
             this.columnOffset = this.position;
           }
-          buffer += c;
+          if (c === '\\' && this.source[this.position] === '`') {
+            this.position += 1;
+            buffer += '`';
+          } else {
+            buffer += c;
+          }
           break;
       }
     }
@@ -883,7 +890,7 @@ export class ExpressionParser extends FunctionParser {
 
     // ArrowParameters :
     //   CoverParenthesizedExpressionAndArrowParameterList
-    if (!this.hasLineTerminatorBeforeNext() && this.test(Token.ARROW)) {
+    if (!this.peek().hadLineTerminatorBefore && this.test(Token.ARROW)) {
       return this.parseArrowFunction(node, expressions, FunctionKind.NORMAL);
     }
 
