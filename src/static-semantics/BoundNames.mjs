@@ -79,6 +79,22 @@ export function BoundNames(node) {
       return BoundNames(node.BindingIdentifier);
     case 'BindingRestElement':
       return BoundNames(node.BindingIdentifier);
+    case 'BindingElement':
+      return BoundNames(node.BindingPattern);
+    case 'ObjectBindingPattern': {
+      const names = BoundNames(node.BindingPropertyList);
+      if (node.BindingRestProperty) {
+        names.push(...BoundNames(node.BindingRestProperty));
+      }
+      return names;
+    }
+    case 'ArrayBindingPattern': {
+      const names = BoundNames(node.BindingElementList);
+      if (node.BindingRestElement) {
+        names.push(...BoundNames(node.BindingRestElement));
+      }
+      return names;
+    }
     default:
       return [];
   }

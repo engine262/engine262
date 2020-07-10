@@ -78,24 +78,49 @@ export class FunctionParser extends IdentifierParser {
     }
   }
 
+  convertArrowParameter(node) {
+    switch (node.type) {
+      case 'IdentifierReference': {
+        node.type = 'BindingIdentifier';
+        const container = this.startNode();
+        container.BindingIdentifier = node;
+        container.Initializer = null;
+        return this.finishNode(container, 'SingleNameBinding');
+      }
+      case 'BindingRestElement':
+        return node;
+      case 'ArrayLiteral': {
+        const wrap = this.startNode();
+        node.BindingElementList = node.ElementList.map((p) => this.convertArrowParameter(p));
+        delete node.ElementList;
+        node.type = 'ArrayBindingPattern';
+        wrap.BindingPattern = node;
+        wrap.Initializer = null;
+        return this.finishNode(wrap, 'BindingElement');
+      }
+      case 'ObjectLiteral': {
+        const wrap = this.startNode();
+        node.BindingPropertyList = node.PropertyDefinitionList.map((p) => this.convertArrowParameter(p));
+        delete node.PropertyDefinitionList;
+        node.type = 'ObjectBindingPattern';
+        wrap.BindingPattern = node;
+        wrap.Initializer = null;
+        return this.finishNode(wrap, 'BindingElement');
+      }
+      case 'AssignmentExpression': {
+        const result = this.convertArrowParameter(node.LeftHandSideExpression);
+        result.Initializer = node.AssignmentExpression;
+        return result;
+      }
+      default:
+        return this.unexpected(node);
+    }
+  }
+
   parseArrowFunction(node, parameters, kind) {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
-    node.ArrowParameters = parameters.map((p) => {
-      switch (p.type) {
-        case 'IdentifierReference': {
-          p.type = 'BindingIdentifier';
-          const container = this.startNode();
-          container.BindingIdentifier = p;
-          container.Initializer = null;
-          return this.finishNode(container, 'SingleNameBinding');
-        }
-        case 'BindingRestElement':
-          return p;
-        default:
-          return this.unexpected(p);
-      }
-    });
+    node.ArrowParameters = parameters.map((p) => this.convertArrowParameter(p));
     const body = this.parseConciseBody(isAsync);
     node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);

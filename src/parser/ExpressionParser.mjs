@@ -530,26 +530,24 @@ export class ExpressionParser extends FunctionParser {
       case Token.IDENTIFIER:
       case Token.YIELD:
       case Token.AWAIT:
-      case Token.ASYNC: {
-        const node = this.startNode();
-        if (this.test(Token.ASYNC)
-            && !this.hasLineTerminatorBeforeNext()) {
-          if (this.testAhead(Token.FUNCTION)) {
+      case Token.ASYNC:
+        if (!this.hasLineTerminatorBeforeNext()) {
+          if (this.test(Token.ASYNC) && this.testAhead(Token.FUNCTION)) {
             return this.parseFunctionExpression(FunctionKind.ASYNC);
           }
-          const asyncIdent = this.parseIdentifierReference();
+          const node = this.startNode();
+          const ident = this.parseIdentifierReference();
           if (this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW)) {
             return this.parseArrowFunction(node, [
               this.parseIdentifierReference(),
             ], FunctionKind.ASYNC);
           }
           if (this.test(Token.ARROW)) {
-            return this.parseArrowFunction(node, [asyncIdent], FunctionKind.NORMAL);
+            return this.parseArrowFunction(node, [ident], FunctionKind.NORMAL);
           }
-          return asyncIdent;
+          return ident;
         }
         return this.parseIdentifierReference();
-      }
       case Token.THIS: {
         const node = this.startNode();
         this.next();
@@ -861,20 +859,27 @@ export class ExpressionParser extends FunctionParser {
       return this.parseArrowFunction(node, [], FunctionKind.NORMAL);
     }
     const expressions = [];
+    let rparenAfterComma;
     while (true) {
       if (this.test(Token.ELLIPSIS)) {
         const inner = this.startNode();
         this.next();
         inner.BindingIdentifier = this.parseBindingIdentifier();
         expressions.push(this.finishNode(inner, 'BindingRestElement'));
+        this.expect(Token.RPAREN);
         break;
       }
       expressions.push(this.parseAssignmentExpression());
-      if (!this.eat(Token.COMMA)) {
+      if (this.eat(Token.COMMA)) {
+        if (this.eat(Token.RPAREN)) {
+          rparenAfterComma = this.currentToken;
+          break;
+        }
+      } else {
+        this.expect(Token.RPAREN);
         break;
       }
     }
-    this.expect(Token.RPAREN);
 
     // ArrowParameters :
     //   CoverParenthesizedExpressionAndArrowParameterList
@@ -886,6 +891,9 @@ export class ExpressionParser extends FunctionParser {
     //   `(` Expression `)`
     if (expressions[expressions.length - 1].type === 'BindingRestElement') {
       this.unexpected(expressions[expressions.length - 1]);
+    }
+    if (rparenAfterComma) {
+      this.unexpected(rparenAfterComma);
     }
     if (expressions.length === 1) {
       node.Expression = expressions[0];
