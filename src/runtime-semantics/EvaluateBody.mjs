@@ -36,7 +36,7 @@ export function* EvaluateBody_FunctionBody({ FunctionStatementList }, functionOb
 
 // #sec-arrow-function-definitions-runtime-semantics-evaluation
 // ExpressionBody : AssignmentExpression
-function* Evaluate_ExpressionBody(AssignmentExpression) {
+export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
   // 1. Let exprRef be the result of evaluating AssignmentExpression.
   const exprRef = yield* Evaluate(AssignmentExpression);
   // 2. Let exprValue be ? GetValue(exprRef).
@@ -51,7 +51,26 @@ export function* EvaluateBody_ConciseBody({ ExpressionBody }, functionObject, ar
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Return the result of evaluating ExpressionBody.
-  return yield* Evaluate_ExpressionBody(ExpressionBody);
+  return yield* Evaluate(ExpressionBody);
+}
+
+// #sec-async-arrow-function-definitions-EvaluateBody
+// AsyncConciseBody : ExpressionBody
+function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argumentsList) {
+  // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+  const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
+  const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
+  // 3. If declResult is not an abrupt completion, then
+  if (!(declResult instanceof AbruptCompletion)) {
+    // a. Perform ! AsyncFunctionStart(promiseCapability, ExpressionBody).
+    X(AsyncFunctionStart(promiseCapability, ExpressionBody));
+  } else { // 4. Else
+    // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
+    X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
+  }
+  // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+  return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
 // #sec-generator-function-definitions-runtime-semantics-evaluatebody

@@ -116,7 +116,9 @@ const SingleCharTokens = {
 export class Lexer {
   constructor() {
     this.currentToken = undefined;
-    this.lookaheadToken = undefined;
+    this.peekToken = undefined;
+    this.peekAheadToken = undefined;
+
     this.position = 0;
     this.line = 1;
     this.columnOffset = 0;
@@ -147,20 +149,32 @@ export class Lexer {
 
   next() {
     this.hasLineTerminatorBeforeNextFlag = false;
-    this.currentToken = this.lookaheadToken;
-    this.lookaheadToken = this.advance();
+    this.currentToken = this.peekToken;
+    if (this.peekAheadToken !== undefined) {
+      this.peekToken = this.peekAheadToken;
+      this.peekAheadToken = undefined;
+    } else {
+      this.peekToken = this.advance();
+    }
     return this.currentToken;
   }
 
   peek() {
-    if (this.lookaheadToken === undefined) {
+    if (this.peekToken === undefined) {
       this.next();
     }
-    return this.lookaheadToken;
+    return this.peekToken;
   }
 
-  test(token) {
-    const peek = this.peek();
+  peekAhead() {
+    if (this.peekAheadToken === undefined) {
+      this.peek();
+      this.peekAheadToken = this.advance();
+    }
+    return this.peekAheadToken;
+  }
+
+  matches(token, peek) {
     if (typeof token === 'string') {
       if (peek.type === Token.IDENTIFIER && peek.value === token) {
         const escapeIndex = this.source.slice(peek.startIndex, peek.endIndex).indexOf('\\');
@@ -173,6 +187,14 @@ export class Lexer {
       }
     }
     return peek.type === token;
+  }
+
+  test(token) {
+    return this.matches(token, this.peek());
+  }
+
+  testAhead(token) {
+    return this.matches(token, this.peekAhead());
   }
 
   eat(token) {

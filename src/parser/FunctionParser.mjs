@@ -78,7 +78,8 @@ export class FunctionParser extends IdentifierParser {
     }
   }
 
-  parseArrowFunction(node, parameters, isAsync) {
+  parseArrowFunction(node, parameters, kind) {
+    const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
     node.ArrowParameters = parameters.map((p) => {
       switch (p.type) {
@@ -104,9 +105,11 @@ export class FunctionParser extends IdentifierParser {
     if (this.test(Token.LBRACE)) {
       return this.parseFunctionBody(isAsync, false, true);
     }
-    const node = this.startNode();
-    node.ExpressionBody = this.parseAssignmentExpression();
-    return this.finishNode(node, `${isAsync ? 'Async' : ''}ConciseBody`);
+    const asyncBody = this.startNode();
+    const exprBody = this.startNode();
+    exprBody.AssignmentExpression = this.parseAssignmentExpression();
+    asyncBody.ExpressionBody = this.finishNode(exprBody, 'ExpressionBody');
+    return this.finishNode(asyncBody, `${isAsync ? 'Async' : ''}ConciseBody`);
   }
 
   // FormalParameter : BindingElement

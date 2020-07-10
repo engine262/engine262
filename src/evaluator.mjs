@@ -66,9 +66,11 @@ import {
   Evaluate_AssignmentExpression,
   Evaluate_UnaryExpression,
   Evaluate_ArrowFunction,
+  Evaluate_AsyncArrowFunction,
   Evaluate_ConditionalExpression,
   Evaluate_RegularExpressionLiteral,
   Evaluate_AnyFunctionBody,
+  Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mjs';
 
 export function* Evaluate(node) {
@@ -227,6 +229,8 @@ export function* Evaluate(node) {
       return yield* Evaluate_UnaryExpression(node);
     case 'ArrowFunction':
       return yield* Evaluate_ArrowFunction(node);
+    case 'AsyncArrowFunction':
+      return yield* Evaluate_AsyncArrowFunction(node);
     case 'ConditionalExpression':
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':
@@ -235,6 +239,8 @@ export function* Evaluate(node) {
     case 'GeneratorBody':
     case 'AsyncGeneratorBody':
       return yield* Evaluate_AnyFunctionBody(node);
+    case 'ExpressionBody':
+      return yield* Evaluate_ExpressionBody(node);
     default:
       throw new OutOfRange('Evaluate', node);
   }

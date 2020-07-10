@@ -61,6 +61,7 @@ export * from './SwitchStatement.mjs';
 export * from './CreateDynamicFunction.mjs';
 export * from './GeneratorExpression.mjs';
 export * from './ArrowFunction.mjs';
+export * from './AsyncArrowFunction.mjs';
 export * from './BreakStatement.mjs';
 export * from './AsyncGeneratorExpression.mjs';
 export * from './HoistableDeclaration.mjs';

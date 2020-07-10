@@ -185,11 +185,11 @@ export class Parser extends LanguageParser {
     const node = {
       type: undefined,
       location: {
-        startIndex: this.lookaheadToken.startIndex,
+        startIndex: this.peekToken.startIndex,
         endIndex: -1,
         start: {
-          line: this.lookaheadToken.line,
-          column: this.lookaheadToken.column,
+          line: this.peekToken.line,
+          column: this.peekToken.column,
         },
         end: {
           line: -1,

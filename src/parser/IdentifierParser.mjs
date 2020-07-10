@@ -11,6 +11,8 @@ export class IdentifierParser extends BaseParser {
         this.unexpected(token);
       }
       node.name = token.value;
+    } else if (token.type === Token.ASYNC) {
+      node.name = token.value;
     } else if (token.type !== Token.IDENTIFIER) {
       this.unexpected(token);
     } else {
@@ -37,6 +39,7 @@ export class IdentifierParser extends BaseParser {
     const token = this.next();
     switch (token.type) {
       case Token.IDENTIFIER:
+      case Token.ASYNC:
         node.name = token.value;
         break;
       case Token.YIELD:
@@ -70,6 +73,7 @@ export class IdentifierParser extends BaseParser {
     const token = this.next();
     switch (token.type) {
       case Token.IDENTIFIER:
+      case Token.ASYNC:
         node.name = token.value;
         break;
       case Token.YIELD:

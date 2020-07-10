@@ -120,6 +120,26 @@ function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
   return closure;
 }
 
+// #sec-arrow-function-definitions-runtime-semantics-namedevaluation
+//   AsyncArrowFunction :
+//     ArrowParameters `=>` AsyncConciseBody
+function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
+  const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;
+  // 1. Let scope be the LexicalEnvironment of the running execution context.
+  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // 2. Let sourceText be the source text matched by ArrowFunction.
+  const sourceText = sourceTextMatchedBy(AsyncArrowFunction);
+  // 3. Let head be CoveredAsyncArrowHead of CoverCallExpressionAndAsyncArrowHead.
+  // 4. Let parameters be the ArrowFormalParameters of head.
+  const parameters = ArrowParameters;
+  // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
+  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, parameters, AsyncConciseBody, 'lexical-this', scope);
+  // 6. Perform SetFunctionName(closure, name).
+  SetFunctionName(closure, name);
+  // 7. Return closure.
+  return closure;
+}
+
 // #sec-class-definitions-runtime-semantics-namedevaluation
 //   ClassExpression : `class` ClassTail
 function* NamedEvaluation_ClassExpression(ClassExpression, name) {
@@ -146,6 +166,8 @@ export function* NamedEvaluation(F, name) {
       return NamedEvaluation_AsyncGeneratorExpression(F, name);
     case 'ArrowFunction':
       return NamedEvaluation_ArrowFunction(F, name);
+    case 'AsyncArrowFunction':
+      return NamedEvaluation_AsyncArrowFunction(F, name);
     case 'ClassExpression':
       return yield* NamedEvaluation_ClassExpression(F, name);
     default:

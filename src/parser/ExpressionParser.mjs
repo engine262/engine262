@@ -47,32 +47,6 @@ export class ExpressionParser extends FunctionParser {
     }
     const node = this.startNode();
     const left = this.parseConditionalExpression();
-    if (!this.hasLineTerminatorBeforeNext() && this.test(Token.ARROW)) {
-      let params;
-      if (left.type === 'ParenthesizedExpression') {
-        if (left.Expression.type === 'CommaOperator') {
-          params = left.Expression.ExpressionList;
-        } else {
-          params = [left.Expression];
-        }
-      } else {
-        params = [left];
-      }
-      return this.parseArrowFunction(node, params, false);
-    } else {
-      if (left.type === 'ParenthesizedExpression') {
-        if (left.Expression.type === 'CommaOperator') {
-          const { ExpressionList } = left.Expression;
-          if (ExpressionList[ExpressionList.length - 1].type === 'RestBindingElement') {
-            this.unexpected(ExpressionList[ExpressionList.length - 1]);
-          }
-        } else {
-          if (left.Expression.type === 'RestBindingElement') {
-            this.unexpected(left.Expression);
-          }
-        }
-      }
-    }
     switch (this.peek().type) {
       case Token.ASSIGN:
       case Token.ASSIGN_MUL:
@@ -457,11 +431,24 @@ export class ExpressionParser extends FunctionParser {
           node.Expression = null;
           result = this.finishNode(node, 'MemberExpression');
           break;
-        case Token.LPAREN:
+        case Token.LPAREN: {
+          // `async` `(`
+          const couldBeArrow = this.currentToken.type === Token.ASYNC
+              && result.type === 'IdentifierReference'
+              && !this.hasLineTerminatorBeforeNext();
+
+          const args = this.parseArguments();
+
+          // `async` `(` Arguments `)` `=>`
+          if (couldBeArrow && this.test(Token.ARROW)) {
+            return this.parseArrowFunction(result, args, FunctionKind.ASYNC);
+          }
+
           node.CallExpression = result;
-          node.Arguments = this.parseArguments();
+          node.Arguments = args;
           result = this.finishNode(node, 'CallExpression');
           break;
+        }
         case Token.OPTIONAL:
           node.MemberExpression = result;
           node.OptionalChain = this.parseOptionalChain();
@@ -540,15 +527,34 @@ export class ExpressionParser extends FunctionParser {
   //   ...
   parsePrimaryExpression() {
     switch (this.peek().type) {
+      case Token.IDENTIFIER:
+      case Token.YIELD:
+      case Token.AWAIT:
+      case Token.ASYNC: {
+        const node = this.startNode();
+        if (this.test(Token.ASYNC)
+            && !this.hasLineTerminatorBeforeNext()) {
+          if (this.testAhead(Token.FUNCTION)) {
+            return this.parseFunctionExpression(FunctionKind.ASYNC);
+          }
+          const asyncIdent = this.parseIdentifierReference();
+          if (this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW)) {
+            return this.parseArrowFunction(node, [
+              this.parseIdentifierReference(),
+            ], FunctionKind.ASYNC);
+          }
+          if (this.test(Token.ARROW)) {
+            return this.parseArrowFunction(node, [asyncIdent], FunctionKind.NORMAL);
+          }
+          return asyncIdent;
+        }
+        return this.parseIdentifierReference();
+      }
       case Token.THIS: {
         const node = this.startNode();
         this.next();
         return this.finishNode(node, 'ThisExpression');
       }
-      case Token.IDENTIFIER:
-      case Token.YIELD:
-      case Token.AWAIT:
-        return this.parseIdentifierReference();
       case Token.NUMBER:
       case Token.BIGINT:
         return this.parseNumericLiteral();
@@ -579,15 +585,13 @@ export class ExpressionParser extends FunctionParser {
         return this.parseFunctionExpression(FunctionKind.NORMAL);
       case Token.CLASS:
         return this.parseClassExpression();
-      case Token.ASYNC:
-        return this.parseFunctionExpression(FunctionKind.ASYNC);
       case Token.TEMPLATE:
         return this.parseTemplateLiteral();
       case Token.DIV:
       case Token.ASSIGN_DIV:
         return this.parseRegularExpressionLiteral();
       case Token.LPAREN:
-        return this.parseParenthesizedExpression();
+        return this.parseCoverParenthesizedExpressionAndArrowParameterList();
       default:
         return this.unexpected();
     }
@@ -841,14 +845,20 @@ export class ExpressionParser extends FunctionParser {
     return this.finishNode(node, 'RegularExpressionLiteral');
   }
 
-  // ParenthesizedExpression :
+  // CoverParenthesizedExpressionAndArrowParameterList :
   //   `(` Expression `)`
-  parseParenthesizedExpression() {
+  //   `(` Expression `,` `)`
+  //   `(` `)`
+  //   `(` `...` BindingIdentifier `)`
+  //   `(` `...` BindingPattern `)`
+  //   `(` Expression `,` `...` BindingIdentifier `)`
+  //   `(` Expression `.` `...` BindingPattern `)`
+  parseCoverParenthesizedExpressionAndArrowParameterList() {
     const node = this.startNode();
     const commaOp = this.startNode();
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
-      return this.parseArrowFunction(node, [], false);
+      return this.parseArrowFunction(node, [], FunctionKind.NORMAL);
     }
     const expressions = [];
     while (true) {
@@ -865,6 +875,18 @@ export class ExpressionParser extends FunctionParser {
       }
     }
     this.expect(Token.RPAREN);
+
+    // ArrowParameters :
+    //   CoverParenthesizedExpressionAndArrowParameterList
+    if (!this.hasLineTerminatorBeforeNext() && this.test(Token.ARROW)) {
+      return this.parseArrowFunction(node, expressions, FunctionKind.NORMAL);
+    }
+
+    // ParenthesizedExpression :
+    //   `(` Expression `)`
+    if (expressions[expressions.length - 1].type === 'BindingRestElement') {
+      this.unexpected(expressions[expressions.length - 1]);
+    }
     if (expressions.length === 1) {
       node.Expression = expressions[0];
     } else {

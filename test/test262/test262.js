@@ -127,7 +127,6 @@ if (!process.send) {
 } else {
   // worker
 
-  const { performance } = require('perf_hooks');
   const {
     Agent, Value,
     Abstract,
