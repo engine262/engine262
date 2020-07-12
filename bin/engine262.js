@@ -17,15 +17,21 @@ const util = require('util');
 const packageJson = require('../package.json');
 const snekparse = require('./snekparse');
 const {
-  inspect,
   Agent,
+  setSurroundingAgent,
+
+  FEATURES,
+  inspect,
+
+  Value,
+
+  CreateDataProperty,
+  OrdinaryObjectCreate,
+  Type,
+
   Completion,
   AbruptCompletion,
-  Value,
-  Object: APIObject,
-  Abstract,
   Throw,
-  FEATURES,
 } = require('..');
 const { createRealm } = require('./test262_realm');
 
@@ -88,41 +94,41 @@ if (argv.features === 'all') {
 }
 
 const agent = new Agent({ features });
-agent.enter();
+setSurroundingAgent(agent);
 
 const { realm, resolverCache } = createRealm({ printCompatMode: true });
-{
-  const console = new APIObject(realm);
-  Abstract.CreateDataProperty(realm.global, new Value(realm, 'console'), console);
+realm.scope(() => {
+  const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
+  CreateDataProperty(realm.GlobalObject, new Value('console'), console);
 
   const format = (args) => args.map((a, i) => {
-    if (i === 0 && Abstract.Type(a) === 'String') {
+    if (i === 0 && Type(a) === 'String') {
       return a.stringValue();
     }
-    return inspect(a, realm);
+    return inspect(a);
   }).join(' ');
 
-  const log = new Value(realm, (args) => {
+  const log = new Value((args) => {
     process.stdout.write(`${format(args)}\n`);
     return Value.undefined;
   });
 
-  Abstract.CreateDataProperty(console, new Value(realm, 'log'), log);
+  CreateDataProperty(console, new Value('log'), log);
 
-  const error = new Value(realm, (args) => {
+  const error = new Value((args) => {
     process.stderr.write(`${format(args)}\n`);
     return Value.undefined;
   });
 
-  Abstract.CreateDataProperty(console, new Value(realm, 'error'), error);
+  CreateDataProperty(console, new Value('error'), error);
 
-  const debug = new Value(realm, (args) => {
+  const debug = new Value((args) => {
     process.stderr.write(`${util.format(...args)}\n`);
     return Value.undefined;
   });
 
-  Abstract.CreateDataProperty(console, new Value(realm, 'debug'), debug);
-}
+  CreateDataProperty(console, new Value('debug'), debug);
+});
 
 if (argv.inspector) {
   const inspector = require('../inspector');
@@ -130,32 +136,34 @@ if (argv.inspector) {
 }
 
 function oneShotEval(source, filename) {
-  let result;
-  if (argv.m || argv.module || filename.endsWith('.mjs')) {
-    result = realm.createSourceTextModule(filename, source);
-    if (!(result instanceof AbruptCompletion)) {
-      const module = result;
-      resolverCache.set(filename, result);
-      result = module.Link();
+  realm.scope(() => {
+    let result;
+    if (argv.m || argv.module || filename.endsWith('.mjs')) {
+      result = realm.createSourceTextModule(filename, source);
       if (!(result instanceof AbruptCompletion)) {
-        result = module.Evaluate();
-      }
-      if (!(result instanceof AbruptCompletion)) {
-        if (result.PromiseState === 'rejected') {
-          result = Throw(realm, result.PromiseResult);
+        const module = result;
+        resolverCache.set(filename, result);
+        result = module.Link();
+        if (!(result instanceof AbruptCompletion)) {
+          result = module.Evaluate();
+        }
+        if (!(result instanceof AbruptCompletion)) {
+          if (result.PromiseState === 'rejected') {
+            result = Throw(result.PromiseResult);
+          }
         }
       }
+    } else {
+      result = realm.evaluateScript(source, { specifier: filename });
     }
-  } else {
-    result = realm.evaluateScript(source, { specifier: filename });
-  }
-  if (result instanceof AbruptCompletion) {
-    const inspected = inspect(result, realm);
-    process.stderr.write(`${inspected}\n`);
-    process.exit(1);
-  } else {
-    process.exit(0);
-  }
+    if (result instanceof AbruptCompletion) {
+      const inspected = inspect(result);
+      process.stderr.write(`${inspected}\n`);
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
+  });
 }
 
 if (entry) {
@@ -186,11 +194,11 @@ Please report bugs to ${packageJson.bugs.url}
     },
     preview: false,
     completer: () => [],
-    writer: (o) => {
+    writer: (o) => realm.scope(() => {
       if (o instanceof Value || o instanceof Completion) {
-        return inspect(o, realm);
+        return inspect(o);
       }
       return util.inspect(o);
-    },
+    }),
   });
 }

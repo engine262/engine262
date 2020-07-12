@@ -2,7 +2,6 @@ import {
   surroundingAgent,
   ExecutionContext,
 } from '../engine.mjs';
-import { Realm } from '../realm.mjs';
 import {
   Descriptor,
   Type,
@@ -35,6 +34,7 @@ import {
   OrdinaryCreateFromConstructor,
   ToObject,
   isStrictModeCode,
+  Realm,
 } from './all.mjs';
 
 // This file covers abstract operations defined in

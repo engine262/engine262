@@ -1,4 +1,4 @@
-import { evaluateScript, surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   BooleanValue,
   NullValue,
@@ -30,6 +30,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
+import { evaluateScript } from '../api.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];

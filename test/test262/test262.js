@@ -63,7 +63,7 @@ if (!process.send) {
           skip();
           break;
         default:
-          break;
+          throw new RangeError(status);
       }
     });
     c.on('exit', (code) => {
@@ -103,12 +103,12 @@ if (!process.send) {
 
     if (slowlist.includes(test.file)) {
       if (RUN_LONG) {
-        longRunningWorker.send(test, () => 0);
+        longRunningWorker.send(test);
       } else {
         skip();
       }
     } else {
-      workers[workerIndex].send(test, () => 0);
+      workers[workerIndex].send(test);
       workerIndex += 1;
       if (workerIndex >= workers.length) {
         workerIndex = 0;
@@ -119,45 +119,52 @@ if (!process.send) {
   stream.on('end', () => {
     workers.forEach((w) => {
       w.send('DONE');
-      if (RUN_LONG) {
-        longRunningWorker.send('DONE');
-      }
     });
+    if (RUN_LONG) {
+      longRunningWorker.send('DONE');
+    }
   });
 } else {
   // worker
 
   const {
-    Agent, Value,
-    Abstract,
-    Throw,
-    AbruptCompletion,
+    Agent,
+    setSurroundingAgent,
     inspect,
+
+    Value,
+
+    IsCallable,
+    IsDataDescriptor,
+    Type,
+
+    AbruptCompletion,
+    Throw,
   } = require('../..');
   const { createRealm } = require('../../bin/test262_realm');
 
-  const isError = (realm, type, value) => {
-    if (Abstract.Type(value) !== 'Object') {
+  const isError = (type, value) => {
+    if (Type(value) !== 'Object') {
       return false;
     }
     const proto = value.Prototype;
-    if (!proto || Abstract.Type(proto) !== 'Object') {
+    if (!proto || Type(proto) !== 'Object') {
       return false;
     }
-    const ctorDesc = proto.properties.get(new Value(realm, 'constructor'));
-    if (!ctorDesc || !Abstract.IsDataDescriptor(ctorDesc)) {
+    const ctorDesc = proto.properties.get(new Value('constructor'));
+    if (!ctorDesc || !IsDataDescriptor(ctorDesc)) {
       return false;
     }
     const ctor = ctorDesc.Value;
-    if (Abstract.Type(ctor) !== 'Object' || Abstract.IsCallable(ctor) !== Value.true) {
+    if (Type(ctor) !== 'Object' || IsCallable(ctor) !== Value.true) {
       return false;
     }
-    const namePropDesc = ctor.properties.get(new Value(realm, 'name'));
-    if (!namePropDesc || !Abstract.IsDataDescriptor(namePropDesc)) {
+    const namePropDesc = ctor.properties.get(new Value('name'));
+    if (!namePropDesc || !IsDataDescriptor(namePropDesc)) {
       return false;
     }
     const nameProp = namePropDesc.Value;
-    return Abstract.Type(nameProp) === 'String' && nameProp.stringValue() === type;
+    return Type(nameProp) === 'String' && nameProp.stringValue() === type;
   };
 
   const includeCache = {};
@@ -174,13 +181,13 @@ if (!process.send) {
     const agent = new Agent({
       features,
     });
+    setSurroundingAgent(agent);
 
-    const r = agent.scope(() => {
-      const {
-        realm, trackedPromises,
-        resolverCache, setPrintHandle,
-      } = createRealm({ file: test.file });
-
+    const {
+      realm, trackedPromises,
+      resolverCache, setPrintHandle,
+    } = createRealm({ file: test.file });
+    const r = realm.scope(() => {
       test.attrs.includes.unshift('assert.js', 'sta.js');
       if (test.attrs.flags.async) {
         test.attrs.includes.unshift('doneprintHandle.js');
@@ -197,7 +204,7 @@ if (!process.send) {
         const entry = includeCache[include];
         const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
         if (completion instanceof AbruptCompletion) {
-          return { status: 'FAIL', error: inspect(completion, realm) };
+          return { status: 'FAIL', error: inspect(completion) };
         }
       }
 
@@ -217,7 +224,7 @@ if (!process.send) {
     }
   }`.trim());
         if (completion instanceof AbruptCompletion) {
-          return { status: 'FAIL', error: inspect(completion, realm) };
+          return { status: 'FAIL', error: inspect(completion) };
         }
       }
 
@@ -227,7 +234,7 @@ if (!process.send) {
           if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
             asyncResult = { status: 'PASS' };
           } else {
-            asyncResult = { status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m, realm) };
+            asyncResult = { status: 'FAIL', error: m.stringValue ? m.stringValue() : inspect(m) };
           }
           setPrintHandle(undefined);
         });
@@ -247,7 +254,7 @@ if (!process.send) {
           }
           if (!(completion instanceof AbruptCompletion)) {
             if (completion.PromiseState === 'rejected') {
-              completion = Throw(realm, completion.PromiseResult);
+              completion = Throw(completion.PromiseResult);
             }
           }
         }
@@ -256,10 +263,10 @@ if (!process.send) {
       }
 
       if (completion instanceof AbruptCompletion) {
-        if (test.attrs.negative && isError(realm, test.attrs.negative.type, completion.Value)) {
+        if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
           return { status: 'PASS' };
         } else {
-          return { status: 'FAIL', error: inspect(completion, realm) };
+          return { status: 'FAIL', error: inspect(completion) };
         }
       }
 
@@ -268,7 +275,7 @@ if (!process.send) {
       }
 
       if (trackedPromises.length > 0) {
-        return { status: 'FAIL', error: inspect(trackedPromises[0], realm) };
+        return { status: 'FAIL', error: inspect(trackedPromises[0]) };
       }
 
       if (test.attrs.negative) {
@@ -284,7 +291,8 @@ if (!process.send) {
   let p = Promise.resolve();
   process.on('message', (test) => {
     if (test === 'DONE') {
-      p = p.then(() => process.exit(0));
+      p.then(() => process.exit(0));
+      p = undefined;
     } else {
       const description = `${test.file}\n${test.attrs.description}`;
       p = p
@@ -294,11 +302,7 @@ if (!process.send) {
           process.exit(1);
         })
         .then((r) => {
-          process.send({ description, ...r }, (e) => {
-            if (e) {
-              process.exit(1);
-            }
-          });
+          process.send({ description, ...r });
         });
     }
   });

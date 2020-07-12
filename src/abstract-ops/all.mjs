@@ -20,6 +20,7 @@ export * from './object-operations.mjs';
 export * from './objects.mjs';
 export * from './promise-operations.mjs';
 export * from './proxy-objects.mjs';
+export * from './realms.mjs';
 export * from './reference-operations.mjs';
 export * from './regexp-objects.mjs';
 export * from './source-code.mjs';

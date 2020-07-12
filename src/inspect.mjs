@@ -1,6 +1,5 @@
 import { surroundingAgent } from './engine.mjs';
 import { Type, Value, wellKnownSymbols } from './value.mjs';
-import { Realm as APIRealm } from './api.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern,
@@ -192,12 +191,9 @@ const INSPECTORS = {
   },
 };
 
-export function inspect(value, realm = surroundingAgent.currentRealmRecord) {
-  if (realm instanceof APIRealm) {
-    realm = realm.realm;
-  }
+export function inspect(value) {
   const context = {
-    realm,
+    realm: surroundingAgent.currentRealmRecord,
     indent: 0,
     quote: true,
     inspected: [],

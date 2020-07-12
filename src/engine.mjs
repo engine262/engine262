@@ -7,18 +7,15 @@ import {
   Q, X,
 } from './completion.mjs';
 import {
-  CreateRealm,
-  SetDefaultGlobalBindings,
-  SetRealmGlobalObject,
-} from './realm.mjs';
-import {
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
   CreateArrayFromList,
+  CreateRealm,
+  SetDefaultGlobalBindings,
+  SetRealmGlobalObject,
 } from './abstract-ops/all.mjs';
-import { ParseScript } from './parse.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
 import { CyclicModuleRecord } from './modules.mjs';
@@ -235,15 +232,6 @@ export function ScriptEvaluation(scriptRecord) {
   // Resume(surroundingAgent.runningExecutionContext);
 
   return result;
-}
-
-export function evaluateScript(sourceText, realm, hostDefined) {
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    return ThrowCompletion(s[0]);
-  }
-
-  return EnsureCompletion(ScriptEvaluation(s));
 }
 
 // #sec-hostenqueuepromisejob
