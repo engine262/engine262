@@ -600,7 +600,7 @@ function BigIntBitwiseOp(op, x, y) {
   }
 }
 
-export class StringValue extends PrimitiveValue {
+class StringValue extends PrimitiveValue {
   constructor(string) {
     super();
     this.string = string;
@@ -610,6 +610,8 @@ export class StringValue extends PrimitiveValue {
     return this.string;
   }
 }
+// rename for static semantics StringValue() conflict
+export { StringValue as JSStringValue };
 
 export class SymbolValue extends PrimitiveValue {
   constructor(Description) {

@@ -640,7 +640,7 @@ export class Lexer {
         this.position += 1;
         break;
       }
-      if (isLineTerminator(c)) {
+      if (c === '\r' || c === '\n') {
         this.report('UnterminatedString', this.position);
       }
       this.position += 1;

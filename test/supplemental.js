@@ -3,11 +3,13 @@
 require('@snek/source-map-support/register');
 const assert = require('assert');
 const {
-  Abstract,
   Agent,
-  Realm,
+  setSurroundingAgent,
+  ManagedRealm,
   Value,
   FEATURES,
+  Get,
+  CreateDataProperty,
 } = require('..');
 const { total, pass, fail } = require('./base');
 
@@ -16,26 +18,26 @@ const { total, pass, fail } = require('./base');
 [
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
     assert.strictEqual(result.Value, Value.undefined);
   },
   () => {
     const agent = new Agent({
       onDebugger() {
-        return new Value(realm, 42);
+        return new Value(42);
       },
     });
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
     assert.strictEqual(result.Value.numberValue(), 42);
   },
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       function x() { throw new Error('owo'); }
       function y() { x(); }
@@ -53,8 +55,8 @@ Error: owo
   },
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       async function x() { await 1; throw new Error('owo'); }
       async function y() { await x(); }
@@ -67,8 +69,8 @@ Error: owo
   },
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       function x() { Reflect.get(); }
       try {
@@ -85,8 +87,8 @@ TypeError: undefined is not an object
   },
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       function Y() { throw new Error('owo'); }
       function x() { new Y(); }
@@ -104,8 +106,8 @@ Error: owo
   },
   () => {
     const agent = new Agent();
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       let e;
       new Promise(() => {
@@ -123,8 +125,8 @@ Error: owo
     const agent = new Agent({
       features: ['WeakRefs'],
     });
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
       const w = new WeakRef({});
       Promise.resolve()
@@ -146,8 +148,8 @@ Error: owo
     const agent = new Agent({
       features: ['WeakRefs'],
     });
-    agent.enter();
-    const realm = new Realm();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
     const module = realm.createSourceTextModule('test.js', `
       const w = new WeakRef({});
       globalThis.result = Promise.resolve()
@@ -165,32 +167,34 @@ Error: owo
     `);
     module.Link();
     module.Evaluate();
-    const result = Abstract.Get(realm.global, new Value(realm, 'result'));
+    const result = Get(realm.GlobalObject, new Value('result'));
     assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
   },
   () => {
     const agent = new Agent({
       features: FEATURES.map((f) => f.name),
     });
-    agent.enter();
-    const realm = new Realm();
-    Abstract.CreateDataProperty(
-      realm.global,
-      new Value(realm, 'spec'),
-      new Value(realm, ([v]) => {
-        if (v && v.nativeFunction && v.nativeFunction.section) {
-          return new Value(realm, v.nativeFunction.section);
-        }
-        return Value.undefined;
-      }),
-    );
-    Abstract.CreateDataProperty(
-      realm.global,
-      new Value(realm, 'fail'),
-      new Value(realm, ([path]) => {
-        throw new Error(`${path.stringValue()} did not have a section`);
-      }),
-    );
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
+    realm.scope(() => {
+      CreateDataProperty(
+        realm.GlobalObject,
+        new Value('spec'),
+        new Value(([v]) => {
+          if (v && v.nativeFunction && v.nativeFunction.section) {
+            return new Value(v.nativeFunction.section);
+          }
+          return Value.undefined;
+        }),
+      );
+      CreateDataProperty(
+        realm.GlobalObject,
+        new Value('fail'),
+        new Value(([path]) => {
+          throw new Error(`${path.stringValue()} did not have a section`);
+        }),
+      );
+    });
     const result = realm.evaluateScript(`
 'use strict';
 

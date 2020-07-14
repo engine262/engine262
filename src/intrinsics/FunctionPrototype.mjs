@@ -115,45 +115,68 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
+// #sec-function.prototype.bind
 function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
+  // 1. Let Target be the this value.
   const Target = thisValue;
+  // 2. If IsCallable(Target) is false, throw a TypeError exception.
   if (IsCallable(Target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', Target);
   }
-  // Let args be a new (possibly empty) List consisting of all
-  // of the argument values provided after thisArg in order.
+  // 3. Let args be a new (possibly empty) List consisting of all of the argument values provided after thisArg in order.
+  // 4. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
+  // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
   const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
+  // 6. If targetHasLength is true, then
   let L;
   if (targetHasLength === Value.true) {
+    // a. Let targetLen be ? Get(Target, "length").
     let targetLen = Q(Get(Target, new Value('length')));
+    // b. If Type(targetLen) is not Number, let L be 0.
     if (Type(targetLen) !== 'Number') {
       L = 0;
-    } else {
+    } else { // c. Else,
+      // i. Set targetLen to ! ToInteger(targetLen).
       targetLen = Q(ToInteger(targetLen)).numberValue();
+      // ii. Let L be the larger of 0 and the result of targetLen minus the number of elements of args.
       L = Math.max(0, targetLen - args.length);
     }
   } else {
+    // 7. ELse, let L be 0.
     L = 0;
   }
+  // 8. Perform ! SetFunctionLength(F, L).
   X(SetFunctionLength(F, new Value(L)));
+  // 9. Let targetName be ? Get(Target, "name").
   let targetName = Q(Get(Target, new Value('name')));
+  // 10. If Type(targetName) is not String, set targetName to the empty String.
   if (Type(targetName) !== 'String') {
     targetName = new Value('');
   }
+  // 11. Perform SetFunctionName(F, targetName, "bound").
   SetFunctionName(F, targetName, new Value('bound'));
+  // 12. Return F.
   return F;
 }
 
-function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue: func }) {
+// #sec-function.prototype.call
+function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue }) {
+  // 1. Let func be the this value.
+  const func = thisValue;
+  // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
+  // 3. Let argList be a new empty List.
   const argList = [];
+  // 4. If this method was called with more than one argument, then in left to right order, starting with the second argument, append each argument as the last element of argList.
   for (const arg of args) {
     argList.push(arg);
   }
+  // 5. Perform PrepareForTailCall().
   PrepareForTailCall();
+  // 6. Return ? Call(func, thisArg, argList).
   return Q(Call(func, thisArg, argList));
 }
 
@@ -191,8 +214,11 @@ function FunctionProto_toString(args, { thisValue: func }) {
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 
+// #sec-function.prototype-@@hasinstance
 function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
+  // 1. Let F be this value.
   const F = thisValue;
+  // 2. Return ? OrdinaryHasInstance(F, V).
   return Q(OrdinaryHasInstance(F, V));
 }
 

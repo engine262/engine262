@@ -28,6 +28,9 @@ export * from './value.mjs';
 export * from './engine.mjs';
 export * from './completion.mjs';
 export * from './abstract-ops/all.mjs';
+export * from './static-semantics/all.mjs';
+export * from './runtime-semantics/all.mjs';
+export * from './environment.mjs';
 export * from './parse.mjs';
 export * from './inspect.mjs';
 
@@ -249,7 +252,7 @@ export class ManagedRealm extends Realm {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
-    const module = this.scope(() => ParseModule(sourceText, this.realm, {
+    const module = this.scope(() => ParseModule(sourceText, this, {
       specifier,
       public: {
         specifier,

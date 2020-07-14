@@ -4,7 +4,7 @@ import {
   NullValue,
   NumberValue,
   ObjectValue,
-  StringValue,
+  JSStringValue,
   Type,
   Value,
 } from '../value.mjs';
@@ -272,7 +272,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
-  Assert(unfiltered instanceof StringValue
+  Assert(unfiltered instanceof JSStringValue
          || unfiltered instanceof NumberValue
          || unfiltered instanceof BooleanValue
          || unfiltered instanceof NullValue

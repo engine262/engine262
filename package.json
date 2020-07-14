@@ -10,13 +10,13 @@
   },
   "main": "dist/engine262",
   "scripts": {
-    "test:test262": "node test/test262/test262.js",
-    "test:supplemental": "node test/supplemental.js",
-    "test:json": "node test/json/json.js",
     "build:engine": "rollup -c",
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
     "build": "npm run build:engine",
-    "test": "npm run test:test262 && npm run test:supplemental",
+    "test": "npm run test:test262 && npm run test:supplemental && npm run test:json",
+    "test:test262": "node test/test262/test262.js",
+    "test:supplemental": "node test/supplemental.js",
+    "test:json": "node test/json/json.js",
     "coverage": "nyc --reporter=lcov bash test/coverage_root.sh",
     "prepublishOnly": "node scripts/tag_version_with_git_hash.js",
     "postpublish": "git reset --hard HEAD"

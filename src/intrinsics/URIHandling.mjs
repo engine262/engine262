@@ -300,6 +300,7 @@ function encodeURI([uri = Value.undefined]) {
   return Q(Encode(uriString, unescapedURISet));
 }
 
+// #sec-encodeuricomponent-uricomponent
 function encodeURIComponent([uriComponent = Value.undefined]) {
   // 1. Let componentString be ? ToString(uriComponent).
   const componentString = Q(ToString(uriComponent));

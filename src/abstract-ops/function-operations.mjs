@@ -52,7 +52,7 @@ export function isFunctionObject(O) {
 }
 
 // #sec-prepareforordinarycall
-function PrepareForOrdinaryCall(F, newTarget) {
+export function PrepareForOrdinaryCall(F, newTarget) {
   // 1. Assert: Type(newTarget) is Undefined or Object.
   Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
   // 2. Let callerContext be the running execution context.
@@ -82,7 +82,7 @@ function PrepareForOrdinaryCall(F, newTarget) {
 }
 
 // #sec-ordinarycallbindthis
-function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   // 1. Let thisMode be F.[[ThisMode]].
   const thisMode = F.ThisMode;
   // 2. If thisMode is lexical, return NormalCompletion(undefined).

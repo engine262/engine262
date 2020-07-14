@@ -302,7 +302,7 @@ if (!process.send) {
           process.exit(1);
         })
         .then((r) => {
-          process.send({ description, ...r });
+          process.send({ description, ...r }, () => 0);
         });
     }
   });

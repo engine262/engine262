@@ -2,17 +2,23 @@ import {
   OrdinaryCreateFromConstructor,
   ToBoolean,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Value } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// #sec-boolean-constructor-boolean-value
 function BooleanConstructor([value = Value.undefined], { NewTarget }) {
-  const b = ToBoolean(value);
-  if (Type(NewTarget) === 'Undefined') {
+  // 1. Let b be ! ToBoolean(value).
+  const b = X(ToBoolean(value));
+  // 2. If NewTarget is undefined, return b.
+  if (NewTarget === Value.undefined) {
     return b;
   }
+  // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
   const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']));
+  // 4. Set O.[[BooleanData]] to b.
   O.BooleanData = b;
+  // 5. Return O.
   return O;
 }
 
