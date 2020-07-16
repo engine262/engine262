@@ -194,11 +194,11 @@ function Decode(string, reservedSet) {
       // vi. If the most significant bit in B is 0, then
       if ((B & 0b10000000) === 0) {
         // 1. Let C be the code unit whose value is B.
-        const C = String.fromCharCode(B);
+        const innerC = String.fromCharCode(B);
         // 2. If C is not in reservedSet, then
         if (!reservedSet.includes(C)) {
           // a. Let S be the String value containing only the code unit C.
-          S = C;
+          S = innerC;
         } else { // 3. Else,
           // a. Let S be the substring of string from index start to index k inclusive.
           S = string.slice(start, k + 1);
@@ -241,15 +241,15 @@ function Decode(string, reservedSet) {
             return surroundingAgent.Throw('URIError', 'URIMalformed');
           }
           // d. Let B be the 8-bit value represented by the two hexadecimal digits at index (k + 1) and (k + 2).
-          const B = Number.parseInt(string.slice(k + 1, k + 3), 16);
+          const innerB = Number.parseInt(string.slice(k + 1, k + 3), 16);
           // e. If the two most significant bits in B are not 10, throw a URIError exception.
-          if (B >> 6 !== 0b10) {
+          if (innerB >> 6 !== 0b10) {
             return surroundingAgent.Throw('URIError', 'URIMalformed');
           }
           // f. Set k to k + 2.
           k += 2;
           // g. Set Octets[j] to B.
-          Octets[j] = B;
+          Octets[j] = innerB;
           // h. Set j to j + 1.
           j += 1;
         }

@@ -91,6 +91,11 @@ if (!process.send) {
 
   let workerIndex = 0;
   stream.on('data', (test) => {
+    if (test.attrs.flags.module && test.scenario !== 'default') {
+      // test262-stream duplicates module tests, deduplicate here
+      return;
+    }
+
     total();
 
     if (/annexB|intl402/.test(test.file)

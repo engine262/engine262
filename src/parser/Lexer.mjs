@@ -12,7 +12,7 @@ export const isIdentifierContinue = (c) => c && isIdentifierContinueRegex.test(c
 const isDecimalDigit = (c) => c && /\d/u.test(c);
 export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
 const isOctalDigit = (c) => c && /[0-7]/u.test(c);
-const isBinaryDigit = (c) => c === '0' || c === '1';
+const isBinaryDigit = (c) => (c === '0' || c === '1');
 const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
@@ -506,7 +506,8 @@ export class Lexer {
         case Token.PERIOD:
           // . ... NUMBER
           if (isDecimalDigit(c1)) {
-            return this.scanNumber(true);
+            this.position -= 1;
+            return this.scanNumber();
           }
           if (c1 === '.') {
             if (this.source[this.position + 1] === '.') {
@@ -520,7 +521,8 @@ export class Lexer {
           return this.scanString(c);
 
         case Token.NUMBER:
-          return this.scanNumber(false);
+          this.position -= 1;
+          return this.scanNumber();
 
         case Token.IDENTIFIER:
           this.position -= 1;
@@ -540,89 +542,82 @@ export class Lexer {
     return this.unexpected(c);
   }
 
-  scanNumber(decimal) {
-    let afterDecimal = decimal;
-    let buffer = this.source[this.position - 1];
+  scanNumber() {
+    const start = this.position;
     let base = 10;
-    let first = true;
-    let bigint = false;
+    let check = isDecimalDigit;
+    if (this.source[this.position] === '0') {
+      this.scannedValue = 0;
+      this.position += 1;
+      switch (this.source[this.position]) {
+        case 'x':
+        case 'X':
+          base = 16;
+          break;
+        case 'o':
+        case 'O':
+          base = 8;
+          break;
+        case 'b':
+        case 'B':
+          base = 2;
+          break;
+        case '.':
+        case 'e':
+        case 'E':
+          break;
+        case 'n':
+          this.position += 1;
+          this.scannedValue = 0n;
+          return Token.BIGINT;
+        default:
+          return Token.NUMBER;
+      }
+      check = {
+        16: isHexDigit,
+        10: isDecimalDigit,
+        8: isOctalDigit,
+        2: isBinaryDigit,
+      }[base];
+      if (base !== 10) {
+        if (!check(this.source[this.position + 1])) {
+          return Token.NUMBER;
+        }
+        this.position += 1;
+      }
+    }
     while (this.position < this.source.length) {
       const c = this.source[this.position];
-      if (first) {
-        first = false;
-        if (c === 'x' || c === 'X') {
-          this.position += 1;
-          base = 16;
-          continue;
-        } else if (c === 'o' || c === 'O') {
-          this.position += 1;
-          base = 8;
-          continue;
-        } else if (c === 'b' || c === 'B') {
-          this.position += 1;
-          base = 2;
-          continue;
-        }
+      if (!check(c)) {
+        break;
       }
-      if (!afterDecimal && c === 'n') {
-        this.position += 1;
-        bigint = true;
-      }
-      const single = SingleCharTokens[c];
-      if (base === 10 && single === Token.PERIOD) {
-        if (afterDecimal) {
-          break;
-        } else {
-          afterDecimal = true;
-          this.position += 1;
-          buffer += c;
-        }
-        continue;
-      }
-      if (single === Token.NUMBER) {
-        if (base === 2 && !isBinaryDigit(c)) {
-          this.report('InvalidBinaryLiteral', this.position);
-        } else if (base === 8 && !isOctalDigit(c)) {
-          this.report('InvalidOctalLiteral', this.position);
-        }
-        this.position += 1;
-        buffer += c;
-        continue;
-      }
-      if (base === 16 && isHexDigit(c)) {
-        this.position += 1;
-        buffer += c;
-        continue;
-      }
-      break;
+      this.position += 1;
     }
-    if (bigint) {
+    if (this.source[this.position] === 'n') {
+      const buffer = this.source.slice(start, this.position);
+      this.position += 1;
       this.scannedValue = BigInt(buffer);
       return Token.BIGINT;
-    } else {
-      let c = this.source[this.position];
-      if (c === 'e' || c === 'E') {
-        this.position += 1;
-        buffer += c;
-        c = this.source[this.position];
-        if (c === '+' || c === '-') {
-          this.position += 1;
-          buffer += c;
-          c = this.source[this.position];
-        }
-        if (!isDecimalDigit(c)) {
-          this.report('UnterminatedNumber', this.position);
-        }
-        while (true) {
-          c = this.source[this.position];
-          if (!isDecimalDigit(c)) {
-            break;
-          }
-          this.position += 1;
-          buffer += c;
-        }
-      }
     }
+    if (base === 10 && this.source[this.position] === '.') {
+      do {
+        this.position += 1;
+      } while (isDecimalDigit(this.source[this.position]));
+    }
+    const c = this.source[this.position];
+    if (base === 10 && (c === 'E' || c === 'e')) {
+      const p = this.source[this.position + 1];
+      if (p === '-' || p === '+') {
+        this.position += 1;
+      }
+      do {
+        this.position += 1;
+      } while (isDecimalDigit(this.source[this.position]));
+    }
+    if (isIdentifierStart(this.source[this.position])) {
+      this.unexpected(this.position);
+    }
+    const buffer = this.source.slice(base === 10 ? start : start + 2, this.position);
     this.scannedValue = base === 10
       ? Number.parseFloat(buffer, base)
       : Number.parseInt(buffer, base);

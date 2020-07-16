@@ -132,7 +132,9 @@ export class FunctionParser extends IdentifierParser {
     }
     const asyncBody = this.startNode();
     const exprBody = this.startNode();
-    exprBody.AssignmentExpression = this.parseAssignmentExpression();
+    this.scope({ await: isAsync }, () => {
+      exprBody.AssignmentExpression = this.parseAssignmentExpression();
+    });
     asyncBody.ExpressionBody = this.finishNode(exprBody, 'ExpressionBody');
     return this.finishNode(asyncBody, `${isAsync ? 'Async' : ''}ConciseBody`);
   }

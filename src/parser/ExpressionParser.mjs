@@ -372,43 +372,53 @@ export class ExpressionParser extends FunctionParser {
   // LeftHandSideExpression
   parseLeftHandSideExpression(allowCalls = true) {
     let result;
-    if (this.test(Token.NEW)) {
-      result = this.parseNewExpression();
-    } else if (this.test(Token.SUPER)) {
-      const node = this.startNode();
-      this.next();
-      if (this.test(Token.LPAREN) && this.isSuperCallScope()) {
-        node.Arguments = this.parseArguments();
-        result = this.finishNode(node, 'SuperCall');
-      } else {
-        if (!this.isSuperPropertyScope()) {
-          this.unexpected();
-        }
-        if (this.eat(Token.LBRACK)) {
-          node.Expression = this.parseExpression();
-          this.expect(Token.RBRACK);
-          node.IdentifierName = null;
+    switch (this.peek().type) {
+      case Token.NEW:
+        result = this.parseNewExpression();
+        break;
+      case Token.SUPER: {
+        const node = this.startNode();
+        this.next();
+        if (this.test(Token.LPAREN) && this.isSuperCallScope()) {
+          node.Arguments = this.parseArguments();
+          result = this.finishNode(node, 'SuperCall');
         } else {
-          this.expect(Token.PERIOD);
-          node.Expression = null;
-          node.IdentifierName = this.parseIdentifierName();
+          if (!this.isSuperPropertyScope()) {
+            this.unexpected();
+          }
+          if (this.eat(Token.LBRACK)) {
+            node.Expression = this.parseExpression();
+            this.expect(Token.RBRACK);
+            node.IdentifierName = null;
+          } else {
+            this.expect(Token.PERIOD);
+            node.Expression = null;
+            node.IdentifierName = this.parseIdentifierName();
+          }
+          result = this.finishNode(node, 'SuperProperty');
         }
-        result = this.finishNode(node, 'SuperProperty');
+        break;
       }
-    } else if (this.test(Token.IMPORT)) {
-      const node = this.startNode();
-      this.next();
-      if (this.isImportMetaScope() && this.eat(Token.PERIOD)) {
-        this.expect('meta');
-        result = this.finishNode(node, 'ImportMeta');
-      } else {
-        this.expect(Token.LPAREN);
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        result = this.finishNode(node, 'ImportCall');
+      case Token.IMPORT: {
+        const node = this.startNode();
+        this.next();
+        if (this.isImportMetaScope() && this.eat(Token.PERIOD)) {
+          this.expect('meta');
+          result = this.finishNode(node, 'ImportMeta');
+        } else {
+          if (!allowCalls) {
+            this.unexpected();
+          }
+          this.expect(Token.LPAREN);
+          node.AssignmentExpression = this.parseAssignmentExpression();
+          this.expect(Token.RPAREN);
+          result = this.finishNode(node, 'ImportCall');
+        }
+        break;
       }
-    } else {
-      result = this.parsePrimaryExpression();
+      default:
+        result = this.parsePrimaryExpression();
+        break;
     }
 
     const check = allowCalls ? isPropertyOrCall : isMember;

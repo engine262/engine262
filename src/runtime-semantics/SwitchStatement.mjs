@@ -158,14 +158,14 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       // 15. For each CaseClause C in B, do
       for (const C of B) {
         // a. Let R be the result of evaluating CaseClause C.
-        const R = EnsureCompletion(yield* Evaluate(C));
+        const innerR = EnsureCompletion(yield* Evaluate(C));
         // b. If R.[[Value]] is not empty, set V to R.[[Value]].
-        if (R.Value !== undefined) {
-          V = R.Value;
+        if (innerR.Value !== undefined) {
+          V = innerR.Value;
         }
         // c. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-        if (R instanceof AbruptCompletion) {
-          return Completion(UpdateEmpty(R, V));
+        if (innerR instanceof AbruptCompletion) {
+          return Completion(UpdateEmpty(innerR, V));
         }
       }
       // 16. Return NormalCompletion(V).
