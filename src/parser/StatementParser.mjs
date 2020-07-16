@@ -412,7 +412,9 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    node.CaseBlock = this.parseCaseBlock();
+    this.scope({ lexical: true }, () => {
+      node.CaseBlock = this.parseCaseBlock();
+    });
     return this.finishNode(node, 'SwitchStatement');
   }
 
@@ -429,43 +431,44 @@ export class StatementParser extends ExpressionParser {
   parseCaseBlock() {
     const node = this.startNode();
     this.expect(Token.LBRACE);
-    node.CaseClauses_a = null;
-    node.DefaultClause = null;
-    node.CaseClauses_b = null;
     while (!this.eat(Token.RBRACE)) {
-      const inner = this.startNode();
-      inner.StatementList = null;
-      if (this.eat(Token.CASE)) {
-        let selected;
-        if (node.DefaultClause !== null) {
-          if (node.CaseClauses_b === null) {
-            node.CaseClauses_b = [];
+      switch (this.peek().type) {
+        case Token.CASE:
+        case Token.DEFAULT: {
+          const inner = this.startNode();
+          const t = this.next().type;
+          if (t === Token.DEFAULT && node.DefaultClause) {
+            this.unexpected();
           }
-          selected = node.CaseClauses_b;
-        } else {
-          if (node.CaseClauses_a === null) {
-            node.CaseClauses_a = [];
+          if (t === Token.CASE) {
+            inner.Expression = this.parseExpression();
           }
-          selected = node.CaseClauses_a;
+          this.expect(Token.COLON);
+          while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
+            if (!inner.StatementList) {
+              inner.StatementList = [];
+            }
+            inner.StatementList.push(this.parseStatementListItem());
+          }
+          if (t === Token.DEFAULT) {
+            node.DefaultClause = this.finishNode(inner, 'DefaultClause');
+          } else {
+            if (node.DefaultClause) {
+              if (!node.CaseClauses_b) {
+                node.CaseClauses_b = [];
+              }
+              node.CaseClauses_b.push(this.finishNode(inner, 'CaseClause'));
+            } else {
+              if (!node.CaseClauses_a) {
+                node.CaseClauses_a = [];
+              }
+              node.CaseClauses_a.push(this.finishNode(inner, 'CaseClause'));
+            }
+          }
+          break;
         }
-        inner.Expression = this.parseExpression();
-        this.expect(Token.COLON);
-        while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
-          if (inner.StatementList === null) {
-            inner.StatementList = [];
-          }
-          inner.StatementList.push(this.parseStatementListItem());
-        }
-        selected.push(this.finishNode(inner, 'CaseClause'));
-      } else if (node.DefaultClause === null && this.eat(Token.DEFAULT)) {
-        this.expect(Token.COLON);
-        while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
-          if (inner.StatementList === null) {
-            inner.StatementList = [];
-          }
-          inner.StatementList.push(this.parseStatementListItem());
-        }
-        node.DefaultClause = this.finishNode(inner, 'DefaultClause');
+        default:
+          this.unexpected();
       }
     }
     return this.finishNode(node, 'CaseBlock');

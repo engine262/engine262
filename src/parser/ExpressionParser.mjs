@@ -634,8 +634,14 @@ export class ExpressionParser extends FunctionParser {
       if (this.eat(Token.RBRACK)) {
         break;
       }
-      const AssignmentExpression = this.parseAssignmentExpression();
-      node.ElementList.push(AssignmentExpression);
+      if (this.test(Token.ELLIPSIS)) {
+        const spread = this.startNode();
+        this.next();
+        spread.AssignmentExpression = this.parseAssignmentExpression();
+        node.ElementList.push(this.finishNode(spread, 'SpreadElement'));
+      } else {
+        node.ElementList.push(this.parseAssignmentExpression());
+      }
       if (this.eat(Token.RBRACK)) {
         break;
       }

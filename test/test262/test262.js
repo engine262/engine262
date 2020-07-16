@@ -51,7 +51,8 @@ if (!process.send) {
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
-    c.on('message', ({ description, status, error }) => {
+    c.on('message', (message) => {
+      const { description, status, error } = message;
       switch (status) {
         case 'PASS':
           pass();
@@ -63,7 +64,7 @@ if (!process.send) {
           skip();
           break;
         default:
-          throw new RangeError(status);
+          throw new RangeError(JSON.stringify(message));
       }
     });
     c.on('exit', (code) => {
@@ -271,6 +272,9 @@ if (!process.send) {
       }
 
       if (test.attrs.flags.async) {
+        if (!asyncResult) {
+          throw new Error('missing async result');
+        }
         return asyncResult;
       }
 
@@ -289,6 +293,11 @@ if (!process.send) {
   };
 
   let p = Promise.resolve();
+  const handleSendError = (e) => {
+    if (e) {
+      process.exit(1);
+    }
+  };
   process.on('message', (test) => {
     if (test === 'DONE') {
       p.then(() => process.exit(0));
@@ -297,12 +306,11 @@ if (!process.send) {
       const description = `${test.file}\n${test.attrs.description}`;
       p = p
         .then(() => run(test))
-        .catch((e) => {
-          process.send({ description, status: 'FAIL', error: util.inspect(e) });
-          process.exit(1);
-        })
         .then((r) => {
-          process.send({ description, ...r }, () => 0);
+          process.send({ description, ...r }, handleSendError);
+        })
+        .catch((e) => {
+          process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
         });
     }
   });
