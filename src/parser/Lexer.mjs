@@ -1,6 +1,7 @@
 import isIdentifierStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex';
 import isIdentifierContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
 import isSpaceSeparatorRegex from 'unicode-13.0.0/General_Category/Space_Separator/regex';
+import { surroundingAgent } from '../engine.mjs';
 import {
   RawTokens,
   Token, KeywordLookup, TokenNames,
@@ -543,6 +544,7 @@ export class Lexer {
   }
 
   scanNumber() {
+    const separators = surroundingAgent.feature('NumericSeparators');
     const start = this.position;
     let base = 10;
     let check = isDecimalDigit;
@@ -588,36 +590,67 @@ export class Lexer {
     }
     while (this.position < this.source.length) {
       const c = this.source[this.position];
-      if (!check(c)) {
+      if (check(c) || (separators && c === '_')) {
+        this.position += 1;
+        if (separators && c === '_') {
+          if (!check(this.source[this.position])) {
+            this.unexpected(this.position);
+          }
+        }
+      } else {
         break;
       }
-      this.position += 1;
     }
     if (this.source[this.position] === 'n') {
-      const buffer = this.source.slice(start, this.position);
+      const buffer = this.source.slice(start, this.position).replace(/_/g, '');
       this.position += 1;
       this.scannedValue = BigInt(buffer);
       return Token.BIGINT;
     }
     if (base === 10 && this.source[this.position] === '.') {
-      do {
-        this.position += 1;
-      } while (isDecimalDigit(this.source[this.position]));
+      this.position += 1;
+      if (separators && this.source[this.position] === '_') {
+        this.unexpected(this.position);
+      }
+      while (this.position < this.source.length) {
+        const c = this.source[this.position];
+        if (isDecimalDigit(c) || (separators && c === '_')) {
+          this.position += 1;
+          if (separators && c === '_') {
+            if (!isDecimalDigit(this.source[this.position])) {
+              this.unexpected(this.position);
+            }
+          }
+        } else {
+          break;
+        }
+      }
     }
-    const c = this.source[this.position];
-    if (base === 10 && (c === 'E' || c === 'e')) {
-      const p = this.source[this.position + 1];
-      if (p === '-' || p === '+') {
+    if (base === 10 && (this.source[this.position] === 'E' || this.source[this.position] === 'e')) {
+      this.position += 1;
+      if (this.source[this.position] === '-' || this.source[this.position] === '+') {
         this.position += 1;
       }
-      do {
-        this.position += 1;
-      } while (isDecimalDigit(this.source[this.position]));
+      while (this.position < this.source.length) {
+        const c = this.source[this.position];
+        if (isDecimalDigit(c) || (separators && c === '_')) {
+          this.position += 1;
+          if (separators && c === '_') {
+            if (!isDecimalDigit(this.source[this.position])) {
+              this.unexpected(this.position);
+            }
+          }
+        } else {
+          break;
+        }
+      }
     }
     if (isIdentifierStart(this.source[this.position])) {
       this.unexpected(this.position);
     }
-    const buffer = this.source.slice(base === 10 ? start : start + 2, this.position);
+    const buffer = this.source
+      .slice(base === 10 ? start : start + 2, this.position)
+      .replace(/_/g, '');
     this.scannedValue = base === 10
       ? Number.parseFloat(buffer, base)
       : Number.parseInt(buffer, base);

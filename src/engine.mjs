@@ -47,6 +47,10 @@ export const FEATURES = Object.freeze([
     name: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
   },
+  {
+    name: 'NumericSeparators',
+    url: 'https://github.com/tc39/proposal-numeric-separator',
+  },
 ].map(Object.freeze));
 
 // #sec-agents

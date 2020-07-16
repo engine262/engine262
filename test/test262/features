@@ -21,8 +21,6 @@
 -class-static-fields-private
 -class-static-methods-private
 
--numeric-separator-literal
-
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = TopLevelAwait
 
@@ -42,3 +40,6 @@ regexp-match-indices = RegExpMatchIndices
 
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang
+
+# https://github.com/tc39/proposal-numeric-separator
+numeric-separator-literal = NumericSeparators
