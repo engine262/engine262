@@ -203,7 +203,7 @@ export function BootstrapReflect(realmRec) {
     ['preventExtensions', Reflect_preventExtensions, 1],
     ['set', Reflect_set, 3],
     ['setPrototypeOf', Reflect_setPrototypeOf, 2],
-  ], realmRec.Intrinsics['%Object.prototype%']);
+  ], realmRec.Intrinsics['%Object.prototype%'], 'Reflect');
 
   realmRec.Intrinsics['%Reflect%'] = reflect;
 }
