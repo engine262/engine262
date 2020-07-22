@@ -34,7 +34,7 @@ export class ExpressionParser extends FunctionParser {
   //   AsyncArrowFunction
   //   LeftHandSideExpression `=` AssignmentExpression
   //   LeftHandSideExpression AssignmentOperator AssignmentExpression
-  //   [*LogicalAssignment] LeftHandSideExpression LogicalAssignmentOperator AssignmentExpression
+  //   LeftHandSideExpression LogicalAssignmentOperator AssignmentExpression
   //
   // AssignmentOperator : one of
   //   *= /= %= += -= <<= >>= >>>= &= ^= |= **=
@@ -64,7 +64,8 @@ export class ExpressionParser extends FunctionParser {
       case Token.ASSIGN_AND:
       case Token.ASSIGN_OR:
       case Token.ASSIGN_NULLISH:
-        node.LeftHandSideExpression = this.validateAssignmentTarget(left);
+        this.validateAssignmentTarget(left);
+        node.LeftHandSideExpression = left;
         node.AssignmentOperator = this.next().value;
         node.AssignmentExpression = this.parseAssignmentExpression();
         return this.finishNode(node, 'AssignmentExpression');
@@ -84,33 +85,27 @@ export class ExpressionParser extends FunctionParser {
             break;
           }
         }
-        return node;
+        return;
       case 'CoverInitializedName':
-        node.type = 'BindingElement';
-        return node;
+        return;
       case 'MemberExpression':
-        return node;
+        return;
       case 'ParenthesizedExpression':
-        return this.validateAssignmentTarget(node.Expression);
+        this.validateAssignmentTarget(node.Expression);
+        return;
       case 'ArrayLiteral':
-        node.BindingElementList = node.ElementList.map((p) => this.validateAssignmentTarget(p));
-        delete node.ElementList;
-        node.type = 'ArrayBindingPattern';
-        return node;
+        node.ElementList.forEach((p) => this.validateAssignmentTarget(p));
+        return;
       case 'ObjectLiteral':
-        node.BindingPropertyList = node.PropertyDefinitionList.map((p) => this.validateAssignmentTarget(p));
-        delete node.PropertyDefinitionList;
-        node.type = 'ObjectBindingPattern';
-        return node;
+        node.PropertyDefinitionList.forEach((p) => this.validateAssignmentTarget(p));
+        return;
       case 'PropertyDefinition':
-        node.BindingElement = this.validateAssignmentTarget(node.AssignmentExpression);
-        delete node.AssignmentExpression;
-        node.type = 'BindingProperty';
-        return node;
+        this.validateAssignmentTarget(node.AssignmentExpression);
+        return;
       default:
         break;
     }
-    return this.report('InvalidAssignmentTarget', node);
+    this.report('InvalidAssignmentTarget', node);
   }
 
   // YieldExpression :
@@ -927,28 +922,6 @@ export class ExpressionParser extends FunctionParser {
     return this.finishNode(node, 'ParenthesizedExpression');
   }
 
-  // BindingElement :
-  //   SingleNameBinding
-  //   BindingPattern Initializer?
-  // SingleNameBinding :
-  //   BindingIdentifier Initializer?
-  parseBindingElement() {
-    const node = this.startNode();
-    if (this.test(Token.LBRACE)) {
-      node.BindingPattern = this.validateAssignmentTarget(this.parseObjectLiteral());
-    } else if (this.test(Token.LBRACK)) {
-      node.BindingPattern = this.validateAssignmentTarget(this.parseArrayLiteral());
-    } else {
-      node.BindingIdentifier = this.parseBindingIdentifier();
-    }
-    if (this.test(Token.ASSIGN)) {
-      node.Initializer = this.parseInitializer();
-    } else {
-      node.Initializer = null;
-    }
-    return this.finishNode(node, node.BindingPattern ? 'BindingElement' : 'SingleNameBinding');
-  }
-
   // PropertyName :
   //   LiteralPropertyName
   //   ComputedPropertyName
@@ -1035,8 +1008,8 @@ export class ExpressionParser extends FunctionParser {
         return this.finishNode(node, 'PropertyDefinition');
       }
       if (this.test(Token.ASSIGN)) {
-        node.BindingIdentifier = firstName;
-        node.Initializer = this.parseInitializer();
+        node.IdentifierReference = firstName;
+        node.Initializer = this.parseInitializerOpt();
         return this.finishNode(node, 'CoverInitializedName');
       }
 

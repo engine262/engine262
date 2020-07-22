@@ -63,7 +63,7 @@ export function* BindingInitialization(node, value, environment) {
       // 1. Let iteratorRecord be ? GetIterator(value).
       const iteratorRecord = Q(GetIterator(value));
       // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
-      const result = IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
+      const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
       // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
       if (iteratorRecord.Done === Value.true) {
         return Q(IteratorClose(iteratorRecord, result));

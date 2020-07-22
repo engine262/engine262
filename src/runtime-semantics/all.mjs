@@ -94,3 +94,4 @@ export * from './ImportMeta.mjs';
 export * from './DebuggerStatement.mjs';
 export * from './PropertyBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
+export * from './DestructuringAssignmentEvaluation.mjs';

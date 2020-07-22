@@ -28,13 +28,6 @@ top-level-await = TopLevelAwait
 WeakRef = WeakRefs
 FinalizationRegistry = WeakRefs
 
-# https://github.com/tc39/proposal-logical-assignment
-logical-assignment-operators = LogicalAssignment
-
-# https://github.com/tc39/proposal-promise-any
-Promise.any = Promise.any
-AggregateError = Promise.any
-
 # https://github.com/tc39/proposal-regexp-match-Indices
 regexp-match-indices = RegExpMatchIndices
 

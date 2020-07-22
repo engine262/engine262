@@ -161,6 +161,8 @@ export function CreateIntrinsics(realmRec) {
   BootstrapErrorPrototype(realmRec);
   BootstrapError(realmRec);
   BootstrapNativeError(realmRec);
+  BootstrapAggregateErrorPrototype(realmRec);
+  BootstrapAggregateError(realmRec);
 
   BootstrapFunction(realmRec);
 
@@ -243,11 +245,6 @@ export function CreateIntrinsics(realmRec) {
   BootstrapWeakSetPrototype(realmRec);
   BootstrapWeakSet(realmRec);
 
-  if (surroundingAgent.feature('Promise.any')) {
-    BootstrapAggregateErrorPrototype(realmRec);
-    BootstrapAggregateError(realmRec);
-  }
-
   if (surroundingAgent.feature('WeakRefs')) {
     BootstrapWeakRefPrototype(realmRec);
     BootstrapWeakRef(realmRec);
@@ -314,6 +311,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'encodeURIComponent',
 
     // Constructor Properties of the Global Object
+    'AggregateError',
     'Array',
     'ArrayBuffer',
     'Boolean',
@@ -365,15 +363,6 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
-
-  if (surroundingAgent.feature('Promise.any')) {
-    Q(DefinePropertyOrThrow(global, new Value('AggregateError'), Descriptor({
-      Value: realmRec.Intrinsics['%AggregateError%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   if (surroundingAgent.feature('WeakRefs')) {
     Q(DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({

@@ -41,6 +41,8 @@ import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
   BindingInitialization,
+  DestructuringAssignmentEvaluation,
+  refineLeftHandSideExpression,
 } from './all.mjs';
 
 // #sec-loopcontinues
@@ -575,9 +577,11 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   // 4. Let destructuring be IsDestructuring of lhs.
   const destructuring = IsDestructuring(lhs);
   // 5. If destructuring is true and if lhsKind is assignment, then
+  let assignmentPattern;
   if (destructuring && lhsKind === 'assignment') {
     // a. Assert: lhs is a LeftHandSideExpression.
     // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
+    assignmentPattern = refineLeftHandSideExpression(lhs);
   }
   // 6. Repeat,
   while (true) {

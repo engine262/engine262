@@ -123,10 +123,118 @@ export class StatementParser extends ExpressionParser {
     return bindingList;
   }
 
+  // BindingElement :
+  //   SingleNameBinding
+  //   BindingPattern Initializer?
+  // SingleNameBinding :
+  //   BindingIdentifier Initializer?
+  parseBindingElement() {
+    const node = this.startNode();
+    if (this.test(Token.LBRACE) || this.test(Token.LBRACK)) {
+      node.BindingPattern = this.parseBindingPattern();
+    } else {
+      node.BindingIdentifier = this.parseBindingIdentifier();
+    }
+    node.Initializer = this.parseInitializerOpt();
+    return this.finishNode(node, node.BindingPattern ? 'BindingElement' : 'SingleNameBinding');
+  }
+
+  // BindingPattern:
+  //   ObjectBindingPattern
+  //   ArrayBindingPattern
+  parseBindingPattern() {
+    switch (this.peek().type) {
+      case Token.LBRACE:
+        return this.parseObjectBindingPattern();
+      case Token.LBRACK:
+        return this.parseArrayBindingPattern();
+      default:
+        return this.unexpected();
+    }
+  }
+
+  // ObjectBindingPattern :
+  //   `{` `}`
+  //   `{` BindingRestProperty `}`
+  //   `{` BindingPropertyList `}`
+  //   `{` BindingPropertyList `,` BindingRestProperty? `}`
+  parseObjectBindingPattern() {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+    node.BindingPropertyList = [];
+    while (!this.eat(Token.RBRACE)) {
+      if (this.test(Token.ELLIPSIS)) {
+        node.BindingRestProperty = this.startNode();
+        this.next();
+        node.BindingRestProperty.BindingIdentifier = this.parseBindingIdentifier();
+        this.finishNode(node.BindingRestProperty, 'BindingRestProperty');
+        this.expect(Token.RBRACE);
+        break;
+      } else {
+        node.BindingPropertyList.push(this.parseBindingProperty());
+        if (!this.eat(Token.COMMA)) {
+          this.expect(Token.RBRACE);
+          break;
+        }
+      }
+    }
+    return this.finishNode(node, 'ObjectBindingPattern');
+  }
+
+  // BindingProperty :
+  //   SingleNameBinding
+  //   PropertyName : BindingElement
+  parseBindingProperty() {
+    const node = this.startNode();
+    const name = this.parsePropertyName();
+    if (this.test(Token.COLON)) {
+      node.PropertyName = name;
+      node.BindingElement = this.parseBindingElement();
+      return this.finishNode(node, 'BindingProperty');
+    }
+    node.BindingIdentifier = name;
+    if (name.type === 'IdentifierName') {
+      name.type = 'BindingIdentifier';
+    } else {
+      this.unexpected(name);
+    }
+    node.Initializer = this.parseInitializerOpt();
+    return this.finishNode(node, 'SingleNameBinding');
+  }
+
+  // ArrayBindingPattern :
+  //   `[` Elision? BindingRestElement `]`
+  //   `[` BindingElementList `]`
+  //   `[` BindingElementList `,` Elision? BindingRestElement `]`
+  parseArrayBindingPattern() {
+    const node = this.startNode();
+    this.expect(Token.LBRACK);
+    node.BindingElementList = [];
+    while (!this.eat(Token.RBRACK)) {
+      if (this.test(Token.ELLIPSIS)) {
+        node.BindingRestElement = this.startNode();
+        this.next();
+        node.BindingPattern = this.parseBindingPattern();
+        this.finishNode(node.BindingRestElement, 'BindingRestElement');
+        this.expect(Token.RBRACK);
+        break;
+      } else {
+        node.BindingElementList.push(this.parseBindingElement());
+        if (!this.eat(Token.COMMA)) {
+          this.expect(Token.RBRACK);
+          break;
+        }
+      }
+    }
+    return this.finishNode(node, 'ArrayBindingPattern');
+  }
+
   // Initializer : `=` AssignmentExpression
-  parseInitializer() {
-    this.expect(Token.ASSIGN);
-    return this.parseAssignmentExpression();
+  parseInitializerOpt() {
+    if (this.eat(Token.ASSIGN)) {
+      return this.parseAssignmentExpression();
+    }
+    return null;
   }
 
   // FunctionDeclaration
@@ -207,11 +315,9 @@ export class StatementParser extends ExpressionParser {
   parseVariableDeclarationList() {
     const declarationList = [];
     do {
-      const node = this.startNode();
-      node.BindingIdentifier = this.parseBindingIdentifier();
-      this.declare(node.BindingIdentifier, 'variable');
-      node.Initializer = this.test(Token.ASSIGN) ? this.parseInitializer() : null;
-      declarationList.push(this.finishNode(node, 'VariableDeclaration'));
+      const node = this.parseBindingElement();
+      this.declare(node, 'variable');
+      declarationList.push(node);
     } while (this.eat(Token.COMMA));
     return declarationList;
   }
@@ -372,14 +478,16 @@ export class StatementParser extends ExpressionParser {
 
       const expression = this.scope({ in: false }, () => this.parseExpression());
       if (!isAwait && this.eat(Token.IN)) {
-        node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
+        this.validateAssignmentTarget(expression);
+        node.LeftHandSideExpression = expression;
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
       if (this.eat('of')) {
-        node.LeftHandSideExpression = this.validateAssignmentTarget(expression);
+        this.validateAssignmentTarget(expression);
+        node.LeftHandSideExpression = expression;
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();

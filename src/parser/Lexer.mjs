@@ -332,7 +332,7 @@ export class Lexer {
           }
           if (c1 === '?') {
             this.position += 1;
-            if (this.source[this.position] === '=' && this.feature('LogicalAssignment')) {
+            if (this.source[this.position] === '=') {
               this.position += 1;
               return Token.ASSIGN_NULLISH;
             }
@@ -468,7 +468,7 @@ export class Lexer {
           // & && &= &&=
           if (c1 === '&') {
             this.position += 1;
-            if (this.source[this.position] === '=' && this.feature('LogicalAssignment')) {
+            if (this.source[this.position] === '=') {
               this.position += 1;
               return Token.ASSIGN_AND;
             }
@@ -484,7 +484,7 @@ export class Lexer {
           // | || |=
           if (c1 === '|') {
             this.position += 1;
-            if (this.source[this.position] === '=' && this.feature('LogicalAssignment')) {
+            if (this.source[this.position] === '=') {
               this.position += 1;
               return Token.ASSIGN_OR;
             }

@@ -32,14 +32,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-weakrefs',
   },
   {
-    name: 'LogicalAssignment',
-    url: 'https://github.com/tc39/proposal-logical-assignment',
-  },
-  {
-    name: 'Promise.any',
-    url: 'https://github.com/tc39/proposal-promise-any',
-  },
-  {
     name: 'RegExpMatchIndices',
     url: 'https://github.com/tc39/proposal-regexp-match-Indices',
   },

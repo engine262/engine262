@@ -11,10 +11,58 @@ import {
   IsIdentifierRef,
 } from '../static-semantics/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import { OutOfRange } from '../helpers.mjs';
 import {
   NamedEvaluation,
   ApplyStringOrNumericBinaryOperator,
+  DestructuringAssignmentEvaluation,
 } from './all.mjs';
+
+// #sec-destructuring-assignment
+export function refineLeftHandSideExpression(node) {
+  switch (node.type) {
+    case 'ArrayLiteral':
+      return {
+        type: 'ArrayAssignmentPattern',
+        AssignmentElementList: node.ElementList.map((n) => refineLeftHandSideExpression(n)),
+      };
+    case 'ObjectLiteral':
+      return {
+        type: 'ObjectAssignmentPattern',
+        AssignmentPropertyList: node.PropertyDefinitionList.map((p) => refineLeftHandSideExpression(p)),
+      };
+    case 'PropertyDefinition':
+      return {
+        type: 'AssignmentProperty',
+        PropertyName: node.PropertyName,
+        AssignmentElement: node.AssignmentExpression.type === 'AssignmentExpression'
+          ? {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression.LeftHandSideExpression,
+            AssignmentExpression: node.AssignmentExpression.AssignmentExpression,
+          }
+          : {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression,
+            Initializer: undefined,
+          },
+      };
+    case 'IdentifierReference':
+      return {
+        type: 'AssignmentProperty',
+        IdentifierReference: node,
+        Initializer: undefined,
+      };
+    case 'CoverInitializedName':
+      return {
+        type: 'AssignmentProperty',
+        IdentifierReference: node.IdentifierReference,
+        Initializer: node.Initializer,
+      };
+    default:
+      throw new OutOfRange('refineLeftHandSideExpression', node.type);
+  }
+}
 
 // #sec-assignment-operators-runtime-semantics-evaluation
 //   AssignmentExpression :
@@ -51,13 +99,13 @@ export function* Evaluate_AssignmentExpression({
       return rval;
     }
     // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
-    const assignmentPattern = LeftHandSideExpression;
+    const assignmentPattern = refineLeftHandSideExpression(LeftHandSideExpression);
     // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
     // 3. Let rval be ? GetValue(rref).
     const rval = Q(GetValue(rref));
     // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
-    Q(yield* DestructuringAssignmentEvaluation_AssignmentPattern(assignmentPattern, rval));
+    Q(yield* DestructuringAssignmentEvaluation(assignmentPattern, rval));
     // 5. Return rval.
     return rval;
   } else if (AssignmentOperator === '&&=') {
