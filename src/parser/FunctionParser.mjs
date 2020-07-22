@@ -152,11 +152,8 @@ export class FunctionParser extends IdentifierParser {
     const params = [];
     this.scope({ parameters: true }, () => {
       while (true) {
-        const node = this.startNode();
-        if (this.eat(Token.ELLIPSIS)) {
-          node.BindingIdentifier = this.parseBindingIdentifier();
-          this.declare(node.BindingIdentifier, 'parameter');
-          params.push(this.finishNode(node, 'BindingRestElement'));
+        if (this.test(Token.ELLIPSIS)) {
+          params.push(this.parseBindingRestElement());
           this.expect(Token.RPAREN);
           break;
         } else {

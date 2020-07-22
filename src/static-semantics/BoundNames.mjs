@@ -23,7 +23,10 @@ export function BoundNames(node) {
     case 'VariableStatement':
       return BoundNames(node.VariableDeclarationList);
     case 'VariableDeclaration':
-      return BoundNames(node.BindingIdentifier);
+      if (node.BindingIdentifier) {
+        return BoundNames(node.BindingIdentifier);
+      }
+      return BoundNames(node.BindingPattern);
     case 'ForDeclaration':
       return BoundNames(node.ForBinding);
     case 'ForBinding':
@@ -79,8 +82,12 @@ export function BoundNames(node) {
       return BoundNames(node.BindingIdentifier);
     case 'BindingRestElement':
       return BoundNames(node.BindingIdentifier);
+    case 'BindingRestProperty':
+      return BoundNames(node.BindingIdentifier);
     case 'BindingElement':
       return BoundNames(node.BindingPattern);
+    case 'BindingProperty':
+      return BoundNames(node.BindingElement);
     case 'ObjectBindingPattern': {
       const names = BoundNames(node.BindingPropertyList);
       if (node.BindingRestProperty) {

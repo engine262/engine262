@@ -13,6 +13,7 @@ import { OutOfRange } from '../helpers.mjs';
 import {
   IteratorBindingInitialization_ArrayBindingPattern,
   PropertyBindingInitialization,
+  RestBindingInitialization,
 } from './all.mjs';
 
 // #sec-initializeboundname
@@ -38,9 +39,12 @@ export function InitializeBoundName(name, value, environment) {
 //   `{` BindingPropertyList `}`
 //   `{` BindingRestProperty `}`
 //   `{` BindingPropertyList `,` BindingRestProperty `}`
-function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList }, value, environment) {
+function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }, value, environment) {
   // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
-  Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
+  const excludedNames = Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
+  if (BindingRestProperty) {
+    Q(RestBindingInitialization(BindingRestProperty, value, environment, excludedNames));
+  }
   // 2. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

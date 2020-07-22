@@ -170,6 +170,8 @@ export function* NamedEvaluation(F, name) {
       return NamedEvaluation_AsyncArrowFunction(F, name);
     case 'ClassExpression':
       return yield* NamedEvaluation_ClassExpression(F, name);
+    case 'ParenthesizedExpression':
+      return yield* NamedEvaluation(F.Expression, name);
     default:
       throw new OutOfRange('NamedEvaluation', F);
   }

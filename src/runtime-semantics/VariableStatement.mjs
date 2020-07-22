@@ -7,7 +7,7 @@ import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
-import { NamedEvaluation } from './all.mjs';
+import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
 //   VariableDeclaration :
@@ -43,7 +43,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
   // 2. Let rval be ? GetValue(rhs).
   const rval = Q(GetValue(rhs));
   // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
-  return yield* BindingInitialization_BindingPattern(BindingPattern, rval, Value.undefined);
+  return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
 }
 
 // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation

@@ -27,6 +27,7 @@ top-level-await = TopLevelAwait
 # https://github.com/tc39/proposal-weakrefs
 WeakRef = WeakRefs
 FinalizationRegistry = WeakRefs
+cleanupSome = WeakRefs
 
 # https://github.com/tc39/proposal-regexp-match-Indices
 regexp-match-indices = RegExpMatchIndices
