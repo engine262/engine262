@@ -105,6 +105,8 @@ export const ProxySetFrozenData = (p) => `'set' on proxy: trap returned truthy f
 export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned truish for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
 export const RegExpArgumentNotAllowed = (m) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o) => `${i(o)} is not object or null`;
+export const RegExpLegacySlotIsEmpty = () => 'The RegExp legacy static accessors are disabled for custom RegExp constructors';
+export const RegExpLegacyFlagsNotAllowed = (m) => `Second argument to ${m} must not be passed when first argument is a regular expression`;
 export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
   ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);

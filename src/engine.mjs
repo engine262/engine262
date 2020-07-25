@@ -40,6 +40,10 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-hashbang',
   },
   {
+    name: 'legacy-regexp',
+    url: 'https://github.com/tc39/proposal-regexp-legacy-features',
+  },
+  {
     name: 'NumericSeparators',
     url: 'https://github.com/tc39/proposal-numeric-separator',
   },

@@ -9,20 +9,23 @@ import {
   CreateDataProperty,
   EscapeRegExpPattern,
   Get,
+  InvalidateLegacyRegExpStaticProperties,
   IsCallable,
+  LengthOfArrayLike,
   MatchRecord,
   OrdinaryObjectCreate,
+  RegExpInitialize,
+  RequireInternalSlot,
   SameValue,
   Set,
   SpeciesConstructor,
-  LengthOfArrayLike,
   ToBoolean,
   ToInteger,
   ToLength,
-  ToString,
   ToObject,
+  ToString,
   ToUint32,
-  RequireInternalSlot,
+  UpdateLegacyRegExpStaticProperties,
 } from '../abstract-ops/all.mjs';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
 import {
@@ -162,6 +165,10 @@ function RegExpBuiltinExec(R, S) {
   // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataProperty(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
+
+  // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+  let capturedValues;
+
   // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
   if (surroundingAgent.feature('RegExpMatchIndices')) {
     // Let indices be a new empty List.
@@ -192,6 +199,13 @@ function RegExpBuiltinExec(R, S) {
     }
     // Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     X(CreateDataProperty(A, new Value('groups'), groups));
+
+    // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+    if (surroundingAgent.feature('legacy-regexp')) {
+      // Let capturedValues be an new empty List.
+      capturedValues = [];
+    }
+
     // For each integer i such that i > 0 and i ≤ n, do
     for (let i = 1; i <= n; i += 1) {
       // Let captureI be ith element of r's captures List.
@@ -240,6 +254,12 @@ function RegExpBuiltinExec(R, S) {
           groupNames.push(Value.undefined);
         }
       }
+
+      // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+      if (capturedValues) {
+        // Append capturedValue to the end of capturedValues.
+        capturedValues.push(capturedValue === Value.undefined ? new Value('') : capturedValue);
+      }
     }
     // Let indicesArray be MakeIndicesArray(S, indices, groupNames).
     const indicesArray = MakeIndicesArray(S, indices, groupNames);
@@ -261,6 +281,13 @@ function RegExpBuiltinExec(R, S) {
     }
     // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     X(CreateDataProperty(A, new Value('groups'), groups));
+
+    // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+    if (surroundingAgent.feature('legacy-regexp')) {
+      // Let capturedValues be an new empty List.
+      capturedValues = [];
+    }
+
     // 27. For each integer i such that i > 0 and i ≤ n, do
     for (let i = 1; i <= n; i += 1) {
       // a. Let captureI be ith element of r's captures List.
@@ -289,8 +316,33 @@ function RegExpBuiltinExec(R, S) {
         // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
         X(CreateDataProperty(groups, s, capturedValue));
       }
+
+      // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+      if (capturedValues) {
+        // Append capturedValue to the end of capturedValues.
+        capturedValues.push(capturedValue === Value.undefined ? new Value('') : capturedValue);
+      }
     }
   }
+
+  // https://tc39.es/proposal-regexp-legacy-features/#sec-legacy-regexpbuiltinexec
+  if (capturedValues) {
+    // Let thisRealm be the current Realm Record.
+    const thisRealm = surroundingAgent.currentRealmRecord;
+
+    // If SameValue(thisRealm, R.[[Realm]]) is true, then
+    if (Object.is(thisRealm, R.Realm)) {
+      // If R.[[LegacyFeaturesEnabled]] is true, then
+      if (R.LegacyFeaturesEnabled === Value.true) {
+        // Perform ! UpdateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
+        UpdateLegacyRegExpStaticProperties(surroundingAgent.intrinsic('%RegExp%'), S, lastIndex.numberValue(), e, capturedValues);
+      } else {
+        // Else, perform ! InvalidateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
+        InvalidateLegacyRegExpStaticProperties(surroundingAgent.intrinsic('%RegExp%'));
+      }
+    }
+  }
+
   // 28. Return A.
   return A;
 }
@@ -881,11 +933,65 @@ function RegExpProto_unicodeGetter(args, { thisValue }) {
   return Value.false;
 }
 
+// B.2.5.1 #sec-regexp.prototype.compile
+// https://github.com/tc39/proposal-regexp-legacy-features/#sec-regexp.prototype.compile
+function RegExpProto_compile([pattern = Value.undefined, flags = Value.undefined], { thisValue }) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[RegExpMatcher]]).
+  Q(RequireInternalSlot(O, 'RegExpMatcher'));
+
+  // Let thisRealm be the current Realm Record.
+  const thisRealm = surroundingAgent.currentRealmRecord;
+
+  // If SameValue(thisRealm, O.[[Realm]]) is *false*, throw a *TypeError* exception.
+  if (!Object.is(thisRealm, O.Realm)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'RegExp.prototype.compile', O);
+  }
+
+  // If O.[[LegacyFeaturesEnabled]] is *false*, throw a *TypeError* exception.
+  if (O.LegacyFeaturesEnabled === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'RegExp.prototype.compile', O);
+  }
+
+  let P;
+  let F;
+
+  // 3. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
+  if (Type(pattern) === 'Object' && 'RegExpMatcher' in pattern) {
+    // a. If flags is not undefined, throw a TypeError exception.
+    if (flags !== Value.undefined) {
+      return surroundingAgent.Throw('TypeError', 'RegExpLegacyFlagsNotAllowed', 'RegExp.prototype.compile');
+    }
+
+    // b. Let P be pattern.[[OriginalSource]].
+    P = pattern.OriginalSource;
+
+    // c. Let F be pattern.[[OriginalFlags]].
+    F = pattern.OriginalFlags;
+
+  // Else,
+  } else {
+    // a. Let P be pattern.
+    P = pattern;
+
+    // b. Let F be flags.
+    F = flags;
+  }
+
+  // Return ? RegExpInitialize(O, P, F).
+  return Q(RegExpInitialize(O, P, F));
+}
+
 export function BootstrapRegExpPrototype(realmRec) {
   const proto = BootstrapPrototype(
     realmRec,
     [
       ['exec', RegExpProto_exec, 1],
+      ...(surroundingAgent.feature('legacy-regexp') ? [
+        ['compile', RegExpProto_compile, 2],
+      ] : []),
       ['dotAll', [RegExpProto_dotAllGetter]],
       ['flags', [RegExpProto_flagsGetter]],
       ['global', [RegExpProto_globalGetter]],
