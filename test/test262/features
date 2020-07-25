@@ -37,3 +37,6 @@ hashbang = hashbang
 
 # https://github.com/tc39/proposal-numeric-separator
 numeric-separator-literal = NumericSeparators
+
+# https://github.com/tc39/proposal-regexp-legacy-features
+legacy-regexp = legacy-regexp
