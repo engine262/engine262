@@ -4,13 +4,12 @@ import {
   Get,
   GetIterator,
   IsCallable,
-  IteratorClose,
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import { Value, wellKnownSymbols } from '../value.mjs';
-import { AbruptCompletion, Q } from '../completion.mjs';
+import { IfAbruptCloseIterator, Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
 
@@ -35,9 +34,8 @@ function SetConstructor([iterable = Value.undefined], { NewTarget }) {
     }
     const nextValue = Q(IteratorValue(next));
     const status = Call(adder, set, [nextValue]);
-    if (status instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, status));
-    }
+    // e. IfAbruptCloseIterator(status, iteratorRecord).
+    IfAbruptCloseIterator(status, iteratorRecord);
   }
 }
 

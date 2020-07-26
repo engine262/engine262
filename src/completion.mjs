@@ -100,6 +100,11 @@ export function X(val) {
   return val;
 }
 
+// 7.4.7 #sec-ifabruptcloseiterator
+export function IfAbruptCloseIterator(_value, _iteratorRecord) {
+  throw new TypeError('IfAbruptCloseIterator requires build');
+}
+
 // 25.6.1.1.1 #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise() {
   throw new TypeError('IfAbruptRejectPromise requires build');

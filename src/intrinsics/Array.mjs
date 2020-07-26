@@ -2,7 +2,7 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  AbruptCompletion,
+  IfAbruptCloseIterator,
   Q,
   ThrowCompletion, X,
 } from '../completion.mjs';
@@ -131,17 +131,12 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
       let mappedValue;
       if (mapping) {
         mappedValue = Call(mapfn, thisArg, [nextValue, new Value(k)]);
-        if (mappedValue instanceof AbruptCompletion) {
-          return Q(IteratorClose(iteratorRecord, mappedValue));
-        }
-        mappedValue = mappedValue.Value;
+        IfAbruptCloseIterator(mappedValue, iteratorRecord);
       } else {
         mappedValue = nextValue;
       }
       const defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
-      if (defineStatus instanceof AbruptCompletion) {
-        return Q(IteratorClose(iteratorRecord, defineStatus));
-      }
+      IfAbruptCloseIterator(defineStatus, iteratorRecord);
       k += 1;
     }
   }
