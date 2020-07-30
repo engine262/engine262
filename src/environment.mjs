@@ -364,7 +364,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   constructor() {
     super();
     this.ThisValue = undefined;
-    this.ThisBindingValue = undefined;
+    this.ThisBindingStatus = undefined;
     this.FunctionObject = undefined;
     this.HomeObject = Value.undefined;
     this.NewTarget = undefined;
@@ -449,7 +449,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   mark(m) {
     super.mark(m);
     m(this.ThisValue);
-    m(this.ThisBindingValue);
     m(this.FunctionObject);
     m(this.HomeObject);
     m(this.NewTarget);
