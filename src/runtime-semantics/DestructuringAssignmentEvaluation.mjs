@@ -126,8 +126,6 @@ export function DestructuringAssignmentEvaluation(node, value) {
   switch (node) {
     case 'ObjectAssignmentPattern':
       return DestructuringAssignmentEvaluation_ObjectAssignmentPattern(node, value);
-    case 'ArrayAssignmentPattern':
-      return DestructuringAssignmentEvaluation_ArrayAssignmentPattern(node, value);
     default:
       throw new OutOfRange('DestructuringAssignmentEvaluation', node);
   }
