@@ -41,13 +41,17 @@ import {
 } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// #sec-promise-executor
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
+  // 2. If IsCallable(executor) is false, throw a TypeError exception.
   if (IsCallable(executor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
   }
+  // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
   const promise = Q(OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', [
     'PromiseState',
     'PromiseResult',
@@ -55,21 +59,30 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
     'PromiseRejectReactions',
     'PromiseIsHandled',
   ]));
+  // 4. Set promise.[[PromiseState]] to pending.
   promise.PromiseState = 'pending';
+  // 5. Set promise.[[PromiseFulfillReactions]] to a new empty List.
   promise.PromiseFulfillReactions = [];
+  // 6. Set promise.[[PromiseFulfillReactions]] to a new empty List.
   promise.PromiseRejectReactions = [];
+  // 7. Set promise.[[PromiseIsHandled]] to false.
   promise.PromiseIsHandled = Value.false;
+  // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
   const resolvingFunctions = CreateResolvingFunctions(promise);
+  // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
   const completion = Call(executor, Value.undefined, [
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
+  // 10. If completion is an abrupt completion, then
   if (completion instanceof AbruptCompletion) {
+    // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
     Q(Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]));
   }
+  // 11. Return promise.
   return promise;
 }
 
-// 25.6.4.1.2 #sec-promise.all-resolve-element-functions
+// #sec-promise.all-resolve-element-functions
 function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
@@ -183,6 +196,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
   }
 }
 
+// #sec-promise.all
 function Promise_all([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -364,6 +378,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
   }
 }
 
+// #sec-promise.allsettled
 function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -434,7 +449,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-promise-any/#sec-performpromiseany
+// #sec-performpromiseany
 function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor)) === Value.true);
@@ -518,7 +533,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
   }
 }
 
-// https://tc39.es/proposal-promise-any/#sec-promise.any
+// #sec-promise.any
 function Promise_any([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -615,22 +630,33 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
+// #sec-promise.reject
 function Promise_reject([r = Value.undefined], { thisValue }) {
+  // 1. Let C be this value.
   const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
+  // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
   Q(Call(promiseCapability.Reject, Value.undefined, [r]));
+  // 4. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
 
+// #sec-promise.resolve
 function Promise_resolve([x = Value.undefined], { thisValue }) {
+  // 1. Let C be the this value.
   const C = thisValue;
+  // 2. If Type(C) is not Object, throw a TypeError exception.
   if (Type(C) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.resolve', C);
   }
+  // 3. Return ? PromiseResolve(C, x).
   return Q(PromiseResolve(C, x));
 }
 
+// #sec-get-promise-@@species
 function Promise_symbolSpecies(args, { thisValue }) {
+  // 1. Return the this value.
   return thisValue;
 }
 

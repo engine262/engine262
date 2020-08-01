@@ -26,11 +26,23 @@ export function refineLeftHandSideExpression(node) {
         type: 'ArrayAssignmentPattern',
         AssignmentElementList: node.ElementList.map((n) => refineLeftHandSideExpression(n)),
       };
-    case 'ObjectLiteral':
-      return {
+    case 'ObjectLiteral': {
+      const refined = {
         type: 'ObjectAssignmentPattern',
-        AssignmentPropertyList: node.PropertyDefinitionList.map((p) => refineLeftHandSideExpression(p)),
+        AssignmentPropertyList: [],
       };
+      node.PropertyDefinitionList.forEach((p) => {
+        if (p.PropertyName === null && p.AssignmentExpression) {
+          refined.AssignmentRestProperty = {
+            type: 'AssignmentRestProperty',
+            DestructuringAssignmentTarget: p.AssignmentExpression,
+          };
+        } else {
+          refined.AssignmentPropertyList.push(refineLeftHandSideExpression(p));
+        }
+      });
+      return refined;
+    }
     case 'PropertyDefinition':
       return {
         type: 'AssignmentProperty',

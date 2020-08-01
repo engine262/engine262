@@ -9,6 +9,7 @@ const {
   Value,
   FEATURES,
   Get,
+  CreateArrayFromList,
   CreateDataProperty,
 } = require('..');
 const { total, pass, fail } = require('./base');
@@ -194,6 +195,16 @@ Error: owo
           throw new Error(`${path.stringValue()} did not have a section`);
         }),
       );
+      const targets = [];
+      Object.entries(realm.Intrinsics)
+        .forEach(([k, v]) => {
+          targets.push(CreateArrayFromList([new Value(k), v]));
+        });
+      CreateDataProperty(
+        realm.GlobalObject,
+        new Value('targets'),
+        CreateArrayFromList(targets),
+      );
     });
     const result = realm.evaluateScript(`
 'use strict';
@@ -204,6 +215,7 @@ Error: owo
   const fail = globalThis.fail;
   delete globalThis.fail;
 
+  const topQueue = new Set();
   const scanned = new Set();
   const scan = (ns, path) => {
     if (scanned.has(ns)) {
@@ -227,15 +239,26 @@ Error: owo
           ? path + '[Symbol(' + name.description + ')]'
           : path + '.' + name;
         if ('value' in desc) {
-          scan(desc.value, p);
+          if (!topQueue.has(desc.value)) {
+            scan(desc.value, p);
+          }
         } else {
-          scan(desc.get, p);
-          scan(desc.set, p);
+          if (!topQueue.has(desc.get)) {
+            scan(desc.get, p);
+          }
+          if (!topQueue.has(desc.set)) {
+            scan(desc.set, p);
+          }
         }
       });
   };
 
-  scan(globalThis, 'globalThis');
+  targets.forEach((t) => {
+    topQueue.add(t[1]);
+  });
+  targets.forEach((t) => {
+    scan(t[1], t[0]);
+  });
 }
     `);
     assert.strictEqual(result.Value, Value.undefined);

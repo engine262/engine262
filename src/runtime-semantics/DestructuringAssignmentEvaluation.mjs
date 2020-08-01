@@ -1,8 +1,11 @@
+import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import {
+  CopyDataProperties,
   GetReferencedName,
   GetV,
   GetValue,
+  OrdinaryObjectCreate,
   PutValue,
   ResolveBinding,
   RequireObjectCoercible,
@@ -28,13 +31,32 @@ import {
 //  `{` `}`
 //  `{` AssignmentPropertyList `}`
 //  `{` AssignmentPropertyList `,` `}`
-function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern(ObjectAssignmentPattern, value) {
+//  `{` AssignmentPropertyList `,` AssignmentRestProperty? `}`
+function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }, value) {
   // 1. Perform ? RequireObjectCoercible(value).
   Q(RequireObjectCoercible(value));
   // 2. Perform ? PropertyDestructuringAssignmentEvaluation for AssignmentPropertyList using value as the argument.
-  Q(yield* PropertyDestructuringAssignmentEvaluation(ObjectAssignmentPattern.AssignmentPropertyList, value));
+  const excludedNames = Q(yield* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, value));
+  if (AssignmentRestProperty) {
+    Q(yield* RestDestructuringAssignmentEvaluation(AssignmentRestProperty, value, excludedNames));
+  }
   // 3. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
+}
+
+// #sec-runtime-semantics-restdestructuringassignmentevaluation
+// AssignmentRestProperty : `...` DestructuringAssignmentTarget
+function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget }, value, excludedNames) {
+  // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.
+  const lref = yield* Evaluate(DestructuringAssignmentTarget);
+  // 2. ReturnIfAbrupt(lref).
+  ReturnIfAbrupt(lref);
+  // 3. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
+  const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  // 4. Perform ? CopyDataProperties(restObj, value, excludedNames).
+  Q(CopyDataProperties(restObj, value, excludedNames));
+  // 5. Return PutValue(lref, restObj).
+  return PutValue(lref, restObj);
 }
 
 function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, value) {
@@ -123,7 +145,7 @@ function* KeyedDestructuringAssignmentEvaluation({
 }
 
 export function DestructuringAssignmentEvaluation(node, value) {
-  switch (node) {
+  switch (node.type) {
     case 'ObjectAssignmentPattern':
       return DestructuringAssignmentEvaluation_ObjectAssignmentPattern(node, value);
     default:

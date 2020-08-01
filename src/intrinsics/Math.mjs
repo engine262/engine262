@@ -56,7 +56,6 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   return X(NumberValue.exponentiate(base, exponent));
 }
 
-// #sec-math.random
 function fmix64(h) {
   h ^= h >> 33n;
   h *= 0xFF51AFD7ED558CCDn;
@@ -68,6 +67,7 @@ function fmix64(h) {
 
 const floatView = new Float64Array(1);
 const big64View = new BigUint64Array(floatView.buffer);
+// #sec-math.random
 function Math_random() {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.randomState === undefined) {

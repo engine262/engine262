@@ -51,6 +51,13 @@ function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, Bind
 
 export function* BindingInitialization(node, value, environment) {
   switch (node.type) {
+    case 'ForBinding':
+      if (node.BindingIdentifier) {
+        return yield* BindingInitialization(node.BindingIdentifier, value, environment);
+      }
+      return yield* BindingInitialization(node.BindingPattern, value, environment);
+    case 'ForDeclaration':
+      return yield* BindingInitialization(node.ForBinding, value, environment);
     case 'BindingIdentifier': {
       // 1. Let name be StringValue of Identifier.
       const name = StringValue(node);
@@ -69,7 +76,7 @@ export function* BindingInitialization(node, value, environment) {
       // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
       const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
       // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-      if (iteratorRecord.Done === Value.true) {
+      if (iteratorRecord.Done === Value.false) {
         return Q(IteratorClose(iteratorRecord, result));
       }
       // 4. Return result.

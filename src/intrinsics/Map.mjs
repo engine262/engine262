@@ -72,7 +72,9 @@ function MapConstructor([iterable = Value.undefined], { NewTarget }) {
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 
+// #sec-get-map-@@species
 function Map_speciesGetter(args, { thisValue }) {
+  // 1. Return the this value.
   return thisValue;
 }
 

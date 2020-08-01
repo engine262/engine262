@@ -174,10 +174,7 @@ export class StatementParser extends ExpressionParser {
     node.BindingPropertyList = [];
     while (!this.eat(Token.RBRACE)) {
       if (this.test(Token.ELLIPSIS)) {
-        node.BindingRestProperty = this.startNode();
-        this.next();
-        node.BindingRestProperty.BindingIdentifier = this.parseBindingIdentifier();
-        this.finishNode(node.BindingRestProperty, 'BindingRestProperty');
+        node.BindingRestProperty = this.parseBindingRestProperty();
         this.expect(Token.RBRACE);
         break;
       } else {
@@ -210,6 +207,15 @@ export class StatementParser extends ExpressionParser {
     }
     node.Initializer = this.parseInitializerOpt();
     return this.finishNode(node, 'SingleNameBinding');
+  }
+
+  // BindingRestProperty :
+  //  `...` BindingIdentifier
+  parseBindingRestProperty() {
+    const node = this.startNode();
+    this.expect(Token.ELLIPSIS);
+    node.BindingIdentifier = this.parseBindingIdentifier();
+    return this.finishNode(node, 'BindingRestProperty');
   }
 
   // ArrayBindingPattern :
@@ -354,10 +360,10 @@ export class StatementParser extends ExpressionParser {
   // VariableDeclarationList :
   //   VariableDeclaration
   //   VariableDeclarationList `,` VariableDeclaration
-  parseVariableDeclarationList() {
+  parseVariableDeclarationList(firstDeclarationRequiresInit = true) {
     const declarationList = [];
     do {
-      const node = this.parseVariableDeclaration();
+      const node = this.parseVariableDeclaration(firstDeclarationRequiresInit);
       declarationList.push(node);
     } while (this.eat(Token.COMMA));
     return declarationList;
@@ -366,14 +372,18 @@ export class StatementParser extends ExpressionParser {
   // VariableDeclaration :
   //   BindingIdentifier Initializer?
   //   BindingPattern Initializer
-  parseVariableDeclaration() {
+  parseVariableDeclaration(firstDeclarationRequiresInit) {
     const node = this.startNode();
     switch (this.peek().type) {
       case Token.LBRACE:
       case Token.LBRACK:
         node.BindingPattern = this.parseBindingPattern();
-        this.expect(Token.ASSIGN);
-        node.Initializer = this.parseAssignmentExpression();
+        if (firstDeclarationRequiresInit) {
+          this.expect(Token.ASSIGN);
+          node.Initializer = this.parseAssignmentExpression();
+        } else {
+          node.Initializer = this.parseInitializerOpt();
+        }
         break;
       default:
         node.BindingIdentifier = this.parseBindingIdentifier();
@@ -510,7 +520,7 @@ export class StatementParser extends ExpressionParser {
           node.Statement = this.parseStatement('for');
           return this.finishNode(node, 'ForAwaitStatement');
         }
-        const list = this.parseVariableDeclarationList();
+        const list = this.parseVariableDeclarationList(false);
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           node.VariableDeclarationList = list;
           this.expect(Token.SEMICOLON);
@@ -527,6 +537,9 @@ export class StatementParser extends ExpressionParser {
         }
         node.ForBinding = list[0];
         node.ForBinding.type = 'ForBinding';
+        if (node.ForBinding.Initializer) {
+          this.unexpected(node.ForBinding.Initializer);
+        }
         if (this.eat('of')) {
           node.AssignmentExpression = this.parseAssignmentExpression();
         } else {

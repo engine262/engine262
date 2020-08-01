@@ -649,19 +649,19 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       // i. If lhsKind is assignment, then
       if (lhsKind === 'assignment') {
         // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
-        status = DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
+        status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
       } else if (lhsKind === 'varBinding') { // ii. Else if lhsKind is varBinding, then
         // 1. Assert: lhs is a ForBinding.
         Assert(lhs.type === 'ForBinding');
         // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
-        status = BindingInitialization(lhs, nextValue, Value.undefined);
+        status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
       } else { // iii. Else,
         // 1. Assert: lhsKind is lexicalBinding.
         Assert(lhsKind === 'lexicalBinding');
         // 2. Assert: lhs is a ForDeclaration.
         Assert(lhs.type === 'ForDeclaration');
         // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
-        status = BindingInitialization(lhs, nextValue, iterationEnv);
+        status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
       }
     }
     // k. If status is an abrupt completion, then
