@@ -67,7 +67,7 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters, body) {
+  validateFormalParameters(parameters, body, checkDuplicates = body.strict) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
 
@@ -86,7 +86,8 @@ export class FunctionParser extends IdentifierParser {
           if (d.name === 'arguments' || d.name === 'eval') {
             this.raiseEarly('UnexpectedToken', d.node);
           }
-
+        }
+        if (checkDuplicates) {
           if (names.has(d.name)) {
             this.raiseEarly('AlreadyDeclared', d.node, d.name);
           } else {
@@ -164,7 +165,7 @@ export class FunctionParser extends IdentifierParser {
     this.expect(Token.ARROW);
     node.ArrowParameters = parameters.map((p) => this.convertArrowParameter(p));
     const body = this.parseConciseBody(isAsync);
-    this.validateFormalParameters(node.ArrowParameters, body);
+    this.validateFormalParameters(node.ArrowParameters, body, true);
     node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }

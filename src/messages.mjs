@@ -37,6 +37,7 @@ export const CannotJSONSerializeBigInt = () => 'Cannot serialize a BigInt to JSO
 export const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use explicit conversions';
 export const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';
 export const CannotSetProperty = (p, o) => `Cannot set property ${i(p)} on ${i(o)}`;
+export const ConstDeclarationMissingInitializer = () => 'Missing initialization of const declaration';
 export const ConstructorNonCallable = (f) => `${i(f)} cannot be invoked without new`;
 export const CouldNotResolveModule = (s) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';

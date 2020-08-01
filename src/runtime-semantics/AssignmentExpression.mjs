@@ -21,15 +21,29 @@ import {
 // #sec-destructuring-assignment
 export function refineLeftHandSideExpression(node) {
   switch (node.type) {
-    case 'ArrayLiteral':
-      return {
+    case 'ArrayLiteral': {
+      const refinement = {
         type: 'ArrayAssignmentPattern',
-        AssignmentElementList: node.ElementList.map((n) => refineLeftHandSideExpression(n)),
+        AssignmentElementList: [],
+        AssignmentRestElement: undefined,
       };
+      node.ElementList.forEach((n) => {
+        if (n.type === 'SpreadElement') {
+          refinement.AssignmentRestElement = {
+            type: 'AssignmentRestElement',
+            DestructuringAssignmentTarget: n.AssignmentExpression,
+          };
+        } else {
+          refinement.AssignmentElementList.push(refineLeftHandSideExpression(n));
+        }
+      });
+      return refinement;
+    }
     case 'ObjectLiteral': {
       const refined = {
         type: 'ObjectAssignmentPattern',
         AssignmentPropertyList: [],
+        AssignmentRestProperty: undefined,
       };
       node.PropertyDefinitionList.forEach((p) => {
         if (p.PropertyName === null && p.AssignmentExpression) {

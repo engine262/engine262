@@ -29,6 +29,7 @@ export function getDeclarations(node) {
     case 'LexicalBinding':
     case 'VariableDeclaration':
     case 'BindingRestElement':
+    case 'ForBinding':
       if (node.BindingIdentifier) {
         return getDeclarations(node.BindingIdentifier);
       }
@@ -60,6 +61,8 @@ export function getDeclarations(node) {
       return [{ name: node.name, node }];
     case 'Elision':
       return [];
+    case 'ForDeclaration':
+      return getDeclarations(node.ForBinding);
     default:
       throw new OutOfRange('getDeclarations', node);
   }

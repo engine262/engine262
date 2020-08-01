@@ -1,6 +1,7 @@
 import { Token, isAutomaticSemicolon } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
+import { getDeclarations } from './Scope.mjs';
 
 export class StatementParser extends ExpressionParser {
   semicolon() {
@@ -498,7 +499,16 @@ export class StatementParser extends ExpressionParser {
         }
         inner.ForBinding = list[0];
         inner.ForBinding.type = 'ForBinding';
+        if (inner.ForBinding.Initializer) {
+          this.unexpected(inner.ForBinding.Initializer);
+        }
         node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
+        getDeclarations(node.ForDeclaration)
+          .forEach((d) => {
+            if (d.name === 'let') {
+              this.raiseEarly('UnexpectedToken', d.node);
+            }
+          });
         if (!isAwait && this.eat(Token.IN)) {
           node.Expression = this.parseExpression();
           this.expect(Token.RPAREN);
