@@ -124,7 +124,6 @@ export const RawTokens = [
   ['IDENTIFIER', null],
   ['AWAIT', 'await'],
   ['YIELD', 'yield'],
-  ['LET', 'let'],
   // END AnyIdentifier
   // END Callable
   ['CLASS', 'class'],

@@ -30,41 +30,6 @@ import {
 import { ValueSet, unwind } from './helpers.mjs';
 import { Evaluate } from './evaluator.mjs';
 
-// #importentry-record
-export class ImportEntryRecord {
-  constructor({
-    ModuleRequest,
-    ImportName,
-    LocalName,
-  }) {
-    Assert(Type(ModuleRequest) === 'String');
-    Assert(Type(ImportName) === 'String');
-    Assert(Type(LocalName) === 'String');
-    this.ModuleRequest = ModuleRequest;
-    this.ImportName = ImportName;
-    this.LocalName = LocalName;
-  }
-}
-
-// #exportentry-record
-export class ExportEntryRecord {
-  constructor({
-    ExportName,
-    ModuleRequest,
-    ImportName,
-    LocalName,
-  }) {
-    Assert(Type(ExportName) === 'String' || Type(ExportName) === 'Null');
-    Assert(Type(ModuleRequest) === 'String' || Type(ModuleRequest) === 'Null');
-    Assert(Type(ImportName) === 'String' || Type(ImportName) === 'Null');
-    Assert(Type(LocalName) === 'String' || Type(LocalName) === 'Null');
-    this.ExportName = ExportName;
-    this.ModuleRequest = ModuleRequest;
-    this.ImportName = ImportName;
-    this.LocalName = LocalName;
-  }
-}
-
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
   constructor({ Module, BindingName }) {

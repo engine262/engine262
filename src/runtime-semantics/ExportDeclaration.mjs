@@ -52,7 +52,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
   }
   if (ClassDeclaration) {
     // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
-    const value = Q(BindingClassDeclarationEvaluation(ClassDeclaration));
+    const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration));
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
     // If className is "*default*", then
@@ -68,7 +68,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
   if (AssignmentExpression) {
     let value;
     // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
-    if (IsAnonymousFunctionDefinition(AssignmentExpression) === Value.true) {
+    if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
       // a. Let value be NamedEvaluation of AssignmentExpression with argument "default".
       value = yield* NamedEvaluation(AssignmentExpression, new Value('default'));
     } else { // 2. Else,

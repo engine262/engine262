@@ -231,6 +231,7 @@ export class FunctionParser extends IdentifierParser {
       return: true,
       await: isAsync,
       yield: isGenerator,
+      label: 'boundary',
     }, () => {
       node.directives = [];
       node.FunctionStatementList = this.parseStatementList(Token.RBRACE, node.directives);

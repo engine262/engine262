@@ -65,7 +65,7 @@ export function refineLeftHandSideExpression(node) {
           ? {
             type: 'AssignmentElement',
             DestructuringAssignmentTarget: node.AssignmentExpression.LeftHandSideExpression,
-            AssignmentExpression: node.AssignmentExpression.AssignmentExpression,
+            Initializer: node.AssignmentExpression.AssignmentExpression,
           }
           : {
             type: 'AssignmentElement',
@@ -91,6 +91,8 @@ export function refineLeftHandSideExpression(node) {
         DestructuringAssignmentTarget: node.LeftHandSideExpression,
         Initializer: node.AssignmentExpression,
       };
+    case 'Elision':
+      return { type: 'Elision' };
     default:
       throw new OutOfRange('refineLeftHandSideExpression', node.type);
   }

@@ -44,7 +44,6 @@ export class LanguageParser extends StatementParser {
       await: this.feature('TopLevelAwait'),
       lexical: true,
       variable: true,
-      variableFunctions: true,
     }, () => {
       const node = this.startNode();
       if (this.eat(Token.EOS)) {

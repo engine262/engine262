@@ -7,7 +7,7 @@ import {
 } from './parser/Parser.mjs';
 import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
-import { ExportEntryRecord, SourceTextModuleRecord } from './modules.mjs';
+import { SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
 import { Get, Set } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
@@ -117,7 +117,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     if (ee.ModuleRequest === Value.null) {
       // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
       if (!importedBoundNames.has(ee.LocalName)) {
-        // 1. If ee.[[LocalName]] is not an element of importedBoundNames, then
+        // 1. Append ee to localExportEntries.
         localExportEntries.push(ee);
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
@@ -130,15 +130,15 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
         } else { // 3. Else,
           // a. NOTE: This is a re-export of a single name.
           // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
-          indirectExportEntries.push(new ExportEntryRecord({
+          indirectExportEntries.push({
             ModuleRequest: ie.ModuleRequest,
             ImportName: ie.ImportName,
             LocalName: Value.null,
             ExportName: ee.ExportName,
-          }));
+          });
         }
       }
-    } else if (ee.ImportName && ee.ImportName.stringValue() === '*') { // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
+    } else if (ee.ImportName && ee.ImportName.stringValue() === '*' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
     } else { // c. Else,

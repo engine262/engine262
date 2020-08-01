@@ -45,10 +45,17 @@ export function getDeclarations(node) {
         d.push(...getDeclarations(node.NameSpaceImport));
       }
       if (node.NamedImports) {
-        d.push(...getDeclarations(node.NamedImpots));
+        d.push(...getDeclarations(node.NamedImports));
       }
       return d;
     }
+    case 'ImportSpecifier':
+      return getDeclarations(node.ImportedBinding);
+    case 'ImportedDefaultBinding':
+    case 'NameSpaceImport':
+      return getDeclarations(node.ImportedBinding);
+    case 'NamedImports':
+      return getDeclarations(node.ImportsList);
     case 'ObjectBindingPattern':
       return getDeclarations(node.BindingPropertyList);
     case 'ArrayBindingPattern':
@@ -58,11 +65,29 @@ export function getDeclarations(node) {
     case 'BindingProperty':
       return getDeclarations(node.BindingElement);
     case 'BindingIdentifier':
+    case 'IdentifierName':
+    case 'LabelIdentifier':
       return [{ name: node.name, node }];
     case 'Elision':
       return [];
     case 'ForDeclaration':
       return getDeclarations(node.ForBinding);
+    case 'ExportSpecifier':
+      if (node.IdentifierName) {
+        return getDeclarations(node.IdentifierName);
+      }
+      return getDeclarations(node.IdentifierName_b);
+    case 'FunctionDeclaration':
+    case 'GeneratorDeclaration':
+    case 'AsyncFunctionDeclaration':
+    case 'AsyncGeneratorDeclaration':
+      return getDeclarations(node.BindingIdentifier);
+    case 'LexicalDeclaration':
+      return getDeclarations(node.BindingList);
+    case 'VariableStatement':
+      return getDeclarations(node.VariableDeclarationList);
+    case 'ClassDeclaration':
+      return getDeclarations(node.BindingIdentifier);
     default:
       throw new OutOfRange('getDeclarations', node);
   }
@@ -72,6 +97,8 @@ export class Scope {
   constructor(parser) {
     this.parser = parser;
     this.scopeStack = [];
+    this.labels = [];
+    this.exports = new Set();
     this.undefinedExports = new Map();
     this.flags = 0;
   }
@@ -136,7 +163,15 @@ export class Scope {
         lexicals: new Set(),
         variables: new Set(),
         functions: new Set(),
+        parameters: new Set(),
       });
+    }
+
+    const oldLabels = this.labels;
+    if (flags.label === 'boundary') {
+      this.labels = [];
+    } else if (flags.label) {
+      this.labels.push({ type: flags.label });
     }
 
     const oldStrict = this.parser.state.strict;
@@ -147,6 +182,12 @@ export class Scope {
     }
 
     const r = f();
+
+    if (flags.label === 'boundary') {
+      this.labels = oldLabels;
+    } else if (flags.label) {
+      this.labels.pop();
+    }
 
     if (flags.lexical || flags.variable) {
       this.scopeStack.pop();
@@ -184,11 +225,14 @@ export class Scope {
       switch (type) {
         case 'lexical':
         case 'import': {
-          if (d.name === 'let') {
+          if (type === 'lexical' && d.name === 'let') {
             this.parser.raiseEarly('LetInLexicalBinding', d.node);
           }
           const scope = this.lexicalScope();
-          if (scope.lexicals.has(d.name) || scope.variables.has(d.name) || scope.functions.has(d.name)) {
+          if (scope.lexicals.has(d.name)
+              || scope.variables.has(d.name)
+              || scope.functions.has(d.name)
+              || scope.parameters.has(d.name)) {
             this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
           }
           scope.lexicals.add(d.name);
@@ -209,14 +253,9 @@ export class Scope {
           }
           break;
         }
-        case 'parameter': {
-          const scope = this.lexicalScope();
-          if (this.parser.isStrictMode() && scope.lexicals.has(d.name)) {
-            this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
-          }
-          scope.lexicals.add(d.name);
+        case 'parameter':
+          this.variableScope().parameters.add(d.name);
           break;
-        }
         case 'variable':
           for (let i = this.scopeStack.length - 1; i >= 0; i -= 1) {
             const scope = this.scopeStack[i];
@@ -224,13 +263,33 @@ export class Scope {
             if (scope.lexicals.has(d.name) || (!scope.flags.variableFunctions && scope.functions.has(d.name))) {
               this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
             }
+            if (i === 0 && this.undefinedExports.has(d.name)) {
+              this.undefinedExports.delete(d.name);
+            }
             if (scope.flags.variable) {
               break;
             }
           }
           break;
+        case 'export':
+          if (this.exports.has(d.name)) {
+            this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+          } else {
+            this.exports.add(d.name);
+          }
+          break;
         default:
           throw new RangeError(type);
+      }
+    });
+  }
+
+  checkUndefinedExports(NamedExports) {
+    const scope = this.variableScope();
+    NamedExports.ExportsList.forEach((n) => {
+      const targetNode = n.IdentifierName || n.IdentifierName_a;
+      if (!scope.lexicals.has(targetNode.name) && !scope.variables.has(targetNode.name)) {
+        this.undefinedExports.set(targetNode.name, targetNode);
       }
     });
   }

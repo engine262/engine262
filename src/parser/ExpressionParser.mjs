@@ -547,8 +547,7 @@ export class ExpressionParser extends FunctionParser {
     switch (this.peek().type) {
       case Token.IDENTIFIER:
       case Token.YIELD:
-      case Token.AWAIT:
-      case Token.LET: {
+      case Token.AWAIT: {
         // `async` [no LineTerminator here] `function`
         if (this.test('async') && this.testAhead(Token.FUNCTION)
             && !this.peekAhead().hadLineTerminatorBefore) {

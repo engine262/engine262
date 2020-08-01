@@ -47,12 +47,13 @@ export const DuplicateConstructor = () => 'A class may only have one constructor
 export const DuplicateExports = () => 'Module cannot contain duplicate exports';
 export const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
+export const IllegalBreakContinue = (isBreak) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
 export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
 export const InvalidArrayLength = (l) => `Invalid array length: ${i(l)}`;
 export const InvalidAssignmentTarget = () => 'Invalid assignment target';
 export const InvalidCodePoint = () => 'Not a valid code point';
 export const InvalidHint = (v) => `Invalid hint: ${i(v)}`;
-export const InvalidMethodName = (name) => `Method cannot be named "${i(name)}"`;
+export const InvalidMethodName = (name) => `Method cannot be named '${i(name)}'`;
 export const InvalidPropertyDescriptor = () => 'Invalid property descriptor. Cannot both specify accessors and a value or writable attribute';
 export const InvalidRadix = () => 'Radix must be between 2 and 36, inclusive';
 export const InvalidReceiver = (f, v) => `${f} called on invalid receiver: ${i(v)}`;
@@ -63,7 +64,8 @@ export const JSONCircular = () => 'Cannot JSON stringify a circular structure';
 export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
 export const JSONUnexpectedChar = (c) => `Unexpected character ${c} in JSON`;
 export const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
-export const LetInLexicalBinding = () => '"let" is not allowed to be used as a name in lexical declarations';
+export const LetInLexicalBinding = () => '\'let\' is not allowed to be used as a name in lexical declarations';
+export const ModuleUndefinedExport = (n) => `Export '${i(n)}' is not defined in module`;
 export const NegativeIndex = (n) => `${n} cannot be negative`;
 export const NewlineAfterThrow = () => 'Illegal newline after throw';
 export const NormalizeInvalidForm = () => 'Invalid normalization form';
@@ -113,7 +115,7 @@ export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned trui
 export const RegExpArgumentNotAllowed = (m) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o) => `${i(o)} is not object or null`;
 export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
-  ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
+  ? `Could not resolve import '${i(n)}' from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n) => `Cannot not delete property ${i(n)}`;

@@ -1,4 +1,4 @@
-import { Token, isKeyword, isReservedWordStrict } from './tokens.mjs';
+import { Token, isKeyword, isReservedWordStrict, isKeywordRaw } from './tokens.mjs';
 import { BaseParser } from './BaseParser.mjs';
 
 export class IdentifierParser extends BaseParser {
@@ -43,9 +43,6 @@ export class IdentifierParser extends BaseParser {
       case Token.AWAIT:
         node.name = 'await';
         break;
-      case Token.LET:
-        node.name = 'let';
-        break;
       default:
         this.unexpected(token);
     }
@@ -62,6 +59,9 @@ export class IdentifierParser extends BaseParser {
       if (node.name === 'eval' || node.name === 'arguments') {
         this.raiseEarly('UnexpectedToken', token);
       }
+    }
+    if (isKeywordRaw(node.name)) {
+      this.raiseEarly('UnexpectedToken', token);
     }
     return this.finishNode(node, 'BindingIdentifier');
   }
@@ -91,9 +91,6 @@ export class IdentifierParser extends BaseParser {
           this.unexpected(token);
         }
         node.name = 'await';
-        break;
-      case Token.LET:
-        node.name = 'let';
         break;
       default:
         this.unexpected(token);
