@@ -677,8 +677,14 @@ export class Lexer {
       this.position += 1;
       if (c === '\\') {
         const l = this.source[this.position];
-        if (l === '\r' || l === '\n') {
+        if (isLineTerminator(l)) {
           this.position += 1;
+          if (l === '\r' && this.source[this.position] === '\n') {
+            this.position += 1;
+          }
+          this.line += 1;
+          this.columnOffset = this.position;
+          this.lineTerminatorBeforeNextToken = true;
         } else {
           buffer += this.scanEscapeSequence();
         }
@@ -719,6 +725,9 @@ export class Lexer {
         return String.fromCodePoint(this.scanCodePoint());
       default:
         this.position += 1;
+        if (c === '0' && !isDecimalDigit(this.source[this.position])) {
+          return '\u{0000}';
+        }
         return c;
     }
   }

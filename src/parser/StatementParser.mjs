@@ -67,7 +67,7 @@ export class StatementParser extends ExpressionParser {
         if (this.test('let')) {
           return this.parseLexicalDeclaration();
         }
-        if (this.test('async')) {
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseHoistableDeclaration();
         }
         return this.parseStatement();
@@ -84,7 +84,7 @@ export class StatementParser extends ExpressionParser {
       case Token.FUNCTION:
         return this.parseFunctionDeclaration(FunctionKind.NORMAL);
       default:
-        if (this.test('async')) {
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseFunctionDeclaration(FunctionKind.ASYNC);
         }
         throw new Error('unreachable');
@@ -477,7 +477,11 @@ export class StatementParser extends ExpressionParser {
           this.expect(Token.CONST);
           inner.LetOrConst = 'const';
         }
-        const list = this.parseBindingList();
+        const list = this.scope.with({ lexical: true }, () => {
+          const bindings = this.parseBindingList();
+          this.scope.declare(bindings, 'lexical');
+          return bindings;
+        });
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           inner.BindingList = list;
           node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
@@ -1029,7 +1033,7 @@ export class StatementParser extends ExpressionParser {
           node.ClassDeclaration = this.scope.with({ default: true }, () => this.parseClassDeclaration());
           break;
         default:
-          if (this.test('async')) {
+          if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
             node.HoistableDeclaration = this.scope.with({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.ASYNC));
           } else {
             node.AssignmentExpression = this.parseAssignmentExpression();
@@ -1088,7 +1092,7 @@ export class StatementParser extends ExpressionParser {
           if (this.test('let')) {
             node.Declaration = this.parseLexicalDeclaration();
             this.scope.declare(node.Declaration, 'export');
-          } else if (this.eat('async')) {
+          } else if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
             node.Declaration = this.parseHoistableDeclaration();
             this.scope.declare(node.Declaration, 'export');
           } else {

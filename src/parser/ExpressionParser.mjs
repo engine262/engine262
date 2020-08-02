@@ -338,6 +338,9 @@ export class ExpressionParser extends FunctionParser {
         case Token.NOT:
           node.operator = this.next().value;
           node.UnaryExpression = this.parseUnaryExpression();
+          if (this.test(Token.EXP)) {
+            this.unexpected();
+          }
           return this.finishNode(node, 'UnaryExpression');
         default:
           return this.parseUpdateExpression();
@@ -472,9 +475,11 @@ export class ExpressionParser extends FunctionParser {
           const { Arguments, trailingComma } = this.parseArguments();
 
           // `async` `(` Arguments `)` `=>`
-          if (!trailingComma && couldBeArrow
-              && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
-            return this.parseArrowFunction(result, Arguments, FunctionKind.ASYNC);
+          if (couldBeArrow && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+            const last = Arguments[Arguments.length - 1];
+            if (!trailingComma || (last && last.type !== 'AssignmentRestElement')) {
+              return this.parseArrowFunction(result, Arguments, FunctionKind.ASYNC);
+            }
           }
 
           node.CallExpression = result;
@@ -572,7 +577,10 @@ export class ExpressionParser extends FunctionParser {
         const node = this.startNode();
         const ident = this.parseIdentifierReference();
         // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
-        if (ident.name === 'async' && this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW)
+        if (ident.name === 'async'
+            && this.test(Token.IDENTIFIER)
+            && !this.peek().hadLineTerminatorBefore
+            && this.testAhead(Token.ARROW)
             && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseArrowFunction(node, [
             this.parseIdentifierReference(),
@@ -1047,27 +1055,19 @@ export class ExpressionParser extends FunctionParser {
     }
 
     let isGenerator = this.eat(Token.MUL);
-    const firstName = this.parsePropertyName();
-    let isAsync = false;
     let isGetter = false;
     let isSetter = false;
+    let isAsync = false;
     if (!isGenerator) {
-      if (firstName.type === 'IdentifierName') {
-        switch (firstName.name) {
-          case 'async':
-            isAsync = true;
-            break;
-          case 'get':
-            isGetter = true;
-            break;
-          case 'set':
-            isSetter = true;
-            break;
-          default:
-            break;
-        }
+      if (this.test('get')) {
+        isGetter = true;
+      } else if (this.test('set')) {
+        isSetter = true;
+      } else if (this.test('async') && !this.peekAhead().hadLineTerminatorBefore) {
+        isAsync = true;
       }
     }
+    const firstName = this.parsePropertyName();
     if (!isGenerator && !isGetter && !isSetter) {
       isGenerator = this.eat(Token.MUL);
     }
@@ -1111,6 +1111,7 @@ export class ExpressionParser extends FunctionParser {
     this.scope.with({
       lexical: true,
       variable: true,
+      superProperty: true,
     }, () => {
       if (isSpecialMethod && isGetter) {
         this.expect(Token.LPAREN);
@@ -1132,12 +1133,11 @@ export class ExpressionParser extends FunctionParser {
                    && !isStatic
                    && (node.PropertyName.name === 'constructor' || node.PropertyName.value === 'constructor')
                    && this.scope.hasSuperCall(),
-        superProperty: true,
       }, () => {
         const body = this.parseFunctionBody(isAsync, isGenerator, false);
         node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
         if (node.UniqueFormalParameters || node.PropertySetParameterList) {
-          this.validateFormalParameters(node.UniqueFormalParameters || node.PropertySetParameterList, body);
+          this.validateFormalParameters(node.UniqueFormalParameters || node.PropertySetParameterList, body, true);
         }
       });
     });

@@ -2,6 +2,10 @@
 
 set -x
 
-npm run test:test262
-npm run test:json
-npm run test:supplemental
+E=0
+
+npm run test:test262 || E=$?
+npm run test:json || E=$?
+npm run test:supplemental || E=$?
+
+exit $E

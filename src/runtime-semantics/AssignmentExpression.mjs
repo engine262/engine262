@@ -28,13 +28,24 @@ export function refineLeftHandSideExpression(node, type) {
         AssignmentRestElement: undefined,
       };
       node.ElementList.forEach((n) => {
-        if (n.type === 'SpreadElement') {
-          refinement.AssignmentRestElement = {
-            type: 'AssignmentRestElement',
-            DestructuringAssignmentTarget: n.AssignmentExpression,
-          };
-        } else {
-          refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
+        switch (n.type) {
+          case 'SpreadElement':
+            refinement.AssignmentRestElement = {
+              type: 'AssignmentRestElement',
+              DestructuringAssignmentTarget: n.AssignmentExpression,
+            };
+            break;
+          case 'ArrayLiteral':
+          case 'ObjectLiteral':
+            refinement.AssignmentElementList.push({
+              type: 'AssignmentElement',
+              DestructuringAssignmentTarget: n,
+              Initializer: null,
+            });
+            break;
+          default:
+            refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
+            break;
         }
       });
       return refinement;
@@ -167,10 +178,17 @@ export function* Evaluate_AssignmentExpression({
     if (lbool === Value.false) {
       return lval;
     }
-    // 5. Let rref be the result of evaluating AssignmentExpression.
-    const rref = yield* Evaluate(AssignmentExpression);
-    // 6. Let rval be ? GetValue(rref).
-    const rval = Q(GetValue(rref));
+    let rval;
+    // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else { // 6. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression);
+      // b. Let rval be ? GetValue(rref).
+      rval = Q(GetValue(rref));
+    }
     // 7. Perform ? PutValue(lref, rval).
     Q(PutValue(lref, rval));
     // 8. Return rval.
@@ -186,10 +204,17 @@ export function* Evaluate_AssignmentExpression({
     if (lbool === Value.true) {
       return lval;
     }
-    // 5. Let rref be the result of evaluating AssignmentExpression.
-    const rref = yield* Evaluate(AssignmentExpression);
-    // 6. Let rval be ? GetValue(rref).
-    const rval = Q(GetValue(rref));
+    let rval;
+    // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else { // 6. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression);
+      // b. Let rval be ? GetValue(rref).
+      rval = Q(GetValue(rref));
+    }
     // 7. Perform ? PutValue(lref, rval).
     Q(PutValue(lref, rval));
     // 8. Return rval.
@@ -203,10 +228,17 @@ export function* Evaluate_AssignmentExpression({
     if (lval !== Value.undefined && lval !== Value.null) {
       return lval;
     }
-    // 4. Let rref be the result of evaluating AssignmentExpression.
-    const rref = yield* Evaluate(AssignmentExpression);
-    // 5. Let rval be ? GetValue(rref).
-    const rval = Q(GetValue(rref));
+    let rval;
+    // 4. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else { // 5. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression);
+      // b. Let rval be ? GetValue(rref).
+      rval = Q(GetValue(rref));
+    }
     // 6. Perform ? PutValue(lref, rval).
     Q(PutValue(lref, rval));
     // 7. Return rval.

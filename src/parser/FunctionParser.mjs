@@ -37,7 +37,12 @@ export class FunctionParser extends IdentifierParser {
     this.expect(Token.FUNCTION);
     const isGenerator = this.eat(Token.MUL);
     if (!this.test(Token.LPAREN)) {
-      node.BindingIdentifier = this.parseBindingIdentifier();
+      this.scope.with({
+        await: isExpression ? false : undefined,
+        yield: isExpression ? false : undefined,
+      }, () => {
+        node.BindingIdentifier = this.parseBindingIdentifier();
+      });
       if (!isExpression) {
         this.scope.declare(node.BindingIdentifier, 'function');
       }
@@ -67,7 +72,7 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters, body, isArrow = false) {
+  validateFormalParameters(parameters, body, wantsUnique = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
 
@@ -87,7 +92,7 @@ export class FunctionParser extends IdentifierParser {
             this.raiseEarly('UnexpectedToken', d.node);
           }
         }
-        if (isStrict || isArrow) {
+        if (isStrict || wantsUnique) {
           if (names.has(d.name)) {
             this.raiseEarly('AlreadyDeclared', d.node, d.name);
           } else {

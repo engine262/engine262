@@ -126,6 +126,7 @@ export const StringPrototypeMethodGlobalRegExp = (m) => `The RegExp passed to St
 export const SubclassLengthTooSmall = (v) => `Subclass constructor returned a smaller-than-requested object ${i(v)}`;
 export const SubclassSameValue = (v) => `Subclass constructor returned the same object ${i(v)}`;
 export const TargetMatchesHeldValue = (v) => `heldValue ${i(v)} matches target`;
+export const TryMissingCatchOrFinally = () => 'Missing catch or finally after try';
 export const TypedArrayCreationOOB = () => 'Sum of start offset and byte length should be less than the size of underlying buffer';
 export const TypedArrayLengthAlignment = (n, m) => `Size of ${n} should be a multiple of ${m}`;
 export const TypedArrayOOB = () => 'Sum of start offset and byte length should be less than the size of the TypedArray';

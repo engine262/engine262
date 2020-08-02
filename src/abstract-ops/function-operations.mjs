@@ -259,7 +259,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   F.Construct = FunctionConstructSlot;
   F.ConstructorKind = 'base';
   if (writablePrototype === undefined) {
-    writablePrototype = true;
+    writablePrototype = Value.true;
   }
   if (prototype === undefined) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
@@ -272,7 +272,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   }
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
-    Writable: writablePrototype ? Value.true : Value.false,
+    Writable: writablePrototype,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
