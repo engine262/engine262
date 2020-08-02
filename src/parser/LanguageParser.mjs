@@ -38,6 +38,7 @@ export class LanguageParser extends StatementParser {
       this.skipHashbangComment();
     }
     return this.scope.with({
+      module: true,
       strict: true,
       in: true,
       importMeta: true,

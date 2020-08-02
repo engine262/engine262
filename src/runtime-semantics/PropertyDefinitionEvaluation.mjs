@@ -6,6 +6,7 @@ import {
   OrdinaryObjectCreate,
   OrdinaryFunctionCreate,
   CreateDataPropertyOrThrow,
+  CopyDataProperties,
   DefinePropertyOrThrow,
   SetFunctionName,
   MakeMethod,
@@ -51,8 +52,20 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     default:
       throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
   }
-  // PropertyDefinition : PropertyName `:` AssignmentExpression
+  // PropertyDefinition :
+  //   PropertyName `:` AssignmentExpression
+  //   `...` AssignmentExpression
   const { PropertyName, AssignmentExpression } = PropertyDefinition;
+  if (!PropertyName) {
+    // 1. Let exprValue be the result of evaluating AssignmentExpression.
+    const exprValue = yield* Evaluate(AssignmentExpression);
+    // 2. Let fromValue be ? GetValue(exprValue).
+    const fromValue = Q(GetValue(exprValue));
+    // 3. Let excludedNames be a new empty List.
+    const excludedNames = [];
+    // 4. Return ? CopyDataProperties(object, fromValue, excludedNames).
+    return Q(CopyDataProperties(object, fromValue, excludedNames));
+  }
   // 1. Let propKey be the result of evaluating PropertyName.
   const propKey = yield* Evaluate_PropertyName(PropertyName);
   // 2. ReturnIfAbrupt(propKey).

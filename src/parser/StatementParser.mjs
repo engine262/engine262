@@ -283,7 +283,7 @@ export class StatementParser extends ExpressionParser {
 
   // Statement :
   //   ...
-  parseStatement(context) {
+  parseStatement() {
     switch (this.peek().type) {
       case Token.LBRACE:
         return this.parseBlockStatement();
@@ -318,16 +318,6 @@ export class StatementParser extends ExpressionParser {
       case Token.DEBUGGER:
         return this.parseDebuggerStatement();
       default:
-        if (this.test(Token.FUNCTION)
-            || (this.test('async') && this.testAhead(Token.FUNCTION)
-            && !this.peekAhead().hadLineTerminatorBefore)) {
-          if (this.isStrictMode() || context !== 'if') {
-            this.raiseEarly('FunctionDeclarationStatement');
-          }
-        }
-        if (this.test('let') && this.testAhead(Token.LBRACK)) {
-          this.raiseEarly('UnexpectedToken');
-        }
         return this.parseExpressionStatement();
     }
   }
@@ -402,9 +392,9 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    node.Statement_a = this.parseStatement('if');
+    node.Statement_a = this.parseStatement();
     if (this.eat(Token.ELSE)) {
-      node.Statement_b = this.parseStatement('if');
+      node.Statement_b = this.parseStatement();
     }
     return this.finishNode(node, 'IfStatement');
   }
@@ -417,7 +407,7 @@ export class StatementParser extends ExpressionParser {
     node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
     this.scope.with({ label: 'loop' }, () => {
-      node.Statement = this.parseStatement('while');
+      node.Statement = this.parseStatement();
     });
     return this.finishNode(node, 'WhileStatement');
   }
@@ -427,7 +417,7 @@ export class StatementParser extends ExpressionParser {
     const node = this.startNode();
     this.expect(Token.DO);
     this.scope.with({ label: 'loop' }, () => {
-      node.Statement = this.parseStatement('do-while');
+      node.Statement = this.parseStatement();
     });
     this.expect(Token.WHILE);
     this.expect(Token.LPAREN);
@@ -476,7 +466,7 @@ export class StatementParser extends ExpressionParser {
           node.Expression_c = this.parseExpression();
         }
         this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement('for');
+        node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
       if (this.test('let') || this.test(Token.CONST)) {
@@ -500,7 +490,7 @@ export class StatementParser extends ExpressionParser {
             node.Expression_b = this.parseExpression();
           }
           this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement('for');
+          node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
         inner.ForBinding = list[0];
@@ -518,13 +508,13 @@ export class StatementParser extends ExpressionParser {
         if (!isAwait && this.eat(Token.IN)) {
           node.Expression = this.parseExpression();
           this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement('for');
+          node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForInStatement');
         }
         this.expect('of');
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement('for');
+        node.Statement = this.parseStatement();
         return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
       }
       if (this.eat(Token.VAR)) {
@@ -533,7 +523,7 @@ export class StatementParser extends ExpressionParser {
           this.expect('of');
           node.AssignmentExpression = this.parseAssignmentExpression();
           this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement('for');
+          node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForAwaitStatement');
         }
         const list = this.parseVariableDeclarationList(false);
@@ -548,7 +538,7 @@ export class StatementParser extends ExpressionParser {
             node.Expression_b = this.parseExpression();
           }
           this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement('for');
+          node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
         node.ForBinding = list[0];
@@ -563,7 +553,7 @@ export class StatementParser extends ExpressionParser {
           node.Expression = this.parseExpression();
         }
         this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement('for');
+        node.Statement = this.parseStatement();
         return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
       }
 
@@ -573,7 +563,7 @@ export class StatementParser extends ExpressionParser {
         node.LeftHandSideExpression = expression;
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement('for');
+        node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
       if (this.eat('of')) {
@@ -581,7 +571,7 @@ export class StatementParser extends ExpressionParser {
         node.LeftHandSideExpression = expression;
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement('for');
+        node.Statement = this.parseStatement();
         return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
       }
 
@@ -598,7 +588,7 @@ export class StatementParser extends ExpressionParser {
       }
       this.expect(Token.RPAREN);
 
-      node.Statement = this.parseStatement('for');
+      node.Statement = this.parseStatement();
       return this.finishNode(node, 'ForStatement');
     });
   }
@@ -774,7 +764,7 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
     this.expect(Token.RPAREN);
-    node.Statement = this.parseStatement('with');
+    node.Statement = this.parseStatement();
     return this.finishNode(node, 'WithStatement');
   }
 
@@ -854,6 +844,21 @@ export class StatementParser extends ExpressionParser {
   // ExpressionStatement :
   //   [lookahead != `{`, `function`, `async` [no LineTerminator here] `function`, `class`, `let` `[` ] Expression `;`
   parseExpressionStatement() {
+    switch (this.peek().type) {
+      case Token.LBRACE:
+      case Token.FUNCTION:
+      case Token.CLASS:
+        this.unexpected();
+        break;
+      default:
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+          this.unexpected();
+        }
+        if (this.test('let') && this.testAhead(Token.LBRACK)) {
+          this.unexpected();
+        }
+        break;
+    }
     const node = this.startNode();
     const expression = this.parseExpression();
     if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
@@ -863,13 +868,25 @@ export class StatementParser extends ExpressionParser {
       if (this.scope.labels.find((l) => l.name === node.LabelIdentifier.name)) {
         this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
       }
-      this.scope.labels.push({ name: node.LabelIdentifier.name });
-
-      if (this.test(Token.FUNCTION)) {
-        node.LabelledItem = this.parseFunctionDeclaration();
-      } else {
-        node.LabelledItem = this.parseStatement();
+      let type = null;
+      switch (this.peek().type) {
+        case Token.SWITCH:
+          type = 'switch';
+          break;
+        case Token.DO:
+        case Token.WHILE:
+        case Token.FOR:
+          type = 'loop';
+          break;
+        default:
+          break;
       }
+      this.scope.labels.push({
+        name: node.LabelIdentifier.name,
+        type,
+      });
+
+      node.LabelledItem = this.parseStatement();
 
       this.scope.labels.pop();
 

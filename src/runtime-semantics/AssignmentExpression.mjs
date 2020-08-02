@@ -19,7 +19,7 @@ import {
 } from './all.mjs';
 
 // #sec-destructuring-assignment
-export function refineLeftHandSideExpression(node) {
+export function refineLeftHandSideExpression(node, type) {
   switch (node.type) {
     case 'ArrayLiteral': {
       const refinement = {
@@ -34,7 +34,7 @@ export function refineLeftHandSideExpression(node) {
             DestructuringAssignmentTarget: n.AssignmentExpression,
           };
         } else {
-          refinement.AssignmentElementList.push(refineLeftHandSideExpression(n));
+          refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
         }
       });
       return refinement;
@@ -52,7 +52,7 @@ export function refineLeftHandSideExpression(node) {
             DestructuringAssignmentTarget: p.AssignmentExpression,
           };
         } else {
-          refined.AssignmentPropertyList.push(refineLeftHandSideExpression(p));
+          refined.AssignmentPropertyList.push(refineLeftHandSideExpression(p, 'object'));
         }
       });
       return refined;
@@ -74,9 +74,23 @@ export function refineLeftHandSideExpression(node) {
           },
       };
     case 'IdentifierReference':
+      if (type === 'array') {
+        return {
+          type: 'AssignmentElement',
+          DestructuringAssignmentTarget: node,
+          Initializer: undefined,
+        };
+      } else {
+        return {
+          type: 'AssignmentProperty',
+          IdentifierReference: node,
+          Initializer: undefined,
+        };
+      }
+    case 'MemberExpression':
       return {
-        type: 'AssignmentProperty',
-        IdentifierReference: node,
+        type: 'AssignmentElement',
+        DestructuringAssignmentTarget: node,
         Initializer: undefined,
       };
     case 'CoverInitializedName':

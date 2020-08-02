@@ -1,4 +1,9 @@
-import { Token, isKeyword, isReservedWordStrict, isKeywordRaw } from './tokens.mjs';
+import {
+  Token,
+  isKeyword,
+  isReservedWordStrict,
+  isKeywordRaw,
+} from './tokens.mjs';
 import { BaseParser } from './BaseParser.mjs';
 
 export class IdentifierParser extends BaseParser {
@@ -46,10 +51,10 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    if (node.name === 'yield' && this.scope.hasYield()) {
+    if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedToken', token);
     }
-    if (node.name === 'await' && this.scope.hasAwait()) {
+    if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedToken', token);
     }
     if (this.isStrictMode()) {
@@ -60,7 +65,9 @@ export class IdentifierParser extends BaseParser {
         this.raiseEarly('UnexpectedToken', token);
       }
     }
-    if (isKeywordRaw(node.name)) {
+    if (node.name !== 'yield'
+        && node.name !== 'await'
+        && isKeywordRaw(node.name)) {
       this.raiseEarly('UnexpectedToken', token);
     }
     return this.finishNode(node, 'BindingIdentifier');
@@ -95,13 +102,18 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    if (node.name === 'yield' && this.scope.hasYield()) {
+    if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedToken', token);
     }
-    if (node.name === 'await' && this.scope.hasAwait()) {
+    if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedToken', token);
     }
     if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+      this.raiseEarly('UnexpectedToken', token);
+    }
+    if (node.name !== 'yield'
+        && node.name !== 'await'
+        && isKeywordRaw(node.name)) {
       this.raiseEarly('UnexpectedToken', token);
     }
     return this.finishNode(node, 'IdentifierReference');

@@ -77,11 +77,12 @@ export class ExpressionParser extends FunctionParser {
   validateAssignmentTarget(node) {
     switch (node.type) {
       case 'IdentifierReference':
-        if (node.name === 'eval' || node.name === 'arguments') {
+        if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
           break;
         }
         return;
       case 'CoverInitializedName':
+        this.validateAssignmentTarget(node.IdentifierReference);
         return;
       case 'MemberExpression':
         return;
@@ -91,10 +92,21 @@ export class ExpressionParser extends FunctionParser {
         this.validateAssignmentTarget(node.Expression);
         return;
       case 'ArrayLiteral':
-        node.ElementList.forEach((p) => this.validateAssignmentTarget(p));
+        node.ElementList.forEach((p, i) => {
+          if (p.type === 'SpreadElement' && i !== node.ElementList.length - 1) {
+            this.raiseEarly('InvalidAssignmentTarget', p);
+          }
+          this.validateAssignmentTarget(p);
+        });
         return;
       case 'ObjectLiteral':
-        node.PropertyDefinitionList.forEach((p) => this.validateAssignmentTarget(p));
+        node.PropertyDefinitionList.forEach((p, i) => {
+          if (p.type === 'PropertyDefinition' && !p.PropertyName
+              && i !== node.PropertyDefinitionList.length - 1) {
+            this.raiseEarly('InvalidAssignmentTarget', p);
+          }
+          this.validateAssignmentTarget(p);
+        });
         return;
       case 'PropertyDefinition':
         this.validateAssignmentTarget(node.AssignmentExpression);
@@ -311,24 +323,26 @@ export class ExpressionParser extends FunctionParser {
   //   `!` UnaryExpression
   //   [+Await] AwaitExpression
   parseUnaryExpression() {
-    if (this.test(Token.AWAIT) && this.scope.hasAwait()) {
-      return this.parseAwaitExpression();
-    }
-    const node = this.startNode();
-    switch (this.peek().type) {
-      case Token.DELETE:
-      case Token.VOID:
-      case Token.TYPEOF:
-      case Token.ADD:
-      case Token.SUB:
-      case Token.BIT_NOT:
-      case Token.NOT:
-        node.operator = this.next().value;
-        node.UnaryExpression = this.parseUnaryExpression();
-        return this.finishNode(node, 'UnaryExpression');
-      default:
-        return this.parseUpdateExpression();
-    }
+    return this.scope.with({ in: true }, () => {
+      if (this.test(Token.AWAIT) && this.scope.hasAwait()) {
+        return this.parseAwaitExpression();
+      }
+      const node = this.startNode();
+      switch (this.peek().type) {
+        case Token.DELETE:
+        case Token.VOID:
+        case Token.TYPEOF:
+        case Token.ADD:
+        case Token.SUB:
+        case Token.BIT_NOT:
+        case Token.NOT:
+          node.operator = this.next().value;
+          node.UnaryExpression = this.parseUnaryExpression();
+          return this.finishNode(node, 'UnaryExpression');
+        default:
+          return this.parseUpdateExpression();
+      }
+    });
   }
 
   // AwaitExpression : `await` UnaryExpression
@@ -388,7 +402,7 @@ export class ExpressionParser extends FunctionParser {
           if (!this.scope.hasSuperCall()) {
             this.raiseEarly('UnexpectedToken');
           }
-          node.Arguments = this.parseArguments();
+          node.Arguments = this.parseArguments().Arguments;
           result = this.finishNode(node, 'SuperCall');
         } else {
           if (!this.scope.hasSuperProperty()) {
@@ -455,15 +469,16 @@ export class ExpressionParser extends FunctionParser {
               && result.type === 'IdentifierReference'
               && !this.peek().hadLineTerminatorBefore;
 
-          const args = this.parseArguments();
+          const { Arguments, trailingComma } = this.parseArguments();
 
           // `async` `(` Arguments `)` `=>`
-          if (couldBeArrow && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
-            return this.parseArrowFunction(result, args, FunctionKind.ASYNC);
+          if (!trailingComma && couldBeArrow
+              && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+            return this.parseArrowFunction(result, Arguments, FunctionKind.ASYNC);
           }
 
           node.CallExpression = result;
-          node.Arguments = args;
+          node.Arguments = Arguments;
           result = this.finishNode(node, 'CallExpression');
           break;
         }
@@ -490,7 +505,7 @@ export class ExpressionParser extends FunctionParser {
     let base = this.startNode();
     base.OptionalChain = null;
     if (this.test(Token.LPAREN)) {
-      base.Arguments = this.parseArguments();
+      base.Arguments = this.parseArguments().Arguments;
     } else if (this.eat(Token.LBRACK)) {
       base.Expression = this.parseExpression();
       this.expect(Token.RBRACK);
@@ -505,7 +520,7 @@ export class ExpressionParser extends FunctionParser {
       const node = this.startNode();
       if (this.test(Token.LPAREN)) {
         node.OptionalChain = base;
-        node.Arguments = this.parseArguments();
+        node.Arguments = this.parseArguments().Arguments;
         base = this.finishNode(node, 'OptionalChain');
       } else if (this.eat(Token.LBRACK)) {
         node.OptionalChain = base;
@@ -534,7 +549,7 @@ export class ExpressionParser extends FunctionParser {
     }
     node.MemberExpression = this.parseLeftHandSideExpression(false);
     if (this.test(Token.LPAREN)) {
-      node.Arguments = this.parseArguments();
+      node.Arguments = this.parseArguments().Arguments;
     } else {
       node.Arguments = null;
     }
@@ -546,6 +561,7 @@ export class ExpressionParser extends FunctionParser {
   parsePrimaryExpression() {
     switch (this.peek().type) {
       case Token.IDENTIFIER:
+      case Token.ESCAPED_KEYWORD:
       case Token.YIELD:
       case Token.AWAIT: {
         // `async` [no LineTerminator here] `function`
@@ -702,26 +718,28 @@ export class ExpressionParser extends FunctionParser {
   parseArguments() {
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
-      return [];
+      return { Arguments: [], trailingComma: false };
     }
-    const params = [];
+    const Arguments = [];
+    let trailingComma = false;
     while (true) {
       const node = this.startNode();
       if (this.eat(Token.ELLIPSIS)) {
         node.AssignmentExpression = this.parseAssignmentExpression();
-        params.push(this.finishNode(node, 'AssignmentRestElement'));
+        Arguments.push(this.finishNode(node, 'AssignmentRestElement'));
       } else {
-        params.push(this.parseAssignmentExpression());
+        Arguments.push(this.parseAssignmentExpression());
       }
       if (this.eat(Token.RPAREN)) {
         break;
       }
       this.expect(Token.COMMA);
       if (this.eat(Token.RPAREN)) {
+        trailingComma = true;
         break;
       }
     }
-    return params;
+    return { Arguments, trailingComma };
   }
 
   // #sec-class-definitions
@@ -1063,6 +1081,7 @@ export class ExpressionParser extends FunctionParser {
       }
       if (this.test(Token.ASSIGN)) {
         node.IdentifierReference = firstName;
+        node.IdentifierReference.type = 'IdentifierReference';
         node.Initializer = this.parseInitializerOpt();
         return this.finishNode(node, 'CoverInitializedName');
       }
@@ -1072,7 +1091,15 @@ export class ExpressionParser extends FunctionParser {
           && !this.test(Token.LPAREN)
           && !isKeyword(firstName.name)) {
         firstName.type = 'IdentifierReference';
-        if (isKeywordRaw(firstName.name)) {
+        if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+        if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+        if (firstName.name !== 'yield'
+            && firstName.name !== 'await'
+            && isKeywordRaw(firstName.name)) {
           this.raiseEarly('UnexpectedToken', firstName);
         }
         return firstName;

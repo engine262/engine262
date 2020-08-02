@@ -7,13 +7,14 @@ export const Flag = {
   'return',
   'await',
   'yield',
-  'parameters', // disallows yield, await
+  'parameters',
   'newTarget',
   'importMeta',
   'superCall',
   'superProperty',
   'in',
   'default',
+  'module',
 ].forEach((name, i) => {
   if (i > 31) {
     throw new RangeError(name);
@@ -141,6 +142,10 @@ export class Scope {
 
   isDefault() {
     return (this.flags & Flag.default) !== 0;
+  }
+
+  isModule() {
+    return (this.flags & Flag.module) !== 0;
   }
 
   with(flags, f) {

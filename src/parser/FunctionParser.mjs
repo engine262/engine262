@@ -67,7 +67,7 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters, body, checkDuplicates = body.strict) {
+  validateFormalParameters(parameters, body, isArrow = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
 
@@ -87,7 +87,7 @@ export class FunctionParser extends IdentifierParser {
             this.raiseEarly('UnexpectedToken', d.node);
           }
         }
-        if (checkDuplicates) {
+        if (isStrict || isArrow) {
           if (names.has(d.name)) {
             this.raiseEarly('AlreadyDeclared', d.node, d.name);
           } else {
@@ -145,6 +145,7 @@ export class FunctionParser extends IdentifierParser {
         delete node.AssignmentExpression;
         return node;
       case 'SpreadElement':
+      case 'AssignmentRestElement':
         node.type = 'BindingRestElement';
         if (node.AssignmentExpression.type === 'IdentifierReference') {
           node.BindingIdentifier = node.AssignmentExpression;
