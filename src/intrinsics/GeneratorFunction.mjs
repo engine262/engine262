@@ -5,8 +5,12 @@ import { Q, X } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
+// #sec-generatorfunction
 function GeneratorFunctionConstructor(args, { NewTarget }) {
+  // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject;
+  // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
+  // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
   return Q(CreateDynamicFunction(C, NewTarget, 'generator', args));
 }
 

@@ -3,6 +3,7 @@ import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
+import { CharacterValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { isLineTerminator } from '../parse.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -55,7 +56,7 @@ export function Evaluate_Pattern(Pattern, flags) {
 
   {
     // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-    const m = Evaluate_Disjunction(Pattern.Disjunction, +1);
+    const m = Evaluate(Pattern.Disjunction, +1);
     // 2. Return a new abstract closure with parameters (str, index) that captures m and performs the following steps when called:
     return (str, index) => {
       // a. Assert: Type(str) is String.
@@ -99,6 +100,31 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
+  function Evaluate(node, ...args) {
+    switch (node.type) {
+      case 'Disjunction':
+        return Evaluate_Disjunction(node, ...args);
+      case 'Alternative':
+        return Evaluate_Alternative(node, ...args);
+      case 'Term':
+        return Evaluate_Term(node, ...args);
+      case 'Assertion':
+        return Evaluate_Assertion(node, ...args);
+      case 'Quantifier':
+        return Evaluate_Quantifier(node, ...args);
+      case 'Atom':
+        return Evaluate_Atom(node, ...args);
+      case 'AtomEscape':
+        return Evaluate_AtomEscape(node, ...args);
+      case 'CharacterClass':
+        return Evaluate_CharacterClass(node, ...args);
+      case 'CharacterEscape':
+        return Evaluate_CharacterEscape(node, ...args);
+      default:
+        throw new OutOfRange('Evaluate', node);
+    }
+  }
+
   // #sec-disjunction
   //   Disjunction ::
   //     Alternative
@@ -106,13 +132,13 @@ export function Evaluate_Pattern(Pattern, flags) {
   function Evaluate_Disjunction({ AlternativeList }, direction) {
     if (AlternativeList.length === 1) {
       // 1. Evaluate Alternative with argument direction to obtain a Matcher m.
-      const m = Evaluate_Alternative(AlternativeList[0], direction);
+      const m = Evaluate(AlternativeList[0], direction);
       // 2. Return m.
       return m;
     }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
     // 2. Evaluate Disjunction with argument direction to obtain a Matcher m2.
-    const mN = AlternativeList.map((Alternative) => Evaluate_Alternative(Alternative, direction));
+    const mN = AlternativeList.map((Alternative) => Evaluate(Alternative, direction));
     // 3. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
@@ -149,11 +175,11 @@ export function Evaluate_Pattern(Pattern, flags) {
       };
     }
     if (TermList.length === 1) {
-      return Evaluate_Term(TermList[0], direction);
+      return Evaluate(TermList[0], direction);
     }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
     // 2. Evaluate Term with argument direction to obtain a Matcher m2.
-    const mN = TermList.map((Term) => Evaluate_Term(Term, direction));
+    const mN = TermList.map((Term) => Evaluate(Term, direction));
     // 3. If direction is equal to +1, then
     if (direction === +1) {
       // a. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
@@ -200,19 +226,15 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     Atom
   //     Atom Quantifier
   function Evaluate_Term(Term, direction) {
-    if (Term.type === 'Assertion') {
-      // 1. Return the Matcher that is the result of evaluating Assertion.
-      return Evaluate_Assertion(Term);
-    }
     const { Atom, Quantifier } = Term;
     if (!Quantifier) {
       // 1. Return the Matcher that is the result of evaluating Atom with argument direction.
-      return Evaluate_Atom(Atom, direction);
+      return Evaluate(Atom, direction);
     }
     // 1. Evaluate Atom with argument direction to obtain a Matcher m.
-    const m = Evaluate_Atom(Atom, direction);
+    const m = Evaluate(Atom, direction);
     // 2. Evaluate Quantifier to obtain the three results: an integer min, an integer (or ∞) max, and Boolean greedy.
-    const [min, max, greedy] = Evaluate_Quantifier(Quantifier);
+    const [min, max, greedy] = Evaluate(Quantifier);
     // 3. Assert: If max is finite, then max is not less than min.
     Assert(!Number.isFinite(max) || (max >= min));
     // 4. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the
@@ -389,7 +411,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         };
       case '?=': {
         // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate_Disjunction(Disjunction, +1);
+        const m = Evaluate(Disjunction, +1);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
@@ -423,7 +445,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       }
       case '?!': {
         // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate_Disjunction(Disjunction, +1);
+        const m = Evaluate(Disjunction, +1);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
@@ -449,7 +471,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       }
       case '?<=': {
         // 1. Evaluate Disjunction with -1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate_Disjunction(Disjunction, -1);
+        const m = Evaluate(Disjunction, -1);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
@@ -483,7 +505,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       }
       case '?<!': {
         // 1. Evaluate Disjunction with -1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate_Disjunction(Disjunction, -1);
+        const m = Evaluate(Disjunction, -1);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
@@ -592,16 +614,16 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     `(` GroupSpecifier Disjunction `)`
   //     `(` `?` `:` Disjunction `)`
   function Evaluate_Atom(Atom, direction) {
-    switch (Atom.subtype) {
-      case 'PatternCharacter': {
+    switch (true) {
+      case !!Atom.PatternCharacter: {
         // 1. Let ch be the character matched by PatternCharacter.
-        const ch = Atom.value;
+        const ch = Atom.PatternCharacter;
         // 2. Let A be a one-element CharSet containing the character ch.
         const A = [ch];
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
-      case '.': {
+      case Atom.subtype === '.': {
         let A;
         // 1. If DotAll is true, then
         if (DotAll) {
@@ -622,24 +644,19 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
-      case 'CharacterClass': {
+      case !!Atom.CharacterClass: {
         // 1. Evaluate CharacterClass to obtain a CharSet A and a Boolean invert.
-        const { A, invert } = Evaluate_CharacterClass(Atom);
+        const { A, invert } = Evaluate(Atom.CharacterClass);
         // 2. Call CharacterSetMatcher(A, invert, direction) and return its Matcher result.
         return CharacterSetMatcher(A, invert, direction);
       }
-      case 'group': {
-        const { capturingParenthesesBefore, capturing, Disjunction } = Atom;
-        if (!capturing) {
-          // 1. Return the Matcher that is the result of evaluating Disjunction with argument direction.
-          return Evaluate_Disjunction(Disjunction, direction);
-        }
+      case Atom.capturing: {
         // 1. Evaluate Disjunction with argument direction to obtain a Matcher m.
-        const m = Evaluate_Disjunction(Disjunction, direction);
+        const m = Evaluate(Atom.Disjunction, direction);
         // 2. Let parenIndex be the number of left-capturing parentheses in the entire regular expression
         //    that occur to the left of this Atom. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)`
         //    Parse Nodes prior to or enclosing this Atom.
-        const parenIndex = capturingParenthesesBefore;
+        const parenIndex = Atom.capturingParenthesesBefore;
         // 3. Return a new Matcher with parameters (x, c) that captures direction, m, and parenIndex and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
@@ -694,8 +711,10 @@ export function Evaluate_Pattern(Pattern, flags) {
           return m(x, d);
         };
       }
+      case !!Atom.Disjunction:
+        return Evaluate(Atom.Disjunction, direction);
       default:
-        throw new OutOfRange('Evaluate_Atom', Atom.subtype);
+        throw new OutOfRange('Evaluate_Atom', Atom);
     }
   }
 
@@ -783,6 +802,105 @@ export function Evaluate_Pattern(Pattern, flags) {
       // h. Return cu.
       return cu;
     }
+  }
+
+  // #sec-atomescape
+  // AtomEscape ::
+  //   DecimalEscape
+  //   CharacterEscape
+  //   CharacterClassEscape
+  //   `k` GroupName
+  function Evaluate_AtomEscape(AtomEscape, direction) {
+    switch (true) {
+      case !!AtomEscape.DecimalEscape: {
+        // 1. Evaluate DecimalEscape to obtain an integer n.
+        const n = Evaluate(AtomEscape.DecimalEscape);
+        // 2. Assert: n ≤ NcapturingParens.
+        Assert(n <= NcapturingParens);
+        // 3. Call BackreferenceMatcher(n, direction) and return its Matcher result.
+        return BackreferenceMatcher(n, direction);
+      }
+      case !!AtomEscape.CharacterEscape: {
+        // 1. Evaluate CharacterEscape to obtain a character ch.
+        const ch = Evaluate(AtomEscape.CharacterEscape);
+        // 2. Let A be a one-element CharSet containing the character ch.
+        const A = [ch];
+        // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+        return CharacterSetMatcher(A, false, direction);
+      }
+      case !!AtomEscape.CharacterClassEscape: {
+        // 1. Evaluate CharacterClassEscape to obtain a CharSet A.
+        const A = Evaluate(AtomEscape.CharacterClassEscape);
+        // 2. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+        return CharacterSetMatcher(A, false, direction);
+      }
+      /*
+      case !!AtomEscape.GroupName: {
+        // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
+        // 2. Assert: A unique such GroupSpecifier is found.
+        // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
+        // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
+      }
+      */
+      default:
+        throw new OutOfRange('Evaluate_AtomEscape', AtomEscape);
+    }
+  }
+
+  // #sec-backreference-matcher
+  function BackreferenceMatcher(n, direction) {
+    // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
+    return (x, c) => {
+      // a. Assert: x is a State.
+      Assert(x instanceof State);
+      // b. Assert: c is a Continuation.
+      Assert(typeof c === 'function');
+      // c. Let cap be x's captures List.
+      const cap = x.captures;
+      // d. Let s be cap[n].
+      const s = cap[n];
+      // e. If s is undefined, return c(x).
+      if (s === undefined) {
+        return c(x);
+      }
+      // f. Let e be x's endIndex.
+      const e = x.endIndex;
+      // g. Let len be the number of elements in s.
+      const len = s.length;
+      // h. Let f be e + direction × len.
+      const f = e + direction * len;
+      // i. If f < 0 or f > InputLength, return failure.
+      if (f < 0 || f > InputLength) {
+        return 'failure';
+      }
+      // j. Let g be min(e, f).
+      const g = Math.min(e, f);
+      // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
+      for (let i = 0; i < len; i += 1) {
+        if (Canonicalize(s[i]) !== Canonicalize(Input[g + i])) {
+          return 'failure';
+        }
+      }
+      // l. Let y be the State (f, cap).
+      const y = new State(f, cap);
+      // m. Call c(y) and return its result.
+      return c(y);
+    };
+  }
+
+  // #sec-characterescape
+  // CharacterEscape ::
+  //   ControlEscape
+  //   `c` ControlLetter
+  //   `0` [lookahead != DecimalDigit]
+  //   HexEscapeSequence
+  //   RegExpUnicodeEscapeSequence
+  //   IdentityEscape
+  function Evaluate_CharacterEscape(CharacterEscape) {
+    // 1. Let cv be the CharacterValue of this CharacterEscape.
+    const cv = CharacterValue(CharacterEscape);
+    // 2. Return the character whose character value is cv.
+    return cv;
   }
 
   // #sec-characterclass

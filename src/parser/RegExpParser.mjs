@@ -92,6 +92,19 @@ export class RegExpParser {
   //   Assertion
   //   Atom
   //   Atom Quantifier
+  parseTerm() {
+    const assertion = this.maybeParseAssertion();
+    if (assertion) {
+      return assertion;
+    }
+    return {
+      type: 'Term',
+      capturingParenthesesBefore: this.capturingGroups.length,
+      Atom: this.parseAtom(),
+      Quantifier: this.maybeParseQuantifier(),
+    };
+  }
+
   // Assertion ::
   //   `^`
   //   `$`
@@ -101,7 +114,7 @@ export class RegExpParser {
   //   `(` `?` `!` Disjunction `)`
   //   `(` `?` `<=` Disjunction `)`
   //   `(` `?` `<!` Disjunction `)`
-  parseTerm() {
+  maybeParseAssertion() {
     if (this.eat('^')) {
       return { type: 'Assertion', subtype: '^' };
     }
@@ -163,12 +176,7 @@ export class RegExpParser {
       };
     }
 
-    return {
-      type: 'Term',
-      capturingParenthesesBefore: this.capturingGroups.length,
-      Atom: this.parseAtom(),
-      Quantifier: this.parseQuantifier(),
-    };
+    return undefined;
   }
 
   // Quantifier ::
@@ -181,7 +189,7 @@ export class RegExpParser {
   //   `{` DecimalDigits `}`
   //   `{` DecimalDigits `,` `}`
   //   `{` DecimalDigits `,` DecimalDigits `}`
-  parseQuantifier() {
+  maybeParseQuantifier() {
     let QuantifierPrefix;
 
     if (this.eat('*')) {
@@ -218,14 +226,6 @@ export class RegExpParser {
     return undefined;
   }
 
-  parseDecimalDigits() {
-    let n = '';
-    while (isDecimalDigit(this.peek())) {
-      n += this.next();
-    }
-    return n;
-  }
-
   // Atom ::
   //   PatternCharacter
   //   `.`
@@ -233,19 +233,16 @@ export class RegExpParser {
   //   CharacterClass
   //   `(` GroupSpecifier Disjunction `)`
   //   `(` `?` `:` Disjunction `)`
-  // GroupSpecifier :
-  //   [empty]
-  //   `?` GroupName
-  // GroupName ::
-  //   `<` RegExpIdentifierName `>`
   parseAtom() {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
     }
+    if (this.eat('\\')) {
+      return this.parseAtomEscape();
+    }
     if (this.eat('(')) {
       const node = {
         type: 'Atom',
-        subtype: 'group',
         capturingParenthesesBefore: this.capturingGroups.length,
         enclosedCapturingParentheses: 0,
         capturing: true,
@@ -278,13 +275,156 @@ export class RegExpParser {
     if (isSyntaxCharacter(this.peek())) {
       throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
     }
-    const character = this.eat('\\') ? this.parseCharacterEscape() : this.next();
     return {
       type: 'Atom',
-      subtype: 'PatternCharacter',
-      enclosedCapturingParentheses: 0,
-      value: character,
+      PatternCharacter: this.next(),
     };
+  }
+
+  // AtomEscape ::
+  //   DecimalEscape
+  //   CharacterClassEscape
+  //   CharacterEscape
+  //   `k` GroupName
+  parseAtomEscape() {
+    if (this.eat('k')) {
+      return {
+        type: 'AtomEscape',
+        GroupName: this.parseGroupName(),
+      };
+    }
+    const CharacterClassEscape = this.maybeParseCharacterClassEscape();
+    if (CharacterClassEscape) {
+      return {
+        type: 'AtomEscape',
+        CharacterClassEscape,
+      };
+    }
+    const DecimalEscape = this.maybeParseDecimalEscape();
+    if (DecimalEscape) {
+      return {
+        type: 'AtomEscape',
+        DecimalEscape,
+      };
+    }
+    return {
+      type: 'AtomEscape',
+      CharacterEscape: this.parseCharacterEscape(),
+    };
+  }
+
+  // CharacterEscape ::
+  //   ControlEscape
+  //   `c` ControlLetter
+  //   `0` [lookahead ∉ DecimalDigit]
+  //   HexEscapeSequence
+  //   RegExpUnicodeEscapeSequence
+  //   IdentityEscape
+  parseCharacterEscape() {
+    switch (this.peek()) {
+      case 'f':
+      case 'n':
+      case 'r':
+      case 't':
+      case 'v':
+        return {
+          type: 'ControlEscape',
+          subtype: this.next(),
+        };
+      case 'c': {
+        this.next();
+        const c = this.next();
+        const p = c.codePointAt(0);
+        if ((p >= 65 && p <= 90) || (p >= 97 && p <= 122)) {
+          return {
+            type: 'CharacterEscape',
+            ControlLetter: c,
+          };
+        }
+        return {
+          type: 'CharacterEscape',
+          IdentityEscape: c,
+        };
+      }
+      case 'x':
+        this.next();
+        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1])) {
+          return {
+            type: 'HexEscapeSequence',
+            HexDigit_a: this.next(),
+            HexDigit_b: this.next(),
+          };
+        }
+        return {
+          type: 'CharacterEscape',
+          IdentityEscape: 'x',
+        };
+      case 'u':
+        this.next();
+        if (isHexDigit(this.source[this.position])
+            && isHexDigit(this.source[this.position + 1])
+            && isHexDigit(this.source[this.position + 2])
+            && isHexDigit(this.source[this.position + 3])) {
+          return {
+            type: 'RegExpUnicodeEscapeSequence',
+            Hex4Digits: {
+              HexDigit_a: this.next(),
+              HexDigit_b: this.next(),
+              HexDigit_c: this.next(),
+              HexDigit_d: this.next(),
+            },
+          };
+        }
+        return {
+          type: 'CharacterEscape',
+          IdentityEscape: 'u',
+        };
+      default: {
+        const c = this.next();
+        if (c === '0' && !isDecimalDigit(this.peek())) {
+          return {
+            type: 'CharacterEscape',
+            subtype: '0',
+          };
+        }
+        return {
+          type: 'CharacterEscape',
+          IdentityEscape: c,
+        };
+      }
+    }
+  }
+
+  // DecimalEscape ::
+  //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
+  maybeParseDecimalEscape() {
+    return undefined;
+  }
+
+  // CharacterClassEscape ::
+  //   `d`
+  //   `D`
+  //   `s`
+  //   `S`
+  //   `w`
+  //   `W`
+  //   [+U] `p{` UnicodePropertyValueExpression `}`
+  //   [+U] `P{` UnicodePropertyValueExpression `}`
+  maybeParseCharacterClassEscape() {
+    switch (this.peek()) {
+      case 'd':
+      case 'D':
+      case 's':
+      case 'S':
+      case 'w':
+      case 'W':
+        return {
+          type: 'CharacterClassEscape',
+          value: this.next(),
+        };
+      default:
+        return undefined;
+    }
   }
 
   // CharacterClass ::
@@ -293,9 +433,7 @@ export class RegExpParser {
   parseCharacterClass() {
     this.expect('[');
     const node = {
-      type: 'Atom',
-      subtype: 'CharacterClass',
-      enclosedCapturingParentheses: 0,
+      type: 'CharacterClass',
       invert: false,
       ClassRanges: undefined,
     };
@@ -342,72 +480,24 @@ export class RegExpParser {
   parseClassAtom() {
     if (this.eat('\\')) {
       if (this.eat('b')) {
-        return '\u{0008}';
+        return {
+          type: 'ClassEscape',
+          value: 'b',
+        };
       }
       if (this.eat('-')) {
-        return '\u{002D}';
+        return {
+          type: 'ClassEscape',
+          value: '-',
+        };
+      }
+      const CharacterClassEscape = this.maybeParseCharacterClassEscape();
+      if (CharacterClassEscape) {
+        return CharacterClassEscape;
       }
       return this.parseCharacterEscape();
     }
     return this.next();
-  }
-
-  // CharacterEscape ::
-  //   ControlEscape
-  //   `c` ControlLetter
-  //   `0` [lookahead ∉ DecimalDigit]
-  //   HexEscapeSequence
-  //   RegExpUnicodeEscapeSequence
-  //   IdentityEscape
-  parseCharacterEscape() {
-    switch (this.peek()) {
-      case 'f':
-        this.next();
-        return '\u{000C}';
-      case 'n':
-        this.next();
-        return '\u{000A}';
-      case 'r':
-        this.next();
-        return '\u{000D}';
-      case 't':
-        this.next();
-        return '\u{0009}';
-      case 'v':
-        this.next();
-        return '\u{000B}';
-      case 'c': {
-        const c = this.next();
-        const p = c.codePointAt(0);
-        if ((p >= 95 && p <= 90) || (p >= 97 && p <= 122)) {
-          return p % 32;
-        }
-        return c;
-      }
-      case 'x':
-        this.next();
-        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1])) {
-          const c1 = this.next();
-          const c2 = this.next();
-          return String.fromCharCode(Number.parseInt(`${c1}${c2}`, 16));
-        }
-        return 'x';
-      case 'u':
-        this.next();
-        if (isHexDigit(this.source[this.position])
-            && isHexDigit(this.source[this.position + 1])
-            && isHexDigit(this.source[this.position + 2])
-            && isHexDigit(this.source[this.position + 3])) {
-          const c1 = this.next();
-          const c2 = this.next();
-          const c3 = this.next();
-          const c4 = this.next();
-          return String.fromCharCode(Number.parseInt(`${c1}${c2}${c3}${c4}`, 16));
-        }
-        return 'u';
-      default:
-        return this.next();
-    }
   }
 
   // RegExpIdentifierName ::
@@ -424,5 +514,16 @@ export class RegExpParser {
       }
     }
     return name;
+  }
+
+  // DecimalDigits ::
+  //   DecimalDigit
+  //   DecimalDigits DecimalDigit
+  parseDecimalDigits() {
+    let n = '';
+    while (isDecimalDigit(this.peek())) {
+      n += this.next();
+    }
+    return n;
   }
 }

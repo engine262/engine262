@@ -7,6 +7,7 @@ import {
   Construct,
   CreateArrayFromList,
   CreateDataProperty,
+  CreateDataPropertyOrThrow,
   EscapeRegExpPattern,
   Get,
   IsCallable,
@@ -158,9 +159,9 @@ function RegExpBuiltinExec(R, S) {
   // 19. Assert: The value of A's "length" property is n + 1.
   Assert(X(Get(A, new Value('length'))).numberValue() === n + 1);
   // 20. Perform ! CreateDataPropertyOrThrow(A, "index", lastIndex).
-  X(CreateDataProperty(A, new Value('index'), lastIndex));
+  X(CreateDataPropertyOrThrow(A, new Value('index'), lastIndex));
   // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
-  X(CreateDataProperty(A, new Value('input'), S));
+  X(CreateDataPropertyOrThrow(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
   // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
   if (surroundingAgent.feature('RegExpMatchIndices')) {
@@ -191,7 +192,7 @@ function RegExpBuiltinExec(R, S) {
       groupNames = Value.undefined;
     }
     // Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
-    X(CreateDataProperty(A, new Value('groups'), groups));
+    X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
     // For each integer i such that i > 0 and i ≤ n, do
     for (let i = 1; i <= n; i += 1) {
       // Let captureI be ith element of r's captures List.
@@ -223,13 +224,13 @@ function RegExpBuiltinExec(R, S) {
         capturedValue = X(GetMatchString(S, capture));
       }
       // Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
-      X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
+      X(CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue));
       // If the ith capture of R was defined with a GroupName, then
       if (capturingParens[i - 1].GroupSpecifier) {
         // Let s be the StringValue of the corresponding RegExpIdentifierName.
         const s = new Value(capturingParens[i - 1].GroupSpecifier);
         // Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
-        X(CreateDataProperty(groups, s, capturedValue));
+        X(CreateDataPropertyOrThrow(groups, s, capturedValue));
         // Assert: groupNames is a List.
         Assert(Array.isArray(groupNames));
         // Append s to groupNames.
@@ -260,7 +261,7 @@ function RegExpBuiltinExec(R, S) {
       groups = Value.undefined;
     }
     // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
-    X(CreateDataProperty(A, new Value('groups'), groups));
+    X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
     // 27. For each integer i such that i > 0 and i ≤ n, do
     for (let i = 1; i <= n; i += 1) {
       // a. Let captureI be ith element of r's captures List.
@@ -281,13 +282,13 @@ function RegExpBuiltinExec(R, S) {
         capturedValue = new Value(captureI.join(''));
       }
       // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
-      X(CreateDataProperty(A, X(ToString(new Value(i))), capturedValue));
+      X(CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue));
       // f. If the ith capture of R was defined with a GroupName, then
       if (capturingParens[i - 1].GroupSpecifier) {
         // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
         const s = new Value(capturingParens[i - 1].GroupSpecifier);
         // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
-        X(CreateDataProperty(groups, s, capturedValue));
+        X(CreateDataPropertyOrThrow(groups, s, capturedValue));
       }
     }
   }
@@ -295,7 +296,7 @@ function RegExpBuiltinExec(R, S) {
   return A;
 }
 
-// 21.2.5.2.3 #sec-advancestringindex
+// #sec-advancestringindex
 export function AdvanceStringIndex(S, index, unicode) {
   Assert(Type(S) === 'String');
   index = index.numberValue();
@@ -511,38 +512,60 @@ function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   return Value.false;
 }
 
-// 21.2.5.7 #sec-regexp.prototype-@@match
+// #sec-regexp.prototype-@@match
 function RegExpProto_match([string = Value.undefined], { thisValue }) {
+  // 1. Let rx be the this value.
   const rx = thisValue;
+  // 2. If Type(rx) is not Object, throw a TypeError exception.
   if (Type(rx) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
+  // 3. Let S be ? ToString(string).
   const S = Q(ToString(string));
-
+  // 4. Let global be ! ToBoolean(? Get(rx, "global")).
   const global = ToBoolean(Q(Get(rx, new Value('global'))));
+  // 5. If global is false, then
   if (global === Value.false) {
+    // a. Return ? RegExpExec(rx, S).
     return Q(RegExpExec(rx, S));
-  } else {
+  } else { // 6. Else,
+    // a. Assert: global is true.
+    Assert(global === Value.true);
+    // b. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
     const fullUnicode = ToBoolean(Q(Get(rx, new Value('unicode'))));
+    // c. Perform ? Set(rx, "lastIndex", 0, true).
     Q(Set(rx, new Value('lastIndex'), new Value(0), Value.true));
+    // d. Let A be ! ArrayCreate(0).
     const A = X(ArrayCreate(new Value(0)));
+    // e. Let n be 0.
     let n = 0;
+    // f. Repeat,
     while (true) {
+      // i. Let result be ? RegExpExec(rx, S).
       const result = Q(RegExpExec(rx, S));
+      // ii. If result is null, then
       if (result === Value.null) {
+        // 1. If n = 0, return null.
         if (n === 0) {
           return Value.null;
         }
+        // 2. Return A.
         return A;
-      } else {
+      } else { // iii. Else,
+        // 1. Let matchStr be ? ToString(? Get(result, "0")).
         const matchStr = Q(ToString(Q(Get(result, new Value('0')))));
-        const status = CreateDataProperty(A, X(ToString(new Value(n))), matchStr);
-        Assert(status === Value.true);
+        // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), matchStr).
+        X(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), matchStr));
+        // 3. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
+          // a. Let thisIndex be ? ToLength(? Get(rx, "lastIndex")).
           const thisIndex = Q(ToLength(Q(Get(rx, new Value('lastIndex')))));
+          // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
+          // c. Perform ? Set(rx, "lastIndex", nextIndex, true).
           Q(Set(rx, new Value('lastIndex'), nextIndex, Value.true));
         }
+        // 4. Set n to n + 1.
         n += 1;
       }
     }
