@@ -8,7 +8,20 @@
   "bugs": {
     "url": "https://github.com/engine262/engine262/issues"
   },
-  "main": "dist/engine262",
+  "main": "dist/engine262.js",
+  "module": "dist/engine262.mjs",
+  "type": "commonjs",
+  "exports": {
+    ".": [
+      {
+        "require": "./dist/engine262.js",
+        "import": "./dist/engine262.mjs",
+        "default": "./dist/engine262.js"
+      },
+      "./dist/engine262.js"
+    ],
+    "./": "./"
+  },
   "scripts": {
     "build:engine": "rollup -c",
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
@@ -31,10 +44,12 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@engine262"
   },
-  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.8.7",
     "@babel/plugin-syntax-bigint": "^7.8.3",
+    "@rollup/plugin-babel": "^5.1.0",
+    "@rollup/plugin-commonjs": "^14.0.0",
+    "@rollup/plugin-node-resolve": "^8.4.0",
     "@snek/source-map-support": "^1.0.4",
     "acorn": "^7.1.1",
     "babel-eslint": "^10.1.0",
@@ -44,10 +59,7 @@
     "glob": "^7.1.6",
     "minimatch": "^3.0.4",
     "nyc": "^15.0.0",
-    "rollup": "^1.32.1",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup": "^2.23.0",
     "test262-stream": "^1.3.0",
     "unicode-13.0.0": "^0.8.0",
     "ws": "^7.2.3"

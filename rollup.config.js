@@ -2,14 +2,22 @@
 
 const fs = require('fs');
 const { execSync } = require('child_process');
-const babel = require('rollup-plugin-babel');
-const commonjs = require('rollup-plugin-commonjs');
-const nodeResolve = require('rollup-plugin-node-resolve');
-const { name, version } = require('./package.json');
+const { default: babel } = require('@rollup/plugin-babel');
+const commonjs = require('@rollup/plugin-commonjs');
+const { default: nodeResolve } = require('@rollup/plugin-node-resolve');
+
+// import of JSON files is disallowed in native ES Modules:
+const {
+  name,
+  version,
+  main: outCommonJS,
+  module: outESModule,
+} = JSON.parse(fs.readFileSync('./package.json', { encoding: 'utf8' }));
 
 const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
-const banner = `/*
+const banner = `\
+/*!
  * engine262 ${version} ${hash}
  *
  * ${fs.readFileSync('./LICENSE', 'utf8').trim().split('\n').join('\n * ')}
@@ -22,6 +30,7 @@ module.exports = () => ({
     commonjs(),
     nodeResolve(),
     babel({
+      babelHelpers: 'bundled',
       exclude: 'node_modules/**',
       plugins: [
         '@babel/plugin-syntax-bigint',
@@ -31,14 +40,14 @@ module.exports = () => ({
   ],
   output: [
     {
-      file: 'dist/engine262.js',
+      file: outCommonJS,
       format: 'umd',
       sourcemap: true,
       name,
       banner,
     },
     {
-      file: 'dist/engine262.mjs',
+      file: outESModule,
       format: 'es',
       sourcemap: true,
       banner,
