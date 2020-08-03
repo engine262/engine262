@@ -2,6 +2,7 @@ import {
   Parser,
   Token,
   isLineTerminator,
+  isWhitespace,
   isHexDigit,
   isDecimalDigit,
 } from './parser/Parser.mjs';
@@ -52,6 +53,7 @@ export {
   Parser,
   Token,
   isLineTerminator,
+  isWhitespace,
   isHexDigit,
   isDecimalDigit,
 };

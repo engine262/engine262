@@ -328,8 +328,8 @@ export class RegExpParser {
       case 't':
       case 'v':
         return {
-          type: 'ControlEscape',
-          subtype: this.next(),
+          type: 'CharacterEscape',
+          ControlEscape: this.next(),
         };
       case 'c': {
         this.next();
@@ -347,38 +347,31 @@ export class RegExpParser {
         };
       }
       case 'x':
-        this.next();
-        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1])) {
+        if (isHexDigit(this.source[this.position + 1]) && isHexDigit(this.source[this.position + 2])) {
           return {
-            type: 'HexEscapeSequence',
-            HexDigit_a: this.next(),
-            HexDigit_b: this.next(),
+            type: 'CharacterEscape',
+            HexEscapeSequence: this.parseHexEscapeSequence(),
           };
         }
+        this.next();
         return {
           type: 'CharacterEscape',
           IdentityEscape: 'x',
         };
-      case 'u':
-        this.next();
-        if (isHexDigit(this.source[this.position])
-            && isHexDigit(this.source[this.position + 1])
-            && isHexDigit(this.source[this.position + 2])
-            && isHexDigit(this.source[this.position + 3])) {
+      case 'u': {
+        const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+        if (RegExpUnicodeEscapeSequence) {
           return {
-            type: 'RegExpUnicodeEscapeSequence',
-            Hex4Digits: {
-              HexDigit_a: this.next(),
-              HexDigit_b: this.next(),
-              HexDigit_c: this.next(),
-              HexDigit_d: this.next(),
-            },
+            type: 'CharacterEscape',
+            RegExpUnicodeEscapeSequence,
           };
         }
+        this.next();
         return {
           type: 'CharacterEscape',
           IdentityEscape: 'u',
         };
+      }
       default: {
         const c = this.next();
         if (c === '0' && !isDecimalDigit(this.peek())) {
@@ -525,5 +518,81 @@ export class RegExpParser {
       n += this.next();
     }
     return n;
+  }
+
+  // HexEscapeSequence ::
+  //   `x` HexDigit HexDigit
+  parseHexEscapeSequence() {
+    this.expect('x');
+    const HexDigit_a = this.next();
+    if (!isHexDigit(HexDigit_a)) {
+      throw new SyntaxError('Not a hex digit');
+    }
+    const HexDigit_b = this.next();
+    if (!isHexDigit(HexDigit_b)) {
+      throw new SyntaxError('Not a hex digit');
+    }
+    return {
+      type: 'HexEscapeSequence',
+      HexDigit_a,
+      HexDigit_b,
+    };
+  }
+
+  // RegExpUnicodeEscapeSequence ::
+  //   `u` HexLeadSurrogate `\u` HexTrailSurrogate
+  //   `u` HexLeadSurrogate
+  //   `u` HexTrailSurrogate
+  //   `u` HexNonSurrogate
+  //   `u` Hex4Digits
+  //   `u{` CodePoint `}`
+  maybeParseRegExpUnicodeEscapeSequence() {
+    const start = this.position;
+    if (!this.eat('u')) {
+      this.position = start;
+      return undefined;
+    }
+    if (this.test('{')) {
+      let buffer = '';
+      while (!this.eat('}')) {
+        if (this.position >= this.source.length) {
+          this.position = start;
+          return undefined;
+        }
+        if (!isHexDigit(this.source[this.position])) {
+          this.position = start;
+          return undefined;
+        }
+        buffer += this.next();
+      }
+      this.expect('}');
+      const CodePoint = Number.parseInt(buffer, 16);
+      if (CodePoint > 0x10FFFF) {
+        this.position = start;
+        return undefined;
+      }
+      return {
+        type: 'RegExpUnicodeEscapeSequence',
+        CodePoint,
+      };
+    }
+    const digits = [];
+    for (let i = 0; i < 4; i += 1) {
+      const HexDigit = this.next();
+      if (!isHexDigit(HexDigit)) {
+        this.position = start;
+        return undefined;
+      }
+      digits.push(HexDigit);
+    }
+    return {
+      type: 'RegExpUnicodeEscapeSequence',
+      Hex4Digits: {
+        HexDigit_a: digits[0],
+        HexDigit_b: digits[1],
+        HexDigit_c: digits[2],
+        HexDigit_d: digits[3],
+      },
+    };
   }
 }

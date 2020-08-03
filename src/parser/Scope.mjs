@@ -241,6 +241,9 @@ export class Scope {
             this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
           }
           scope.lexicals.add(d.name);
+          if (scope === this.scopeStack[0] && this.undefinedExports.has(d.name)) {
+            this.undefinedExports.delete(d.name);
+          }
           break;
         }
         case 'function': {
@@ -255,6 +258,9 @@ export class Scope {
               this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
             }
             scope.lexicals.add(d.name);
+          }
+          if (scope === this.scopeStack[0] && this.undefinedExports.has(d.name)) {
+            this.undefinedExports.delete(d.name);
           }
           break;
         }

@@ -5,7 +5,7 @@ import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
-import { isLineTerminator } from '../parse.mjs';
+import { isLineTerminator, isWhitespace } from '../parse.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // #sec-pattern
@@ -116,10 +116,12 @@ export function Evaluate_Pattern(Pattern, flags) {
         return Evaluate_Atom(node, ...args);
       case 'AtomEscape':
         return Evaluate_AtomEscape(node, ...args);
-      case 'CharacterClass':
-        return Evaluate_CharacterClass(node, ...args);
       case 'CharacterEscape':
         return Evaluate_CharacterEscape(node, ...args);
+      case 'CharacterClassEscape':
+        return Evaluate_CharacterClassEscape(node, ...args);
+      case 'CharacterClass':
+        return Evaluate_CharacterClass(node, ...args);
       default:
         throw new OutOfRange('Evaluate', node);
     }
@@ -901,6 +903,63 @@ export function Evaluate_Pattern(Pattern, flags) {
     const cv = CharacterValue(CharacterEscape);
     // 2. Return the character whose character value is cv.
     return cv;
+  }
+
+  // #sec-characterclassescape
+  // CharacterClassEscape ::
+  //   `d`
+  //   `D`
+  //   `s`
+  //   `S`
+  //   `w`
+  //   `W`
+  //   `p{` UnicodePropertyValueExpression `}`
+  //   `P{` UnicodePropertyValueExpression `}`
+  function Evaluate_CharacterClassEscape(node) {
+    switch (node.value) {
+      case 'd':
+        // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
+        return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      case 'D': {
+        // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
+        const set = Evaluate_CharacterClassEscape({ value: 'd' });
+        return {
+          includes(c) {
+            return !set.includes(c);
+          },
+        };
+      }
+      case 's':
+        // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
+        return {
+          includes(c) {
+            return isWhitespace(c) || isLineTerminator(c);
+          },
+        };
+      case 'S': {
+        // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
+        const set = Evaluate_CharacterClassEscape({ value: 's' });
+        return {
+          includes(c) {
+            return !set.includes(c);
+          },
+        };
+      }
+      case 'w':
+        // 1. Return the set of all characters returned by WordCharacters().
+        return WordCharacters();
+      case 'W': {
+        // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
+        const set = Evaluate_CharacterClassEscape({ value: 'w' });
+        return {
+          includes(c) {
+            return !set.includes(c);
+          },
+        };
+      }
+      default:
+        throw new OutOfRange('Evaluate_CharacterClassEscape', node);
+    }
   }
 
   // #sec-characterclass

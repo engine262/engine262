@@ -16,7 +16,7 @@ export const isDecimalDigit = (c) => c && /\d/u.test(c);
 export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
 const isOctalDigit = (c) => c && /[0-7]/u.test(c);
 const isBinaryDigit = (c) => (c === '0' || c === '1');
-const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
+export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
 

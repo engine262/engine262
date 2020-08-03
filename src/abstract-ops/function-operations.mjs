@@ -265,7 +265,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     X(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
       Value: F,
-      Writable: writablePrototype ? Value.true : Value.false,
+      Writable: writablePrototype,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));

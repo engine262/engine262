@@ -5,7 +5,12 @@ import { Token } from './tokens.mjs';
 import { Scope } from './Scope.mjs';
 
 export { Token };
-export { isLineTerminator, isDecimalDigit, isHexDigit } from './Lexer.mjs';
+export {
+  isLineTerminator,
+  isWhitespace,
+  isDecimalDigit,
+  isHexDigit,
+} from './Lexer.mjs';
 
 export class Parser extends LanguageParser {
   constructor(source) {
