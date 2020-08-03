@@ -20,6 +20,8 @@ import { OutOfRange } from './helpers.mjs';
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 const styles = {
+  __proto__: null,
+
   bigint: 'blueBright',
   boolean: 'yellow',
   date: 'magenta',
@@ -35,12 +37,13 @@ const styles = {
   symbol: 'green',
   undefined: 'blackBright',
 };
-Object.setPrototypeOf(styles, null);
 
 const resetFG = 39;
 const resetBG = 49;
 
 const colors = {
+  __proto__: null,
+
   reset: [0, 0],
   bold: [1, 22],
   dim: [2, 22],
@@ -83,7 +86,6 @@ const colors = {
   bgCyanBright: [106, resetBG],
   bgWhiteBright: [107, resetBG],
 };
-Object.setPrototypeOf(colors, null);
 
 const stylizeWithColor = (text, styleName) => {
   const style = styles[styleName];
