@@ -182,6 +182,13 @@ if (entry) {
   process.stdout.write(`${packageJson.name} v${packageJson.version}
 Please report bugs to ${packageJson.bugs.url}
 `);
+
+  // TODO: Make it possible to customise this:
+  const replOptions = {
+    colors: true,
+    showProxy: true,
+  };
+
   repl.start({
     prompt: '> ',
     eval: (cmd, context, filename, callback) => {
@@ -196,9 +203,9 @@ Please report bugs to ${packageJson.bugs.url}
     completer: () => [],
     writer: (o) => realm.scope(() => {
       if (o instanceof Value || o instanceof Completion) {
-        return inspect(o);
+        return inspect(o, replOptions);
       }
-      return util.inspect(o);
+      return util.inspect(o, replOptions);
     }),
   });
 }

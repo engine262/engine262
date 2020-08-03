@@ -1,10 +1,13 @@
-import { surroundingAgent } from './engine.mjs';
 import { Value } from './value.mjs';
 import { inspect } from './api.mjs';
 
 function i(V) {
   if (V instanceof Value) {
-    return inspect(V, surroundingAgent.currentRealmRecord, true);
+    return inspect(V, {
+      colors: false,
+      showHidden: false,
+      showProxy: false,
+    });
   }
   return `${V}`;
 }
