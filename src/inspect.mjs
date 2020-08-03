@@ -19,14 +19,6 @@ import { OutOfRange } from './helpers.mjs';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
-const defaultOptions = {
-  colors: false,
-  showHidden: false,
-  showProxy: false,
-};
-Object.setPrototypeOf(defaultOptions, null);
-Object.seal(defaultOptions);
-
 const styles = {
   bigint: 'blueBright',
   boolean: 'yellow',
@@ -675,26 +667,14 @@ const INSPECTORS = {
   },
 };
 
-const hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
-const getOption = (options, name, convert) => {
-  Assert(typeof name === 'string' && name in defaultOptions);
-  Assert(typeof convert === 'function');
-
-  if (hasOwn(options, name)) {
-    return convert(options[name]);
-  } else {
-    return defaultOptions[name];
-  }
-};
-
 export function inspect(value, options = {}) {
   const context = {
     realm: surroundingAgent.currentRealmRecord,
     indent: 0,
     inspected: [],
-    stylize: getOption(options, 'colors', Boolean) ? stylizeWithColor : stylizeNoColor,
-    showHidden: getOption(options, 'showHidden', Boolean),
-    showProxy: getOption(options, 'showProxy', Boolean),
+    stylize: options.colors ? stylizeWithColor : stylizeNoColor,
+    showHidden: !!options.showHidden,
+    showProxy: !!options.showProxy,
   };
   const inner = (v) => INSPECTORS[Type(v)](v, context, inner);
   return inner(value);
