@@ -28,7 +28,7 @@ Object.setPrototypeOf(defaultOptions, null);
 Object.seal(defaultOptions);
 
 const styles = {
-  bigint: 'yellow',
+  bigint: 'blueBright',
   boolean: 'yellow',
   date: 'magenta',
   hidden: 'blackBright',
@@ -36,7 +36,7 @@ const styles = {
   module: 'underline',
   name: undefined,
   null: 'bold',
-  number: 'yellow',
+  number: 'blueBright',
   regexp: 'red',
   special: 'cyan',
   string: 'green',
@@ -202,19 +202,46 @@ const getConstructorName = (value) => {
   return `${fallback} <Complex prototype>`;
 };
 
-const getPrefix = (constructor, tag, fallback, size = '') => {
+const getPrefix = (constructor, tag, type, size = '') => {
   let prefix;
   if (constructor === null) {
-    prefix = `[${fallback}${size}: null prototype] `;
+    prefix = `[${type}${size}: null prototype] `;
+  } else if (type !== 'Object') {
+    prefix = `${type}${size} `;
+    if (constructor !== type) {
+      prefix += `(${constructor}) `;
+    }
   } else {
     prefix = `${constructor}${size} `;
   }
 
-  if (tag !== '' && tag !== constructor) {
+  if (tag !== '' && tag !== constructor && tag !== type) {
     prefix += `[${tag}] `;
   }
 
   return prefix;
+};
+
+const getBoxedBase = (type, value, ctx, innerInspect, constructor, tag) => {
+  let base = `[${type}`;
+  if (type !== constructor) {
+    if (constructor !== null) {
+      base += ` (${constructor})`;
+    } else {
+      base += ' (null prototype)';
+    }
+  }
+
+  const os = ctx.stylize;
+  ctx.stylize = stylizeNoColor;
+  base += `: ${typeof value === 'string' ? value : innerInspect(value)}]`;
+  ctx.stylize = os;
+
+  if (tag !== '' && tag !== constructor && tag !== type) {
+    base += ` [${tag}]`;
+  }
+
+  return ctx.stylize(base, type.toLowerCase());
 };
 
 const getFunctionBase = (value, constructor, tag) => {
@@ -304,28 +331,6 @@ const getKeys = (O, includeNonEnumerable = false) => {
   return properties;
 };
 
-const getBoxedBase = (type, value, ctx, innerInspect, constructor, tag) => {
-  let base = `[${type}`;
-  if (type !== constructor) {
-    if (constructor !== null) {
-      base += ` (${constructor})`;
-    } else {
-      base += ' (null prototype)';
-    }
-  }
-
-  const os = ctx.stylize;
-  ctx.stylize = stylizeNoColor;
-  base += `: ${innerInspect(value)}]`;
-  ctx.stylize = os;
-
-  if (tag !== '' && tag !== constructor) {
-    base += ` [${tag}]`;
-  }
-
-  return ctx.stylize(base, type.toLowerCase());
-};
-
 const formatPropertyDescriptor = (desc, ctx, i) => {
   Assert(Type(desc) === 'Descriptor');
   if (IsDataDescriptor(desc)) {
@@ -365,6 +370,7 @@ const strEscapeArray = [
   /* x98 - x9F: */ '\\x98', '\\x99', '\\x9A', '\\x9B', '\\x9C', '\\x9D', '\\x9E', '\\x9F',
 ];
 
+// TODO: Handle unpaired surrogates
 const escapeFn = (str) => strEscapeArray[str.charCodeAt(0)];
 
 // Roughly based on the JSON stringify escaping.
@@ -377,9 +383,6 @@ const strEscape = (str) => {
       // If the string contains single quotes and not double quotes,
       // then we wrap it in double quotes:
       quote = -1;
-    } else if (!str.includes('`') && !str.includes('${')) {
-      // Otherwise, try to see if we can safely wrap it as a template literal
-      quote = -2;
     }
 
     if (quote !== 0x27) {
@@ -392,9 +395,6 @@ const strEscape = (str) => {
     case -1:
       return `"${str}"`;
 
-    case -2:
-      return `\`${str}\``;
-
     case 0x27:
       return `'${str}'`;
 
@@ -403,17 +403,17 @@ const strEscape = (str) => {
   }
 };
 
-const compactObject = (value, constructor, tag) => {
+const compactObject = (value) => {
   try {
     const toString = X(Get(value, new Value('toString')));
     const objectToString = surroundingAgent.intrinsic('%Object.prototype.toString%');
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
-      return `[object ${tag || constructor || 'Unknown'}]`;
+      return '<#Object>';
     }
   } catch {
-    return '[object Unknown]';
+    return '<#Object>';
   }
 };
 
@@ -445,8 +445,8 @@ const INSPECTORS = {
         return 'Proxy { <revoked> }';
       } else {
         return `Proxy {
-  ${ctx.stylize('[[ProxyTarget]]', 'internalSlot')}: ${i(v.ProxyTarget)}
-  ${ctx.stylize('[[ProxyHandler]]', 'internalSlot')}: ${i(v.ProxyHandler)}
+  ${ctx.stylize('[[ProxyTarget]]', 'internalSlot')}: ${i(v.ProxyTarget)},
+  ${ctx.stylize('[[ProxyHandler]]', 'internalSlot')}: ${i(v.ProxyHandler)},
 }`;
       }
     }
@@ -507,8 +507,8 @@ const INSPECTORS = {
 
       if (keys.length === 0) {
         return `${base}{
-  ${ctx.stylize('[[PromiseState]]', 'internalSlot')}: ${ctx.stylize(v.PromiseState, 'special')}
-  ${ctx.stylize('[[PromiseResult]]', 'internalSlot')}: ${result}
+  ${ctx.stylize('[[PromiseState]]', 'internalSlot')}: ${ctx.stylize(v.PromiseState, 'special')},
+  ${ctx.stylize('[[PromiseResult]]', 'internalSlot')}: ${result},
 }`;
       }
 
@@ -534,8 +534,7 @@ const INSPECTORS = {
     } else if ('DateValue' in v) {
       const d = new Date(v.DateValue.numberValue());
       const str = Number.isNaN(d.getTime()) ? 'Invalid' : d.toISOString();
-      const prefix = getPrefix(constructor, tag, 'Date');
-      base = ctx.stylize(`[${prefix.slice(0, -1)}: ${str}]`, 'date');
+      base = getBoxedBase('Date', str, ctx, i, constructor, tag);
 
       if (keys.length === 0) {
         return base;
@@ -644,7 +643,7 @@ const INSPECTORS = {
       let outStr = `${base ? `${base} ` : ''}${braces[0]}`;
       if (slots.length > 0 || (cache.length + outArray.length) > 5) {
         slots.forEach((s) => {
-          outStr += `\n${'  '.repeat(ctx.indent)}${ctx.stylize(s[0], 'internalSlot')}: ${s[1]}`;
+          outStr += `\n${'  '.repeat(ctx.indent)}${ctx.stylize(s[0], 'internalSlot')}: ${s[1]},`;
         });
         outArray.forEach((c) => {
           outStr += `\n${'  '.repeat(ctx.indent)}${c},`;
@@ -668,7 +667,7 @@ const INSPECTORS = {
 
       return outStr;
     } catch {
-      return compactObject(v, constructor, tag);
+      return compactObject(v);
     } finally {
       ctx.indent -= 1;
       ctx.inspected.pop();
