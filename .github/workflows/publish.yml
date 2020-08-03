@@ -25,15 +25,11 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm run lint
-      - run: npm run coverage
+
+      # Test coverage is handled by tests.yml
+      - run: npm run test
         env:
           CONTINUOUS_INTEGRATION: 1
-
-      # Upload coverage data
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{github.token}}
 
       # Publish built package
       - run: npm publish --access=public
