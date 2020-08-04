@@ -54,6 +54,26 @@ export function CharacterValue(node) {
       const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
       return String.fromCharCode(Number.parseInt(chars, 16));
     }
+    case 'ClassAtom':
+      switch (true) {
+        case node.value === '-':
+          return '-';
+        case !!node.SourceCharacter:
+          return node.SourceCharacter;
+        default:
+          throw new OutOfRange('CharacterValue', node);
+      }
+    case 'ClassEscape':
+      switch (true) {
+        case node.value === 'b':
+          return '\u{0008}';
+        case node.value === '-':
+          return '-';
+        case !!node.CharacterEscape:
+          return CharacterValue(node.CharacterEscape);
+        default:
+          throw new OutOfRange('CharacterValue', node);
+      }
     default:
       throw new OutOfRange('CharacterValue', node);
   }

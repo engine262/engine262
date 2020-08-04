@@ -1,3 +1,4 @@
+import { CharacterValue } from '../static-semantics/all.mjs';
 import {
   isIdentifierStart,
   isIdentifierContinue,
@@ -270,7 +271,10 @@ export class RegExpParser {
       return node;
     }
     if (this.test('[')) {
-      return this.parseCharacterClass();
+      return {
+        type: 'Atom',
+        CharacterClass: this.parseCharacterClass(),
+      };
     }
     if (isSyntaxCharacter(this.peek())) {
       throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
@@ -391,6 +395,18 @@ export class RegExpParser {
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
   maybeParseDecimalEscape() {
+    if (isDecimalDigit(this.source[this.position]) && this.source[this.position] !== '0') {
+      let buffer = this.source[this.position];
+      this.position += 1;
+      while (isDecimalDigit(this.source[this.position])) {
+        buffer += this.source[this.position];
+        this.position += 1;
+      }
+      return {
+        type: 'DecimalEscape',
+        value: Number.parseInt(buffer, 10),
+      };
+    }
     return undefined;
   }
 
@@ -446,12 +462,18 @@ export class RegExpParser {
         throw new SyntaxError('Unexpected end of CharacterClass');
       }
       const atom = this.parseClassAtom();
-      if (this.eat('-')) {
+      if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
         const atom2 = this.parseClassAtom();
-        if (atom > atom2) {
-          throw new SyntaxError(`${atom}-${atom2} is not a valid class range`);
+        if (atom2.type === 'CharacterClassEscape') {
+          ranges.push(atom);
+          ranges.push({ type: 'ClassAtom', value: '-' });
+          ranges.push(atom2);
+        } else {
+          if (CharacterValue(atom) > CharacterValue(atom2)) {
+            throw new SyntaxError('Invalid class range');
+          }
+          ranges.push([atom, atom2]);
         }
-        ranges.push([atom, atom2]);
       } else {
         ranges.push(atom);
       }
@@ -488,9 +510,15 @@ export class RegExpParser {
       if (CharacterClassEscape) {
         return CharacterClassEscape;
       }
-      return this.parseCharacterEscape();
+      return {
+        type: 'ClassEscape',
+        CharacterEscape: this.parseCharacterEscape(),
+      };
     }
-    return this.next();
+    return {
+      type: 'ClassAtom',
+      SourceCharacter: this.next(),
+    };
   }
 
   // RegExpIdentifierName ::

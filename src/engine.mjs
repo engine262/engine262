@@ -32,10 +32,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-weakrefs',
   },
   {
-    name: 'RegExpMatchIndices',
-    url: 'https://github.com/tc39/proposal-regexp-match-Indices',
-  },
-  {
     name: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
   },

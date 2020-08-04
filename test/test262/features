@@ -21,6 +21,8 @@
 -class-static-fields-private
 -class-static-methods-private
 
+-regexp-match-indices
+
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = TopLevelAwait
 
@@ -28,9 +30,6 @@ top-level-await = TopLevelAwait
 WeakRef = WeakRefs
 FinalizationRegistry = WeakRefs
 cleanupSome = WeakRefs
-
-# https://github.com/tc39/proposal-regexp-match-Indices
-regexp-match-indices = RegExpMatchIndices
 
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang

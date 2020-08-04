@@ -11,16 +11,6 @@ import {
   ToString,
 } from './all.mjs';
 
-// https://tc39.es/proposal-regexp-match-indices/#sec-match-records
-export class MatchRecord {
-  constructor(StartIndex, EndIndex) {
-    Assert(Number.isInteger(StartIndex) && StartIndex >= 0);
-    Assert(Number.isInteger(EndIndex) && EndIndex >= StartIndex);
-    this.StartIndex = StartIndex;
-    this.EndIndex = EndIndex;
-  }
-}
-
 // #sec-regexpalloc
 export function RegExpAlloc(newTarget) {
   const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
