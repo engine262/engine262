@@ -31,7 +31,7 @@ const {
 
   Completion,
   AbruptCompletion,
-  Throw,
+  ThrowCompletion,
 } = require('..');
 const { createRealm } = require('./test262_realm');
 
@@ -164,7 +164,7 @@ function oneShotEval(source, filename) {
         }
         if (!(result instanceof AbruptCompletion)) {
           if (result.PromiseState === 'rejected') {
-            result = Throw(result.PromiseResult);
+            result = ThrowCompletion(result.PromiseResult);
           }
         }
       }
