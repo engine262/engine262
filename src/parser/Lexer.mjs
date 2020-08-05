@@ -779,8 +779,14 @@ export class Lexer {
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
-        if (!(SingleCharTokens[raw] === Token.IDENTIFIER || isIdentifierContinue(raw))) {
-          this.unexpected(escapeIndex);
+        if (!buffer.length) {
+          if (!(isIdentifierStart(raw) || raw === '$' || raw === '_')) {
+            this.unexpected(escapeIndex);
+          }
+        } else {
+          if (!(isIdentifierContinue(raw) || raw === '$' || raw === '_' || raw === '\u200C' || raw === '\u200D')) {
+            this.unexpected(escapeIndex);
+          }
         }
         buffer += raw;
       } else if (SingleCharTokens[c] === Token.IDENTIFIER || isIdentifierContinue(c)) {
