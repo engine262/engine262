@@ -4,7 +4,7 @@ import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
-import { isLineTerminator, isWhitespace } from '../parse.mjs';
+import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parse.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // #sec-pattern
@@ -17,11 +17,31 @@ class State {
 
 export { State as RegExpState };
 
-// Caches the result of WordCharacters()
-let cachedWordCharacters;
-
 function isContinuation(v) {
   return typeof v === 'function' && v.length === 1;
+}
+
+const SetOfAllCharacters = new Set();
+const SetOfAllCharactersExceptLineTerminator = new Set();
+const SetOfAllNotDigitCharacters = new Set();
+const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
+const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
+for (let i = 0; i < 0x10FFFF; i += 1) {
+  const c = String.fromCodePoint(i);
+  SetOfAllCharacters.add(c);
+  const lineTerminator = isLineTerminator(c);
+  if (!lineTerminator) {
+    SetOfAllCharactersExceptLineTerminator.add(c);
+    if (!isWhitespace(c)) {
+      SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
+    }
+  }
+  if (lineTerminator && isWhitespace(c)) {
+    SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
+  }
+  if (!isDecimalDigit(c)) {
+    SetOfAllNotDigitCharacters.add(c);
+  }
 }
 
 // #sec-pattern
@@ -536,9 +556,6 @@ export function Evaluate_Pattern(Pattern, flags) {
 
   // #sec-runtime-semantics-wordcharacters-abstract-operation
   function WordCharacters() {
-    if (cachedWordCharacters !== undefined) {
-      return cachedWordCharacters;
-    }
     // 1. Let A be a set of characters containing the sixty-three characters:
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
     //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
@@ -548,7 +565,6 @@ export function Evaluate_Pattern(Pattern, flags) {
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
     ]);
-    cachedWordCharacters = A;
     // 2. Let U be an empty set.
     const U = new Set();
     // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
@@ -628,18 +644,10 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. If DotAll is true, then
         if (DotAll) {
           // a. Let A be the set of all characters.
-          A = {
-            has(_c) {
-              return true;
-            },
-          };
+          A = SetOfAllCharacters;
         } else {
           // 2. Otherwise, let A be the set of all characters except LineTerminator.
-          A = {
-            has(c) {
-              return !isLineTerminator(c);
-            },
-          };
+          A = SetOfAllCharactersExceptLineTerminator;
         }
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
@@ -913,42 +921,29 @@ export function Evaluate_Pattern(Pattern, flags) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
         return new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-      case 'D': {
+      case 'D':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
-        const set = Evaluate_CharacterClassEscape({ value: 'd' });
-        return {
-          has(c) {
-            return !set.has(c);
-          },
-        };
-      }
+        return SetOfAllNotDigitCharacters;
       case 's':
         // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
-        return {
-          has(c) {
-            return isWhitespace(c) || isLineTerminator(c);
-          },
-        };
-      case 'S': {
+        return SetOfCharactersOfWhitespaceOrLineTerminator;
+      case 'S':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
-        const set = Evaluate_CharacterClassEscape({ value: 's' });
-        return {
-          has(c) {
-            return !set.has(c);
-          },
-        };
-      }
+        return SetOfCharactersOfNotWhitespaceOrLineTerminator;
       case 'w':
         // 1. Return the set of all characters returned by WordCharacters().
         return WordCharacters();
       case 'W': {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
-        const set = Evaluate_CharacterClassEscape({ value: 'w' });
-        return {
-          has(c) {
-            return !set.has(c);
-          },
-        };
+        const set = WordCharacters();
+        const A = new Set();
+        for (let i = 0; i < 0x10FFFF; i += 1) {
+          const c = String.fromCodePoint(i);
+          if (!set.has(c)) {
+            A.add(c);
+          }
+        }
+        return A;
       }
       default:
         throw new OutOfRange('Evaluate_CharacterClassEscape', node);
