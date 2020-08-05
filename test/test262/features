@@ -23,13 +23,10 @@
 
 -regexp-match-indices
 
+-cleanupSome
+
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = TopLevelAwait
-
-# https://github.com/tc39/proposal-weakrefs
-WeakRef = WeakRefs
-FinalizationRegistry = WeakRefs
-cleanupSome = WeakRefs
 
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang

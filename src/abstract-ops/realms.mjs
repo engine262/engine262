@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor,
   Value,
@@ -74,13 +73,12 @@ import { BootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mjs';
 import { BootstrapWeakMap } from '../intrinsics/WeakMap.mjs';
 import { BootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mjs';
 import { BootstrapWeakSet } from '../intrinsics/WeakSet.mjs';
-// Flagged features
 import { BootstrapAggregateError } from '../intrinsics/AggregateError.mjs';
 import { BootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mjs';
-import { BootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
-import { BootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
 import { BootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { BootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
+import { BootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
+import { BootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -245,13 +243,11 @@ export function CreateIntrinsics(realmRec) {
   BootstrapWeakSetPrototype(realmRec);
   BootstrapWeakSet(realmRec);
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    BootstrapWeakRefPrototype(realmRec);
-    BootstrapWeakRef(realmRec);
+  BootstrapWeakRefPrototype(realmRec);
+  BootstrapWeakRef(realmRec);
 
-    BootstrapFinalizationRegistryPrototype(realmRec);
-    BootstrapFinalizationRegistry(realmRec);
-  }
+  BootstrapFinalizationRegistryPrototype(realmRec);
+  BootstrapFinalizationRegistry(realmRec);
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
@@ -322,6 +318,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Date',
     'Error',
     'EvalError',
+    'FinalizationRegistry',
     'Float32Array',
     'Float64Array',
     'Function',
@@ -348,6 +345,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Uint32Array',
     'URIError',
     'WeakMap',
+    'WeakRef',
     'WeakSet',
 
     // Other Properties of the Global Object
@@ -363,22 +361,6 @@ export function SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true,
     })));
   });
-
-  if (surroundingAgent.feature('WeakRefs')) {
-    Q(DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({
-      Value: realmRec.Intrinsics['%WeakRef%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-
-    Q(DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
-  }
 
   return global;
 }

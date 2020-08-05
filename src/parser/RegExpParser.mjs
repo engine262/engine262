@@ -1,3 +1,9 @@
+import {
+  BinaryUnicodeProperties,
+  NonbinaryUnicodeProperties,
+  UnicodeGeneralCategoryValues,
+  UnicodeScriptValues,
+} from '../runtime-semantics/all.mjs';
 import { CharacterValue } from '../static-semantics/all.mjs';
 import {
   isIdentifierStart,
@@ -8,6 +14,7 @@ import {
 const isSyntaxCharacter = (c) => '^$.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
+const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
 
 export class RegExpParser {
   constructor(source, plusU) {
@@ -261,9 +268,7 @@ export class RegExpParser {
         if (this.eat(':')) {
           node.capturing = false;
         } else {
-          this.expect('<');
-          node.GroupSpecifier = this.parseIdentifierName();
-          this.expect('>');
+          node.GroupSpecifier = this.parseGroupName();
         }
       }
       if (node.capturing) {
@@ -438,6 +443,104 @@ export class RegExpParser {
           type: 'CharacterClassEscape',
           value: this.next(),
         };
+      case 'p':
+      case 'P': {
+        if (!this.plusU) {
+          return undefined;
+        }
+        const value = this.next();
+        this.expect('{');
+        let sawDigit;
+        let LoneUnicodePropertyNameOrValue = '';
+        while (true) {
+          if (this.position >= this.source.length) {
+            throw new SyntaxError('Invalid unicode property name or value');
+          }
+          const c = this.source[this.position];
+          if (isDecimalDigit(c)) {
+            sawDigit = true;
+            this.position += 1;
+            LoneUnicodePropertyNameOrValue += c;
+            continue;
+          }
+          if (c === '_') {
+            this.position += 1;
+            LoneUnicodePropertyNameOrValue += c;
+            continue;
+          }
+          if (!isControlLetter(c)) {
+            break;
+          }
+          this.position += 1;
+          LoneUnicodePropertyNameOrValue += c;
+        }
+        if (LoneUnicodePropertyNameOrValue.length === 0) {
+          throw new SyntaxError('Invalid unicode property name or value');
+        }
+        if (sawDigit && this.eat('}')) {
+          if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues
+              || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
+            throw new SyntaxError('Invalid unicode property name or value');
+          }
+          return {
+            type: 'CharacterClassEscape',
+            value,
+            UnicodePropertyValueExpression: {
+              type: 'UnicodePropertyValueExpression',
+              LoneUnicodePropertyNameOrValue,
+            },
+          };
+        }
+        let UnicodePropertyValue;
+        if (this.source[this.position] === '=') {
+          this.position += 1;
+          UnicodePropertyValue = '';
+          while (true) {
+            if (this.position >= this.source.length) {
+              throw new SyntaxError('Invalid unicode property value');
+            }
+            const c = this.source[this.position];
+            if (!isControlLetter(c) && !isDecimalDigit(c) && c !== '_') {
+              break;
+            }
+            this.position += 1;
+            UnicodePropertyValue += c;
+          }
+          if (UnicodePropertyValue.length === 0) {
+            throw new SyntaxError('Invalid unicode property value');
+          }
+        }
+        this.expect('}');
+        if (UnicodePropertyValue) {
+          if (!(LoneUnicodePropertyNameOrValue in NonbinaryUnicodeProperties)) {
+            throw new SyntaxError('Invalid unicode property name');
+          }
+          if (!(UnicodePropertyValue in UnicodeGeneralCategoryValues || UnicodePropertyValue in UnicodeScriptValues)) {
+            throw new SyntaxError('Invalid unicode property value');
+          }
+          return {
+            type: 'CharacterClassEscape',
+            value,
+            UnicodePropertyValueExpression: {
+              type: 'UnicodePropertyValueExpression',
+              UnicodePropertyName: LoneUnicodePropertyNameOrValue,
+              UnicodePropertyValue,
+            },
+          };
+        }
+        if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues
+            || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
+          throw new SyntaxError('Invalid unicode property name or value');
+        }
+        return {
+          type: 'CharacterClassEscape',
+          value,
+          UnicodePropertyValueExpression: {
+            type: 'UnicodePropertyValueExpression',
+            LoneUnicodePropertyNameOrValue,
+          },
+        };
+      }
       default:
         return undefined;
     }
@@ -532,10 +635,7 @@ export class RegExpParser {
     this.expect('<');
     const RegExpIdentifierName = this.parseIdentifierName();
     this.expect('>');
-    return {
-      type: 'GroupName',
-      RegExpIdentifierName,
-    };
+    return RegExpIdentifierName;
   }
 
   // RegExpIdentifierName ::

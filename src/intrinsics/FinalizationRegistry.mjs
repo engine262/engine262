@@ -4,7 +4,7 @@ import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.m
 import { Q } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
-// https://tc39.es/proposal-weakrefs/#sec-finalization-registry-cleanup-callback
+// #sec-finalization-registry-cleanup-callback
 function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {

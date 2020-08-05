@@ -2,7 +2,7 @@ import { Value } from './value.mjs';
 import {
   surroundingAgent,
   ExecutionContext,
-  HostCleanupFinalizationRegistry,
+  HostEnqueueFinalizationRegistryCleanupJob,
   ScriptEvaluation,
 } from './engine.mjs';
 import {
@@ -39,18 +39,19 @@ export function Throw(...args) {
 }
 
 function mark() {
-  // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
-  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps automically:
+  // #sec-weakref-execution
+  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
   // 1. For each obj os S, do
   //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
   //     i. Set ref.[[WeakRefTarget]] to empty.
-  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, and cell.[[WeakRefTarget]] is obj,
   //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Optionally, perform ! HostCleanupFinalizationRegistry(fg).
+  //     ii. Optionally, perform ! HostEnqueueFinalizationRegistryCleanupJob(fg).
   //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
-  //     i. Remove r from map.WeakMapData.
-  //   d. For each WeakSet set such that set.WeakSetData contains obj,
-  //     i. Remove obj from WeakSetData.
+  //     i. Set r.[[Key]] to empty.
+  //     ii. Set r.[[Value]] to empty.
+  //   d. For each WeakSet set such that set.[[WeakSetData]] contains obj,
+  //     i. Replace the element of set whose value is obj with an element whose value is empty.
 
   const marked = new Set();
   const weakrefs = new Set();
@@ -96,9 +97,7 @@ function mark() {
     }
   };
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    ClearKeptObjects();
-  }
+  ClearKeptObjects();
 
   markCb(surroundingAgent);
 
@@ -109,26 +108,24 @@ function mark() {
     }
   }
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    weakrefs.forEach((ref) => {
-      if (!marked.has(ref.WeakRefTarget)) {
-        ref.WeakRefTarget = undefined;
-      }
-    });
+  weakrefs.forEach((ref) => {
+    if (!marked.has(ref.WeakRefTarget)) {
+      ref.WeakRefTarget = undefined;
+    }
+  });
 
-    fgs.forEach((fg) => {
-      let dirty = false;
-      fg.Cells.forEach((cell) => {
-        if (!marked.has(cell.WeakRefTarget)) {
-          cell.WeakRefTarget = undefined;
-          dirty = true;
-        }
-      });
-      if (dirty) {
-        X(HostCleanupFinalizationRegistry(fg));
+  fgs.forEach((fg) => {
+    let dirty = false;
+    fg.Cells.forEach((cell) => {
+      if (!marked.has(cell.WeakRefTarget)) {
+        cell.WeakRefTarget = undefined;
+        dirty = true;
       }
     });
-  }
+    if (dirty) {
+      X(HostEnqueueFinalizationRegistryCleanupJob(fg));
+    }
+  });
 
   weakmaps.forEach((map) => {
     map.WeakMapData.forEach((r) => {

@@ -96,3 +96,4 @@ export * from './PropertyBindingInitialization.mjs';
 export * from './KeyedBindingInitialization.mjs';
 export * from './DestructuringAssignmentEvaluation.mjs';
 export * from './RestBindingInitialization.mjs';
+export * from './Unicode.mjs';

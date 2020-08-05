@@ -28,10 +28,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-top-level-await',
   },
   {
-    name: 'WeakRefs',
-    url: 'https://github.com/tc39/proposal-weakrefs',
-  },
-  {
     name: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
   },
@@ -41,17 +37,24 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
+let agentSignifier = 0;
 // #sec-agents
 export class Agent {
   constructor(options = {}) {
-    this.LittleEndian = Value.true;
-    this.CanBlock = true;
-    this.Signifier = Agent.Increment;
-    Agent.Increment += 1;
-    this.IsLockFree1 = true;
-    this.IsLockFree2 = true;
-    this.CandidateExecution = undefined;
+    // #table-agent-record
+    const Signifier = agentSignifier;
+    agentSignifier += 1;
+    this.AgentRecord = {
+      LittleEndian: Value.true,
+      CanBlock: Value.true,
+      Signifier,
+      IsLockFree1: Value.true,
+      IsLockFree2: Value.true,
+      CandidateExecution: undefined,
+      KeptAlive: new Set(),
+    };
 
+    // #execution-context-stack
     this.executionContextStack = [];
     const stackPop = this.executionContextStack.pop;
     this.executionContextStack.pop = function pop(ctx) {
@@ -61,8 +64,8 @@ export class Agent {
       }
     };
 
+    // NON-SPEC
     this.jobQueue = [];
-
     this.hostDefinedOptions = {
       ...options,
       features: FEATURES.reduce((acc, { name }) => {
@@ -74,10 +77,6 @@ export class Agent {
         return acc;
       }, {}),
     };
-
-    if (this.feature('WeakRefs')) {
-      this.KeptAlive = new Set();
-    }
   }
 
   // #running-execution-context
@@ -148,7 +147,6 @@ export class Agent {
     });
   }
 }
-Agent.Increment = 0;
 
 export let surroundingAgent;
 export function setSurroundingAgent(a) {
@@ -245,9 +243,11 @@ export function InitializeHostDefinedRealm() {
   SetDefaultGlobalBindings(realm);
 }
 
-// 8.7.1 #sec-agentsignifier
+// #sec-agentsignifier
 export function AgentSignifier() {
-  const AR = surroundingAgent;
+  // 1. Let AR be the Agent Record of the surrounding agent.
+  const AR = surroundingAgent.AgentRecord;
+  // 2. Return AR.[[Signifier]].
   return AR.Signifier;
 }
 
@@ -366,9 +366,9 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-registry
+// #sec-host-cleanup-finalization-registry
 const scheduledForCleanup = new Set();
-export function HostCleanupFinalizationRegistry(fg) {
+export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
   } else {

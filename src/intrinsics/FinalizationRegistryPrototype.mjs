@@ -1,15 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, Type } from '../value.mjs';
 import {
-  CleanupFinalizationRegistry,
   RequireInternalSlot,
-  IsCallable,
   SameValue,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-// https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.register
+// #sec-finalization-registry.prototype.register
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], { thisValue }) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
@@ -44,7 +42,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.unregister
+// #sec-finalization-registry.prototype.unregister
 function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], { thisValue }) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
@@ -59,7 +57,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationRegistry.[[Cells]], do
   finalizationRegistry.Cells = finalizationRegistry.Cells.filter((cell) => {
     let r = true;
-    // a. If SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
+    // a. If cell.[[UnregisterToken]] is not empty and SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
     if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === Value.true) {
       // i. Remove cell from finalizationRegistry.Cells.
       r = false;
@@ -72,27 +70,10 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   return removed;
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.cleanupSome
-function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {
-  // 1. Let finalizationRegistry be the this value.
-  const finalizationRegistry = thisValue;
-  // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-  Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If callback is not undefined and IsCallable(callback) is false, throw a TypeError exception.
-  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
-  }
-  // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-  Q(CleanupFinalizationRegistry(finalizationRegistry, callback));
-  // 5. Return undefined.
-  return Value.undefined;
-}
-
 export function BootstrapFinalizationRegistryPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
     ['register', FinalizationRegistryProto_register, 2],
     ['unregister', FinalizationRegistryProto_unregister, 1],
-    ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
 
   realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;

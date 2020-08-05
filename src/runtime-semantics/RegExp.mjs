@@ -6,6 +6,14 @@ import { CharacterValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parse.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import {
+  UnicodeMatchProperty,
+  UnicodeMatchPropertyValue,
+  UnicodeGeneralCategoryValues,
+  BinaryUnicodeProperties,
+  NonbinaryUnicodeProperties,
+  getUnicodePropertyValueSet,
+} from './all.mjs';
 
 // #sec-pattern
 class State {
@@ -26,27 +34,36 @@ const SetOfAllCharactersExceptLineTerminator = new Set();
 const SetOfAllNotDigitCharacters = new Set();
 const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
 const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
-for (let i = 0; i < 0x10FFFF; i += 1) {
-  const c = String.fromCodePoint(i);
-  SetOfAllCharacters.add(c);
-  const lineTerminator = isLineTerminator(c);
-  if (!lineTerminator) {
-    SetOfAllCharactersExceptLineTerminator.add(c);
-    if (!isWhitespace(c)) {
-      SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
+
+function ensureSets() {
+  if (SetOfAllCharacters.size > 0) {
+    return;
+  }
+
+  for (let i = 0; i < 0x10FFFF; i += 1) {
+    const c = String.fromCodePoint(i);
+    SetOfAllCharacters.add(c);
+    const lineTerminator = isLineTerminator(c);
+    if (!lineTerminator) {
+      SetOfAllCharactersExceptLineTerminator.add(c);
+      if (!isWhitespace(c)) {
+        SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
+      }
     }
-  }
-  if (lineTerminator && isWhitespace(c)) {
-    SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
-  }
-  if (!isDecimalDigit(c)) {
-    SetOfAllNotDigitCharacters.add(c);
+    if (lineTerminator && isWhitespace(c)) {
+      SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
+    }
+    if (!isDecimalDigit(c)) {
+      SetOfAllNotDigitCharacters.add(c);
+    }
   }
 }
 
 // #sec-pattern
 //   Pattern :: Disjunction
 export function Evaluate_Pattern(Pattern, flags) {
+  ensureSets();
+
   // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
@@ -107,7 +124,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         return y;
       };
       // g. Let cap be a List of NcapturingParens undefined values, indexed 1 through NcapturingParens.
-      const cap = Array.from({ length: NcapturingParens }, () => Value.undefined);
+      const cap = Array.from({ length: NcapturingParens + 1 }, () => Value.undefined);
       // h. Let x be the State (listIndex, cap).
       const x = new State(listIndex, cap);
       // i. Call m(x, c) and return its result.
@@ -137,6 +154,8 @@ export function Evaluate_Pattern(Pattern, flags) {
         return Evaluate_DecimalEscape(node, ...args);
       case 'CharacterClassEscape':
         return Evaluate_CharacterClassEscape(node, ...args);
+      case 'UnicodePropertyValueExpression':
+        return Evaluate_UnicodePropertyValueExpression(node, ...args);
       case 'CharacterClass':
         return Evaluate_CharacterClass(node, ...args);
       case 'ClassAtom':
@@ -830,14 +849,15 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 2. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
-      /*
       case !!AtomEscape.GroupName: {
         // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
         // 2. Assert: A unique such GroupSpecifier is found.
         // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
+        const parenIndex = Pattern.groupSpecifiers.get(AtomEscape.GroupName);
+        Assert(parenIndex !== undefined);
         // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
+        return BackreferenceMatcher(parenIndex + 1, direction);
       }
-      */
       default:
         throw new OutOfRange('Evaluate_AtomEscape', AtomEscape);
     }
@@ -856,7 +876,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // d. Let s be cap[n].
       const s = cap[n];
       // e. If s is undefined, return c(x).
-      if (s === undefined) {
+      if (s === Value.undefined) {
         return c(x);
       }
       // f. Let e be x's endIndex.
@@ -945,9 +965,57 @@ export function Evaluate_Pattern(Pattern, flags) {
         }
         return A;
       }
+      case 'p':
+        // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
+        return Evaluate(node.UnicodePropertyValueExpression);
+      case 'P': {
+        // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
+        const set = Evaluate(node.UnicodePropertyValueExpression);
+        const A = new Set();
+        for (let i = 0; i < 0x10FFFF; i += 1) {
+          const c = String.fromCodePoint(i);
+          if (!set.has(c)) {
+            A.add(c);
+          }
+        }
+        return A;
+      }
       default:
         throw new OutOfRange('Evaluate_CharacterClassEscape', node);
     }
+  }
+
+  // UnicodePropertyValueExpression ::
+  //   UnicodePropertyName `=` UnicodePropertyValue
+  //   LoneUnicodePropertyNameOrValue
+  function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression) {
+    if (UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue) {
+      // 1. Let s be SourceText of LoneUnicodePropertyNameOrValue.
+      const s = UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue;
+      // 2. If ! UnicodeMatchPropertyValue(General_Category, s) is identical to a List of Unicode code points that is the name of a Unicode general category or general category alias listed in the “Property value and aliases” column of Table 57, then
+      if (X(UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues)) {
+        // a. Return the CharSet containing all Unicode code points whose character database definition includes the property “General_Category” with value s.
+        return getUnicodePropertyValueSet('General_Category', s);
+      }
+      // 3. Let p be ! UnicodeMatchProperty(s).
+      const p = X(UnicodeMatchProperty(s));
+      // 4. Assert: p is a binary Unicode property or binary property alias listed in the “Property name and aliases” column of Table 56.
+      Assert(p in BinaryUnicodeProperties);
+      // 5. Return the CharSet containing all Unicode code points whose character database definition includes the property p with value “True”.
+      return getUnicodePropertyValueSet(p);
+    }
+    // 1. Let ps be SourceText of UnicodePropertyName.
+    const ps = UnicodePropertyValueExpression.UnicodePropertyName;
+    // 2. Let p be ! UnicodeMatchProperty(ps).
+    const p = X(UnicodeMatchProperty(ps));
+    // 3. Assert: p is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55.
+    Assert(p in NonbinaryUnicodeProperties);
+    // 4. Let vs be SourceText of UnicodePropertyValue.
+    const vs = UnicodePropertyValueExpression.UnicodePropertyValue;
+    // 5. Let v be ! UnicodeMatchPropertyValue(p, vs).
+    const v = X(UnicodeMatchPropertyValue(p, vs));
+    // 6. Return the CharSet containing all Unicode code points whose character database definition includes the property p with value v.
+    return getUnicodePropertyValueSet(p, v);
   }
 
   // #sec-characterclass

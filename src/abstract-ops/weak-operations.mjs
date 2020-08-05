@@ -1,33 +1,46 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { NormalCompletion, Q } from '../completion.mjs';
+import { NormalCompletion, Q, X } from '../completion.mjs';
 import { Assert, Call } from './all.mjs';
 
-// https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+// #sec-clear-kept-objects
 export function ClearKeptObjects() {
-  // 1. Let agent be the surrounding agent.
-  const agent = surroundingAgent;
-  // 2. Set agent.[[KeptAlive]] to a new empty List.
-  agent.KeptAlive = new Set();
+  // 1. Let agentRecord be the surrounding agent's Agent Record.
+  const agentRecord = surroundingAgent.AgentRecord;
+  // 2. Set agentRecord.[[KeptAlive]] to a new empty List.
+  agentRecord.KeptAlive = new Set();
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+// #sec-addtokeptobjects
 export function AddToKeptObjects(object) {
-  // 1. Let agent be the surrounding agent.
-  const agent = surroundingAgent;
-  // 2. Append object to agent.[[KeptAlive]].
-  agent.KeptAlive.add(object);
+  // 1. Let agentRecord be the surrounding agent's Agent Record.
+  const agentRecord = surroundingAgent.AgentRecord;
+  // 2. Append object to agentRecord.[[KeptAlive]].
+  agentRecord.KeptAlive.add(object);
 }
 
-// https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
+// #sec-weakrefderef
+export function WeakRefDeref(weakRef) {
+  // 1. Let target be weakRef.[[WeakRefTarget]].
+  const target = weakRef.WeakRefTarget;
+  // 2. If target is not empty, then
+  if (target !== undefined) {
+    // a. Perform ! AddToKeptObjects(target).
+    X(AddToKeptObjects(target));
+    // b. Return target.
+    return target;
+  }
+  // 3. Return undefined.
+  return Value.undefined;
+}
+
+// #sec-cleanup-finalization-registry
 export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
-  Assert('Cells' in finalizationRegistry);
-  // 2. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
-  if (callback === undefined || callback === Value.undefined) {
-    callback = finalizationRegistry.CleanupCallback;
-  }
-  // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, do
+  Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
+  // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
+  callback = finalizationRegistry.CleanupCallback;
+  // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
   for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
     // a. Choose any such _cell_.
     const cell = finalizationRegistry.Cells[i];
