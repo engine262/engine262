@@ -65,11 +65,13 @@ export class RegExpParser {
   parseDisjunction() {
     const node = {
       type: 'Disjunction',
-      AlternativeList: [],
+      Alternative: undefined,
+      Disjunction: undefined,
     };
-    do {
-      node.AlternativeList.push(this.parseAlternative());
-    } while (this.eat('|'));
+    node.Alternative = this.parseAlternative();
+    if (this.eat('|')) {
+      node.Disjunction = this.parseDisjunction();
+    }
     return node;
   }
 
@@ -78,13 +80,18 @@ export class RegExpParser {
   //   [empty]
   //   Term Alternative
   parseAlternative() {
-    const node = {
+    let node = {
       type: 'Alternative',
-      TermList: [],
+      Term: undefined,
+      Alternative: undefined,
     };
     while (this.position < this.source.length
            && !isClosingSyntaxCharacter(this.peek())) {
-      node.TermList.push(this.parseTerm());
+      node = {
+        type: 'Alternative',
+        Term: this.parseTerm(),
+        Alternative: node,
+      };
     }
     return node;
   }
@@ -518,6 +525,16 @@ export class RegExpParser {
     return {
       type: 'ClassAtom',
       SourceCharacter: this.next(),
+    };
+  }
+
+  parseGroupName() {
+    this.expect('<');
+    const RegExpIdentifierName = this.parseIdentifierName();
+    this.expect('>');
+    return {
+      type: 'GroupName',
+      RegExpIdentifierName,
     };
   }
 

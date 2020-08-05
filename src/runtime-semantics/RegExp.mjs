@@ -20,6 +20,10 @@ export { State as RegExpState };
 // Caches the result of WordCharacters()
 let cachedWordCharacters;
 
+function isContinuation(v) {
+  return typeof v === 'function' && v.length === 1;
+}
+
 // #sec-pattern
 //   Pattern :: Disjunction
 export function Evaluate_Pattern(Pattern, flags) {
@@ -128,32 +132,31 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   Disjunction ::
   //     Alternative
   //     Alternative `|` Disjunction
-  function Evaluate_Disjunction({ AlternativeList }, direction) {
-    if (AlternativeList.length === 1) {
+  function Evaluate_Disjunction({ Alternative, Disjunction }, direction) {
+    if (!Disjunction) {
       // 1. Evaluate Alternative with argument direction to obtain a Matcher m.
-      const m = Evaluate(AlternativeList[0], direction);
+      const m = Evaluate(Alternative, direction);
       // 2. Return m.
       return m;
     }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
+    const m1 = Evaluate(Alternative, direction);
     // 2. Evaluate Disjunction with argument direction to obtain a Matcher m2.
-    const mN = AlternativeList.map((Alternative) => Evaluate(Alternative, direction));
+    const m2 = Evaluate(Disjunction, direction);
     // 3. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
       Assert(x instanceof State);
       // b. Assert: c is a Continuation.
-      Assert(typeof c === 'function');
+      Assert(isContinuation(c));
       // c. Call m1(x, c) and let r be its result.
+      const r = m1(x, c);
       // d. If r is not failure, return r.
-      // e. Call m2(x, c) and return its result.
-      for (const m of mN) {
-        const r = m(x, c);
-        if (r !== 'failure') {
-          return r;
-        }
+      if (r !== 'failure') {
+        return r;
       }
-      return 'failure';
+      // e. Call m2(x, c) and return its result.
+      return m2(x, c);
     };
   }
 
@@ -161,24 +164,22 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   Alternative ::
   //     [empty]
   //     Alternative Term
-  function Evaluate_Alternative({ TermList }, direction) {
-    if (TermList.length === 0) {
+  function Evaluate_Alternative({ Alternative, Term }, direction) {
+    if (!Alternative && !Term) {
       // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
       return (x, c) => {
-        // a. Assert: x is a State.
+        // 1. Assert: x is a State.
         Assert(x instanceof State);
-        // b. Assert: c is a Continuation.
-        Assert(typeof c === 'function');
-        // c. Call c(x) and return its result.
+        // 2. Assert: c is a Continuation.
+        Assert(isContinuation(c));
+        // 3. Call c(x) and return its result.
         return c(x);
       };
     }
-    if (TermList.length === 1) {
-      return Evaluate(TermList[0], direction);
-    }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
+    const m1 = Evaluate(Alternative, direction);
     // 2. Evaluate Term with argument direction to obtain a Matcher m2.
-    const mN = TermList.map((Term) => Evaluate(Term, direction));
+    const m2 = Evaluate(Term, direction);
     // 3. If direction is equal to +1, then
     if (direction === +1) {
       // a. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
@@ -186,16 +187,16 @@ export function Evaluate_Pattern(Pattern, flags) {
         // i. Assert: x is a State.
         Assert(x instanceof State);
         // ii. Assert: c is a Continuation.
-        Assert(typeof c === 'function');
+        Assert(isContinuation(c));
         // iii. Let d be a new Continuation with parameters (y) that captures c and m2 and performs the following steps when called:
-        const d = mN.slice(1).reduceRight((cN, m2) => (y) => {
+        const d = (y) => {
           // 1. Assert: y is a State.
           Assert(y instanceof State);
           // 2. Call m2(y, c) and return its result.
-          return m2(y, cN);
-        }, c);
+          return m2(y, c);
+        };
         // iv. Call m1(x, d) and return its result.
-        return mN[0](x, d);
+        return m1(x, d);
       };
     } else { // 4. Else,
       // a. Assert: direction is equal to -1.
@@ -205,16 +206,16 @@ export function Evaluate_Pattern(Pattern, flags) {
         // i. Assert: x is a State.
         Assert(x instanceof State);
         // ii. Assert: c is a Continuation.
-        Assert(typeof c === 'function');
+        Assert(isContinuation(c));
         // iii. Let d be a new Continuation with parameters (y) that captures c and m1 and performs the following steps when called:
-        const d = mN.slice(0, -1).reduce((cN, m1) => (y) => {
+        const d = (y) => {
           // 1. Assert: y is a State.
           Assert(y instanceof State);
           // 2. Call m1(y, c) and return its result.
-          return m1(y, cN);
-        });
+          return m1(y, c);
+        };
         // iv. Call m2(x, d) and return its result.
-        return mN[mN.length - 1](x, d);
+        return m2(x, d);
       };
     }
   }
@@ -248,7 +249,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State);
       // b. Assert: c is a Continuation.
-      Assert(typeof c === 'function');
+      Assert(isContinuation(c));
       // c. Call RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) and return its result.
       return RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount);
     };
@@ -338,7 +339,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is zero, or if Multiline is true and the character Input[e - 1] is one of LineTerminator, then
@@ -355,7 +356,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is equal to InputLength, or if Multiline is true and the character Input[e] is one of LineTerminator, then
@@ -372,7 +373,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. Call IsWordChar(e - 1) and let a be the Boolean result.
@@ -393,7 +394,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. Call IsWordChar(e - 1) and let a be the Boolean result.
@@ -416,7 +417,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
           const d = (y) => {
             // i. Assert: y is a State.
@@ -450,7 +451,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
           const d = (y) => {
             // i. Assert: y is a State.
@@ -476,7 +477,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
           const d = (y) => {
             // i. Assert: y is a State.
@@ -510,7 +511,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
           const d = (y) => {
             // i. Assert: y is a State.
@@ -542,26 +543,26 @@ export function Evaluate_Pattern(Pattern, flags) {
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
     //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     //   0 1 2 3 4 5 6 7 8 9 _
-    const A = [
+    const A = new Set([
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
-    ];
+    ]);
     cachedWordCharacters = A;
     // 2. Let U be an empty set.
-    const U = [];
+    const U = new Set();
     // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
     for (let i = 0; i < 0x10FFFF; i += 1) {
       const c = String.fromCodePoint(i);
-      if (A.includes(c)) {
+      if (A.has(c)) {
         continue;
       }
-      if (A.includes(Canonicalize(c))) {
-        U.push(c);
+      if (A.has(Canonicalize(c))) {
+        U.add(c);
       }
     }
     // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
-    Assert((Unicode && IgnoreCase) || U.length === 0);
+    Assert((Unicode && IgnoreCase) || U.size === 0);
     // 5. Add the characters in set U to set A.
     // Return A.
     return A;
@@ -578,7 +579,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 3. Let wordChars be the result of ! WordCharacters().
     const wordChars = X(WordCharacters());
     // 4. If c is in wordChars, return true.
-    if (wordChars.includes(c)) {
+    if (wordChars.has(c)) {
       return true;
     }
     // 5. Return false.
@@ -618,7 +619,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Let ch be the character matched by PatternCharacter.
         const ch = Atom.PatternCharacter;
         // 2. Let A be a one-element CharSet containing the character ch.
-        const A = [Canonicalize(ch)];
+        const A = new Set([Canonicalize(ch)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
@@ -628,14 +629,14 @@ export function Evaluate_Pattern(Pattern, flags) {
         if (DotAll) {
           // a. Let A be the set of all characters.
           A = {
-            includes(_c) {
+            has(_c) {
               return true;
             },
           };
         } else {
           // 2. Otherwise, let A be the set of all characters except LineTerminator.
           A = {
-            includes(c) {
+            has(c) {
               return !isLineTerminator(c);
             },
           };
@@ -661,7 +662,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State);
           // b. Assert: c is a Continuation.
-          Assert(typeof c === 'function');
+          Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
           const d = (y) => {
             // i. Assert: y is a State.
@@ -712,7 +713,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State);
       // b. Assert: c is a Continuation.
-      Assert(typeof c === 'function');
+      Assert(isContinuation(c));
       // c. Let e be x's endIndex.
       const e = x.endIndex;
       // d. Let f be e + direction.
@@ -730,14 +731,14 @@ export function Evaluate_Pattern(Pattern, flags) {
       // i. If invert is false, then
       if (invert === false) {
         // i. If there does not exist a member a of set A such that Canonicalize(a) is cc, return failure.
-        if (!A.includes(cc)) {
+        if (!A.has(cc)) {
           return 'failure';
         }
       } else { // j. Else
         // i. Assert: invert is true.
         Assert(invert === true);
         // ii. If there exists a member a of set A such that Canonicalize(a) is cc, return failure.
-        if (A.includes(cc)) {
+        if (A.has(cc)) {
           return 'failure';
         }
       }
@@ -811,7 +812,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Evaluate CharacterEscape to obtain a character ch.
         const ch = Evaluate(AtomEscape.CharacterEscape);
         // 2. Let A be a one-element CharSet containing the character ch.
-        const A = [Canonicalize(ch)];
+        const A = new Set([Canonicalize(ch)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
@@ -841,7 +842,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State);
       // b. Assert: c is a Continuation.
-      Assert(typeof c === 'function');
+      Assert(isContinuation(c));
       // c. Let cap be x's captures List.
       const cap = x.captures;
       // d. Let s be cap[n].
@@ -911,20 +912,20 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (node.value) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
-        return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        return new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
       case 'D': {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
         const set = Evaluate_CharacterClassEscape({ value: 'd' });
         return {
-          includes(c) {
-            return !set.includes(c);
+          has(c) {
+            return !set.has(c);
           },
         };
       }
       case 's':
         // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
         return {
-          includes(c) {
+          has(c) {
             return isWhitespace(c) || isLineTerminator(c);
           },
         };
@@ -932,8 +933,8 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
         const set = Evaluate_CharacterClassEscape({ value: 's' });
         return {
-          includes(c) {
-            return !set.includes(c);
+          has(c) {
+            return !set.has(c);
           },
         };
       }
@@ -944,8 +945,8 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
         const set = Evaluate_CharacterClassEscape({ value: 'w' });
         return {
-          includes(c) {
-            return !set.includes(c);
+          has(c) {
+            return !set.has(c);
           },
         };
       }
@@ -959,14 +960,18 @@ export function Evaluate_Pattern(Pattern, flags) {
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
   function Evaluate_CharacterClass({ invert, ClassRanges }) {
-    const A = [];
+    const A = new Set();
     for (const range of ClassRanges) {
       if (Array.isArray(range)) {
         const C = Evaluate(range[0]);
         const D = Evaluate(range[1]);
-        A.push(...CharacterRange(C, D));
+        CharacterRange(C, D).forEach((c) => {
+          A.add(c);
+        });
       } else {
-        A.push(...Evaluate(range));
+        Evaluate(range).forEach((c) => {
+          A.add(c);
+        });
       }
     }
     return { A, invert };
@@ -975,11 +980,11 @@ export function Evaluate_Pattern(Pattern, flags) {
   // #sec-runtime-semantics-characterrange-abstract-operation
   function CharacterRange(A, B) {
     // 1. Assert: A and B each contain exactly one character.
-    Assert(A.length === 1 && B.length === 1);
+    Assert(A.size === 1 && B.size === 1);
     // 2. Let a be the one character in CharSet A.
-    const a = A[0];
+    const a = A.values().next().value;
     // 3. Let b be the one character in CharSet B.
-    const b = B[0];
+    const b = B.values().next().value;
     // 4. Let i be the character value of character a.
     const i = a.codePointAt(0);
     // 5. Let j be the character value of character b.
@@ -987,9 +992,9 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 6. Assert: i ≤ j.
     Assert(i <= j);
     // 7. Return the set containing all characters numbered i through j, inclusive.
-    const set = [];
+    const set = new Set();
     for (let k = i; k <= j; k += 1) {
-      set.push(Canonicalize(String.fromCodePoint(k)));
+      set.add(Canonicalize(String.fromCodePoint(k)));
     }
     return set;
   }
@@ -1005,10 +1010,10 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (true) {
       case !!ClassAtom.SourceCharacter:
         // 1. Return the CharSet containing the character matched by SourceCharacter.
-        return [Canonicalize(ClassAtom.SourceCharacter)];
+        return new Set([Canonicalize(ClassAtom.SourceCharacter)]);
       case ClassAtom.value === '-':
         // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
-        return ['-'];
+        return new Set(['-']);
       default:
         throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
     }
@@ -1030,7 +1035,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 2. Let c be the character whose character value is cv.
         const c = cv;
         // 3. Return the CharSet containing the single character c.
-        return [Canonicalize(c)];
+        return new Set([Canonicalize(c)]);
       }
       default:
         throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
