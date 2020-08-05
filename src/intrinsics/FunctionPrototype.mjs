@@ -181,18 +181,18 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
 }
 
 // #sec-function.prototype.tostring
-function FunctionProto_toString(args, { thisValue: func }) {
+function FunctionProto_toString(args, { thisValue }) {
   // 1. Let func be the this value.
-  // 2. If func is a bound function exotic object or a built-in function object, then
-  //    return an implementation-dependent String source code representation of func.
-  //    The representation must have the syntax of a NativeFunction. Additionally, if
-  //    func is a Well-known Intrinsic Object and is not identified as an anonymous
-  //    function, the portion of the returned String that would be matched by
-  //    PropertyName must be the initial value of the "name" property of func.
-  if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
-    const name = func.properties.get(new Value('name'));
-    if (name !== undefined) {
-      return new Value(`function ${name.Value.stringValue()}() { [native code] }`);
+  const func = thisValue;
+  // 2. If func is a built-in function object, then return an implementation-defined
+  //    String source code representation of func. The representation must have the
+  //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
+  //    slot and func.[[InitialName]] is a String, the portion of the returned String
+  //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
+  //    value of func.[[InitialName]].
+  if ('nativeFunction' in func) {
+    if (func.InitialName !== Value.null) {
+      return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
     return new Value('function() { [native code] }');
   }

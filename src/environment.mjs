@@ -288,7 +288,13 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
     const bindings = envRec.bindingObject;
-    // 3. Return ? Set(bindings, N, V, S).
+    // 3. Let stillExists be ? HasProperty(bindings, N).
+    const stillExists = Q(HasProperty(bindings, N));
+    // 4. If stillExists is false and S is true, throw a ReferenceError exception.
+    if (stillExists === Value.false && S === Value.true) {
+      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+    }
+    // 5. Return ? Set(bindings, N, V, S).
     return Q(Set(bindings, N, V, S));
   }
 

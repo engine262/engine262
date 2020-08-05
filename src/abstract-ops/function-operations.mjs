@@ -295,22 +295,41 @@ export function MakeMethod(F, homeObject) {
   return NormalCompletion(Value.undefined);
 }
 
-// 9.2.13 #sec-setfunctionname
+// #sec-setfunctionname
 export function SetFunctionName(F, name, prefix) {
+  // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
+  // 2. Assert: Type(name) is either Symbol or String.
   Assert(Type(name) === 'Symbol' || Type(name) === 'String');
+  // 3. Assert: If prefix is present, then Type(prefix) is String.
   Assert(!prefix || Type(prefix) === 'String');
+  // 4. If Type(name) is Symbol, then
   if (Type(name) === 'Symbol') {
+    // a. Let description be name's [[Description]] value.
     const description = name.Description;
-    if (Type(description) === 'Undefined') {
+    // b. If description is undefined, set name to the empty String.
+    if (description === Value.undefined) {
       name = new Value('');
     } else {
+      // c. Else, set name to the string-concatenation of "[", description, and "]".
       name = new Value(`[${description.stringValue()}]`);
     }
   }
-  if (prefix !== undefined) {
-    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
+  // 5. If F has an [[InitialName]] internal slot, then
+  if ('InitialName' in F) {
+    // a. Set F.[[InitialName]] to name.
+    F.InitialName = name;
   }
+  // 6. If prefix is present, then
+  if (prefix !== undefined) {
+    // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
+    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    // b. If F has an [[InitialName]] internal slot, then
+    if ('InitialName' in F) {
+      // i. Optionally, set F.[[InitialName]] to name.
+    }
+  }
+  // 7. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
     Value: name,
     Writable: Value.false,
@@ -394,7 +413,7 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(internalSlotsList));
+  const func = X(MakeBasicObject(internalSlotsList.concat('InitialName')));
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
@@ -408,7 +427,9 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
   func.Extensible = Value.true;
   // 9. Set func.[[Extensible]] to true.
   func.ScriptOrModule = Value.null;
-  // 10. Return func.
+  // 10. Set func.[[InitialName]] to null.
+  func.InitialName = Value.null;
+  // 11. Return func.
   return func;
 }
 
