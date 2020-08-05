@@ -779,12 +779,12 @@ export class Lexer {
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
-        if (!buffer.length) {
-          if (!(isIdentifierStart(raw) || raw === '$' || raw === '_')) {
+        if (buffer.length) {
+          if (!(isIdentifierContinue(raw) || raw === '$' || raw === '_' || raw === '\u200C' || raw === '\u200D')) {
             this.unexpected(escapeIndex);
           }
         } else {
-          if (!(isIdentifierContinue(raw) || raw === '$' || raw === '_' || raw === '\u200C' || raw === '\u200D')) {
+          if (!(isIdentifierStart(raw) || raw === '$' || raw === '_')) {
             this.unexpected(escapeIndex);
           }
         }
