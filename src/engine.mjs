@@ -284,12 +284,11 @@ export function HostResolveImportedModule(referencingScriptOrModule, specifier) 
         return referencingScriptOrModule.HostDefined.moduleMap.get(specifier);
       }
     }
-    const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
-    const apiModule = Q(realm.HostDefined.resolveImportedModule(publicModule, specifier));
+    const resolved = Q(realm.HostDefined.resolveImportedModule(referencingScriptOrModule, specifier));
     if (referencingScriptOrModule !== Value.null) {
-      referencingScriptOrModule.HostDefined.moduleMap.set(specifier, apiModule.module);
+      referencingScriptOrModule.HostDefined.moduleMap.set(specifier, resolved);
     }
-    return apiModule.module;
+    return resolved;
   }
   return surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier);
 }

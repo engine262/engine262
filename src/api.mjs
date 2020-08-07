@@ -15,7 +15,6 @@ import {
   Realm,
   ClearKeptObjects,
   CreateIntrinsics,
-  GetModuleNamespace,
   SetRealmGlobalObject,
   SetDefaultGlobalBindings,
 } from './abstract-ops/all.mjs';
@@ -23,6 +22,7 @@ import {
   ParseScript,
   ParseModule,
 } from './parse.mjs';
+import { SourceTextModuleRecord } from './modules.mjs';
 
 export * from './value.mjs';
 export * from './engine.mjs';
@@ -251,23 +251,21 @@ export class ManagedRealm extends Realm {
     }
     const module = this.scope(() => ParseModule(sourceText, this, {
       specifier,
-      public: {
-        specifier,
-        Link: () => this.scope(() => module.Link()),
-        GetNamespace: () => this.scope(() => GetModuleNamespace(module)),
-        Evaluate: () => {
-          const res = this.scope(() => module.Evaluate());
-          if (!(res instanceof AbruptCompletion)) {
-            runJobQueue();
-          }
-          return res;
-        },
-      },
+      SourceTextModuleRecord: ManagedSourceTextModuleRecord,
     }));
     if (Array.isArray(module)) {
       return ThrowCompletion(module[0]);
     }
-    module.HostDefined.public.module = module;
-    return module.HostDefined.public;
+    return module;
+  }
+}
+
+class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
+  Evaluate() {
+    const r = super.Evaluate();
+    if (!(r instanceof AbruptCompletion)) {
+      runJobQueue();
+    }
+    return r;
   }
 }

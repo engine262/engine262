@@ -59,8 +59,8 @@ export function RegExpExec(R, S) {
   return Q(RegExpBuiltinExec(R, S));
 }
 
-// 21.2.5.2.2 #sec-regexpbuiltinexec
-function RegExpBuiltinExec(R, S) {
+// #sec-regexpbuiltinexec
+export function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
   // 2. Assert: Type(S) is String.

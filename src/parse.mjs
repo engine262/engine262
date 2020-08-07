@@ -149,7 +149,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     }
   }
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-  return new SourceTextModuleRecord({
+  return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
     Environment: Value.undefined,
     Namespace: Value.undefined,

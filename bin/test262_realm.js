@@ -34,7 +34,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     },
     resolveImportedModule(referencingScriptOrModule, specifier) {
       try {
-        const base = path.dirname(referencingScriptOrModule.specifier);
+        const base = path.dirname(referencingScriptOrModule.HostDefined.specifier);
         const resolved = path.resolve(base, specifier);
         if (resolverCache.has(resolved)) {
           return resolverCache.get(resolved);
