@@ -13,3 +13,5 @@ language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
 built-ins/{encode,decode}URI?(Component)/**/*.js
+
+built-ins/Function/prototype/toString/built-in-function-object.js
