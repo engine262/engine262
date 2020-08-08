@@ -13,7 +13,7 @@ import { Q } from '../completion.mjs';
 // BindingRestProperty : `...` BindingIdentifier
 export function RestBindingInitialization({ BindingIdentifier }, value, environment, excludedNames) {
   // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
-  const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment));
+  const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
   // 2. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 3. Perform ? CopyDataProperties(restObj, value, excludedNames).

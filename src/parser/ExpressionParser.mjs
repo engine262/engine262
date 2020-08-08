@@ -124,7 +124,7 @@ export class ExpressionParser extends FunctionParser {
         return;
       case 'ArrayLiteral':
         node.ElementList.forEach((p, i) => {
-          if (p.type === 'SpreadElement' && i !== node.ElementList.length - 1) {
+          if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
           this.validateAssignmentTarget(p);
@@ -148,6 +148,10 @@ export class ExpressionParser extends FunctionParser {
       case 'Elision':
         return;
       case 'SpreadElement':
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          break;
+        }
+        this.validateAssignmentTarget(node.AssignmentExpression);
         return;
       default:
         break;
@@ -200,9 +204,11 @@ export class ExpressionParser extends FunctionParser {
     const ShortCircuitExpression = this.parseShortCircuitExpression();
     if (this.eat(Token.CONDITIONAL)) {
       node.ShortCircuitExpression = ShortCircuitExpression;
-      node.AssignmentExpression_a = this.parseAssignmentExpression();
-      this.expect(Token.COLON);
-      node.AssignmentExpression_b = this.parseAssignmentExpression();
+      this.scope.with({ in: true }, () => {
+        node.AssignmentExpression_a = this.parseAssignmentExpression();
+        this.expect(Token.COLON);
+        node.AssignmentExpression_b = this.parseAssignmentExpression();
+      });
       return this.finishNode(node, 'ConditionalExpression');
     }
     return ShortCircuitExpression;
@@ -686,6 +692,7 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.LBRACK);
     node.ElementList = [];
+    node.hasTrailingComma = false;
     while (true) {
       while (this.test(Token.COMMA)) {
         const elision = this.startNode();
@@ -704,8 +711,10 @@ export class ExpressionParser extends FunctionParser {
         node.ElementList.push(this.parseAssignmentExpression());
       }
       if (this.eat(Token.RBRACK)) {
+        node.hasTrailingComma = false;
         break;
       }
+      node.hasTrailingComma = true;
       this.expect(Token.COMMA);
     }
     return this.finishNode(node, 'ArrayLiteral');

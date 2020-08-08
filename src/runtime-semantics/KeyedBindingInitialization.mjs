@@ -32,7 +32,7 @@ export function* KeyedBindingInitialization(node, value, environment, propertyNa
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(node.BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId, environment).
-    const lhs = Q(ResolveBinding(bindingId, environment));
+    const lhs = Q(ResolveBinding(bindingId, environment, node.BindingIdentifier.strict));
     // 3. Let v be ? GetV(value, propertyName).
     let v = Q(GetV(value, propertyName));
     if (node.Initializer && v === Value.undefined) {

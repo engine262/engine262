@@ -65,7 +65,16 @@ export class StatementParser extends ExpressionParser {
         return this.parseLexicalDeclaration();
       default:
         if (this.test('let')) {
-          return this.parseLexicalDeclaration();
+          switch (this.peekAhead().type) {
+            case Token.LBRACE:
+            case Token.LBRACK:
+            case Token.IDENTIFIER:
+            case Token.YIELD:
+            case Token.AWAIT:
+              return this.parseLexicalDeclaration();
+            default:
+              break;
+          }
         }
         if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
           return this.parseHoistableDeclaration();
@@ -328,10 +337,10 @@ export class StatementParser extends ExpressionParser {
   }
 
   // Block : `{` StatementList `}`
-  parseBlock() {
+  parseBlock(lexical = true) {
     const node = this.startNode();
     this.expect(Token.LBRACE);
-    this.scope.with({ lexical: true }, () => {
+    this.scope.with({ lexical }, () => {
       node.StatementList = this.parseStatementList(Token.RBRACE);
     });
     return this.finishNode(node, 'Block');
@@ -469,7 +478,7 @@ export class StatementParser extends ExpressionParser {
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
-      if (this.test('let') || this.test(Token.CONST)) {
+      if ((this.test('let') || this.test(Token.CONST)) && !this.testAhead(Token.IN)) {
         const inner = this.startNode();
         if (this.eat('let')) {
           inner.LetOrConst = 'let';
@@ -805,24 +814,26 @@ export class StatementParser extends ExpressionParser {
     this.expect(Token.TRY);
     node.Block = this.parseBlock();
     if (this.eat(Token.CATCH)) {
-      const clause = this.startNode();
-      if (this.eat(Token.LPAREN)) {
-        switch (this.peek().type) {
-          case Token.LBRACE:
-          case Token.LBRACK:
-            clause.CatchParameter = this.parseBindingPattern();
-            break;
-          default:
-            clause.CatchParameter = this.parseBindingIdentifier();
-            break;
+      this.scope.with({ lexical: true }, () => {
+        const clause = this.startNode();
+        if (this.eat(Token.LPAREN)) {
+          switch (this.peek().type) {
+            case Token.LBRACE:
+            case Token.LBRACK:
+              clause.CatchParameter = this.parseBindingPattern();
+              break;
+            default:
+              clause.CatchParameter = this.parseBindingIdentifier();
+              break;
+          }
+          this.scope.declare(clause.CatchParameter, 'lexical');
+          this.expect(Token.RPAREN);
+        } else {
+          clause.CatchParameter = null;
         }
-        // this.scope.declare(clause.CatchParameter, 'lexical');
-        this.expect(Token.RPAREN);
-      } else {
-        clause.CatchParameter = null;
-      }
-      clause.Block = this.parseBlock();
-      node.Catch = this.finishNode(clause, 'Catch');
+        clause.Block = this.parseBlock(false);
+        node.Catch = this.finishNode(clause, 'Catch');
+      });
     } else {
       node.Catch = null;
     }

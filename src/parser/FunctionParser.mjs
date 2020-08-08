@@ -117,7 +117,15 @@ export class FunctionParser extends IdentifierParser {
         return node;
       case 'ArrayLiteral': {
         const wrap = this.startNode();
-        node.BindingElementList = node.ElementList.map((p) => this.convertArrowParameter(p));
+        node.BindingElementList = [];
+        node.ElementList.forEach((p) => {
+          const c = this.convertArrowParameter(p);
+          if (c.type === 'BindingRestElement') {
+            node.BindingRestElement = c;
+          } else {
+            node.BindingElementList.push(c);
+          }
+        });
         delete node.ElementList;
         node.type = 'ArrayBindingPattern';
         wrap.BindingPattern = node;
@@ -126,7 +134,15 @@ export class FunctionParser extends IdentifierParser {
       }
       case 'ObjectLiteral': {
         const wrap = this.startNode();
-        node.BindingPropertyList = node.PropertyDefinitionList.map((p) => this.convertArrowParameter(p));
+        node.BindingPropertyList = [];
+        node.PropertyDefinitionList.forEach((p) => {
+          const c = this.convertArrowParameter(p);
+          if (c.type === 'BindingRestProperty') {
+            node.BindingRestProperty = c;
+          } else {
+            node.BindingPropertyList.push(c);
+          }
+        });
         delete node.PropertyDefinitionList;
         node.type = 'ObjectBindingPattern';
         wrap.BindingPattern = node;
@@ -145,18 +161,26 @@ export class FunctionParser extends IdentifierParser {
         delete node.IdentifierReference;
         return node;
       case 'PropertyDefinition':
-        node.type = 'BindingProperty';
-        node.BindingElement = this.convertArrowParameter(node.AssignmentExpression);
+        if (node.PropertyName === null) {
+          node.type = 'BindingRestProperty';
+          node.BindingIdentifier = node.AssignmentExpression;
+          node.BindingIdentifier.type = 'BindingIdentifier';
+        } else {
+          node.type = 'BindingProperty';
+          node.BindingElement = this.convertArrowParameter(node.AssignmentExpression);
+        }
         delete node.AssignmentExpression;
         return node;
       case 'SpreadElement':
       case 'AssignmentRestElement':
         node.type = 'BindingRestElement';
-        if (node.AssignmentExpression.type === 'IdentifierReference') {
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          this.raiseEarly('UnexpectedToken', node);
+        } else if (node.AssignmentExpression.type === 'IdentifierReference') {
           node.BindingIdentifier = node.AssignmentExpression;
           node.BindingIdentifier.type = 'BindingIdentifier';
         } else {
-          node.BindingPattern = this.convertArrowParameter(node.AssignmentExpression);
+          node.BindingPattern = this.convertArrowParameter(node.AssignmentExpression).BindingPattern;
         }
         delete node.AssignmentExpression;
         return node;

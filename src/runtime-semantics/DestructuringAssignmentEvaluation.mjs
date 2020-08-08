@@ -77,7 +77,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       // 1. Let P be StringValue of IdentifierReference.
       const P = StringValue(AssignmentProperty.IdentifierReference);
       // 2. Let lref be ? ResolveBinding(P).
-      const lref = Q(ResolveBinding(P));
+      const lref = Q(ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict));
       // 3. Let v be ? GetV(value, P).
       let v = Q(GetV(value, P));
       // 4. If Initializer? is present and v is undefined, then

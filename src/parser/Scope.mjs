@@ -34,7 +34,10 @@ export function getDeclarations(node) {
       if (node.BindingIdentifier) {
         return getDeclarations(node.BindingIdentifier);
       }
-      return getDeclarations(node.BindingPattern);
+      if (node.BindingPattern) {
+        return getDeclarations(node.BindingPattern);
+      }
+      return [];
     case 'SingleNameBinding':
       return getDeclarations(node.BindingIdentifier);
     case 'ImportClause': {

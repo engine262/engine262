@@ -629,7 +629,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // 2. Let lhsName be the sole element of BoundNames of lhs.
         const lhsName = BoundNames(lhs)[0];
         // 3. Let lhsRef be ! ResolveBinding(lhsName).
-        lhsRef = X(ResolveBinding(lhsName));
+        lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
       }
     }
     let status;
