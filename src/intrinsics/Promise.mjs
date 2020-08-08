@@ -407,7 +407,7 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
-// https://tc39.es/proposal-promise-any/#sec-promise.any-reject-element-functions
+// #sec-promise.any-reject-element-functions
 function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;

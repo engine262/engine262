@@ -110,14 +110,15 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   // 2. Let getThenRealmResult be GetFunctionRealm(then).
   const getThenRealmResult = GetFunctionRealm(then);
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
-  // 4. Otherwise, let thenRealm be null.
   let thenRealm;
   if (getThenRealmResult instanceof NormalCompletion) {
     thenRealm = getThenRealmResult.Value;
   } else {
-    thenRealm = Value.null;
+    // 4. Else, let _thenRealm_ be the current Realm Record.
+    thenRealm = surroundingAgent.currentRealmRecord;
   }
-  // 5. Return { [[Job]]: job, [[Realm]]: thenRealm }.
+  // 5. NOTE: _thenRealm_ is never *null*. When _then_ is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
+  // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
   return { Job: job, Realm: thenRealm };
 }
 
@@ -311,7 +312,12 @@ function NewPromiseReactionJob(reaction, argument) {
     // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;
+    } else {
+      // c. Else, set _handlerRealm_ to the current Realm Record.
+      handlerRealm = surroundingAgent.currentRealmRecord;
     }
+    // d. NOTE: _handlerRealm_ is never *null* unless the handler is *undefined*. When the handler
+    //    is a revoked Proxy and no ECMAScript code runs, _handlerRealm_ is used to create error objects.
   }
   // 4. Return { [[Job]]: job, [[Realm]]: handlerRealm }.
   return { Job: job, Realm: handlerRealm };

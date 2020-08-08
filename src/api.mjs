@@ -160,18 +160,16 @@ export function runJobQueue() {
       callerScriptOrModule,
     } = surroundingAgent.jobQueue.shift();
 
-    // 1. Push an execution context onto the execution context stack.
+    // 1. Perform any implementation-defined preparation steps.
     const newContext = new ExecutionContext();
     surroundingAgent.executionContextStack.push(newContext);
-    // 2. Perform any implementation-defined preparation steps.
     newContext.Function = Value.null;
     newContext.Realm = callerRealm;
     newContext.ScriptOrModule = callerScriptOrModule;
-    // 3. Call the abstract closure.
+    // 2. Call the abstract closure.
     X(abstractClosure());
-    // 4. Perform any implementation-defined cleanup steps.
+    // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
     mark();
-    // 5. Pop the previously-pushed execution context from the execution context stack.
     surroundingAgent.executionContextStack.pop(newContext);
   }
 }

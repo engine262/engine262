@@ -127,7 +127,6 @@ export function refineLeftHandSideExpression(node, type) {
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
-// https://tc39.es/proposal-logical-assignment/#sec-assignment-operators-runtime-semantics-evaluation
 //     LeftHandSideExpression `&&=` AssignmentExpression
 //     LeftHandSideExpression `||=` AssignmentExpression
 //     LeftHandSideExpression `??=` AssignmentExpression

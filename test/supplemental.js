@@ -151,25 +151,27 @@ Error: owo
     });
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const module = realm.createSourceTextModule('test.js', `
-      const w = new WeakRef({});
-      globalThis.result = Promise.resolve()
-        .then(() => {
-          if (typeof w.deref() !== 'object') {
-            throw new Error();
-          }
-        })
-        .then(() => {
-          if (typeof w.deref() !== 'undefined') {
-            throw new Error();
-          }
-        })
-        .then(() => 'pass');
-    `);
-    module.Link();
-    module.Evaluate();
-    const result = Get(realm.GlobalObject, new Value('result'));
-    assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+    realm.scope(() => {
+      const module = realm.createSourceTextModule('test.js', `
+        const w = new WeakRef({});
+        globalThis.result = Promise.resolve()
+          .then(() => {
+            if (typeof w.deref() !== 'object') {
+              throw new Error();
+            }
+          })
+          .then(() => {
+            if (typeof w.deref() !== 'undefined') {
+              throw new Error();
+            }
+          })
+          .then(() => 'pass');
+      `);
+      module.Link();
+      module.Evaluate();
+      const result = Get(realm.GlobalObject, new Value('result'));
+      assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+    });
   },
   () => {
     const agent = new Agent({

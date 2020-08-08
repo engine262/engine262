@@ -20,6 +20,7 @@ import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange } from './helpers.mjs';
 
+// #sec-ecmascript-language-types
 export function Value(value) {
   if (new.target !== undefined && new.target !== Value) {
     return undefined;
@@ -41,10 +42,13 @@ export function Value(value) {
 
 export class PrimitiveValue extends Value {}
 
+// #sec-ecmascript-language-types-undefined-type
 export class UndefinedValue extends PrimitiveValue {}
 
+// #sec-ecmascript-language-types-null-type
 export class NullValue extends PrimitiveValue {}
 
+// #sec-ecmascript-language-types-boolean-type
 export class BooleanValue extends PrimitiveValue {
   constructor(v) {
     super();
@@ -67,6 +71,50 @@ Object.defineProperties(Value, {
   false: { value: new BooleanValue(false), configurable: false, writable: false },
 });
 
+// #sec-ecmascript-language-types-string-type
+class StringValue extends PrimitiveValue {
+  constructor(string) {
+    super();
+    this.string = string;
+  }
+
+  stringValue() {
+    return this.string;
+  }
+}
+// rename for static semantics StringValue() conflict
+export { StringValue as JSStringValue };
+
+// #sec-ecmascript-language-types-symbol-type
+export class SymbolValue extends PrimitiveValue {
+  constructor(Description) {
+    super();
+    this.Description = Description;
+  }
+}
+
+export const wellKnownSymbols = Object.create(null);
+for (const name of [
+  'asyncIterator',
+  'hasInstance',
+  'isConcatSpreadable',
+  'iterator',
+  'match',
+  'matchAll',
+  'replace',
+  'search',
+  'species',
+  'split',
+  'toPrimitive',
+  'toStringTag',
+  'unscopables',
+]) {
+  const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
+  wellKnownSymbols[name] = sym;
+}
+Object.freeze(wellKnownSymbols);
+
+// #sec-ecmascript-language-types-number-type
 export class NumberValue extends PrimitiveValue {
   constructor(number) {
     super();
@@ -320,6 +368,7 @@ function NumberBitwiseOp(op, x, y) {
   }
 }
 
+// #sec-ecmascript-language-types-bigint-type
 export class BigIntValue extends PrimitiveValue {
   constructor(bigint) {
     super();
@@ -600,47 +649,7 @@ function BigIntBitwiseOp(op, x, y) {
   }
 }
 
-class StringValue extends PrimitiveValue {
-  constructor(string) {
-    super();
-    this.string = string;
-  }
-
-  stringValue() {
-    return this.string;
-  }
-}
-// rename for static semantics StringValue() conflict
-export { StringValue as JSStringValue };
-
-export class SymbolValue extends PrimitiveValue {
-  constructor(Description) {
-    super();
-    this.Description = Description;
-  }
-}
-
-export const wellKnownSymbols = Object.create(null);
-for (const name of [
-  'asyncIterator',
-  'hasInstance',
-  'isConcatSpreadable',
-  'iterator',
-  'match',
-  'matchAll',
-  'replace',
-  'search',
-  'species',
-  'split',
-  'toPrimitive',
-  'toStringTag',
-  'unscopables',
-]) {
-  const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
-  wellKnownSymbols[name] = sym;
-}
-Object.freeze(wellKnownSymbols);
-
+// #sec-object-type
 export class ObjectValue extends Value {
   constructor(internalSlotsList) {
     super();
