@@ -19,6 +19,7 @@ const isBinaryDigit = (c) => (c === '0' || c === '1');
 export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
+const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -779,11 +780,14 @@ export class Lexer {
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
-        if (!(SingleCharTokens[raw] === Token.IDENTIFIER || isIdentifierContinue(raw))) {
+        if (!isIdentifierPart(raw)) {
+          this.unexpected(escapeIndex);
+        }
+        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
           this.unexpected(escapeIndex);
         }
         buffer += raw;
-      } else if (SingleCharTokens[c] === Token.IDENTIFIER || isIdentifierContinue(c)) {
+      } else if (isIdentifierPart(c)) {
         this.position += 1;
         buffer += c;
       } else if (code >= 0xD800 && code <= 0xDBFF) {
@@ -792,7 +796,7 @@ export class Lexer {
           this.unexpected(this.position);
         }
         const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
-        if (!(SingleCharTokens[raw] === Token.IDENTIFIER || isIdentifierContinue(raw))) {
+        if (!isIdentifierPart(raw)) {
           this.unexpected(this.position);
         }
         this.position += 2;
