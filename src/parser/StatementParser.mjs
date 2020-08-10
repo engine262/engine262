@@ -478,7 +478,19 @@ export class StatementParser extends ExpressionParser {
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForStatement');
       }
-      if ((this.test('let') || this.test(Token.CONST)) && !this.testAhead(Token.IN)) {
+      const isLexicalStart = () => {
+        switch (this.peekAhead().type) {
+          case Token.LBRACE:
+          case Token.LBRACK:
+          case Token.IDENTIFIER:
+          case Token.YIELD:
+          case Token.AWAIT:
+            return true;
+          default:
+            return false;
+        }
+      };
+      if ((this.test('let') || this.test(Token.CONST)) && isLexicalStart()) {
         const inner = this.startNode();
         if (this.eat('let')) {
           inner.LetOrConst = 'let';
@@ -486,11 +498,8 @@ export class StatementParser extends ExpressionParser {
           this.expect(Token.CONST);
           inner.LetOrConst = 'const';
         }
-        const list = this.scope.with({ lexical: true }, () => {
-          const bindings = this.parseBindingList();
-          this.scope.declare(bindings, 'lexical');
-          return bindings;
-        });
+        const list = this.parseBindingList();
+        this.scope.declare(list, 'lexical');
         if (list.length > 1 || this.test(Token.SEMICOLON)) {
           inner.BindingList = list;
           node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');

@@ -4,7 +4,7 @@ import {
   Assert,
   Call,
   CodePointAt,
-  CreateDataProperty,
+  CreateDataPropertyOrThrow,
   Get,
   GetMethod,
   Invoke,
@@ -492,7 +492,7 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], { t
   return new Value(S.slice(from, from + span));
 }
 
-// 21.1.3.20 #sec-string.prototype.split
+// #sec-string.prototype.split
 function StringProto_split([separator = Value.undefined, limit = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (separator !== Value.undefined && separator !== Value.null) {
@@ -517,15 +517,13 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     return A;
   }
   if (separator === Value.undefined) {
-    X(CreateDataProperty(A, new Value('0'), S));
+    X(CreateDataPropertyOrThrow(A, new Value('0'), S));
     return A;
   }
   if (s === 0) {
-    const z = SplitMatch(S, 0, R);
-    if (z !== false) {
-      return A;
+    if (R.stringValue() !== '') {
+      X(CreateDataPropertyOrThrow(A, new Value('0'), S));
     }
-    X(CreateDataProperty(A, new Value('0'), S));
     return A;
   }
   let q = p;
@@ -538,7 +536,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
         q += 1;
       } else {
         const T = new Value(S.stringValue().substring(p, q));
-        X(CreateDataProperty(A, X(ToString(new Value(lengthA))), T));
+        X(CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T));
         lengthA += 1;
         if (lengthA === lim.numberValue()) {
           return A;
@@ -549,7 +547,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     }
   }
   const T = new Value(S.stringValue().substring(p, s));
-  X(CreateDataProperty(A, X(ToString(new Value(lengthA))), T));
+  X(CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T));
   return A;
 }
 

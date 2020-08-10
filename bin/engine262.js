@@ -160,8 +160,6 @@ function oneShotEval(source, filename) {
       const inspected = inspect(result);
       process.stderr.write(`${inspected}\n`);
       process.exit(1);
-    } else {
-      process.exit(0);
     }
   });
 }

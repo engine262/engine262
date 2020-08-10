@@ -32,6 +32,7 @@ export * from './static-semantics/all.mjs';
 export * from './runtime-semantics/all.mjs';
 export * from './environment.mjs';
 export * from './parse.mjs';
+export * from './modules.mjs';
 export * from './inspect.mjs';
 
 export function Throw(...args) {

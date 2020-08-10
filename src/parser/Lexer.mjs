@@ -725,10 +725,13 @@ export class Lexer {
         this.position += 1;
         return String.fromCodePoint(this.scanCodePoint());
       default:
-        this.position += 1;
-        if (c === '0' && !isDecimalDigit(this.source[this.position])) {
+        if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
+          this.position += 1;
           return '\u{0000}';
+        } else if (this.isStrictMode() && isDecimalDigit(c)) {
+          this.unexpected();
         }
+        this.position += 1;
         return c;
     }
   }
