@@ -29,6 +29,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         case 'handle':
           trackedPromises.delete(promise);
           break;
+        /* istanbul ignore next */
         default:
           throw new RangeError('promiseRejectionTracker', operation);
       }
@@ -58,6 +59,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
       printHandle = f;
     };
     CreateDataProperty(realm.GlobalObject, new Value('print'), new Value((args) => {
+      /* istanbul ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
       } else {

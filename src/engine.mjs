@@ -13,9 +13,6 @@ import {
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
   CreateArrayFromList,
-  CreateRealm,
-  SetDefaultGlobalBindings,
-  SetRealmGlobalObject,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -231,20 +228,6 @@ export function ScriptEvaluation(scriptRecord) {
 // #sec-hostenqueuepromisejob
 export function HostEnqueuePromiseJob(job, _realm) {
   surroundingAgent.queueJob('PromiseJobs', job);
-}
-
-// 8.5 #sec-initializehostdefinedrealm
-export function InitializeHostDefinedRealm() {
-  const realm = CreateRealm();
-  const newContext = new ExecutionContext();
-  newContext.Function = Value.null;
-  newContext.Realm = realm;
-  newContext.ScriptOrModule = Value.null;
-  surroundingAgent.executionContextStack.push(newContext);
-  const global = Value.undefined;
-  const thisValue = Value.undefined;
-  SetRealmGlobalObject(realm, global, thisValue);
-  SetDefaultGlobalBindings(realm);
 }
 
 // #sec-agentsignifier

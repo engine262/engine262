@@ -47,7 +47,10 @@ export class ExpressionParser extends FunctionParser {
       return this.parseYieldExpression();
     }
     const node = this.startNode();
+
+    this.scope.pushAssignmentInfo('assign');
     const left = this.parseConditionalExpression();
+    const assignmentInfo = this.scope.popAssignmentInfo();
 
     if (left.type === 'IdentifierReference') {
       // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
@@ -56,12 +59,14 @@ export class ExpressionParser extends FunctionParser {
           && !this.peek().hadLineTerminatorBefore
           && this.testAhead(Token.ARROW)
           && !this.peekAhead().hadLineTerminatorBefore) {
+        assignmentInfo.clear();
         return this.parseArrowFunction(node, {
           Arguments: [this.parseIdentifierReference()],
         }, FunctionKind.ASYNC);
       }
       // IdentifierReference [no LineTerminator here] `=>`
       if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+        assignmentInfo.clear();
         return this.parseArrowFunction(node, { Arguments: [left] }, FunctionKind.NORMAL);
       }
     }
@@ -71,11 +76,13 @@ export class ExpressionParser extends FunctionParser {
         && !this.peek().hadLineTerminatorBefore) {
       const last = left.Arguments[left.Arguments.length - 1];
       if (!left.arrowInfo.trailingComma || (last && last.type !== 'AssignmentRestElement')) {
+        assignmentInfo.clear();
         return this.parseArrowFunction(node, left, FunctionKind.ASYNC);
       }
     }
 
     if (left.type === 'CoverParenthesizedExpressionAndArrowParameterList') {
+      assignmentInfo.clear();
       return this.parseArrowFunction(node, left, FunctionKind.NORMAL);
     }
 
@@ -96,6 +103,7 @@ export class ExpressionParser extends FunctionParser {
       case Token.ASSIGN_AND:
       case Token.ASSIGN_OR:
       case Token.ASSIGN_NULLISH:
+        assignmentInfo.clear();
         this.validateAssignmentTarget(left);
         node.LeftHandSideExpression = left;
         node.AssignmentOperator = this.next().value;
@@ -995,6 +1003,7 @@ export class ExpressionParser extends FunctionParser {
     }
 
     this.scope.pushArrowInfo();
+    this.scope.pushAssignmentInfo('arrow');
 
     const expressions = [];
     let rparenAfterComma;
@@ -1028,12 +1037,14 @@ export class ExpressionParser extends FunctionParser {
     }
 
     const arrowInfo = this.scope.popArrowInfo();
+    const assignmentInfo = this.scope.popAssignmentInfo();
 
     // ArrowParameters :
     //   CoverParenthesizedExpressionAndArrowParameterList
     if (this.test(Token.ARROW)) {
       node.Arguments = expressions;
       node.arrowInfo = arrowInfo;
+      assignmentInfo.clear();
       return this.finishNode(node, 'CoverParenthesizedExpressionAndArrowParameterList');
     }
 
@@ -1133,11 +1144,13 @@ export class ExpressionParser extends FunctionParser {
         node.AssignmentExpression = this.parseAssignmentExpression();
         return this.finishNode(node, 'PropertyDefinition');
       }
-      if (this.test(Token.ASSIGN)) {
+      if (this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
         node.IdentifierReference = firstName;
         node.IdentifierReference.type = 'IdentifierReference';
         node.Initializer = this.parseInitializerOpt();
-        return this.finishNode(node, 'CoverInitializedName');
+        this.finishNode(node, 'CoverInitializedName');
+        this.scope.registerCoverInitializedName(node);
+        return node;
       }
 
       if (!isSpecialMethod

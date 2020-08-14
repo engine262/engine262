@@ -20,7 +20,6 @@ export class StatementParser extends ExpressionParser {
   parseStatementList(endToken, directives) {
     const statementList = [];
     const oldStrict = this.state.strict;
-
     while (!this.eat(endToken)) {
       const stmt = this.parseStatementListItem();
       statementList.push(stmt);
@@ -31,12 +30,17 @@ export class StatementParser extends ExpressionParser {
           stmt.Expression.location.startIndex + 1,
           stmt.Expression.location.endIndex - 1,
         );
-        directives.push(directive);
         if (directive === 'use strict') {
           stmt.strict = true;
           stmt.Expression.strict = true;
           this.state.strict = true;
+          directives.forEach((d) => {
+            if ((/\\([1-9]|0\d)/).test(d)) {
+              this.raiseEarly('UnexpectedToken', stmt);
+            }
+          });
         }
+        directives.push(directive);
       } else {
         directives = undefined;
       }
@@ -579,8 +583,11 @@ export class StatementParser extends ExpressionParser {
         return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
       }
 
+      this.scope.pushAssignmentInfo('for');
       const expression = this.scope.with({ in: false }, () => this.parseExpression());
+      const assignmentInfo = this.scope.popAssignmentInfo();
       if (!isAwait && this.eat(Token.IN)) {
+        assignmentInfo.clear();
         this.validateAssignmentTarget(expression);
         node.LeftHandSideExpression = expression;
         node.Expression = this.parseExpression();
@@ -589,6 +596,7 @@ export class StatementParser extends ExpressionParser {
         return this.finishNode(node, 'ForInStatement');
       }
       if (this.eat('of')) {
+        assignmentInfo.clear();
         this.validateAssignmentTarget(expression);
         node.LeftHandSideExpression = expression;
         node.AssignmentExpression = this.parseAssignmentExpression();

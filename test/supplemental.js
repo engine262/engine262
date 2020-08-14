@@ -12,6 +12,7 @@ const {
   CreateArrayFromList,
   CreateDataProperty,
 } = require('..');
+const test262realm = require('../bin/test262_realm');
 const { total, pass, fail } = require('./base');
 
 // Features that cannot be tested by test262 should go here.
@@ -178,18 +179,8 @@ Error: owo
       features: FEATURES.map((f) => f.name),
     });
     setSurroundingAgent(agent);
-    const realm = new ManagedRealm();
+    const { realm } = test262realm.createRealm();
     realm.scope(() => {
-      CreateDataProperty(
-        realm.GlobalObject,
-        new Value('spec'),
-        new Value(([v]) => {
-          if (v && v.nativeFunction && v.nativeFunction.section) {
-            return new Value(v.nativeFunction.section);
-          }
-          return Value.undefined;
-        }),
-      );
       CreateDataProperty(
         realm.GlobalObject,
         new Value('fail'),
@@ -212,8 +203,8 @@ Error: owo
 'use strict';
 
 {
-  const spec = globalThis.spec;
-  delete globalThis.spec;
+  const targets = globalThis.targets;
+  delete globalThis.targets;
   const fail = globalThis.fail;
   delete globalThis.fail;
 
@@ -225,7 +216,7 @@ Error: owo
     }
     scanned.add(ns);
     if (typeof ns === 'function') {
-      if (spec(ns) === undefined) {
+      if ($262.spec(ns) === undefined) {
         fail(path);
       }
     }

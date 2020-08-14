@@ -16,6 +16,7 @@ export const Flag = {
   'default',
   'module',
 ].forEach((name, i) => {
+  /* istanbul ignore next */
   if (i > 31) {
     throw new RangeError(name);
   }
@@ -114,6 +115,7 @@ export class Scope {
     this.scopeStack = [];
     this.labels = [];
     this.arrowInfoStack = [];
+    this.assignmentInfoStack = [];
     this.exports = new Set();
     this.undefinedExports = new Map();
     this.flags = 0;
@@ -233,6 +235,34 @@ export class Scope {
     return this.arrowInfoStack.pop();
   }
 
+  pushAssignmentInfo(type) {
+    const parser = this.parser;
+    this.assignmentInfoStack.push({
+      type,
+      coverInitializedNameErrors: [],
+      clear() {
+        this.coverInitializedNameErrors.forEach((e) => {
+          parser.earlyErrors.delete(e);
+        });
+      },
+    });
+  }
+
+  popAssignmentInfo() {
+    return this.assignmentInfoStack.pop();
+  }
+
+  registerCoverInitializedName(CoverInitializedName) {
+    const error = this.parser.raiseEarly('UnexpectedToken', CoverInitializedName);
+    for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
+      const info = this.assignmentInfoStack[i];
+      info.coverInitializedNameErrors.push(error);
+      if (info.type !== 'assign') {
+        break;
+      }
+    }
+  }
+
   lexicalScope() {
     for (let i = this.scopeStack.length - 1; i >= 0; i -= 1) {
       const scope = this.scopeStack[i];
@@ -240,6 +270,7 @@ export class Scope {
         return scope;
       }
     }
+    /* istanbul ignore next */
     throw new RangeError();
   }
 
@@ -250,6 +281,7 @@ export class Scope {
         return scope;
       }
     }
+    /* istanbul ignore next */
     throw new RangeError();
   }
 
@@ -319,6 +351,7 @@ export class Scope {
           }
           break;
         default:
+          /* istanbul ignore next */
           throw new RangeError(type);
       }
     });

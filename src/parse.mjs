@@ -40,8 +40,8 @@ export function wrappedParse(sourceText, f) {
 
   try {
     const r = f(p);
-    if (p.earlyErrors.length > 0) {
-      return p.earlyErrors.map((e) => handleError(e));
+    if (p.earlyErrors.size > 0) {
+      return [...p.earlyErrors].map((e) => handleError(e));
     }
     return r;
   } catch (e) {

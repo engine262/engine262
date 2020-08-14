@@ -16,7 +16,7 @@ export class Parser extends LanguageParser {
   constructor(source) {
     super(source);
     this.source = source;
-    this.earlyErrors = [];
+    this.earlyErrors = new Set();
     this.state = {
       hasTopLevelAwait: false,
       strict: false,
@@ -117,7 +117,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   raiseEarly(template, context, ...templateArgs) {
-    this.earlyErrors.push(this.createSyntaxError(context, template, templateArgs));
+    const e = this.createSyntaxError(context, template, templateArgs);
+    this.earlyErrors.add(e);
+    return e;
   }
 
   raise(template, context, ...templateArgs) {
