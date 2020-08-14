@@ -20,30 +20,27 @@ export class StatementParser extends ExpressionParser {
   parseStatementList(endToken, directives) {
     const statementList = [];
     const oldStrict = this.state.strict;
+    const directiveData = [];
     while (!this.eat(endToken)) {
-      const stmt = this.parseStatementListItem();
-      statementList.push(stmt);
-      if (directives !== undefined
-          && stmt.type === 'ExpressionStatement'
-          && stmt.Expression.type === 'StringLiteral') {
-        const directive = this.source.slice(
-          stmt.Expression.location.startIndex + 1,
-          stmt.Expression.location.endIndex - 1,
-        );
+      if (directives !== undefined && this.test(Token.STRING)) {
+        const token = this.peek();
+        const directive = this.source.slice(token.startIndex + 1, token.endIndex - 1);
         if (directive === 'use strict') {
-          stmt.strict = true;
-          stmt.Expression.strict = true;
           this.state.strict = true;
-          directives.forEach((d) => {
-            if ((/\\([1-9]|0\d)/).test(d)) {
-              this.raiseEarly('UnexpectedToken', stmt);
+          directiveData.forEach((d) => {
+            if (/\\([1-9]|0\d)/.test(d.directive)) {
+              this.raiseEarly('UnexpectedToken', d.token);
             }
           });
         }
         directives.push(directive);
+        directiveData.push({ directive, token });
       } else {
         directives = undefined;
       }
+
+      const stmt = this.parseStatementListItem();
+      statementList.push(stmt);
     }
 
     this.state.strict = oldStrict;

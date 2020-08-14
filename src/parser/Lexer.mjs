@@ -729,7 +729,7 @@ export class Lexer {
           this.position += 1;
           return '\u{0000}';
         } else if (this.isStrictMode() && isDecimalDigit(c)) {
-          this.unexpected();
+          this.unexpected(this.position);
         }
         this.position += 1;
         return c;
