@@ -903,6 +903,12 @@ export class ExpressionParser extends FunctionParser {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
+        // templates will eat newlines before hitting EOF and realizing
+        // there is no end, so walk back to the last line with content on it
+        // for the error message.
+        while (isLineTerminator(this.source[this.position - 1])) {
+          this.position -= 1;
+        }
         this.raise('UnterminatedTemplate', this.position);
       }
       const c = this.source[this.position];

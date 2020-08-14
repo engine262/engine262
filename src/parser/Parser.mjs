@@ -3,6 +3,7 @@ import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
 import { Token } from './tokens.mjs';
 import { Scope } from './Scope.mjs';
+import { isLineTerminator } from './Lexer.mjs';
 
 export { Token };
 export {
@@ -90,7 +91,7 @@ export class Parser extends LanguageParser {
     let endIndex;
     if (typeof context === 'number') {
       startIndex = context;
-      endIndex = context;
+      endIndex = context + 1;
     } else {
       if (context.location) {
         context = context.location;
@@ -98,16 +99,32 @@ export class Parser extends LanguageParser {
       startIndex = context.startIndex;
       endIndex = context.endIndex;
     }
-    startIndex = Math.min(this.source.length - 1, startIndex);
-    endIndex = Math.min(this.source.length - 1, endIndex);
 
-    let lineStart = this.source.lastIndexOf('\n', startIndex - 1);
-    if (lineStart === -1) {
-      lineStart = 0;
+    /*
+     * Source looks like:
+     *
+     *  const a = 1;
+     *  const b 'string string string'; // a string
+     *  const c = 3;                  |            |
+     *  |       |                     |            |
+     *  |       | startIndex          | endIndex   |
+     *  | lineStart                                | lineEnd
+     *
+     * Exception looks like:
+     *
+     *  const b 'string string string'; // a string
+     *          ^^^^^^^^^^^^^^^^^^^^^^
+     *  SyntaxError: unexpected token
+     */
+
+    let lineStart = startIndex;
+    while (!isLineTerminator(this.source[lineStart - 1]) && this.source[lineStart - 1] !== undefined) {
+      lineStart -= 1;
     }
-    let lineEnd = this.source.indexOf('\n', endIndex);
-    if (lineEnd === -1) {
-      lineEnd = this.source.length - 1;
+
+    let lineEnd = startIndex;
+    while (!isLineTerminator(this.source[lineEnd]) && this.source[lineEnd] !== undefined) {
+      lineEnd += 1;
     }
 
     const e = new SyntaxError(messages[template](...templateArgs));
