@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 de6a24377b06a7f668151ae76725ccad5dd94e42
+ * engine262 0.0.1 07cac02711552790a5d990896fdc7e726308aeb0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -354,8 +354,8 @@ function captureAsyncStack(stack) {
 
     const [reaction] = promise.PromiseFulfillReactions;
 
-    if (reaction.Handler.nativeFunction === AwaitFulfilledFunctions) {
-      const asyncContext = reaction.Handler.AsyncContext;
+    if (reaction.Handler && reaction.Handler.Callback.nativeFunction === AwaitFulfilledFunctions) {
+      const asyncContext = reaction.Handler.Callback.AsyncContext;
       stack.push(asyncContext.callSite.clone());
 
       if ('PromiseState' in asyncContext.promiseCapability.Promise) {
@@ -1383,8 +1383,78 @@ function IsSimpleParameterList(node) {
   }
 }
 
-function ContainsExpression(_node) {
-  return false;
+function ContainsExpression(node) {
+  if (Array.isArray(node)) {
+    for (const n of node) {
+      if (ContainsExpression(n)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  switch (node.type) {
+    case 'SingleNameBinding':
+      return !!node.Initializer;
+
+    case 'BindingElement':
+      if (ContainsExpression(node.BindingPattern)) {
+        return true;
+      }
+
+      return !!node.Initializer;
+
+    case 'ObjectBindingPattern':
+      if (ContainsExpression(node.BindingPropertyList)) {
+        return true;
+      }
+
+      if (node.BindingRestProperty) {
+        return ContainsExpression(node.BindingRestProperty);
+      }
+
+      return false;
+
+    case 'BindingProperty':
+      if (node.PropertyName && node.PropertyName.ComputedPropertyName) {
+        return true;
+      }
+
+      return ContainsExpression(node.BindingElement);
+
+    case 'BindingRestProperty':
+      if (node.BindingIdentifier) {
+        return false;
+      }
+
+      return ContainsExpression(node.BindingPattern);
+
+    case 'ArrayBindingPattern':
+      if (ContainsExpression(node.BindingElementList)) {
+        return true;
+      }
+
+      if (node.BindingRestElement) {
+        return ContainsExpression(node.BindingRestElement);
+      }
+
+      return false;
+
+    case 'BindingRestElement':
+      if (node.BindingIdentifier) {
+        return false;
+      }
+
+      return ContainsExpression(node.BindingPattern);
+
+    case 'Elision':
+      return false;
+
+    /*istanbul ignore next*/
+    default:
+      throw new OutOfRange('ContainsExpression', node);
+  }
 }
 
 // #sec-static-semantics-isstrict
@@ -1638,9 +1708,6 @@ function ImportedLocalNames(importEntries) {
 
 function IsDestructuring(node) {
   switch (node.type) {
-    case 'IdentifierReference':
-      return false;
-
     case 'ObjectBindingPattern':
     case 'ArrayBindingPattern':
     case 'ObjectLiteral':
@@ -1657,49 +1724,8 @@ function IsDestructuring(node) {
 
       return true;
 
-    /*istanbul ignore next*/
     default:
-      throw new OutOfRange('IsDestructuring', node);
-  }
-}
-
-function ExportedNames(node) {
-  if (Array.isArray(node)) {
-    const names = [];
-
-    for (const item of node) {
-      names.push(...ExportedNames(item));
-    }
-
-    return names;
-  }
-
-  switch (node.type) {
-    case 'ExportDeclaration':
-      if (node.default) {
-        return [new Value('default')];
-      }
-
-      if (node.ExportFromClause) {
-        return ExportedNames(node.ExportFromClause);
-      }
-
-      if (node.VariableStatement) {
-        return BoundNames(node.VariableStatement);
-      }
-
-      if (node.Declaration) {
-        return BoundNames(node.Declaration);
-      }
-
-      if (node.NamedExports) {
-        return [];
-      }
-
-      throw new OutOfRange('ExportedNames', node);
-
-    default:
-      return [];
+      return false;
   }
 }
 
@@ -1718,7 +1744,7 @@ const ArrayBufferShared = () => 'Attempt to access shared ArrayBuffer';
 const ArrayPastSafeLength = () => 'Cannot make length of array-like object surpass the bounds of an integer index';
 const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
 const AssignmentToConstant = n => `Assignment to constant variable ${i(n)}`;
-const AwaitInFormalParameters = () => 'await is not allowed in async function parameters';
+const AwaitInFormalParameters = () => 'await is not allowed in function parameters';
 const AwaitNotInAsyncFunction = () => 'await is only valid in async functions';
 const BigIntDivideByZero = () => 'Division by zero';
 const BigIntNegativeExponent = () => 'Exponent must be positive';
@@ -1825,6 +1851,7 @@ const StringPrototypeMethodGlobalRegExp = m => `The RegExp passed to String.prot
 const SubclassLengthTooSmall = v => `Subclass constructor returned a smaller-than-requested object ${i(v)}`;
 const SubclassSameValue = v => `Subclass constructor returned the same object ${i(v)}`;
 const TargetMatchesHeldValue = v => `heldValue ${i(v)} matches target`;
+const TryMissingCatchOrFinally = () => 'Missing catch or finally after try';
 const TypedArrayCreationOOB = () => 'Sum of start offset and byte length should be less than the size of underlying buffer';
 const TypedArrayLengthAlignment = (n, m) => `Size of ${n} should be a multiple of ${m}`;
 const TypedArrayOOB = () => 'Sum of start offset and byte length should be less than the size of the TypedArray';
@@ -1842,7 +1869,7 @@ const UnexpectedToken = () => 'Unexpected token';
 const UseStrictNonSimpleParameter = () => 'Function with \'use strict\' directive has non-simple parameter list';
 const URIMalformed = () => 'URI malformed';
 const WeakCollectionNotObject = v => `${i(v)} is not a valid weak collectection entry object`;
-const YieldInFormalParameters = () => 'yield is not allowed in generator parameters';
+const YieldInFormalParameters = () => 'yield is not allowed in function parameters';
 const YieldNotInGenerator = () => 'yield is only valid in generators';
 
 var messages = /*#__PURE__*/Object.freeze({
@@ -1961,6 +1988,7 @@ var messages = /*#__PURE__*/Object.freeze({
   SubclassLengthTooSmall: SubclassLengthTooSmall,
   SubclassSameValue: SubclassSameValue,
   TargetMatchesHeldValue: TargetMatchesHeldValue,
+  TryMissingCatchOrFinally: TryMissingCatchOrFinally,
   TypedArrayCreationOOB: TypedArrayCreationOOB,
   TypedArrayLengthAlignment: TypedArrayLengthAlignment,
   TypedArrayOOB: TypedArrayOOB,
@@ -2054,10 +2082,11 @@ const isBinaryDigit = c => c === '0' || c === '1';
 
 const isWhitespace = c => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || regex$2.test(c)); // eslint-disable-line no-control-regex
 
-
 const isLineTerminator = c => c && /[\r\n\u2028\u2029]/u.test(c);
 
 const isRegularExpressionFlagPart = c => c && (isIdentifierContinue(c) || c === '$');
+
+const isIdentifierPart = c => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -2805,8 +2834,16 @@ class Lexer {
       if (c === '\\') {
         const l = this.source[this.position];
 
-        if (l === '\r' || l === '\n') {
+        if (isLineTerminator(l)) {
           this.position += 1;
+
+          if (l === '\r' && this.source[this.position] === '\n') {
+            this.position += 1;
+          }
+
+          this.line += 1;
+          this.columnOffset = this.position;
+          this.lineTerminatorBeforeNextToken = true;
         } else {
           buffer += this.scanEscapeSequence();
         }
@@ -2856,6 +2893,13 @@ class Lexer {
         return String.fromCodePoint(this.scanCodePoint());
 
       default:
+        if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
+          this.position += 1;
+          return '\u{0000}';
+        } else if (this.isStrictMode() && isDecimalDigit(c)) {
+          this.unexpected();
+        }
+
         this.position += 1;
         return c;
     }
@@ -2921,12 +2965,16 @@ class Lexer {
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
 
-        if (!(SingleCharTokens[raw] === Token.IDENTIFIER || isIdentifierContinue(raw))) {
+        if (!isIdentifierPart(raw)) {
+          this.unexpected(escapeIndex);
+        }
+
+        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
           this.unexpected(escapeIndex);
         }
 
         buffer += raw;
-      } else if (SingleCharTokens[c] === Token.IDENTIFIER || isIdentifierContinue(c)) {
+      } else if (isIdentifierPart(c)) {
         this.position += 1;
         buffer += c;
       } else if (code >= 0xD800 && code <= 0xDBFF) {
@@ -2938,7 +2986,7 @@ class Lexer {
 
         const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
 
-        if (!(SingleCharTokens[raw] === Token.IDENTIFIER || isIdentifierContinue(raw))) {
+        if (!isIdentifierPart(raw)) {
           this.unexpected(this.position);
         }
 
@@ -3039,6 +3087,7 @@ const Flag = {
   __proto__: null
 };
 ['return', 'await', 'yield', 'parameters', 'newTarget', 'importMeta', 'superCall', 'superProperty', 'in', 'default', 'module'].forEach((name, i) => {
+  /* istanbul ignore next */
   if (i > 31) {
     throw new RangeError(name);
   }
@@ -3054,12 +3103,17 @@ function getDeclarations(node) {
     case 'LexicalBinding':
     case 'VariableDeclaration':
     case 'BindingRestElement':
+    case 'BindingRestProperty':
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return getDeclarations(node.BindingIdentifier);
       }
 
-      return getDeclarations(node.BindingPattern);
+      if (node.BindingPattern) {
+        return getDeclarations(node.BindingPattern);
+      }
+
+      return [];
 
     case 'SingleNameBinding':
       return getDeclarations(node.BindingIdentifier);
@@ -3094,10 +3148,26 @@ function getDeclarations(node) {
       return getDeclarations(node.ImportsList);
 
     case 'ObjectBindingPattern':
-      return getDeclarations(node.BindingPropertyList);
+      {
+        const declarations = getDeclarations(node.BindingPropertyList);
+
+        if (node.BindingRestProperty) {
+          declarations.push(...getDeclarations(node.BindingRestProperty));
+        }
+
+        return declarations;
+      }
 
     case 'ArrayBindingPattern':
-      return getDeclarations(node.BindingElementList);
+      {
+        const declarations = getDeclarations(node.BindingElementList);
+
+        if (node.BindingRestElement) {
+          declarations.push(...getDeclarations(node.BindingRestElement));
+        }
+
+        return declarations;
+      }
 
     case 'BindingElement':
       return getDeclarations(node.BindingPattern);
@@ -3151,6 +3221,8 @@ class Scope {
     this.parser = parser;
     this.scopeStack = [];
     this.labels = [];
+    this.arrowInfoStack = [];
+    this.assignmentInfoStack = [];
     this.exports = new Set();
     this.undefinedExports = new Map();
     this.flags = 0;
@@ -3257,6 +3329,52 @@ class Scope {
     return r;
   }
 
+  pushArrowInfo(isAsync = false) {
+    this.arrowInfoStack.push({
+      isAsync,
+      hasTrailingComma: false,
+      yieldExpressions: [],
+      awaitExpressions: [],
+      awaitIdentifiers: []
+    });
+  }
+
+  popArrowInfo() {
+    return this.arrowInfoStack.pop();
+  }
+
+  pushAssignmentInfo(type) {
+    const parser = this.parser;
+    this.assignmentInfoStack.push({
+      type,
+      coverInitializedNameErrors: [],
+
+      clear() {
+        this.coverInitializedNameErrors.forEach(e => {
+          parser.earlyErrors.delete(e);
+        });
+      }
+
+    });
+  }
+
+  popAssignmentInfo() {
+    return this.assignmentInfoStack.pop();
+  }
+
+  registerCoverInitializedName(CoverInitializedName) {
+    const error = this.parser.raiseEarly('UnexpectedToken', CoverInitializedName);
+
+    for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
+      const info = this.assignmentInfoStack[i];
+      info.coverInitializedNameErrors.push(error);
+
+      if (info.type !== 'assign') {
+        break;
+      }
+    }
+  }
+
   lexicalScope() {
     for (let i = this.scopeStack.length - 1; i >= 0; i -= 1) {
       const scope = this.scopeStack[i];
@@ -3265,6 +3383,8 @@ class Scope {
         return scope;
       }
     }
+    /* istanbul ignore next */
+
 
     throw new RangeError();
   }
@@ -3277,6 +3397,8 @@ class Scope {
         return scope;
       }
     }
+    /* istanbul ignore next */
+
 
     throw new RangeError();
   }
@@ -3299,6 +3421,11 @@ class Scope {
             }
 
             scope.lexicals.add(d.name);
+
+            if (scope === this.scopeStack[0] && this.undefinedExports.has(d.name)) {
+              this.undefinedExports.delete(d.name);
+            }
+
             break;
           }
 
@@ -3318,6 +3445,10 @@ class Scope {
               }
 
               scope.lexicals.add(d.name);
+            }
+
+            if (scope === this.scopeStack[0] && this.undefinedExports.has(d.name)) {
+              this.undefinedExports.delete(d.name);
             }
 
             break;
@@ -3357,6 +3488,7 @@ class Scope {
           break;
 
         default:
+          /* istanbul ignore next */
           throw new RangeError(type);
       }
     });
@@ -3378,14 +3510,7 @@ class Scope {
 class BaseParser extends Lexer {}
 
 class IdentifierParser extends BaseParser {
-  // IdentifierName but not ReservedWord
-  parseIdentifier() {
-    const node = this.startNode();
-    node.name = this.expect(Token.IDENTIFIER).value;
-    return this.finishNode(node, 'Identifier');
-  } // IdentifierName
-
-
+  // IdentifierName
   parseIdentifierName() {
     const node = this.startNode();
     const p = this.peek();
@@ -3422,6 +3547,16 @@ class IdentifierParser extends BaseParser {
 
       case Token.AWAIT:
         node.name = 'await';
+
+        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
+          const arrowInfo = this.scope.arrowInfoStack[i];
+
+          if (arrowInfo.isAsync) {
+            arrowInfo.awaitIdentifiers.push(node);
+            break;
+          }
+        }
+
         break;
 
       default:
@@ -3481,6 +3616,15 @@ class IdentifierParser extends BaseParser {
       case Token.AWAIT:
         if (this.scope.hasAwait()) {
           this.unexpected(token);
+        }
+
+        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
+          const arrowInfo = this.scope.arrowInfoStack[i];
+
+          if (arrowInfo.isAsync) {
+            arrowInfo.awaitIdentifiers.push(node);
+            break;
+          }
         }
 
         node.name = 'await';
@@ -3558,7 +3702,12 @@ class FunctionParser extends IdentifierParser {
     const isGenerator = this.eat(Token.MUL);
 
     if (!this.test(Token.LPAREN)) {
-      node.BindingIdentifier = this.parseBindingIdentifier();
+      this.scope.with({
+        await: isExpression ? false : undefined,
+        yield: isExpression ? false : undefined
+      }, () => {
+        node.BindingIdentifier = this.parseBindingIdentifier();
+      });
 
       if (!isExpression) {
         this.scope.declare(node.BindingIdentifier, 'function');
@@ -3580,15 +3729,36 @@ class FunctionParser extends IdentifierParser {
       node.FormalParameters = this.parseFormalParameters();
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
       node[body.type] = body;
+
+      if (node.BindingIdentifier) {
+        if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
+          this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+        }
+
+        if (isExpression) {
+          if (this.scope.hasYield() && node.BindingIdentifier.name === 'yield') {
+            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+          }
+
+          if (this.scope.hasAwait() && node.BindingIdentifier.name === 'await') {
+            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+          }
+        }
+      }
+
       this.validateFormalParameters(node.FormalParameters, body);
     });
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}`;
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters, body, isArrow = false) {
+  validateFormalParameters(parameters, body, wantsUnique = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
+
+    if (wantsUnique === false && !IsSimpleParameterList(parameters)) {
+      wantsUnique = true;
+    }
 
     if (hasStrictDirective) {
       parameters.forEach(p => {
@@ -3606,7 +3776,7 @@ class FunctionParser extends IdentifierParser {
         }
       }
 
-      if (isStrict || isArrow) {
+      if (isStrict || wantsUnique) {
         if (names.has(d.name)) {
           this.raiseEarly('AlreadyDeclared', d.node, d.name);
         } else {
@@ -3624,10 +3794,12 @@ class FunctionParser extends IdentifierParser {
           const container = this.startNode();
           container.BindingIdentifier = node;
           container.Initializer = null;
+          this.scope.declare(node, 'parameter');
           return this.finishNode(container, 'SingleNameBinding');
         }
 
       case 'BindingRestElement':
+        this.scope.declare(node, 'parameter');
         return node;
 
       case 'Elision':
@@ -3636,7 +3808,20 @@ class FunctionParser extends IdentifierParser {
       case 'ArrayLiteral':
         {
           const wrap = this.startNode();
-          node.BindingElementList = node.ElementList.map(p => this.convertArrowParameter(p));
+          node.BindingElementList = [];
+          node.ElementList.forEach((p, i) => {
+            const c = this.convertArrowParameter(p);
+
+            if (c.type === 'BindingRestElement') {
+              if (i !== node.ElementList.length - 1) {
+                this.raiseEarly('UnexpectedToken', c);
+              }
+
+              node.BindingRestElement = c;
+            } else {
+              node.BindingElementList.push(c);
+            }
+          });
           delete node.ElementList;
           node.type = 'ArrayBindingPattern';
           wrap.BindingPattern = node;
@@ -3647,7 +3832,16 @@ class FunctionParser extends IdentifierParser {
       case 'ObjectLiteral':
         {
           const wrap = this.startNode();
-          node.BindingPropertyList = node.PropertyDefinitionList.map(p => this.convertArrowParameter(p));
+          node.BindingPropertyList = [];
+          node.PropertyDefinitionList.forEach(p => {
+            const c = this.convertArrowParameter(p);
+
+            if (c.type === 'BindingRestProperty') {
+              node.BindingRestProperty = c;
+            } else {
+              node.BindingPropertyList.push(c);
+            }
+          });
           delete node.PropertyDefinitionList;
           node.type = 'ObjectBindingPattern';
           wrap.BindingPattern = node;
@@ -3667,11 +3861,20 @@ class FunctionParser extends IdentifierParser {
         node.BindingIdentifier = node.IdentifierReference;
         node.BindingIdentifier.type = 'BindingIdentifier';
         delete node.IdentifierReference;
+        this.scope.declare(node, 'parameter');
         return node;
 
       case 'PropertyDefinition':
-        node.type = 'BindingProperty';
-        node.BindingElement = this.convertArrowParameter(node.AssignmentExpression);
+        if (node.PropertyName === null) {
+          node.type = 'BindingRestProperty';
+          node.BindingIdentifier = node.AssignmentExpression;
+          node.BindingIdentifier.type = 'BindingIdentifier';
+        } else {
+          node.type = 'BindingProperty';
+          node.BindingElement = this.convertArrowParameter(node.AssignmentExpression);
+        }
+
+        this.scope.declare(node, 'parameter');
         delete node.AssignmentExpression;
         return node;
 
@@ -3679,13 +3882,16 @@ class FunctionParser extends IdentifierParser {
       case 'AssignmentRestElement':
         node.type = 'BindingRestElement';
 
-        if (node.AssignmentExpression.type === 'IdentifierReference') {
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          this.raiseEarly('UnexpectedToken', node);
+        } else if (node.AssignmentExpression.type === 'IdentifierReference') {
           node.BindingIdentifier = node.AssignmentExpression;
           node.BindingIdentifier.type = 'BindingIdentifier';
         } else {
-          node.BindingPattern = this.convertArrowParameter(node.AssignmentExpression);
+          node.BindingPattern = this.convertArrowParameter(node.AssignmentExpression).BindingPattern;
         }
 
+        this.scope.declare(node, 'parameter');
         delete node.AssignmentExpression;
         return node;
 
@@ -3695,13 +3901,42 @@ class FunctionParser extends IdentifierParser {
     }
   }
 
-  parseArrowFunction(node, parameters, kind) {
+  parseArrowFunction(node, {
+    arrowInfo,
+    Arguments
+  }, kind) {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
-    node.ArrowParameters = parameters.map(p => this.convertArrowParameter(p));
-    const body = this.parseConciseBody(isAsync);
-    this.validateFormalParameters(node.ArrowParameters, body, true);
-    node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
+
+    if (arrowInfo) {
+      arrowInfo.awaitExpressions.forEach(e => {
+        this.raiseEarly('AwaitInFormalParameters', e);
+      });
+      arrowInfo.yieldExpressions.forEach(e => {
+        this.raiseEarly('YieldInFormalParameters', e);
+      });
+
+      if (isAsync) {
+        arrowInfo.awaitIdentifiers.forEach(e => {
+          this.raiseEarly('AwaitInFormalParameters', e);
+        });
+      }
+    }
+
+    this.scope.with({
+      default: false,
+      lexical: true,
+      variable: true
+    }, () => {
+      this.scope.with({
+        parameters: true
+      }, () => {
+        node.ArrowParameters = Arguments.map(p => this.convertArrowParameter(p));
+      });
+      const body = this.parseConciseBody(isAsync);
+      this.validateFormalParameters(node.ArrowParameters, body, true);
+      node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
+    });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
 
@@ -3786,4015 +4021,6 @@ class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-}
-
-const isSyntaxCharacter = c => '^$.*+?()[]{}|'.includes(c);
-
-const isClosingSyntaxCharacter = c => ')]}|'.includes(c);
-
-const isDecimalDigit$1 = c => /[0123456789]/u.test(c);
-
-class RegExpParser {
-  constructor(source, plusU) {
-    this.source = source;
-    this.position = 0;
-    this.plusU = plusU;
-    this.capturingGroups = [];
-    this.groupSpecifiers = new Map();
-  }
-
-  peek() {
-    return this.source[this.position];
-  }
-
-  test(c) {
-    return this.source[this.position] === c;
-  }
-
-  eat(c) {
-    if (this.test(c)) {
-      this.next();
-      return true;
-    }
-
-    return false;
-  }
-
-  next() {
-    const c = this.source[this.position];
-    this.position += 1;
-    return c;
-  }
-
-  expect(c) {
-    if (!this.eat(c)) {
-      throw new SyntaxError(`Expected ${c} but got ${this.peek()}`);
-    }
-  } // Pattern ::
-  //   Disjunction
-
-
-  parsePattern() {
-    const node = {
-      type: 'Pattern',
-      groupSpecifiers: this.groupSpecifiers,
-      capturingGroups: this.capturingGroups,
-      Disjunction: undefined
-    };
-    node.Disjunction = this.parseDisjunction();
-    return node;
-  } // Disjunction ::
-  //   Alternative
-  //   Alternative `|` Disjunction
-
-
-  parseDisjunction() {
-    const node = {
-      type: 'Disjunction',
-      AlternativeList: []
-    };
-
-    do {
-      node.AlternativeList.push(this.parseAlternative());
-    } while (this.eat('|'));
-
-    return node;
-  } // Alternative ::
-  //   [empty]
-  //   Term Alternative
-
-
-  parseAlternative() {
-    const node = {
-      type: 'Alternative',
-      TermList: []
-    };
-
-    while (this.position < this.source.length && !isClosingSyntaxCharacter(this.peek())) {
-      node.TermList.push(this.parseTerm());
-    }
-
-    return node;
-  } // Term ::
-  //   Assertion
-  //   Atom
-  //   Atom Quantifier
-
-
-  parseTerm() {
-    const assertion = this.maybeParseAssertion();
-
-    if (assertion) {
-      return assertion;
-    }
-
-    return {
-      type: 'Term',
-      capturingParenthesesBefore: this.capturingGroups.length,
-      Atom: this.parseAtom(),
-      Quantifier: this.maybeParseQuantifier()
-    };
-  } // Assertion ::
-  //   `^`
-  //   `$`
-  //   `\` `b`
-  //   `\` `B`
-  //   `(` `?` `=` Disjunction `)`
-  //   `(` `?` `!` Disjunction `)`
-  //   `(` `?` `<=` Disjunction `)`
-  //   `(` `?` `<!` Disjunction `)`
-
-
-  maybeParseAssertion() {
-    if (this.eat('^')) {
-      return {
-        type: 'Assertion',
-        subtype: '^'
-      };
-    }
-
-    if (this.eat('$')) {
-      return {
-        type: 'Assertion',
-        subtype: '$'
-      };
-    }
-
-    const look2 = this.source.slice(this.position, this.position + 2);
-
-    if (look2 === '\\b') {
-      this.position += 2;
-      return {
-        type: 'Assertion',
-        subtype: 'b'
-      };
-    }
-
-    if (look2 === '\\B') {
-      this.position += 2;
-      return {
-        type: 'Assertion',
-        subtype: 'B'
-      };
-    }
-
-    const look3 = this.source.slice(this.position, this.position + 3);
-
-    if (look3 === '(?=') {
-      this.position += 3;
-      const d = this.parseDisjunction();
-      this.expect(')');
-      return {
-        type: 'Assertion',
-        subtype: '?=',
-        Disjunction: d
-      };
-    }
-
-    if (look3 === '(?!') {
-      this.position += 3;
-      const d = this.parseDisjunction();
-      this.expect(')');
-      return {
-        type: 'Assertion',
-        subtype: '?!',
-        Disjunction: d
-      };
-    }
-
-    const look4 = this.source.slice(this.position, this.position + 4);
-
-    if (look4 === '(?<=') {
-      this.position += 4;
-      const d = this.parseDisjunction();
-      this.expect(')');
-      return {
-        type: 'Assertion',
-        subtype: '?<=',
-        Disjunction: d
-      };
-    }
-
-    if (look4 === '(?<!') {
-      this.position += 4;
-      const d = this.parseDisjunction();
-      this.expect(')');
-      return {
-        type: 'Assertion',
-        subtype: '?<!',
-        Disjunction: d
-      };
-    }
-
-    return undefined;
-  } // Quantifier ::
-  //   QuantifierPrefix
-  //   QuantifierPrefix `?`
-  // QuantifierPrefix ::
-  //   `*`
-  //   `+`
-  //   `?`
-  //   `{` DecimalDigits `}`
-  //   `{` DecimalDigits `,` `}`
-  //   `{` DecimalDigits `,` DecimalDigits `}`
-
-
-  maybeParseQuantifier() {
-    let QuantifierPrefix;
-
-    if (this.eat('*')) {
-      QuantifierPrefix = '*';
-    } else if (this.eat('+')) {
-      QuantifierPrefix = '+';
-    } else if (this.eat('?')) {
-      QuantifierPrefix = '?';
-    } else if (this.eat('{')) {
-      QuantifierPrefix = {
-        DecimalDigits_a: undefined,
-        DecimalDigits_b: undefined
-      };
-      QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
-
-      if (this.eat(',')) {
-        if (!this.test('}')) {
-          QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
-
-          if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
-            throw new SyntaxError('Numbers out of order in {} quantifier');
-          }
-        }
-      }
-
-      this.expect('}');
-    }
-
-    if (QuantifierPrefix) {
-      return {
-        type: 'Quantifier',
-        QuantifierPrefix,
-        greedy: !this.eat('?')
-      };
-    }
-
-    return undefined;
-  } // Atom ::
-  //   PatternCharacter
-  //   `.`
-  //   `\` AtomEscape
-  //   CharacterClass
-  //   `(` GroupSpecifier Disjunction `)`
-  //   `(` `?` `:` Disjunction `)`
-
-
-  parseAtom() {
-    if (this.eat('.')) {
-      return {
-        type: 'Atom',
-        subtype: '.',
-        enclosedCapturingParentheses: 0
-      };
-    }
-
-    if (this.eat('\\')) {
-      return this.parseAtomEscape();
-    }
-
-    if (this.eat('(')) {
-      const node = {
-        type: 'Atom',
-        capturingParenthesesBefore: this.capturingGroups.length,
-        enclosedCapturingParentheses: 0,
-        capturing: true,
-        GroupSpecifier: undefined,
-        Disjunction: undefined
-      };
-
-      if (this.eat('?')) {
-        if (this.eat(':')) {
-          node.capturing = false;
-        } else {
-          this.expect('<');
-          node.GroupSpecifier = this.parseIdentifierName();
-          this.expect('>');
-        }
-      }
-
-      if (node.capturing) {
-        this.capturingGroups.push(node);
-      }
-
-      if (node.GroupSpecifier) {
-        this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
-      }
-
-      node.Disjunction = this.parseDisjunction();
-      this.expect(')');
-      node.enclosedCapturingParentheses = this.capturingGroups.length - node.capturingParenthesesBefore - 1;
-      return node;
-    }
-
-    if (this.test('[')) {
-      return this.parseCharacterClass();
-    }
-
-    if (isSyntaxCharacter(this.peek())) {
-      throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
-    }
-
-    return {
-      type: 'Atom',
-      PatternCharacter: this.next()
-    };
-  } // AtomEscape ::
-  //   DecimalEscape
-  //   CharacterClassEscape
-  //   CharacterEscape
-  //   `k` GroupName
-
-
-  parseAtomEscape() {
-    if (this.eat('k')) {
-      return {
-        type: 'AtomEscape',
-        GroupName: this.parseGroupName()
-      };
-    }
-
-    const CharacterClassEscape = this.maybeParseCharacterClassEscape();
-
-    if (CharacterClassEscape) {
-      return {
-        type: 'AtomEscape',
-        CharacterClassEscape
-      };
-    }
-
-    const DecimalEscape = this.maybeParseDecimalEscape();
-
-    if (DecimalEscape) {
-      return {
-        type: 'AtomEscape',
-        DecimalEscape
-      };
-    }
-
-    return {
-      type: 'AtomEscape',
-      CharacterEscape: this.parseCharacterEscape()
-    };
-  } // CharacterEscape ::
-  //   ControlEscape
-  //   `c` ControlLetter
-  //   `0` [lookahead ∉ DecimalDigit]
-  //   HexEscapeSequence
-  //   RegExpUnicodeEscapeSequence
-  //   IdentityEscape
-
-
-  parseCharacterEscape() {
-    switch (this.peek()) {
-      case 'f':
-      case 'n':
-      case 'r':
-      case 't':
-      case 'v':
-        return {
-          type: 'ControlEscape',
-          subtype: this.next()
-        };
-
-      case 'c':
-        {
-          this.next();
-          const c = this.next();
-          const p = c.codePointAt(0);
-
-          if (p >= 65 && p <= 90 || p >= 97 && p <= 122) {
-            return {
-              type: 'CharacterEscape',
-              ControlLetter: c
-            };
-          }
-
-          return {
-            type: 'CharacterEscape',
-            IdentityEscape: c
-          };
-        }
-
-      case 'x':
-        this.next();
-
-        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1])) {
-          return {
-            type: 'HexEscapeSequence',
-            HexDigit_a: this.next(),
-            HexDigit_b: this.next()
-          };
-        }
-
-        return {
-          type: 'CharacterEscape',
-          IdentityEscape: 'x'
-        };
-
-      case 'u':
-        this.next();
-
-        if (isHexDigit(this.source[this.position]) && isHexDigit(this.source[this.position + 1]) && isHexDigit(this.source[this.position + 2]) && isHexDigit(this.source[this.position + 3])) {
-          return {
-            type: 'RegExpUnicodeEscapeSequence',
-            Hex4Digits: {
-              HexDigit_a: this.next(),
-              HexDigit_b: this.next(),
-              HexDigit_c: this.next(),
-              HexDigit_d: this.next()
-            }
-          };
-        }
-
-        return {
-          type: 'CharacterEscape',
-          IdentityEscape: 'u'
-        };
-
-      default:
-        {
-          const c = this.next();
-
-          if (c === '0' && !isDecimalDigit$1(this.peek())) {
-            return {
-              type: 'CharacterEscape',
-              subtype: '0'
-            };
-          }
-
-          return {
-            type: 'CharacterEscape',
-            IdentityEscape: c
-          };
-        }
-    }
-  } // DecimalEscape ::
-  //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
-
-
-  maybeParseDecimalEscape() {
-    return undefined;
-  } // CharacterClassEscape ::
-  //   `d`
-  //   `D`
-  //   `s`
-  //   `S`
-  //   `w`
-  //   `W`
-  //   [+U] `p{` UnicodePropertyValueExpression `}`
-  //   [+U] `P{` UnicodePropertyValueExpression `}`
-
-
-  maybeParseCharacterClassEscape() {
-    switch (this.peek()) {
-      case 'd':
-      case 'D':
-      case 's':
-      case 'S':
-      case 'w':
-      case 'W':
-        return {
-          type: 'CharacterClassEscape',
-          value: this.next()
-        };
-
-      default:
-        return undefined;
-    }
-  } // CharacterClass ::
-  //   `[` ClassRanges `]`
-  //   `[` `^` ClassRanges `]`
-
-
-  parseCharacterClass() {
-    this.expect('[');
-    const node = {
-      type: 'CharacterClass',
-      invert: false,
-      ClassRanges: undefined
-    };
-    node.invert = this.eat('^');
-    node.ClassRanges = this.parseClassRanges();
-    this.expect(']');
-    return node;
-  } // ClassRanges ::
-  //   [empty]
-  //   NonemptyClassRanges
-
-
-  parseClassRanges() {
-    const ranges = [];
-
-    while (!this.test(']')) {
-      if (this.position >= this.source.length) {
-        throw new SyntaxError('Unexpected end of CharacterClass');
-      }
-
-      const atom = this.parseClassAtom();
-
-      if (this.eat('-')) {
-        const atom2 = this.parseClassAtom();
-
-        if (atom > atom2) {
-          throw new SyntaxError(`${atom}-${atom2} is not a valid class range`);
-        }
-
-        ranges.push([atom, atom2]);
-      } else {
-        ranges.push(atom);
-      }
-    }
-
-    return ranges;
-  } // ClassAtom ::
-  //   `-`
-  //   ClassAtomNoDash
-  // ClassAtomNoDash ::
-  //   SourceCharacter but not one of `\` or `]` or `-`
-  //   `\` ClassEscape
-  // ClassEscape :
-  //   `b`
-  //   [+U] `-`
-  //   CharacterClassEscape
-  //   CharacterEscape
-
-
-  parseClassAtom() {
-    if (this.eat('\\')) {
-      if (this.eat('b')) {
-        return {
-          type: 'ClassEscape',
-          value: 'b'
-        };
-      }
-
-      if (this.eat('-')) {
-        return {
-          type: 'ClassEscape',
-          value: '-'
-        };
-      }
-
-      const CharacterClassEscape = this.maybeParseCharacterClassEscape();
-
-      if (CharacterClassEscape) {
-        return CharacterClassEscape;
-      }
-
-      return this.parseCharacterEscape();
-    }
-
-    return this.next();
-  } // RegExpIdentifierName ::
-  //   RegExpIdentifierStart
-  //   RegExpIdentifierName RegExpIdentifierPart
-
-
-  parseIdentifierName() {
-    let name = '';
-
-    while (true) {
-      const c = this.peek();
-
-      if (isIdentifierStart(c) || isIdentifierContinue(c) || c === '$') {
-        name += this.next();
-      } else {
-        break;
-      }
-    }
-
-    return name;
-  } // DecimalDigits ::
-  //   DecimalDigit
-  //   DecimalDigits DecimalDigit
-
-
-  parseDecimalDigits() {
-    let n = '';
-
-    while (isDecimalDigit$1(this.peek())) {
-      n += this.next();
-    }
-
-    return n;
-  }
-
-}
-
-class ExpressionParser extends FunctionParser {
-  // Expression :
-  //   AssignmentExpression
-  //   Expression `,` AssignmentExpression
-  parseExpression() {
-    const node = this.startNode();
-    const AssignmentExpression = this.parseAssignmentExpression();
-
-    if (this.eat(Token.COMMA)) {
-      node.ExpressionList = [AssignmentExpression];
-
-      do {
-        node.ExpressionList.push(this.parseAssignmentExpression());
-      } while (this.eat(Token.COMMA));
-
-      return this.finishNode(node, 'CommaOperator');
-    }
-
-    return AssignmentExpression;
-  } // AssignmentExpression :
-  //   ConditionalExpression
-  //   [+Yield] YieldExpression
-  //   ArrowFunction
-  //   AsyncArrowFunction
-  //   LeftHandSideExpression `=` AssignmentExpression
-  //   LeftHandSideExpression AssignmentOperator AssignmentExpression
-  //   LeftHandSideExpression LogicalAssignmentOperator AssignmentExpression
-  //
-  // AssignmentOperator : one of
-  //   *= /= %= += -= <<= >>= >>>= &= ^= |= **=
-  //
-  // LogicalAssignmentOperator : one of
-  //   &&= ||= ??=
-
-
-  parseAssignmentExpression() {
-    if (this.test(Token.YIELD) && this.scope.hasYield()) {
-      return this.parseYieldExpression();
-    }
-
-    const node = this.startNode();
-    const left = this.parseConditionalExpression();
-
-    switch (this.peek().type) {
-      case Token.ASSIGN:
-      case Token.ASSIGN_MUL:
-      case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD:
-      case Token.ASSIGN_ADD:
-      case Token.ASSIGN_SUB:
-      case Token.ASSIGN_SHL:
-      case Token.ASSIGN_SAR:
-      case Token.ASSIGN_SHR:
-      case Token.ASSIGN_BIT_AND:
-      case Token.ASSIGN_BIT_XOR:
-      case Token.ASSIGN_BIT_OR:
-      case Token.ASSIGN_EXP:
-      case Token.ASSIGN_AND:
-      case Token.ASSIGN_OR:
-      case Token.ASSIGN_NULLISH:
-        this.validateAssignmentTarget(left);
-        node.LeftHandSideExpression = left;
-        node.AssignmentOperator = this.next().value;
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        return this.finishNode(node, 'AssignmentExpression');
-
-      default:
-        return left;
-    }
-  }
-
-  validateAssignmentTarget(node) {
-    switch (node.type) {
-      case 'IdentifierReference':
-        if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
-          break;
-        }
-
-        return;
-
-      case 'CoverInitializedName':
-        this.validateAssignmentTarget(node.IdentifierReference);
-        return;
-
-      case 'MemberExpression':
-        return;
-
-      case 'SuperProperty':
-        return;
-
-      case 'ParenthesizedExpression':
-        this.validateAssignmentTarget(node.Expression);
-        return;
-
-      case 'ArrayLiteral':
-        node.ElementList.forEach((p, i) => {
-          if (p.type === 'SpreadElement' && i !== node.ElementList.length - 1) {
-            this.raiseEarly('InvalidAssignmentTarget', p);
-          }
-
-          this.validateAssignmentTarget(p);
-        });
-        return;
-
-      case 'ObjectLiteral':
-        node.PropertyDefinitionList.forEach((p, i) => {
-          if (p.type === 'PropertyDefinition' && !p.PropertyName && i !== node.PropertyDefinitionList.length - 1) {
-            this.raiseEarly('InvalidAssignmentTarget', p);
-          }
-
-          this.validateAssignmentTarget(p);
-        });
-        return;
-
-      case 'PropertyDefinition':
-        this.validateAssignmentTarget(node.AssignmentExpression);
-        return;
-
-      case 'AssignmentExpression':
-        this.validateAssignmentTarget(node.LeftHandSideExpression);
-        return;
-
-      case 'Elision':
-        return;
-
-      case 'SpreadElement':
-        return;
-    }
-
-    this.raiseEarly('InvalidAssignmentTarget', node);
-  } // YieldExpression :
-  //   `yield`
-  //   `yield` [no LineTerminator here] AssignmentExpression
-  //   `yield` [no LineTerminator here] `*` AssignmentExpression
-
-
-  parseYieldExpression() {
-    if (this.scope.inParameters()) {
-      this.raiseEarly('YieldInFormalParameters');
-    }
-
-    const node = this.startNode();
-    this.expect(Token.YIELD);
-
-    if (this.peek().hadLineTerminatorBefore) {
-      node.hasStar = false;
-      node.AssignmentExpression = null;
-    } else {
-      node.hasStar = this.eat(Token.MUL);
-
-      if (node.hasStar) {
-        node.AssignmentExpression = this.parseAssignmentExpression();
-      } else {
-        switch (this.peek().type) {
-          case Token.EOS:
-          case Token.SEMICOLON:
-          case Token.RBRACE:
-          case Token.RBRACK:
-          case Token.RPAREN:
-          case Token.COLON:
-          case Token.COMMA:
-          case Token.IN:
-            node.AssignmentExpression = null;
-            break;
-
-          default:
-            node.AssignmentExpression = this.parseAssignmentExpression();
-        }
-      }
-    }
-
-    return this.finishNode(node, 'YieldExpression');
-  } // ConditionalExpression :
-  //   ShortCircuitExpression
-  //   ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
-
-
-  parseConditionalExpression() {
-    const node = this.startNode();
-    const ShortCircuitExpression = this.parseShortCircuitExpression();
-
-    if (this.eat(Token.CONDITIONAL)) {
-      node.ShortCircuitExpression = ShortCircuitExpression;
-      node.AssignmentExpression_a = this.parseAssignmentExpression();
-      this.expect(Token.COLON);
-      node.AssignmentExpression_b = this.parseAssignmentExpression();
-      return this.finishNode(node, 'ConditionalExpression');
-    }
-
-    return ShortCircuitExpression;
-  } // ShortCircuitExpression :
-  //   LogicalORExpression
-  //   CoalesceExpression
-  //
-  // CoalesceExpression :
-  //   CoalesceExpressionHead `??` BitwiseORExpression
-  //
-  // CoalesceExpressionHead :
-  //   CoalesceExpression
-  //   BitwiseORExpression
-
-
-  parseShortCircuitExpression() {
-    // Start parse at BIT_OR, right above AND/OR/NULLISH
-    const expression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
-
-    switch (this.peek().type) {
-      case Token.AND:
-      case Token.OR:
-        // Drop into normal binary chain starting at OR
-        return this.parseBinaryExpression(TokenPrecedence[Token.OR], expression);
-
-      case Token.NULLISH:
-        {
-          let x = expression;
-
-          while (this.eat(Token.NULLISH)) {
-            const node = this.startNode();
-            node.CoalesceExpressionHead = x;
-            node.BitwiseORExpression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
-            x = this.finishNode(node, 'CoalesceExpression');
-          }
-
-          return x;
-        }
-
-      default:
-        return expression;
-    }
-  }
-
-  parseBinaryExpression(precedence, x = this.parseUnaryExpression()) {
-    let p = TokenPrecedence[this.peek().type];
-
-    if (p >= precedence) {
-      do {
-        while (TokenPrecedence[this.peek().type] === p) {
-          const node = this.startNode();
-          const left = x;
-
-          if (this.peek().type === Token.IN && !this.scope.hasIn()) {
-            return left;
-          }
-
-          const op = this.next();
-          const nextP = op.type === Token.EXP ? p : p + 1;
-          const right = this.parseBinaryExpression(nextP);
-          let name;
-
-          switch (op.type) {
-            case Token.EXP:
-              name = 'ExponentiationExpression';
-              node.UpdateExpression = left;
-              node.ExponentiationExpression = right;
-              break;
-
-            case Token.MUL:
-            case Token.DIV:
-            case Token.MOD:
-              name = 'MultiplicativeExpression';
-              node.MultiplicativeExpression = left;
-              node.MultiplicativeOperator = op.value;
-              node.ExponentiationExpression = right;
-              break;
-
-            case Token.ADD:
-            case Token.SUB:
-              name = 'AdditiveExpression';
-              node.AdditiveExpression = left;
-              node.MultiplicativeExpression = right;
-              node.operator = op.value;
-              break;
-
-            case Token.SHL:
-            case Token.SAR:
-            case Token.SHR:
-              name = 'ShiftExpression';
-              node.ShiftExpression = left;
-              node.AdditiveExpression = right;
-              node.operator = op.value;
-              break;
-
-            case Token.LT:
-            case Token.GT:
-            case Token.LTE:
-            case Token.GTE:
-            case Token.INSTANCEOF:
-            case Token.IN:
-              name = 'RelationalExpression';
-              node.RelationalExpression = left;
-              node.ShiftExpression = right;
-              node.operator = op.value;
-              break;
-
-            case Token.EQ:
-            case Token.NE:
-            case Token.EQ_STRICT:
-            case Token.NE_STRICT:
-              name = 'EqualityExpression';
-              node.EqualityExpression = left;
-              node.RelationalExpression = right;
-              node.operator = op.value;
-              break;
-
-            case Token.BIT_AND:
-              name = 'BitwiseANDExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-
-            case Token.BIT_XOR:
-              name = 'BitwiseXORExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-
-            case Token.BIT_OR:
-              name = 'BitwiseORExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-
-            case Token.AND:
-              name = 'LogicalANDExpression';
-              node.LogicalANDExpression = left;
-              node.BitwiseORExpression = right;
-              break;
-
-            case Token.OR:
-              name = 'LogicalORExpression';
-              node.LogicalORExpression = left;
-              node.LogicalANDExpression = right;
-              break;
-
-            default:
-              this.unexpected(op);
-          }
-
-          x = this.finishNode(node, name);
-        }
-
-        p -= 1;
-      } while (p >= precedence);
-    }
-
-    return x;
-  } // UnaryExpression :
-  //   UpdateExpression
-  //   `delete` UnaryExpression
-  //   `void` UnaryExpression
-  //   `typeof` UnaryExpression
-  //   `+` UnaryExpression
-  //   `-` UnaryExpression
-  //   `~` UnaryExpression
-  //   `!` UnaryExpression
-  //   [+Await] AwaitExpression
-
-
-  parseUnaryExpression() {
-    return this.scope.with({
-      in: true
-    }, () => {
-      if (this.test(Token.AWAIT) && this.scope.hasAwait()) {
-        return this.parseAwaitExpression();
-      }
-
-      const node = this.startNode();
-
-      switch (this.peek().type) {
-        case Token.DELETE:
-        case Token.VOID:
-        case Token.TYPEOF:
-        case Token.ADD:
-        case Token.SUB:
-        case Token.BIT_NOT:
-        case Token.NOT:
-          node.operator = this.next().value;
-          node.UnaryExpression = this.parseUnaryExpression();
-          return this.finishNode(node, 'UnaryExpression');
-
-        default:
-          return this.parseUpdateExpression();
-      }
-    });
-  } // AwaitExpression : `await` UnaryExpression
-
-
-  parseAwaitExpression() {
-    if (this.scope.inParameters()) {
-      this.raiseEarly('AwaitInFormalParameters');
-    }
-
-    const node = this.startNode();
-    this.expect(Token.AWAIT);
-    node.UnaryExpression = this.parseUnaryExpression();
-
-    if (!this.scope.hasReturn()) {
-      this.state.hasTopLevelAwait = true;
-    }
-
-    return this.finishNode(node, 'AwaitExpression');
-  } // UpdateExpression :
-  //   LeftHandSideExpression
-  //   LeftHandSideExpression [no LineTerminator here] `++`
-  //   LeftHandSideExpression [no LineTerminator here] `--`
-  //   `++` UnaryExpression
-  //   `--` UnaryExpression
-
-
-  parseUpdateExpression() {
-    if (this.test(Token.INC) || this.test(Token.DEC)) {
-      const node = this.startNode();
-      node.operator = this.next().value;
-      node.LeftHandSideExpression = null;
-      node.UnaryExpression = this.parseUnaryExpression();
-      this.validateAssignmentTarget(node.UnaryExpression);
-      return this.finishNode(node, 'UpdateExpression');
-    }
-
-    const argument = this.parseLeftHandSideExpression();
-
-    if (!this.peek().hadLineTerminatorBefore) {
-      if (this.test(Token.INC) || this.test(Token.DEC)) {
-        this.validateAssignmentTarget(argument);
-        const node = this.startNode();
-        node.operator = this.next().value;
-        node.LeftHandSideExpression = argument;
-        node.UnaryExpression = null;
-        return this.finishNode(node, 'UpdateExpression');
-      }
-    }
-
-    return argument;
-  } // LeftHandSideExpression
-
-
-  parseLeftHandSideExpression(allowCalls = true) {
-    let result;
-
-    switch (this.peek().type) {
-      case Token.NEW:
-        result = this.parseNewExpression();
-        break;
-
-      case Token.SUPER:
-        {
-          const node = this.startNode();
-          this.next();
-
-          if (this.test(Token.LPAREN)) {
-            if (!this.scope.hasSuperCall()) {
-              this.raiseEarly('UnexpectedToken');
-            }
-
-            node.Arguments = this.parseArguments().Arguments;
-            result = this.finishNode(node, 'SuperCall');
-          } else {
-            if (!this.scope.hasSuperProperty()) {
-              this.raiseEarly('UnexpectedToken');
-            }
-
-            if (this.eat(Token.LBRACK)) {
-              node.Expression = this.parseExpression();
-              this.expect(Token.RBRACK);
-              node.IdentifierName = null;
-            } else {
-              this.expect(Token.PERIOD);
-              node.Expression = null;
-              node.IdentifierName = this.parseIdentifierName();
-            }
-
-            result = this.finishNode(node, 'SuperProperty');
-          }
-
-          break;
-        }
-
-      case Token.IMPORT:
-        {
-          const node = this.startNode();
-          this.next();
-
-          if (this.scope.hasImportMeta() && this.eat(Token.PERIOD)) {
-            this.expect('meta');
-            result = this.finishNode(node, 'ImportMeta');
-          } else {
-            if (!allowCalls) {
-              this.unexpected();
-            }
-
-            this.expect(Token.LPAREN);
-            node.AssignmentExpression = this.parseAssignmentExpression();
-            this.expect(Token.RPAREN);
-            result = this.finishNode(node, 'ImportCall');
-          }
-
-          break;
-        }
-
-      default:
-        result = this.parsePrimaryExpression();
-        break;
-    }
-
-    const check = allowCalls ? isPropertyOrCall : isMember;
-
-    while (check(this.peek().type)) {
-      const node = this.startNode();
-
-      switch (this.peek().type) {
-        case Token.LBRACK:
-          {
-            this.next();
-            node.MemberExpression = result;
-            node.IdentifierName = null;
-            node.Expression = this.parseExpression();
-            result = this.finishNode(node, 'MemberExpression');
-            this.expect(Token.RBRACK);
-            break;
-          }
-
-        case Token.PERIOD:
-          this.next();
-          node.MemberExpression = result;
-          node.IdentifierName = this.parseIdentifierName();
-          node.Expression = null;
-          result = this.finishNode(node, 'MemberExpression');
-          break;
-
-        case Token.LPAREN:
-          {
-            // `async` `(`
-            const couldBeArrow = this.currentToken.value === 'async' && result.type === 'IdentifierReference' && !this.peek().hadLineTerminatorBefore;
-            const {
-              Arguments,
-              trailingComma
-            } = this.parseArguments(); // `async` `(` Arguments `)` `=>`
-
-            if (!trailingComma && couldBeArrow && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
-              return this.parseArrowFunction(result, Arguments, FunctionKind.ASYNC);
-            }
-
-            node.CallExpression = result;
-            node.Arguments = Arguments;
-            result = this.finishNode(node, 'CallExpression');
-            break;
-          }
-
-        case Token.OPTIONAL:
-          node.MemberExpression = result;
-          node.OptionalChain = this.parseOptionalChain();
-          result = this.finishNode(node, 'OptionalExpression');
-          break;
-
-        case Token.TEMPLATE:
-          node.MemberExpression = result;
-          node.TemplateLiteral = this.parseTemplateLiteral(true);
-          result = this.finishNode(node, 'TaggedTemplateExpression');
-          break;
-
-        default:
-          this.unexpected();
-      }
-    }
-
-    return result;
-  } // OptionalChain
-
-
-  parseOptionalChain() {
-    this.expect(Token.OPTIONAL);
-    let base = this.startNode();
-    base.OptionalChain = null;
-
-    if (this.test(Token.LPAREN)) {
-      base.Arguments = this.parseArguments().Arguments;
-    } else if (this.eat(Token.LBRACK)) {
-      base.Expression = this.parseExpression();
-      this.expect(Token.RBRACK);
-    } else if (this.test(Token.TEMPLATE)) {
-      this.unexpected();
-    } else {
-      base.IdentifierName = this.parseIdentifierName();
-    }
-
-    base = this.finishNode(base, 'OptionalChain');
-
-    while (true) {
-      const node = this.startNode();
-
-      if (this.test(Token.LPAREN)) {
-        node.OptionalChain = base;
-        node.Arguments = this.parseArguments().Arguments;
-        base = this.finishNode(node, 'OptionalChain');
-      } else if (this.eat(Token.LBRACK)) {
-        node.OptionalChain = base;
-        node.Expression = this.parseExpression();
-        this.expect(Token.RBRACK);
-        base = this.finishNode(node, 'OptionalChain');
-      } else if (this.test(Token.TEMPLATE)) {
-        this.unexpected();
-      } else if (this.eat(Token.PERIOD)) {
-        node.OptionalChain = base;
-        node.IdentifierName = this.parseIdentifierName();
-        base = this.finishNode(node, 'OptionalChain');
-      } else {
-        return base;
-      }
-    }
-  } // NewExpression
-
-
-  parseNewExpression() {
-    const node = this.startNode();
-    this.expect(Token.NEW);
-
-    if (this.scope.hasNewTarget() && this.eat(Token.PERIOD)) {
-      this.expect('target');
-      return this.finishNode(node, 'NewTarget');
-    }
-
-    node.MemberExpression = this.parseLeftHandSideExpression(false);
-
-    if (this.test(Token.LPAREN)) {
-      node.Arguments = this.parseArguments().Arguments;
-    } else {
-      node.Arguments = null;
-    }
-
-    return this.finishNode(node, 'NewExpression');
-  } // PrimaryExpression :
-  //   ...
-
-
-  parsePrimaryExpression() {
-    switch (this.peek().type) {
-      case Token.IDENTIFIER:
-      case Token.ESCAPED_KEYWORD:
-      case Token.YIELD:
-      case Token.AWAIT:
-        {
-          // `async` [no LineTerminator here] `function`
-          if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
-            return this.parseFunctionExpression(FunctionKind.ASYNC);
-          }
-
-          const node = this.startNode();
-          const ident = this.parseIdentifierReference(); // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
-
-          if (ident.name === 'async' && this.test(Token.IDENTIFIER) && this.testAhead(Token.ARROW) && !this.peekAhead().hadLineTerminatorBefore) {
-            return this.parseArrowFunction(node, [this.parseIdentifierReference()], FunctionKind.ASYNC);
-          } // IdentifierReference [no LineTerminator here] `=>`
-
-
-          if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
-            return this.parseArrowFunction(node, [ident], FunctionKind.NORMAL);
-          }
-
-          return ident;
-        }
-
-      case Token.THIS:
-        {
-          const node = this.startNode();
-          this.next();
-          return this.finishNode(node, 'ThisExpression');
-        }
-
-      case Token.NUMBER:
-      case Token.BIGINT:
-        return this.parseNumericLiteral();
-
-      case Token.STRING:
-        return this.parseStringLiteral();
-
-      case Token.NULL:
-        {
-          const node = this.startNode();
-          this.next();
-          return this.finishNode(node, 'NullLiteral');
-        }
-
-      case Token.TRUE:
-        {
-          const node = this.startNode();
-          this.next();
-          node.value = true;
-          return this.finishNode(node, 'BooleanLiteral');
-        }
-
-      case Token.FALSE:
-        {
-          const node = this.startNode();
-          this.next();
-          node.value = false;
-          return this.finishNode(node, 'BooleanLiteral');
-        }
-
-      case Token.LBRACK:
-        return this.parseArrayLiteral();
-
-      case Token.LBRACE:
-        return this.parseObjectLiteral();
-
-      case Token.FUNCTION:
-        return this.parseFunctionExpression(FunctionKind.NORMAL);
-
-      case Token.CLASS:
-        return this.parseClassExpression();
-
-      case Token.TEMPLATE:
-        return this.parseTemplateLiteral();
-
-      case Token.DIV:
-      case Token.ASSIGN_DIV:
-        return this.parseRegularExpressionLiteral();
-
-      case Token.LPAREN:
-        return this.parseCoverParenthesizedExpressionAndArrowParameterList();
-
-      default:
-        return this.unexpected();
-    }
-  } // NumericLiteral
-
-
-  parseNumericLiteral() {
-    const node = this.startNode();
-
-    if (!this.test(Token.NUMBER) && !this.test(Token.BIGINT)) {
-      this.unexpected();
-    }
-
-    node.value = this.next().value;
-    return this.finishNode(node, 'NumericLiteral');
-  } // StringLiteral
-
-
-  parseStringLiteral() {
-    const node = this.startNode();
-
-    if (!this.test(Token.STRING)) {
-      this.unexpected();
-    }
-
-    node.value = this.next().value;
-    return this.finishNode(node, 'StringLiteral');
-  } // ArrayLiteral :
-  //   `[` `]`
-  //   `[` Elision `]`
-  //   `[` ElementList `]`
-  //   `[` ElementList `,` `]`
-  //   `[` ElementList `,` Elision `]`
-
-
-  parseArrayLiteral() {
-    const node = this.startNode();
-    this.expect(Token.LBRACK);
-    node.ElementList = [];
-
-    while (true) {
-      while (this.test(Token.COMMA)) {
-        const elision = this.startNode();
-        this.next();
-        node.ElementList.push(this.finishNode(elision, 'Elision'));
-      }
-
-      if (this.eat(Token.RBRACK)) {
-        break;
-      }
-
-      if (this.test(Token.ELLIPSIS)) {
-        const spread = this.startNode();
-        this.next();
-        spread.AssignmentExpression = this.parseAssignmentExpression();
-        node.ElementList.push(this.finishNode(spread, 'SpreadElement'));
-      } else {
-        node.ElementList.push(this.parseAssignmentExpression());
-      }
-
-      if (this.eat(Token.RBRACK)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-    }
-
-    return this.finishNode(node, 'ArrayLiteral');
-  } // ObjectLiteral :
-  //   `{` `}`
-  //   `{` PropertyDefinitionList `}`
-  //   `{` PropertyDefinitionList `,` `}`
-
-
-  parseObjectLiteral() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-    node.PropertyDefinitionList = [];
-
-    while (true) {
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-
-      node.PropertyDefinitionList.push(this.parsePropertyDefinition());
-
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-    }
-
-    return this.finishNode(node, 'ObjectLiteral');
-  }
-
-  parsePropertyDefinition() {
-    return this.parseBracketedDefinition('property');
-  }
-
-  parseFunctionExpression(kind) {
-    return this.parseFunction(true, kind);
-  }
-
-  parseArguments() {
-    this.expect(Token.LPAREN);
-
-    if (this.eat(Token.RPAREN)) {
-      return {
-        Arguments: [],
-        trailingComma: false
-      };
-    }
-
-    const Arguments = [];
-    let trailingComma = false;
-
-    while (true) {
-      const node = this.startNode();
-
-      if (this.eat(Token.ELLIPSIS)) {
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        Arguments.push(this.finishNode(node, 'AssignmentRestElement'));
-      } else {
-        Arguments.push(this.parseAssignmentExpression());
-      }
-
-      if (this.eat(Token.RPAREN)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-
-      if (this.eat(Token.RPAREN)) {
-        trailingComma = true;
-        break;
-      }
-    }
-
-    return {
-      Arguments,
-      trailingComma
-    };
-  } // #sec-class-definitions
-  // ClassDeclaration :
-  //   `class` BindingIdentifier ClassTail
-  //   [+Default] `class` ClassTail
-  //
-  // ClassExpression :
-  //   `class` BindingIdentifier? ClassTail
-
-
-  parseClass(isExpression) {
-    const node = this.startNode();
-    this.expect(Token.CLASS);
-    this.scope.with({
-      strict: true
-    }, () => {
-      if (!this.test(Token.LBRACE) && !this.test(Token.EXTENDS)) {
-        node.BindingIdentifier = this.parseBindingIdentifier();
-
-        if (!isExpression) {
-          this.scope.declare(node.BindingIdentifier, 'lexical');
-        }
-      } else if (isExpression === false && !this.scope.isDefault()) {
-        this.unexpected();
-      } else {
-        node.BindingIdentifier = null;
-      }
-
-      node.ClassTail = this.scope.with({
-        default: false
-      }, () => this.parseClassTail());
-    });
-    return this.finishNode(node, isExpression ? 'ClassExpression' : 'ClassDeclaration');
-  } // ClassTail : ClassHeritage? `{` ClassBody? `}`
-  // ClassHeritage : `extends` LeftHandSideExpression
-  // ClassBody : ClassElementList
-
-
-  parseClassTail() {
-    const node = this.startNode();
-
-    if (this.eat(Token.EXTENDS)) {
-      node.ClassHeritage = this.parseLeftHandSideExpression();
-    } else {
-      node.ClassHeritage = null;
-    }
-
-    this.expect(Token.LBRACE);
-
-    if (this.eat(Token.RBRACE)) {
-      node.ClassBody = null;
-    } else {
-      this.scope.with({
-        superCall: !!node.ClassHeritage
-      }, () => {
-        node.ClassBody = [];
-        let hasConstructor = false;
-
-        while (!this.eat(Token.RBRACE)) {
-          const m = this.parseClassElement();
-          node.ClassBody.push(m);
-          const name = PropName(m.MethodDefinition);
-          const isActualConstructor = !m.static && !!m.MethodDefinition.UniqueFormalParameters && m.MethodDefinition.type === 'MethodDefinition' && name === 'constructor';
-
-          if (isActualConstructor) {
-            if (hasConstructor) {
-              this.raiseEarly('DuplicateConstructor', m);
-            } else {
-              hasConstructor = true;
-            }
-          }
-
-          if (name === 'prototype' || !m.static && !isActualConstructor && name === 'constructor') {
-            this.raiseEarly('InvalidMethodName', m, name);
-          }
-        }
-      });
-    }
-
-    return this.finishNode(node, 'ClassTail');
-  } // ClassElement :
-  //   `static` MethodDefinition
-  //   MethodDefinition
-
-
-  parseClassElement() {
-    const node = this.startNode();
-    node.static = this.eat('static');
-    node.MethodDefinition = this.parseMethodDefinition(node.static);
-
-    while (this.eat(Token.SEMICOLON)) {// nothing
-    }
-
-    return this.finishNode(node, 'ClassElement');
-  }
-
-  parseMethodDefinition(isStatic) {
-    return this.parseBracketedDefinition('method', isStatic);
-  }
-
-  parseClassExpression() {
-    return this.parseClass(true);
-  }
-
-  parseTemplateLiteral(tagged = false) {
-    const node = this.startNode();
-    node.TemplateSpanList = [];
-    node.ExpressionList = [];
-    let buffer = '';
-
-    while (true) {
-      if (this.position >= this.source.length) {
-        this.raise('UnterminatedTemplate', this.position);
-      }
-
-      const c = this.source[this.position];
-
-      switch (c) {
-        case '`':
-          this.position += 1;
-          node.TemplateSpanList.push(buffer);
-          this.next();
-
-          if (!tagged) {
-            node.TemplateSpanList.forEach(s => {
-              if (TV(s) === undefined) {
-                this.unexpected(node);
-              }
-            });
-          }
-
-          return this.finishNode(node, 'TemplateLiteral');
-
-        case '$':
-          this.position += 1;
-
-          if (this.source[this.position] === '{') {
-            this.position += 1;
-            node.TemplateSpanList.push(buffer);
-            buffer = '';
-            this.next();
-            node.ExpressionList.push(this.parseExpression());
-            break;
-          }
-
-          buffer += c;
-          break;
-
-        default:
-          {
-            if (c === '\\') {
-              buffer += c;
-              this.position += 1;
-            }
-
-            const l = this.source[this.position];
-            this.position += 1;
-
-            if (isLineTerminator(l)) {
-              if (l === '\r' && this.source[this.position] === '\n') {
-                this.position += 1;
-              }
-
-              if (l === '\u{2028}' || l === '\u{2029}') {
-                buffer += l;
-              } else {
-                buffer += '\n';
-              }
-
-              this.line += 1;
-              this.columnOffset = this.position;
-            } else {
-              buffer += l;
-            }
-
-            break;
-          }
-      }
-    }
-  } // RegularExpressionLiteral :
-  //   `/` RegularExpressionBody `/` RegularExpressionFlags
-
-
-  parseRegularExpressionLiteral() {
-    const node = this.startNode();
-    this.scanRegularExpressionBody();
-    node.RegularExpressionBody = this.scannedValue;
-    this.scanRegularExpressionFlags();
-    node.RegularExpressionFlags = this.scannedValue;
-    {
-      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags); // throws if invalid
-
-      p.parsePattern();
-    }
-    const fakeToken = {
-      endIndex: this.position - 1,
-      line: this.line - 1,
-      column: this.position - this.columnOffset
-    };
-    this.next();
-    this.currentToken = fakeToken;
-    return this.finishNode(node, 'RegularExpressionLiteral');
-  } // CoverParenthesizedExpressionAndArrowParameterList :
-  //   `(` Expression `)`
-  //   `(` Expression `,` `)`
-  //   `(` `)`
-  //   `(` `...` BindingIdentifier `)`
-  //   `(` `...` BindingPattern `)`
-  //   `(` Expression `,` `...` BindingIdentifier `)`
-  //   `(` Expression `.` `...` BindingPattern `)`
-
-
-  parseCoverParenthesizedExpressionAndArrowParameterList() {
-    const node = this.startNode();
-    const commaOp = this.startNode();
-    this.expect(Token.LPAREN);
-
-    if (this.eat(Token.RPAREN) && !this.peek().hadLineTerminatorBefore) {
-      return this.parseArrowFunction(node, [], FunctionKind.NORMAL);
-    }
-
-    const expressions = [];
-    let rparenAfterComma;
-
-    while (true) {
-      if (this.test(Token.ELLIPSIS)) {
-        const inner = this.startNode();
-        this.next();
-
-        switch (this.peek().type) {
-          case Token.LBRACE:
-          case Token.LBRACK:
-            inner.BindingPattern = this.parseBindingPattern();
-            break;
-
-          default:
-            inner.BindingIdentifier = this.parseBindingIdentifier();
-            break;
-        }
-
-        expressions.push(this.finishNode(inner, 'BindingRestElement'));
-        this.expect(Token.RPAREN);
-        break;
-      }
-
-      expressions.push(this.parseAssignmentExpression());
-
-      if (this.eat(Token.COMMA)) {
-        if (this.eat(Token.RPAREN)) {
-          rparenAfterComma = this.currentToken;
-          break;
-        }
-      } else {
-        this.expect(Token.RPAREN);
-        break;
-      }
-    } // ArrowParameters :
-    //   CoverParenthesizedExpressionAndArrowParameterList
-
-
-    if (!this.peek().hadLineTerminatorBefore && this.test(Token.ARROW)) {
-      return this.parseArrowFunction(node, expressions, FunctionKind.NORMAL);
-    } // ParenthesizedExpression :
-    //   `(` Expression `)`
-
-
-    if (expressions[expressions.length - 1].type === 'BindingRestElement') {
-      this.unexpected(expressions[expressions.length - 1]);
-    }
-
-    if (rparenAfterComma) {
-      this.unexpected(rparenAfterComma);
-    }
-
-    if (expressions.length === 1) {
-      node.Expression = expressions[0];
-    } else {
-      commaOp.ExpressionList = expressions;
-      node.Expression = this.finishNode(commaOp, 'CommaOperator');
-    }
-
-    return this.finishNode(node, 'ParenthesizedExpression');
-  } // PropertyName :
-  //   LiteralPropertyName
-  //   ComputedPropertyName
-  // LiteralPropertyName :
-  //   IdentifierName
-  //   StringLiteral
-  //   NumericLiteral
-  // ComputedPropertyName :
-  //   `[` AssignmentExpression `]`
-
-
-  parsePropertyName() {
-    if (this.test(Token.LBRACK)) {
-      const node = this.startNode();
-      this.next();
-      node.ComputedPropertyName = this.parseAssignmentExpression();
-      this.expect(Token.RBRACK);
-      return this.finishNode(node, 'PropertyName');
-    }
-
-    if (this.test(Token.STRING)) {
-      return this.parseStringLiteral();
-    }
-
-    if (this.test(Token.NUMBER) || this.test(Token.BIGINT)) {
-      return this.parseNumericLiteral();
-    }
-
-    return this.parseIdentifierName();
-  } // PropertyDefinition :
-  //   IdentifierReference
-  //   CoverInitializedName
-  //   PropertyName `:` AssignmentExpression
-  //   MethodDefinition
-  //   `...` AssignmentExpression
-  // MethodDefinition :
-  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-  //   GeneratorMethod
-  //   AsyncMethod
-  //   AsyncGeneratorMethod
-  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
-  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-  // GeneratorMethod :
-  //   `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-  // AsyncMethod :
-  //   `async` [no LineTerminator here] PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
-  // AsyncGeneratorMethod :
-  //   `async` [no LineTerminator here] `*` Propertyname `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-
-
-  parseBracketedDefinition(type, isStatic = false) {
-    const node = this.startNode();
-
-    if (type === 'property' && this.eat(Token.ELLIPSIS)) {
-      node.PropertyName = null;
-      node.AssignmentExpression = this.parseAssignmentExpression();
-      return this.finishNode(node, 'PropertyDefinition');
-    }
-
-    let isGenerator = this.eat(Token.MUL);
-    const firstName = this.parsePropertyName();
-    let isAsync = false;
-    let isGetter = false;
-    let isSetter = false;
-
-    if (!isGenerator) {
-      if (firstName.type === 'IdentifierName') {
-        switch (firstName.name) {
-          case 'async':
-            isAsync = true;
-            break;
-
-          case 'get':
-            isGetter = true;
-            break;
-
-          case 'set':
-            isSetter = true;
-            break;
-        }
-      }
-    }
-
-    if (!isGenerator && !isGetter && !isSetter) {
-      isGenerator = this.eat(Token.MUL);
-    }
-
-    const isSpecialMethod = isGenerator || (isSetter || isGetter || isAsync) && !this.test(Token.LPAREN);
-
-    if (!isGenerator && type === 'property') {
-      if (this.eat(Token.COLON)) {
-        node.PropertyName = firstName;
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        return this.finishNode(node, 'PropertyDefinition');
-      }
-
-      if (this.test(Token.ASSIGN)) {
-        node.IdentifierReference = firstName;
-        node.IdentifierReference.type = 'IdentifierReference';
-        node.Initializer = this.parseInitializerOpt();
-        return this.finishNode(node, 'CoverInitializedName');
-      }
-
-      if (!isSpecialMethod && firstName.type === 'IdentifierName' && !this.test(Token.LPAREN) && !isKeyword(firstName.name)) {
-        firstName.type = 'IdentifierReference';
-
-        if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
-          this.raiseEarly('UnexpectedToken', firstName);
-        }
-
-        if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
-          this.raiseEarly('UnexpectedToken', firstName);
-        }
-
-        if (firstName.name !== 'yield' && firstName.name !== 'await' && isKeywordRaw(firstName.name)) {
-          this.raiseEarly('UnexpectedToken', firstName);
-        }
-
-        return firstName;
-      }
-    }
-
-    node.PropertyName = isSpecialMethod && (!isGenerator || isAsync) ? this.parsePropertyName() : firstName;
-    this.scope.with({
-      lexical: true,
-      variable: true
-    }, () => {
-      if (isSpecialMethod && isGetter) {
-        this.expect(Token.LPAREN);
-        this.expect(Token.RPAREN);
-        node.PropertySetParameterList = null;
-        node.UniqueFormalParameters = null;
-      } else if (isSpecialMethod && isSetter) {
-        this.expect(Token.LPAREN);
-        node.PropertySetParameterList = [this.parseFormalParameter()];
-        this.expect(Token.RPAREN);
-        node.UniqueFormalParameters = null;
-      } else {
-        node.PropertySetParameterList = null;
-        node.UniqueFormalParameters = this.parseUniqueFormalParameters();
-      }
-
-      this.scope.with({
-        superCall: !isSpecialMethod && !isStatic && (node.PropertyName.name === 'constructor' || node.PropertyName.value === 'constructor') && this.scope.hasSuperCall(),
-        superProperty: true
-      }, () => {
-        const body = this.parseFunctionBody(isAsync, isGenerator, false);
-        node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
-
-        if (node.UniqueFormalParameters || node.PropertySetParameterList) {
-          this.validateFormalParameters(node.UniqueFormalParameters || node.PropertySetParameterList, body);
-        }
-      });
-    });
-    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}`;
-    return this.finishNode(node, name);
-  }
-
-}
-
-class StatementParser extends ExpressionParser {
-  semicolon() {
-    if (this.eat(Token.SEMICOLON)) {
-      return;
-    }
-
-    if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
-      return;
-    }
-
-    this.unexpected();
-  } // StatementList :
-  //   StatementListItem
-  //   StatementList StatementListItem
-
-
-  parseStatementList(endToken, directives) {
-    const statementList = [];
-    const oldStrict = this.state.strict;
-
-    while (!this.eat(endToken)) {
-      const stmt = this.parseStatementListItem();
-      statementList.push(stmt);
-
-      if (directives !== undefined && stmt.type === 'ExpressionStatement' && stmt.Expression.type === 'StringLiteral') {
-        const directive = this.source.slice(stmt.Expression.location.startIndex + 1, stmt.Expression.location.endIndex - 1);
-        directives.push(directive);
-
-        if (directive === 'use strict') {
-          stmt.strict = true;
-          stmt.Expression.strict = true;
-          this.state.strict = true;
-        }
-      } else {
-        directives = undefined;
-      }
-    }
-
-    this.state.strict = oldStrict;
-    return statementList;
-  } // StatementListItem :
-  //   Statement
-  //   Declaration
-  //
-  // Declaration :
-  //   HoistableDeclaration
-  //   ClassDeclaration
-  //   LexicalDeclaration
-
-
-  parseStatementListItem() {
-    switch (this.peek().type) {
-      case Token.FUNCTION:
-        return this.parseHoistableDeclaration();
-
-      case Token.CLASS:
-        return this.parseClassDeclaration();
-
-      case Token.CONST:
-        return this.parseLexicalDeclaration();
-
-      default:
-        if (this.test('let')) {
-          return this.parseLexicalDeclaration();
-        }
-
-        if (this.test('async')) {
-          return this.parseHoistableDeclaration();
-        }
-
-        return this.parseStatement();
-    }
-  } // HoistableDeclaration :
-  //   FunctionDeclaration
-  //   GeneratorDeclaration
-  //   AsyncFunctionDeclaration
-  //   AsyncGeneratorDeclaration
-
-
-  parseHoistableDeclaration() {
-    switch (this.peek().type) {
-      case Token.FUNCTION:
-        return this.parseFunctionDeclaration(FunctionKind.NORMAL);
-
-      default:
-        if (this.test('async')) {
-          return this.parseFunctionDeclaration(FunctionKind.ASYNC);
-        }
-
-        throw new Error('unreachable');
-    }
-  } // ClassDeclaration :
-  //   `class` BindingIdentifier ClassTail
-  //   [+Default] `class` ClassTail
-
-
-  parseClassDeclaration() {
-    return this.parseClass(false);
-  } // LexicalDeclaration : LetOrConst BindingList `;`
-
-
-  parseLexicalDeclaration() {
-    const node = this.startNode();
-    const letOrConst = this.eat('let') || this.expect(Token.CONST);
-    node.LetOrConst = letOrConst.type === Token.CONST ? 'const' : 'let';
-    node.BindingList = this.parseBindingList();
-    this.semicolon();
-    this.scope.declare(node.BindingList, 'lexical');
-    node.BindingList.forEach(b => {
-      if (node.LetOrConst === 'const' && !b.Initializer) {
-        this.raiseEarly('ConstDeclarationMissingInitializer', b);
-      }
-    });
-    return this.finishNode(node, 'LexicalDeclaration');
-  } // BindingList :
-  //   LexicalBinding
-  //   BindingList `,` LexicalBinding
-  //
-  // LexicalBinding :
-  //   BindingIdentifier Initializer?
-  //   BindingPattern Initializer
-
-
-  parseBindingList() {
-    const bindingList = [];
-
-    do {
-      const node = this.parseBindingElement();
-      node.type = 'LexicalBinding';
-      bindingList.push(node);
-    } while (this.eat(Token.COMMA));
-
-    return bindingList;
-  } // BindingElement :
-  //   SingleNameBinding
-  //   BindingPattern Initializer?
-  // SingleNameBinding :
-  //   BindingIdentifier Initializer?
-
-
-  parseBindingElement() {
-    const node = this.startNode();
-
-    if (this.test(Token.LBRACE) || this.test(Token.LBRACK)) {
-      node.BindingPattern = this.parseBindingPattern();
-    } else {
-      node.BindingIdentifier = this.parseBindingIdentifier();
-    }
-
-    node.Initializer = this.parseInitializerOpt();
-    return this.finishNode(node, node.BindingPattern ? 'BindingElement' : 'SingleNameBinding');
-  } // BindingPattern:
-  //   ObjectBindingPattern
-  //   ArrayBindingPattern
-
-
-  parseBindingPattern() {
-    switch (this.peek().type) {
-      case Token.LBRACE:
-        return this.parseObjectBindingPattern();
-
-      case Token.LBRACK:
-        return this.parseArrayBindingPattern();
-
-      default:
-        return this.unexpected();
-    }
-  } // ObjectBindingPattern :
-  //   `{` `}`
-  //   `{` BindingRestProperty `}`
-  //   `{` BindingPropertyList `}`
-  //   `{` BindingPropertyList `,` BindingRestProperty? `}`
-
-
-  parseObjectBindingPattern() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-    node.BindingPropertyList = [];
-
-    while (!this.eat(Token.RBRACE)) {
-      if (this.test(Token.ELLIPSIS)) {
-        node.BindingRestProperty = this.parseBindingRestProperty();
-        this.expect(Token.RBRACE);
-        break;
-      } else {
-        node.BindingPropertyList.push(this.parseBindingProperty());
-
-        if (!this.eat(Token.COMMA)) {
-          this.expect(Token.RBRACE);
-          break;
-        }
-      }
-    }
-
-    return this.finishNode(node, 'ObjectBindingPattern');
-  } // BindingProperty :
-  //   SingleNameBinding
-  //   PropertyName : BindingElement
-
-
-  parseBindingProperty() {
-    const node = this.startNode();
-    const name = this.parsePropertyName();
-
-    if (this.eat(Token.COLON)) {
-      node.PropertyName = name;
-      node.BindingElement = this.parseBindingElement();
-      return this.finishNode(node, 'BindingProperty');
-    }
-
-    node.BindingIdentifier = name;
-
-    if (name.type === 'IdentifierName') {
-      name.type = 'BindingIdentifier';
-    } else {
-      this.unexpected(name);
-    }
-
-    node.Initializer = this.parseInitializerOpt();
-    return this.finishNode(node, 'SingleNameBinding');
-  } // BindingRestProperty :
-  //  `...` BindingIdentifier
-
-
-  parseBindingRestProperty() {
-    const node = this.startNode();
-    this.expect(Token.ELLIPSIS);
-    node.BindingIdentifier = this.parseBindingIdentifier();
-    return this.finishNode(node, 'BindingRestProperty');
-  } // ArrayBindingPattern :
-  //   `[` Elision? BindingRestElement `]`
-  //   `[` BindingElementList `]`
-  //   `[` BindingElementList `,` Elision? BindingRestElement `]`
-
-
-  parseArrayBindingPattern() {
-    const node = this.startNode();
-    this.expect(Token.LBRACK);
-    node.BindingElementList = [];
-
-    while (true) {
-      while (this.test(Token.COMMA)) {
-        const elision = this.startNode();
-        this.next();
-        node.BindingElementList.push(this.finishNode(elision, 'Elision'));
-      }
-
-      if (this.eat(Token.RBRACK)) {
-        break;
-      }
-
-      if (this.test(Token.ELLIPSIS)) {
-        node.BindingRestElement = this.parseBindingRestElement();
-        this.expect(Token.RBRACK);
-        break;
-      } else {
-        node.BindingElementList.push(this.parseBindingElement());
-      }
-
-      if (this.eat(Token.RBRACK)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-    }
-
-    return this.finishNode(node, 'ArrayBindingPattern');
-  } // BindingRestElement :
-  //   `...` BindingIdentifier
-  //   `...` BindingPattern
-
-
-  parseBindingRestElement() {
-    const node = this.startNode();
-    this.expect(Token.ELLIPSIS);
-
-    switch (this.peek().type) {
-      case Token.LBRACE:
-      case Token.LBRACK:
-        node.BindingPattern = this.parseBindingPattern();
-        break;
-
-      default:
-        node.BindingIdentifier = this.parseBindingIdentifier();
-        break;
-    }
-
-    return this.finishNode(node, 'BindingRestElement');
-  } // Initializer : `=` AssignmentExpression
-
-
-  parseInitializerOpt() {
-    if (this.eat(Token.ASSIGN)) {
-      return this.parseAssignmentExpression();
-    }
-
-    return null;
-  } // FunctionDeclaration
-
-
-  parseFunctionDeclaration(kind) {
-    return this.parseFunction(false, kind);
-  } // Statement :
-  //   ...
-
-
-  parseStatement() {
-    switch (this.peek().type) {
-      case Token.LBRACE:
-        return this.parseBlockStatement();
-
-      case Token.VAR:
-        return this.parseVariableStatement();
-
-      case Token.SEMICOLON:
-        {
-          const node = this.startNode();
-          this.next();
-          return this.finishNode(node, 'EmptyStatement');
-        }
-
-      case Token.IF:
-        return this.parseIfStatement();
-
-      case Token.DO:
-        return this.parseDoWhileStatement();
-
-      case Token.WHILE:
-        return this.parseWhileStatement();
-
-      case Token.FOR:
-        return this.parseForStatement();
-
-      case Token.SWITCH:
-        return this.parseSwitchStatement();
-
-      case Token.CONTINUE:
-      case Token.BREAK:
-        return this.parseBreakContinueStatement();
-
-      case Token.RETURN:
-        return this.parseReturnStatement();
-
-      case Token.WITH:
-        return this.parseWithStatement();
-
-      case Token.THROW:
-        return this.parseThrowStatement();
-
-      case Token.TRY:
-        return this.parseTryStatement();
-
-      case Token.DEBUGGER:
-        return this.parseDebuggerStatement();
-
-      default:
-        return this.parseExpressionStatement();
-    }
-  } // BlockStatement : Block
-
-
-  parseBlockStatement() {
-    return this.parseBlock();
-  } // Block : `{` StatementList `}`
-
-
-  parseBlock() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-    this.scope.with({
-      lexical: true
-    }, () => {
-      node.StatementList = this.parseStatementList(Token.RBRACE);
-    });
-    return this.finishNode(node, 'Block');
-  } // VariableStatement : `var` VariableDeclarationList `;`
-
-
-  parseVariableStatement() {
-    const node = this.startNode();
-    this.expect(Token.VAR);
-    node.VariableDeclarationList = this.parseVariableDeclarationList();
-    this.semicolon();
-    this.scope.declare(node.VariableDeclarationList, 'variable');
-    return this.finishNode(node, 'VariableStatement');
-  } // VariableDeclarationList :
-  //   VariableDeclaration
-  //   VariableDeclarationList `,` VariableDeclaration
-
-
-  parseVariableDeclarationList(firstDeclarationRequiresInit = true) {
-    const declarationList = [];
-
-    do {
-      const node = this.parseVariableDeclaration(firstDeclarationRequiresInit);
-      declarationList.push(node);
-    } while (this.eat(Token.COMMA));
-
-    return declarationList;
-  } // VariableDeclaration :
-  //   BindingIdentifier Initializer?
-  //   BindingPattern Initializer
-
-
-  parseVariableDeclaration(firstDeclarationRequiresInit) {
-    const node = this.startNode();
-
-    switch (this.peek().type) {
-      case Token.LBRACE:
-      case Token.LBRACK:
-        node.BindingPattern = this.parseBindingPattern();
-
-        if (firstDeclarationRequiresInit) {
-          this.expect(Token.ASSIGN);
-          node.Initializer = this.parseAssignmentExpression();
-        } else {
-          node.Initializer = this.parseInitializerOpt();
-        }
-
-        break;
-
-      default:
-        node.BindingIdentifier = this.parseBindingIdentifier();
-        node.Initializer = this.parseInitializerOpt();
-        break;
-    }
-
-    return this.finishNode(node, 'VariableDeclaration');
-  } // IfStatement :
-  //  `if` `(` Expression `)` Statement `else` Statement
-  //  `if` `(` Expression `)` Statement
-
-
-  parseIfStatement() {
-    const node = this.startNode();
-    this.expect(Token.IF);
-    this.expect(Token.LPAREN);
-    node.Expression = this.parseExpression();
-    this.expect(Token.RPAREN);
-    node.Statement_a = this.parseStatement();
-
-    if (this.eat(Token.ELSE)) {
-      node.Statement_b = this.parseStatement();
-    }
-
-    return this.finishNode(node, 'IfStatement');
-  } // `while` `(` Expression `)` Statement
-
-
-  parseWhileStatement() {
-    const node = this.startNode();
-    this.expect(Token.WHILE);
-    this.expect(Token.LPAREN);
-    node.Expression = this.parseExpression();
-    this.expect(Token.RPAREN);
-    this.scope.with({
-      label: 'loop'
-    }, () => {
-      node.Statement = this.parseStatement();
-    });
-    return this.finishNode(node, 'WhileStatement');
-  } // `do` Statement `while` `(` Expression `)` `;`
-
-
-  parseDoWhileStatement() {
-    const node = this.startNode();
-    this.expect(Token.DO);
-    this.scope.with({
-      label: 'loop'
-    }, () => {
-      node.Statement = this.parseStatement();
-    });
-    this.expect(Token.WHILE);
-    this.expect(Token.LPAREN);
-    node.Expression = this.parseExpression();
-    this.expect(Token.RPAREN); // Semicolons are completely optional after a do-while, even without a newline
-
-    this.eat(Token.SEMICOLON);
-    return this.finishNode(node, 'DoWhileStatement');
-  } // `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
-  // `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-  // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
-  // `for` `(` `var` ForBinding `in` Expression `)` Statement
-  // `for` `(` ForDeclaration `in` Expression `)` Statement
-  // `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  // `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-  //
-  // ForDeclaration : LetOrConst ForBinding
-
-
-  parseForStatement() {
-    return this.scope.with({
-      lexical: true,
-      label: 'loop'
-    }, () => {
-      const node = this.startNode();
-      this.expect(Token.FOR);
-      const isAwait = this.scope.hasAwait() && this.eat(Token.AWAIT);
-
-      if (isAwait && !this.scope.hasReturn()) {
-        this.state.hasTopLevelAwait = true;
-      }
-
-      this.expect(Token.LPAREN);
-
-      if (isAwait && this.test(Token.SEMICOLON)) {
-        this.unexpected();
-      }
-
-      if (this.eat(Token.SEMICOLON)) {
-        if (!this.test(Token.SEMICOLON)) {
-          node.Expression_b = this.parseExpression();
-        }
-
-        this.expect(Token.SEMICOLON);
-
-        if (!this.test(Token.RPAREN)) {
-          node.Expression_c = this.parseExpression();
-        }
-
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForStatement');
-      }
-
-      if (this.test('let') || this.test(Token.CONST)) {
-        const inner = this.startNode();
-
-        if (this.eat('let')) {
-          inner.LetOrConst = 'let';
-        } else {
-          this.expect(Token.CONST);
-          inner.LetOrConst = 'const';
-        }
-
-        const list = this.parseBindingList();
-
-        if (list.length > 1 || this.test(Token.SEMICOLON)) {
-          inner.BindingList = list;
-          node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
-          this.expect(Token.SEMICOLON);
-
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-
-          this.expect(Token.SEMICOLON);
-
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForStatement');
-        }
-
-        inner.ForBinding = list[0];
-        inner.ForBinding.type = 'ForBinding';
-
-        if (inner.ForBinding.Initializer) {
-          this.unexpected(inner.ForBinding.Initializer);
-        }
-
-        node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
-        getDeclarations(node.ForDeclaration).forEach(d => {
-          if (d.name === 'let') {
-            this.raiseEarly('UnexpectedToken', d.node);
-          }
-        });
-
-        if (!isAwait && this.eat(Token.IN)) {
-          node.Expression = this.parseExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForInStatement');
-        }
-
-        this.expect('of');
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
-      }
-
-      if (this.eat(Token.VAR)) {
-        if (isAwait) {
-          node.ForBinding = this.parseForBinding();
-          this.expect('of');
-          node.AssignmentExpression = this.parseAssignmentExpression();
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForAwaitStatement');
-        }
-
-        const list = this.parseVariableDeclarationList(false);
-
-        if (list.length > 1 || this.test(Token.SEMICOLON)) {
-          node.VariableDeclarationList = list;
-          this.expect(Token.SEMICOLON);
-
-          if (!this.test(Token.SEMICOLON)) {
-            node.Expression_a = this.parseExpression();
-          }
-
-          this.expect(Token.SEMICOLON);
-
-          if (!this.test(Token.RPAREN)) {
-            node.Expression_b = this.parseExpression();
-          }
-
-          this.expect(Token.RPAREN);
-          node.Statement = this.parseStatement();
-          return this.finishNode(node, 'ForStatement');
-        }
-
-        node.ForBinding = list[0];
-        node.ForBinding.type = 'ForBinding';
-
-        if (node.ForBinding.Initializer) {
-          this.unexpected(node.ForBinding.Initializer);
-        }
-
-        if (this.eat('of')) {
-          node.AssignmentExpression = this.parseAssignmentExpression();
-        } else {
-          this.expect(Token.IN);
-          node.Expression = this.parseExpression();
-        }
-
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
-      }
-
-      const expression = this.scope.with({
-        in: false
-      }, () => this.parseExpression());
-
-      if (!isAwait && this.eat(Token.IN)) {
-        this.validateAssignmentTarget(expression);
-        node.LeftHandSideExpression = expression;
-        node.Expression = this.parseExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, 'ForInStatement');
-      }
-
-      if (this.eat('of')) {
-        this.validateAssignmentTarget(expression);
-        node.LeftHandSideExpression = expression;
-        node.AssignmentExpression = this.parseAssignmentExpression();
-        this.expect(Token.RPAREN);
-        node.Statement = this.parseStatement();
-        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
-      }
-
-      node.Expression_a = expression;
-      this.expect(Token.SEMICOLON);
-
-      if (!this.test(Token.SEMICOLON)) {
-        node.Expression_b = this.parseExpression();
-      }
-
-      this.expect(Token.SEMICOLON);
-
-      if (!this.test(Token.RPAREN)) {
-        node.Expression_c = this.parseExpression();
-      }
-
-      this.expect(Token.RPAREN);
-      node.Statement = this.parseStatement();
-      return this.finishNode(node, 'ForStatement');
-    });
-  } // ForBinding :
-  //   BindingIdentifier
-  //   BindingPattern
-
-
-  parseForBinding() {
-    const node = this.startNode();
-
-    switch (this.peek().type) {
-      case Token.LBRACE:
-      case Token.LBRACK:
-        node.BindingPattern = this.parseBindingPattern();
-        break;
-
-      default:
-        node.BindingIdentifier = this.parseBindingIdentifier();
-        break;
-    }
-
-    return this.finishNode(node, 'ForBinding');
-  } // SwitchStatement :
-  //   `switch` `(` Expression `)` CaseBlock
-
-
-  parseSwitchStatement() {
-    const node = this.startNode();
-    this.expect(Token.SWITCH);
-    this.expect(Token.LPAREN);
-    node.Expression = this.parseExpression();
-    this.expect(Token.RPAREN);
-    this.scope.with({
-      lexical: true,
-      label: 'switch'
-    }, () => {
-      node.CaseBlock = this.parseCaseBlock();
-    });
-    return this.finishNode(node, 'SwitchStatement');
-  } // CaseBlock :
-  //   `{` CaseClauses? `}`
-  //   `{` CaseClauses? DefaultClause CaseClauses? `}`
-  // CaseClauses :
-  //   CaseClause
-  //   CaseClauses CauseClause
-  // CaseClause :
-  //   `case` Expression `:` StatementList?
-  // DefaultClause :
-  //   `default` `:` StatementList?
-
-
-  parseCaseBlock() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-
-    while (!this.eat(Token.RBRACE)) {
-      switch (this.peek().type) {
-        case Token.CASE:
-        case Token.DEFAULT:
-          {
-            const inner = this.startNode();
-            const t = this.next().type;
-
-            if (t === Token.DEFAULT && node.DefaultClause) {
-              this.unexpected();
-            }
-
-            if (t === Token.CASE) {
-              inner.Expression = this.parseExpression();
-            }
-
-            this.expect(Token.COLON);
-
-            while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
-              if (!inner.StatementList) {
-                inner.StatementList = [];
-              }
-
-              inner.StatementList.push(this.parseStatementListItem());
-            }
-
-            if (t === Token.DEFAULT) {
-              node.DefaultClause = this.finishNode(inner, 'DefaultClause');
-            } else {
-              if (node.DefaultClause) {
-                if (!node.CaseClauses_b) {
-                  node.CaseClauses_b = [];
-                }
-
-                node.CaseClauses_b.push(this.finishNode(inner, 'CaseClause'));
-              } else {
-                if (!node.CaseClauses_a) {
-                  node.CaseClauses_a = [];
-                }
-
-                node.CaseClauses_a.push(this.finishNode(inner, 'CaseClause'));
-              }
-            }
-
-            break;
-          }
-
-        default:
-          this.unexpected();
-      }
-    }
-
-    return this.finishNode(node, 'CaseBlock');
-  } // BreakStatement :
-  //   `break` `;`
-  //   `break` [no LineTerminator here] LabelIdentifier `;`
-  //
-  // ContinueStatement :
-  //   `continue` `;`
-  //   `continue` [no LineTerminator here] LabelIdentifier `;`
-
-
-  parseBreakContinueStatement() {
-    const node = this.startNode();
-    const isBreak = this.eat(Token.BREAK);
-
-    if (!isBreak) {
-      this.expect(Token.CONTINUE);
-    }
-
-    if (this.eat(Token.SEMICOLON)) {
-      node.LabelIdentifier = null;
-    } else if (this.peek().hadLineTerminatorBefore) {
-      node.LabelIdentifier = null;
-      this.semicolon();
-    } else {
-      if (this.test(Token.IDENTIFIER)) {
-        node.LabelIdentifier = this.parseLabelIdentifier();
-      } else {
-        node.LabelIdentifier = null;
-      }
-
-      this.semicolon();
-    }
-
-    this.verifyBreakContinue(node, isBreak);
-    return this.finishNode(node, isBreak ? 'BreakStatement' : 'ContinueStatement');
-  }
-
-  verifyBreakContinue(node, isBreak) {
-    let i = 0;
-
-    for (; i < this.scope.labels.length; i += 1) {
-      const label = this.scope.labels[i];
-
-      if (!node.LabelIdentifier || node.LabelIdentifier.name === label.name) {
-        if (label.type && (isBreak || label.type === 'loop')) {
-          break;
-        }
-
-        if (node.LabelIdentifier && isBreak) {
-          break;
-        }
-      }
-    }
-
-    if (i === this.scope.labels.length) {
-      this.raiseEarly('IllegalBreakContinue', node, isBreak);
-    }
-  } // ReturnStatement :
-  //   `return` `;`
-  //   `return` [no LineTerminator here] Expression `;`
-
-
-  parseReturnStatement() {
-    if (!this.scope.hasReturn()) {
-      this.unexpected();
-    }
-
-    const node = this.startNode();
-    this.expect(Token.RETURN);
-
-    if (this.eat(Token.SEMICOLON)) {
-      node.Expression = null;
-    } else if (this.peek().hadLineTerminatorBefore) {
-      node.Expression = null;
-      this.semicolon();
-    } else {
-      node.Expression = this.parseExpression();
-      this.semicolon();
-    }
-
-    return this.finishNode(node, 'ReturnStatement');
-  } // WithStatement :
-  //   `with` `(` Expression `)` Statement
-
-
-  parseWithStatement() {
-    if (this.isStrictMode()) {
-      this.raiseEarly('UnexpectedToken');
-    }
-
-    const node = this.startNode();
-    this.expect(Token.WITH);
-    this.expect(Token.LPAREN);
-    node.Expression = this.parseExpression();
-    this.expect(Token.RPAREN);
-    node.Statement = this.parseStatement();
-    return this.finishNode(node, 'WithStatement');
-  } // ThrowStatement :
-  //   `throw` [no LineTerminator here] Expression `;`
-
-
-  parseThrowStatement() {
-    const node = this.startNode();
-    this.expect(Token.THROW);
-
-    if (this.peek().hadLineTerminatorBefore) {
-      this.raise('NewlineAfterThrow', node);
-    }
-
-    node.Expression = this.parseExpression();
-    this.semicolon();
-    return this.finishNode(node, 'ThrowStatement');
-  } // TryStatement :
-  //   `try` Block Catch
-  //   `try` Block Finally
-  //   `try` Block Catch Finally
-  //
-  // Catch :
-  //   `catch` `(` CatchParameter `)` Block
-  //   `catch` Block
-  //
-  // Finally :
-  //   `finally` Block
-  //
-  // CatchParameter :
-  //   BindingIdentifier
-  //   BindingPattern
-
-
-  parseTryStatement() {
-    const node = this.startNode();
-    this.expect(Token.TRY);
-    node.Block = this.parseBlock();
-
-    if (this.eat(Token.CATCH)) {
-      const clause = this.startNode();
-
-      if (this.eat(Token.LPAREN)) {
-        switch (this.peek().type) {
-          case Token.LBRACE:
-          case Token.LBRACK:
-            clause.CatchParameter = this.parseBindingPattern();
-            break;
-
-          default:
-            clause.CatchParameter = this.parseBindingIdentifier();
-            break;
-        } // this.scope.declare(clause.CatchParameter, 'lexical');
-
-
-        this.expect(Token.RPAREN);
-      } else {
-        clause.CatchParameter = null;
-      }
-
-      clause.Block = this.parseBlock();
-      node.Catch = this.finishNode(clause, 'Catch');
-    } else {
-      node.Catch = null;
-    }
-
-    if (this.eat(Token.FINALLY)) {
-      node.Finally = this.parseBlock();
-    } else {
-      node.Finally = null;
-    }
-
-    if (!node.Catch && !node.Finally) {
-      this.raise('TryMissingCatchOrFinally');
-    }
-
-    return this.finishNode(node, 'TryStatement');
-  } // DebuggerStatement : `debugger` `;`
-
-
-  parseDebuggerStatement() {
-    const node = this.startNode();
-    this.expect(Token.DEBUGGER);
-    this.semicolon();
-    return this.finishNode(node, 'DebuggerStatement');
-  } // ExpressionStatement :
-  //   [lookahead != `{`, `function`, `async` [no LineTerminator here] `function`, `class`, `let` `[` ] Expression `;`
-
-
-  parseExpressionStatement() {
-    switch (this.peek().type) {
-      case Token.LBRACE:
-      case Token.FUNCTION:
-      case Token.CLASS:
-        this.unexpected();
-        break;
-
-      default:
-        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
-          this.unexpected();
-        }
-
-        if (this.test('let') && this.testAhead(Token.LBRACK)) {
-          this.unexpected();
-        }
-
-        break;
-    }
-
-    const node = this.startNode();
-    const expression = this.parseExpression();
-
-    if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
-      expression.type = 'LabelIdentifier';
-      node.LabelIdentifier = expression;
-
-      if (this.scope.labels.find(l => l.name === node.LabelIdentifier.name)) {
-        this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
-      }
-
-      let type = null;
-
-      switch (this.peek().type) {
-        case Token.SWITCH:
-          type = 'switch';
-          break;
-
-        case Token.DO:
-        case Token.WHILE:
-        case Token.FOR:
-          type = 'loop';
-          break;
-      }
-
-      this.scope.labels.push({
-        name: node.LabelIdentifier.name,
-        type
-      });
-      node.LabelledItem = this.parseStatement();
-      this.scope.labels.pop();
-      return this.finishNode(node, 'LabelledStatement');
-    }
-
-    node.Expression = expression;
-    this.semicolon();
-    return this.finishNode(node, 'ExpressionStatement');
-  } // ImportDeclaration :
-  //   `import` ImportClause FromClause `;`
-  //   `import` ModuleSpecifier `;`
-
-
-  parseImportDeclaration() {
-    if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
-      // `import` `(`
-      // `import` `.`
-      return this.parseExpressionStatement();
-    }
-
-    const node = this.startNode();
-    this.next();
-
-    if (this.test(Token.STRING)) {
-      node.ModuleSpecifier = this.parsePrimaryExpression();
-    } else {
-      node.ImportClause = this.parseImportClause();
-      this.scope.declare(node.ImportClause, 'import');
-      node.FromClause = this.parseFromClause();
-    }
-
-    this.semicolon();
-    return this.finishNode(node, 'ImportDeclaration');
-  } // ImportClause :
-  //   ImportedDefaultBinding
-  //   NameSpaceImport
-  //   NamedImports
-  //   ImportedDefaultBinding `,` NameSpaceImport
-  //   ImportedDefaultBinding `,` NamedImports
-  //
-  // ImportedBinding :
-  //   BindingIdentifier
-
-
-  parseImportClause() {
-    const node = this.startNode();
-
-    if (this.test(Token.IDENTIFIER)) {
-      node.ImportedDefaultBinding = this.parseImportedDefaultBinding();
-
-      if (!this.eat(Token.COMMA)) {
-        return this.finishNode(node, 'ImportClause');
-      }
-    }
-
-    if (this.test(Token.MUL)) {
-      node.NameSpaceImport = this.parseNameSpaceImport();
-    } else if (this.eat(Token.LBRACE)) {
-      node.NamedImports = this.parseNamedImports();
-    } else {
-      this.unexpected();
-    }
-
-    return this.finishNode(node, 'ImportClause');
-  } // ImportedDefaultBinding :
-  //   ImportedBinding
-
-
-  parseImportedDefaultBinding() {
-    const node = this.startNode();
-    node.ImportedBinding = this.parseBindingIdentifier();
-    return this.finishNode(node, 'ImportedDefaultBinding');
-  } // NameSpaceImport :
-  //   `*` `as` ImportedBinding
-
-
-  parseNameSpaceImport() {
-    const node = this.startNode();
-    this.expect(Token.MUL);
-    this.expect('as');
-    node.ImportedBinding = this.parseBindingIdentifier();
-    return this.finishNode(node, 'NameSpaceImport');
-  } // NamedImports :
-  //   `{` `}`
-  //   `{` ImportsList `}`
-  //   `{` ImportsList `,` `}`
-
-
-  parseNamedImports() {
-    const node = this.startNode();
-    node.ImportsList = [];
-
-    while (!this.eat(Token.RBRACE)) {
-      node.ImportsList.push(this.parseImportSpecifier());
-
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-    }
-
-    return this.finishNode(node, 'NamedImports');
-  } // ImportSpecifier :
-  //   ImportedBinding
-  //   IdentifierName `as` ImportedBinding
-
-
-  parseImportSpecifier() {
-    const node = this.startNode();
-    const name = this.parseIdentifierName();
-
-    if (this.eat('as')) {
-      node.IdentifierName = name;
-      node.ImportedBinding = this.parseBindingIdentifier();
-    } else {
-      node.ImportedBinding = name;
-      node.ImportedBinding.type = 'BindingIdentifier';
-
-      if (isKeywordRaw(node.ImportedBinding.name)) {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-      }
-
-      if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-      }
-    }
-
-    return this.finishNode(node, 'ImportSpecifier');
-  } // ExportDeclaration :
-  //   `export` ExportFromClause FromClause `;`
-  //   `export` NamedExports `;`
-  //   `export` VariableStatement
-  //   `export` Declaration
-  //   `export` `default` HoistableDeclaration
-  //   `export` `default` ClassDeclaration
-  //   `export` `default` AssignmentExpression `;`
-  //
-  // ExportFromClause :
-  //   `*`
-  //   `*` as IdentifierName
-  //   NamedExports
-
-
-  parseExportDeclaration() {
-    const node = this.startNode();
-    this.expect(Token.EXPORT);
-    node.default = this.eat(Token.DEFAULT);
-
-    if (node.default) {
-      switch (this.peek().type) {
-        case Token.FUNCTION:
-          node.HoistableDeclaration = this.scope.with({
-            default: true
-          }, () => this.parseFunctionDeclaration(FunctionKind.NORMAL));
-          break;
-
-        case Token.CLASS:
-          node.ClassDeclaration = this.scope.with({
-            default: true
-          }, () => this.parseClassDeclaration());
-          break;
-
-        default:
-          if (this.test('async')) {
-            node.HoistableDeclaration = this.scope.with({
-              default: true
-            }, () => this.parseFunctionDeclaration(FunctionKind.ASYNC));
-          } else {
-            node.AssignmentExpression = this.parseAssignmentExpression();
-            this.semicolon();
-          }
-
-          break;
-      }
-
-      if (this.scope.exports.has('default')) {
-        this.raiseEarly('AlreadyDeclared', node);
-      } else {
-        this.scope.exports.add('default');
-      }
-    } else {
-      switch (this.peek().type) {
-        case Token.CONST:
-          node.Declaration = this.parseLexicalDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-
-        case Token.CLASS:
-          node.Declaration = this.parseClassDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-
-        case Token.FUNCTION:
-          node.Declaration = this.parseHoistableDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-
-        case Token.VAR:
-          node.VariableStatement = this.parseVariableStatement();
-          this.scope.declare(node.VariableStatement, 'export');
-          break;
-
-        case Token.LBRACE:
-          {
-            const NamedExports = this.parseNamedExports();
-
-            if (this.test('from')) {
-              node.ExportFromClause = NamedExports;
-              node.FromClause = this.parseFromClause();
-            } else {
-              node.NamedExports = NamedExports;
-              this.scope.checkUndefinedExports(node.NamedExports);
-            }
-
-            this.semicolon();
-            break;
-          }
-
-        case Token.MUL:
-          {
-            const inner = this.startNode();
-            this.next();
-
-            if (this.eat('as')) {
-              inner.IdentifierName = this.parseIdentifierName();
-              this.scope.declare(inner.IdentifierName, 'export');
-            }
-
-            node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
-            node.FromClause = this.parseFromClause();
-            this.semicolon();
-            break;
-          }
-
-        default:
-          if (this.test('let')) {
-            node.Declaration = this.parseLexicalDeclaration();
-            this.scope.declare(node.Declaration, 'export');
-          } else if (this.eat('async')) {
-            node.Declaration = this.parseHoistableDeclaration();
-            this.scope.declare(node.Declaration, 'export');
-          } else {
-            this.unexpected();
-          }
-
-      }
-    }
-
-    return this.finishNode(node, 'ExportDeclaration');
-  } // NamedExports :
-  //   `{` `}`
-  //   `{` ExportsList `}`
-  //   `{` ExportsList `,` `}`
-
-
-  parseNamedExports() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-    node.ExportsList = [];
-
-    while (!this.eat(Token.RBRACE)) {
-      node.ExportsList.push(this.parseExportSpecifier());
-
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-
-      this.expect(Token.COMMA);
-    }
-
-    return this.finishNode(node, 'NamedExports');
-  } // ExportSpecifier :
-  //   IdentifierName
-  //   IdentifierName `as` IdentifierName
-
-
-  parseExportSpecifier() {
-    const node = this.startNode();
-    const name = this.parseIdentifierName();
-
-    if (this.eat('as')) {
-      node.IdentifierName_a = name;
-      node.IdentifierName_b = this.parseIdentifierName();
-      this.scope.declare(node.IdentifierName_b, 'export');
-    } else {
-      node.IdentifierName = name;
-      this.scope.declare(name, 'export');
-    }
-
-    return this.finishNode(node, 'ExportSpecifier');
-  } // FromClause :
-  //   `from` ModuleSpecifier
-
-
-  parseFromClause() {
-    this.expect('from');
-    return this.parseStringLiteral();
-  }
-
-}
-
-class LanguageParser extends StatementParser {
-  // Script : ScriptBody?
-  parseScript() {
-    if (this.feature('hashbang')) {
-      this.skipHashbangComment();
-    }
-
-    const node = this.startNode();
-
-    if (this.eat(Token.EOS)) {
-      node.ScriptBody = null;
-    } else {
-      node.ScriptBody = this.parseScriptBody();
-    }
-
-    return this.finishNode(node, 'Script');
-  } // ScriptBody : StatementList
-
-
-  parseScriptBody() {
-    const node = this.startNode();
-    this.scope.with({
-      in: true,
-      lexical: true,
-      variable: true,
-      variableFunctions: true
-    }, () => {
-      const directives = [];
-      node.StatementList = this.parseStatementList(Token.EOS, directives);
-      node.strict = directives.includes('use strict');
-    });
-    return this.finishNode(node, 'ScriptBody');
-  } // Module : ModuleBody?
-
-
-  parseModule() {
-    if (this.feature('hashbang')) {
-      this.skipHashbangComment();
-    }
-
-    return this.scope.with({
-      module: true,
-      strict: true,
-      in: true,
-      importMeta: true,
-      await: this.feature('TopLevelAwait'),
-      lexical: true,
-      variable: true
-    }, () => {
-      const node = this.startNode();
-
-      if (this.eat(Token.EOS)) {
-        node.ModuleBody = null;
-      } else {
-        node.ModuleBody = this.parseModuleBody();
-      }
-
-      this.scope.undefinedExports.forEach((importNode, name) => {
-        this.raiseEarly('ModuleUndefinedExport', importNode, name);
-      });
-      node.hasTopLevelAwait = this.state.hasTopLevelAwait;
-      return this.finishNode(node, 'Module');
-    });
-  } // ModuleBody :
-  //   ModuleItemList
-
-
-  parseModuleBody() {
-    const node = this.startNode();
-    node.ModuleItemList = this.parseModuleItemList();
-    return this.finishNode(node, 'ModuleBody');
-  } // ModuleItemList :
-  //   ModuleItem
-  //   ModuleItemList ModuleItem
-  //
-  // ModuleItem :
-  //   ImportDeclaration
-  //   ExportDeclaration
-  //   StatementListItem
-
-
-  parseModuleItemList() {
-    const moduleItemList = [];
-
-    while (!this.eat(Token.EOS)) {
-      switch (this.peek().type) {
-        case Token.IMPORT:
-          moduleItemList.push(this.parseImportDeclaration());
-          break;
-
-        case Token.EXPORT:
-          moduleItemList.push(this.parseExportDeclaration());
-          break;
-
-        default:
-          moduleItemList.push(this.parseStatementListItem());
-          break;
-      }
-    }
-
-    return moduleItemList;
-  }
-
-}
-
-class Parser extends LanguageParser {
-  constructor(source) {
-    super(source);
-    this.source = source;
-    this.earlyErrors = [];
-    this.state = {
-      hasTopLevelAwait: false,
-      strict: false
-    };
-    this.scope = new Scope(this);
-  }
-
-  isStrictMode() {
-    return this.state.strict;
-  }
-
-  feature(name) {
-    return surroundingAgent.feature(name);
-  }
-
-  startNode() {
-    this.peek();
-    const node = {
-      type: undefined,
-      location: {
-        startIndex: this.peekToken.startIndex,
-        endIndex: -1,
-        start: {
-          line: this.peekToken.line,
-          column: this.peekToken.column
-        },
-        end: {
-          line: -1,
-          column: -1
-        }
-      },
-      strict: this.state.strict,
-      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex)
-    };
-    return node;
-  }
-
-  finishNode(node, type) {
-    node.type = type;
-    node.location.endIndex = this.currentToken.endIndex;
-    node.location.end.line = this.currentToken.line;
-    node.location.end.column = this.currentToken.column;
-    return node;
-  }
-
-  createSyntaxError(context = this.peek(), template, templateArgs) {
-    if (template === 'UnexpectedToken') {
-      switch (context.type) {
-        case Token.AWAIT:
-          template = 'AwaitNotInAsyncFunction';
-          break;
-
-        case Token.YIELD:
-          template = 'YieldNotInGenerator';
-          break;
-
-        case Token.IDENTIFIER:
-          if (context.value === 'await') {
-            template = 'AwaitNotInAsyncFunction';
-          } else if (context.value === 'yield') {
-            template = 'YieldNotInGenerator';
-          }
-
-          break;
-
-        case Token.EOS:
-          template = 'UnexpectedEOS';
-          break;
-      }
-    }
-
-    let startIndex;
-    let endIndex;
-
-    if (typeof context === 'number') {
-      startIndex = context;
-      endIndex = context;
-    } else {
-      if (context.location) {
-        context = context.location;
-      }
-
-      startIndex = context.startIndex;
-      endIndex = context.endIndex;
-    }
-
-    startIndex = Math.min(this.source.length - 1, startIndex);
-    endIndex = Math.min(this.source.length - 1, endIndex);
-    let lineStart = this.source.lastIndexOf('\n', startIndex - 1);
-
-    if (lineStart === -1) {
-      lineStart = 0;
-    }
-
-    let lineEnd = this.source.indexOf('\n', endIndex);
-
-    if (lineEnd === -1) {
-      lineEnd = this.source.length - 1;
-    }
-
-    const e = new SyntaxError(messages[template](...templateArgs));
-    e.decoration = `${this.source.slice(lineStart, lineEnd)}
-${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
-    return e;
-  }
-
-  raiseEarly(template, context, ...templateArgs) {
-    this.earlyErrors.push(this.createSyntaxError(context, template, templateArgs));
-  }
-
-  raise(template, context, ...templateArgs) {
-    const e = this.createSyntaxError(context, template, templateArgs);
-    throw e;
-  }
-
-  unexpected(...args) {
-    return this.raise('UnexpectedToken', ...args);
-  }
-
-}
-
-function handleError(e) {
-  if (e.name === 'SyntaxError') {
-    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
-
-    if (e.decoration) {
-      const stackString = new Value('stack');
-
-      let _temp = Get(v, stackString);
-
-      Assert(!(_temp instanceof AbruptCompletion), "Get(v, stackString)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const stack = _temp.stringValue();
-
-      const newStackString = `${e.decoration}\n${stack}`;
-
-      let _temp2 = Set$1(v, stackString, new Value(newStackString), Value.true);
-
-      Assert(!(_temp2 instanceof AbruptCompletion), "Set(v, stackString, new Value(newStackString), Value.true)" + ' returned an abrupt completion');
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-    }
-
-    return v;
-  } else {
-    throw e;
-  }
-}
-
-function wrappedParse(sourceText, f) {
-  const p = new Parser(sourceText);
-
-  try {
-    const r = f(p);
-
-    if (p.earlyErrors.length > 0) {
-      return p.earlyErrors.map(e => handleError(e));
-    }
-
-    return r;
-  } catch (e) {
-    return [handleError(e)];
-  }
-}
-function ParseScript(sourceText, realm, hostDefined = {}) {
-  // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
-  // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
-  //    any Early Error conditions. If the parse was successful and no early errors were found,
-  //    let body be the resulting parse tree. Otherwise, let body be a List of one or more
-  //    SyntaxError objects representing the parsing errors and/or early errors. Parsing and
-  //    early error detection may be interweaved in an implementation-dependent manner. If more
-  //    than one parsing error or early error is present, the number and ordering of error
-  //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse(sourceText, p => p.parseScript()); // 3. If body is a List of errors, return body.
-
-  if (Array.isArray(body)) {
-    return body;
-  } // 4. Return Script Record { [[Realm]]: realm, [[Environment]]: undefined, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-
-
-  return {
-    Realm: realm,
-    Environment: Value.undefined,
-    ECMAScriptCode: body,
-    HostDefined: hostDefined,
-
-    mark(m) {
-      m(this.Realm);
-      m(this.Environment);
-    }
-
-  };
-}
-function ParseModule(sourceText, realm, hostDefined = {}) {
-  // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
-  // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
-  //    any Early Error conditions. If the parse was successful and no early errors were found,
-  //    let body be the resulting parse tree. Otherwise, let body be a List of one or more
-  //    SyntaxError objects representing the parsing errors and/or early errors. Parsing and
-  //    early error detection may be interweaved in an implementation-dependent manner. If more
-  //    than one parsing error or early error is present, the number and ordering of error
-  //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse(sourceText, p => p.parseModule()); // 3. If body is a List of errors, return body.
-
-  if (Array.isArray(body)) {
-    return body;
-  } // 4. Let requestedModules be the ModuleRequests of body.
-
-
-  const requestedModules = ModuleRequests(body); // 5. Let importEntries be ImportEntries of body.
-
-  const importEntries = ImportEntries(body); // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
-
-  const importedBoundNames = new ValueSet(ImportedLocalNames(importEntries)); // 7. Let indirectExportEntries be a new empty List.
-
-  const indirectExportEntries = []; // 8. Let localExportEntries be a new empty List.
-
-  const localExportEntries = []; // 9. Let starExportEntries be a new empty List.
-
-  const starExportEntries = []; // 10. Let exportEntries be ExportEntries of body.
-
-  const exportEntries = ExportEntries(body); // 11. For each ExportEntry Record ee in exportEntries, do
-
-  for (const ee of exportEntries) {
-    // a. If ee.[[ModuleRequest]] is null, then
-    if (ee.ModuleRequest === Value.null) {
-      // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
-      if (!importedBoundNames.has(ee.LocalName)) {
-        // 1. Append ee to localExportEntries.
-        localExportEntries.push(ee);
-      } else {
-        // ii. Else,
-        // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-        const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is "*", then
-
-        if (ie.ImportName.stringValue() === '*') {
-          // a. NOTE: This is a re-export of an imported module namespace object.
-          // b. Append ee to localExportEntries.
-          localExportEntries.push(ee);
-        } else {
-          // 3. Else,
-          // a. NOTE: This is a re-export of a single name.
-          // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
-          indirectExportEntries.push({
-            ModuleRequest: ie.ModuleRequest,
-            ImportName: ie.ImportName,
-            LocalName: Value.null,
-            ExportName: ee.ExportName
-          });
-        }
-      }
-    } else if (ee.ImportName && ee.ImportName.stringValue() === '*' && ee.ExportName === Value.null) {
-      // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
-      // i. Append ee to starExportEntries.
-      starExportEntries.push(ee);
-    } else {
-      // c. Else,
-      // i. Append ee to indirectExportEntries.
-      indirectExportEntries.push(ee);
-    }
-  } // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-
-
-  return new SourceTextModuleRecord({
-    Realm: realm,
-    Environment: Value.undefined,
-    Namespace: Value.undefined,
-    Status: 'unlinked',
-    EvaluationError: Value.undefined,
-    HostDefined: hostDefined,
-    ECMAScriptCode: body,
-    Context: undefined,
-    ImportMeta: undefined,
-    RequestedModules: requestedModules,
-    ImportEntries: importEntries,
-    LocalExportEntries: localExportEntries,
-    IndirectExportEntries: indirectExportEntries,
-    StarExportEntries: starExportEntries,
-    DFSIndex: Value.undefined,
-    DFSAncestorIndex: Value.undefined,
-    Async: body.hasTopLevelAwait ? Value.true : Value.false,
-    AsyncEvaluating: Value.false,
-    TopLevelCapability: Value.undefined,
-    AsyncParentModules: Value.undefined,
-    PendingAsyncDependencies: Value.undefined
-  });
-} // #sec-parsepattern
-
-function ParsePattern(patternText, u) {
-  try {
-    const p = new RegExpParser(patternText, u);
-    return p.parsePattern();
-  } catch (e) {
-    return [handleError(e)];
-  }
-}
-
-function TV(s) {
-  let buffer = '';
-
-  for (let i = 0; i < s.length; i += 1) {
-    if (s[i] === '\\') {
-      i += 1;
-
-      switch (s[i]) {
-        case '\\':
-          buffer += '\\';
-          break;
-
-        case '`':
-          buffer += '`';
-          break;
-
-        case '\'':
-          buffer += '\'';
-          break;
-
-        case '"':
-          buffer += '"';
-          break;
-
-        case 'b':
-          buffer += '\b';
-          break;
-
-        case 'f':
-          buffer += '\f';
-          break;
-
-        case 'n':
-          buffer += '\n';
-          break;
-
-        case 'r':
-          buffer += '\r';
-          break;
-
-        case 't':
-          buffer += '\t';
-          break;
-
-        case 'v':
-          buffer += '\v';
-          break;
-
-        case 'x':
-          i += 1;
-
-          if (isHexDigit(s[i]) && isHexDigit(s[i + 1])) {
-            const n = Number.parseInt(s.slice(i, i + 2), 16);
-            i += 2;
-            buffer += String.fromCharCode(n);
-          } else {
-            return undefined;
-          }
-
-          break;
-
-        case 'u':
-          i += 1;
-
-          if (s[i] === '{') {
-            i += 1;
-            const start = i;
-
-            do {
-              i += 1;
-            } while (isHexDigit(s[i]));
-
-            if (s[i] !== '}') {
-              return undefined;
-            }
-
-            const n = Number.parseInt(s.slice(start, i), 16);
-
-            if (n > 0x10FFFF) {
-              return undefined;
-            }
-
-            buffer += String.fromCodePoint(n);
-          } else if (isHexDigit(s[i]) && isHexDigit(s[i + 1]) && isHexDigit(s[i + 2]) && isHexDigit(s[i + 3])) {
-            const n = Number.parseInt(s.slice(i, i + 4), 16);
-            i += 3;
-            buffer += String.fromCodePoint(n);
-          } else {
-            return undefined;
-          }
-
-          break;
-
-        case '0':
-          if (isDecimalDigit(s[i + 1])) {
-            return undefined;
-          }
-
-          return '\u{0000}';
-
-        default:
-          if (isLineTerminator(s)) {
-            return '';
-          }
-
-          return undefined;
-      }
-    } else {
-      buffer += s[i];
-    }
-  }
-
-  return buffer;
-}
-function TemplateStrings(node, raw) {
-  if (raw) {
-    return node.TemplateSpanList.map(Value);
-  }
-
-  return node.TemplateSpanList.map(v => {
-    const tv = TV(v);
-
-    if (tv === undefined) {
-      return Value.undefined;
-    }
-
-    return new Value(tv);
-  });
-}
-
-function ImportEntriesForModule(node, module) {
-  switch (node.type) {
-    case 'ImportClause':
-      switch (true) {
-        case !!node.ImportedDefaultBinding && !!node.NameSpaceImport:
-          {
-            // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
-            const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module); // 2. Append to entries the elements of the ImportEntriesForModule of NameSpaceImport with argument module.
-
-            entries.push(...ImportEntriesForModule(node.NameSpaceImport, module)); // 3. Return entries.
-
-            return entries;
-          }
-
-        case !!node.ImportedDefaultBinding && !!node.NamedImports:
-          {
-            // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
-            const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module); // 2. Append to entries the elements of the ImportEntriesForModule of NamedImports with argument module.
-
-            entries.push(...ImportEntriesForModule(node.NamedImports, module)); // 3. Return entries.
-
-            return entries;
-          }
-
-        case !!node.ImportedDefaultBinding:
-          return ImportEntriesForModule(node.ImportedDefaultBinding, module);
-
-        case !!node.NameSpaceImport:
-          return ImportEntriesForModule(node.NameSpaceImport, module);
-
-        case !!node.NamedImports:
-          return ImportEntriesForModule(node.NamedImports, module);
-
-        /*istanbul ignore next*/
-        default:
-          throw new OutOfRange('ImportEntriesForModule', node);
-      }
-
-    case 'ImportedDefaultBinding':
-      {
-        // 1. Let localName be the sole element of BoundNames of ImportedBinding.
-        const localName = BoundNames(node.ImportedBinding)[0]; // 2. Let defaultEntry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "default", [[LocalName]]: localName }.
-
-        const defaultEntry = {
-          ModuleRequest: module,
-          ImportName: new Value('default'),
-          LocalName: localName
-        }; // 3. Return a new List containing defaultEntry.
-
-        return [defaultEntry];
-      }
-
-    case 'NameSpaceImport':
-      {
-        // 1. Let localName be the StringValue of ImportedBinding.
-        const localName = StringValue(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: localName }.
-
-        const entry = {
-          ModuleRequest: module,
-          ImportName: new Value('*'),
-          LocalName: localName
-        }; // 3. Return a new List containing entry.
-
-        return [entry];
-      }
-
-    case 'NamedImports':
-      {
-        const specs = [];
-        node.ImportsList.forEach(n => {
-          specs.push(...ImportEntriesForModule(n, module));
-        });
-        return specs;
-      }
-
-    case 'ImportSpecifier':
-      if (node.IdentifierName) {
-        // 1. Let importName be the StringValue of IdentifierName.
-        const importName = StringValue(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
-
-        const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
-
-        const entry = {
-          ModuleRequest: module,
-          ImportName: importName,
-          LocalName: localName
-        }; // 4. Return a new List containing entry.
-
-        return [entry];
-      } else {
-        // 1. Let localName be the sole element of BoundNames of ImportedBinding.
-        const localName = BoundNames(node.ImportedBinding)[0]; // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: localName, [[LocalName]]: localName }.
-
-        const entry = {
-          ModuleRequest: module,
-          ImportName: localName,
-          LocalName: localName
-        }; // 3. Return a new List containing entry.
-
-        return [entry];
-      }
-
-    /*istanbul ignore next*/
-    default:
-      throw new OutOfRange('ImportEntriesForModule', node);
-  }
-}
-
-function ExportEntriesForModule(node, module) {
-  if (Array.isArray(node)) {
-    const specs = [];
-    node.forEach(n => {
-      specs.push(...ExportEntriesForModule(n, module));
-    });
-    return specs;
-  }
-
-  switch (node.type) {
-    case 'ExportFromClause':
-      if (node.IdentifierName) {
-        // 1. Let exportName be the StringValue of IdentifierName.
-        const exportName = StringValue(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: exportName }.
-
-        const entry = {
-          ModuleRequest: module,
-          ImportName: new Value('*'),
-          LocalName: Value.null,
-          ExportName: exportName
-        }; // 3. Return a new List containing entry.
-
-        return [entry];
-      } else {
-        // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: null }.
-        const entry = {
-          ModuleRequest: module,
-          ImportName: new Value('*'),
-          LocalName: Value.null,
-          ExportName: Value.null
-        }; // 2. Return a new List containing entry.
-
-        return [entry];
-      }
-
-    case 'ExportSpecifier':
-      switch (true) {
-        case !!node.IdentifierName:
-          {
-            // 1. Let sourceName be the StringValue of IdentifierName.
-            const sourceName = StringValue(node.IdentifierName);
-            let localName;
-            let importName; // 2. If module is null, then
-
-            if (module === Value.null) {
-              // a. Let localName be sourceName.
-              localName = sourceName; // b. Let importName be null.
-
-              importName = Value.null;
-            } else {
-              // 3. Else,
-              // a. Let localName be null.
-              localName = Value.null; // b. Let importName be sourceName.
-
-              importName = sourceName;
-            } // 4. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: sourceName }.
-
-
-            return [{
-              ModuleRequest: module,
-              ImportName: importName,
-              LocalName: localName,
-              ExportName: sourceName
-            }];
-          }
-
-        case !!node.IdentifierName_a && !!node.IdentifierName_b:
-          {
-            // 1. Let sourceName be the StringValue of the first IdentifierName.
-            const sourceName = StringValue(node.IdentifierName_a); // 2. Let exportName be the StringValue of the second IdentifierName.
-
-            const exportName = StringValue(node.IdentifierName_b);
-            let localName;
-            let importName; // 3. If module is null, then
-
-            if (module === Value.null) {
-              localName = sourceName;
-              importName = Value.null;
-            } else {
-              // 4. Else,
-              localName = Value.null;
-              importName = sourceName;
-            } // 5. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: exportName }.
-
-
-            return [{
-              ModuleRequest: module,
-              ImportName: importName,
-              LocalName: localName,
-              ExportName: exportName
-            }];
-          }
-
-        /*istanbul ignore next*/
-        default:
-          throw new OutOfRange('ExportEntriesForModule', node);
-      }
-
-    case 'NamedExports':
-      return ExportEntriesForModule(node.ExportsList, module);
-
-    /*istanbul ignore next*/
-    default:
-      throw new OutOfRange('ExportEntriesForModule', node);
-  }
-}
-
-function CharacterValue(node) {
-  switch (node.type) {
-    case 'CharacterEscape':
-      if (node.ControlLetter) {
-        // 1. Let ch be the code point matched by ControlLetter.
-        const ch = node.ControlLetter; // 2. Let i be ch's code point value.
-
-        const i = ch.codePointAt(0); // 3. Return the remainder of dividing i by 32.
-
-        return String.fromCharCode(i % 32);
-      }
-
-      if (node.IdentityEscape) {
-        return node.IdentityEscape;
-      }
-
-      throw new OutOfRange('CharacterValue', node);
-
-    /*istanbul ignore next*/
-    default:
-      throw new OutOfRange('CharacterValue', node);
-  }
 }
 
 // IdentifierReference :
@@ -8508,13 +4734,26 @@ function refineLeftHandSideExpression(node, type) {
           AssignmentRestElement: undefined
         };
         node.ElementList.forEach(n => {
-          if (n.type === 'SpreadElement') {
-            refinement.AssignmentRestElement = {
-              type: 'AssignmentRestElement',
-              DestructuringAssignmentTarget: n.AssignmentExpression
-            };
-          } else {
-            refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
+          switch (n.type) {
+            case 'SpreadElement':
+              refinement.AssignmentRestElement = {
+                type: 'AssignmentRestElement',
+                DestructuringAssignmentTarget: n.AssignmentExpression
+              };
+              break;
+
+            case 'ArrayLiteral':
+            case 'ObjectLiteral':
+              refinement.AssignmentElementList.push({
+                type: 'AssignmentElement',
+                DestructuringAssignmentTarget: n,
+                Initializer: null
+              });
+              break;
+
+            default:
+              refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
+              break;
           }
         });
         return refinement;
@@ -8604,7 +4843,6 @@ function refineLeftHandSideExpression(node, type) {
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
-// https://tc39.es/proposal-logical-assignment/#sec-assignment-operators-runtime-semantics-evaluation
 //     LeftHandSideExpression `&&=` AssignmentExpression
 //     LeftHandSideExpression `||=` AssignmentExpression
 //     LeftHandSideExpression `??=` AssignmentExpression
@@ -8729,22 +4967,31 @@ function* Evaluate_AssignmentExpression({
 
     if (lbool === Value.false) {
       return lval;
-    } // 5. Let rref be the result of evaluating AssignmentExpression.
-
-
-    const rref = yield* Evaluate(AssignmentExpression); // 6. Let rval be ? GetValue(rref).
-
-    let _temp7 = GetValue(rref);
-
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
     }
 
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
+    let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
 
-    const rval = _temp7; // 7. Perform ? PutValue(lref, rval).
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else {
+      // 6. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+      let _temp7 = GetValue(rref);
+
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
+      }
+
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
+      }
+
+      rval = _temp7;
+    } // 7. Perform ? PutValue(lref, rval).
+
 
     let _temp8 = PutValue(lref, rval);
 
@@ -8785,22 +5032,31 @@ function* Evaluate_AssignmentExpression({
 
     if (lbool === Value.true) {
       return lval;
-    } // 5. Let rref be the result of evaluating AssignmentExpression.
-
-
-    const rref = yield* Evaluate(AssignmentExpression); // 6. Let rval be ? GetValue(rref).
-
-    let _temp11 = GetValue(rref);
-
-    if (_temp11 instanceof AbruptCompletion) {
-      return _temp11;
     }
 
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
+    let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
 
-    const rval = _temp11; // 7. Perform ? PutValue(lref, rval).
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else {
+      // 6. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+      let _temp11 = GetValue(rref);
+
+      if (_temp11 instanceof AbruptCompletion) {
+        return _temp11;
+      }
+
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
+
+      rval = _temp11;
+    } // 7. Perform ? PutValue(lref, rval).
+
 
     let _temp12 = PutValue(lref, rval);
 
@@ -8831,22 +5087,31 @@ function* Evaluate_AssignmentExpression({
 
     if (lval !== Value.undefined && lval !== Value.null) {
       return lval;
-    } // 4. Let rref be the result of evaluating AssignmentExpression.
-
-
-    const rref = yield* Evaluate(AssignmentExpression); // 5. Let rval be ? GetValue(rref).
-
-    let _temp14 = GetValue(rref);
-
-    if (_temp14 instanceof AbruptCompletion) {
-      return _temp14;
     }
 
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
+    let rval; // 4. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
 
-    const rval = _temp14; // 6. Perform ? PutValue(lref, rval).
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+      // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+    } else {
+      // 5. Else,
+      // a. Let rref be the result of evaluating AssignmentExpression.
+      const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+      let _temp14 = GetValue(rref);
+
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
+      }
+
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+
+      rval = _temp14;
+    } // 6. Perform ? PutValue(lref, rval).
+
 
     let _temp15 = PutValue(lref, rval);
 
@@ -10676,7 +6941,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   const simpleParameterList = IsSimpleParameterList(formals); // 8. Let hasParameterExpressions be ContainsExpression of formals.
 
-  const hasParameterExpressions = ContainsExpression(); // 9. Let varNames be the VarDeclaredNames of code.
+  const hasParameterExpressions = ContainsExpression(formals); // 9. Let varNames be the VarDeclaredNames of code.
 
   const varNames = VarDeclaredNames(code); // 10. Let varDeclarations be the VarScopedDeclarations of code.
 
@@ -10713,10 +6978,10 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (parameterNames.includes('arguments')) {
+  } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else {
+  } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
     if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
       // i. Set argumentsObjectNeeded to false.
@@ -10848,7 +7113,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
 
   let varEnv; // 27. If hasParameterExpressions is false, then
 
-  {
+  if (hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
     // b. Let instantiatedVarNames be a copy of the List parameterBindings.
     const instantiatedVarNames = new ValueSet(parameterBindings); // c. For each n in varNames, do
@@ -10873,6 +7138,50 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
 
 
     varEnv = env;
+  } else {
+    // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
+    //    in the formal parameter list do not have visibility of declarations in the function body.
+    // b. Let varEnv be NewDeclarativeEnvironment(env).
+    varEnv = NewDeclarativeEnvironment(env); // c. Set the VariableEnvironment of calleeContext to varEnv.
+
+    calleeContext.VariableEnvironment = varEnv; // d. Let instantiatedVarNames be a new empty List.
+
+    const instantiatedVarNames = new ValueSet(); // e. For each n in varNames, do
+
+    for (const n of varNames) {
+      // If n is not an element of instantiatedVarNames, then
+      if (!instantiatedVarNames.has(n)) {
+        // 1. Append n to instantiatedVarNames.
+        instantiatedVarNames.add(n); // 2. Perform ! varEnv.CreateMutableBinding(n, false).
+
+        let _temp8 = varEnv.CreateMutableBinding(n, Value.false);
+
+        Assert(!(_temp8 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
+
+        if (_temp8 instanceof Completion) {
+          _temp8 = _temp8.Value;
+        }
+        let initialValue; // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
+
+        if (!parameterBindings.has(n) || functionNames.has(n)) {
+          initialValue = Value.undefined;
+        } else {
+          let _temp9 = env.GetBindingValue(n, Value.false);
+
+          Assert(!(_temp9 instanceof AbruptCompletion), "env.GetBindingValue(n, Value.false)" + ' returned an abrupt completion');
+
+          if (_temp9 instanceof Completion) {
+            _temp9 = _temp9.Value;
+          }
+
+          // a. Let initialValue be ! env.GetBindingValue(n, false).
+          initialValue = _temp9;
+        } // 5. Call varEnv.InitializeBinding(n, initialValue).
+
+
+        varEnv.InitializeBinding(n, initialValue); // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
+      }
+    }
   } // 29. NOTE: Annex B.3.3.1 adds additional steps at this point.
 
 
@@ -11012,7 +7321,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
 
-  let _temp2 = ResolveBinding(bindingId, environment);
+  let _temp2 = ResolveBinding(bindingId, environment, BindingIdentifier.strict);
 
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
@@ -11110,7 +7419,7 @@ function* IteratorBindingInitialization_BindingRestElement({
   BindingPattern
 }, iteratorRecord, environment) {
   if (BindingIdentifier) {
-    let _temp4 = ResolveBinding(StringValue(BindingIdentifier), environment);
+    let _temp4 = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -15567,9 +11876,9 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // 2. Let lhsName be the sole element of BoundNames of lhs.
         const lhsName = BoundNames(lhs)[0]; // 3. Let lhsRef be ! ResolveBinding(lhsName).
 
-        let _temp33 = ResolveBinding(lhsName);
+        let _temp33 = ResolveBinding(lhsName, undefined, lhs.strict);
 
-        Assert(!(_temp33 instanceof AbruptCompletion), "ResolveBinding(lhsName)" + ' returned an abrupt completion');
+        Assert(!(_temp33 instanceof AbruptCompletion), "ResolveBinding(lhsName, undefined, lhs.strict)" + ' returned an abrupt completion');
 
         if (_temp33 instanceof Completion) {
           _temp33 = _temp33.Value;
@@ -17053,22 +13362,50 @@ class State {
     this.captures = captures;
   }
 
-} // https://tc39.es/proposal-regexp-match-indices/
-
-
-class Range {
-  constructor(startIndex, endIndex) {
-    this.startIndex = startIndex;
-    this.endIndex = endIndex;
-  }
-
 }
 
-let cachedWordCharacters; // #sec-pattern
+function isContinuation(v) {
+  return typeof v === 'function' && v.length === 1;
+}
+
+const SetOfAllCharacters = new Set();
+const SetOfAllCharactersExceptLineTerminator = new Set();
+const SetOfAllNotDigitCharacters = new Set();
+const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
+const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
+
+function ensureSets() {
+  if (SetOfAllCharacters.size > 0) {
+    return;
+  }
+
+  for (let i = 0; i < 0x10FFFF; i += 1) {
+    const c = String.fromCodePoint(i);
+    SetOfAllCharacters.add(c);
+    const lineTerminator = isLineTerminator(c);
+
+    if (!lineTerminator) {
+      SetOfAllCharactersExceptLineTerminator.add(c);
+
+      if (!isWhitespace(c)) {
+        SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
+      }
+    }
+
+    if (lineTerminator && isWhitespace(c)) {
+      SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
+    }
+
+    if (!isDecimalDigit(c)) {
+      SetOfAllNotDigitCharacters.add(c);
+    }
+  }
+} // #sec-pattern
 //   Pattern :: Disjunction
 
+
 function Evaluate_Pattern(Pattern, flags) {
-  // The descriptions below use the following variables:
+  ensureSets(); // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
   //     depending upon the kind of pattern involved. The notation Input[n] means the nth character
@@ -17082,6 +13419,7 @@ function Evaluate_Pattern(Pattern, flags) {
   //   * IgnoreCase is true if the RegExp object's [[OriginalFlags]] internal slot contains "i" and otherwise is false.
   //   * Multiline is true if the RegExp object's [[OriginalFlags]] internal slot contains "m" and otherwise is false.
   //   * Unicode is true if the RegExp object's [[OriginalFlags]] internal slot contains "u" and otherwise is false.
+
   let Input;
   let InputLength;
   const NcapturingParens = Pattern.capturingGroups.length;
@@ -17142,7 +13480,7 @@ function Evaluate_Pattern(Pattern, flags) {
 
 
       const cap = Array.from({
-        length: NcapturingParens
+        length: NcapturingParens + 1
       }, () => Value.undefined); // h. Let x be the State (listIndex, cap).
 
       const x = new State(listIndex, cap); // i. Call m(x, c) and return its result.
@@ -17163,10 +13501,10 @@ function Evaluate_Pattern(Pattern, flags) {
         return Evaluate_Term(node, ...args);
 
       case 'Assertion':
-        return Evaluate_Assertion(node);
+        return Evaluate_Assertion(node, ...args);
 
       case 'Quantifier':
-        return Evaluate_Quantifier(node);
+        return Evaluate_Quantifier(node, ...args);
 
       case 'Atom':
         return Evaluate_Atom(node, ...args);
@@ -17174,11 +13512,26 @@ function Evaluate_Pattern(Pattern, flags) {
       case 'AtomEscape':
         return Evaluate_AtomEscape(node, ...args);
 
-      case 'CharacterClass':
-        return Evaluate_CharacterClass(node);
-
       case 'CharacterEscape':
-        return Evaluate_CharacterEscape(node);
+        return Evaluate_CharacterEscape(node, ...args);
+
+      case 'DecimalEscape':
+        return Evaluate_DecimalEscape(node, ...args);
+
+      case 'CharacterClassEscape':
+        return Evaluate_CharacterClassEscape(node, ...args);
+
+      case 'UnicodePropertyValueExpression':
+        return Evaluate_UnicodePropertyValueExpression(node, ...args);
+
+      case 'CharacterClass':
+        return Evaluate_CharacterClass(node, ...args);
+
+      case 'ClassAtom':
+        return Evaluate_ClassAtom(node, ...args);
+
+      case 'ClassEscape':
+        return Evaluate_ClassEscape(node, ...args);
 
       /*istanbul ignore next*/
       default:
@@ -17191,61 +13544,58 @@ function Evaluate_Pattern(Pattern, flags) {
 
 
   function Evaluate_Disjunction({
-    AlternativeList
+    Alternative,
+    Disjunction
   }, direction) {
-    if (AlternativeList.length === 1) {
+    if (!Disjunction) {
       // 1. Evaluate Alternative with argument direction to obtain a Matcher m.
-      const m = Evaluate(AlternativeList[0], direction); // 2. Return m.
+      const m = Evaluate(Alternative, direction); // 2. Return m.
 
       return m;
     } // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
-    // 2. Evaluate Disjunction with argument direction to obtain a Matcher m2.
 
 
-    const mN = AlternativeList.map(Alternative => Evaluate(Alternative, direction)); // 3. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
+    const m1 = Evaluate(Alternative, direction); // 2. Evaluate Disjunction with argument direction to obtain a Matcher m2.
+
+    const m2 = Evaluate(Disjunction, direction); // 3. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
 
     return (x, c) => {
       // a. Assert: x is a State.
       Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-      Assert(typeof c === 'function', "typeof c === 'function'"); // c. Call m1(x, c) and let r be its result.
-      // d. If r is not failure, return r.
-      // e. Call m2(x, c) and return its result.
+      Assert(isContinuation(c), "isContinuation(c)"); // c. Call m1(x, c) and let r be its result.
 
-      for (const m of mN) {
-        const r = m(x, c);
+      const r = m1(x, c); // d. If r is not failure, return r.
 
-        if (r !== 'failure') {
-          return r;
-        }
-      }
+      if (r !== 'failure') {
+        return r;
+      } // e. Call m2(x, c) and return its result.
 
-      return 'failure';
+
+      return m2(x, c);
     };
   } // #sec-alternative
 
   function Evaluate_Alternative({
-    TermList
+    Alternative,
+    Term
   }, direction) {
-    if (TermList.length === 0) {
+    if (!Alternative && !Term) {
       // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
       return (x, c) => {
-        // a. Assert: x is a State.
-        Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
+        // 1. Assert: x is a State.
+        Assert(x instanceof State, "x instanceof State"); // 2. Assert: c is a Continuation.
 
-        Assert(typeof c === 'function', "typeof c === 'function'"); // c. Call c(x) and return its result.
+        Assert(isContinuation(c), "isContinuation(c)"); // 3. Call c(x) and return its result.
 
         return c(x);
       };
-    }
-
-    if (TermList.length === 1) {
-      return Evaluate(TermList[0], direction);
     } // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
-    // 2. Evaluate Term with argument direction to obtain a Matcher m2.
 
 
-    const mN = TermList.map(Term => Evaluate(Term, direction)); // 3. If direction is equal to +1, then
+    const m1 = Evaluate(Alternative, direction); // 2. Evaluate Term with argument direction to obtain a Matcher m2.
+
+    const m2 = Evaluate(Term, direction); // 3. If direction is equal to +1, then
 
     if (direction === +1) {
       // a. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
@@ -17253,16 +13603,17 @@ function Evaluate_Pattern(Pattern, flags) {
         // i. Assert: x is a State.
         Assert(x instanceof State, "x instanceof State"); // ii. Assert: c is a Continuation.
 
-        Assert(typeof c === 'function', "typeof c === 'function'"); // iii. Let d be a new Continuation with parameters (y) that captures c and m2 and performs the following steps when called:
+        Assert(isContinuation(c), "isContinuation(c)"); // iii. Let d be a new Continuation with parameters (y) that captures c and m2 and performs the following steps when called:
 
-        const d = mN.slice(1).reduceRight((cN, m2) => y => {
+        const d = y => {
           // 1. Assert: y is a State.
           Assert(y instanceof State, "y instanceof State"); // 2. Call m2(y, c) and return its result.
 
-          return m2(y, cN);
-        }, c); // iv. Call m1(x, d) and return its result.
+          return m2(y, c);
+        }; // iv. Call m1(x, d) and return its result.
 
-        return mN[0](x, d);
+
+        return m1(x, d);
       };
     } else {
       // 4. Else,
@@ -17273,16 +13624,17 @@ function Evaluate_Pattern(Pattern, flags) {
         // i. Assert: x is a State.
         Assert(x instanceof State, "x instanceof State"); // ii. Assert: c is a Continuation.
 
-        Assert(typeof c === 'function', "typeof c === 'function'"); // iii. Let d be a new Continuation with parameters (y) that captures c and m1 and performs the following steps when called:
+        Assert(isContinuation(c), "isContinuation(c)"); // iii. Let d be a new Continuation with parameters (y) that captures c and m1 and performs the following steps when called:
 
-        const d = mN.slice(0, -1).reduce((cN, m1) => y => {
+        const d = y => {
           // 1. Assert: y is a State.
           Assert(y instanceof State, "y instanceof State"); // 2. Call m1(y, c) and return its result.
 
-          return m1(y, cN);
-        }); // iv. Call m2(x, d) and return its result.
+          return m1(y, c);
+        }; // iv. Call m2(x, d) and return its result.
 
-        return mN[mN.length - 1](x, d);
+
+        return m2(x, d);
       };
     }
   } // #sec-term
@@ -17316,7 +13668,7 @@ function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-      Assert(typeof c === 'function', "typeof c === 'function'"); // c. Call RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) and return its result.
+      Assert(isContinuation(c), "isContinuation(c)"); // c. Call RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) and return its result.
 
       return RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount);
     };
@@ -17410,7 +13762,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-          Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let e be x's endIndex.
+          Assert(isContinuation(c), "isContinuation(c)"); // c. Let e be x's endIndex.
 
           const e = x.endIndex; // d. If e is zero, or if Multiline is true and the character Input[e - 1] is one of LineTerminator, then
 
@@ -17429,7 +13781,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-          Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let e be x's endIndex.
+          Assert(isContinuation(c), "isContinuation(c)"); // c. Let e be x's endIndex.
 
           const e = x.endIndex; // d. If e is equal to InputLength, or if Multiline is true and the character Input[e] is one of LineTerminator, then
 
@@ -17448,7 +13800,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-          Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let e be x's endIndex.
+          Assert(isContinuation(c), "isContinuation(c)"); // c. Let e be x's endIndex.
 
           const e = x.endIndex; // d. Call IsWordChar(e - 1) and let a be the Boolean result.
 
@@ -17471,7 +13823,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // a. Assert: x is a State.
           Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-          Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let e be x's endIndex.
+          Assert(isContinuation(c), "isContinuation(c)"); // c. Let e be x's endIndex.
 
           const e = x.endIndex; // d. Call IsWordChar(e - 1) and let a be the Boolean result.
 
@@ -17497,7 +13849,7 @@ function Evaluate_Pattern(Pattern, flags) {
             // a. Assert: x is a State.
             Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-            Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
+            Assert(isContinuation(c), "isContinuation(c)"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
 
             const d = y => {
               // i. Assert: y is a State.
@@ -17535,7 +13887,7 @@ function Evaluate_Pattern(Pattern, flags) {
             // a. Assert: x is a State.
             Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-            Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
+            Assert(isContinuation(c), "isContinuation(c)"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
 
             const d = y => {
               // i. Assert: y is a State.
@@ -17565,7 +13917,7 @@ function Evaluate_Pattern(Pattern, flags) {
             // a. Assert: x is a State.
             Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-            Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
+            Assert(isContinuation(c), "isContinuation(c)"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
 
             const d = y => {
               // i. Assert: y is a State.
@@ -17603,7 +13955,7 @@ function Evaluate_Pattern(Pattern, flags) {
             // a. Assert: x is a State.
             Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-            Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
+            Assert(isContinuation(c), "isContinuation(c)"); // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
 
             const d = y => {
               // i. Assert: y is a State.
@@ -17631,33 +13983,28 @@ function Evaluate_Pattern(Pattern, flags) {
   } // #sec-runtime-semantics-wordcharacters-abstract-operation
 
   function WordCharacters() {
-    if (cachedWordCharacters !== undefined) {
-      return cachedWordCharacters;
-    } // 1. Let A be a set of characters containing the sixty-three characters:
+    // 1. Let A be a set of characters containing the sixty-three characters:
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
     //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     //   0 1 2 3 4 5 6 7 8 9 _
+    const A = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_']); // 2. Let U be an empty set.
 
+    const U = new Set(); // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
 
-    const A = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_'];
-    cachedWordCharacters = A; // 2. Let U be an empty set.
-
-    const U = []; // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
-
-    for (let i = 0; i < 0x10FFF; i += 1) {
+    for (let i = 0; i < 0x10FFFF; i += 1) {
       const c = String.fromCodePoint(i);
 
-      if (A.includes(c)) {
+      if (A.has(c)) {
         continue;
       }
 
-      if (A.includes(Canonicalize(c))) {
-        U.push(c);
+      if (A.has(Canonicalize(c))) {
+        U.add(c);
       }
     } // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
 
 
-    Assert(Unicode && IgnoreCase || U.length === 0, "(Unicode && IgnoreCase) || U.length === 0"); // 5. Add the characters in set U to set A.
+    Assert(Unicode && IgnoreCase || U.size === 0, "(Unicode && IgnoreCase) || U.size === 0"); // 5. Add the characters in set U to set A.
     // Return A.
 
     return A;
@@ -17682,7 +14029,7 @@ function Evaluate_Pattern(Pattern, flags) {
 
     const wordChars = _temp2; // 4. If c is in wordChars, return true.
 
-    if (wordChars.includes(c)) {
+    if (wordChars.has(c)) {
       return true;
     } // 5. Return false.
 
@@ -17719,7 +14066,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // 1. Let ch be the character matched by PatternCharacter.
           const ch = Atom.PatternCharacter; // 2. Let A be a one-element CharSet containing the character ch.
 
-          const A = [ch]; // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+          const A = new Set([Canonicalize(ch)]); // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
 
           return CharacterSetMatcher(A, false, direction);
         }
@@ -17730,20 +14077,10 @@ function Evaluate_Pattern(Pattern, flags) {
 
           if (DotAll) {
             // a. Let A be the set of all characters.
-            A = {
-              includes(_c) {
-                return true;
-              }
-
-            };
+            A = SetOfAllCharacters;
           } else {
             // 2. Otherwise, let A be the set of all characters except LineTerminator.
-            A = {
-              includes(c) {
-                return !isLineTerminator(c);
-              }
-
-            };
+            A = SetOfAllCharactersExceptLineTerminator;
           } // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
 
 
@@ -17774,7 +14111,7 @@ function Evaluate_Pattern(Pattern, flags) {
             // a. Assert: x is a State.
             Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-            Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
+            Assert(isContinuation(c), "isContinuation(c)"); // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
 
             const d = y => {
               // i. Assert: y is a State.
@@ -17789,31 +14126,17 @@ function Evaluate_Pattern(Pattern, flags) {
 
               if (direction === +1) {
                 // 1. Assert: xe ≤ ye.
-                Assert(xe <= ye, "xe <= ye");
+                Assert(xe <= ye, "xe <= ye"); // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
 
-                if (surroundingAgent.feature('RegExpMatchIndices')) {
-                  // https://tc39.es/proposal-regexp-match-indices/#sec-atom
-                  // 2. Let r be the Range (xe, ye).
-                  s = new Range(xe, ye);
-                } else {
-                  // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
-                  s = Input.slice(xe, ye);
-                }
+                s = Input.slice(xe, ye);
               } else {
                 // vi. Else,
                 // 1. Assert: direction is equal to -1.
                 Assert(direction === -1, "direction === -1"); // 2. Assert: ye ≤ xe.
 
-                Assert(ye <= xe, "ye <= xe");
+                Assert(ye <= xe, "ye <= xe"); // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
 
-                if (surroundingAgent.feature('RegExpMatchIndices')) {
-                  // https://tc39.es/proposal-regexp-match-indices/#sec-atom
-                  // 3. Let r be the Range (ye, xe).
-                  s = new Range(ye, xe);
-                } else {
-                  // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
-                  s = Input.slice(ye, xe);
-                }
+                s = Input.slice(ye, xe);
               } // vii. Set cap[parenIndex + 1] to s.
 
 
@@ -17844,7 +14167,7 @@ function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-      Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let e be x's endIndex.
+      Assert(isContinuation(c), "isContinuation(c)"); // c. Let e be x's endIndex.
 
       const e = x.endIndex; // d. Let f be e + direction.
 
@@ -17863,7 +14186,7 @@ function Evaluate_Pattern(Pattern, flags) {
 
       if (invert === false) {
         // i. If there does not exist a member a of set A such that Canonicalize(a) is cc, return failure.
-        if (!A.includes(cc)) {
+        if (!A.has(cc)) {
           return 'failure';
         }
       } else {
@@ -17871,7 +14194,7 @@ function Evaluate_Pattern(Pattern, flags) {
         // i. Assert: invert is true.
         Assert(invert === true, "invert === true"); // ii. If there exists a member a of set A such that Canonicalize(a) is cc, return failure.
 
-        if (A.includes(cc)) {
+        if (A.has(cc)) {
           return 'failure';
         }
       } // k. Let cap be x's captures List.
@@ -17948,7 +14271,7 @@ function Evaluate_Pattern(Pattern, flags) {
           // 1. Evaluate CharacterEscape to obtain a character ch.
           const ch = Evaluate(AtomEscape.CharacterEscape); // 2. Let A be a one-element CharSet containing the character ch.
 
-          const A = [ch]; // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+          const A = new Set([Canonicalize(ch)]); // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
 
           return CharacterSetMatcher(A, false, direction);
         }
@@ -17961,14 +14284,16 @@ function Evaluate_Pattern(Pattern, flags) {
           return CharacterSetMatcher(A, false, direction);
         }
 
-      /*
-      case !!AtomEscape.GroupName: {
-        // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
-        // 2. Assert: A unique such GroupSpecifier is found.
-        // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
-        // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
-      }
-      */
+      case !!AtomEscape.GroupName:
+        {
+          // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
+          // 2. Assert: A unique such GroupSpecifier is found.
+          // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
+          const parenIndex = Pattern.groupSpecifiers.get(AtomEscape.GroupName);
+          Assert(parenIndex !== undefined, "parenIndex !== undefined"); // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
+
+          return BackreferenceMatcher(parenIndex + 1, direction);
+        }
 
       /*istanbul ignore next*/
       default:
@@ -17982,13 +14307,13 @@ function Evaluate_Pattern(Pattern, flags) {
       // a. Assert: x is a State.
       Assert(x instanceof State, "x instanceof State"); // b. Assert: c is a Continuation.
 
-      Assert(typeof c === 'function', "typeof c === 'function'"); // c. Let cap be x's captures List.
+      Assert(isContinuation(c), "isContinuation(c)"); // c. Let cap be x's captures List.
 
       const cap = x.captures; // d. Let s be cap[n].
 
       const s = cap[n]; // e. If s is undefined, return c(x).
 
-      if (s === undefined) {
+      if (s === Value.undefined) {
         return c(x);
       } // f. Let e be x's endIndex.
 
@@ -18024,19 +14349,161 @@ function Evaluate_Pattern(Pattern, flags) {
     const cv = CharacterValue(CharacterEscape); // 2. Return the character whose character value is cv.
 
     return cv;
+  } // #sec-decimalescape
+
+  function Evaluate_DecimalEscape(DecimalEscape) {
+    return DecimalEscape.value;
+  } // #sec-characterclassescape
+
+  function Evaluate_CharacterClassEscape(node) {
+    switch (node.value) {
+      case 'd':
+        // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
+        return new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+      case 'D':
+        // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
+        return SetOfAllNotDigitCharacters;
+
+      case 's':
+        // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
+        return SetOfCharactersOfWhitespaceOrLineTerminator;
+
+      case 'S':
+        // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
+        return SetOfCharactersOfNotWhitespaceOrLineTerminator;
+
+      case 'w':
+        // 1. Return the set of all characters returned by WordCharacters().
+        return WordCharacters();
+
+      case 'W':
+        {
+          // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
+          const set = WordCharacters();
+          const A = new Set();
+
+          for (let i = 0; i < 0x10FFFF; i += 1) {
+            const c = String.fromCodePoint(i);
+
+            if (!set.has(c)) {
+              A.add(c);
+            }
+          }
+
+          return A;
+        }
+
+      case 'p':
+        // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
+        return Evaluate(node.UnicodePropertyValueExpression);
+
+      case 'P':
+        {
+          // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
+          const set = Evaluate(node.UnicodePropertyValueExpression);
+          const A = new Set();
+
+          for (let i = 0; i < 0x10FFFF; i += 1) {
+            const c = String.fromCodePoint(i);
+
+            if (!set.has(c)) {
+              A.add(c);
+            }
+          }
+
+          return A;
+        }
+
+      /*istanbul ignore next*/
+      default:
+        throw new OutOfRange('Evaluate_CharacterClassEscape', node);
+    }
+  } // UnicodePropertyValueExpression ::
+
+  function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression) {
+    if (UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue) {
+      // 1. Let s be SourceText of LoneUnicodePropertyNameOrValue.
+      const s = UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue; // 2. If ! UnicodeMatchPropertyValue(General_Category, s) is identical to a List of Unicode code points that is the name of a Unicode general category or general category alias listed in the “Property value and aliases” column of Table 57, then
+
+      let _temp3 = (UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues);
+
+      Assert(!(_temp3 instanceof AbruptCompletion), "UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues" + ' returned an abrupt completion');
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      if (_temp3) {
+        // a. Return the CharSet containing all Unicode code points whose character database definition includes the property “General_Category” with value s.
+        return getUnicodePropertyValueSet();
+      } // 3. Let p be ! UnicodeMatchProperty(s).
+
+
+      let _temp4 = UnicodeMatchProperty(s);
+
+      Assert(!(_temp4 instanceof AbruptCompletion), "UnicodeMatchProperty(s)" + ' returned an abrupt completion');
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      const p = _temp4; // 4. Assert: p is a binary Unicode property or binary property alias listed in the “Property name and aliases” column of Table 56.
+
+      Assert(p in BinaryUnicodeProperties, "p in BinaryUnicodeProperties"); // 5. Return the CharSet containing all Unicode code points whose character database definition includes the property p with value “True”.
+
+      return getUnicodePropertyValueSet();
+    } // 1. Let ps be SourceText of UnicodePropertyName.
+
+
+    const ps = UnicodePropertyValueExpression.UnicodePropertyName; // 2. Let p be ! UnicodeMatchProperty(ps).
+
+    let _temp5 = UnicodeMatchProperty(ps);
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "UnicodeMatchProperty(ps)" + ' returned an abrupt completion');
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const p = _temp5; // 3. Assert: p is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55.
+
+    Assert(p in NonbinaryUnicodeProperties, "p in NonbinaryUnicodeProperties"); // 4. Let vs be SourceText of UnicodePropertyValue.
+
+    const vs = UnicodePropertyValueExpression.UnicodePropertyValue; // 5. Let v be ! UnicodeMatchPropertyValue(p, vs).
+
+    let _temp6 = UnicodeMatchPropertyValue(p, vs);
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "UnicodeMatchPropertyValue(p, vs)" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    return getUnicodePropertyValueSet();
   } // #sec-characterclass
+  //  CharacterClass ::
+  //    `[` ClassRanges `]`
+  //    `[` `^` ClassRanges `]`
+
 
   function Evaluate_CharacterClass({
     invert,
     ClassRanges
   }) {
-    const A = [];
+    const A = new Set();
 
     for (const range of ClassRanges) {
       if (Array.isArray(range)) {
-        A.push(...CharacterRange(range[0], range[1]));
+        const C = Evaluate(range[0]);
+        const D = Evaluate(range[1]);
+        CharacterRange(C, D).forEach(c => {
+          A.add(c);
+        });
       } else {
-        A.push(range);
+        Evaluate(range).forEach(c => {
+          A.add(c);
+        });
       }
     }
 
@@ -18048,10 +14515,11 @@ function Evaluate_Pattern(Pattern, flags) {
 
   function CharacterRange(A, B) {
     // 1. Assert: A and B each contain exactly one character.
-    // 2. Let a be the one character in CharSet A.
-    const a = A; // 3. Let b be the one character in CharSet B.
+    Assert(A.size === 1 && B.size === 1, "A.size === 1 && B.size === 1"); // 2. Let a be the one character in CharSet A.
 
-    const b = B; // 4. Let i be the character value of character a.
+    const a = A.values().next().value; // 3. Let b be the one character in CharSet B.
+
+    const b = B.values().next().value; // 4. Let i be the character value of character a.
 
     const i = a.codePointAt(0); // 5. Let j be the character value of character b.
 
@@ -18059,13 +14527,49 @@ function Evaluate_Pattern(Pattern, flags) {
 
     Assert(i <= j, "i <= j"); // 7. Return the set containing all characters numbered i through j, inclusive.
 
-    const set = [];
+    const set = new Set();
 
     for (let k = i; k <= j; k += 1) {
-      set.push(Canonicalize(String.fromCodePoint(k)));
+      set.add(Canonicalize(String.fromCodePoint(k)));
     }
 
     return set;
+  } // #sec-classatom
+
+  function Evaluate_ClassAtom(ClassAtom) {
+    switch (true) {
+      case !!ClassAtom.SourceCharacter:
+        // 1. Return the CharSet containing the character matched by SourceCharacter.
+        return new Set([Canonicalize(ClassAtom.SourceCharacter)]);
+
+      case ClassAtom.value === '-':
+        // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
+        return new Set(['-']);
+
+      /*istanbul ignore next*/
+      default:
+        throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
+    }
+  } // #sec-classescape
+
+  function Evaluate_ClassEscape(ClassEscape) {
+    switch (true) {
+      case ClassEscape.value === 'b':
+      case ClassEscape.value === '-':
+      case !!ClassEscape.CharacterEscape:
+        {
+          // 1. Let cv be the CharacterValue of this ClassEscape.
+          const cv = CharacterValue(ClassEscape); // 2. Let c be the character whose character value is cv.
+
+          const c = cv; // 3. Return the CharSet containing the single character c.
+
+          return new Set([Canonicalize(c)]);
+        }
+
+      /*istanbul ignore next*/
+      default:
+        throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
+    }
   }
 }
 
@@ -19277,7 +15781,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(node.BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
 
-    let _temp3 = ResolveBinding(bindingId, environment);
+    let _temp3 = ResolveBinding(bindingId, environment, node.BindingIdentifier.strict);
 
     if (_temp3 instanceof AbruptCompletion) {
       return _temp3;
@@ -19430,7 +15934,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       // 1. Let P be StringValue of IdentifierReference.
       const P = StringValue(AssignmentProperty.IdentifierReference); // 2. Let lref be ? ResolveBinding(P).
 
-      let _temp5 = ResolveBinding(P);
+      let _temp5 = ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict);
 
       if (_temp5 instanceof AbruptCompletion) {
         return _temp5;
@@ -19918,7 +16422,7 @@ function DestructuringAssignmentEvaluation(node, value) {
 function RestBindingInitialization({
   BindingIdentifier
 }, value, environment, excludedNames) {
-  let _temp = ResolveBinding(StringValue(BindingIdentifier), environment);
+  let _temp = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
   /* istanbul ignore if */
 
 
@@ -19953,6 +16457,5007 @@ function RestBindingInitialization({
 
 
   return InitializeReferencedBinding(lhs, restObj);
+}
+
+const NonbinaryUnicodeProperties = {
+  __proto__: null,
+  General_Category: 'General_Category',
+  gc: 'General_Category',
+  Script: 'Script',
+  sc: 'Script',
+  Script_Extensions: 'Script_Extensions',
+  scx: 'Script_Extensions'
+}; // #table-binary-unicode-properties
+
+const BinaryUnicodeProperties = {
+  __proto__: null,
+  ASCII: 'ASCII',
+  ASCII_Hex_Digit: 'ASCII_Hex_Digit',
+  AHex: 'ASCII_Hex_Digit',
+  Alphabetic: 'Alphabetic',
+  Alpha: 'Alphabetic',
+  Any: 'Any',
+  Assigned: 'Assigned',
+  Bidi_Control: 'Bidi_Control',
+  Bidi_C: 'Bidi_Control',
+  Bidi_Mirrored: 'Bidi_Mirrored',
+  Bidi_M: 'Bidi_Mirrored',
+  Case_Ignorable: 'Case_Ignorable',
+  CI: 'Case_Ignorable',
+  Cased: 'Cased',
+  Changes_When_Casefolded: 'Changes_When_Casefolded',
+  CWCF: 'Changes_When_Casefolded',
+  Changes_When_Casemapped: 'Changes_When_Casemapped',
+  CWCM: 'Changes_When_Casemapped',
+  Changes_When_Lowercased: 'Changes_When_Lowercased',
+  CWL: 'Changes_When_Lowercased',
+  Changes_When_NFKC_Casefolded: 'Changes_When_NFKC_Casefolded',
+  CWKCF: 'Changes_When_NFKC_Casefolded',
+  Changes_When_Titlecased: 'Changes_When_Titlecased',
+  CWT: 'Changes_When_Titlecased',
+  Changes_When_Uppercased: 'Changes_When_Uppercased',
+  CWU: 'Changes_When_Uppercased',
+  Dash: 'Dash',
+  Default_Ignorable_Code_Point: 'Default_Ignorable_Code_Point',
+  DI: 'Default_Ignorable_Code_Point',
+  Deprecated: 'Deprecated',
+  Dep: 'Deprecated',
+  Diacritic: 'Diacritic',
+  Dia: 'Diacritic',
+  Emoji: 'Emoji',
+  Emoji_Component: 'Emoji_Component',
+  EComp: 'Emoji_Component',
+  Emoji_Modifier: 'Emoji_Modifier',
+  EMod: 'Emoji_Modifier',
+  Emoji_Modifier_Base: 'Emoji_Modifier_Base',
+  EBase: 'Emoji_Modifier_Base',
+  Emoji_Presentation: 'Emoji_Presentation',
+  EPres: 'Emoji_Presentation',
+  Extended_Pictographic: 'Extended_Pictographic',
+  ExtPict: 'Extended_Pictographic',
+  Extender: 'Extender',
+  Ext: 'Extender',
+  Grapheme_Base: 'Grapheme_Base',
+  Gr_Base: 'Grapheme_Base',
+  Grapheme_Extend: 'Grapheme_Extend',
+  Gr_Ext: 'Grapheme_Extend',
+  Hex_Digit: 'Hex_Digit',
+  Hex: 'Hex_Digit',
+  IDS_Binary_Operator: 'IDS_Binary_Operator',
+  IDSB: 'IDS_Binary_Operator',
+  IDS_Trinary_Operator: 'IDS_Trinary_Operator',
+  IDST: 'IDS_Trinary_Operator',
+  ID_Continue: 'ID_Continue',
+  IDC: 'ID_Continue',
+  ID_Start: 'ID_Start',
+  IDS: 'ID_Start',
+  Ideographic: 'Ideographic',
+  Ideo: 'Ideographic',
+  Join_Control: 'Join_Control',
+  Join_C: 'Join_Control',
+  Logical_Order_Exception: 'Logical_Order_Exception',
+  LOE: 'Logical_Order_Exception',
+  Lowercase: 'Lowercase',
+  Lower: 'Lowercase',
+  Math: 'Math',
+  Noncharacter_Code_Point: 'Noncharacter_Code_Point',
+  NChar: 'Noncharacter_Code_Point',
+  Pattern_Syntax: 'Pattern_Syntax',
+  Pat_Syn: 'Pattern_Syntax',
+  Pattern_White_Space: 'Pattern_White_Space',
+  Pat_WS: 'Pattern_White_Space',
+  Quotation_Mark: 'Quotation_Mark',
+  QMark: 'Quotation_Mark',
+  Radical: 'Radical',
+  Regional_Indicator: 'Regional_Indicator',
+  RI: 'Regional_Indicator',
+  Sentence_Terminal: 'Sentence_Terminal',
+  STerm: 'Sentence_Terminal',
+  Soft_Dotted: 'Soft_Dotted',
+  SD: 'Soft_Dotted',
+  Terminal_Punctuation: 'Terminal_Punctuation',
+  Term: 'Terminal_Punctuation',
+  Unified_Ideograph: 'Unified_Ideograph',
+  UIdeo: 'Unified_Ideograph',
+  Uppercase: 'Uppercase',
+  Upper: 'Uppercase',
+  Variation_Selector: 'Variation_Selector',
+  VS: 'Variation_Selector',
+  White_Space: 'White_Space',
+  space: 'White_Space',
+  XID_Continue: 'XID_Continue',
+  XIDC: 'XID_Continue',
+  XID_Start: 'XID_Start',
+  XIDS: 'XID_Start'
+}; // #table-unicode-general-category-values
+
+const UnicodeGeneralCategoryValues = {
+  __proto__: null,
+  Cased_Letter: 'Cased_Letter',
+  LC: 'Cased_Letter',
+  Close_Punctuation: 'Close_Punctuation',
+  Pe: 'Close_Punctuation',
+  Connector_Punctuation: 'Connector_Punctuation',
+  Pc: 'Connector_Punctuation',
+  Control: 'Control',
+  Cc: 'Control',
+  cntrl: 'Control',
+  Currency_Symbol: 'Currency_Symbol',
+  Sc: 'Currency_Symbol',
+  Dash_Punctuation: 'Dash_Punctuation',
+  Pd: 'Dash_Punctuation',
+  Decimal_Number: 'Decimal_Number',
+  Nd: 'Decimal_Number',
+  digit: 'Decimal_Number',
+  Enclosing_Mark: 'Enclosing_Mark',
+  Me: 'Enclosing_Mark',
+  Final_Punctuation: 'Final_Punctuation',
+  Pf: 'Final_Punctuation',
+  Format: 'Format',
+  Cf: 'Format',
+  Initial_Punctuation: 'Initial_Punctuation',
+  Pi: 'Initial_Punctuation',
+  Letter: 'Letter',
+  L: 'Letter',
+  Letter_Number: 'Letter_Number',
+  Nl: 'Letter_Number',
+  Line_Separator: 'Line_Separator',
+  Zl: 'Line_Separator',
+  Lowercase_Letter: 'Lowercase_Letter',
+  Ll: 'Lowercase_Letter',
+  Mark: 'Mark',
+  M: 'Mark',
+  Combining_Mark: 'Mark',
+  Math_Symbol: 'Math_Symbol',
+  Sm: 'Math_Symbol',
+  Modifier_Letter: 'Modifier_Letter',
+  Lm: 'Modifier_Letter',
+  Modifier_Symbol: 'Modifier_Symbol',
+  Sk: 'Modifier_Symbol',
+  Nonspacing_Mark: 'Nonspacing_Mark',
+  Mn: 'Nonspacing_Mark',
+  Number: 'Number',
+  N: 'Number',
+  Open_Punctuation: 'Open_Punctuation',
+  Ps: 'Open_Punctuation',
+  Other: 'Other',
+  C: 'Other',
+  Other_Letter: 'Other_Letter',
+  Lo: 'Other_Letter',
+  Other_Number: 'Other_Number',
+  No: 'Other_Number',
+  Other_Punctuation: 'Other_Punctuation',
+  Po: 'Other_Punctuation',
+  Other_Symbol: 'Other_Symbol',
+  So: 'Other_Symbol',
+  Paragraph_Separator: 'Paragraph_Separator',
+  Zp: 'Paragraph_Separator',
+  Private_Use: 'Private_Use',
+  Co: 'Private_Use',
+  Punctuation: 'Punctuation',
+  P: 'Punctuation',
+  punct: 'Punctuation',
+  Separator: 'Separator',
+  Z: 'Separator',
+  Space_Separator: 'Space_Separator',
+  Zs: 'Space_Separator',
+  Spacing_Mark: 'Spacing_Mark',
+  Mc: 'Spacing_Mark',
+  Surrogate: 'Surrogate',
+  Cs: 'Surrogate',
+  Symbol: 'Symbol',
+  S: 'Symbol',
+  Titlecase_Letter: 'Titlecase_Letter',
+  Lt: 'Titlecase_Letter',
+  Unassigned: 'Unassigned',
+  Cn: 'Unassigned',
+  Uppercase_Letter: 'Uppercase_Letter',
+  Lu: 'Uppercase_Letter'
+}; // #table-unicode-script-values
+
+const UnicodeScriptValues = {
+  __proto__: null,
+  Adlam: 'Adlam',
+  Adlm: 'Adlam',
+  Ahom: 'Ahom',
+  Anatolian_Hieroglyphs: 'Anatolian_Hieroglyphs',
+  Hluw: 'Anatolian_Hieroglyphs',
+  Arabic: 'Arabic',
+  Arab: 'Arabic',
+  Armenian: 'Armenian',
+  Armn: 'Armenian',
+  Avestan: 'Avestan',
+  Avst: 'Avestan',
+  Balinese: 'Balinese',
+  Bali: 'Balinese',
+  Bamum: 'Bamum',
+  Bamu: 'Bamum',
+  Bassa_Vah: 'Bassa_Vah',
+  Bass: 'Bassa_Vah',
+  Batak: 'Batak',
+  Batk: 'Batak',
+  Bengali: 'Bengali',
+  Beng: 'Bengali',
+  Bhaiksuki: 'Bhaiksuki',
+  Bhks: 'Bhaiksuki',
+  Bopomofo: 'Bopomofo',
+  Bopo: 'Bopomofo',
+  Brahmi: 'Brahmi',
+  Brah: 'Brahmi',
+  Braille: 'Braille',
+  Brai: 'Braille',
+  Buginese: 'Buginese',
+  Bugi: 'Buginese',
+  Buhid: 'Buhid',
+  Buhd: 'Buhid',
+  Canadian_Aboriginal: 'Canadian_Aboriginal',
+  Cans: 'Canadian_Aboriginal',
+  Carian: 'Carian',
+  Cari: 'Carian',
+  Caucasian_Albanian: 'Caucasian_Albanian',
+  Aghb: 'Caucasian_Albanian',
+  Chakma: 'Chakma',
+  Cakm: 'Chakma',
+  Cham: 'Cham',
+  Chorasmian: 'Chorasmian',
+  Chrs: 'Chorasmian',
+  Cherokee: 'Cherokee',
+  Cher: 'Cherokee',
+  Common: 'Common',
+  Zyyy: 'Common',
+  Coptic: 'Coptic',
+  Copt: 'Coptic',
+  Qaac: 'Coptic',
+  Cuneiform: 'Cuneiform',
+  Xsux: 'Cuneiform',
+  Cypriot: 'Cypriot',
+  Cprt: 'Cypriot',
+  Cyrillic: 'Cyrillic',
+  Cyrl: 'Cyrillic',
+  Deseret: 'Deseret',
+  Dsrt: 'Deseret',
+  Devanagari: 'Devanagari',
+  Deva: 'Devanagari',
+  Dives_Akuru: 'Dives_Akuru',
+  Diak: 'Dives_Akuru',
+  Dogra: 'Dogra',
+  Dogr: 'Dogra',
+  Duployan: 'Duployan',
+  Dupl: 'Duployan',
+  Egyptian_Hieroglyphs: 'Egyptian_Hieroglyphs',
+  Egyp: 'Egyptian_Hieroglyphs',
+  Elbasan: 'Elbasan',
+  Elba: 'Elbasan',
+  Elymaic: 'Elymaic',
+  Elym: 'Elymaic',
+  Ethiopic: 'Ethiopic',
+  Ethi: 'Ethiopic',
+  Georgian: 'Georgian',
+  Geor: 'Georgian',
+  Glagolitic: 'Glagolitic',
+  Glag: 'Glagolitic',
+  Gothic: 'Gothic',
+  Goth: 'Gothic',
+  Grantha: 'Grantha',
+  Gran: 'Grantha',
+  Greek: 'Greek',
+  Grek: 'Greek',
+  Gujarati: 'Gujarati',
+  Gujr: 'Gujarati',
+  Gunjala_Gondi: 'Gunjala_Gondi',
+  Gong: 'Gunjala_Gondi',
+  Gurmukhi: 'Gurmukhi',
+  Guru: 'Gurmukhi',
+  Han: 'Han',
+  Hani: 'Han',
+  Hangul: 'Hangul',
+  Hang: 'Hangul',
+  Hanifi_Rohingya: 'Hanifi_Rohingya',
+  Rohg: 'Hanifi_Rohingya',
+  Hanunoo: 'Hanunoo',
+  Hano: 'Hanunoo',
+  Hatran: 'Hatran',
+  Hatr: 'Hatran',
+  Hebrew: 'Hebrew',
+  Hebr: 'Hebrew',
+  Hiragana: 'Hiragana',
+  Hira: 'Hiragana',
+  Imperial_Aramaic: 'Imperial_Aramaic',
+  Armi: 'Imperial_Aramaic',
+  Inherited: 'Inherited',
+  Zinh: 'Inherited',
+  Qaai: 'Inherited',
+  Inscriptional_Pahlavi: 'Inscriptional_Pahlavi',
+  Phli: 'Inscriptional_Pahlavi',
+  Inscriptional_Parthian: 'Inscriptional_Parthian',
+  Prti: 'Inscriptional_Parthian',
+  Javanese: 'Javanese',
+  Java: 'Javanese',
+  Kaithi: 'Kaithi',
+  Kthi: 'Kaithi',
+  Kannada: 'Kannada',
+  Knda: 'Kannada',
+  Katakana: 'Katakana',
+  Kana: 'Katakana',
+  Kayah_Li: 'Kayah_Li',
+  Kali: 'Kayah_Li',
+  Kharoshthi: 'Kharoshthi',
+  Khar: 'Kharoshthi',
+  Khitan_Small_Script: 'Khitan_Small_Script',
+  Kits: 'Khitan_Small_Script',
+  Khmer: 'Khmer',
+  Khmr: 'Khmer',
+  Khojki: 'Khojki',
+  Khoj: 'Khojki',
+  Khudawadi: 'Khudawadi',
+  Sind: 'Khudawadi',
+  Lao: 'Lao',
+  Laoo: 'Lao',
+  Latin: 'Latin',
+  Latn: 'Latin',
+  Lepcha: 'Lepcha',
+  Lepc: 'Lepcha',
+  Limbu: 'Limbu',
+  Limb: 'Limbu',
+  Linear_A: 'Linear_A',
+  Lina: 'Linear_A',
+  Linear_B: 'Linear_B',
+  Linb: 'Linear_B',
+  Lisu: 'Lisu',
+  Lycian: 'Lycian',
+  Lyci: 'Lycian',
+  Lydian: 'Lydian',
+  Lydi: 'Lydian',
+  Mahajani: 'Mahajani',
+  Mahj: 'Mahajani',
+  Makasar: 'Makasar',
+  Maka: 'Makasar',
+  Malayalam: 'Malayalam',
+  Mlym: 'Malayalam',
+  Mandaic: 'Mandaic',
+  Mand: 'Mandaic',
+  Manichaean: 'Manichaean',
+  Mani: 'Manichaean',
+  Marchen: 'Marchen',
+  Marc: 'Marchen',
+  Medefaidrin: 'Medefaidrin',
+  Medf: 'Medefaidrin',
+  Masaram_Gondi: 'Masaram_Gondi',
+  Gonm: 'Masaram_Gondi',
+  Meetei_Mayek: 'Meetei_Mayek',
+  Mtei: 'Meetei_Mayek',
+  Mende_Kikakui: 'Mende_Kikakui',
+  Mend: 'Mende_Kikakui',
+  Meroitic_Cursive: 'Meroitic_Cursive',
+  Merc: 'Meroitic_Cursive',
+  Meroitic_Hieroglyphs: 'Meroitic_Hieroglyphs',
+  Mero: 'Meroitic_Hieroglyphs',
+  Miao: 'Miao',
+  Plrd: 'Miao',
+  Modi: 'Modi',
+  Mongolian: 'Mongolian',
+  Mong: 'Mongolian',
+  Mro: 'Mro',
+  Mroo: 'Mro',
+  Multani: 'Multani',
+  Mult: 'Multani',
+  Myanmar: 'Myanmar',
+  Mymr: 'Myanmar',
+  Nabataean: 'Nabataean',
+  Nbat: 'Nabataean',
+  Nandinagari: 'Nandinagari',
+  Nand: 'Nandinagari',
+  New_Tai_Lue: 'New_Tai_Lue',
+  Talu: 'New_Tai_Lue',
+  Newa: 'Newa',
+  Nko: 'Nko',
+  Nkoo: 'Nko',
+  Nushu: 'Nushu',
+  Nshu: 'Nushu',
+  Nyiakeng_Puachue_Hmong: 'Nyiakeng_Puachue_Hmong',
+  Hmnp: 'Nyiakeng_Puachue_Hmong',
+  Ogham: 'Ogham',
+  Ogam: 'Ogham',
+  Ol_Chiki: 'Ol_Chiki',
+  Olck: 'Ol_Chiki',
+  Old_Hungarian: 'Old_Hungarian',
+  Hung: 'Old_Hungarian',
+  Old_Italic: 'Old_Italic',
+  Ital: 'Old_Italic',
+  Old_North_Arabian: 'Old_North_Arabian',
+  Narb: 'Old_North_Arabian',
+  Old_Permic: 'Old_Permic',
+  Perm: 'Old_Permic',
+  Old_Persian: 'Old_Persian',
+  Xpeo: 'Old_Persian',
+  Old_Sogdian: 'Old_Sogdian',
+  Sogo: 'Old_Sogdian',
+  Old_South_Arabian: 'Old_South_Arabian',
+  Sarb: 'Old_South_Arabian',
+  Old_Turkic: 'Old_Turkic',
+  Orkh: 'Old_Turkic',
+  Oriya: 'Oriya',
+  Orya: 'Oriya',
+  Osage: 'Osage',
+  Osge: 'Osage',
+  Osmanya: 'Osmanya',
+  Osma: 'Osmanya',
+  Pahawh_Hmong: 'Pahawh_Hmong',
+  Hmng: 'Pahawh_Hmong',
+  Palmyrene: 'Palmyrene',
+  Palm: 'Palmyrene',
+  Pau_Cin_Hau: 'Pau_Cin_Hau',
+  Pauc: 'Pau_Cin_Hau',
+  Phags_Pa: 'Phags_Pa',
+  Phag: 'Phags_Pa',
+  Phoenician: 'Phoenician',
+  Phnx: 'Phoenician',
+  Psalter_Pahlavi: 'Psalter_Pahlavi',
+  Phlp: 'Psalter_Pahlavi',
+  Rejang: 'Rejang',
+  Rjng: 'Rejang',
+  Runic: 'Runic',
+  Runr: 'Runic',
+  Samaritan: 'Samaritan',
+  Samr: 'Samaritan',
+  Saurashtra: 'Saurashtra',
+  Saur: 'Saurashtra',
+  Sharada: 'Sharada',
+  Shrd: 'Sharada',
+  Shavian: 'Shavian',
+  Shaw: 'Shavian',
+  Siddham: 'Siddham',
+  Sidd: 'Siddham',
+  SignWriting: 'SignWriting',
+  Sgnw: 'SignWriting',
+  Sinhala: 'Sinhala',
+  Sinh: 'Sinhala',
+  Sogdian: 'Sogdian',
+  Sogd: 'Sogdian',
+  Sora_Sompeng: 'Sora_Sompeng',
+  Sora: 'Sora_Sompeng',
+  Soyombo: 'Soyombo',
+  Soyo: 'Soyombo',
+  Sundanese: 'Sundanese',
+  Sund: 'Sundanese',
+  Syloti_Nagri: 'Syloti_Nagri',
+  Sylo: 'Syloti_Nagri',
+  Syriac: 'Syriac',
+  Syrc: 'Syriac',
+  Tagalog: 'Tagalog',
+  Tglg: 'Tagalog',
+  Tagbanwa: 'Tagbanwa',
+  Tagb: 'Tagbanwa',
+  Tai_Le: 'Tai_Le',
+  Tale: 'Tai_Le',
+  Tai_Tham: 'Tai_Tham',
+  Lana: 'Tai_Tham',
+  Tai_Viet: 'Tai_Viet',
+  Tavt: 'Tai_Viet',
+  Takri: 'Takri',
+  Takr: 'Takri',
+  Tamil: 'Tamil',
+  Taml: 'Tamil',
+  Tangut: 'Tangut',
+  Tang: 'Tangut',
+  Telugu: 'Telugu',
+  Telu: 'Telugu',
+  Thaana: 'Thaana',
+  Thaa: 'Thaana',
+  Thai: 'Thai',
+  Tibetan: 'Tibetan',
+  Tibt: 'Tibetan',
+  Tifinagh: 'Tifinagh',
+  Tfng: 'Tifinagh',
+  Tirhuta: 'Tirhuta',
+  Tirh: 'Tirhuta',
+  Ugaritic: 'Ugaritic',
+  Ugar: 'Ugaritic',
+  Vai: 'Vai',
+  Vaii: 'Vai',
+  Wancho: 'Wancho',
+  Wcho: 'Wancho',
+  Warang_Citi: 'Warang_Citi',
+  Wara: 'Warang_Citi',
+  Yezidi: 'Yezidi',
+  Yezi: 'Yezidi',
+  Yi: 'Yi',
+  Yiii: 'Yi',
+  Zanabazar_Square: 'Zanabazar_Square',
+  Zanb: 'Zanabazar_Square'
+}; // #sec-runtime-semantics-unicodematchproperty-p
+
+function UnicodeMatchProperty(p) {
+  // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55 or Table 56.
+  Assert(p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties, "p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties"); // 2. Let c be the canonical property name of p as given in the “Canonical property name” column of the corresponding row.
+
+  const c = NonbinaryUnicodeProperties[p] || BinaryUnicodeProperties[p]; // 3. Return the List of Unicode code points of c.
+
+  return c;
+} // #sec-runtime-semantics-unicodematchpropertyvalue-p-v
+
+function UnicodeMatchPropertyValue(p, v) {
+  // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a canonical, unaliased Unicode property name listed in the “Canonical property name” column of Table 55.
+  Assert(p in NonbinaryUnicodeProperties, "p in NonbinaryUnicodeProperties"); // 2. Assert: v is a List of Unicode code points that is identical to a List of Unicode code points that is a property value or property value alias for Unicode property p listed in the “Property value and aliases” column of Table 57 or Table 58.
+  // Assert(v in UnicodeGeneralCategoryValues || v in UnicodeScriptValues);
+  // 3. Let value be the canonical property value of v as given in the “Canonical property value” column of the corresponding row.
+
+  const value = UnicodeGeneralCategoryValues[v] || UnicodeScriptValues[v]; // 4. Return the List of Unicode code points of value.
+
+  return value;
+}
+function getUnicodePropertyValueSet(_property, _value) {
+  // FIXME: figure out bundling unicode properties
+  // const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
+  // return new Set(require(`unicode-13.0.0/${path}/symbols.js`));
+  return new Set();
+}
+
+const isSyntaxCharacter = c => '^$.*+?()[]{}|'.includes(c);
+
+const isClosingSyntaxCharacter = c => ')]}|'.includes(c);
+
+const isDecimalDigit$1 = c => /[0123456789]/u.test(c);
+
+const isControlLetter = c => /[a-zA-Z]/u.test(c);
+
+class RegExpParser {
+  constructor(source, plusU) {
+    this.source = source;
+    this.position = 0;
+    this.plusU = plusU;
+    this.capturingGroups = [];
+    this.groupSpecifiers = new Map();
+  }
+
+  peek() {
+    return this.source[this.position];
+  }
+
+  test(c) {
+    return this.source[this.position] === c;
+  }
+
+  eat(c) {
+    if (this.test(c)) {
+      this.next();
+      return true;
+    }
+
+    return false;
+  }
+
+  next() {
+    const c = this.source[this.position];
+    this.position += 1;
+    return c;
+  }
+
+  expect(c) {
+    if (!this.eat(c)) {
+      throw new SyntaxError(`Expected ${c} but got ${this.peek()}`);
+    }
+  } // Pattern ::
+  //   Disjunction
+
+
+  parsePattern() {
+    const node = {
+      type: 'Pattern',
+      groupSpecifiers: this.groupSpecifiers,
+      capturingGroups: this.capturingGroups,
+      Disjunction: undefined
+    };
+    node.Disjunction = this.parseDisjunction();
+    return node;
+  } // Disjunction ::
+  //   Alternative
+  //   Alternative `|` Disjunction
+
+
+  parseDisjunction() {
+    const node = {
+      type: 'Disjunction',
+      Alternative: undefined,
+      Disjunction: undefined
+    };
+    node.Alternative = this.parseAlternative();
+
+    if (this.eat('|')) {
+      node.Disjunction = this.parseDisjunction();
+    }
+
+    return node;
+  } // Alternative ::
+  //   [empty]
+  //   Term Alternative
+
+
+  parseAlternative() {
+    let node = {
+      type: 'Alternative',
+      Term: undefined,
+      Alternative: undefined
+    };
+
+    while (this.position < this.source.length && !isClosingSyntaxCharacter(this.peek())) {
+      node = {
+        type: 'Alternative',
+        Term: this.parseTerm(),
+        Alternative: node
+      };
+    }
+
+    return node;
+  } // Term ::
+  //   Assertion
+  //   Atom
+  //   Atom Quantifier
+
+
+  parseTerm() {
+    const assertion = this.maybeParseAssertion();
+
+    if (assertion) {
+      return assertion;
+    }
+
+    return {
+      type: 'Term',
+      capturingParenthesesBefore: this.capturingGroups.length,
+      Atom: this.parseAtom(),
+      Quantifier: this.maybeParseQuantifier()
+    };
+  } // Assertion ::
+  //   `^`
+  //   `$`
+  //   `\` `b`
+  //   `\` `B`
+  //   `(` `?` `=` Disjunction `)`
+  //   `(` `?` `!` Disjunction `)`
+  //   `(` `?` `<=` Disjunction `)`
+  //   `(` `?` `<!` Disjunction `)`
+
+
+  maybeParseAssertion() {
+    if (this.eat('^')) {
+      return {
+        type: 'Assertion',
+        subtype: '^'
+      };
+    }
+
+    if (this.eat('$')) {
+      return {
+        type: 'Assertion',
+        subtype: '$'
+      };
+    }
+
+    const look2 = this.source.slice(this.position, this.position + 2);
+
+    if (look2 === '\\b') {
+      this.position += 2;
+      return {
+        type: 'Assertion',
+        subtype: 'b'
+      };
+    }
+
+    if (look2 === '\\B') {
+      this.position += 2;
+      return {
+        type: 'Assertion',
+        subtype: 'B'
+      };
+    }
+
+    const look3 = this.source.slice(this.position, this.position + 3);
+
+    if (look3 === '(?=') {
+      this.position += 3;
+      const d = this.parseDisjunction();
+      this.expect(')');
+      return {
+        type: 'Assertion',
+        subtype: '?=',
+        Disjunction: d
+      };
+    }
+
+    if (look3 === '(?!') {
+      this.position += 3;
+      const d = this.parseDisjunction();
+      this.expect(')');
+      return {
+        type: 'Assertion',
+        subtype: '?!',
+        Disjunction: d
+      };
+    }
+
+    const look4 = this.source.slice(this.position, this.position + 4);
+
+    if (look4 === '(?<=') {
+      this.position += 4;
+      const d = this.parseDisjunction();
+      this.expect(')');
+      return {
+        type: 'Assertion',
+        subtype: '?<=',
+        Disjunction: d
+      };
+    }
+
+    if (look4 === '(?<!') {
+      this.position += 4;
+      const d = this.parseDisjunction();
+      this.expect(')');
+      return {
+        type: 'Assertion',
+        subtype: '?<!',
+        Disjunction: d
+      };
+    }
+
+    return undefined;
+  } // Quantifier ::
+  //   QuantifierPrefix
+  //   QuantifierPrefix `?`
+  // QuantifierPrefix ::
+  //   `*`
+  //   `+`
+  //   `?`
+  //   `{` DecimalDigits `}`
+  //   `{` DecimalDigits `,` `}`
+  //   `{` DecimalDigits `,` DecimalDigits `}`
+
+
+  maybeParseQuantifier() {
+    let QuantifierPrefix;
+
+    if (this.eat('*')) {
+      QuantifierPrefix = '*';
+    } else if (this.eat('+')) {
+      QuantifierPrefix = '+';
+    } else if (this.eat('?')) {
+      QuantifierPrefix = '?';
+    } else if (this.eat('{')) {
+      QuantifierPrefix = {
+        DecimalDigits_a: undefined,
+        DecimalDigits_b: undefined
+      };
+      QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
+
+      if (this.eat(',')) {
+        if (!this.test('}')) {
+          QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
+
+          if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
+            throw new SyntaxError('Numbers out of order in {} quantifier');
+          }
+        }
+      }
+
+      this.expect('}');
+    }
+
+    if (QuantifierPrefix) {
+      return {
+        type: 'Quantifier',
+        QuantifierPrefix,
+        greedy: !this.eat('?')
+      };
+    }
+
+    return undefined;
+  } // Atom ::
+  //   PatternCharacter
+  //   `.`
+  //   `\` AtomEscape
+  //   CharacterClass
+  //   `(` GroupSpecifier Disjunction `)`
+  //   `(` `?` `:` Disjunction `)`
+
+
+  parseAtom() {
+    if (this.eat('.')) {
+      return {
+        type: 'Atom',
+        subtype: '.',
+        enclosedCapturingParentheses: 0
+      };
+    }
+
+    if (this.eat('\\')) {
+      return this.parseAtomEscape();
+    }
+
+    if (this.eat('(')) {
+      const node = {
+        type: 'Atom',
+        capturingParenthesesBefore: this.capturingGroups.length,
+        enclosedCapturingParentheses: 0,
+        capturing: true,
+        GroupSpecifier: undefined,
+        Disjunction: undefined
+      };
+
+      if (this.eat('?')) {
+        if (this.eat(':')) {
+          node.capturing = false;
+        } else {
+          node.GroupSpecifier = this.parseGroupName();
+        }
+      }
+
+      if (node.capturing) {
+        this.capturingGroups.push(node);
+      }
+
+      if (node.GroupSpecifier) {
+        this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
+      }
+
+      node.Disjunction = this.parseDisjunction();
+      this.expect(')');
+      node.enclosedCapturingParentheses = this.capturingGroups.length - node.capturingParenthesesBefore - 1;
+      return node;
+    }
+
+    if (this.test('[')) {
+      return {
+        type: 'Atom',
+        CharacterClass: this.parseCharacterClass()
+      };
+    }
+
+    if (isSyntaxCharacter(this.peek())) {
+      throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
+    }
+
+    return {
+      type: 'Atom',
+      PatternCharacter: this.next()
+    };
+  } // AtomEscape ::
+  //   DecimalEscape
+  //   CharacterClassEscape
+  //   CharacterEscape
+  //   `k` GroupName
+
+
+  parseAtomEscape() {
+    if (this.eat('k')) {
+      return {
+        type: 'AtomEscape',
+        GroupName: this.parseGroupName()
+      };
+    }
+
+    const CharacterClassEscape = this.maybeParseCharacterClassEscape();
+
+    if (CharacterClassEscape) {
+      return {
+        type: 'AtomEscape',
+        CharacterClassEscape
+      };
+    }
+
+    const DecimalEscape = this.maybeParseDecimalEscape();
+
+    if (DecimalEscape) {
+      return {
+        type: 'AtomEscape',
+        DecimalEscape
+      };
+    }
+
+    return {
+      type: 'AtomEscape',
+      CharacterEscape: this.parseCharacterEscape()
+    };
+  } // CharacterEscape ::
+  //   ControlEscape
+  //   `c` ControlLetter
+  //   `0` [lookahead ∉ DecimalDigit]
+  //   HexEscapeSequence
+  //   RegExpUnicodeEscapeSequence
+  //   IdentityEscape
+
+
+  parseCharacterEscape() {
+    switch (this.peek()) {
+      case 'f':
+      case 'n':
+      case 'r':
+      case 't':
+      case 'v':
+        return {
+          type: 'CharacterEscape',
+          ControlEscape: this.next()
+        };
+
+      case 'c':
+        {
+          this.next();
+          const c = this.next();
+          const p = c.codePointAt(0);
+
+          if (p >= 65 && p <= 90 || p >= 97 && p <= 122) {
+            return {
+              type: 'CharacterEscape',
+              ControlLetter: c
+            };
+          }
+
+          return {
+            type: 'CharacterEscape',
+            IdentityEscape: c
+          };
+        }
+
+      case 'x':
+        if (isHexDigit(this.source[this.position + 1]) && isHexDigit(this.source[this.position + 2])) {
+          return {
+            type: 'CharacterEscape',
+            HexEscapeSequence: this.parseHexEscapeSequence()
+          };
+        }
+
+        this.next();
+        return {
+          type: 'CharacterEscape',
+          IdentityEscape: 'x'
+        };
+
+      case 'u':
+        {
+          const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+
+          if (RegExpUnicodeEscapeSequence) {
+            return {
+              type: 'CharacterEscape',
+              RegExpUnicodeEscapeSequence
+            };
+          }
+
+          this.next();
+          return {
+            type: 'CharacterEscape',
+            IdentityEscape: 'u'
+          };
+        }
+
+      default:
+        {
+          const c = this.next();
+
+          if (c === '0' && !isDecimalDigit$1(this.peek())) {
+            return {
+              type: 'CharacterEscape',
+              subtype: '0'
+            };
+          }
+
+          return {
+            type: 'CharacterEscape',
+            IdentityEscape: c
+          };
+        }
+    }
+  } // DecimalEscape ::
+  //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
+
+
+  maybeParseDecimalEscape() {
+    if (isDecimalDigit$1(this.source[this.position]) && this.source[this.position] !== '0') {
+      let buffer = this.source[this.position];
+      this.position += 1;
+
+      while (isDecimalDigit$1(this.source[this.position])) {
+        buffer += this.source[this.position];
+        this.position += 1;
+      }
+
+      return {
+        type: 'DecimalEscape',
+        value: Number.parseInt(buffer, 10)
+      };
+    }
+
+    return undefined;
+  } // CharacterClassEscape ::
+  //   `d`
+  //   `D`
+  //   `s`
+  //   `S`
+  //   `w`
+  //   `W`
+  //   [+U] `p{` UnicodePropertyValueExpression `}`
+  //   [+U] `P{` UnicodePropertyValueExpression `}`
+
+
+  maybeParseCharacterClassEscape() {
+    switch (this.peek()) {
+      case 'd':
+      case 'D':
+      case 's':
+      case 'S':
+      case 'w':
+      case 'W':
+        return {
+          type: 'CharacterClassEscape',
+          value: this.next()
+        };
+
+      case 'p':
+      case 'P':
+        {
+          if (!this.plusU) {
+            return undefined;
+          }
+
+          const value = this.next();
+          this.expect('{');
+          let sawDigit;
+          let LoneUnicodePropertyNameOrValue = '';
+
+          while (true) {
+            if (this.position >= this.source.length) {
+              throw new SyntaxError('Invalid unicode property name or value');
+            }
+
+            const c = this.source[this.position];
+
+            if (isDecimalDigit$1(c)) {
+              sawDigit = true;
+              this.position += 1;
+              LoneUnicodePropertyNameOrValue += c;
+              continue;
+            }
+
+            if (c === '_') {
+              this.position += 1;
+              LoneUnicodePropertyNameOrValue += c;
+              continue;
+            }
+
+            if (!isControlLetter(c)) {
+              break;
+            }
+
+            this.position += 1;
+            LoneUnicodePropertyNameOrValue += c;
+          }
+
+          if (LoneUnicodePropertyNameOrValue.length === 0) {
+            throw new SyntaxError('Invalid unicode property name or value');
+          }
+
+          if (sawDigit && this.eat('}')) {
+            if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
+              throw new SyntaxError('Invalid unicode property name or value');
+            }
+
+            return {
+              type: 'CharacterClassEscape',
+              value,
+              UnicodePropertyValueExpression: {
+                type: 'UnicodePropertyValueExpression',
+                LoneUnicodePropertyNameOrValue
+              }
+            };
+          }
+
+          let UnicodePropertyValue;
+
+          if (this.source[this.position] === '=') {
+            this.position += 1;
+            UnicodePropertyValue = '';
+
+            while (true) {
+              if (this.position >= this.source.length) {
+                throw new SyntaxError('Invalid unicode property value');
+              }
+
+              const c = this.source[this.position];
+
+              if (!isControlLetter(c) && !isDecimalDigit$1(c) && c !== '_') {
+                break;
+              }
+
+              this.position += 1;
+              UnicodePropertyValue += c;
+            }
+
+            if (UnicodePropertyValue.length === 0) {
+              throw new SyntaxError('Invalid unicode property value');
+            }
+          }
+
+          this.expect('}');
+
+          if (UnicodePropertyValue) {
+            if (!(LoneUnicodePropertyNameOrValue in NonbinaryUnicodeProperties)) {
+              throw new SyntaxError('Invalid unicode property name');
+            }
+
+            if (!(UnicodePropertyValue in UnicodeGeneralCategoryValues || UnicodePropertyValue in UnicodeScriptValues)) {
+              throw new SyntaxError('Invalid unicode property value');
+            }
+
+            return {
+              type: 'CharacterClassEscape',
+              value,
+              UnicodePropertyValueExpression: {
+                type: 'UnicodePropertyValueExpression',
+                UnicodePropertyName: LoneUnicodePropertyNameOrValue,
+                UnicodePropertyValue
+              }
+            };
+          }
+
+          if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
+            throw new SyntaxError('Invalid unicode property name or value');
+          }
+
+          return {
+            type: 'CharacterClassEscape',
+            value,
+            UnicodePropertyValueExpression: {
+              type: 'UnicodePropertyValueExpression',
+              LoneUnicodePropertyNameOrValue
+            }
+          };
+        }
+
+      default:
+        return undefined;
+    }
+  } // CharacterClass ::
+  //   `[` ClassRanges `]`
+  //   `[` `^` ClassRanges `]`
+
+
+  parseCharacterClass() {
+    this.expect('[');
+    const node = {
+      type: 'CharacterClass',
+      invert: false,
+      ClassRanges: undefined
+    };
+    node.invert = this.eat('^');
+    node.ClassRanges = this.parseClassRanges();
+    this.expect(']');
+    return node;
+  } // ClassRanges ::
+  //   [empty]
+  //   NonemptyClassRanges
+
+
+  parseClassRanges() {
+    const ranges = [];
+
+    while (!this.test(']')) {
+      if (this.position >= this.source.length) {
+        throw new SyntaxError('Unexpected end of CharacterClass');
+      }
+
+      const atom = this.parseClassAtom();
+
+      if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
+        const atom2 = this.parseClassAtom();
+
+        if (atom2.type === 'CharacterClassEscape') {
+          ranges.push(atom);
+          ranges.push({
+            type: 'ClassAtom',
+            value: '-'
+          });
+          ranges.push(atom2);
+        } else {
+          if (CharacterValue(atom) > CharacterValue(atom2)) {
+            throw new SyntaxError('Invalid class range');
+          }
+
+          ranges.push([atom, atom2]);
+        }
+      } else {
+        ranges.push(atom);
+      }
+    }
+
+    return ranges;
+  } // ClassAtom ::
+  //   `-`
+  //   ClassAtomNoDash
+  // ClassAtomNoDash ::
+  //   SourceCharacter but not one of `\` or `]` or `-`
+  //   `\` ClassEscape
+  // ClassEscape :
+  //   `b`
+  //   [+U] `-`
+  //   CharacterClassEscape
+  //   CharacterEscape
+
+
+  parseClassAtom() {
+    if (this.eat('\\')) {
+      if (this.eat('b')) {
+        return {
+          type: 'ClassEscape',
+          value: 'b'
+        };
+      }
+
+      if (this.eat('-')) {
+        return {
+          type: 'ClassEscape',
+          value: '-'
+        };
+      }
+
+      const CharacterClassEscape = this.maybeParseCharacterClassEscape();
+
+      if (CharacterClassEscape) {
+        return CharacterClassEscape;
+      }
+
+      return {
+        type: 'ClassEscape',
+        CharacterEscape: this.parseCharacterEscape()
+      };
+    }
+
+    return {
+      type: 'ClassAtom',
+      SourceCharacter: this.next()
+    };
+  }
+
+  parseGroupName() {
+    this.expect('<');
+    const RegExpIdentifierName = this.parseIdentifierName();
+    this.expect('>');
+    return RegExpIdentifierName;
+  } // RegExpIdentifierName ::
+  //   RegExpIdentifierStart
+  //   RegExpIdentifierName RegExpIdentifierPart
+
+
+  parseIdentifierName() {
+    let name = '';
+
+    while (true) {
+      const c = this.peek();
+
+      if (isIdentifierStart(c) || isIdentifierContinue(c) || c === '$') {
+        name += this.next();
+      } else {
+        break;
+      }
+    }
+
+    return name;
+  } // DecimalDigits ::
+  //   DecimalDigit
+  //   DecimalDigits DecimalDigit
+
+
+  parseDecimalDigits() {
+    let n = '';
+
+    while (isDecimalDigit$1(this.peek())) {
+      n += this.next();
+    }
+
+    return n;
+  } // HexEscapeSequence ::
+  //   `x` HexDigit HexDigit
+
+
+  parseHexEscapeSequence() {
+    this.expect('x');
+    const HexDigit_a = this.next();
+
+    if (!isHexDigit(HexDigit_a)) {
+      throw new SyntaxError('Not a hex digit');
+    }
+
+    const HexDigit_b = this.next();
+
+    if (!isHexDigit(HexDigit_b)) {
+      throw new SyntaxError('Not a hex digit');
+    }
+
+    return {
+      type: 'HexEscapeSequence',
+      HexDigit_a,
+      HexDigit_b
+    };
+  } // RegExpUnicodeEscapeSequence ::
+  //   `u` HexLeadSurrogate `\u` HexTrailSurrogate
+  //   `u` HexLeadSurrogate
+  //   `u` HexTrailSurrogate
+  //   `u` HexNonSurrogate
+  //   `u` Hex4Digits
+  //   `u{` CodePoint `}`
+
+
+  maybeParseRegExpUnicodeEscapeSequence() {
+    const start = this.position;
+
+    if (!this.eat('u')) {
+      this.position = start;
+      return undefined;
+    }
+
+    if (this.test('{')) {
+      let buffer = '';
+
+      while (!this.eat('}')) {
+        if (this.position >= this.source.length) {
+          this.position = start;
+          return undefined;
+        }
+
+        if (!isHexDigit(this.source[this.position])) {
+          this.position = start;
+          return undefined;
+        }
+
+        buffer += this.next();
+      }
+
+      this.expect('}');
+      const CodePoint = Number.parseInt(buffer, 16);
+
+      if (CodePoint > 0x10FFFF) {
+        this.position = start;
+        return undefined;
+      }
+
+      return {
+        type: 'RegExpUnicodeEscapeSequence',
+        CodePoint
+      };
+    }
+
+    const digits = [];
+
+    for (let i = 0; i < 4; i += 1) {
+      const HexDigit = this.next();
+
+      if (!isHexDigit(HexDigit)) {
+        this.position = start;
+        return undefined;
+      }
+
+      digits.push(HexDigit);
+    }
+
+    return {
+      type: 'RegExpUnicodeEscapeSequence',
+      Hex4Digits: {
+        HexDigit_a: digits[0],
+        HexDigit_b: digits[1],
+        HexDigit_c: digits[2],
+        HexDigit_d: digits[3]
+      }
+    };
+  }
+
+}
+
+class ExpressionParser extends FunctionParser {
+  // Expression :
+  //   AssignmentExpression
+  //   Expression `,` AssignmentExpression
+  parseExpression() {
+    const node = this.startNode();
+    const AssignmentExpression = this.parseAssignmentExpression();
+
+    if (this.eat(Token.COMMA)) {
+      node.ExpressionList = [AssignmentExpression];
+
+      do {
+        node.ExpressionList.push(this.parseAssignmentExpression());
+      } while (this.eat(Token.COMMA));
+
+      return this.finishNode(node, 'CommaOperator');
+    }
+
+    return AssignmentExpression;
+  } // AssignmentExpression :
+  //   ConditionalExpression
+  //   [+Yield] YieldExpression
+  //   ArrowFunction
+  //   AsyncArrowFunction
+  //   LeftHandSideExpression `=` AssignmentExpression
+  //   LeftHandSideExpression AssignmentOperator AssignmentExpression
+  //   LeftHandSideExpression LogicalAssignmentOperator AssignmentExpression
+  //
+  // AssignmentOperator : one of
+  //   *= /= %= += -= <<= >>= >>>= &= ^= |= **=
+  //
+  // LogicalAssignmentOperator : one of
+  //   &&= ||= ??=
+
+
+  parseAssignmentExpression() {
+    if (this.test(Token.YIELD) && this.scope.hasYield()) {
+      return this.parseYieldExpression();
+    }
+
+    const node = this.startNode();
+    this.scope.pushAssignmentInfo('assign');
+    const left = this.parseConditionalExpression();
+    const assignmentInfo = this.scope.popAssignmentInfo();
+
+    if (left.type === 'IdentifierReference') {
+      // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
+      if (left.name === 'async' && this.test(Token.IDENTIFIER) && !this.peek().hadLineTerminatorBefore && this.testAhead(Token.ARROW) && !this.peekAhead().hadLineTerminatorBefore) {
+        assignmentInfo.clear();
+        return this.parseArrowFunction(node, {
+          Arguments: [this.parseIdentifierReference()]
+        }, FunctionKind.ASYNC);
+      } // IdentifierReference [no LineTerminator here] `=>`
+
+
+      if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+        assignmentInfo.clear();
+        return this.parseArrowFunction(node, {
+          Arguments: [left]
+        }, FunctionKind.NORMAL);
+      }
+    } // `async` [no LineTerminator here] Arguments [no LineTerminator here] `=>`
+
+
+    if (left.type === 'CallExpression' && left.arrowInfo && this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
+      const last = left.Arguments[left.Arguments.length - 1];
+
+      if (!left.arrowInfo.trailingComma || last && last.type !== 'AssignmentRestElement') {
+        assignmentInfo.clear();
+        return this.parseArrowFunction(node, left, FunctionKind.ASYNC);
+      }
+    }
+
+    if (left.type === 'CoverParenthesizedExpressionAndArrowParameterList') {
+      assignmentInfo.clear();
+      return this.parseArrowFunction(node, left, FunctionKind.NORMAL);
+    }
+
+    switch (this.peek().type) {
+      case Token.ASSIGN:
+      case Token.ASSIGN_MUL:
+      case Token.ASSIGN_DIV:
+      case Token.ASSIGN_MOD:
+      case Token.ASSIGN_ADD:
+      case Token.ASSIGN_SUB:
+      case Token.ASSIGN_SHL:
+      case Token.ASSIGN_SAR:
+      case Token.ASSIGN_SHR:
+      case Token.ASSIGN_BIT_AND:
+      case Token.ASSIGN_BIT_XOR:
+      case Token.ASSIGN_BIT_OR:
+      case Token.ASSIGN_EXP:
+      case Token.ASSIGN_AND:
+      case Token.ASSIGN_OR:
+      case Token.ASSIGN_NULLISH:
+        assignmentInfo.clear();
+        this.validateAssignmentTarget(left);
+        node.LeftHandSideExpression = left;
+        node.AssignmentOperator = this.next().value;
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        return this.finishNode(node, 'AssignmentExpression');
+
+      default:
+        return left;
+    }
+  }
+
+  validateAssignmentTarget(node) {
+    switch (node.type) {
+      case 'IdentifierReference':
+        if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
+          break;
+        }
+
+        return;
+
+      case 'CoverInitializedName':
+        this.validateAssignmentTarget(node.IdentifierReference);
+        return;
+
+      case 'MemberExpression':
+        return;
+
+      case 'SuperProperty':
+        return;
+
+      case 'ParenthesizedExpression':
+        this.validateAssignmentTarget(node.Expression);
+        return;
+
+      case 'ArrayLiteral':
+        node.ElementList.forEach((p, i) => {
+          if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
+            this.raiseEarly('InvalidAssignmentTarget', p);
+          }
+
+          this.validateAssignmentTarget(p);
+        });
+        return;
+
+      case 'ObjectLiteral':
+        node.PropertyDefinitionList.forEach((p, i) => {
+          if (p.type === 'PropertyDefinition' && !p.PropertyName && i !== node.PropertyDefinitionList.length - 1) {
+            this.raiseEarly('InvalidAssignmentTarget', p);
+          }
+
+          this.validateAssignmentTarget(p);
+        });
+        return;
+
+      case 'PropertyDefinition':
+        this.validateAssignmentTarget(node.AssignmentExpression);
+        return;
+
+      case 'AssignmentExpression':
+        this.validateAssignmentTarget(node.LeftHandSideExpression);
+        return;
+
+      case 'Elision':
+        return;
+
+      case 'SpreadElement':
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          break;
+        }
+
+        this.validateAssignmentTarget(node.AssignmentExpression);
+        return;
+    }
+
+    this.raiseEarly('InvalidAssignmentTarget', node);
+  } // YieldExpression :
+  //   `yield`
+  //   `yield` [no LineTerminator here] AssignmentExpression
+  //   `yield` [no LineTerminator here] `*` AssignmentExpression
+
+
+  parseYieldExpression() {
+    if (this.scope.inParameters()) {
+      this.raiseEarly('YieldInFormalParameters');
+    }
+
+    const node = this.startNode();
+    this.expect(Token.YIELD);
+
+    if (this.peek().hadLineTerminatorBefore) {
+      node.hasStar = false;
+      node.AssignmentExpression = null;
+    } else {
+      node.hasStar = this.eat(Token.MUL);
+
+      if (node.hasStar) {
+        node.AssignmentExpression = this.parseAssignmentExpression();
+      } else {
+        switch (this.peek().type) {
+          case Token.EOS:
+          case Token.SEMICOLON:
+          case Token.RBRACE:
+          case Token.RBRACK:
+          case Token.RPAREN:
+          case Token.COLON:
+          case Token.COMMA:
+          case Token.IN:
+            node.AssignmentExpression = null;
+            break;
+
+          default:
+            node.AssignmentExpression = this.parseAssignmentExpression();
+        }
+      }
+    }
+
+    if (this.scope.arrowInfoStack.length > 0) {
+      this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].yieldExpressions.push(node);
+    }
+
+    return this.finishNode(node, 'YieldExpression');
+  } // ConditionalExpression :
+  //   ShortCircuitExpression
+  //   ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
+
+
+  parseConditionalExpression() {
+    const node = this.startNode();
+    const ShortCircuitExpression = this.parseShortCircuitExpression();
+
+    if (this.eat(Token.CONDITIONAL)) {
+      node.ShortCircuitExpression = ShortCircuitExpression;
+      this.scope.with({
+        in: true
+      }, () => {
+        node.AssignmentExpression_a = this.parseAssignmentExpression();
+      });
+      this.expect(Token.COLON);
+      node.AssignmentExpression_b = this.parseAssignmentExpression();
+      return this.finishNode(node, 'ConditionalExpression');
+    }
+
+    return ShortCircuitExpression;
+  } // ShortCircuitExpression :
+  //   LogicalORExpression
+  //   CoalesceExpression
+  //
+  // CoalesceExpression :
+  //   CoalesceExpressionHead `??` BitwiseORExpression
+  //
+  // CoalesceExpressionHead :
+  //   CoalesceExpression
+  //   BitwiseORExpression
+
+
+  parseShortCircuitExpression() {
+    // Start parse at BIT_OR, right above AND/OR/NULLISH
+    const expression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
+
+    switch (this.peek().type) {
+      case Token.AND:
+      case Token.OR:
+        // Drop into normal binary chain starting at OR
+        return this.parseBinaryExpression(TokenPrecedence[Token.OR], expression);
+
+      case Token.NULLISH:
+        {
+          let x = expression;
+
+          while (this.eat(Token.NULLISH)) {
+            const node = this.startNode();
+            node.CoalesceExpressionHead = x;
+            node.BitwiseORExpression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
+            x = this.finishNode(node, 'CoalesceExpression');
+          }
+
+          return x;
+        }
+
+      default:
+        return expression;
+    }
+  }
+
+  parseBinaryExpression(precedence, x = this.parseUnaryExpression()) {
+    let p = TokenPrecedence[this.peek().type];
+
+    if (p >= precedence) {
+      do {
+        while (TokenPrecedence[this.peek().type] === p) {
+          const node = this.startNode();
+          const left = x;
+
+          if (this.peek().type === Token.IN && !this.scope.hasIn()) {
+            return left;
+          }
+
+          const op = this.next();
+          const nextP = op.type === Token.EXP ? p : p + 1;
+          const right = this.parseBinaryExpression(nextP);
+          let name;
+
+          switch (op.type) {
+            case Token.EXP:
+              name = 'ExponentiationExpression';
+              node.UpdateExpression = left;
+              node.ExponentiationExpression = right;
+              break;
+
+            case Token.MUL:
+            case Token.DIV:
+            case Token.MOD:
+              name = 'MultiplicativeExpression';
+              node.MultiplicativeExpression = left;
+              node.MultiplicativeOperator = op.value;
+              node.ExponentiationExpression = right;
+              break;
+
+            case Token.ADD:
+            case Token.SUB:
+              name = 'AdditiveExpression';
+              node.AdditiveExpression = left;
+              node.MultiplicativeExpression = right;
+              node.operator = op.value;
+              break;
+
+            case Token.SHL:
+            case Token.SAR:
+            case Token.SHR:
+              name = 'ShiftExpression';
+              node.ShiftExpression = left;
+              node.AdditiveExpression = right;
+              node.operator = op.value;
+              break;
+
+            case Token.LT:
+            case Token.GT:
+            case Token.LTE:
+            case Token.GTE:
+            case Token.INSTANCEOF:
+            case Token.IN:
+              name = 'RelationalExpression';
+              node.RelationalExpression = left;
+              node.ShiftExpression = right;
+              node.operator = op.value;
+              break;
+
+            case Token.EQ:
+            case Token.NE:
+            case Token.EQ_STRICT:
+            case Token.NE_STRICT:
+              name = 'EqualityExpression';
+              node.EqualityExpression = left;
+              node.RelationalExpression = right;
+              node.operator = op.value;
+              break;
+
+            case Token.BIT_AND:
+              name = 'BitwiseANDExpression';
+              node.A = left;
+              node.operator = op.value;
+              node.B = right;
+              break;
+
+            case Token.BIT_XOR:
+              name = 'BitwiseXORExpression';
+              node.A = left;
+              node.operator = op.value;
+              node.B = right;
+              break;
+
+            case Token.BIT_OR:
+              name = 'BitwiseORExpression';
+              node.A = left;
+              node.operator = op.value;
+              node.B = right;
+              break;
+
+            case Token.AND:
+              name = 'LogicalANDExpression';
+              node.LogicalANDExpression = left;
+              node.BitwiseORExpression = right;
+              break;
+
+            case Token.OR:
+              name = 'LogicalORExpression';
+              node.LogicalORExpression = left;
+              node.LogicalANDExpression = right;
+              break;
+
+            default:
+              this.unexpected(op);
+          }
+
+          x = this.finishNode(node, name);
+        }
+
+        p -= 1;
+      } while (p >= precedence);
+    }
+
+    return x;
+  } // UnaryExpression :
+  //   UpdateExpression
+  //   `delete` UnaryExpression
+  //   `void` UnaryExpression
+  //   `typeof` UnaryExpression
+  //   `+` UnaryExpression
+  //   `-` UnaryExpression
+  //   `~` UnaryExpression
+  //   `!` UnaryExpression
+  //   [+Await] AwaitExpression
+
+
+  parseUnaryExpression() {
+    return this.scope.with({
+      in: true
+    }, () => {
+      if (this.test(Token.AWAIT) && this.scope.hasAwait()) {
+        return this.parseAwaitExpression();
+      }
+
+      const node = this.startNode();
+
+      switch (this.peek().type) {
+        case Token.DELETE:
+        case Token.VOID:
+        case Token.TYPEOF:
+        case Token.ADD:
+        case Token.SUB:
+        case Token.BIT_NOT:
+        case Token.NOT:
+          node.operator = this.next().value;
+          node.UnaryExpression = this.parseUnaryExpression();
+
+          if (this.isStrictMode() && node.operator === 'delete' && node.UnaryExpression.type === 'IdentifierReference') {
+            this.raiseEarly('UnexpectedToken', node.UnaryExpression);
+          }
+
+          if (this.test(Token.EXP)) {
+            this.unexpected();
+          }
+
+          return this.finishNode(node, 'UnaryExpression');
+
+        default:
+          return this.parseUpdateExpression();
+      }
+    });
+  } // AwaitExpression : `await` UnaryExpression
+
+
+  parseAwaitExpression() {
+    if (this.scope.inParameters()) {
+      this.raiseEarly('AwaitInFormalParameters');
+    }
+
+    const node = this.startNode();
+    this.expect(Token.AWAIT);
+    node.UnaryExpression = this.parseUnaryExpression();
+
+    if (this.scope.arrowInfoStack.length > 0) {
+      this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].awaitExpressions.push(node);
+    } else if (!this.scope.hasReturn()) {
+      this.state.hasTopLevelAwait = true;
+    }
+
+    return this.finishNode(node, 'AwaitExpression');
+  } // UpdateExpression :
+  //   LeftHandSideExpression
+  //   LeftHandSideExpression [no LineTerminator here] `++`
+  //   LeftHandSideExpression [no LineTerminator here] `--`
+  //   `++` UnaryExpression
+  //   `--` UnaryExpression
+
+
+  parseUpdateExpression() {
+    if (this.test(Token.INC) || this.test(Token.DEC)) {
+      const node = this.startNode();
+      node.operator = this.next().value;
+      node.LeftHandSideExpression = null;
+      node.UnaryExpression = this.parseUnaryExpression();
+      this.validateAssignmentTarget(node.UnaryExpression);
+      return this.finishNode(node, 'UpdateExpression');
+    }
+
+    const argument = this.parseLeftHandSideExpression();
+
+    if (!this.peek().hadLineTerminatorBefore) {
+      if (this.test(Token.INC) || this.test(Token.DEC)) {
+        this.validateAssignmentTarget(argument);
+        const node = this.startNode();
+        node.operator = this.next().value;
+        node.LeftHandSideExpression = argument;
+        node.UnaryExpression = null;
+        return this.finishNode(node, 'UpdateExpression');
+      }
+    }
+
+    return argument;
+  } // LeftHandSideExpression
+
+
+  parseLeftHandSideExpression(allowCalls = true) {
+    let result;
+
+    switch (this.peek().type) {
+      case Token.NEW:
+        result = this.parseNewExpression();
+        break;
+
+      case Token.SUPER:
+        {
+          const node = this.startNode();
+          this.next();
+
+          if (this.test(Token.LPAREN)) {
+            if (!this.scope.hasSuperCall()) {
+              this.raiseEarly('UnexpectedToken');
+            }
+
+            node.Arguments = this.parseArguments().Arguments;
+            result = this.finishNode(node, 'SuperCall');
+          } else {
+            if (!this.scope.hasSuperProperty()) {
+              this.raiseEarly('UnexpectedToken');
+            }
+
+            if (this.eat(Token.LBRACK)) {
+              node.Expression = this.parseExpression();
+              this.expect(Token.RBRACK);
+              node.IdentifierName = null;
+            } else {
+              this.expect(Token.PERIOD);
+              node.Expression = null;
+              node.IdentifierName = this.parseIdentifierName();
+            }
+
+            result = this.finishNode(node, 'SuperProperty');
+          }
+
+          break;
+        }
+
+      case Token.IMPORT:
+        {
+          const node = this.startNode();
+          this.next();
+
+          if (this.scope.hasImportMeta() && this.eat(Token.PERIOD)) {
+            this.expect('meta');
+            result = this.finishNode(node, 'ImportMeta');
+          } else {
+            if (!allowCalls) {
+              this.unexpected();
+            }
+
+            this.expect(Token.LPAREN);
+            node.AssignmentExpression = this.parseAssignmentExpression();
+            this.expect(Token.RPAREN);
+            result = this.finishNode(node, 'ImportCall');
+          }
+
+          break;
+        }
+
+      default:
+        result = this.parsePrimaryExpression();
+        break;
+    }
+
+    const check = allowCalls ? isPropertyOrCall : isMember;
+
+    while (check(this.peek().type)) {
+      const node = this.startNode();
+
+      switch (this.peek().type) {
+        case Token.LBRACK:
+          {
+            this.next();
+            node.MemberExpression = result;
+            node.IdentifierName = null;
+            node.Expression = this.parseExpression();
+            result = this.finishNode(node, 'MemberExpression');
+            this.expect(Token.RBRACK);
+            break;
+          }
+
+        case Token.PERIOD:
+          this.next();
+          node.MemberExpression = result;
+          node.IdentifierName = this.parseIdentifierName();
+          node.Expression = null;
+          result = this.finishNode(node, 'MemberExpression');
+          break;
+
+        case Token.LPAREN:
+          {
+            // `async` [no LineTerminator here] `(`
+            const couldBeArrow = this.matches('async', this.currentToken) && result.type === 'IdentifierReference' && !this.peek().hadLineTerminatorBefore;
+
+            if (couldBeArrow) {
+              this.scope.pushArrowInfo(true);
+            }
+
+            const {
+              Arguments,
+              trailingComma
+            } = this.parseArguments();
+            node.CallExpression = result;
+            node.Arguments = Arguments;
+
+            if (couldBeArrow) {
+              node.arrowInfo = this.scope.popArrowInfo();
+              node.arrowInfo.trailingComma = trailingComma;
+            }
+
+            result = this.finishNode(node, 'CallExpression');
+            break;
+          }
+
+        case Token.OPTIONAL:
+          node.MemberExpression = result;
+          node.OptionalChain = this.parseOptionalChain();
+          result = this.finishNode(node, 'OptionalExpression');
+          break;
+
+        case Token.TEMPLATE:
+          node.MemberExpression = result;
+          node.TemplateLiteral = this.parseTemplateLiteral(true);
+          result = this.finishNode(node, 'TaggedTemplateExpression');
+          break;
+
+        default:
+          this.unexpected();
+      }
+    }
+
+    return result;
+  } // OptionalChain
+
+
+  parseOptionalChain() {
+    this.expect(Token.OPTIONAL);
+    let base = this.startNode();
+    base.OptionalChain = null;
+
+    if (this.test(Token.LPAREN)) {
+      base.Arguments = this.parseArguments().Arguments;
+    } else if (this.eat(Token.LBRACK)) {
+      base.Expression = this.parseExpression();
+      this.expect(Token.RBRACK);
+    } else if (this.test(Token.TEMPLATE)) {
+      this.unexpected();
+    } else {
+      base.IdentifierName = this.parseIdentifierName();
+    }
+
+    base = this.finishNode(base, 'OptionalChain');
+
+    while (true) {
+      const node = this.startNode();
+
+      if (this.test(Token.LPAREN)) {
+        node.OptionalChain = base;
+        node.Arguments = this.parseArguments().Arguments;
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.eat(Token.LBRACK)) {
+        node.OptionalChain = base;
+        node.Expression = this.parseExpression();
+        this.expect(Token.RBRACK);
+        base = this.finishNode(node, 'OptionalChain');
+      } else if (this.test(Token.TEMPLATE)) {
+        this.unexpected();
+      } else if (this.eat(Token.PERIOD)) {
+        node.OptionalChain = base;
+        node.IdentifierName = this.parseIdentifierName();
+        base = this.finishNode(node, 'OptionalChain');
+      } else {
+        return base;
+      }
+    }
+  } // NewExpression
+
+
+  parseNewExpression() {
+    const node = this.startNode();
+    this.expect(Token.NEW);
+
+    if (this.scope.hasNewTarget() && this.eat(Token.PERIOD)) {
+      this.expect('target');
+      return this.finishNode(node, 'NewTarget');
+    }
+
+    node.MemberExpression = this.parseLeftHandSideExpression(false);
+
+    if (this.test(Token.LPAREN)) {
+      node.Arguments = this.parseArguments().Arguments;
+    } else {
+      node.Arguments = null;
+    }
+
+    return this.finishNode(node, 'NewExpression');
+  } // PrimaryExpression :
+  //   ...
+
+
+  parsePrimaryExpression() {
+    switch (this.peek().type) {
+      case Token.IDENTIFIER:
+      case Token.ESCAPED_KEYWORD:
+      case Token.YIELD:
+      case Token.AWAIT:
+        // `async` [no LineTerminator here] `function`
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+          return this.parseFunctionExpression(FunctionKind.ASYNC);
+        }
+
+        return this.parseIdentifierReference();
+
+      case Token.THIS:
+        {
+          const node = this.startNode();
+          this.next();
+          return this.finishNode(node, 'ThisExpression');
+        }
+
+      case Token.NUMBER:
+      case Token.BIGINT:
+        return this.parseNumericLiteral();
+
+      case Token.STRING:
+        return this.parseStringLiteral();
+
+      case Token.NULL:
+        {
+          const node = this.startNode();
+          this.next();
+          return this.finishNode(node, 'NullLiteral');
+        }
+
+      case Token.TRUE:
+      case Token.FALSE:
+        return this.parseBooleanLiteral();
+
+      case Token.LBRACK:
+        return this.parseArrayLiteral();
+
+      case Token.LBRACE:
+        return this.parseObjectLiteral();
+
+      case Token.FUNCTION:
+        return this.parseFunctionExpression(FunctionKind.NORMAL);
+
+      case Token.CLASS:
+        return this.parseClassExpression();
+
+      case Token.TEMPLATE:
+        return this.parseTemplateLiteral();
+
+      case Token.DIV:
+      case Token.ASSIGN_DIV:
+        return this.parseRegularExpressionLiteral();
+
+      case Token.LPAREN:
+        return this.parseCoverParenthesizedExpressionAndArrowParameterList();
+
+      default:
+        return this.unexpected();
+    }
+  } // NumericLiteral
+
+
+  parseNumericLiteral() {
+    const node = this.startNode();
+
+    if (!this.test(Token.NUMBER) && !this.test(Token.BIGINT)) {
+      this.unexpected();
+    }
+
+    node.value = this.next().value;
+    return this.finishNode(node, 'NumericLiteral');
+  } // StringLiteral
+
+
+  parseStringLiteral() {
+    const node = this.startNode();
+
+    if (!this.test(Token.STRING)) {
+      this.unexpected();
+    }
+
+    node.value = this.next().value;
+    return this.finishNode(node, 'StringLiteral');
+  } // BooleanLiteral :
+  //   `true`
+  //   `false`
+
+
+  parseBooleanLiteral() {
+    const node = this.startNode();
+
+    switch (this.peek().type) {
+      case Token.TRUE:
+        this.next();
+        node.value = true;
+        break;
+
+      case Token.FALSE:
+        this.next();
+        node.value = false;
+        break;
+
+      default:
+        this.unexpected();
+    }
+
+    return this.finishNode(node, 'BooleanLiteral');
+  } // ArrayLiteral :
+  //   `[` `]`
+  //   `[` Elision `]`
+  //   `[` ElementList `]`
+  //   `[` ElementList `,` `]`
+  //   `[` ElementList `,` Elision `]`
+
+
+  parseArrayLiteral() {
+    const node = this.startNode();
+    this.expect(Token.LBRACK);
+    node.ElementList = [];
+    node.hasTrailingComma = false;
+
+    while (true) {
+      while (this.test(Token.COMMA)) {
+        const elision = this.startNode();
+        this.next();
+        node.ElementList.push(this.finishNode(elision, 'Elision'));
+      }
+
+      if (this.eat(Token.RBRACK)) {
+        break;
+      }
+
+      if (this.test(Token.ELLIPSIS)) {
+        const spread = this.startNode();
+        this.next();
+        spread.AssignmentExpression = this.parseAssignmentExpression();
+        node.ElementList.push(this.finishNode(spread, 'SpreadElement'));
+      } else {
+        node.ElementList.push(this.parseAssignmentExpression());
+      }
+
+      if (this.eat(Token.RBRACK)) {
+        node.hasTrailingComma = false;
+        break;
+      }
+
+      node.hasTrailingComma = true;
+      this.expect(Token.COMMA);
+    }
+
+    return this.finishNode(node, 'ArrayLiteral');
+  } // ObjectLiteral :
+  //   `{` `}`
+  //   `{` PropertyDefinitionList `}`
+  //   `{` PropertyDefinitionList `,` `}`
+
+
+  parseObjectLiteral() {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+    node.PropertyDefinitionList = [];
+
+    while (true) {
+      if (this.eat(Token.RBRACE)) {
+        break;
+      }
+
+      node.PropertyDefinitionList.push(this.parsePropertyDefinition());
+
+      if (this.eat(Token.RBRACE)) {
+        break;
+      }
+
+      this.expect(Token.COMMA);
+    }
+
+    return this.finishNode(node, 'ObjectLiteral');
+  }
+
+  parsePropertyDefinition() {
+    return this.parseBracketedDefinition('property');
+  }
+
+  parseFunctionExpression(kind) {
+    return this.parseFunction(true, kind);
+  }
+
+  parseArguments() {
+    this.expect(Token.LPAREN);
+
+    if (this.eat(Token.RPAREN)) {
+      return {
+        Arguments: [],
+        trailingComma: false
+      };
+    }
+
+    const Arguments = [];
+    let trailingComma = false;
+
+    while (true) {
+      const node = this.startNode();
+
+      if (this.eat(Token.ELLIPSIS)) {
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        Arguments.push(this.finishNode(node, 'AssignmentRestElement'));
+      } else {
+        Arguments.push(this.parseAssignmentExpression());
+      }
+
+      if (this.eat(Token.RPAREN)) {
+        break;
+      }
+
+      this.expect(Token.COMMA);
+
+      if (this.eat(Token.RPAREN)) {
+        trailingComma = true;
+        break;
+      }
+    }
+
+    return {
+      Arguments,
+      trailingComma
+    };
+  } // #sec-class-definitions
+  // ClassDeclaration :
+  //   `class` BindingIdentifier ClassTail
+  //   [+Default] `class` ClassTail
+  //
+  // ClassExpression :
+  //   `class` BindingIdentifier? ClassTail
+
+
+  parseClass(isExpression) {
+    const node = this.startNode();
+    this.expect(Token.CLASS);
+    this.scope.with({
+      strict: true
+    }, () => {
+      if (!this.test(Token.LBRACE) && !this.test(Token.EXTENDS)) {
+        node.BindingIdentifier = this.parseBindingIdentifier();
+
+        if (!isExpression) {
+          this.scope.declare(node.BindingIdentifier, 'lexical');
+        }
+      } else if (isExpression === false && !this.scope.isDefault()) {
+        this.unexpected();
+      } else {
+        node.BindingIdentifier = null;
+      }
+
+      node.ClassTail = this.scope.with({
+        default: false
+      }, () => this.parseClassTail());
+    });
+    return this.finishNode(node, isExpression ? 'ClassExpression' : 'ClassDeclaration');
+  } // ClassTail : ClassHeritage? `{` ClassBody? `}`
+  // ClassHeritage : `extends` LeftHandSideExpression
+  // ClassBody : ClassElementList
+
+
+  parseClassTail() {
+    const node = this.startNode();
+
+    if (this.eat(Token.EXTENDS)) {
+      node.ClassHeritage = this.parseLeftHandSideExpression();
+    } else {
+      node.ClassHeritage = null;
+    }
+
+    this.expect(Token.LBRACE);
+
+    if (this.eat(Token.RBRACE)) {
+      node.ClassBody = null;
+    } else {
+      this.scope.with({
+        superCall: !!node.ClassHeritage
+      }, () => {
+        node.ClassBody = [];
+        let hasConstructor = false;
+
+        while (!this.eat(Token.RBRACE)) {
+          const m = this.parseClassElement();
+          node.ClassBody.push(m);
+          const name = PropName(m.MethodDefinition);
+          const isActualConstructor = !m.static && !!m.MethodDefinition.UniqueFormalParameters && m.MethodDefinition.type === 'MethodDefinition' && name === 'constructor';
+
+          if (isActualConstructor) {
+            if (hasConstructor) {
+              this.raiseEarly('DuplicateConstructor', m);
+            } else {
+              hasConstructor = true;
+            }
+          }
+
+          if (name === 'prototype' || !m.static && !isActualConstructor && name === 'constructor') {
+            this.raiseEarly('InvalidMethodName', m, name);
+          }
+        }
+      });
+    }
+
+    return this.finishNode(node, 'ClassTail');
+  } // ClassElement :
+  //   `static` MethodDefinition
+  //   MethodDefinition
+
+
+  parseClassElement() {
+    const node = this.startNode();
+    node.static = this.eat('static');
+    node.MethodDefinition = this.parseMethodDefinition(node.static);
+
+    while (this.eat(Token.SEMICOLON)) {// nothing
+    }
+
+    return this.finishNode(node, 'ClassElement');
+  }
+
+  parseMethodDefinition(isStatic) {
+    return this.parseBracketedDefinition('method', isStatic);
+  }
+
+  parseClassExpression() {
+    return this.parseClass(true);
+  }
+
+  parseTemplateLiteral(tagged = false) {
+    const node = this.startNode();
+    node.TemplateSpanList = [];
+    node.ExpressionList = [];
+    let buffer = '';
+
+    while (true) {
+      if (this.position >= this.source.length) {
+        this.raise('UnterminatedTemplate', this.position);
+      }
+
+      const c = this.source[this.position];
+
+      switch (c) {
+        case '`':
+          this.position += 1;
+          node.TemplateSpanList.push(buffer);
+          this.next();
+
+          if (!tagged) {
+            node.TemplateSpanList.forEach(s => {
+              if (TV(s) === undefined) {
+                this.unexpected(node);
+              }
+            });
+          }
+
+          return this.finishNode(node, 'TemplateLiteral');
+
+        case '$':
+          this.position += 1;
+
+          if (this.source[this.position] === '{') {
+            this.position += 1;
+            node.TemplateSpanList.push(buffer);
+            buffer = '';
+            this.next();
+            node.ExpressionList.push(this.parseExpression());
+            break;
+          }
+
+          buffer += c;
+          break;
+
+        default:
+          {
+            if (c === '\\') {
+              buffer += c;
+              this.position += 1;
+            }
+
+            const l = this.source[this.position];
+            this.position += 1;
+
+            if (isLineTerminator(l)) {
+              if (l === '\r' && this.source[this.position] === '\n') {
+                this.position += 1;
+              }
+
+              if (l === '\u{2028}' || l === '\u{2029}') {
+                buffer += l;
+              } else {
+                buffer += '\n';
+              }
+
+              this.line += 1;
+              this.columnOffset = this.position;
+            } else {
+              buffer += l;
+            }
+
+            break;
+          }
+      }
+    }
+  } // RegularExpressionLiteral :
+  //   `/` RegularExpressionBody `/` RegularExpressionFlags
+
+
+  parseRegularExpressionLiteral() {
+    const node = this.startNode();
+    this.scanRegularExpressionBody();
+    node.RegularExpressionBody = this.scannedValue;
+    this.scanRegularExpressionFlags();
+    node.RegularExpressionFlags = this.scannedValue;
+    {
+      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags); // throws if invalid
+
+      p.parsePattern();
+    }
+    const fakeToken = {
+      endIndex: this.position - 1,
+      line: this.line - 1,
+      column: this.position - this.columnOffset
+    };
+    this.next();
+    this.currentToken = fakeToken;
+    return this.finishNode(node, 'RegularExpressionLiteral');
+  } // CoverParenthesizedExpressionAndArrowParameterList :
+  //   `(` Expression `)`
+  //   `(` Expression `,` `)`
+  //   `(` `)`
+  //   `(` `...` BindingIdentifier `)`
+  //   `(` `...` BindingPattern `)`
+  //   `(` Expression `,` `...` BindingIdentifier `)`
+  //   `(` Expression `.` `...` BindingPattern `)`
+
+
+  parseCoverParenthesizedExpressionAndArrowParameterList() {
+    const node = this.startNode();
+    const commaOp = this.startNode();
+    this.expect(Token.LPAREN);
+
+    if (this.test(Token.RPAREN)) {
+      if (!this.testAhead(Token.ARROW) || this.peekAhead().hadLineTerminatorBefore) {
+        this.unexpected();
+      }
+
+      this.next();
+      node.Arguments = [];
+      return this.finishNode(node, 'CoverParenthesizedExpressionAndArrowParameterList');
+    }
+
+    this.scope.pushArrowInfo();
+    this.scope.pushAssignmentInfo('arrow');
+    const expressions = [];
+    let rparenAfterComma;
+
+    while (true) {
+      if (this.test(Token.ELLIPSIS)) {
+        const inner = this.startNode();
+        this.next();
+
+        switch (this.peek().type) {
+          case Token.LBRACE:
+          case Token.LBRACK:
+            inner.BindingPattern = this.parseBindingPattern();
+            break;
+
+          default:
+            inner.BindingIdentifier = this.parseBindingIdentifier();
+            break;
+        }
+
+        expressions.push(this.finishNode(inner, 'BindingRestElement'));
+        this.expect(Token.RPAREN);
+        break;
+      }
+
+      expressions.push(this.parseAssignmentExpression());
+
+      if (this.eat(Token.COMMA)) {
+        if (this.eat(Token.RPAREN)) {
+          rparenAfterComma = this.currentToken;
+          break;
+        }
+      } else {
+        this.expect(Token.RPAREN);
+        break;
+      }
+    }
+
+    const arrowInfo = this.scope.popArrowInfo();
+    const assignmentInfo = this.scope.popAssignmentInfo(); // ArrowParameters :
+    //   CoverParenthesizedExpressionAndArrowParameterList
+
+    if (this.test(Token.ARROW)) {
+      node.Arguments = expressions;
+      node.arrowInfo = arrowInfo;
+      assignmentInfo.clear();
+      return this.finishNode(node, 'CoverParenthesizedExpressionAndArrowParameterList');
+    } // ParenthesizedExpression :
+    //   `(` Expression `)`
+
+
+    if (expressions[expressions.length - 1].type === 'BindingRestElement') {
+      this.unexpected(expressions[expressions.length - 1]);
+    }
+
+    if (rparenAfterComma) {
+      this.unexpected(rparenAfterComma);
+    }
+
+    if (expressions.length === 1) {
+      node.Expression = expressions[0];
+    } else {
+      commaOp.ExpressionList = expressions;
+      node.Expression = this.finishNode(commaOp, 'CommaOperator');
+    }
+
+    return this.finishNode(node, 'ParenthesizedExpression');
+  } // PropertyName :
+  //   LiteralPropertyName
+  //   ComputedPropertyName
+  // LiteralPropertyName :
+  //   IdentifierName
+  //   StringLiteral
+  //   NumericLiteral
+  // ComputedPropertyName :
+  //   `[` AssignmentExpression `]`
+
+
+  parsePropertyName() {
+    if (this.test(Token.LBRACK)) {
+      const node = this.startNode();
+      this.next();
+      node.ComputedPropertyName = this.parseAssignmentExpression();
+      this.expect(Token.RBRACK);
+      return this.finishNode(node, 'PropertyName');
+    }
+
+    if (this.test(Token.STRING)) {
+      return this.parseStringLiteral();
+    }
+
+    if (this.test(Token.NUMBER) || this.test(Token.BIGINT)) {
+      return this.parseNumericLiteral();
+    }
+
+    return this.parseIdentifierName();
+  } // PropertyDefinition :
+  //   IdentifierReference
+  //   CoverInitializedName
+  //   PropertyName `:` AssignmentExpression
+  //   MethodDefinition
+  //   `...` AssignmentExpression
+  // MethodDefinition :
+  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+  //   GeneratorMethod
+  //   AsyncMethod
+  //   AsyncGeneratorMethod
+  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
+  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+  // GeneratorMethod :
+  //   `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+  // AsyncMethod :
+  //   `async` [no LineTerminator here] PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+  // AsyncGeneratorMethod :
+  //   `async` [no LineTerminator here] `*` Propertyname `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+
+
+  parseBracketedDefinition(type, isStatic = false) {
+    const node = this.startNode();
+
+    if (type === 'property' && this.eat(Token.ELLIPSIS)) {
+      node.PropertyName = null;
+      node.AssignmentExpression = this.parseAssignmentExpression();
+      return this.finishNode(node, 'PropertyDefinition');
+    }
+
+    let isGenerator = this.eat(Token.MUL);
+    let isGetter = false;
+    let isSetter = false;
+    let isAsync = false;
+
+    if (!isGenerator) {
+      if (this.test('get')) {
+        isGetter = true;
+      } else if (this.test('set')) {
+        isSetter = true;
+      } else if (this.test('async') && !this.peekAhead().hadLineTerminatorBefore) {
+        isAsync = true;
+      }
+    }
+
+    const firstName = this.parsePropertyName();
+
+    if (!isGenerator && !isGetter && !isSetter) {
+      isGenerator = this.eat(Token.MUL);
+    }
+
+    const isSpecialMethod = isGenerator || (isSetter || isGetter || isAsync) && !this.test(Token.LPAREN);
+
+    if (!isGenerator && type === 'property') {
+      if (this.eat(Token.COLON)) {
+        node.PropertyName = firstName;
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        return this.finishNode(node, 'PropertyDefinition');
+      }
+
+      if (this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
+        node.IdentifierReference = firstName;
+        node.IdentifierReference.type = 'IdentifierReference';
+        node.Initializer = this.parseInitializerOpt();
+        this.finishNode(node, 'CoverInitializedName');
+        this.scope.registerCoverInitializedName(node);
+        return node;
+      }
+
+      if (!isSpecialMethod && firstName.type === 'IdentifierName' && !this.test(Token.LPAREN) && !isKeyword(firstName.name)) {
+        firstName.type = 'IdentifierReference';
+
+        if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+
+        if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+
+        if (firstName.name !== 'yield' && firstName.name !== 'await' && isKeywordRaw(firstName.name)) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+
+        if (this.isStrictMode() && isReservedWordStrict(firstName.name)) {
+          this.raiseEarly('UnexpectedToken', firstName);
+        }
+
+        return firstName;
+      }
+    }
+
+    node.PropertyName = isSpecialMethod && (!isGenerator || isAsync) ? this.parsePropertyName() : firstName;
+    this.scope.with({
+      lexical: true,
+      variable: true,
+      superProperty: true,
+      await: isAsync,
+      yield: isGenerator
+    }, () => {
+      if (isSpecialMethod && isGetter) {
+        this.expect(Token.LPAREN);
+        this.expect(Token.RPAREN);
+        node.PropertySetParameterList = null;
+        node.UniqueFormalParameters = null;
+      } else if (isSpecialMethod && isSetter) {
+        this.expect(Token.LPAREN);
+        node.PropertySetParameterList = [this.parseFormalParameter()];
+        this.expect(Token.RPAREN);
+        node.UniqueFormalParameters = null;
+      } else {
+        node.PropertySetParameterList = null;
+        node.UniqueFormalParameters = this.parseUniqueFormalParameters();
+      }
+
+      this.scope.with({
+        superCall: !isSpecialMethod && !isStatic && (node.PropertyName.name === 'constructor' || node.PropertyName.value === 'constructor') && this.scope.hasSuperCall()
+      }, () => {
+        const body = this.parseFunctionBody(isAsync, isGenerator, false);
+        node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
+
+        if (node.UniqueFormalParameters || node.PropertySetParameterList) {
+          this.validateFormalParameters(node.UniqueFormalParameters || node.PropertySetParameterList, body, true);
+        }
+      });
+    });
+    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}`;
+    return this.finishNode(node, name);
+  }
+
+}
+
+class StatementParser extends ExpressionParser {
+  semicolon() {
+    if (this.eat(Token.SEMICOLON)) {
+      return;
+    }
+
+    if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
+      return;
+    }
+
+    this.unexpected();
+  } // StatementList :
+  //   StatementListItem
+  //   StatementList StatementListItem
+
+
+  parseStatementList(endToken, directives) {
+    const statementList = [];
+    const oldStrict = this.state.strict;
+
+    while (!this.eat(endToken)) {
+      const stmt = this.parseStatementListItem();
+      statementList.push(stmt);
+
+      if (directives !== undefined && stmt.type === 'ExpressionStatement' && stmt.Expression.type === 'StringLiteral') {
+        const directive = this.source.slice(stmt.Expression.location.startIndex + 1, stmt.Expression.location.endIndex - 1);
+
+        if (directive === 'use strict') {
+          stmt.strict = true;
+          stmt.Expression.strict = true;
+          this.state.strict = true;
+          directives.forEach(d => {
+            if (/\\([1-9]|0\d)/.test(d)) {
+              this.raiseEarly('UnexpectedToken', stmt);
+            }
+          });
+        }
+
+        directives.push(directive);
+      } else {
+        directives = undefined;
+      }
+    }
+
+    this.state.strict = oldStrict;
+    return statementList;
+  } // StatementListItem :
+  //   Statement
+  //   Declaration
+  //
+  // Declaration :
+  //   HoistableDeclaration
+  //   ClassDeclaration
+  //   LexicalDeclaration
+
+
+  parseStatementListItem() {
+    switch (this.peek().type) {
+      case Token.FUNCTION:
+        return this.parseHoistableDeclaration();
+
+      case Token.CLASS:
+        return this.parseClassDeclaration();
+
+      case Token.CONST:
+        return this.parseLexicalDeclaration();
+
+      default:
+        if (this.test('let')) {
+          switch (this.peekAhead().type) {
+            case Token.LBRACE:
+            case Token.LBRACK:
+            case Token.IDENTIFIER:
+            case Token.YIELD:
+            case Token.AWAIT:
+              return this.parseLexicalDeclaration();
+          }
+        }
+
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+          return this.parseHoistableDeclaration();
+        }
+
+        return this.parseStatement();
+    }
+  } // HoistableDeclaration :
+  //   FunctionDeclaration
+  //   GeneratorDeclaration
+  //   AsyncFunctionDeclaration
+  //   AsyncGeneratorDeclaration
+
+
+  parseHoistableDeclaration() {
+    switch (this.peek().type) {
+      case Token.FUNCTION:
+        return this.parseFunctionDeclaration(FunctionKind.NORMAL);
+
+      default:
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+          return this.parseFunctionDeclaration(FunctionKind.ASYNC);
+        }
+
+        throw new Error('unreachable');
+    }
+  } // ClassDeclaration :
+  //   `class` BindingIdentifier ClassTail
+  //   [+Default] `class` ClassTail
+
+
+  parseClassDeclaration() {
+    return this.parseClass(false);
+  } // LexicalDeclaration : LetOrConst BindingList `;`
+
+
+  parseLexicalDeclaration() {
+    const node = this.startNode();
+    const letOrConst = this.eat('let') || this.expect(Token.CONST);
+    node.LetOrConst = letOrConst.type === Token.CONST ? 'const' : 'let';
+    node.BindingList = this.parseBindingList();
+    this.semicolon();
+    this.scope.declare(node.BindingList, 'lexical');
+    node.BindingList.forEach(b => {
+      if (node.LetOrConst === 'const' && !b.Initializer) {
+        this.raiseEarly('ConstDeclarationMissingInitializer', b);
+      }
+    });
+    return this.finishNode(node, 'LexicalDeclaration');
+  } // BindingList :
+  //   LexicalBinding
+  //   BindingList `,` LexicalBinding
+  //
+  // LexicalBinding :
+  //   BindingIdentifier Initializer?
+  //   BindingPattern Initializer
+
+
+  parseBindingList() {
+    const bindingList = [];
+
+    do {
+      const node = this.parseBindingElement();
+      node.type = 'LexicalBinding';
+      bindingList.push(node);
+    } while (this.eat(Token.COMMA));
+
+    return bindingList;
+  } // BindingElement :
+  //   SingleNameBinding
+  //   BindingPattern Initializer?
+  // SingleNameBinding :
+  //   BindingIdentifier Initializer?
+
+
+  parseBindingElement() {
+    const node = this.startNode();
+
+    if (this.test(Token.LBRACE) || this.test(Token.LBRACK)) {
+      node.BindingPattern = this.parseBindingPattern();
+    } else {
+      node.BindingIdentifier = this.parseBindingIdentifier();
+    }
+
+    node.Initializer = this.parseInitializerOpt();
+    return this.finishNode(node, node.BindingPattern ? 'BindingElement' : 'SingleNameBinding');
+  } // BindingPattern:
+  //   ObjectBindingPattern
+  //   ArrayBindingPattern
+
+
+  parseBindingPattern() {
+    switch (this.peek().type) {
+      case Token.LBRACE:
+        return this.parseObjectBindingPattern();
+
+      case Token.LBRACK:
+        return this.parseArrayBindingPattern();
+
+      default:
+        return this.unexpected();
+    }
+  } // ObjectBindingPattern :
+  //   `{` `}`
+  //   `{` BindingRestProperty `}`
+  //   `{` BindingPropertyList `}`
+  //   `{` BindingPropertyList `,` BindingRestProperty? `}`
+
+
+  parseObjectBindingPattern() {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+    node.BindingPropertyList = [];
+
+    while (!this.eat(Token.RBRACE)) {
+      if (this.test(Token.ELLIPSIS)) {
+        node.BindingRestProperty = this.parseBindingRestProperty();
+        this.expect(Token.RBRACE);
+        break;
+      } else {
+        node.BindingPropertyList.push(this.parseBindingProperty());
+
+        if (!this.eat(Token.COMMA)) {
+          this.expect(Token.RBRACE);
+          break;
+        }
+      }
+    }
+
+    return this.finishNode(node, 'ObjectBindingPattern');
+  } // BindingProperty :
+  //   SingleNameBinding
+  //   PropertyName : BindingElement
+
+
+  parseBindingProperty() {
+    const node = this.startNode();
+    const name = this.parsePropertyName();
+
+    if (this.eat(Token.COLON)) {
+      node.PropertyName = name;
+      node.BindingElement = this.parseBindingElement();
+      return this.finishNode(node, 'BindingProperty');
+    }
+
+    node.BindingIdentifier = name;
+
+    if (name.type === 'IdentifierName') {
+      name.type = 'BindingIdentifier';
+    } else {
+      this.unexpected(name);
+    }
+
+    node.Initializer = this.parseInitializerOpt();
+    return this.finishNode(node, 'SingleNameBinding');
+  } // BindingRestProperty :
+  //  `...` BindingIdentifier
+
+
+  parseBindingRestProperty() {
+    const node = this.startNode();
+    this.expect(Token.ELLIPSIS);
+    node.BindingIdentifier = this.parseBindingIdentifier();
+    return this.finishNode(node, 'BindingRestProperty');
+  } // ArrayBindingPattern :
+  //   `[` Elision? BindingRestElement `]`
+  //   `[` BindingElementList `]`
+  //   `[` BindingElementList `,` Elision? BindingRestElement `]`
+
+
+  parseArrayBindingPattern() {
+    const node = this.startNode();
+    this.expect(Token.LBRACK);
+    node.BindingElementList = [];
+
+    while (true) {
+      while (this.test(Token.COMMA)) {
+        const elision = this.startNode();
+        this.next();
+        node.BindingElementList.push(this.finishNode(elision, 'Elision'));
+      }
+
+      if (this.eat(Token.RBRACK)) {
+        break;
+      }
+
+      if (this.test(Token.ELLIPSIS)) {
+        node.BindingRestElement = this.parseBindingRestElement();
+        this.expect(Token.RBRACK);
+        break;
+      } else {
+        node.BindingElementList.push(this.parseBindingElement());
+      }
+
+      if (this.eat(Token.RBRACK)) {
+        break;
+      }
+
+      this.expect(Token.COMMA);
+    }
+
+    return this.finishNode(node, 'ArrayBindingPattern');
+  } // BindingRestElement :
+  //   `...` BindingIdentifier
+  //   `...` BindingPattern
+
+
+  parseBindingRestElement() {
+    const node = this.startNode();
+    this.expect(Token.ELLIPSIS);
+
+    switch (this.peek().type) {
+      case Token.LBRACE:
+      case Token.LBRACK:
+        node.BindingPattern = this.parseBindingPattern();
+        break;
+
+      default:
+        node.BindingIdentifier = this.parseBindingIdentifier();
+        break;
+    }
+
+    return this.finishNode(node, 'BindingRestElement');
+  } // Initializer : `=` AssignmentExpression
+
+
+  parseInitializerOpt() {
+    if (this.eat(Token.ASSIGN)) {
+      return this.parseAssignmentExpression();
+    }
+
+    return null;
+  } // FunctionDeclaration
+
+
+  parseFunctionDeclaration(kind) {
+    return this.parseFunction(false, kind);
+  } // Statement :
+  //   ...
+
+
+  parseStatement() {
+    switch (this.peek().type) {
+      case Token.LBRACE:
+        return this.parseBlockStatement();
+
+      case Token.VAR:
+        return this.parseVariableStatement();
+
+      case Token.SEMICOLON:
+        {
+          const node = this.startNode();
+          this.next();
+          return this.finishNode(node, 'EmptyStatement');
+        }
+
+      case Token.IF:
+        return this.parseIfStatement();
+
+      case Token.DO:
+        return this.parseDoWhileStatement();
+
+      case Token.WHILE:
+        return this.parseWhileStatement();
+
+      case Token.FOR:
+        return this.parseForStatement();
+
+      case Token.SWITCH:
+        return this.parseSwitchStatement();
+
+      case Token.CONTINUE:
+      case Token.BREAK:
+        return this.parseBreakContinueStatement();
+
+      case Token.RETURN:
+        return this.parseReturnStatement();
+
+      case Token.WITH:
+        return this.parseWithStatement();
+
+      case Token.THROW:
+        return this.parseThrowStatement();
+
+      case Token.TRY:
+        return this.parseTryStatement();
+
+      case Token.DEBUGGER:
+        return this.parseDebuggerStatement();
+
+      default:
+        return this.parseExpressionStatement();
+    }
+  } // BlockStatement : Block
+
+
+  parseBlockStatement() {
+    return this.parseBlock();
+  } // Block : `{` StatementList `}`
+
+
+  parseBlock(lexical = true) {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+    this.scope.with({
+      lexical
+    }, () => {
+      node.StatementList = this.parseStatementList(Token.RBRACE);
+    });
+    return this.finishNode(node, 'Block');
+  } // VariableStatement : `var` VariableDeclarationList `;`
+
+
+  parseVariableStatement() {
+    const node = this.startNode();
+    this.expect(Token.VAR);
+    node.VariableDeclarationList = this.parseVariableDeclarationList();
+    this.semicolon();
+    this.scope.declare(node.VariableDeclarationList, 'variable');
+    return this.finishNode(node, 'VariableStatement');
+  } // VariableDeclarationList :
+  //   VariableDeclaration
+  //   VariableDeclarationList `,` VariableDeclaration
+
+
+  parseVariableDeclarationList(firstDeclarationRequiresInit = true) {
+    const declarationList = [];
+
+    do {
+      const node = this.parseVariableDeclaration(firstDeclarationRequiresInit);
+      declarationList.push(node);
+    } while (this.eat(Token.COMMA));
+
+    return declarationList;
+  } // VariableDeclaration :
+  //   BindingIdentifier Initializer?
+  //   BindingPattern Initializer
+
+
+  parseVariableDeclaration(firstDeclarationRequiresInit) {
+    const node = this.startNode();
+
+    switch (this.peek().type) {
+      case Token.LBRACE:
+      case Token.LBRACK:
+        node.BindingPattern = this.parseBindingPattern();
+
+        if (firstDeclarationRequiresInit) {
+          this.expect(Token.ASSIGN);
+          node.Initializer = this.parseAssignmentExpression();
+        } else {
+          node.Initializer = this.parseInitializerOpt();
+        }
+
+        break;
+
+      default:
+        node.BindingIdentifier = this.parseBindingIdentifier();
+        node.Initializer = this.parseInitializerOpt();
+        break;
+    }
+
+    return this.finishNode(node, 'VariableDeclaration');
+  } // IfStatement :
+  //  `if` `(` Expression `)` Statement `else` Statement
+  //  `if` `(` Expression `)` Statement
+
+
+  parseIfStatement() {
+    const node = this.startNode();
+    this.expect(Token.IF);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    node.Statement_a = this.parseStatement();
+
+    if (this.eat(Token.ELSE)) {
+      node.Statement_b = this.parseStatement();
+    }
+
+    return this.finishNode(node, 'IfStatement');
+  } // `while` `(` Expression `)` Statement
+
+
+  parseWhileStatement() {
+    const node = this.startNode();
+    this.expect(Token.WHILE);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    this.scope.with({
+      label: 'loop'
+    }, () => {
+      node.Statement = this.parseStatement();
+    });
+    return this.finishNode(node, 'WhileStatement');
+  } // `do` Statement `while` `(` Expression `)` `;`
+
+
+  parseDoWhileStatement() {
+    const node = this.startNode();
+    this.expect(Token.DO);
+    this.scope.with({
+      label: 'loop'
+    }, () => {
+      node.Statement = this.parseStatement();
+    });
+    this.expect(Token.WHILE);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN); // Semicolons are completely optional after a do-while, even without a newline
+
+    this.eat(Token.SEMICOLON);
+    return this.finishNode(node, 'DoWhileStatement');
+  } // `for` `(` [lookahead != `let` `[`] Expression? `;` Expression? `;` Expression? `)` Statement
+  // `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
+  // `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
+  // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
+  // `for` `(` `var` ForBinding `in` Expression `)` Statement
+  // `for` `(` ForDeclaration `in` Expression `)` Statement
+  // `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  // `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+  //
+  // ForDeclaration : LetOrConst ForBinding
+
+
+  parseForStatement() {
+    return this.scope.with({
+      lexical: true,
+      label: 'loop'
+    }, () => {
+      const node = this.startNode();
+      this.expect(Token.FOR);
+      const isAwait = this.scope.hasAwait() && this.eat(Token.AWAIT);
+
+      if (isAwait && !this.scope.hasReturn()) {
+        this.state.hasTopLevelAwait = true;
+      }
+
+      this.expect(Token.LPAREN);
+
+      if (isAwait && this.test(Token.SEMICOLON)) {
+        this.unexpected();
+      }
+
+      if (this.eat(Token.SEMICOLON)) {
+        if (!this.test(Token.SEMICOLON)) {
+          node.Expression_b = this.parseExpression();
+        }
+
+        this.expect(Token.SEMICOLON);
+
+        if (!this.test(Token.RPAREN)) {
+          node.Expression_c = this.parseExpression();
+        }
+
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, 'ForStatement');
+      }
+
+      const isLexicalStart = () => {
+        switch (this.peekAhead().type) {
+          case Token.LBRACE:
+          case Token.LBRACK:
+          case Token.IDENTIFIER:
+          case Token.YIELD:
+          case Token.AWAIT:
+            return true;
+
+          default:
+            return false;
+        }
+      };
+
+      if ((this.test('let') || this.test(Token.CONST)) && isLexicalStart()) {
+        const inner = this.startNode();
+
+        if (this.eat('let')) {
+          inner.LetOrConst = 'let';
+        } else {
+          this.expect(Token.CONST);
+          inner.LetOrConst = 'const';
+        }
+
+        const list = this.parseBindingList();
+        this.scope.declare(list, 'lexical');
+
+        if (list.length > 1 || this.test(Token.SEMICOLON)) {
+          inner.BindingList = list;
+          node.LexicalDeclaration = this.finishNode(inner, 'LexicalDeclaration');
+          this.expect(Token.SEMICOLON);
+
+          if (!this.test(Token.SEMICOLON)) {
+            node.Expression_a = this.parseExpression();
+          }
+
+          this.expect(Token.SEMICOLON);
+
+          if (!this.test(Token.RPAREN)) {
+            node.Expression_b = this.parseExpression();
+          }
+
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForStatement');
+        }
+
+        inner.ForBinding = list[0];
+        inner.ForBinding.type = 'ForBinding';
+
+        if (inner.ForBinding.Initializer) {
+          this.unexpected(inner.ForBinding.Initializer);
+        }
+
+        node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
+        getDeclarations(node.ForDeclaration).forEach(d => {
+          if (d.name === 'let') {
+            this.raiseEarly('UnexpectedToken', d.node);
+          }
+        });
+
+        if (!isAwait && this.eat(Token.IN)) {
+          node.Expression = this.parseExpression();
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForInStatement');
+        }
+
+        this.expect('of');
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+      }
+
+      if (this.eat(Token.VAR)) {
+        if (isAwait) {
+          node.ForBinding = this.parseForBinding();
+          this.expect('of');
+          node.AssignmentExpression = this.parseAssignmentExpression();
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForAwaitStatement');
+        }
+
+        const list = this.parseVariableDeclarationList(false);
+
+        if (list.length > 1 || this.test(Token.SEMICOLON)) {
+          node.VariableDeclarationList = list;
+          this.expect(Token.SEMICOLON);
+
+          if (!this.test(Token.SEMICOLON)) {
+            node.Expression_a = this.parseExpression();
+          }
+
+          this.expect(Token.SEMICOLON);
+
+          if (!this.test(Token.RPAREN)) {
+            node.Expression_b = this.parseExpression();
+          }
+
+          this.expect(Token.RPAREN);
+          node.Statement = this.parseStatement();
+          return this.finishNode(node, 'ForStatement');
+        }
+
+        node.ForBinding = list[0];
+        node.ForBinding.type = 'ForBinding';
+
+        if (node.ForBinding.Initializer) {
+          this.unexpected(node.ForBinding.Initializer);
+        }
+
+        if (this.eat('of')) {
+          node.AssignmentExpression = this.parseAssignmentExpression();
+        } else {
+          this.expect(Token.IN);
+          node.Expression = this.parseExpression();
+        }
+
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, node.AssignmentExpression ? 'ForOfStatement' : 'ForInStatement');
+      }
+
+      this.scope.pushAssignmentInfo('for');
+      const expression = this.scope.with({
+        in: false
+      }, () => this.parseExpression());
+      const assignmentInfo = this.scope.popAssignmentInfo();
+
+      if (!isAwait && this.eat(Token.IN)) {
+        assignmentInfo.clear();
+        this.validateAssignmentTarget(expression);
+        node.LeftHandSideExpression = expression;
+        node.Expression = this.parseExpression();
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, 'ForInStatement');
+      }
+
+      if (this.eat('of')) {
+        assignmentInfo.clear();
+        this.validateAssignmentTarget(expression);
+        node.LeftHandSideExpression = expression;
+        node.AssignmentExpression = this.parseAssignmentExpression();
+        this.expect(Token.RPAREN);
+        node.Statement = this.parseStatement();
+        return this.finishNode(node, isAwait ? 'ForAwaitStatement' : 'ForOfStatement');
+      }
+
+      node.Expression_a = expression;
+      this.expect(Token.SEMICOLON);
+
+      if (!this.test(Token.SEMICOLON)) {
+        node.Expression_b = this.parseExpression();
+      }
+
+      this.expect(Token.SEMICOLON);
+
+      if (!this.test(Token.RPAREN)) {
+        node.Expression_c = this.parseExpression();
+      }
+
+      this.expect(Token.RPAREN);
+      node.Statement = this.parseStatement();
+      return this.finishNode(node, 'ForStatement');
+    });
+  } // ForBinding :
+  //   BindingIdentifier
+  //   BindingPattern
+
+
+  parseForBinding() {
+    const node = this.startNode();
+
+    switch (this.peek().type) {
+      case Token.LBRACE:
+      case Token.LBRACK:
+        node.BindingPattern = this.parseBindingPattern();
+        break;
+
+      default:
+        node.BindingIdentifier = this.parseBindingIdentifier();
+        break;
+    }
+
+    return this.finishNode(node, 'ForBinding');
+  } // SwitchStatement :
+  //   `switch` `(` Expression `)` CaseBlock
+
+
+  parseSwitchStatement() {
+    const node = this.startNode();
+    this.expect(Token.SWITCH);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    this.scope.with({
+      lexical: true,
+      label: 'switch'
+    }, () => {
+      node.CaseBlock = this.parseCaseBlock();
+    });
+    return this.finishNode(node, 'SwitchStatement');
+  } // CaseBlock :
+  //   `{` CaseClauses? `}`
+  //   `{` CaseClauses? DefaultClause CaseClauses? `}`
+  // CaseClauses :
+  //   CaseClause
+  //   CaseClauses CauseClause
+  // CaseClause :
+  //   `case` Expression `:` StatementList?
+  // DefaultClause :
+  //   `default` `:` StatementList?
+
+
+  parseCaseBlock() {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+
+    while (!this.eat(Token.RBRACE)) {
+      switch (this.peek().type) {
+        case Token.CASE:
+        case Token.DEFAULT:
+          {
+            const inner = this.startNode();
+            const t = this.next().type;
+
+            if (t === Token.DEFAULT && node.DefaultClause) {
+              this.unexpected();
+            }
+
+            if (t === Token.CASE) {
+              inner.Expression = this.parseExpression();
+            }
+
+            this.expect(Token.COLON);
+
+            while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
+              if (!inner.StatementList) {
+                inner.StatementList = [];
+              }
+
+              inner.StatementList.push(this.parseStatementListItem());
+            }
+
+            if (t === Token.DEFAULT) {
+              node.DefaultClause = this.finishNode(inner, 'DefaultClause');
+            } else {
+              if (node.DefaultClause) {
+                if (!node.CaseClauses_b) {
+                  node.CaseClauses_b = [];
+                }
+
+                node.CaseClauses_b.push(this.finishNode(inner, 'CaseClause'));
+              } else {
+                if (!node.CaseClauses_a) {
+                  node.CaseClauses_a = [];
+                }
+
+                node.CaseClauses_a.push(this.finishNode(inner, 'CaseClause'));
+              }
+            }
+
+            break;
+          }
+
+        default:
+          this.unexpected();
+      }
+    }
+
+    return this.finishNode(node, 'CaseBlock');
+  } // BreakStatement :
+  //   `break` `;`
+  //   `break` [no LineTerminator here] LabelIdentifier `;`
+  //
+  // ContinueStatement :
+  //   `continue` `;`
+  //   `continue` [no LineTerminator here] LabelIdentifier `;`
+
+
+  parseBreakContinueStatement() {
+    const node = this.startNode();
+    const isBreak = this.eat(Token.BREAK);
+
+    if (!isBreak) {
+      this.expect(Token.CONTINUE);
+    }
+
+    if (this.eat(Token.SEMICOLON)) {
+      node.LabelIdentifier = null;
+    } else if (this.peek().hadLineTerminatorBefore) {
+      node.LabelIdentifier = null;
+      this.semicolon();
+    } else {
+      if (this.test(Token.IDENTIFIER)) {
+        node.LabelIdentifier = this.parseLabelIdentifier();
+      } else {
+        node.LabelIdentifier = null;
+      }
+
+      this.semicolon();
+    }
+
+    this.verifyBreakContinue(node, isBreak);
+    return this.finishNode(node, isBreak ? 'BreakStatement' : 'ContinueStatement');
+  }
+
+  verifyBreakContinue(node, isBreak) {
+    let i = 0;
+
+    for (; i < this.scope.labels.length; i += 1) {
+      const label = this.scope.labels[i];
+
+      if (!node.LabelIdentifier || node.LabelIdentifier.name === label.name) {
+        if (label.type && (isBreak || label.type === 'loop')) {
+          break;
+        }
+
+        if (node.LabelIdentifier && isBreak) {
+          break;
+        }
+      }
+    }
+
+    if (i === this.scope.labels.length) {
+      this.raiseEarly('IllegalBreakContinue', node, isBreak);
+    }
+  } // ReturnStatement :
+  //   `return` `;`
+  //   `return` [no LineTerminator here] Expression `;`
+
+
+  parseReturnStatement() {
+    if (!this.scope.hasReturn()) {
+      this.unexpected();
+    }
+
+    const node = this.startNode();
+    this.expect(Token.RETURN);
+
+    if (this.eat(Token.SEMICOLON)) {
+      node.Expression = null;
+    } else if (this.peek().hadLineTerminatorBefore) {
+      node.Expression = null;
+      this.semicolon();
+    } else {
+      node.Expression = this.parseExpression();
+      this.semicolon();
+    }
+
+    return this.finishNode(node, 'ReturnStatement');
+  } // WithStatement :
+  //   `with` `(` Expression `)` Statement
+
+
+  parseWithStatement() {
+    if (this.isStrictMode()) {
+      this.raiseEarly('UnexpectedToken');
+    }
+
+    const node = this.startNode();
+    this.expect(Token.WITH);
+    this.expect(Token.LPAREN);
+    node.Expression = this.parseExpression();
+    this.expect(Token.RPAREN);
+    node.Statement = this.parseStatement();
+    return this.finishNode(node, 'WithStatement');
+  } // ThrowStatement :
+  //   `throw` [no LineTerminator here] Expression `;`
+
+
+  parseThrowStatement() {
+    const node = this.startNode();
+    this.expect(Token.THROW);
+
+    if (this.peek().hadLineTerminatorBefore) {
+      this.raise('NewlineAfterThrow', node);
+    }
+
+    node.Expression = this.parseExpression();
+    this.semicolon();
+    return this.finishNode(node, 'ThrowStatement');
+  } // TryStatement :
+  //   `try` Block Catch
+  //   `try` Block Finally
+  //   `try` Block Catch Finally
+  //
+  // Catch :
+  //   `catch` `(` CatchParameter `)` Block
+  //   `catch` Block
+  //
+  // Finally :
+  //   `finally` Block
+  //
+  // CatchParameter :
+  //   BindingIdentifier
+  //   BindingPattern
+
+
+  parseTryStatement() {
+    const node = this.startNode();
+    this.expect(Token.TRY);
+    node.Block = this.parseBlock();
+
+    if (this.eat(Token.CATCH)) {
+      this.scope.with({
+        lexical: true
+      }, () => {
+        const clause = this.startNode();
+
+        if (this.eat(Token.LPAREN)) {
+          switch (this.peek().type) {
+            case Token.LBRACE:
+            case Token.LBRACK:
+              clause.CatchParameter = this.parseBindingPattern();
+              break;
+
+            default:
+              clause.CatchParameter = this.parseBindingIdentifier();
+              break;
+          }
+
+          this.scope.declare(clause.CatchParameter, 'lexical');
+          this.expect(Token.RPAREN);
+        } else {
+          clause.CatchParameter = null;
+        }
+
+        clause.Block = this.parseBlock(false);
+        node.Catch = this.finishNode(clause, 'Catch');
+      });
+    } else {
+      node.Catch = null;
+    }
+
+    if (this.eat(Token.FINALLY)) {
+      node.Finally = this.parseBlock();
+    } else {
+      node.Finally = null;
+    }
+
+    if (!node.Catch && !node.Finally) {
+      this.raise('TryMissingCatchOrFinally');
+    }
+
+    return this.finishNode(node, 'TryStatement');
+  } // DebuggerStatement : `debugger` `;`
+
+
+  parseDebuggerStatement() {
+    const node = this.startNode();
+    this.expect(Token.DEBUGGER);
+    this.semicolon();
+    return this.finishNode(node, 'DebuggerStatement');
+  } // ExpressionStatement :
+  //   [lookahead != `{`, `function`, `async` [no LineTerminator here] `function`, `class`, `let` `[` ] Expression `;`
+
+
+  parseExpressionStatement() {
+    switch (this.peek().type) {
+      case Token.LBRACE:
+      case Token.FUNCTION:
+      case Token.CLASS:
+        this.unexpected();
+        break;
+
+      default:
+        if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+          this.unexpected();
+        }
+
+        if (this.test('let') && this.testAhead(Token.LBRACK)) {
+          this.unexpected();
+        }
+
+        break;
+    }
+
+    const node = this.startNode();
+    const expression = this.parseExpression();
+
+    if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
+      expression.type = 'LabelIdentifier';
+      node.LabelIdentifier = expression;
+
+      if (this.scope.labels.find(l => l.name === node.LabelIdentifier.name)) {
+        this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
+      }
+
+      let type = null;
+
+      switch (this.peek().type) {
+        case Token.SWITCH:
+          type = 'switch';
+          break;
+
+        case Token.DO:
+        case Token.WHILE:
+        case Token.FOR:
+          type = 'loop';
+          break;
+      }
+
+      this.scope.labels.push({
+        name: node.LabelIdentifier.name,
+        type
+      });
+      node.LabelledItem = this.parseStatement();
+      this.scope.labels.pop();
+      return this.finishNode(node, 'LabelledStatement');
+    }
+
+    node.Expression = expression;
+    this.semicolon();
+    return this.finishNode(node, 'ExpressionStatement');
+  } // ImportDeclaration :
+  //   `import` ImportClause FromClause `;`
+  //   `import` ModuleSpecifier `;`
+
+
+  parseImportDeclaration() {
+    if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
+      // `import` `(`
+      // `import` `.`
+      return this.parseExpressionStatement();
+    }
+
+    const node = this.startNode();
+    this.next();
+
+    if (this.test(Token.STRING)) {
+      node.ModuleSpecifier = this.parsePrimaryExpression();
+    } else {
+      node.ImportClause = this.parseImportClause();
+      this.scope.declare(node.ImportClause, 'import');
+      node.FromClause = this.parseFromClause();
+    }
+
+    this.semicolon();
+    return this.finishNode(node, 'ImportDeclaration');
+  } // ImportClause :
+  //   ImportedDefaultBinding
+  //   NameSpaceImport
+  //   NamedImports
+  //   ImportedDefaultBinding `,` NameSpaceImport
+  //   ImportedDefaultBinding `,` NamedImports
+  //
+  // ImportedBinding :
+  //   BindingIdentifier
+
+
+  parseImportClause() {
+    const node = this.startNode();
+
+    if (this.test(Token.IDENTIFIER)) {
+      node.ImportedDefaultBinding = this.parseImportedDefaultBinding();
+
+      if (!this.eat(Token.COMMA)) {
+        return this.finishNode(node, 'ImportClause');
+      }
+    }
+
+    if (this.test(Token.MUL)) {
+      node.NameSpaceImport = this.parseNameSpaceImport();
+    } else if (this.eat(Token.LBRACE)) {
+      node.NamedImports = this.parseNamedImports();
+    } else {
+      this.unexpected();
+    }
+
+    return this.finishNode(node, 'ImportClause');
+  } // ImportedDefaultBinding :
+  //   ImportedBinding
+
+
+  parseImportedDefaultBinding() {
+    const node = this.startNode();
+    node.ImportedBinding = this.parseBindingIdentifier();
+    return this.finishNode(node, 'ImportedDefaultBinding');
+  } // NameSpaceImport :
+  //   `*` `as` ImportedBinding
+
+
+  parseNameSpaceImport() {
+    const node = this.startNode();
+    this.expect(Token.MUL);
+    this.expect('as');
+    node.ImportedBinding = this.parseBindingIdentifier();
+    return this.finishNode(node, 'NameSpaceImport');
+  } // NamedImports :
+  //   `{` `}`
+  //   `{` ImportsList `}`
+  //   `{` ImportsList `,` `}`
+
+
+  parseNamedImports() {
+    const node = this.startNode();
+    node.ImportsList = [];
+
+    while (!this.eat(Token.RBRACE)) {
+      node.ImportsList.push(this.parseImportSpecifier());
+
+      if (this.eat(Token.RBRACE)) {
+        break;
+      }
+
+      this.expect(Token.COMMA);
+    }
+
+    return this.finishNode(node, 'NamedImports');
+  } // ImportSpecifier :
+  //   ImportedBinding
+  //   IdentifierName `as` ImportedBinding
+
+
+  parseImportSpecifier() {
+    const node = this.startNode();
+    const name = this.parseIdentifierName();
+
+    if (this.eat('as')) {
+      node.IdentifierName = name;
+      node.ImportedBinding = this.parseBindingIdentifier();
+    } else {
+      node.ImportedBinding = name;
+      node.ImportedBinding.type = 'BindingIdentifier';
+
+      if (isKeywordRaw(node.ImportedBinding.name)) {
+        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+      }
+
+      if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
+        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+      }
+    }
+
+    return this.finishNode(node, 'ImportSpecifier');
+  } // ExportDeclaration :
+  //   `export` ExportFromClause FromClause `;`
+  //   `export` NamedExports `;`
+  //   `export` VariableStatement
+  //   `export` Declaration
+  //   `export` `default` HoistableDeclaration
+  //   `export` `default` ClassDeclaration
+  //   `export` `default` AssignmentExpression `;`
+  //
+  // ExportFromClause :
+  //   `*`
+  //   `*` as IdentifierName
+  //   NamedExports
+
+
+  parseExportDeclaration() {
+    const node = this.startNode();
+    this.expect(Token.EXPORT);
+    node.default = this.eat(Token.DEFAULT);
+
+    if (node.default) {
+      switch (this.peek().type) {
+        case Token.FUNCTION:
+          node.HoistableDeclaration = this.scope.with({
+            default: true
+          }, () => this.parseFunctionDeclaration(FunctionKind.NORMAL));
+          break;
+
+        case Token.CLASS:
+          node.ClassDeclaration = this.scope.with({
+            default: true
+          }, () => this.parseClassDeclaration());
+          break;
+
+        default:
+          if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+            node.HoistableDeclaration = this.scope.with({
+              default: true
+            }, () => this.parseFunctionDeclaration(FunctionKind.ASYNC));
+          } else {
+            node.AssignmentExpression = this.parseAssignmentExpression();
+            this.semicolon();
+          }
+
+          break;
+      }
+
+      if (this.scope.exports.has('default')) {
+        this.raiseEarly('AlreadyDeclared', node);
+      } else {
+        this.scope.exports.add('default');
+      }
+    } else {
+      switch (this.peek().type) {
+        case Token.CONST:
+          node.Declaration = this.parseLexicalDeclaration();
+          this.scope.declare(node.Declaration, 'export');
+          break;
+
+        case Token.CLASS:
+          node.Declaration = this.parseClassDeclaration();
+          this.scope.declare(node.Declaration, 'export');
+          break;
+
+        case Token.FUNCTION:
+          node.Declaration = this.parseHoistableDeclaration();
+          this.scope.declare(node.Declaration, 'export');
+          break;
+
+        case Token.VAR:
+          node.VariableStatement = this.parseVariableStatement();
+          this.scope.declare(node.VariableStatement, 'export');
+          break;
+
+        case Token.LBRACE:
+          {
+            const NamedExports = this.parseNamedExports();
+
+            if (this.test('from')) {
+              node.ExportFromClause = NamedExports;
+              node.FromClause = this.parseFromClause();
+            } else {
+              node.NamedExports = NamedExports;
+              this.scope.checkUndefinedExports(node.NamedExports);
+            }
+
+            this.semicolon();
+            break;
+          }
+
+        case Token.MUL:
+          {
+            const inner = this.startNode();
+            this.next();
+
+            if (this.eat('as')) {
+              inner.IdentifierName = this.parseIdentifierName();
+              this.scope.declare(inner.IdentifierName, 'export');
+            }
+
+            node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
+            node.FromClause = this.parseFromClause();
+            this.semicolon();
+            break;
+          }
+
+        default:
+          if (this.test('let')) {
+            node.Declaration = this.parseLexicalDeclaration();
+            this.scope.declare(node.Declaration, 'export');
+          } else if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
+            node.Declaration = this.parseHoistableDeclaration();
+            this.scope.declare(node.Declaration, 'export');
+          } else {
+            this.unexpected();
+          }
+
+      }
+    }
+
+    return this.finishNode(node, 'ExportDeclaration');
+  } // NamedExports :
+  //   `{` `}`
+  //   `{` ExportsList `}`
+  //   `{` ExportsList `,` `}`
+
+
+  parseNamedExports() {
+    const node = this.startNode();
+    this.expect(Token.LBRACE);
+    node.ExportsList = [];
+
+    while (!this.eat(Token.RBRACE)) {
+      node.ExportsList.push(this.parseExportSpecifier());
+
+      if (this.eat(Token.RBRACE)) {
+        break;
+      }
+
+      this.expect(Token.COMMA);
+    }
+
+    return this.finishNode(node, 'NamedExports');
+  } // ExportSpecifier :
+  //   IdentifierName
+  //   IdentifierName `as` IdentifierName
+
+
+  parseExportSpecifier() {
+    const node = this.startNode();
+    const name = this.parseIdentifierName();
+
+    if (this.eat('as')) {
+      node.IdentifierName_a = name;
+      node.IdentifierName_b = this.parseIdentifierName();
+      this.scope.declare(node.IdentifierName_b, 'export');
+    } else {
+      node.IdentifierName = name;
+      this.scope.declare(name, 'export');
+    }
+
+    return this.finishNode(node, 'ExportSpecifier');
+  } // FromClause :
+  //   `from` ModuleSpecifier
+
+
+  parseFromClause() {
+    this.expect('from');
+    return this.parseStringLiteral();
+  }
+
+}
+
+class LanguageParser extends StatementParser {
+  // Script : ScriptBody?
+  parseScript() {
+    if (this.feature('hashbang')) {
+      this.skipHashbangComment();
+    }
+
+    const node = this.startNode();
+
+    if (this.eat(Token.EOS)) {
+      node.ScriptBody = null;
+    } else {
+      node.ScriptBody = this.parseScriptBody();
+    }
+
+    return this.finishNode(node, 'Script');
+  } // ScriptBody : StatementList
+
+
+  parseScriptBody() {
+    const node = this.startNode();
+    this.scope.with({
+      in: true,
+      lexical: true,
+      variable: true,
+      variableFunctions: true
+    }, () => {
+      const directives = [];
+      node.StatementList = this.parseStatementList(Token.EOS, directives);
+      node.strict = directives.includes('use strict');
+    });
+    return this.finishNode(node, 'ScriptBody');
+  } // Module : ModuleBody?
+
+
+  parseModule() {
+    if (this.feature('hashbang')) {
+      this.skipHashbangComment();
+    }
+
+    return this.scope.with({
+      module: true,
+      strict: true,
+      in: true,
+      importMeta: true,
+      await: this.feature('TopLevelAwait'),
+      lexical: true,
+      variable: true
+    }, () => {
+      const node = this.startNode();
+
+      if (this.eat(Token.EOS)) {
+        node.ModuleBody = null;
+      } else {
+        node.ModuleBody = this.parseModuleBody();
+      }
+
+      this.scope.undefinedExports.forEach((importNode, name) => {
+        this.raiseEarly('ModuleUndefinedExport', importNode, name);
+      });
+      node.hasTopLevelAwait = this.state.hasTopLevelAwait;
+      return this.finishNode(node, 'Module');
+    });
+  } // ModuleBody :
+  //   ModuleItemList
+
+
+  parseModuleBody() {
+    const node = this.startNode();
+    node.ModuleItemList = this.parseModuleItemList();
+    return this.finishNode(node, 'ModuleBody');
+  } // ModuleItemList :
+  //   ModuleItem
+  //   ModuleItemList ModuleItem
+  //
+  // ModuleItem :
+  //   ImportDeclaration
+  //   ExportDeclaration
+  //   StatementListItem
+
+
+  parseModuleItemList() {
+    const moduleItemList = [];
+
+    while (!this.eat(Token.EOS)) {
+      switch (this.peek().type) {
+        case Token.IMPORT:
+          moduleItemList.push(this.parseImportDeclaration());
+          break;
+
+        case Token.EXPORT:
+          moduleItemList.push(this.parseExportDeclaration());
+          break;
+
+        default:
+          moduleItemList.push(this.parseStatementListItem());
+          break;
+      }
+    }
+
+    return moduleItemList;
+  }
+
+}
+
+class Parser extends LanguageParser {
+  constructor(source) {
+    super(source);
+    this.source = source;
+    this.earlyErrors = new Set();
+    this.state = {
+      hasTopLevelAwait: false,
+      strict: false
+    };
+    this.scope = new Scope(this);
+  }
+
+  isStrictMode() {
+    return this.state.strict;
+  }
+
+  feature(name) {
+    return surroundingAgent.feature(name);
+  }
+
+  startNode() {
+    this.peek();
+    const node = {
+      type: undefined,
+      location: {
+        startIndex: this.peekToken.startIndex,
+        endIndex: -1,
+        start: {
+          line: this.peekToken.line,
+          column: this.peekToken.column
+        },
+        end: {
+          line: -1,
+          column: -1
+        }
+      },
+      strict: this.state.strict,
+      sourceText: () => this.source.slice(node.location.startIndex, node.location.endIndex)
+    };
+    return node;
+  }
+
+  finishNode(node, type) {
+    node.type = type;
+    node.location.endIndex = this.currentToken.endIndex;
+    node.location.end.line = this.currentToken.line;
+    node.location.end.column = this.currentToken.column;
+    return node;
+  }
+
+  createSyntaxError(context = this.peek(), template, templateArgs) {
+    if (template === 'UnexpectedToken') {
+      switch (context.type) {
+        case Token.AWAIT:
+          template = 'AwaitNotInAsyncFunction';
+          break;
+
+        case Token.YIELD:
+          template = 'YieldNotInGenerator';
+          break;
+
+        case Token.IDENTIFIER:
+          if (context.value === 'await') {
+            template = 'AwaitNotInAsyncFunction';
+          } else if (context.value === 'yield') {
+            template = 'YieldNotInGenerator';
+          }
+
+          break;
+
+        case Token.EOS:
+          template = 'UnexpectedEOS';
+          break;
+      }
+    }
+
+    let startIndex;
+    let endIndex;
+
+    if (typeof context === 'number') {
+      startIndex = context;
+      endIndex = context;
+    } else {
+      if (context.location) {
+        context = context.location;
+      }
+
+      startIndex = context.startIndex;
+      endIndex = context.endIndex;
+    }
+
+    startIndex = Math.min(this.source.length - 1, startIndex);
+    endIndex = Math.min(this.source.length - 1, endIndex);
+    let lineStart = this.source.lastIndexOf('\n', startIndex - 1);
+
+    if (lineStart === -1) {
+      lineStart = 0;
+    }
+
+    let lineEnd = this.source.indexOf('\n', endIndex);
+
+    if (lineEnd === -1) {
+      lineEnd = this.source.length - 1;
+    }
+
+    const e = new SyntaxError(messages[template](...templateArgs));
+    e.decoration = `${this.source.slice(lineStart, lineEnd)}
+${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
+    return e;
+  }
+
+  raiseEarly(template, context, ...templateArgs) {
+    const e = this.createSyntaxError(context, template, templateArgs);
+    this.earlyErrors.add(e);
+    return e;
+  }
+
+  raise(template, context, ...templateArgs) {
+    const e = this.createSyntaxError(context, template, templateArgs);
+    throw e;
+  }
+
+  unexpected(...args) {
+    return this.raise('UnexpectedToken', ...args);
+  }
+
+}
+
+function handleError(e) {
+  if (e.name === 'SyntaxError') {
+    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
+
+    if (e.decoration) {
+      const stackString = new Value('stack');
+
+      let _temp = Get(v, stackString);
+
+      Assert(!(_temp instanceof AbruptCompletion), "Get(v, stackString)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const stack = _temp.stringValue();
+
+      const newStackString = `${e.decoration}\n${stack}`;
+
+      let _temp2 = Set$1(v, stackString, new Value(newStackString), Value.true);
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "Set(v, stackString, new Value(newStackString), Value.true)" + ' returned an abrupt completion');
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+    }
+
+    return v;
+  } else {
+    throw e;
+  }
+}
+
+function wrappedParse(sourceText, f) {
+  const p = new Parser(sourceText);
+
+  try {
+    const r = f(p);
+
+    if (p.earlyErrors.size > 0) {
+      return [...p.earlyErrors].map(e => handleError(e));
+    }
+
+    return r;
+  } catch (e) {
+    return [handleError(e)];
+  }
+}
+function ParseScript(sourceText, realm, hostDefined = {}) {
+  // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
+  // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
+  //    any Early Error conditions. If the parse was successful and no early errors were found,
+  //    let body be the resulting parse tree. Otherwise, let body be a List of one or more
+  //    SyntaxError objects representing the parsing errors and/or early errors. Parsing and
+  //    early error detection may be interweaved in an implementation-dependent manner. If more
+  //    than one parsing error or early error is present, the number and ordering of error
+  //    objects in the list is implementation-dependent, but at least one must be present.
+  const body = wrappedParse(sourceText, p => p.parseScript()); // 3. If body is a List of errors, return body.
+
+  if (Array.isArray(body)) {
+    return body;
+  } // 4. Return Script Record { [[Realm]]: realm, [[Environment]]: undefined, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
+
+
+  return {
+    Realm: realm,
+    Environment: Value.undefined,
+    ECMAScriptCode: body,
+    HostDefined: hostDefined,
+
+    mark(m) {
+      m(this.Realm);
+      m(this.Environment);
+    }
+
+  };
+}
+function ParseModule(sourceText, realm, hostDefined = {}) {
+  // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
+  // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
+  //    any Early Error conditions. If the parse was successful and no early errors were found,
+  //    let body be the resulting parse tree. Otherwise, let body be a List of one or more
+  //    SyntaxError objects representing the parsing errors and/or early errors. Parsing and
+  //    early error detection may be interweaved in an implementation-dependent manner. If more
+  //    than one parsing error or early error is present, the number and ordering of error
+  //    objects in the list is implementation-dependent, but at least one must be present.
+  const body = wrappedParse(sourceText, p => p.parseModule()); // 3. If body is a List of errors, return body.
+
+  if (Array.isArray(body)) {
+    return body;
+  } // 4. Let requestedModules be the ModuleRequests of body.
+
+
+  const requestedModules = ModuleRequests(body); // 5. Let importEntries be ImportEntries of body.
+
+  const importEntries = ImportEntries(body); // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
+
+  const importedBoundNames = new ValueSet(ImportedLocalNames(importEntries)); // 7. Let indirectExportEntries be a new empty List.
+
+  const indirectExportEntries = []; // 8. Let localExportEntries be a new empty List.
+
+  const localExportEntries = []; // 9. Let starExportEntries be a new empty List.
+
+  const starExportEntries = []; // 10. Let exportEntries be ExportEntries of body.
+
+  const exportEntries = ExportEntries(body); // 11. For each ExportEntry Record ee in exportEntries, do
+
+  for (const ee of exportEntries) {
+    // a. If ee.[[ModuleRequest]] is null, then
+    if (ee.ModuleRequest === Value.null) {
+      // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
+      if (!importedBoundNames.has(ee.LocalName)) {
+        // 1. Append ee to localExportEntries.
+        localExportEntries.push(ee);
+      } else {
+        // ii. Else,
+        // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
+        const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is "*", then
+
+        if (ie.ImportName.stringValue() === '*') {
+          // a. NOTE: This is a re-export of an imported module namespace object.
+          // b. Append ee to localExportEntries.
+          localExportEntries.push(ee);
+        } else {
+          // 3. Else,
+          // a. NOTE: This is a re-export of a single name.
+          // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
+          indirectExportEntries.push({
+            ModuleRequest: ie.ModuleRequest,
+            ImportName: ie.ImportName,
+            LocalName: Value.null,
+            ExportName: ee.ExportName
+          });
+        }
+      }
+    } else if (ee.ImportName && ee.ImportName.stringValue() === '*' && ee.ExportName === Value.null) {
+      // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
+      // i. Append ee to starExportEntries.
+      starExportEntries.push(ee);
+    } else {
+      // c. Else,
+      // i. Append ee to indirectExportEntries.
+      indirectExportEntries.push(ee);
+    }
+  } // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
+
+
+  return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
+    Realm: realm,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
+    Status: 'unlinked',
+    EvaluationError: Value.undefined,
+    HostDefined: hostDefined,
+    ECMAScriptCode: body,
+    Context: undefined,
+    ImportMeta: undefined,
+    RequestedModules: requestedModules,
+    ImportEntries: importEntries,
+    LocalExportEntries: localExportEntries,
+    IndirectExportEntries: indirectExportEntries,
+    StarExportEntries: starExportEntries,
+    DFSIndex: Value.undefined,
+    DFSAncestorIndex: Value.undefined,
+    Async: body.hasTopLevelAwait ? Value.true : Value.false,
+    AsyncEvaluating: Value.false,
+    TopLevelCapability: Value.undefined,
+    AsyncParentModules: Value.undefined,
+    PendingAsyncDependencies: Value.undefined
+  });
+} // #sec-parsepattern
+
+function ParsePattern(patternText, u) {
+  try {
+    const p = new RegExpParser(patternText, u);
+    return p.parsePattern();
+  } catch (e) {
+    return [handleError(e)];
+  }
+}
+
+function TV(s) {
+  let buffer = '';
+
+  for (let i = 0; i < s.length; i += 1) {
+    if (s[i] === '\\') {
+      i += 1;
+
+      switch (s[i]) {
+        case '\\':
+          buffer += '\\';
+          break;
+
+        case '`':
+          buffer += '`';
+          break;
+
+        case '\'':
+          buffer += '\'';
+          break;
+
+        case '"':
+          buffer += '"';
+          break;
+
+        case 'b':
+          buffer += '\b';
+          break;
+
+        case 'f':
+          buffer += '\f';
+          break;
+
+        case 'n':
+          buffer += '\n';
+          break;
+
+        case 'r':
+          buffer += '\r';
+          break;
+
+        case 't':
+          buffer += '\t';
+          break;
+
+        case 'v':
+          buffer += '\v';
+          break;
+
+        case 'x':
+          i += 1;
+
+          if (isHexDigit(s[i]) && isHexDigit(s[i + 1])) {
+            const n = Number.parseInt(s.slice(i, i + 2), 16);
+            i += 2;
+            buffer += String.fromCharCode(n);
+          } else {
+            return undefined;
+          }
+
+          break;
+
+        case 'u':
+          i += 1;
+
+          if (s[i] === '{') {
+            i += 1;
+            const start = i;
+
+            do {
+              i += 1;
+            } while (isHexDigit(s[i]));
+
+            if (s[i] !== '}') {
+              return undefined;
+            }
+
+            const n = Number.parseInt(s.slice(start, i), 16);
+
+            if (n > 0x10FFFF) {
+              return undefined;
+            }
+
+            buffer += String.fromCodePoint(n);
+          } else if (isHexDigit(s[i]) && isHexDigit(s[i + 1]) && isHexDigit(s[i + 2]) && isHexDigit(s[i + 3])) {
+            const n = Number.parseInt(s.slice(i, i + 4), 16);
+            i += 3;
+            buffer += String.fromCodePoint(n);
+          } else {
+            return undefined;
+          }
+
+          break;
+
+        case '0':
+          if (isDecimalDigit(s[i + 1])) {
+            return undefined;
+          }
+
+          return '\u{0000}';
+
+        default:
+          if (isLineTerminator(s)) {
+            return '';
+          }
+
+          return undefined;
+      }
+    } else {
+      buffer += s[i];
+    }
+  }
+
+  return buffer;
+}
+function TemplateStrings(node, raw) {
+  if (raw) {
+    return node.TemplateSpanList.map(Value);
+  }
+
+  return node.TemplateSpanList.map(v => {
+    const tv = TV(v);
+
+    if (tv === undefined) {
+      return Value.undefined;
+    }
+
+    return new Value(tv);
+  });
+}
+
+function ImportEntriesForModule(node, module) {
+  switch (node.type) {
+    case 'ImportClause':
+      switch (true) {
+        case !!node.ImportedDefaultBinding && !!node.NameSpaceImport:
+          {
+            // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
+            const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module); // 2. Append to entries the elements of the ImportEntriesForModule of NameSpaceImport with argument module.
+
+            entries.push(...ImportEntriesForModule(node.NameSpaceImport, module)); // 3. Return entries.
+
+            return entries;
+          }
+
+        case !!node.ImportedDefaultBinding && !!node.NamedImports:
+          {
+            // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
+            const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module); // 2. Append to entries the elements of the ImportEntriesForModule of NamedImports with argument module.
+
+            entries.push(...ImportEntriesForModule(node.NamedImports, module)); // 3. Return entries.
+
+            return entries;
+          }
+
+        case !!node.ImportedDefaultBinding:
+          return ImportEntriesForModule(node.ImportedDefaultBinding, module);
+
+        case !!node.NameSpaceImport:
+          return ImportEntriesForModule(node.NameSpaceImport, module);
+
+        case !!node.NamedImports:
+          return ImportEntriesForModule(node.NamedImports, module);
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('ImportEntriesForModule', node);
+      }
+
+    case 'ImportedDefaultBinding':
+      {
+        // 1. Let localName be the sole element of BoundNames of ImportedBinding.
+        const localName = BoundNames(node.ImportedBinding)[0]; // 2. Let defaultEntry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "default", [[LocalName]]: localName }.
+
+        const defaultEntry = {
+          ModuleRequest: module,
+          ImportName: new Value('default'),
+          LocalName: localName
+        }; // 3. Return a new List containing defaultEntry.
+
+        return [defaultEntry];
+      }
+
+    case 'NameSpaceImport':
+      {
+        // 1. Let localName be the StringValue of ImportedBinding.
+        const localName = StringValue(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: localName }.
+
+        const entry = {
+          ModuleRequest: module,
+          ImportName: new Value('*'),
+          LocalName: localName
+        }; // 3. Return a new List containing entry.
+
+        return [entry];
+      }
+
+    case 'NamedImports':
+      {
+        const specs = [];
+        node.ImportsList.forEach(n => {
+          specs.push(...ImportEntriesForModule(n, module));
+        });
+        return specs;
+      }
+
+    case 'ImportSpecifier':
+      if (node.IdentifierName) {
+        // 1. Let importName be the StringValue of IdentifierName.
+        const importName = StringValue(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
+
+        const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
+
+        const entry = {
+          ModuleRequest: module,
+          ImportName: importName,
+          LocalName: localName
+        }; // 4. Return a new List containing entry.
+
+        return [entry];
+      } else {
+        // 1. Let localName be the sole element of BoundNames of ImportedBinding.
+        const localName = BoundNames(node.ImportedBinding)[0]; // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: localName, [[LocalName]]: localName }.
+
+        const entry = {
+          ModuleRequest: module,
+          ImportName: localName,
+          LocalName: localName
+        }; // 3. Return a new List containing entry.
+
+        return [entry];
+      }
+
+    /*istanbul ignore next*/
+    default:
+      throw new OutOfRange('ImportEntriesForModule', node);
+  }
+}
+
+function ExportEntriesForModule(node, module) {
+  if (Array.isArray(node)) {
+    const specs = [];
+    node.forEach(n => {
+      specs.push(...ExportEntriesForModule(n, module));
+    });
+    return specs;
+  }
+
+  switch (node.type) {
+    case 'ExportFromClause':
+      if (node.IdentifierName) {
+        // 1. Let exportName be the StringValue of IdentifierName.
+        const exportName = StringValue(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: exportName }.
+
+        const entry = {
+          ModuleRequest: module,
+          ImportName: new Value('*'),
+          LocalName: Value.null,
+          ExportName: exportName
+        }; // 3. Return a new List containing entry.
+
+        return [entry];
+      } else {
+        // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: null }.
+        const entry = {
+          ModuleRequest: module,
+          ImportName: new Value('*'),
+          LocalName: Value.null,
+          ExportName: Value.null
+        }; // 2. Return a new List containing entry.
+
+        return [entry];
+      }
+
+    case 'ExportSpecifier':
+      switch (true) {
+        case !!node.IdentifierName:
+          {
+            // 1. Let sourceName be the StringValue of IdentifierName.
+            const sourceName = StringValue(node.IdentifierName);
+            let localName;
+            let importName; // 2. If module is null, then
+
+            if (module === Value.null) {
+              // a. Let localName be sourceName.
+              localName = sourceName; // b. Let importName be null.
+
+              importName = Value.null;
+            } else {
+              // 3. Else,
+              // a. Let localName be null.
+              localName = Value.null; // b. Let importName be sourceName.
+
+              importName = sourceName;
+            } // 4. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: sourceName }.
+
+
+            return [{
+              ModuleRequest: module,
+              ImportName: importName,
+              LocalName: localName,
+              ExportName: sourceName
+            }];
+          }
+
+        case !!node.IdentifierName_a && !!node.IdentifierName_b:
+          {
+            // 1. Let sourceName be the StringValue of the first IdentifierName.
+            const sourceName = StringValue(node.IdentifierName_a); // 2. Let exportName be the StringValue of the second IdentifierName.
+
+            const exportName = StringValue(node.IdentifierName_b);
+            let localName;
+            let importName; // 3. If module is null, then
+
+            if (module === Value.null) {
+              localName = sourceName;
+              importName = Value.null;
+            } else {
+              // 4. Else,
+              localName = Value.null;
+              importName = sourceName;
+            } // 5. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: exportName }.
+
+
+            return [{
+              ModuleRequest: module,
+              ImportName: importName,
+              LocalName: localName,
+              ExportName: exportName
+            }];
+          }
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('ExportEntriesForModule', node);
+      }
+
+    case 'NamedExports':
+      return ExportEntriesForModule(node.ExportsList, module);
+
+    /*istanbul ignore next*/
+    default:
+      throw new OutOfRange('ExportEntriesForModule', node);
+  }
+}
+
+function CharacterValue(node) {
+  switch (node.type) {
+    case 'CharacterEscape':
+      switch (true) {
+        case !!node.ControlEscape:
+          switch (node.ControlEscape) {
+            case 't':
+              return '\u{0009}';
+
+            case 'n':
+              return '\u{000A}';
+
+            case 'v':
+              return '\u{000B}';
+
+            case 'f':
+              return '\u{000C}';
+
+            case 'r':
+              return '\u{000D}';
+
+            /*istanbul ignore next*/
+            default:
+              throw new OutOfRange('Evaluate_CharacterEscape', node);
+          }
+
+        case !!node.ControlLetter:
+          {
+            // 1. Let ch be the code point matched by ControlLetter.
+            const ch = node.ControlLetter; // 2. Let i be ch's code point value.
+
+            const i = ch.codePointAt(0); // 3. Return the remainder of dividing i by 32.
+
+            return String.fromCharCode(i % 32);
+          }
+
+        case !!node.HexEscapeSequence:
+          // 1. Return the numeric value of the code unit that is the SV of HexEscapeSequence.
+          return String.fromCharCode(Number.parseInt(`${node.HexEscapeSequence.HexDigit_a}${node.HexEscapeSequence.HexDigit_b}`, 16));
+
+        case !!node.RegExpUnicodeEscapeSequence:
+          return CharacterValue(node.RegExpUnicodeEscapeSequence);
+
+        case node.subtype === '0':
+          // 1. Return the code point value of U+0000 (NULL).
+          return '\u{0000}';
+
+        case !!node.IdentityEscape:
+          // 1. Let ch be the code point matched by IdentityEscape.
+          // 2. Return the code point value of ch.
+          return node.IdentityEscape;
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('Evaluate_CharacterEscape', node);
+      }
+
+    case 'RegExpUnicodeEscapeSequence':
+      {
+        const {
+          Hex4Digits: {
+            HexDigit_a,
+            HexDigit_b,
+            HexDigit_c,
+            HexDigit_d
+          }
+        } = node;
+        const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
+        return String.fromCharCode(Number.parseInt(chars, 16));
+      }
+
+    case 'ClassAtom':
+      switch (true) {
+        case node.value === '-':
+          return '-';
+
+        case !!node.SourceCharacter:
+          return node.SourceCharacter;
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('CharacterValue', node);
+      }
+
+    case 'ClassEscape':
+      switch (true) {
+        case node.value === 'b':
+          return '\u{0008}';
+
+        case node.value === '-':
+          return '-';
+
+        case !!node.CharacterEscape:
+          return CharacterValue(node.CharacterEscape);
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('CharacterValue', node);
+      }
+
+    /*istanbul ignore next*/
+    default:
+      throw new OutOfRange('CharacterValue', node);
+  }
 }
 
 class ResolvedBindingRecord {
@@ -20945,17 +22450,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this; // 2. Let bindings be the binding object for envRec.
 
-    const bindings = envRec.bindingObject; // 3. Return ? Set(bindings, N, V, S).
-
-    return Set$1(bindings, N, V, S);
-  } // #sec-object-environment-records-getbindingvalue-n-s
-
-
-  GetBindingValue(N, S) {
-    // 1. Let envRec be the object Environment Record for which the method was invoked.
-    const envRec = this; // 2. Let bindings be the binding object for envRec.
-
-    const bindings = envRec.bindingObject; // 3. Let value be ? HasProperty(bindings, N).
+    const bindings = envRec.bindingObject; // 3. Let stillExists be ? HasProperty(bindings, N).
 
     let _temp5 = HasProperty(bindings, N);
 
@@ -20967,7 +22462,34 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
       _temp5 = _temp5.Value;
     }
 
-    const value = _temp5; // 4. If value is false, then
+    const stillExists = _temp5; // 4. If stillExists is false and S is true, throw a ReferenceError exception.
+
+    if (stillExists === Value.false && S === Value.true) {
+      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+    } // 5. Return ? Set(bindings, N, V, S).
+
+
+    return Set$1(bindings, N, V, S);
+  } // #sec-object-environment-records-getbindingvalue-n-s
+
+
+  GetBindingValue(N, S) {
+    // 1. Let envRec be the object Environment Record for which the method was invoked.
+    const envRec = this; // 2. Let bindings be the binding object for envRec.
+
+    const bindings = envRec.bindingObject; // 3. Let value be ? HasProperty(bindings, N).
+
+    let _temp6 = HasProperty(bindings, N);
+
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
+    }
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    const value = _temp6; // 4. If value is false, then
 
     if (value === Value.false) {
       // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
@@ -21253,31 +22775,31 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
 
-    let _temp6 = HasOwnProperty(globalObject, N);
+    let _temp7 = HasOwnProperty(globalObject, N);
 
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
     }
 
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
 
-    const existingProp = _temp6; // 7. If existingProp is true, then
+    const existingProp = _temp7; // 7. If existingProp is true, then
 
     if (existingProp === Value.true) {
-      let _temp7 = ObjRec.DeleteBinding(N);
+      let _temp8 = ObjRec.DeleteBinding(N);
 
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
       }
 
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
 
       // a. Let status be ? ObjRec.DeleteBinding(N).
-      const status = _temp7; // b. If status is true, then
+      const status = _temp8; // b. If status is true, then
 
       if (status === Value.true) {
         // i. Let varNames be envRec.[[VarNames]].
@@ -21356,17 +22878,17 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
 
-    let _temp8 = globalObject.GetOwnProperty(N);
+    let _temp9 = globalObject.GetOwnProperty(N);
 
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
     }
 
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
 
-    const existingProp = _temp8; // 5. If existingProp is undefined, return false.
+    const existingProp = _temp9; // 5. If existingProp is undefined, return false.
 
     if (existingProp === Value.undefined) {
       return Value.false;
@@ -21390,17 +22912,17 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
 
-    let _temp9 = HasOwnProperty(globalObject, N);
+    let _temp10 = HasOwnProperty(globalObject, N);
 
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
     }
 
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
 
-    const hasProperty = _temp9; // 5. If hasProperty is true, return true.
+    const hasProperty = _temp10; // 5. If hasProperty is true, return true.
 
     if (hasProperty === Value.true) {
       return Value.true;
@@ -21419,17 +22941,17 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
 
-    let _temp10 = globalObject.GetOwnProperty(N);
+    let _temp11 = globalObject.GetOwnProperty(N);
 
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
     }
 
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
     }
 
-    const existingProp = _temp10; // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
+    const existingProp = _temp11; // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
 
     if (existingProp === Value.undefined) {
       return IsExtensible(globalObject);
@@ -21459,19 +22981,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
 
-    let _temp11 = HasOwnProperty(globalObject, N);
-
-    if (_temp11 instanceof AbruptCompletion) {
-      return _temp11;
-    }
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    const hasProperty = _temp11; // 5. Let extensible be ? IsExtensible(globalObject).
-
-    let _temp12 = IsExtensible(globalObject);
+    let _temp12 = HasOwnProperty(globalObject, N);
 
     if (_temp12 instanceof AbruptCompletion) {
       return _temp12;
@@ -21481,20 +22991,22 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       _temp12 = _temp12.Value;
     }
 
-    const extensible = _temp12; // 6. If hasProperty is false and extensible is true, then
+    const hasProperty = _temp12; // 5. Let extensible be ? IsExtensible(globalObject).
+
+    let _temp13 = IsExtensible(globalObject);
+
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
+    }
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    const extensible = _temp13; // 6. If hasProperty is false and extensible is true, then
 
     if (hasProperty === Value.false && extensible === Value.true) {
-      let _temp13 = ObjRec.CreateMutableBinding(N, D);
-
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
-      }
-
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-
-      let _temp14 = ObjRec.InitializeBinding(N, Value.undefined);
+      let _temp14 = ObjRec.CreateMutableBinding(N, D);
 
       if (_temp14 instanceof AbruptCompletion) {
         return _temp14;
@@ -21502,6 +23014,16 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
       if (_temp14 instanceof Completion) {
         _temp14 = _temp14.Value;
+      }
+
+      let _temp15 = ObjRec.InitializeBinding(N, Value.undefined);
+
+      if (_temp15 instanceof AbruptCompletion) {
+        return _temp15;
+      }
+
+      if (_temp15 instanceof Completion) {
+        _temp15 = _temp15.Value;
       }
     } // 7. Let varDeclaredNames be envRec.[[VarNames]].
 
@@ -21526,17 +23048,17 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     const globalObject = ObjRec.bindingObject; // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
 
-    let _temp15 = globalObject.GetOwnProperty(N);
+    let _temp16 = globalObject.GetOwnProperty(N);
 
-    if (_temp15 instanceof AbruptCompletion) {
-      return _temp15;
+    if (_temp16 instanceof AbruptCompletion) {
+      return _temp16;
     }
 
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
     }
 
-    const existingProp = _temp15; // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
+    const existingProp = _temp16; // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
 
     let desc;
 
@@ -21556,18 +23078,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     } // 7. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
 
 
-    let _temp16 = DefinePropertyOrThrow(globalObject, N, desc);
-
-    if (_temp16 instanceof AbruptCompletion) {
-      return _temp16;
-    }
-
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
-    }
-    // 9. Perform ? Set(globalObject, N, V, false).
-
-    let _temp17 = Set$1(globalObject, N, V, Value.false);
+    let _temp17 = DefinePropertyOrThrow(globalObject, N, desc);
 
     if (_temp17 instanceof AbruptCompletion) {
       return _temp17;
@@ -21575,6 +23086,17 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
 
     if (_temp17 instanceof Completion) {
       _temp17 = _temp17.Value;
+    }
+    // 9. Perform ? Set(globalObject, N, V, false).
+
+    let _temp18 = Set$1(globalObject, N, V, Value.false);
+
+    if (_temp18 instanceof AbruptCompletion) {
+      return _temp18;
+    }
+
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
     }
 
     const varDeclaredNames = envRec.VarNames; // 11. If varDeclaredNames does not contain N, then
@@ -21687,17 +23209,17 @@ function GetIdentifierReference(env, name, strict) {
   } // 2. Let exists be ? envRec.HasBinding(name).
 
 
-  let _temp18 = env.HasBinding(name);
+  let _temp19 = env.HasBinding(name);
 
-  if (_temp18 instanceof AbruptCompletion) {
-    return _temp18;
+  if (_temp19 instanceof AbruptCompletion) {
+    return _temp19;
   }
 
-  if (_temp18 instanceof Completion) {
-    _temp18 = _temp18.Value;
+  if (_temp19 instanceof Completion) {
+    _temp19 = _temp19.Value;
   }
 
-  const exists = _temp18; // 3. If exists is true, then
+  const exists = _temp19; // 3. If exists is true, then
 
   if (exists === Value.true) {
     // a. Return a value of type Reference whose base value component is envRec, whose
@@ -21815,9 +23337,12 @@ function Value(value) {
       throw new OutOfRange('new Value', value);
   }
 }
-class PrimitiveValue extends Value {}
-class UndefinedValue extends PrimitiveValue {}
-class NullValue extends PrimitiveValue {}
+class PrimitiveValue extends Value {} // #sec-ecmascript-language-types-undefined-type
+
+class UndefinedValue extends PrimitiveValue {} // #sec-ecmascript-language-types-null-type
+
+class NullValue extends PrimitiveValue {} // #sec-ecmascript-language-types-boolean-type
+
 class BooleanValue extends PrimitiveValue {
   constructor(v) {
     super();
@@ -21854,7 +23379,36 @@ Object.defineProperties(Value, {
     configurable: false,
     writable: false
   }
-});
+}); // #sec-ecmascript-language-types-string-type
+
+class StringValue$1 extends PrimitiveValue {
+  constructor(string) {
+    super();
+    this.string = string;
+  }
+
+  stringValue() {
+    return this.string;
+  }
+
+} // rename for static semantics StringValue() conflict
+
+class SymbolValue extends PrimitiveValue {
+  constructor(Description) {
+    super();
+    this.Description = Description;
+  }
+
+}
+const wellKnownSymbols = Object.create(null);
+
+for (const name of ['asyncIterator', 'hasInstance', 'isConcatSpreadable', 'iterator', 'match', 'matchAll', 'replace', 'search', 'species', 'split', 'toPrimitive', 'toStringTag', 'unscopables']) {
+  const sym = new SymbolValue(new StringValue$1(`Symbol.${name}`));
+  wellKnownSymbols[name] = sym;
+}
+
+Object.freeze(wellKnownSymbols); // #sec-ecmascript-language-types-number-type
+
 class NumberValue extends PrimitiveValue {
   constructor(number) {
     super();
@@ -22226,7 +23780,8 @@ function NumberBitwiseOp(op, x, y) {
     default:
       throw new OutOfRange('NumberBitwiseOp', op);
   }
-}
+} // #sec-ecmascript-language-types-bigint-type
+
 
 NumberBitwiseOp.section = 'https://tc39.es/ecma262/#sec-numberbitwiseop';
 class BigIntValue extends PrimitiveValue {
@@ -22530,36 +24085,10 @@ function BigIntBitwiseOp(op, x, y) {
     default:
       throw new OutOfRange('BigIntBitwiseOp', op);
   }
-}
+} // #sec-object-type
+
 
 BigIntBitwiseOp.section = 'https://tc39.es/ecma262/#sec-binaryand';
-
-class StringValue$1 extends PrimitiveValue {
-  constructor(string) {
-    super();
-    this.string = string;
-  }
-
-  stringValue() {
-    return this.string;
-  }
-
-} // rename for static semantics StringValue() conflict
-class SymbolValue extends PrimitiveValue {
-  constructor(Description) {
-    super();
-    this.Description = Description;
-  }
-
-}
-const wellKnownSymbols = Object.create(null);
-
-for (const name of ['asyncIterator', 'hasInstance', 'isConcatSpreadable', 'iterator', 'match', 'matchAll', 'replace', 'search', 'species', 'split', 'toPrimitive', 'toStringTag', 'unscopables']) {
-  const sym = new SymbolValue(new StringValue$1(`Symbol.${name}`));
-  wellKnownSymbols[name] = sym;
-}
-
-Object.freeze(wellKnownSymbols);
 class ObjectValue extends Value {
   constructor(internalSlotsList) {
     super();
@@ -22769,28 +24298,29 @@ const FEATURES = Object.freeze([{
   name: 'TopLevelAwait',
   url: 'https://github.com/tc39/proposal-top-level-await'
 }, {
-  name: 'WeakRefs',
-  url: 'https://github.com/tc39/proposal-weakrefs'
-}, {
-  name: 'RegExpMatchIndices',
-  url: 'https://github.com/tc39/proposal-regexp-match-Indices'
-}, {
   name: 'hashbang',
   url: 'https://github.com/tc39/proposal-hashbang'
 }, {
   name: 'NumericSeparators',
   url: 'https://github.com/tc39/proposal-numeric-separator'
-}].map(Object.freeze)); // #sec-agents
+}].map(Object.freeze));
+let agentSignifier = 0; // #sec-agents
 
 class Agent {
   constructor(options = {}) {
-    this.LittleEndian = Value.true;
-    this.CanBlock = true;
-    this.Signifier = Agent.Increment;
-    Agent.Increment += 1;
-    this.IsLockFree1 = true;
-    this.IsLockFree2 = true;
-    this.CandidateExecution = undefined;
+    // #table-agent-record
+    const Signifier = agentSignifier;
+    agentSignifier += 1;
+    this.AgentRecord = {
+      LittleEndian: Value.true,
+      CanBlock: Value.true,
+      Signifier,
+      IsLockFree1: Value.true,
+      IsLockFree2: Value.true,
+      CandidateExecution: undefined,
+      KeptAlive: new Set()
+    }; // #execution-context-stack
+
     this.executionContextStack = [];
     const stackPop = this.executionContextStack.pop;
 
@@ -22799,7 +24329,8 @@ class Agent {
         const popped = stackPop.call(this);
         Assert(popped === ctx, "popped === ctx");
       }
-    };
+    }; // NON-SPEC
+
 
     this.jobQueue = [];
     this.hostDefinedOptions = { ...options,
@@ -22815,10 +24346,6 @@ class Agent {
         return acc;
       }, {})
     };
-
-    if (this.feature('WeakRefs')) {
-      this.KeptAlive = new Set();
-    }
   } // #running-execution-context
 
 
@@ -22905,6 +24432,9 @@ class Agent {
 
 
   mark(m) {
+    this.AgentRecord.KeptAlive.forEach(v => {
+      m(v);
+    });
     this.executionContextStack.forEach(e => {
       m(e);
     });
@@ -22915,7 +24445,6 @@ class Agent {
   }
 
 }
-Agent.Increment = 0;
 let surroundingAgent;
 function setSurroundingAgent(a) {
   surroundingAgent = a;
@@ -22990,23 +24519,12 @@ function ScriptEvaluation(scriptRecord) {
 
 function HostEnqueuePromiseJob(job, _realm) {
   surroundingAgent.queueJob('PromiseJobs', job);
-} // 8.5 #sec-initializehostdefinedrealm
-
-function InitializeHostDefinedRealm() {
-  const realm = CreateRealm();
-  const newContext = new ExecutionContext();
-  newContext.Function = Value.null;
-  newContext.Realm = realm;
-  newContext.ScriptOrModule = Value.null;
-  surroundingAgent.executionContextStack.push(newContext);
-  const global = Value.undefined;
-  const thisValue = Value.undefined;
-  SetRealmGlobalObject(realm, global, thisValue);
-  SetDefaultGlobalBindings(realm);
-} // 8.7.1 #sec-agentsignifier
+} // #sec-agentsignifier
 
 function AgentSignifier() {
-  const AR = surroundingAgent;
+  // 1. Let AR be the Agent Record of the surrounding agent.
+  const AR = surroundingAgent.AgentRecord; // 2. Return AR.[[Signifier]].
+
   return AR.Signifier;
 }
 function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
@@ -23072,9 +24590,7 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
       }
     }
 
-    const publicModule = referencingScriptOrModule.HostDefined ? referencingScriptOrModule.HostDefined.public : null;
-
-    let _temp7 = realm.HostDefined.resolveImportedModule(publicModule, specifier);
+    let _temp7 = realm.HostDefined.resolveImportedModule(referencingScriptOrModule, specifier);
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -23084,19 +24600,20 @@ function HostResolveImportedModule(referencingScriptOrModule, specifier) {
       _temp7 = _temp7.Value;
     }
 
-    const apiModule = _temp7;
+    const resolved = _temp7;
 
     if (referencingScriptOrModule !== Value.null) {
-      referencingScriptOrModule.HostDefined.moduleMap.set(specifier, apiModule.module);
+      referencingScriptOrModule.HostDefined.moduleMap.set(specifier, resolved);
     }
 
-    return apiModule.module;
+    return resolved;
   }
 
   return surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier);
 }
 
 function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
+  // 1. If completion is an abrupt completion, then perform ! Call(promiseCapability.[[Reject]], undefined, « completion.[[Value]] »).
   if (completion instanceof AbruptCompletion) {
     let _temp8 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
 
@@ -23106,111 +24623,100 @@ function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapabi
       _temp8 = _temp8.Value;
     }
   } else {
-    Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
+    // 2. Else,
+    // a. Assert: completion is a normal completion and completion.[[Value]] is undefined.
+    Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion"); // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
 
-    let _temp9 = CreateBuiltinFunction(([v = Value.undefined]) => {
-      Assert(v === Value.undefined, "v === Value.undefined");
+    let _temp9 = HostResolveImportedModule(referencingScriptOrModule, specifier);
 
-      let _temp12 = HostResolveImportedModule(referencingScriptOrModule, specifier);
-
-      Assert(!(_temp12 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-
-      const moduleRecord = _temp12; // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-
-      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-
-      if (namespace instanceof AbruptCompletion) {
-        let _temp13 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
-
-        Assert(!(_temp13 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-
-        if (_temp13 instanceof Completion) {
-          _temp13 = _temp13.Value;
-        }
-      } else {
-        let _temp14 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
-
-        Assert(!(_temp14 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-      }
-
-      return Value.undefined;
-    }, []);
-
-    Assert(!(_temp9 instanceof AbruptCompletion), "CreateBuiltinFunction(([v = Value.undefined]) => {\n      Assert(v === Value.undefined);\n      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));\n      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.\n      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));\n      if (namespace instanceof AbruptCompletion) {\n        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));\n      } else {\n        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));\n      }\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+    Assert(!(_temp9 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
 
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
     }
 
-    const onFulfilled = _temp9;
+    const moduleRecord = _temp9; // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+    // d. Let namespace be GetModuleNamespace(moduleRecord).
 
-    let _temp10 = CreateBuiltinFunction(([r = Value.undefined]) => {
-      let _temp15 = Call(promiseCapability.Reject, Value.undefined, [r]);
+    const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord)); // e. If namespace is an abrupt completion, perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
 
-      Assert(!(_temp15 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [r])" + ' returned an abrupt completion');
+    if (namespace instanceof AbruptCompletion) {
+      let _temp10 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
 
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
+      Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
+
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
       }
-      return Value.undefined;
-    }, []);
+    } else {
+      let _temp11 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
 
-    Assert(!(_temp10 instanceof AbruptCompletion), "CreateBuiltinFunction(([r = Value.undefined]) => {\n      X(Call(promiseCapability.Reject, Value.undefined, [r]));\n      return Value.undefined;\n    }, [])" + ' returned an abrupt completion');
+      Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
 
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const onRejected = _temp10;
-
-    let _temp11 = PerformPromiseThen(completion.Value, onFulfilled, onRejected);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "PerformPromiseThen(completion.Value, onFulfilled, onRejected)" + ' returned an abrupt completion');
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
     }
   }
 }
 
 function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
   surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
-    let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
+    const finish = c => FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, c);
 
-    if (!(completion instanceof AbruptCompletion)) {
-      const module = completion.Value;
+    const c = (() => {
+      let _temp12 = HostResolveImportedModule(referencingScriptOrModule, specifier);
+
+      if (_temp12 instanceof AbruptCompletion) {
+        return _temp12;
+      }
+
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+
+      const module = _temp12;
+
+      let _temp13 = module.Link();
+
+      if (_temp13 instanceof AbruptCompletion) {
+        return _temp13;
+      }
+
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+
+      let _temp14 = module.Evaluate();
+
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
+      }
+
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+
+      const maybePromise = _temp14;
 
       if (module instanceof CyclicModuleRecord) {
-        if (module.HostDefined.cachedCompletion) {
-          completion = module.HostDefined.cachedCompletion;
-        } else {
-          if (module.Status !== 'linking' && module.Status !== 'evaluating') {
-            completion = EnsureCompletion(module.Link());
-          }
-
-          if (!(completion instanceof AbruptCompletion)) {
-            completion = EnsureCompletion(module.Evaluate());
-            module.HostDefined.cachedCompletion = completion;
-          }
-        }
+        const onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
+          finish(NormalCompletion(v));
+          return Value.undefined;
+        }, []);
+        const onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
+          finish(ThrowCompletion(r));
+          return Value.undefined;
+        }, []);
+        PerformPromiseThen(maybePromise, onFulfilled, onRejected);
       } else {
-        completion = EnsureCompletion(module.Link());
-
-        if (!(completion instanceof AbruptCompletion)) {
-          completion = EnsureCompletion(module.Evaluate());
-        }
+        finish(NormalCompletion(undefined));
       }
-    }
+    })();
 
-    FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
+    if (c instanceof AbruptCompletion) {
+      finish(c);
+    }
   });
   return NormalCompletion(Value.undefined);
 } // #sec-hostgetimportmetaproperties
@@ -23219,15 +24725,15 @@ function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.getImportMetaProperties) {
-    let _temp16 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
+    let _temp15 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp15 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
     }
 
-    return _temp16;
+    return _temp15;
   }
 
   return [];
@@ -23237,31 +24743,31 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
 
   if (realm.HostDefined.finalizeImportMeta) {
-    let _temp17 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
+    let _temp16 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
 
-    Assert(!(_temp17 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+    Assert(!(_temp16 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
 
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
     }
 
-    return _temp17;
+    return _temp16;
   }
 
   return Value.undefined;
-} // https://tc39.es/proposal-weakrefs/#sec-host-cleanup-finalization-registry
+} // #sec-host-cleanup-finalization-registry
 
 const scheduledForCleanup = new Set();
-function HostCleanupFinalizationRegistry(fg) {
+function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
-    let _temp18 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
+    let _temp17 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
 
-    if (_temp18 instanceof AbruptCompletion) {
-      return _temp18;
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
     }
 
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
     }
   } else {
     if (!scheduledForCleanup.has(fg)) {
@@ -23274,6 +24780,23 @@ function HostCleanupFinalizationRegistry(fg) {
   }
 
   return NormalCompletion(undefined);
+} // #sec-hostmakejobcallback
+
+function HostMakeJobCallback(callback) {
+  // 1. Assert: IsCallable(callback) is true.
+  Assert(IsCallable(callback) === Value.true, "IsCallable(callback) === Value.true"); // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
+
+  return {
+    Callback: callback,
+    HostDefined: undefined
+  };
+} // #sec-hostcalljobcallback
+
+function HostCallJobCallback(jobCallback, V, argumentsList) {
+  // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
+  Assert(IsCallable(jobCallback.Callback) === Value.true, "IsCallable(jobCallback.Callback) === Value.true"); // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
+
+  return Call(jobCallback.Callback, V, argumentsList);
 }
 
 function Completion(init) {
@@ -24548,7 +26071,7 @@ function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, i
   const rawValue = [...block.subarray(byteIndex.numberValue(), byteIndex.numberValue() + elementSize)]; // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
 
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.LittleEndian;
+    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
   } // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
 
 
@@ -24636,7 +26159,7 @@ function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, ord
   // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
 
   if (isLittleEndian === undefined) {
-    isLittleEndian = surroundingAgent.LittleEndian;
+    isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
   } // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
 
 
@@ -25995,7 +27518,7 @@ function MakeConstructor(F, writablePrototype, prototype) {
   F.ConstructorKind = 'base';
 
   if (writablePrototype === undefined) {
-    writablePrototype = true;
+    writablePrototype = Value.true;
   }
 
   if (prototype === undefined) {
@@ -26003,12 +27526,12 @@ function MakeConstructor(F, writablePrototype, prototype) {
 
     let _temp7 = DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
       Value: F,
-      Writable: writablePrototype ? Value.true : Value.false,
+      Writable: writablePrototype,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
 
-    Assert(!(_temp7 instanceof AbruptCompletion), "DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({\n      Value: F,\n      Writable: writablePrototype ? Value.true : Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+    Assert(!(_temp7 instanceof AbruptCompletion), "DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({\n      Value: F,\n      Writable: writablePrototype,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
@@ -26017,12 +27540,12 @@ function MakeConstructor(F, writablePrototype, prototype) {
 
   let _temp8 = DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
-    Writable: writablePrototype ? Value.true : Value.false,
+    Writable: writablePrototype,
     Enumerable: Value.false,
     Configurable: Value.false
   }));
 
-  Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: writablePrototype ? Value.true : Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: writablePrototype,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
 
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
@@ -26042,26 +27565,40 @@ function MakeMethod(F, homeObject) {
   Assert(Type(homeObject) === 'Object', "Type(homeObject) === 'Object'");
   F.HomeObject = homeObject;
   return NormalCompletion(Value.undefined);
-} // 9.2.13 #sec-setfunctionname
+} // #sec-setfunctionname
 
 function SetFunctionName(F, name, prefix) {
-  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false");
-  Assert(Type(name) === 'Symbol' || Type(name) === 'String', "Type(name) === 'Symbol' || Type(name) === 'String'");
-  Assert(!prefix || Type(prefix) === 'String', "!prefix || Type(prefix) === 'String'");
+  // 1. Assert: F is an extensible object that does not have a "name" own property.
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false"); // 2. Assert: Type(name) is either Symbol or String.
+
+  Assert(Type(name) === 'Symbol' || Type(name) === 'String', "Type(name) === 'Symbol' || Type(name) === 'String'"); // 3. Assert: If prefix is present, then Type(prefix) is String.
+
+  Assert(!prefix || Type(prefix) === 'String', "!prefix || Type(prefix) === 'String'"); // 4. If Type(name) is Symbol, then
 
   if (Type(name) === 'Symbol') {
-    const description = name.Description;
+    // a. Let description be name's [[Description]] value.
+    const description = name.Description; // b. If description is undefined, set name to the empty String.
 
-    if (Type(description) === 'Undefined') {
+    if (description === Value.undefined) {
       name = new Value('');
     } else {
+      // c. Else, set name to the string-concatenation of "[", description, and "]".
       name = new Value(`[${description.stringValue()}]`);
     }
-  }
+  } // 5. If F has an [[InitialName]] internal slot, then
+
+
+  if ('InitialName' in F) {
+    // a. Set F.[[InitialName]] to name.
+    F.InitialName = name;
+  } // 6. If prefix is present, then
+
 
   if (prefix !== undefined) {
-    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
-  }
+    // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
+    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`); // b. If F has an [[InitialName]] internal slot, then
+  } // 7. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+
 
   let _temp9 = DefinePropertyOrThrow(F, new Value('name'), Descriptor({
     Value: name,
@@ -26170,9 +27707,9 @@ function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isCon
   } // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
 
 
-  let _temp12 = MakeBasicObject(internalSlotsList);
+  let _temp12 = MakeBasicObject(internalSlotsList.concat('InitialName'));
 
-  Assert(!(_temp12 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
+  Assert(!(_temp12 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList.concat('InitialName'))" + ' returned an abrupt completion');
 
   if (_temp12 instanceof Completion) {
     _temp12 = _temp12.Value;
@@ -26193,7 +27730,9 @@ function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isCon
 
   func.Extensible = Value.true; // 9. Set func.[[Extensible]] to true.
 
-  func.ScriptOrModule = Value.null; // 10. Return func.
+  func.ScriptOrModule = Value.null; // 10. Set func.[[InitialName]] to null.
+
+  func.InitialName = Value.null; // 11. Return func.
 
   return func;
 } // 14.9.3 #sec-preparefortailcall
@@ -29977,7 +31516,7 @@ class PromiseReactionRecord {
   constructor(O) {
     Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject', "O.Type === 'Fulfill' || O.Type === 'Reject'");
-    Assert(O.Handler === Value.undefined || isFunctionObject(O.Handler), "O.Handler === Value.undefined\n           || isFunctionObject(O.Handler)");
+    Assert(O.Handler === undefined || isFunctionObject(O.Handler.Callback), "O.Handler === undefined\n           || isFunctionObject(O.Handler.Callback)");
     this.Capability = O.Capability;
     this.Type = O.Type;
     this.Handler = O.Handler;
@@ -30048,9 +31587,9 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   //    promiseToResolve, thenable, and then and performs the following steps when called:
   const job = () => {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
-    const resolvingFunctions = CreateResolvingFunctions(promiseToResolve); // b. Let thenCallResult be Call(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    const resolvingFunctions = CreateResolvingFunctions(promiseToResolve); // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
 
-    const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]); // c. If thenCallResult is an abrupt completion, then
+    const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]); // c. If thenCallResult is an abrupt completion, then
 
     if (thenCallResult instanceof AbruptCompletion) {
       // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
@@ -30061,19 +31600,20 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
 
 
     return Completion(thenCallResult);
-  }; // 2. Let getThenRealmResult be GetFunctionRealm(then).
+  }; // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
 
 
-  const getThenRealmResult = GetFunctionRealm(then); // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
-  // 4. Otherwise, let thenRealm be null.
+  const getThenRealmResult = GetFunctionRealm(then.Callback); // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
 
   let thenRealm;
 
   if (getThenRealmResult instanceof NormalCompletion) {
     thenRealm = getThenRealmResult.Value;
   } else {
-    thenRealm = Value.null;
-  } // 5. Return { [[Job]]: job, [[Realm]]: thenRealm }.
+    // 4. Else, let _thenRealm_ be the current Realm Record.
+    thenRealm = surroundingAgent.currentRealmRecord;
+  } // 5. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
+  // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
 
 
   return {
@@ -30086,40 +31626,58 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
 NewPromiseResolveThenableJob.section = 'https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob';
 
 function PromiseResolveFunctions([resolution = Value.undefined]) {
-  const F = this;
-  Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'");
-  const promise = F.Promise;
-  const alreadyResolved = F.AlreadyResolved;
+  // 1. Let F be the active function object.
+  const F = this; // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
+
+  Assert('Promise' in F && Type(F.Promise) === 'Object', "'Promise' in F && Type(F.Promise) === 'Object'"); // 3. Let promise be F.[[Promise]].
+
+  const promise = F.Promise; // 4. Let alreadyResolved be F.[[AlreadyResolved]].
+
+  const alreadyResolved = F.AlreadyResolved; // 5. If alreadyResolved.[[Value]] is true, return undefined.
 
   if (alreadyResolved.Value === true) {
     return Value.undefined;
-  }
+  } // 6. Set alreadyResolved.[[Value]] to true.
 
-  alreadyResolved.Value = true;
+
+  alreadyResolved.Value = true; // 7. If SameValue(resolution, promise) is true, then
 
   if (SameValue(resolution, promise) === Value.true) {
-    const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
+    // a. Let selfResolutionError be a newly created TypeError object.
+    const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value; // b. Return RejectPromise(promise, selfResolutionError).
+
     return RejectPromise(promise, selfResolutionError);
-  }
+  } // 8. If Type(resolution) is not Object, then
+
 
   if (Type(resolution) !== 'Object') {
+    // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
-  }
+  } // 9. Let then be Get(resolution, "then").
 
-  const then = Get(resolution, new Value('then'));
+
+  const then = Get(resolution, new Value('then')); // 10. If then is an abrupt completion, then
 
   if (then instanceof AbruptCompletion) {
+    // a. Return RejectPromise(promise, then.[[Value]]).
     return RejectPromise(promise, then.Value);
-  }
+  } // 11. Let thenAction be then.[[Value]].
 
-  const thenAction = then.Value;
+
+  const thenAction = then.Value; // 12. If IsCallable(thenAction) is false, then
 
   if (IsCallable(thenAction) === Value.false) {
+    // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
-  }
+  } // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
 
-  const job = NewPromiseResolveThenableJob(promise, resolution, thenAction);
-  HostEnqueuePromiseJob(job.Job);
+
+  const thenJobCallback = HostMakeJobCallback(thenAction); // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
+
+  const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback); // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
+
+  HostEnqueuePromiseJob(job.Job); // 16. Return undefined.
+
   return Value.undefined;
 } // 25.6.1.4 #sec-fulfillpromise
 
@@ -30307,9 +31865,9 @@ function NewPromiseReactionJob(reaction, argument) {
     const type = reaction.Type; // d. Let handler be reaction.[[Handler]].
 
     const handler = reaction.Handler;
-    let handlerResult; // e. If handler is undefined, then
+    let handlerResult; // e. If handler is empty, then
 
-    if (handler === Value.undefined) {
+    if (handler === undefined) {
       // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
       if (type === 'Fulfill') {
         handlerResult = NormalCompletion(argument);
@@ -30320,8 +31878,8 @@ function NewPromiseReactionJob(reaction, argument) {
         handlerResult = ThrowCompletion(argument);
       }
     } else {
-      // f. let handlerResult be Call(handler, undefined, « argument »).
-      handlerResult = Call(handler, Value.undefined, [argument]);
+      // f. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
+      handlerResult = HostCallJobCallback(handler, Value.undefined, [argument]);
     } // g. If promiseCapability is undefined, then
 
 
@@ -30347,15 +31905,20 @@ function NewPromiseReactionJob(reaction, argument) {
   }; // 2. Let handlerRealm be null.
 
 
-  let handlerRealm = Value.null; // 3. If reaction.[[Handler]] is not undefined, then
+  let handlerRealm = Value.null; // 3. If reaction.[[Handler]] is not empty, then
 
-  if (reaction.Handler !== Value.undefined) {
-    // a. Let getHandlerRealmResult be GetFunctionRealm(handler).
-    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler); // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
+  if (reaction.Handler !== undefined) {
+    // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
+    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler.Callback); // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
 
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;
-    }
+    } else {
+      // c. Else, set _handlerRealm_ to the current Realm Record.
+      handlerRealm = surroundingAgent.currentRealmRecord;
+    } // d. NOTE: _handlerRealm_ is never *null* unless the handler is *undefined*. When the handler
+    //    is a revoked Proxy and no ECMAScript code runs, _handlerRealm_ is used to create error objects.
+
   } // 4. Return { [[Job]]: job, [[Realm]]: handlerRealm }.
 
 
@@ -30369,40 +31932,46 @@ function NewPromiseReactionJob(reaction, argument) {
 NewPromiseReactionJob.section = 'https://tc39.es/ecma262/#sec-newpromisereactionjob';
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   // 1. Assert: IsPromise(promise) is true.
-  Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true"); // 2. If resultCapability is present, then
+  Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true"); // 2. If resultCapability is not present, then
 
-  if (resultCapability) {
-    // a. Assert: resultCapability is a PromiseCapability Record.
-    Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
-  } else {
+  if (resultCapability === undefined) {
     // a. Set resultCapability to undefined.
     resultCapability = Value.undefined;
-  } // 4. If IsCallable(onFulfilled) is false, then
+  }
 
+  let onFulfilledJobCallback; // 3. If IsCallable(onFulfilled) is false, then
 
   if (IsCallable(onFulfilled) === Value.false) {
-    // a. Set onFulfilled to undefined.
-    onFulfilled = Value.undefined;
-  } // 5. If IsCallable(onRejected) is false, then
+    // a. Let onFulfilledJobCallback be empty.
+    onFulfilledJobCallback = undefined;
+  } else {
+    // 4. Else,
+    // a. Let onFulfilledJobCallback be HostMakeJobCallback(onFulfilled).
+    onFulfilledJobCallback = HostMakeJobCallback(onFulfilled);
+  }
 
+  let onRejectedJobCallback; // 5. If IsCallable(onRejected) is false, then
 
   if (IsCallable(onRejected) === Value.false) {
-    // a. Set onRejected to undefined.
-    onRejected = Value.undefined;
-  } // 6. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
+    // a. Let onRejectedJobCallback be empty.
+    onRejectedJobCallback = undefined;
+  } else {
+    // 6. Else,
+    onRejectedJobCallback = HostMakeJobCallback(onRejected);
+  } // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
 
 
   const fulfillReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
-    Handler: onFulfilled
-  }); // 7. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
+    Handler: onFulfilledJobCallback
+  }); // 8. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
 
   const rejectReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
-    Handler: onRejected
-  }); // 8. If promise.[[PromiseState]] is pending, then
+    Handler: onRejectedJobCallback
+  }); // 9. If promise.[[PromiseState]] is pending, then
 
   if (promise.PromiseState === 'pending') {
     // a. Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
@@ -30430,16 +31999,17 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     const rejectJob = NewPromiseReactionJob(rejectReaction, reason); // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
 
     HostEnqueuePromiseJob(rejectJob.Job);
-  } // 11. Set promise.[[PromiseIsHandled]] to true.
+  } // 12. Set promise.[[PromiseIsHandled]] to true.
 
 
-  promise.PromiseIsHandled = Value.true; // 12. If resultCapability is undefined, then
+  promise.PromiseIsHandled = Value.true; // 13. If resultCapability is undefined, then
 
   if (resultCapability === Value.undefined) {
     // a. Return undefined.
     return Value.undefined;
   } else {
-    // return resultCapability.[[Promise]].
+    // 14. Else,
+    // a. Return resultCapability.[[Promise]].
     return resultCapability.Promise;
   }
 }
@@ -38616,20 +40186,19 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], {
 FunctionProto_call.section = 'https://tc39.es/ecma262/#sec-function.prototype.call';
 
 function FunctionProto_toString(args, {
-  thisValue: func
+  thisValue
 }) {
   // 1. Let func be the this value.
-  // 2. If func is a bound function exotic object or a built-in function object, then
-  //    return an implementation-dependent String source code representation of func.
-  //    The representation must have the syntax of a NativeFunction. Additionally, if
-  //    func is a Well-known Intrinsic Object and is not identified as an anonymous
-  //    function, the portion of the returned String that would be matched by
-  //    PropertyName must be the initial value of the "name" property of func.
-  if ('BoundTargetFunction' in func || 'nativeFunction' in func) {
-    const name = func.properties.get(new Value('name'));
+  const func = thisValue; // 2. If func is a built-in function object, then return an implementation-defined
+  //    String source code representation of func. The representation must have the
+  //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
+  //    slot and func.[[InitialName]] is a String, the portion of the returned String
+  //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
+  //    value of func.[[InitialName]].
 
-    if (name !== undefined) {
-      return new Value(`function ${name.Value.stringValue()}() { [native code] }`);
+  if ('nativeFunction' in func) {
+    if (func.InitialName !== Value.null) {
+      return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
 
     return new Value('function() { [native code] }');
@@ -40496,7 +42065,7 @@ function DateProto_toISOString(args, {
   let YYYY = String(year);
 
   if (year < 0 || year > 9999) {
-    YYYY = year < 0 ? `-${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
+    YYYY = year < 0 ? `${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
   }
 
   const MM = String(month).padStart(2, '0');
@@ -41452,7 +43021,7 @@ function RegExpExec(R, S) {
     _temp5 = _temp5.Value;
   }
   return RegExpBuiltinExec(R, S);
-} // 21.2.5.2.2 #sec-regexpbuiltinexec
+} // #sec-regexpbuiltinexec
 
 function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
@@ -41462,17 +43031,17 @@ function RegExpBuiltinExec(R, S) {
 
   const length = S.stringValue().length; // 4. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
 
-  let _temp30 = Get(R, new Value('lastIndex'));
+  let _temp19 = Get(R, new Value('lastIndex'));
 
-  if (_temp30 instanceof AbruptCompletion) {
-    return _temp30;
+  if (_temp19 instanceof AbruptCompletion) {
+    return _temp19;
   }
 
-  if (_temp30 instanceof Completion) {
-    _temp30 = _temp30.Value;
+  if (_temp19 instanceof Completion) {
+    _temp19 = _temp19.Value;
   }
 
-  let _temp6 = ToLength(_temp30);
+  let _temp6 = ToLength(_temp19);
 
   if (_temp6 instanceof AbruptCompletion) {
     return _temp6;
@@ -41557,48 +43126,33 @@ function RegExpBuiltinExec(R, S) {
   const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split(''); // 14. If fullUnicode is true, then
 
   if (fullUnicode) {
-    // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
-      let _temp9 = GetStringIndex(S, Input, e);
+    // a. e is an index into the Input character list, derived from S, matched by matcher.
+    //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+    //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+    let eUTF = 0;
 
-      Assert(!(_temp9 instanceof AbruptCompletion), "GetStringIndex(S, Input, e)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
-
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-
-      // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
-      e = _temp9;
+    if (e >= Input.length) {
+      eUTF = S.stringValue().length;
     } else {
-      // a. e is an index into the Input character list, derived from S, matched by matcher.
-      //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
-      //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
-      let eUTF = 0;
-
-      if (e >= Input.length) {
-        eUTF = S.stringValue().length;
-      } else {
-        for (let i = 0; i < e; i += 1) {
-          eUTF += Input[i].length;
-        }
-      } // b. Set e to eUTF.
+      for (let i = 0; i < e; i += 1) {
+        eUTF += Input[i].length;
+      }
+    } // b. Set e to eUTF.
 
 
-      e = eUTF;
-    }
+    e = eUTF;
   } // 15. If global is true or sticky is true, then
 
 
   if (global || sticky) {
-    let _temp10 = Set$1(R, new Value('lastIndex'), new Value(e), Value.true);
+    let _temp9 = Set$1(R, new Value('lastIndex'), new Value(e), Value.true);
 
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
     }
 
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
   } // 16. Let n be the number of elements in r's captures List.
 
@@ -41607,282 +43161,121 @@ function RegExpBuiltinExec(R, S) {
 
   Assert(n < 2 ** 32 - 1, "n < (2 ** 32) - 1"); // 18. Let A be ! ArrayCreate(n + 1).
 
-  let _temp11 = ArrayCreate(new Value(n + 1));
+  let _temp10 = ArrayCreate(new Value(n + 1));
 
-  Assert(!(_temp11 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
+  Assert(!(_temp10 instanceof AbruptCompletion), "ArrayCreate(new Value(n + 1))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
+  }
+
+  const A = _temp10; // 19. Assert: The value of A's "length" property is n + 1.
+
+  let _temp11 = Get(A, new Value('length'));
+
+  Assert(!(_temp11 instanceof AbruptCompletion), "Get(A, new Value('length'))" + ' returned an abrupt completion');
 
   if (_temp11 instanceof Completion) {
     _temp11 = _temp11.Value;
   }
 
-  const A = _temp11; // 19. Assert: The value of A's "length" property is n + 1.
+  Assert(_temp11.numberValue() === n + 1, "X(Get(A, new Value('length'))).numberValue() === n + 1"); // 20. Perform ! CreateDataPropertyOrThrow(A, "index", lastIndex).
 
-  let _temp12 = Get(A, new Value('length'));
+  let _temp12 = CreateDataPropertyOrThrow(A, new Value('index'), lastIndex);
 
-  Assert(!(_temp12 instanceof AbruptCompletion), "Get(A, new Value('length'))" + ' returned an abrupt completion');
+  Assert(!(_temp12 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('index'), lastIndex)" + ' returned an abrupt completion');
 
   if (_temp12 instanceof Completion) {
     _temp12 = _temp12.Value;
   }
 
-  Assert(_temp12.numberValue() === n + 1, "X(Get(A, new Value('length'))).numberValue() === n + 1"); // 20. Perform ! CreateDataPropertyOrThrow(A, "index", lastIndex).
+  let _temp13 = CreateDataPropertyOrThrow(A, new Value('input'), S);
 
-  let _temp13 = CreateDataPropertyOrThrow(A, new Value('index'), lastIndex);
-
-  Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('index'), lastIndex)" + ' returned an abrupt completion');
+  Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('input'), S)" + ' returned an abrupt completion');
 
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
   }
+  const capturingParens = R.parsedPattern.capturingGroups; // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
 
-  let _temp14 = CreateDataPropertyOrThrow(A, new Value('input'), S);
+  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e); // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
 
-  Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('input'), S)" + ' returned an abrupt completion');
+  let _temp14 = CreateDataProperty(A, new Value('0'), new Value(matchedSubstr));
+
+  Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), new Value(matchedSubstr))" + ' returned an abrupt completion');
 
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
-  const capturingParens = R.parsedPattern.capturingGroups; // https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
+  let groups; // 24. If R contains any GroupName, then
 
-  if (surroundingAgent.feature('RegExpMatchIndices')) {
-    // Let indices be a new empty List.
-    const indices = []; // Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+  if (R.parsedPattern.groupSpecifiers.size > 0) {
+    // a. Let groups be OrdinaryObjectCreate(null).
+    groups = OrdinaryObjectCreate(Value.null);
+  } else {
+    // 25. Else,
+    // a. Let groups be undefined.
+    groups = Value.undefined;
+  } // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
 
-    const match = new MatchRecord(lastIndex.numberValue(), e); // Add match as the last element of indices.
 
-    indices.push(match); // Let matchedValue be ! GetMatchString(S, match).
+  let _temp15 = CreateDataPropertyOrThrow(A, new Value('groups'), groups);
 
-    let _temp15 = GetMatchString(S, match);
+  Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('groups'), groups)" + ' returned an abrupt completion');
 
-    Assert(!(_temp15 instanceof AbruptCompletion), "GetMatchString(S, match)" + ' returned an abrupt completion');
+  if (_temp15 instanceof Completion) {
+    _temp15 = _temp15.Value;
+  }
 
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
+  for (let i = 1; i <= n; i += 1) {
+    // a. Let captureI be ith element of r's captures List.
+    const captureI = r.captures[i];
+    let capturedValue; // b. If captureI is undefined, let capturedValue be undefined.
+
+    if (captureI === Value.undefined) {
+      capturedValue = Value.undefined;
+    } else if (fullUnicode) {
+      // c. Else if fullUnicode is true, then
+      // i. Assert: captureI is a List of code points.
+      // ii. Let capturedValue be ! UTF16Encode(captureI).
+      capturedValue = new Value(captureI.join(''));
+    } else {
+      // d. Else,
+      // i. Assert: fullUnicode is false.
+      Assert(fullUnicode === false, "fullUnicode === false"); // ii. Assert: captureI is a List of code units.
+      // iii. Let capturedValue be the String value consisting of the code units of captureI.
+
+      capturedValue = new Value(captureI.join(''));
+    } // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
+
+
+    let _temp18 = ToString(new Value(i));
+
+    Assert(!(_temp18 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
     }
 
-    const matchedValue = _temp15; // Perform ! CreateDataProperty(A, "0", matchedValue).
+    let _temp16 = CreateDataPropertyOrThrow(A, _temp18, capturedValue);
 
-    let _temp16 = CreateDataProperty(A, new Value('0'), matchedValue);
-
-    Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), matchedValue)" + ' returned an abrupt completion');
+    Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
 
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
-    let groups;
-    let groupNames; // If R contains any GroupName, then
 
-    if (R.parsedPattern.groupSpecifiers.size > 0) {
-      // Let groups be OrdinaryObjectCreate(null).
-      groups = OrdinaryObjectCreate(Value.null); // Let groupNames be a new empty List.
+    if (capturingParens[i - 1].GroupSpecifier) {
+      // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
+      const s = new Value(capturingParens[i - 1].GroupSpecifier); // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
 
-      groupNames = []; // TODO: add this to spec text.
+      let _temp17 = CreateDataPropertyOrThrow(groups, s, capturedValue);
 
-      groupNames.push(Value.undefined);
-    } else {
-      // Else,
-      // Let groups be undefined.
-      groups = Value.undefined; // Let groupNames be undefined.
+      Assert(!(_temp17 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, s, capturedValue)" + ' returned an abrupt completion');
 
-      groupNames = Value.undefined;
-    } // Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
-
-
-    let _temp17 = CreateDataPropertyOrThrow(A, new Value('groups'), groups);
-
-    Assert(!(_temp17 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('groups'), groups)" + ' returned an abrupt completion');
-
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
-    }
-
-    for (let i = 1; i <= n; i += 1) {
-      // Let captureI be ith element of r's captures List.
-      const captureI = r.captures[i];
-      let capturedValue; // If captureI is undefined, then
-
-      if (captureI === Value.undefined) {
-        // Let capturedValue be undefined.
-        capturedValue = Value.undefined; // Add undefined as the last element of indices.
-
-        indices.push(Value.undefined);
-      } else {
-        // Else,
-        // Let captureStart be captureI's startIndex.
-        let captureStart = captureI.startIndex; // Let captureEnd be captureI's endIndex.
-
-        let captureEnd = captureI.endIndex; // If fullUnicode is true, then
-
-        if (fullUnicode) {
-          let _temp18 = GetStringIndex(S, Input, captureStart);
-
-          Assert(!(_temp18 instanceof AbruptCompletion), "GetStringIndex(S, Input, captureStart)" + ' returned an abrupt completion');
-
-          if (_temp18 instanceof Completion) {
-            _temp18 = _temp18.Value;
-          }
-
-          // Set captureStart to ! GetStringIndex(S, Input, captureStart).
-          captureStart = _temp18; // Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
-
-          let _temp19 = GetStringIndex(S, Input, captureEnd);
-
-          Assert(!(_temp19 instanceof AbruptCompletion), "GetStringIndex(S, Input, captureEnd)" + ' returned an abrupt completion');
-
-          if (_temp19 instanceof Completion) {
-            _temp19 = _temp19.Value;
-          }
-
-          captureEnd = _temp19;
-        } // Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
-
-
-        const capture = new MatchRecord(captureStart, captureEnd); // Append capture to indices.
-
-        indices.push(capture); // Let capturedValue be ! GetMatchString(S, capture).
-
-        let _temp20 = GetMatchString(S, capture);
-
-        Assert(!(_temp20 instanceof AbruptCompletion), "GetMatchString(S, capture)" + ' returned an abrupt completion');
-
-        if (_temp20 instanceof Completion) {
-          _temp20 = _temp20.Value;
-        }
-
-        capturedValue = _temp20;
-      } // Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
-
-
-      let _temp23 = ToString(new Value(i));
-
-      Assert(!(_temp23 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
-
-      if (_temp23 instanceof Completion) {
-        _temp23 = _temp23.Value;
-      }
-
-      let _temp21 = CreateDataPropertyOrThrow(A, _temp23, capturedValue);
-
-      Assert(!(_temp21 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
-
-      if (_temp21 instanceof Completion) {
-        _temp21 = _temp21.Value;
-      }
-
-      if (capturingParens[i - 1].GroupSpecifier) {
-        // Let s be the StringValue of the corresponding RegExpIdentifierName.
-        const s = new Value(capturingParens[i - 1].GroupSpecifier); // Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
-
-        let _temp22 = CreateDataPropertyOrThrow(groups, s, capturedValue);
-
-        Assert(!(_temp22 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, s, capturedValue)" + ' returned an abrupt completion');
-
-        if (_temp22 instanceof Completion) {
-          _temp22 = _temp22.Value;
-        }
-
-        Assert(Array.isArray(groupNames), "Array.isArray(groupNames)"); // Append s to groupNames.
-
-        groupNames.push(s);
-      } else {
-        // Else,
-        // If groupNames is a List, append undefined to groupNames.
-        if (Array.isArray(groupNames)) {
-          groupNames.push(Value.undefined);
-        }
-      }
-    } // Let indicesArray be MakeIndicesArray(S, indices, groupNames).
-
-
-    const indicesArray = MakeIndicesArray(S, indices, groupNames); // Perform ! CreateDataProperty(A, "indices", indicesArray).
-
-    let _temp24 = CreateDataProperty(A, new Value('indices'), indicesArray);
-
-    Assert(!(_temp24 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('indices'), indicesArray)" + ' returned an abrupt completion');
-
-    if (_temp24 instanceof Completion) {
-      _temp24 = _temp24.Value;
-    }
-  } else {
-    // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
-    const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e); // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
-
-    let _temp25 = CreateDataProperty(A, new Value('0'), new Value(matchedSubstr));
-
-    Assert(!(_temp25 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), new Value(matchedSubstr))" + ' returned an abrupt completion');
-
-    if (_temp25 instanceof Completion) {
-      _temp25 = _temp25.Value;
-    }
-    let groups; // 24. If R contains any GroupName, then
-
-    if (R.parsedPattern.groupSpecifiers.size > 0) {
-      // a. Let groups be OrdinaryObjectCreate(null).
-      groups = OrdinaryObjectCreate(Value.null);
-    } else {
-      // 25. Else,
-      // a. Let groups be undefined.
-      groups = Value.undefined;
-    } // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
-
-
-    let _temp26 = CreateDataPropertyOrThrow(A, new Value('groups'), groups);
-
-    Assert(!(_temp26 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('groups'), groups)" + ' returned an abrupt completion');
-
-    if (_temp26 instanceof Completion) {
-      _temp26 = _temp26.Value;
-    }
-
-    for (let i = 1; i <= n; i += 1) {
-      // a. Let captureI be ith element of r's captures List.
-      const captureI = r.captures[i];
-      let capturedValue; // b. If captureI is undefined, let capturedValue be undefined.
-
-      if (captureI === Value.undefined) {
-        capturedValue = Value.undefined;
-      } else if (fullUnicode) {
-        // c. Else if fullUnicode is true, then
-        // i. Assert: captureI is a List of code points.
-        // ii. Let capturedValue be ! UTF16Encode(captureI).
-        capturedValue = new Value(captureI.join(''));
-      } else {
-        // d. Else,
-        // i. Assert: fullUnicode is false.
-        Assert(fullUnicode === false, "fullUnicode === false"); // ii. Assert: captureI is a List of code units.
-        // iii. Let capturedValue be the String value consisting of the code units of captureI.
-
-        capturedValue = new Value(captureI.join(''));
-      } // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
-
-
-      let _temp29 = ToString(new Value(i));
-
-      Assert(!(_temp29 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
-
-      if (_temp29 instanceof Completion) {
-        _temp29 = _temp29.Value;
-      }
-
-      let _temp27 = CreateDataPropertyOrThrow(A, _temp29, capturedValue);
-
-      Assert(!(_temp27 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue)" + ' returned an abrupt completion');
-
-      if (_temp27 instanceof Completion) {
-        _temp27 = _temp27.Value;
-      }
-
-      if (capturingParens[i - 1].GroupSpecifier) {
-        // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
-        const s = new Value(capturingParens[i - 1].GroupSpecifier); // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
-
-        let _temp28 = CreateDataPropertyOrThrow(groups, s, capturedValue);
-
-        Assert(!(_temp28 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, s, capturedValue)" + ' returned an abrupt completion');
-
-        if (_temp28 instanceof Completion) {
-          _temp28 = _temp28.Value;
-        }
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
       }
     }
   } // 28. Return A.
@@ -41891,8 +43284,6 @@ function RegExpBuiltinExec(R, S) {
   return A;
 } // #sec-advancestringindex
 
-
-RegExpBuiltinExec.section = 'https://tc39.es/ecma262/#sec-regexpbuiltinexec';
 function AdvanceStringIndex(S, index, unicode) {
   Assert(Type(S) === 'String', "Type(S) === 'String'");
   index = index.numberValue();
@@ -41909,196 +43300,17 @@ function AdvanceStringIndex(S, index, unicode) {
     return new Value(index + 1);
   }
 
-  let _temp31 = CodePointAt(S, index);
+  let _temp20 = CodePointAt(S, index);
 
-  Assert(!(_temp31 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
+  Assert(!(_temp20 instanceof AbruptCompletion), "CodePointAt(S, index)" + ' returned an abrupt completion');
 
-  if (_temp31 instanceof Completion) {
-    _temp31 = _temp31.Value;
+  if (_temp20 instanceof Completion) {
+    _temp20 = _temp20.Value;
   }
 
-  const cp = _temp31;
+  const cp = _temp20;
   return new Value(index + cp.CodeUnitCount.numberValue());
-} // https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex
-
-function GetStringIndex(S, Input, e) {
-  // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
-
-  Assert(Array.isArray(Input), "Array.isArray(Input)"); // 3. Assert: e is an integer value ≥ 0 and < the number of elements in Input.
-  // TODO: fix spec text.
-
-  Assert(e >= 0
-  /* && e < Input.length */
-  , "e >= 0"); // 4. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
-  //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
-
-  let eUTF = 0;
-
-  if (e >= Input.length) {
-    eUTF = S.stringValue().length;
-  } else {
-    for (let i = 0; i < e; i += 1) {
-      eUTF += Input[i].length;
-    }
-  } // 5. Return eUTF.
-
-
-  return eUTF;
-} // https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring
-
-
-GetStringIndex.section = 'https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex';
-
-function GetMatchString(S, match) {
-  // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: match is a Match Record.
-
-  Assert(match instanceof MatchRecord, "match instanceof MatchRecord"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  // TODO: fix spec text.
-
-  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-
-  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-
-  return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
-} // https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
-
-
-GetMatchString.section = 'https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring';
-
-function GetMatchIndicesArray(S, match) {
-  // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: match is a Match Record.
-
-  Assert(match instanceof MatchRecord, "match instanceof MatchRecord"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  // TODO: fix spect text.
-
-  Assert(Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "Number.isInteger(match.StartIndex) && match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
-
-  Assert(Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "Number.isInteger(match.EndIndex) && match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
-
-  return CreateArrayFromList([new Value(match.StartIndex), new Value(match.EndIndex)]);
-} // https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-
-
-GetMatchIndicesArray.section = 'https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray';
-
-function MakeIndicesArray(S, indices, groupNames) {
-  // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: indices is a List.
-
-  Assert(Array.isArray(indices), "Array.isArray(indices)"); // 3. Assert: groupNames is a List or is undefined.
-
-  Assert(Array.isArray(groupNames) || groupNames === Value.undefined, "Array.isArray(groupNames) || groupNames === Value.undefined"); // 4. Let n be the number of elements in indices.
-
-  const n = indices.length; // 5. Assert: n < 2^32-1.
-
-  Assert(n < 2 ** 32 - 1, "n < 2 ** 32 - 1"); // 6. Set A to ! ArrayCreate(n).
-
-  let _temp32 = ArrayCreate(new Value(n));
-
-  Assert(!(_temp32 instanceof AbruptCompletion), "ArrayCreate(new Value(n))" + ' returned an abrupt completion');
-
-  if (_temp32 instanceof Completion) {
-    _temp32 = _temp32.Value;
-  }
-
-  const A = _temp32; // 7. Assert: The value of A's "length" property is n.
-
-  let _temp33 = Get(A, new Value('length'));
-
-  Assert(!(_temp33 instanceof AbruptCompletion), "Get(A, new Value('length'))" + ' returned an abrupt completion');
-
-  if (_temp33 instanceof Completion) {
-    _temp33 = _temp33.Value;
-  }
-
-  Assert(_temp33.numberValue() === n, "X(Get(A, new Value('length'))).numberValue() === n");
-  let groups; // 8. If groupNames is not undefined, then
-
-  if (groupNames !== Value.undefined) {
-    let _temp34 = OrdinaryObjectCreate(Value.null);
-
-    Assert(!(_temp34 instanceof AbruptCompletion), "OrdinaryObjectCreate(Value.null)" + ' returned an abrupt completion');
-
-    if (_temp34 instanceof Completion) {
-      _temp34 = _temp34.Value;
-    }
-
-    // a. Let groups be ! ObjectCreate(null).
-    groups = _temp34;
-  } else {
-    // 9. Else,
-    // b. Let groups be undefined.
-    groups = Value.undefined;
-  } // 10. Perform ! CreateDataProperty(A, "groups", groups).
-
-
-  let _temp35 = CreateDataProperty(A, new Value('groups'), groups);
-
-  Assert(!(_temp35 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('groups'), groups)" + ' returned an abrupt completion');
-
-  if (_temp35 instanceof Completion) {
-    _temp35 = _temp35.Value;
-  }
-
-  for (let i = 0; i < n; i += 1) {
-    // a. Let matchIndices be indices[i].
-    const matchIndices = indices[i];
-    let matchIndicesArray; // b. If matchIndices is not undefined, then
-
-    if (matchIndices !== Value.undefined) {
-      let _temp36 = GetMatchIndicesArray(S, matchIndices);
-
-      Assert(!(_temp36 instanceof AbruptCompletion), "GetMatchIndicesArray(S, matchIndices)" + ' returned an abrupt completion');
-
-      if (_temp36 instanceof Completion) {
-        _temp36 = _temp36.Value;
-      }
-
-      // i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
-      matchIndicesArray = _temp36;
-    } else {
-      // c. Else,
-      // i. Let matchIndicesArray be undefined.
-      matchIndicesArray = Value.undefined;
-    } // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
-
-
-    let _temp39 = ToString(new Value(i));
-
-    Assert(!(_temp39 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
-
-    if (_temp39 instanceof Completion) {
-      _temp39 = _temp39.Value;
-    }
-
-    let _temp37 = CreateDataProperty(A, _temp39, matchIndicesArray);
-
-    Assert(!(_temp37 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(i))), matchIndicesArray)" + ' returned an abrupt completion');
-
-    if (_temp37 instanceof Completion) {
-      _temp37 = _temp37.Value;
-    }
-
-    if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
-      let _temp38 = CreateDataProperty(groups, groupNames[i], matchIndicesArray);
-
-      Assert(!(_temp38 instanceof AbruptCompletion), "CreateDataProperty(groups, groupNames[i], matchIndicesArray)" + ' returned an abrupt completion');
-
-      if (_temp38 instanceof Completion) {
-        _temp38 = _temp38.Value;
-      }
-    }
-  } // 12. Return A.
-
-
-  return A;
 } // 21.2.5.3 #sec-get-regexp.prototype.dotAll
-
-
-MakeIndicesArray.section = 'https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray';
 
 function RegExpProto_dotAllGetter(args, {
   thisValue
@@ -42140,97 +43352,97 @@ function RegExpProto_flagsGetter(args, {
 
   let result = '';
 
-  let _temp40 = Get(R, new Value('global'));
+  let _temp21 = Get(R, new Value('global'));
 
-  if (_temp40 instanceof AbruptCompletion) {
-    return _temp40;
+  if (_temp21 instanceof AbruptCompletion) {
+    return _temp21;
   }
 
-  if (_temp40 instanceof Completion) {
-    _temp40 = _temp40.Value;
+  if (_temp21 instanceof Completion) {
+    _temp21 = _temp21.Value;
   }
 
-  const global = ToBoolean(_temp40);
+  const global = ToBoolean(_temp21);
 
   if (global === Value.true) {
     result += 'g';
   }
 
-  let _temp41 = Get(R, new Value('ignoreCase'));
+  let _temp22 = Get(R, new Value('ignoreCase'));
 
-  if (_temp41 instanceof AbruptCompletion) {
-    return _temp41;
+  if (_temp22 instanceof AbruptCompletion) {
+    return _temp22;
   }
 
-  if (_temp41 instanceof Completion) {
-    _temp41 = _temp41.Value;
+  if (_temp22 instanceof Completion) {
+    _temp22 = _temp22.Value;
   }
 
-  const ignoreCase = ToBoolean(_temp41);
+  const ignoreCase = ToBoolean(_temp22);
 
   if (ignoreCase === Value.true) {
     result += 'i';
   }
 
-  let _temp42 = Get(R, new Value('multiline'));
+  let _temp23 = Get(R, new Value('multiline'));
 
-  if (_temp42 instanceof AbruptCompletion) {
-    return _temp42;
+  if (_temp23 instanceof AbruptCompletion) {
+    return _temp23;
   }
 
-  if (_temp42 instanceof Completion) {
-    _temp42 = _temp42.Value;
+  if (_temp23 instanceof Completion) {
+    _temp23 = _temp23.Value;
   }
 
-  const multiline = ToBoolean(_temp42);
+  const multiline = ToBoolean(_temp23);
 
   if (multiline === Value.true) {
     result += 'm';
   }
 
-  let _temp43 = Get(R, new Value('dotAll'));
+  let _temp24 = Get(R, new Value('dotAll'));
 
-  if (_temp43 instanceof AbruptCompletion) {
-    return _temp43;
+  if (_temp24 instanceof AbruptCompletion) {
+    return _temp24;
   }
 
-  if (_temp43 instanceof Completion) {
-    _temp43 = _temp43.Value;
+  if (_temp24 instanceof Completion) {
+    _temp24 = _temp24.Value;
   }
 
-  const dotAll = ToBoolean(_temp43);
+  const dotAll = ToBoolean(_temp24);
 
   if (dotAll === Value.true) {
     result += 's';
   }
 
-  let _temp44 = Get(R, new Value('unicode'));
+  let _temp25 = Get(R, new Value('unicode'));
 
-  if (_temp44 instanceof AbruptCompletion) {
-    return _temp44;
+  if (_temp25 instanceof AbruptCompletion) {
+    return _temp25;
   }
 
-  if (_temp44 instanceof Completion) {
-    _temp44 = _temp44.Value;
+  if (_temp25 instanceof Completion) {
+    _temp25 = _temp25.Value;
   }
 
-  const unicode = ToBoolean(_temp44);
+  const unicode = ToBoolean(_temp25);
 
   if (unicode === Value.true) {
     result += 'u';
   }
 
-  let _temp45 = Get(R, new Value('sticky'));
+  let _temp26 = Get(R, new Value('sticky'));
 
-  if (_temp45 instanceof AbruptCompletion) {
-    return _temp45;
+  if (_temp26 instanceof AbruptCompletion) {
+    return _temp26;
   }
 
-  if (_temp45 instanceof Completion) {
-    _temp45 = _temp45.Value;
+  if (_temp26 instanceof Completion) {
+    _temp26 = _temp26.Value;
   }
 
-  const sticky = ToBoolean(_temp45);
+  const sticky = ToBoolean(_temp26);
 
   if (sticky === Value.true) {
     result += 'y';
@@ -42311,29 +43523,29 @@ function RegExpProto_match([string = Value.undefined], {
   } // 3. Let S be ? ToString(string).
 
 
-  let _temp46 = ToString(string);
+  let _temp27 = ToString(string);
 
-  if (_temp46 instanceof AbruptCompletion) {
-    return _temp46;
+  if (_temp27 instanceof AbruptCompletion) {
+    return _temp27;
   }
 
-  if (_temp46 instanceof Completion) {
-    _temp46 = _temp46.Value;
+  if (_temp27 instanceof Completion) {
+    _temp27 = _temp27.Value;
   }
 
-  const S = _temp46; // 4. Let global be ! ToBoolean(? Get(rx, "global")).
+  const S = _temp27; // 4. Let global be ! ToBoolean(? Get(rx, "global")).
 
-  let _temp47 = Get(rx, new Value('global'));
+  let _temp28 = Get(rx, new Value('global'));
 
-  if (_temp47 instanceof AbruptCompletion) {
-    return _temp47;
+  if (_temp28 instanceof AbruptCompletion) {
+    return _temp28;
   }
 
-  if (_temp47 instanceof Completion) {
-    _temp47 = _temp47.Value;
+  if (_temp28 instanceof Completion) {
+    _temp28 = _temp28.Value;
   }
 
-  const global = ToBoolean(_temp47); // 5. If global is false, then
+  const global = ToBoolean(_temp28); // 5. If global is false, then
 
   if (global === Value.false) {
     // a. Return ? RegExpExec(rx, S).
@@ -42343,53 +43555,53 @@ function RegExpProto_match([string = Value.undefined], {
     // a. Assert: global is true.
     Assert(global === Value.true, "global === Value.true"); // b. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
 
-    let _temp48 = Get(rx, new Value('unicode'));
+    let _temp29 = Get(rx, new Value('unicode'));
 
-    if (_temp48 instanceof AbruptCompletion) {
-      return _temp48;
+    if (_temp29 instanceof AbruptCompletion) {
+      return _temp29;
     }
 
-    if (_temp48 instanceof Completion) {
-      _temp48 = _temp48.Value;
+    if (_temp29 instanceof Completion) {
+      _temp29 = _temp29.Value;
     }
 
-    const fullUnicode = ToBoolean(_temp48); // c. Perform ? Set(rx, "lastIndex", 0, true).
+    const fullUnicode = ToBoolean(_temp29); // c. Perform ? Set(rx, "lastIndex", 0, true).
 
-    let _temp49 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp30 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp49 instanceof AbruptCompletion) {
-      return _temp49;
+    if (_temp30 instanceof AbruptCompletion) {
+      return _temp30;
     }
 
-    if (_temp49 instanceof Completion) {
-      _temp49 = _temp49.Value;
+    if (_temp30 instanceof Completion) {
+      _temp30 = _temp30.Value;
     }
 
-    let _temp50 = ArrayCreate(new Value(0));
+    let _temp31 = ArrayCreate(new Value(0));
 
-    Assert(!(_temp50 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+    Assert(!(_temp31 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
 
-    if (_temp50 instanceof Completion) {
-      _temp50 = _temp50.Value;
+    if (_temp31 instanceof Completion) {
+      _temp31 = _temp31.Value;
     }
 
-    const A = _temp50; // e. Let n be 0.
+    const A = _temp31; // e. Let n be 0.
 
     let n = 0; // f. Repeat,
 
     while (true) {
-      let _temp51 = RegExpExec(rx, S);
+      let _temp32 = RegExpExec(rx, S);
 
-      if (_temp51 instanceof AbruptCompletion) {
-        return _temp51;
+      if (_temp32 instanceof AbruptCompletion) {
+        return _temp32;
       }
 
-      if (_temp51 instanceof Completion) {
-        _temp51 = _temp51.Value;
+      if (_temp32 instanceof Completion) {
+        _temp32 = _temp32.Value;
       }
 
       // i. Let result be ? RegExpExec(rx, S).
-      const result = _temp51; // ii. If result is null, then
+      const result = _temp32; // ii. If result is null, then
 
       if (result === Value.null) {
         // 1. If n = 0, return null.
@@ -42400,80 +43612,80 @@ function RegExpProto_match([string = Value.undefined], {
 
         return A;
       } else {
-        let _temp57 = Get(result, new Value('0'));
+        let _temp38 = Get(result, new Value('0'));
 
-        if (_temp57 instanceof AbruptCompletion) {
-          return _temp57;
+        if (_temp38 instanceof AbruptCompletion) {
+          return _temp38;
         }
 
-        if (_temp57 instanceof Completion) {
-          _temp57 = _temp57.Value;
+        if (_temp38 instanceof Completion) {
+          _temp38 = _temp38.Value;
         }
 
-        let _temp52 = ToString(_temp57);
+        let _temp33 = ToString(_temp38);
 
-        if (_temp52 instanceof AbruptCompletion) {
-          return _temp52;
+        if (_temp33 instanceof AbruptCompletion) {
+          return _temp33;
         }
 
-        if (_temp52 instanceof Completion) {
-          _temp52 = _temp52.Value;
+        if (_temp33 instanceof Completion) {
+          _temp33 = _temp33.Value;
         }
 
         // iii. Else,
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        const matchStr = _temp52; // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), matchStr).
+        const matchStr = _temp33; // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), matchStr).
 
-        let _temp58 = ToString(new Value(n));
+        let _temp39 = ToString(new Value(n));
 
-        Assert(!(_temp58 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+        Assert(!(_temp39 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-        if (_temp58 instanceof Completion) {
-          _temp58 = _temp58.Value;
+        if (_temp39 instanceof Completion) {
+          _temp39 = _temp39.Value;
         }
 
-        let _temp53 = CreateDataPropertyOrThrow(A, _temp58, matchStr);
+        let _temp34 = CreateDataPropertyOrThrow(A, _temp39, matchStr);
 
-        Assert(!(_temp53 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), matchStr)" + ' returned an abrupt completion');
+        Assert(!(_temp34 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), matchStr)" + ' returned an abrupt completion');
 
-        if (_temp53 instanceof Completion) {
-          _temp53 = _temp53.Value;
+        if (_temp34 instanceof Completion) {
+          _temp34 = _temp34.Value;
         }
 
         if (matchStr.stringValue() === '') {
-          let _temp56 = Get(rx, new Value('lastIndex'));
+          let _temp37 = Get(rx, new Value('lastIndex'));
 
-          if (_temp56 instanceof AbruptCompletion) {
-            return _temp56;
+          if (_temp37 instanceof AbruptCompletion) {
+            return _temp37;
           }
 
-          if (_temp56 instanceof Completion) {
-            _temp56 = _temp56.Value;
+          if (_temp37 instanceof Completion) {
+            _temp37 = _temp37.Value;
           }
 
-          let _temp54 = ToLength(_temp56);
+          let _temp35 = ToLength(_temp37);
 
-          if (_temp54 instanceof AbruptCompletion) {
-            return _temp54;
+          if (_temp35 instanceof AbruptCompletion) {
+            return _temp35;
           }
 
-          if (_temp54 instanceof Completion) {
-            _temp54 = _temp54.Value;
+          if (_temp35 instanceof Completion) {
+            _temp35 = _temp35.Value;
           }
 
           // a. Let thisIndex be ? ToLength(? Get(rx, "lastIndex")).
-          const thisIndex = _temp54; // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
+          const thisIndex = _temp35; // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
 
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode); // c. Perform ? Set(rx, "lastIndex", nextIndex, true).
 
-          let _temp55 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+          let _temp36 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
 
-          if (_temp55 instanceof AbruptCompletion) {
-            return _temp55;
+          if (_temp36 instanceof AbruptCompletion) {
+            return _temp36;
           }
 
-          if (_temp55 instanceof Completion) {
-            _temp55 = _temp55.Value;
+          if (_temp36 instanceof Completion) {
+            _temp36 = _temp36.Value;
           }
         } // 4. Set n to n + 1.
 
@@ -42496,94 +43708,94 @@ function RegExpProto_matchAll([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp59 = ToString(string);
+  let _temp40 = ToString(string);
 
-  if (_temp59 instanceof AbruptCompletion) {
-    return _temp59;
+  if (_temp40 instanceof AbruptCompletion) {
+    return _temp40;
   }
 
-  if (_temp59 instanceof Completion) {
-    _temp59 = _temp59.Value;
+  if (_temp40 instanceof Completion) {
+    _temp40 = _temp40.Value;
   }
 
-  const S = _temp59;
+  const S = _temp40;
 
-  let _temp60 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp41 = SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
 
-  if (_temp60 instanceof AbruptCompletion) {
-    return _temp60;
+  if (_temp41 instanceof AbruptCompletion) {
+    return _temp41;
   }
 
-  if (_temp60 instanceof Completion) {
-    _temp60 = _temp60.Value;
+  if (_temp41 instanceof Completion) {
+    _temp41 = _temp41.Value;
   }
 
-  const C = _temp60;
+  const C = _temp41;
 
-  let _temp66 = Get(R, new Value('flags'));
+  let _temp47 = Get(R, new Value('flags'));
 
-  if (_temp66 instanceof AbruptCompletion) {
-    return _temp66;
+  if (_temp47 instanceof AbruptCompletion) {
+    return _temp47;
   }
 
-  if (_temp66 instanceof Completion) {
-    _temp66 = _temp66.Value;
+  if (_temp47 instanceof Completion) {
+    _temp47 = _temp47.Value;
   }
 
-  let _temp61 = ToString(_temp66);
+  let _temp42 = ToString(_temp47);
 
-  if (_temp61 instanceof AbruptCompletion) {
-    return _temp61;
+  if (_temp42 instanceof AbruptCompletion) {
+    return _temp42;
   }
 
-  if (_temp61 instanceof Completion) {
-    _temp61 = _temp61.Value;
+  if (_temp42 instanceof Completion) {
+    _temp42 = _temp42.Value;
   }
 
-  const flags = _temp61;
+  const flags = _temp42;
 
-  let _temp62 = Construct(C, [R, flags]);
+  let _temp43 = Construct(C, [R, flags]);
 
-  if (_temp62 instanceof AbruptCompletion) {
-    return _temp62;
+  if (_temp43 instanceof AbruptCompletion) {
+    return _temp43;
   }
 
-  if (_temp62 instanceof Completion) {
-    _temp62 = _temp62.Value;
+  if (_temp43 instanceof Completion) {
+    _temp43 = _temp43.Value;
   }
 
-  const matcher = _temp62;
+  const matcher = _temp43;
 
-  let _temp67 = Get(R, new Value('lastIndex'));
+  let _temp48 = Get(R, new Value('lastIndex'));
 
-  if (_temp67 instanceof AbruptCompletion) {
-    return _temp67;
+  if (_temp48 instanceof AbruptCompletion) {
+    return _temp48;
   }
 
-  if (_temp67 instanceof Completion) {
-    _temp67 = _temp67.Value;
+  if (_temp48 instanceof Completion) {
+    _temp48 = _temp48.Value;
   }
 
-  let _temp63 = ToLength(_temp67);
+  let _temp44 = ToLength(_temp48);
 
-  if (_temp63 instanceof AbruptCompletion) {
-    return _temp63;
+  if (_temp44 instanceof AbruptCompletion) {
+    return _temp44;
   }
 
-  if (_temp63 instanceof Completion) {
-    _temp63 = _temp63.Value;
+  if (_temp44 instanceof Completion) {
+    _temp44 = _temp44.Value;
   }
 
-  const lastIndex = _temp63;
+  const lastIndex = _temp44;
 
-  let _temp64 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
+  let _temp45 = Set$1(matcher, new Value('lastIndex'), lastIndex, Value.true);
 
-  if (_temp64 instanceof AbruptCompletion) {
-    return _temp64;
+  if (_temp45 instanceof AbruptCompletion) {
+    return _temp45;
   }
 
-  if (_temp64 instanceof Completion) {
-    _temp64 = _temp64.Value;
+  if (_temp45 instanceof Completion) {
+    _temp45 = _temp45.Value;
   }
   let global;
 
@@ -42601,15 +43813,15 @@ function RegExpProto_matchAll([string = Value.undefined], {
     fullUnicode = Value.false;
   }
 
-  let _temp65 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
+  let _temp46 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
 
-  Assert(!(_temp65 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
+  Assert(!(_temp46 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
 
-  if (_temp65 instanceof Completion) {
-    _temp65 = _temp65.Value;
+  if (_temp46 instanceof Completion) {
+    _temp46 = _temp46.Value;
   }
 
-  return _temp65;
+  return _temp46;
 } // 21.2.5.9 #sec-get-regexp.prototype.multiline
 
 
@@ -42653,68 +43865,68 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp68 = ToString(string);
+  let _temp49 = ToString(string);
 
-  if (_temp68 instanceof AbruptCompletion) {
-    return _temp68;
+  if (_temp49 instanceof AbruptCompletion) {
+    return _temp49;
   }
 
-  if (_temp68 instanceof Completion) {
-    _temp68 = _temp68.Value;
+  if (_temp49 instanceof Completion) {
+    _temp49 = _temp49.Value;
   }
 
-  const S = _temp68;
+  const S = _temp49;
   const lengthS = S.stringValue().length;
   const functionalReplace = IsCallable(replaceValue);
 
   if (functionalReplace === Value.false) {
-    let _temp69 = ToString(replaceValue);
+    let _temp50 = ToString(replaceValue);
 
-    if (_temp69 instanceof AbruptCompletion) {
-      return _temp69;
+    if (_temp50 instanceof AbruptCompletion) {
+      return _temp50;
     }
 
-    if (_temp69 instanceof Completion) {
-      _temp69 = _temp69.Value;
+    if (_temp50 instanceof Completion) {
+      _temp50 = _temp50.Value;
     }
 
-    replaceValue = _temp69;
+    replaceValue = _temp50;
   }
 
-  let _temp70 = Get(rx, new Value('global'));
+  let _temp51 = Get(rx, new Value('global'));
 
-  if (_temp70 instanceof AbruptCompletion) {
-    return _temp70;
+  if (_temp51 instanceof AbruptCompletion) {
+    return _temp51;
   }
 
-  if (_temp70 instanceof Completion) {
-    _temp70 = _temp70.Value;
+  if (_temp51 instanceof Completion) {
+    _temp51 = _temp51.Value;
   }
 
-  const global = ToBoolean(_temp70);
+  const global = ToBoolean(_temp51);
   let fullUnicode;
 
   if (global === Value.true) {
-    let _temp71 = Get(rx, new Value('unicode'));
+    let _temp52 = Get(rx, new Value('unicode'));
 
-    if (_temp71 instanceof AbruptCompletion) {
-      return _temp71;
+    if (_temp52 instanceof AbruptCompletion) {
+      return _temp52;
     }
 
-    if (_temp71 instanceof Completion) {
-      _temp71 = _temp71.Value;
+    if (_temp52 instanceof Completion) {
+      _temp52 = _temp52.Value;
     }
 
-    fullUnicode = ToBoolean(_temp71);
+    fullUnicode = ToBoolean(_temp52);
 
-    let _temp72 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp53 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp72 instanceof AbruptCompletion) {
-      return _temp72;
+    if (_temp53 instanceof AbruptCompletion) {
+      return _temp53;
     }
 
-    if (_temp72 instanceof Completion) {
-      _temp72 = _temp72.Value;
+    if (_temp53 instanceof Completion) {
+      _temp53 = _temp53.Value;
     }
   }
 
@@ -42722,17 +43934,17 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let done = false;
 
   while (!done) {
-    let _temp73 = RegExpExec(rx, S);
+    let _temp54 = RegExpExec(rx, S);
 
-    if (_temp73 instanceof AbruptCompletion) {
-      return _temp73;
+    if (_temp54 instanceof AbruptCompletion) {
+      return _temp54;
     }
 
-    if (_temp73 instanceof Completion) {
-      _temp73 = _temp73.Value;
+    if (_temp54 instanceof Completion) {
+      _temp54 = _temp54.Value;
     }
 
-    const result = _temp73;
+    const result = _temp54;
 
     if (result === Value.null) {
       done = true;
@@ -42742,60 +43954,60 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       if (global === Value.false) {
         done = true;
       } else {
-        let _temp78 = Get(result, new Value('0'));
+        let _temp59 = Get(result, new Value('0'));
 
-        if (_temp78 instanceof AbruptCompletion) {
-          return _temp78;
+        if (_temp59 instanceof AbruptCompletion) {
+          return _temp59;
         }
 
-        if (_temp78 instanceof Completion) {
-          _temp78 = _temp78.Value;
+        if (_temp59 instanceof Completion) {
+          _temp59 = _temp59.Value;
         }
 
-        let _temp74 = ToString(_temp78);
+        let _temp55 = ToString(_temp59);
 
-        if (_temp74 instanceof AbruptCompletion) {
-          return _temp74;
+        if (_temp55 instanceof AbruptCompletion) {
+          return _temp55;
         }
 
-        if (_temp74 instanceof Completion) {
-          _temp74 = _temp74.Value;
+        if (_temp55 instanceof Completion) {
+          _temp55 = _temp55.Value;
         }
 
-        const matchStr = _temp74;
+        const matchStr = _temp55;
 
         if (matchStr.stringValue() === '') {
-          let _temp77 = Get(rx, new Value('lastIndex'));
+          let _temp58 = Get(rx, new Value('lastIndex'));
 
-          if (_temp77 instanceof AbruptCompletion) {
-            return _temp77;
+          if (_temp58 instanceof AbruptCompletion) {
+            return _temp58;
           }
 
-          if (_temp77 instanceof Completion) {
-            _temp77 = _temp77.Value;
+          if (_temp58 instanceof Completion) {
+            _temp58 = _temp58.Value;
           }
 
-          let _temp75 = ToLength(_temp77);
+          let _temp56 = ToLength(_temp58);
 
-          if (_temp75 instanceof AbruptCompletion) {
-            return _temp75;
+          if (_temp56 instanceof AbruptCompletion) {
+            return _temp56;
           }
 
-          if (_temp75 instanceof Completion) {
-            _temp75 = _temp75.Value;
+          if (_temp56 instanceof Completion) {
+            _temp56 = _temp56.Value;
           }
 
-          const thisIndex = _temp75;
+          const thisIndex = _temp56;
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
 
-          let _temp76 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
+          let _temp57 = Set$1(rx, new Value('lastIndex'), nextIndex, Value.true);
 
-          if (_temp76 instanceof AbruptCompletion) {
-            return _temp76;
+          if (_temp57 instanceof AbruptCompletion) {
+            return _temp57;
           }
 
-          if (_temp76 instanceof Completion) {
-            _temp76 = _temp76.Value;
+          if (_temp57 instanceof Completion) {
+            _temp57 = _temp57.Value;
           }
         }
       }
@@ -42806,118 +44018,118 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let nextSourcePosition = 0;
 
   for (const result of results) {
-    let _temp79 = LengthOfArrayLike(result);
+    let _temp60 = LengthOfArrayLike(result);
 
-    if (_temp79 instanceof AbruptCompletion) {
-      return _temp79;
+    if (_temp60 instanceof AbruptCompletion) {
+      return _temp60;
     }
 
-    if (_temp79 instanceof Completion) {
-      _temp79 = _temp79.Value;
+    if (_temp60 instanceof Completion) {
+      _temp60 = _temp60.Value;
     }
 
-    let nCaptures = _temp79.numberValue();
+    let nCaptures = _temp60.numberValue();
 
     nCaptures = Math.max(nCaptures - 1, 0);
 
-    let _temp90 = Get(result, new Value('0'));
+    let _temp71 = Get(result, new Value('0'));
 
-    if (_temp90 instanceof AbruptCompletion) {
-      return _temp90;
+    if (_temp71 instanceof AbruptCompletion) {
+      return _temp71;
     }
 
-    if (_temp90 instanceof Completion) {
-      _temp90 = _temp90.Value;
+    if (_temp71 instanceof Completion) {
+      _temp71 = _temp71.Value;
     }
 
-    let _temp80 = ToString(_temp90);
+    let _temp61 = ToString(_temp71);
 
-    if (_temp80 instanceof AbruptCompletion) {
-      return _temp80;
+    if (_temp61 instanceof AbruptCompletion) {
+      return _temp61;
     }
 
-    if (_temp80 instanceof Completion) {
-      _temp80 = _temp80.Value;
+    if (_temp61 instanceof Completion) {
+      _temp61 = _temp61.Value;
     }
 
-    const matched = _temp80;
+    const matched = _temp61;
     const matchLength = matched.stringValue().length;
 
-    let _temp91 = Get(result, new Value('index'));
+    let _temp72 = Get(result, new Value('index'));
 
-    if (_temp91 instanceof AbruptCompletion) {
-      return _temp91;
+    if (_temp72 instanceof AbruptCompletion) {
+      return _temp72;
     }
 
-    if (_temp91 instanceof Completion) {
-      _temp91 = _temp91.Value;
+    if (_temp72 instanceof Completion) {
+      _temp72 = _temp72.Value;
     }
 
-    let _temp81 = ToInteger(_temp91);
+    let _temp62 = ToInteger(_temp72);
 
-    if (_temp81 instanceof AbruptCompletion) {
-      return _temp81;
+    if (_temp62 instanceof AbruptCompletion) {
+      return _temp62;
     }
 
-    if (_temp81 instanceof Completion) {
-      _temp81 = _temp81.Value;
+    if (_temp62 instanceof Completion) {
+      _temp62 = _temp62.Value;
     }
 
-    let position = _temp81;
+    let position = _temp62;
     position = new Value(Math.max(Math.min(position.numberValue(), lengthS), 0));
     let n = 1;
     const captures = [];
 
     while (n <= nCaptures) {
-      let _temp84 = ToString(new Value(n));
+      let _temp65 = ToString(new Value(n));
 
-      Assert(!(_temp84 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+      Assert(!(_temp65 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
 
-      if (_temp84 instanceof Completion) {
-        _temp84 = _temp84.Value;
+      if (_temp65 instanceof Completion) {
+        _temp65 = _temp65.Value;
       }
 
-      let _temp82 = Get(result, _temp84);
+      let _temp63 = Get(result, _temp65);
 
-      if (_temp82 instanceof AbruptCompletion) {
-        return _temp82;
+      if (_temp63 instanceof AbruptCompletion) {
+        return _temp63;
       }
 
-      if (_temp82 instanceof Completion) {
-        _temp82 = _temp82.Value;
+      if (_temp63 instanceof Completion) {
+        _temp63 = _temp63.Value;
       }
 
-      let capN = _temp82;
+      let capN = _temp63;
 
       if (capN !== Value.undefined) {
-        let _temp83 = ToString(capN);
+        let _temp64 = ToString(capN);
 
-        if (_temp83 instanceof AbruptCompletion) {
-          return _temp83;
+        if (_temp64 instanceof AbruptCompletion) {
+          return _temp64;
         }
 
-        if (_temp83 instanceof Completion) {
-          _temp83 = _temp83.Value;
+        if (_temp64 instanceof Completion) {
+          _temp64 = _temp64.Value;
         }
 
-        capN = _temp83;
+        capN = _temp64;
       }
 
       captures.push(capN);
       n += 1;
     }
 
-    let _temp85 = Get(result, new Value('groups'));
+    let _temp66 = Get(result, new Value('groups'));
 
-    if (_temp85 instanceof AbruptCompletion) {
-      return _temp85;
+    if (_temp66 instanceof AbruptCompletion) {
+      return _temp66;
     }
 
-    if (_temp85 instanceof Completion) {
-      _temp85 = _temp85.Value;
+    if (_temp66 instanceof Completion) {
+      _temp66 = _temp66.Value;
     }
 
-    let namedCaptures = _temp85;
+    let namedCaptures = _temp66;
     let replacement;
 
     if (functionalReplace === Value.true) {
@@ -42929,55 +44141,55 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         replacerArgs.push(namedCaptures);
       }
 
-      let _temp86 = Call(replaceValue, Value.undefined, replacerArgs);
+      let _temp67 = Call(replaceValue, Value.undefined, replacerArgs);
 
-      if (_temp86 instanceof AbruptCompletion) {
-        return _temp86;
+      if (_temp67 instanceof AbruptCompletion) {
+        return _temp67;
       }
 
-      if (_temp86 instanceof Completion) {
-        _temp86 = _temp86.Value;
+      if (_temp67 instanceof Completion) {
+        _temp67 = _temp67.Value;
       }
 
-      const replValue = _temp86;
+      const replValue = _temp67;
 
-      let _temp87 = ToString(replValue);
+      let _temp68 = ToString(replValue);
 
-      if (_temp87 instanceof AbruptCompletion) {
-        return _temp87;
+      if (_temp68 instanceof AbruptCompletion) {
+        return _temp68;
       }
 
-      if (_temp87 instanceof Completion) {
-        _temp87 = _temp87.Value;
+      if (_temp68 instanceof Completion) {
+        _temp68 = _temp68.Value;
       }
 
-      replacement = _temp87;
+      replacement = _temp68;
     } else {
       if (namedCaptures !== Value.undefined) {
-        let _temp88 = ToObject(namedCaptures);
+        let _temp69 = ToObject(namedCaptures);
 
-        if (_temp88 instanceof AbruptCompletion) {
-          return _temp88;
+        if (_temp69 instanceof AbruptCompletion) {
+          return _temp69;
         }
 
-        if (_temp88 instanceof Completion) {
-          _temp88 = _temp88.Value;
+        if (_temp69 instanceof Completion) {
+          _temp69 = _temp69.Value;
         }
 
-        namedCaptures = _temp88;
+        namedCaptures = _temp69;
       }
 
-      let _temp89 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+      let _temp70 = GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
 
-      if (_temp89 instanceof AbruptCompletion) {
-        return _temp89;
+      if (_temp70 instanceof AbruptCompletion) {
+        return _temp70;
       }
 
-      if (_temp89 instanceof Completion) {
-        _temp89 = _temp89.Value;
+      if (_temp70 instanceof Completion) {
+        _temp70 = _temp70.Value;
       }
 
-      replacement = _temp89;
+      replacement = _temp70;
     }
 
     if (position.numberValue() >= nextSourcePosition) {
@@ -43005,75 +44217,75 @@ function RegExpProto_search([string = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp92 = ToString(string);
+  let _temp73 = ToString(string);
 
-  if (_temp92 instanceof AbruptCompletion) {
-    return _temp92;
+  if (_temp73 instanceof AbruptCompletion) {
+    return _temp73;
   }
 
-  if (_temp92 instanceof Completion) {
-    _temp92 = _temp92.Value;
+  if (_temp73 instanceof Completion) {
+    _temp73 = _temp73.Value;
   }
 
-  const S = _temp92;
+  const S = _temp73;
 
-  let _temp93 = Get(rx, new Value('lastIndex'));
+  let _temp74 = Get(rx, new Value('lastIndex'));
 
-  if (_temp93 instanceof AbruptCompletion) {
-    return _temp93;
+  if (_temp74 instanceof AbruptCompletion) {
+    return _temp74;
   }
 
-  if (_temp93 instanceof Completion) {
-    _temp93 = _temp93.Value;
+  if (_temp74 instanceof Completion) {
+    _temp74 = _temp74.Value;
   }
 
-  const previousLastIndex = _temp93;
+  const previousLastIndex = _temp74;
 
   if (SameValue(previousLastIndex, new Value(0)) === Value.false) {
-    let _temp94 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
+    let _temp75 = Set$1(rx, new Value('lastIndex'), new Value(0), Value.true);
 
-    if (_temp94 instanceof AbruptCompletion) {
-      return _temp94;
+    if (_temp75 instanceof AbruptCompletion) {
+      return _temp75;
     }
 
-    if (_temp94 instanceof Completion) {
-      _temp94 = _temp94.Value;
+    if (_temp75 instanceof Completion) {
+      _temp75 = _temp75.Value;
     }
   }
 
-  let _temp95 = RegExpExec(rx, S);
+  let _temp76 = RegExpExec(rx, S);
 
-  if (_temp95 instanceof AbruptCompletion) {
-    return _temp95;
+  if (_temp76 instanceof AbruptCompletion) {
+    return _temp76;
   }
 
-  if (_temp95 instanceof Completion) {
-    _temp95 = _temp95.Value;
+  if (_temp76 instanceof Completion) {
+    _temp76 = _temp76.Value;
   }
 
-  const result = _temp95;
+  const result = _temp76;
 
-  let _temp96 = Get(rx, new Value('lastIndex'));
+  let _temp77 = Get(rx, new Value('lastIndex'));
 
-  if (_temp96 instanceof AbruptCompletion) {
-    return _temp96;
+  if (_temp77 instanceof AbruptCompletion) {
+    return _temp77;
   }
 
-  if (_temp96 instanceof Completion) {
-    _temp96 = _temp96.Value;
+  if (_temp77 instanceof Completion) {
+    _temp77 = _temp77.Value;
   }
 
-  const currentLastIndex = _temp96;
+  const currentLastIndex = _temp77;
 
   if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
-    let _temp97 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
+    let _temp78 = Set$1(rx, new Value('lastIndex'), previousLastIndex, Value.true);
 
-    if (_temp97 instanceof AbruptCompletion) {
-      return _temp97;
+    if (_temp78 instanceof AbruptCompletion) {
+      return _temp78;
     }
 
-    if (_temp97 instanceof Completion) {
-      _temp97 = _temp97.Value;
+    if (_temp78 instanceof Completion) {
+      _temp78 = _temp78.Value;
     }
   }
 
@@ -43122,95 +44334,95 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
 
-  let _temp98 = ToString(string);
+  let _temp79 = ToString(string);
 
-  if (_temp98 instanceof AbruptCompletion) {
-    return _temp98;
+  if (_temp79 instanceof AbruptCompletion) {
+    return _temp79;
   }
 
-  if (_temp98 instanceof Completion) {
-    _temp98 = _temp98.Value;
+  if (_temp79 instanceof Completion) {
+    _temp79 = _temp79.Value;
   }
 
-  const S = _temp98;
+  const S = _temp79;
 
-  let _temp99 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
+  let _temp80 = SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
 
-  if (_temp99 instanceof AbruptCompletion) {
-    return _temp99;
+  if (_temp80 instanceof AbruptCompletion) {
+    return _temp80;
   }
 
-  if (_temp99 instanceof Completion) {
-    _temp99 = _temp99.Value;
+  if (_temp80 instanceof Completion) {
+    _temp80 = _temp80.Value;
   }
 
-  const C = _temp99;
+  const C = _temp80;
 
-  let _temp100 = Get(rx, new Value('flags'));
+  let _temp81 = Get(rx, new Value('flags'));
 
-  if (_temp100 instanceof AbruptCompletion) {
-    return _temp100;
+  if (_temp81 instanceof AbruptCompletion) {
+    return _temp81;
   }
 
-  if (_temp100 instanceof Completion) {
-    _temp100 = _temp100.Value;
+  if (_temp81 instanceof Completion) {
+    _temp81 = _temp81.Value;
   }
 
-  const flagsValue = _temp100;
+  const flagsValue = _temp81;
 
-  let _temp101 = ToString(flagsValue);
+  let _temp82 = ToString(flagsValue);
 
-  if (_temp101 instanceof AbruptCompletion) {
-    return _temp101;
+  if (_temp82 instanceof AbruptCompletion) {
+    return _temp82;
   }
 
-  if (_temp101 instanceof Completion) {
-    _temp101 = _temp101.Value;
+  if (_temp82 instanceof Completion) {
+    _temp82 = _temp82.Value;
   }
 
-  const flags = _temp101.stringValue();
+  const flags = _temp82.stringValue();
 
   const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
   const newFlags = flags.includes('y') ? new Value(flags) : new Value(`${flags}y`);
 
-  let _temp102 = Construct(C, [rx, newFlags]);
+  let _temp83 = Construct(C, [rx, newFlags]);
 
-  if (_temp102 instanceof AbruptCompletion) {
-    return _temp102;
+  if (_temp83 instanceof AbruptCompletion) {
+    return _temp83;
   }
 
-  if (_temp102 instanceof Completion) {
-    _temp102 = _temp102.Value;
+  if (_temp83 instanceof Completion) {
+    _temp83 = _temp83.Value;
   }
 
-  const splitter = _temp102;
+  const splitter = _temp83;
 
-  let _temp103 = ArrayCreate(new Value(0));
+  let _temp84 = ArrayCreate(new Value(0));
 
-  Assert(!(_temp103 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
+  Assert(!(_temp84 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
 
-  if (_temp103 instanceof Completion) {
-    _temp103 = _temp103.Value;
+  if (_temp84 instanceof Completion) {
+    _temp84 = _temp84.Value;
   }
 
-  const A = _temp103;
+  const A = _temp84;
   let lengthA = 0;
   let lim;
 
   if (limit === Value.undefined) {
     lim = 2 ** 32 - 1;
   } else {
-    let _temp104 = ToUint32(limit);
+    let _temp85 = ToUint32(limit);
 
-    if (_temp104 instanceof AbruptCompletion) {
-      return _temp104;
+    if (_temp85 instanceof AbruptCompletion) {
+      return _temp85;
     }
 
-    if (_temp104 instanceof Completion) {
-      _temp104 = _temp104.Value;
+    if (_temp85 instanceof Completion) {
+      _temp85 = _temp85.Value;
     }
 
-    lim = _temp104.numberValue();
+    lim = _temp85.numberValue();
   }
 
   const size = S.stringValue().length;
@@ -43221,28 +44433,28 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   }
 
   if (size === 0) {
-    let _temp105 = RegExpExec(splitter, S);
+    let _temp86 = RegExpExec(splitter, S);
 
-    if (_temp105 instanceof AbruptCompletion) {
-      return _temp105;
+    if (_temp86 instanceof AbruptCompletion) {
+      return _temp86;
     }
 
-    if (_temp105 instanceof Completion) {
-      _temp105 = _temp105.Value;
+    if (_temp86 instanceof Completion) {
+      _temp86 = _temp86.Value;
     }
 
-    const z = _temp105;
+    const z = _temp86;
 
     if (z !== Value.null) {
       return A;
     }
 
-    let _temp106 = CreateDataProperty(A, new Value('0'), S);
+    let _temp87 = CreateDataProperty(A, new Value('0'), S);
 
-    Assert(!(_temp106 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp87 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
 
-    if (_temp106 instanceof Completion) {
-      _temp106 = _temp106.Value;
+    if (_temp87 instanceof Completion) {
+      _temp87 = _temp87.Value;
     }
     return A;
   }
@@ -43250,54 +44462,54 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   let q = new Value(p);
 
   while (q.numberValue() < size) {
-    let _temp107 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
+    let _temp88 = Set$1(splitter, new Value('lastIndex'), q, Value.true);
 
-    if (_temp107 instanceof AbruptCompletion) {
-      return _temp107;
+    if (_temp88 instanceof AbruptCompletion) {
+      return _temp88;
     }
 
-    if (_temp107 instanceof Completion) {
-      _temp107 = _temp107.Value;
+    if (_temp88 instanceof Completion) {
+      _temp88 = _temp88.Value;
     }
 
-    let _temp108 = RegExpExec(splitter, S);
+    let _temp89 = RegExpExec(splitter, S);
 
-    if (_temp108 instanceof AbruptCompletion) {
-      return _temp108;
+    if (_temp89 instanceof AbruptCompletion) {
+      return _temp89;
     }
 
-    if (_temp108 instanceof Completion) {
-      _temp108 = _temp108.Value;
+    if (_temp89 instanceof Completion) {
+      _temp89 = _temp89.Value;
     }
 
-    const z = _temp108;
+    const z = _temp89;
 
     if (z === Value.null) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
-      let _temp109 = Get(splitter, new Value('lastIndex'));
+      let _temp90 = Get(splitter, new Value('lastIndex'));
 
-      if (_temp109 instanceof AbruptCompletion) {
-        return _temp109;
+      if (_temp90 instanceof AbruptCompletion) {
+        return _temp90;
       }
 
-      if (_temp109 instanceof Completion) {
-        _temp109 = _temp109.Value;
+      if (_temp90 instanceof Completion) {
+        _temp90 = _temp90.Value;
       }
 
-      const lastIndex = _temp109;
+      const lastIndex = _temp90;
 
-      let _temp110 = ToLength(lastIndex);
+      let _temp91 = ToLength(lastIndex);
 
-      if (_temp110 instanceof AbruptCompletion) {
-        return _temp110;
+      if (_temp91 instanceof AbruptCompletion) {
+        return _temp91;
       }
 
-      if (_temp110 instanceof Completion) {
-        _temp110 = _temp110.Value;
+      if (_temp91 instanceof Completion) {
+        _temp91 = _temp91.Value;
       }
 
-      let e = _temp110;
+      let e = _temp91;
       e = new Value(Math.min(e.numberValue(), size));
 
       if (e.numberValue() === p) {
@@ -43305,20 +44517,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
       } else {
         const T = new Value(S.stringValue().substring(p, q.numberValue()));
 
-        let _temp117 = ToString(new Value(lengthA));
+        let _temp98 = ToString(new Value(lengthA));
 
-        Assert(!(_temp117 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+        Assert(!(_temp98 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-        if (_temp117 instanceof Completion) {
-          _temp117 = _temp117.Value;
+        if (_temp98 instanceof Completion) {
+          _temp98 = _temp98.Value;
         }
 
-        let _temp111 = CreateDataProperty(A, _temp117, T);
+        let _temp92 = CreateDataProperty(A, _temp98, T);
 
-        Assert(!(_temp111 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+        Assert(!(_temp92 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-        if (_temp111 instanceof Completion) {
-          _temp111 = _temp111.Value;
+        if (_temp92 instanceof Completion) {
+          _temp92 = _temp92.Value;
         }
         lengthA += 1;
 
@@ -43328,56 +44540,56 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
         p = e.numberValue();
 
-        let _temp112 = LengthOfArrayLike(z);
+        let _temp93 = LengthOfArrayLike(z);
 
-        if (_temp112 instanceof AbruptCompletion) {
-          return _temp112;
+        if (_temp93 instanceof AbruptCompletion) {
+          return _temp93;
         }
 
-        if (_temp112 instanceof Completion) {
-          _temp112 = _temp112.Value;
+        if (_temp93 instanceof Completion) {
+          _temp93 = _temp93.Value;
         }
 
-        let numberOfCaptures = _temp112.numberValue();
+        let numberOfCaptures = _temp93.numberValue();
 
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
 
         while (i <= numberOfCaptures) {
-          let _temp115 = ToString(new Value(i));
+          let _temp96 = ToString(new Value(i));
 
-          Assert(!(_temp115 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+          Assert(!(_temp96 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
 
-          if (_temp115 instanceof Completion) {
-            _temp115 = _temp115.Value;
+          if (_temp96 instanceof Completion) {
+            _temp96 = _temp96.Value;
           }
 
-          let _temp113 = Get(z, _temp115);
+          let _temp94 = Get(z, _temp96);
 
-          if (_temp113 instanceof AbruptCompletion) {
-            return _temp113;
+          if (_temp94 instanceof AbruptCompletion) {
+            return _temp94;
           }
 
-          if (_temp113 instanceof Completion) {
-            _temp113 = _temp113.Value;
+          if (_temp94 instanceof Completion) {
+            _temp94 = _temp94.Value;
           }
 
-          const nextCapture = _temp113;
+          const nextCapture = _temp94;
 
-          let _temp116 = ToString(new Value(lengthA));
+          let _temp97 = ToString(new Value(lengthA));
 
-          Assert(!(_temp116 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+          Assert(!(_temp97 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-          if (_temp116 instanceof Completion) {
-            _temp116 = _temp116.Value;
+          if (_temp97 instanceof Completion) {
+            _temp97 = _temp97.Value;
           }
 
-          let _temp114 = CreateDataProperty(A, _temp116, nextCapture);
+          let _temp95 = CreateDataProperty(A, _temp97, nextCapture);
 
-          Assert(!(_temp114 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
+          Assert(!(_temp95 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), nextCapture)" + ' returned an abrupt completion');
 
-          if (_temp114 instanceof Completion) {
-            _temp114 = _temp114.Value;
+          if (_temp95 instanceof Completion) {
+            _temp95 = _temp95.Value;
           }
           i += 1;
           lengthA += 1;
@@ -43394,20 +44606,20 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
   const T = new Value(S.stringValue().substring(p, size));
 
-  let _temp119 = ToString(new Value(lengthA));
+  let _temp100 = ToString(new Value(lengthA));
 
-  Assert(!(_temp119 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
+  Assert(!(_temp100 instanceof AbruptCompletion), "ToString(new Value(lengthA))" + ' returned an abrupt completion');
 
-  if (_temp119 instanceof Completion) {
-    _temp119 = _temp119.Value;
+  if (_temp100 instanceof Completion) {
+    _temp100 = _temp100.Value;
   }
 
-  let _temp118 = CreateDataProperty(A, _temp119, T);
+  let _temp99 = CreateDataProperty(A, _temp100, T);
 
-  Assert(!(_temp118 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+  Assert(!(_temp99 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
-  if (_temp118 instanceof Completion) {
-    _temp118 = _temp118.Value;
+  if (_temp99 instanceof Completion) {
+    _temp99 = _temp99.Value;
   }
   return A;
 } // 21.2.5.14 #sec-get-regexp.prototype.sticky
@@ -43453,29 +44665,29 @@ function RegExpProto_test([S = Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp120 = ToString(S);
+  let _temp101 = ToString(S);
 
-  if (_temp120 instanceof AbruptCompletion) {
-    return _temp120;
+  if (_temp101 instanceof AbruptCompletion) {
+    return _temp101;
   }
 
-  if (_temp120 instanceof Completion) {
-    _temp120 = _temp120.Value;
+  if (_temp101 instanceof Completion) {
+    _temp101 = _temp101.Value;
   }
 
-  const string = _temp120;
+  const string = _temp101;
 
-  let _temp121 = RegExpExec(R, string);
+  let _temp102 = RegExpExec(R, string);
 
-  if (_temp121 instanceof AbruptCompletion) {
-    return _temp121;
+  if (_temp102 instanceof AbruptCompletion) {
+    return _temp102;
   }
 
-  if (_temp121 instanceof Completion) {
-    _temp121 = _temp121.Value;
+  if (_temp102 instanceof Completion) {
+    _temp102 = _temp102.Value;
   }
 
-  const match = _temp121;
+  const match = _temp102;
 
   if (match !== Value.null) {
     return Value.true;
@@ -43496,49 +44708,49 @@ function RegExpProto_toString(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
 
-  let _temp124 = Get(R, new Value('source'));
+  let _temp105 = Get(R, new Value('source'));
 
-  if (_temp124 instanceof AbruptCompletion) {
-    return _temp124;
+  if (_temp105 instanceof AbruptCompletion) {
+    return _temp105;
   }
 
-  if (_temp124 instanceof Completion) {
-    _temp124 = _temp124.Value;
+  if (_temp105 instanceof Completion) {
+    _temp105 = _temp105.Value;
   }
 
-  let _temp122 = ToString(_temp124);
+  let _temp103 = ToString(_temp105);
 
-  if (_temp122 instanceof AbruptCompletion) {
-    return _temp122;
+  if (_temp103 instanceof AbruptCompletion) {
+    return _temp103;
   }
 
-  if (_temp122 instanceof Completion) {
-    _temp122 = _temp122.Value;
+  if (_temp103 instanceof Completion) {
+    _temp103 = _temp103.Value;
   }
 
-  const pattern = _temp122;
+  const pattern = _temp103;
 
-  let _temp125 = Get(R, new Value('flags'));
+  let _temp106 = Get(R, new Value('flags'));
 
-  if (_temp125 instanceof AbruptCompletion) {
-    return _temp125;
+  if (_temp106 instanceof AbruptCompletion) {
+    return _temp106;
   }
 
-  if (_temp125 instanceof Completion) {
-    _temp125 = _temp125.Value;
+  if (_temp106 instanceof Completion) {
+    _temp106 = _temp106.Value;
   }
 
-  let _temp123 = ToString(_temp125);
+  let _temp104 = ToString(_temp106);
 
-  if (_temp123 instanceof AbruptCompletion) {
-    return _temp123;
+  if (_temp104 instanceof AbruptCompletion) {
+    return _temp104;
   }
 
-  if (_temp123 instanceof Completion) {
-    _temp123 = _temp123.Value;
+  if (_temp104 instanceof Completion) {
+    _temp104 = _temp104.Value;
   }
 
-  const flags = _temp123;
+  const flags = _temp104;
   const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
   return new Value(result);
 } // 21.2.5.17 #sec-get-regexp.prototype.unicode
@@ -44672,7 +45884,7 @@ function Promise_allSettled([iterable = Value.undefined], {
 
 
   return Completion(result);
-} // https://tc39.es/proposal-promise-any/#sec-promise.any-reject-element-functions
+} // #sec-promise.any-reject-element-functions
 
 
 Promise_allSettled.section = 'https://tc39.es/ecma262/#sec-promise.allsettled';
@@ -44735,7 +45947,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
 } // #sec-performpromiseany
 
 
-PromiseAnyRejectElementFunctions.section = 'https://tc39.es/proposal-promise-any/#sec-promise.any-reject-element-functions';
+PromiseAnyRejectElementFunctions.section = 'https://tc39.es/ecma262/#sec-promise.any-reject-element-functions';
 
 function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   let _temp33 = IsConstructor(constructor);
@@ -47234,7 +48446,7 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], {
 
   const span = Math.max(to - from, 0);
   return new Value(S.slice(from, from + span));
-} // 21.1.3.20 #sec-string.prototype.split
+} // #sec-string.prototype.split
 
 
 StringProto_slice.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
@@ -47332,9 +48544,9 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   }
 
   if (separator === Value.undefined) {
-    let _temp92 = CreateDataProperty(A, new Value('0'), S);
+    let _temp92 = CreateDataPropertyOrThrow(A, new Value('0'), S);
 
-    Assert(!(_temp92 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
+    Assert(!(_temp92 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('0'), S)" + ' returned an abrupt completion');
 
     if (_temp92 instanceof Completion) {
       _temp92 = _temp92.Value;
@@ -47343,19 +48555,16 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   }
 
   if (s === 0) {
-    const z = SplitMatch(S, 0, R);
+    if (R.stringValue() !== '') {
+      let _temp93 = CreateDataPropertyOrThrow(A, new Value('0'), S);
 
-    if (z !== false) {
-      return A;
+      Assert(!(_temp93 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, new Value('0'), S)" + ' returned an abrupt completion');
+
+      if (_temp93 instanceof Completion) {
+        _temp93 = _temp93.Value;
+      }
     }
 
-    let _temp93 = CreateDataProperty(A, new Value('0'), S);
-
-    Assert(!(_temp93 instanceof AbruptCompletion), "CreateDataProperty(A, new Value('0'), S)" + ' returned an abrupt completion');
-
-    if (_temp93 instanceof Completion) {
-      _temp93 = _temp93.Value;
-    }
     return A;
   }
 
@@ -47380,9 +48589,9 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
           _temp95 = _temp95.Value;
         }
 
-        let _temp94 = CreateDataProperty(A, _temp95, T);
+        let _temp94 = CreateDataPropertyOrThrow(A, _temp95, T);
 
-        Assert(!(_temp94 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+        Assert(!(_temp94 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
         if (_temp94 instanceof Completion) {
           _temp94 = _temp94.Value;
@@ -47409,9 +48618,9 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     _temp97 = _temp97.Value;
   }
 
-  let _temp96 = CreateDataProperty(A, _temp97, T);
+  let _temp96 = CreateDataPropertyOrThrow(A, _temp97, T);
 
-  Assert(!(_temp96 instanceof AbruptCompletion), "CreateDataProperty(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
+  Assert(!(_temp96 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T)" + ' returned an abrupt completion');
 
   if (_temp96 instanceof Completion) {
     _temp96 = _temp96.Value;
@@ -55694,7 +56903,7 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
   return O;
 }
 
-AggregateErrorConstructor.section = 'https://tc39.es/proposal-promise-any/#sec-aggregate-error';
+AggregateErrorConstructor.section = 'https://tc39.es/ecma262/#sec-aggregate-error-constructor';
 function BootstrapAggregateError(realmRec) {
   const c = BootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
   c.Prototype = realmRec.Intrinsics['%Error%'];
@@ -55704,6 +56913,94 @@ function BootstrapAggregateError(realmRec) {
 function BootstrapAggregateErrorPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [['name', new Value('AggregateError')], ['message', new Value('')]], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
   realmRec.Intrinsics['%AggregateError.prototype%'] = proto;
+}
+
+function WeakRefProto_deref(args, {
+  thisValue
+}) {
+  // 1. Let weakRef be the this value.
+  const weakRef = thisValue; // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
+
+  let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  let _temp2 = WeakRefDeref(weakRef);
+
+  Assert(!(_temp2 instanceof AbruptCompletion), "WeakRefDeref(weakRef)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  return _temp2;
+}
+
+WeakRefProto_deref.section = 'https://tc39.es/ecma262/#sec-weak-ref.prototype.deref';
+function BootstrapWeakRefPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
+  realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
+}
+
+function WeakRefConstructor([target = Value.undefined], {
+  NewTarget
+}) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+  } // 2. If Type(target) is not Object, throw a TypeError exception.
+
+
+  if (Type(target) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+  } // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
+
+
+  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* istanbul ignore if */
+
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  const weakRef = _temp; // 4. Perfom ! AddToKeptObjects(target).
+
+  let _temp2 = AddToKeptObjects(target);
+
+  Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  weakRef.WeakRefTarget = target; // 6. Return weakRef
+
+  return weakRef;
+}
+
+WeakRefConstructor.section = 'https://tc39.es/ecma262/#sec-weak-ref-target';
+function BootstrapWeakRef(realmRec) {
+  const bigintConstructor = BootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
+  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }
 
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
@@ -55756,10 +57053,10 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   finalizationRegistry.Cells.push(cell); // 8. Return undefined.
 
   return Value.undefined;
-} // https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.unregister
+} // #sec-finalization-registry.prototype.unregister
 
 
-FinalizationRegistryProto_register.section = 'https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.register';
+FinalizationRegistryProto_register.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.register';
 
 function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], {
   thisValue
@@ -55785,7 +57082,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   let removed = Value.false; // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationRegistry.[[Cells]], do
 
   finalizationRegistry.Cells = finalizationRegistry.Cells.filter(cell => {
-    let r = true; // a. If SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
+    let r = true; // a. If cell.[[UnregisterToken]] is not empty and SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
 
     if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === Value.true) {
       // i. Remove cell from finalizationRegistry.Cells.
@@ -55798,48 +57095,11 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   }); // 6. Return removed.
 
   return removed;
-} // https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.cleanupSome
-
-
-FinalizationRegistryProto_unregister.section = 'https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.unregister';
-
-function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
-  thisValue
-}) {
-  // 1. Let finalizationRegistry be the this value.
-  const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-
-  let _temp3 = RequireInternalSlot(finalizationRegistry, 'Cells');
-
-  if (_temp3 instanceof AbruptCompletion) {
-    return _temp3;
-  }
-
-  if (_temp3 instanceof Completion) {
-    _temp3 = _temp3.Value;
-  }
-
-  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
-  } // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-
-
-  let _temp4 = CleanupFinalizationRegistry(finalizationRegistry, callback);
-
-  if (_temp4 instanceof AbruptCompletion) {
-    return _temp4;
-  }
-
-  if (_temp4 instanceof Completion) {
-    _temp4 = _temp4.Value;
-  }
-
-  return Value.undefined;
 }
 
-FinalizationRegistryProto_cleanupSome.section = 'https://tc39.es/proposal-weakrefs/#sec-finalization-registry.prototype.cleanupSome';
+FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
 function BootstrapFinalizationRegistryPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1], ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
+  const proto = BootstrapPrototype(realmRec, [['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
   realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
 }
 
@@ -55884,105 +57144,10 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
   return finalizationGroup;
 }
 
-FinalizationRegistryConstructor.section = 'https://tc39.es/proposal-weakrefs/#sec-finalization-registry-cleanup-callback';
+FinalizationRegistryConstructor.section = 'https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback';
 function BootstrapFinalizationRegistry(realmRec) {
   const cons = BootstrapConstructor(realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1, realmRec.Intrinsics['%FinalizationRegistry.prototype%'], []);
   realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
-}
-
-function WeakRefProto_deref(args, {
-  thisValue
-}) {
-  // 1. Let weakRef be the this value.
-  const weakRef = thisValue; // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
-
-  let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
-  /* istanbul ignore if */
-
-
-  if (_temp instanceof AbruptCompletion) {
-    return _temp;
-  }
-  /* istanbul ignore if */
-
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-
-  const target = weakRef.WeakRefTarget; // 4. If target is not empty,
-
-  if (target !== undefined) {
-    let _temp2 = AddToKeptObjects(target);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    return target;
-  } // 5. Return undefined.
-
-
-  return Value.undefined;
-}
-
-WeakRefProto_deref.section = 'https://tc39.es/proposal-weakrefs/#sec-weak-ref.prototype.deref';
-function BootstrapWeakRefPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
-  realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
-}
-
-function WeakRefConstructor([target = Value.undefined], {
-  NewTarget
-}) {
-  // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-  } // 2. If Type(target) is not Object, throw a TypeError exception.
-
-
-  if (Type(target) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
-  } // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
-
-
-  let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
-  /* istanbul ignore if */
-
-
-  if (_temp instanceof AbruptCompletion) {
-    return _temp;
-  }
-  /* istanbul ignore if */
-
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-
-  const weakRef = _temp; // 4. Perfom ! AddToKeptObjects(target).
-
-  let _temp2 = AddToKeptObjects(target);
-
-  Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
-  /* istanbul ignore if */
-
-  if (_temp2 instanceof Completion) {
-    _temp2 = _temp2.Value;
-  }
-
-  weakRef.WeakRefTarget = target; // 6. Return weakRef
-
-  return weakRef;
-}
-
-WeakRefConstructor.section = 'https://tc39.es/proposal-weakrefs/#sec-weak-ref-target';
-function BootstrapWeakRef(realmRec) {
-  const bigintConstructor = BootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
-  realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }
 
 class Realm {
@@ -56127,14 +57292,10 @@ function CreateIntrinsics(realmRec) {
   BootstrapWeakMap(realmRec);
   BootstrapWeakSetPrototype(realmRec);
   BootstrapWeakSet(realmRec);
-
-  if (surroundingAgent.feature('WeakRefs')) {
-    BootstrapWeakRefPrototype(realmRec);
-    BootstrapWeakRef(realmRec);
-    BootstrapFinalizationRegistryPrototype(realmRec);
-    BootstrapFinalizationRegistry(realmRec);
-  }
-
+  BootstrapWeakRefPrototype(realmRec);
+  BootstrapWeakRef(realmRec);
+  BootstrapFinalizationRegistryPrototype(realmRec);
+  BootstrapFinalizationRegistry(realmRec);
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
   return intrinsics;
 } // 8.2.3 #sec-setrealmglobalobject
@@ -56196,8 +57357,8 @@ function SetDefaultGlobalBindings(realmRec) {
   }
   [// Function Properties of the Global Object
   'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', // Constructor Properties of the Global Object
-  'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', // 'SharedArrayBuffer',
-  'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakSet', // Other Properties of the Global Object
+  'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set', // 'SharedArrayBuffer',
+  'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet', // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect'].forEach(name => {
     let _temp5 = DefinePropertyOrThrow(global, new Value(name), Descriptor({
@@ -56215,39 +57376,6 @@ function SetDefaultGlobalBindings(realmRec) {
       _temp5 = _temp5.Value;
     }
   });
-
-  if (surroundingAgent.feature('WeakRefs')) {
-    let _temp6 = DefinePropertyOrThrow(global, new Value('WeakRef'), Descriptor({
-      Value: realmRec.Intrinsics['%WeakRef%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    let _temp7 = DefinePropertyOrThrow(global, new Value('FinalizationRegistry'), Descriptor({
-      Value: realmRec.Intrinsics['%FinalizationRegistry%'],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
-    }
-
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-  }
-
   return global;
 }
 
@@ -56453,16 +57581,6 @@ function InitializeReferencedBinding(V, W) {
   Assert(Type(base) === 'EnvironmentRecord', "Type(base) === 'EnvironmentRecord'");
   return base.InitializeBinding(GetReferencedName(V), W);
 }
-
-class MatchRecord {
-  constructor(StartIndex, EndIndex) {
-    Assert(Number.isInteger(StartIndex) && StartIndex >= 0, "Number.isInteger(StartIndex) && StartIndex >= 0");
-    Assert(Number.isInteger(EndIndex) && EndIndex >= StartIndex, "Number.isInteger(EndIndex) && EndIndex >= StartIndex");
-    this.StartIndex = StartIndex;
-    this.EndIndex = EndIndex;
-  }
-
-} // #sec-regexpalloc
 
 function RegExpAlloc(newTarget) {
   let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
@@ -59158,27 +60276,45 @@ function IterableToList(items, method) {
 }
 
 function ClearKeptObjects() {
-  // 1. Let agent be the surrounding agent.
-  const agent = surroundingAgent; // 2. Set agent.[[KeptAlive]] to a new empty List.
+  // 1. Let agentRecord be the surrounding agent's Agent Record.
+  const agentRecord = surroundingAgent.AgentRecord; // 2. Set agentRecord.[[KeptAlive]] to a new empty List.
 
-  agent.KeptAlive = new Set();
-} // https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+  agentRecord.KeptAlive = new Set();
+} // #sec-addtokeptobjects
 
 function AddToKeptObjects(object) {
-  // 1. Let agent be the surrounding agent.
-  const agent = surroundingAgent; // 2. Append object to agent.[[KeptAlive]].
+  // 1. Let agentRecord be the surrounding agent's Agent Record.
+  const agentRecord = surroundingAgent.AgentRecord; // 2. Append object to agentRecord.[[KeptAlive]].
 
-  agent.KeptAlive.add(object);
-} // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-registry
+  agentRecord.KeptAlive.add(object);
+} // #sec-weakrefderef
+
+function WeakRefDeref(weakRef) {
+  // 1. Let target be weakRef.[[WeakRefTarget]].
+  const target = weakRef.WeakRefTarget; // 2. If target is not empty, then
+
+  if (target !== undefined) {
+    let _temp = AddToKeptObjects(target);
+
+    Assert(!(_temp instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
+    /* istanbul ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    return target;
+  } // 3. Return undefined.
+
+
+  return Value.undefined;
+} // #sec-cleanup-finalization-registry
 
 function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
-  Assert('Cells' in finalizationRegistry, "'Cells' in finalizationRegistry"); // 2. If callback is not present or undefined, set callback to finalizationRegistry.[[CleanupCallback]].
+  Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry, "'Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry"); // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
 
-  if (callback === undefined || callback === Value.undefined) {
-    callback = finalizationRegistry.CleanupCallback;
-  } // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, do
-
+  callback = finalizationRegistry.CleanupCallback; // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
 
   for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
     // a. Choose any such _cell_.
@@ -59192,18 +60328,18 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1; // c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
 
-    let _temp = Call(callback, Value.undefined, [cell.HeldValue]);
+    let _temp2 = Call(callback, Value.undefined, [cell.HeldValue]);
     /* istanbul ignore if */
 
 
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
     }
     /* istanbul ignore if */
 
 
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
   } // 4. Return NormalCompletion(undefined).
 
@@ -59566,20 +60702,20 @@ function inspect(value) {
 function Throw(...args) {
   return surroundingAgent.Throw(...args);
 }
-
-function mark() {
-  // https://tc39.es/proposal-weakrefs/#sec-weakref-execution
-  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps automically:
-  // 1. For each obj os S, do
+function gc() {
+  // #sec-weakref-execution
+  // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
+  // 1. For each obj of S, do
   //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
   //     i. Set ref.[[WeakRefTarget]] to empty.
-  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, such that cell.[[WeakRefTarget]] is obj,
+  //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, and cell.[[WeakRefTarget]] is obj,
   //     i. Set cell.[[WeakRefTarget]] to empty.
-  //     ii. Optionally, perform ! HostCleanupFinalizationRegistry(fg).
+  //     ii. Optionally, perform ! HostEnqueueFinalizationRegistryCleanupJob(fg).
   //   c. For each WeakMap map such that map.WeakMapData contains a record r such that r.Key is obj,
-  //     i. Remove r from map.WeakMapData.
-  //   d. For each WeakSet set such that set.WeakSetData contains obj,
-  //     i. Remove obj from WeakSetData.
+  //     i. Set r.[[Key]] to empty.
+  //     ii. Set r.[[Value]] to empty.
+  //   d. For each WeakSet set such that set.[[WeakSetData]] contains obj,
+  //     i. Replace the element of set whose value is obj with an element whose value is empty.
   const marked = new Set();
   const weakrefs = new Set();
   const fgs = new Set();
@@ -59625,10 +60761,6 @@ function mark() {
     }
   };
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    ClearKeptObjects();
-  }
-
   markCb(surroundingAgent);
 
   while (ephemeronQueue.length > 0) {
@@ -59639,34 +60771,31 @@ function mark() {
     }
   }
 
-  if (surroundingAgent.feature('WeakRefs')) {
-    weakrefs.forEach(ref => {
-      if (!marked.has(ref.WeakRefTarget)) {
-        ref.WeakRefTarget = undefined;
+  weakrefs.forEach(ref => {
+    if (!marked.has(ref.WeakRefTarget)) {
+      ref.WeakRefTarget = undefined;
+    }
+  });
+  fgs.forEach(fg => {
+    let dirty = false;
+    fg.Cells.forEach(cell => {
+      if (!marked.has(cell.WeakRefTarget)) {
+        cell.WeakRefTarget = undefined;
+        dirty = true;
       }
     });
-    fgs.forEach(fg => {
-      let dirty = false;
-      fg.Cells.forEach(cell => {
-        if (!marked.has(cell.WeakRefTarget)) {
-          cell.WeakRefTarget = undefined;
-          dirty = true;
-        }
-      });
 
-      if (dirty) {
-        let _temp = HostCleanupFinalizationRegistry(fg);
+    if (dirty) {
+      let _temp = HostEnqueueFinalizationRegistryCleanupJob(fg);
 
-        Assert(!(_temp instanceof AbruptCompletion), "HostCleanupFinalizationRegistry(fg)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+      Assert(!(_temp instanceof AbruptCompletion), "HostEnqueueFinalizationRegistryCleanupJob(fg)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
 
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
       }
-    });
-  }
-
+    }
+  });
   weakmaps.forEach(map => {
     map.WeakMapData.forEach(r => {
       if (!marked.has(r.Key)) {
@@ -59684,7 +60813,6 @@ function mark() {
   });
 } // https://tc39.es/ecma262/#sec-jobs
 
-
 function runJobQueue() {
   if (surroundingAgent.executionContextStack.some(e => e.ScriptOrModule !== Value.null)) {
     return;
@@ -59698,14 +60826,13 @@ function runJobQueue() {
       job: abstractClosure,
       callerRealm,
       callerScriptOrModule
-    } = surroundingAgent.jobQueue.shift(); // 1. Push an execution context onto the execution context stack.
+    } = surroundingAgent.jobQueue.shift(); // 1. Perform any implementation-defined preparation steps.
 
     const newContext = new ExecutionContext();
-    surroundingAgent.executionContextStack.push(newContext); // 2. Perform any implementation-defined preparation steps.
-
+    surroundingAgent.executionContextStack.push(newContext);
     newContext.Function = Value.null;
     newContext.Realm = callerRealm;
-    newContext.ScriptOrModule = callerScriptOrModule; // 3. Call the abstract closure.
+    newContext.ScriptOrModule = callerScriptOrModule; // 2. Call the abstract closure.
 
     let _temp2 = abstractClosure();
 
@@ -59715,8 +60842,8 @@ function runJobQueue() {
       _temp2 = _temp2.Value;
     }
 
-    mark(); // 5. Pop the previously-pushed execution context from the execution context stack.
-
+    ClearKeptObjects();
+    gc();
     surroundingAgent.executionContextStack.pop(newContext);
   }
 }
@@ -59800,31 +60927,30 @@ class ManagedRealm extends Realm {
 
     const module = this.scope(() => ParseModule(sourceText, this, {
       specifier,
-      public: {
-        specifier,
-        Link: () => this.scope(() => module.Link()),
-        GetNamespace: () => this.scope(() => GetModuleNamespace(module)),
-        Evaluate: () => {
-          const res = this.scope(() => module.Evaluate());
-
-          if (!(res instanceof AbruptCompletion)) {
-            runJobQueue();
-          }
-
-          return res;
-        }
-      }
+      SourceTextModuleRecord: ManagedSourceTextModuleRecord
     }));
 
     if (Array.isArray(module)) {
       return ThrowCompletion(module[0]);
     }
 
-    module.HostDefined.public.module = module;
-    return module.HostDefined.public;
+    return module;
   }
 
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateUnmappedArgumentsObject, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, ExportedNames, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetBase, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetReferencedName, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasPrimitiveBase, HasProperty, HostCleanupFinalizationRegistry, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeHostDefinedRealm, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsInteger, IsNonNegativeInteger, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictReference, IsStringPrefix, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue$1 as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StrDecimalLiteral, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMethod, MakeTime, ManagedRealm, MatchRecord, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, Reference, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringValue, SuperReference, SymbolDescriptiveString, SymbolValue, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToInteger, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, Token, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeNumeric, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16DecodeString, UTF16DecodeSurrogatePair, UTF16Encode, UTF16Encoding, UndefinedValue, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeekDay, X, YearFromTime, evaluateScript, inspect, isArrayExoticObject, isArrayIndex, isDecimalDigit, isECMAScriptFunctionObject, isFunctionObject, isHexDigit, isIntegerIndex, isIntegerIndexedExoticObject, isLeadingSurrogate, isLineTerminator, isProxyExoticObject, isStrictModeCode, isTrailingSurrogate, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
+  Evaluate() {
+    const r = super.Evaluate();
+
+    if (!(r instanceof AbruptCompletion)) {
+      runJobQueue();
+    }
+
+    return r;
+  }
+
+}
+
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetBase, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetReferencedName, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasPrimitiveBase, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsInteger, IsNonNegativeInteger, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictReference, IsStringPrefix, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue$1 as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StrDecimalLiteral, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMethod, MakeTime, ManagedRealm, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, Reference, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringValue, SuperReference, SymbolDescriptiveString, SymbolValue, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToInteger, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, Token, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeNumeric, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16DecodeString, UTF16DecodeSurrogatePair, UTF16Encode, UTF16Encoding, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, evaluateScript, gc, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isDecimalDigit, isECMAScriptFunctionObject, isFunctionObject, isHexDigit, isIntegerIndex, isIntegerIndexedExoticObject, isLeadingSurrogate, isLineTerminator, isProxyExoticObject, isStrictModeCode, isTrailingSurrogate, isWhitespace, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
