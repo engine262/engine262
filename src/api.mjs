@@ -39,10 +39,10 @@ export function Throw(...args) {
   return surroundingAgent.Throw(...args);
 }
 
-function gc() {
+export function gc() {
   // #sec-weakref-execution
   // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
-  // 1. For each obj os S, do
+  // 1. For each obj of S, do
   //   a. For each WeakRef ref such that ref.[[WeakRefTarget]] is obj,
   //     i. Set ref.[[WeakRefTarget]] to empty.
   //   b. For each FinalizationRegistry fg such that fg.[[Cells]] contains cell, and cell.[[WeakRefTarget]] is obj,

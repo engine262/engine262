@@ -13,6 +13,7 @@ const {
   AbruptCompletion,
   ManagedRealm,
   inspect,
+  gc,
 } = require('..');
 
 const createRealm = ({ printCompatMode = false } = {}) => {
@@ -95,7 +96,10 @@ const createRealm = ({ printCompatMode = false } = {}) => {
       }],
       ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue())],
       ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer)],
-      ['gc', () => Value.undefined],
+      ['gc', () => {
+        gc();
+        return Value.undefined;
+      }],
       ['spec', ([v]) => {
         if (v.nativeFunction && v.nativeFunction.section) {
           return new Value(v.nativeFunction.section);

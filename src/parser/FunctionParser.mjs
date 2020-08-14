@@ -1,3 +1,4 @@
+import { IsSimpleParameterList } from '../static-semantics/all.mjs';
 import { getDeclarations } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
@@ -65,6 +66,20 @@ export class FunctionParser extends IdentifierParser {
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
       node[body.type] = body;
 
+      if (node.BindingIdentifier) {
+        if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
+          this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+        }
+        if (isExpression) {
+          if (this.scope.hasYield() && node.BindingIdentifier.name === 'yield') {
+            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+          }
+          if (this.scope.hasAwait() && node.BindingIdentifier.name === 'await') {
+            this.raiseEarly('UnexpectedToken', node.BindingIdentifier);
+          }
+        }
+      }
+
       this.validateFormalParameters(node.FormalParameters, body);
     });
 
@@ -75,6 +90,9 @@ export class FunctionParser extends IdentifierParser {
   validateFormalParameters(parameters, body, wantsUnique = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
+    if (wantsUnique === false && !IsSimpleParameterList(parameters)) {
+      wantsUnique = true;
+    }
 
     if (hasStrictDirective) {
       parameters.forEach((p) => {
@@ -120,9 +138,12 @@ export class FunctionParser extends IdentifierParser {
       case 'ArrayLiteral': {
         const wrap = this.startNode();
         node.BindingElementList = [];
-        node.ElementList.forEach((p) => {
+        node.ElementList.forEach((p, i) => {
           const c = this.convertArrowParameter(p);
           if (c.type === 'BindingRestElement') {
+            if (i !== node.ElementList.length - 1) {
+              this.raiseEarly('UnexpectedToken', c);
+            }
             node.BindingRestElement = c;
           } else {
             node.BindingElementList.push(c);

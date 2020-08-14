@@ -210,9 +210,9 @@ export class ExpressionParser extends FunctionParser {
       node.ShortCircuitExpression = ShortCircuitExpression;
       this.scope.with({ in: true }, () => {
         node.AssignmentExpression_a = this.parseAssignmentExpression();
-        this.expect(Token.COLON);
-        node.AssignmentExpression_b = this.parseAssignmentExpression();
       });
+      this.expect(Token.COLON);
+      node.AssignmentExpression_b = this.parseAssignmentExpression();
       return this.finishNode(node, 'ConditionalExpression');
     }
     return ShortCircuitExpression;
@@ -379,6 +379,11 @@ export class ExpressionParser extends FunctionParser {
         case Token.NOT:
           node.operator = this.next().value;
           node.UnaryExpression = this.parseUnaryExpression();
+          if (this.isStrictMode()
+              && node.operator === 'delete'
+              && node.UnaryExpression.type === 'IdentifierReference') {
+            this.raiseEarly('UnexpectedToken', node.UnaryExpression);
+          }
           if (this.test(Token.EXP)) {
             this.unexpected();
           }
@@ -1164,6 +1169,8 @@ export class ExpressionParser extends FunctionParser {
       lexical: true,
       variable: true,
       superProperty: true,
+      await: isAsync,
+      yield: isGenerator,
     }, () => {
       if (isSpecialMethod && isGetter) {
         this.expect(Token.LPAREN);
