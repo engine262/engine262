@@ -39,7 +39,7 @@ export function Throw(...args) {
   return surroundingAgent.Throw(...args);
 }
 
-function mark() {
+function gc() {
   // #sec-weakref-execution
   // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
   // 1. For each obj os S, do
@@ -97,8 +97,6 @@ function mark() {
       O.mark(markCb);
     }
   };
-
-  ClearKeptObjects();
 
   markCb(surroundingAgent);
 
@@ -170,7 +168,8 @@ export function runJobQueue() {
     // 2. Call the abstract closure.
     X(abstractClosure());
     // 3. Perform any host-defined cleanup steps, after which the execution context stack must be empty.
-    mark();
+    ClearKeptObjects();
+    gc();
     surroundingAgent.executionContextStack.pop(newContext);
   }
 }

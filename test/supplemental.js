@@ -152,17 +152,17 @@ Error: owo
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     realm.scope(() => {
-      const module = realm.createSourceTextModule('test.js', `
+      const module = realm.createSourceTextModule('test.mjs', `
         const w = new WeakRef({});
         globalThis.result = Promise.resolve()
           .then(() => {
             if (typeof w.deref() !== 'object') {
-              throw new Error();
+              throw new Error('should be object');
             }
           })
           .then(() => {
             if (typeof w.deref() !== 'undefined') {
-              throw new Error();
+              throw new Error('should be undefined');
             }
           })
           .then(() => 'pass');

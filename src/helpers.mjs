@@ -292,8 +292,8 @@ function captureAsyncStack(stack) {
       return;
     }
     const [reaction] = promise.PromiseFulfillReactions;
-    if (reaction.Handler.nativeFunction === AwaitFulfilledFunctions) {
-      const asyncContext = reaction.Handler.AsyncContext;
+    if (reaction.Handler && reaction.Handler.Callback.nativeFunction === AwaitFulfilledFunctions) {
+      const asyncContext = reaction.Handler.Callback.AsyncContext;
       stack.push(asyncContext.callSite.clone());
       if ('PromiseState' in asyncContext.promiseCapability.Promise) {
         promise = asyncContext.promiseCapability.Promise;

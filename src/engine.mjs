@@ -139,6 +139,9 @@ export class Agent {
 
   // NON-SPEC
   mark(m) {
+    this.AgentRecord.KeptAlive.forEach((v) => {
+      m(v);
+    });
     this.executionContextStack.forEach((e) => {
       m(e);
     });
@@ -295,55 +298,51 @@ export function HostResolveImportedModule(referencingScriptOrModule, specifier) 
 }
 
 function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
+  // 1. If completion is an abrupt completion, then perform ! Call(promiseCapability.[[Reject]], undefined, « completion.[[Value]] »).
   if (completion instanceof AbruptCompletion) {
     X(Call(promiseCapability.Reject, Value.undefined, [completion.Value]));
-  } else {
+  } else { // 2. Else,
+    // a. Assert: completion is a normal completion and completion.[[Value]] is undefined.
     Assert(completion instanceof NormalCompletion);
-    const onFulfilled = X(CreateBuiltinFunction(([v = Value.undefined]) => {
-      Assert(v === Value.undefined);
-      const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
-      // Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-      if (namespace instanceof AbruptCompletion) {
-        X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
-      } else {
-        X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
-      }
-      return Value.undefined;
-    }, []));
-    const onRejected = X(CreateBuiltinFunction(([r = Value.undefined]) => {
-      X(Call(promiseCapability.Reject, Value.undefined, [r]));
-      return Value.undefined;
-    }, []));
-    X(PerformPromiseThen(completion.Value, onFulfilled, onRejected));
+    // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
+    const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
+    // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
+    // d. Let namespace be GetModuleNamespace(moduleRecord).
+    const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
+    // e. If namespace is an abrupt completion, perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
+    if (namespace instanceof AbruptCompletion) {
+      X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
+    } else {
+      // f. Else, perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
+      X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
+    }
   }
 }
 
 export function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
   surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
-    let completion = EnsureCompletion(HostResolveImportedModule(referencingScriptOrModule, specifier));
-    if (!(completion instanceof AbruptCompletion)) {
-      const module = completion.Value;
+    const finish = (c) => FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, c);
+    const c = (() => {
+      const module = Q(HostResolveImportedModule(referencingScriptOrModule, specifier));
+      Q(module.Link());
+      const maybePromise = Q(module.Evaluate());
       if (module instanceof CyclicModuleRecord) {
-        if (module.HostDefined.cachedCompletion) {
-          completion = module.HostDefined.cachedCompletion;
-        } else {
-          if (module.Status !== 'linking' && module.Status !== 'evaluating') {
-            completion = EnsureCompletion(module.Link());
-          }
-          if (!(completion instanceof AbruptCompletion)) {
-            completion = EnsureCompletion(module.Evaluate());
-            module.HostDefined.cachedCompletion = completion;
-          }
-        }
+        const onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
+          finish(NormalCompletion(v));
+          return Value.undefined;
+        }, []);
+        const onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
+          finish(ThrowCompletion(r));
+          return Value.undefined;
+        }, []);
+        PerformPromiseThen(maybePromise, onFulfilled, onRejected);
       } else {
-        completion = EnsureCompletion(module.Link());
-        if (!(completion instanceof AbruptCompletion)) {
-          completion = EnsureCompletion(module.Evaluate());
-        }
+        finish(NormalCompletion(undefined));
       }
+    })();
+    if (c instanceof AbruptCompletion) {
+      finish(c);
     }
-    FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion);
   });
   return NormalCompletion(Value.undefined);
 }
