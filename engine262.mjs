@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 07cac02711552790a5d990896fdc7e726308aeb0
+ * engine262 0.0.1 678d696df2f7788326a83b3db88f7326e5f5ecc0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2897,7 +2897,7 @@ class Lexer {
           this.position += 1;
           return '\u{0000}';
         } else if (this.isStrictMode() && isDecimalDigit(c)) {
-          this.unexpected();
+          this.unexpected(this.position);
         }
 
         this.position += 1;
@@ -19257,29 +19257,33 @@ class StatementParser extends ExpressionParser {
   parseStatementList(endToken, directives) {
     const statementList = [];
     const oldStrict = this.state.strict;
+    const directiveData = [];
 
     while (!this.eat(endToken)) {
-      const stmt = this.parseStatementListItem();
-      statementList.push(stmt);
-
-      if (directives !== undefined && stmt.type === 'ExpressionStatement' && stmt.Expression.type === 'StringLiteral') {
-        const directive = this.source.slice(stmt.Expression.location.startIndex + 1, stmt.Expression.location.endIndex - 1);
+      if (directives !== undefined && this.test(Token.STRING)) {
+        const token = this.peek();
+        const directive = this.source.slice(token.startIndex + 1, token.endIndex - 1);
 
         if (directive === 'use strict') {
-          stmt.strict = true;
-          stmt.Expression.strict = true;
           this.state.strict = true;
-          directives.forEach(d => {
-            if (/\\([1-9]|0\d)/.test(d)) {
-              this.raiseEarly('UnexpectedToken', stmt);
+          directiveData.forEach(d => {
+            if (/\\([1-9]|0\d)/.test(d.directive)) {
+              this.raiseEarly('UnexpectedToken', d.token);
             }
           });
         }
 
         directives.push(directive);
+        directiveData.push({
+          directive,
+          token
+        });
       } else {
         directives = undefined;
       }
+
+      const stmt = this.parseStatementListItem();
+      statementList.push(stmt);
     }
 
     this.state.strict = oldStrict;
