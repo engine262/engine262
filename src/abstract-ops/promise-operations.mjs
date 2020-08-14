@@ -1,4 +1,6 @@
 import {
+  HostMakeJobCallback,
+  HostCallJobCallback,
   HostEnqueuePromiseJob,
   HostPromiseRejectionTracker,
   surroundingAgent,
@@ -45,8 +47,8 @@ export class PromiseReactionRecord {
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === Value.undefined);
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
-    Assert(O.Handler === Value.undefined
-           || isFunctionObject(O.Handler));
+    Assert(O.Handler === undefined
+           || isFunctionObject(O.Handler.Callback));
     this.Capability = O.Capability;
     this.Type = O.Type;
     this.Handler = O.Handler;
@@ -95,8 +97,8 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   const job = () => {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
-    // b. Let thenCallResult be Call(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-    const thenCallResult = Call(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
+    // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
     // c. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
       // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
@@ -107,8 +109,8 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     // d. Return Completion(thenCallResult).
     return Completion(thenCallResult);
   };
-  // 2. Let getThenRealmResult be GetFunctionRealm(then).
-  const getThenRealmResult = GetFunctionRealm(then);
+  // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
+  const getThenRealmResult = GetFunctionRealm(then.Callback);
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
   let thenRealm;
   if (getThenRealmResult instanceof NormalCompletion) {
@@ -117,40 +119,60 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     // 4. Else, let _thenRealm_ be the current Realm Record.
     thenRealm = surroundingAgent.currentRealmRecord;
   }
-  // 5. NOTE: _thenRealm_ is never *null*. When _then_ is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
+  // 5. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
   // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
   return { Job: job, Realm: thenRealm };
 }
 
 // 25.6.1.3.2 #sec-promise-resolve-functions
 function PromiseResolveFunctions([resolution = Value.undefined]) {
+  // 1. Let F be the active function object.
   const F = this;
-
+  // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
   Assert('Promise' in F && Type(F.Promise) === 'Object');
+  // 3. Let promise be F.[[Promise]].
   const promise = F.Promise;
+  // 4. Let alreadyResolved be F.[[AlreadyResolved]].
   const alreadyResolved = F.AlreadyResolved;
+  // 5. If alreadyResolved.[[Value]] is true, return undefined.
   if (alreadyResolved.Value === true) {
     return Value.undefined;
   }
+  // 6. Set alreadyResolved.[[Value]] to true.
   alreadyResolved.Value = true;
+  // 7. If SameValue(resolution, promise) is true, then
   if (SameValue(resolution, promise) === Value.true) {
+    // a. Let selfResolutionError be a newly created TypeError object.
     const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
+    // b. Return RejectPromise(promise, selfResolutionError).
     return RejectPromise(promise, selfResolutionError);
   }
+  // 8. If Type(resolution) is not Object, then
   if (Type(resolution) !== 'Object') {
+    // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
-
+  // 9. Let then be Get(resolution, "then").
   const then = Get(resolution, new Value('then'));
+  // 10. If then is an abrupt completion, then
   if (then instanceof AbruptCompletion) {
+    // a. Return RejectPromise(promise, then.[[Value]]).
     return RejectPromise(promise, then.Value);
   }
+  // 11. Let thenAction be then.[[Value]].
   const thenAction = then.Value;
+  // 12. If IsCallable(thenAction) is false, then
   if (IsCallable(thenAction) === Value.false) {
+    // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
-  const job = NewPromiseResolveThenableJob(promise, resolution, thenAction);
+  // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
+  const thenJobCallback = HostMakeJobCallback(thenAction);
+  // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
+  const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback);
+  // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
   HostEnqueuePromiseJob(job.Job, job.Realm);
+  // 16. Return undefined.
   return Value.undefined;
 }
 
@@ -269,8 +291,8 @@ function NewPromiseReactionJob(reaction, argument) {
     // d. Let handler be reaction.[[Handler]].
     const handler = reaction.Handler;
     let handlerResult;
-    // e. If handler is undefined, then
-    if (handler === Value.undefined) {
+    // e. If handler is empty, then
+    if (handler === undefined) {
       // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
       if (type === 'Fulfill') {
         handlerResult = NormalCompletion(argument);
@@ -281,8 +303,8 @@ function NewPromiseReactionJob(reaction, argument) {
         handlerResult = ThrowCompletion(argument);
       }
     } else {
-      // f. let handlerResult be Call(handler, undefined, « argument »).
-      handlerResult = Call(handler, Value.undefined, [argument]);
+      // f. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
+      handlerResult = HostCallJobCallback(handler, Value.undefined, [argument]);
     }
     // g. If promiseCapability is undefined, then
     if (promiseCapability === Value.undefined) {
@@ -305,10 +327,10 @@ function NewPromiseReactionJob(reaction, argument) {
   };
   // 2. Let handlerRealm be null.
   let handlerRealm = Value.null;
-  // 3. If reaction.[[Handler]] is not undefined, then
-  if (reaction.Handler !== Value.undefined) {
-    // a. Let getHandlerRealmResult be GetFunctionRealm(handler).
-    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler);
+  // 3. If reaction.[[Handler]] is not empty, then
+  if (reaction.Handler !== undefined) {
+    // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
+    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler.Callback);
     // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;
@@ -327,37 +349,41 @@ function NewPromiseReactionJob(reaction, argument) {
 export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);
-  // 2. If resultCapability is present, then
-  if (resultCapability) {
-    // a. Assert: resultCapability is a PromiseCapability Record.
-    Assert(resultCapability instanceof PromiseCapabilityRecord);
-  } else {
+  // 2. If resultCapability is not present, then
+  if (resultCapability === undefined) {
     // a. Set resultCapability to undefined.
     resultCapability = Value.undefined;
   }
-  // 4. If IsCallable(onFulfilled) is false, then
+  let onFulfilledJobCallback;
+  // 3. If IsCallable(onFulfilled) is false, then
   if (IsCallable(onFulfilled) === Value.false) {
-    // a. Set onFulfilled to undefined.
-    onFulfilled = Value.undefined;
+    // a. Let onFulfilledJobCallback be empty.
+    onFulfilledJobCallback = undefined;
+  } else { // 4. Else,
+    // a. Let onFulfilledJobCallback be HostMakeJobCallback(onFulfilled).
+    onFulfilledJobCallback = HostMakeJobCallback(onFulfilled);
   }
+  let onRejectedJobCallback;
   // 5. If IsCallable(onRejected) is false, then
   if (IsCallable(onRejected) === Value.false) {
-    // a. Set onRejected to undefined.
-    onRejected = Value.undefined;
+    // a. Let onRejectedJobCallback be empty.
+    onRejectedJobCallback = undefined;
+  } else { // 6. Else,
+    onRejectedJobCallback = HostMakeJobCallback(onRejected);
   }
-  // 6. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
+  // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
   const fulfillReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
-    Handler: onFulfilled,
+    Handler: onFulfilledJobCallback,
   });
-  // 7. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
+  // 8. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
   const rejectReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
-    Handler: onRejected,
+    Handler: onRejectedJobCallback,
   });
-  // 8. If promise.[[PromiseState]] is pending, then
+  // 9. If promise.[[PromiseState]] is pending, then
   if (promise.PromiseState === 'pending') {
     // a. Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
     promise.PromiseFulfillReactions.push(fulfillReaction);
@@ -384,14 +410,14 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
     // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
     HostEnqueuePromiseJob(rejectJob.Job, rejectJob.Realm);
   }
-  // 11. Set promise.[[PromiseIsHandled]] to true.
+  // 12. Set promise.[[PromiseIsHandled]] to true.
   promise.PromiseIsHandled = Value.true;
-  // 12. If resultCapability is undefined, then
+  // 13. If resultCapability is undefined, then
   if (resultCapability === Value.undefined) {
     // a. Return undefined.
     return Value.undefined;
-  } else {
-    // return resultCapability.[[Promise]].
+  } else { // 14. Else,
+    // a. Return resultCapability.[[Promise]].
     return resultCapability.Promise;
   }
 }

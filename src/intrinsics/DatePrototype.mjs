@@ -492,7 +492,7 @@ function DateProto_toISOString(args, { thisValue }) {
   // TODO: figure out if there can be invalid years.
   let YYYY = String(year);
   if (year < 0 || year > 9999) {
-    YYYY = year < 0 ? `-${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
+    YYYY = year < 0 ? `${String(year).padStart(6, '0')}` : `+${String(year).padStart(6, '0')}`;
   }
   const MM = String(month).padStart(2, '0');
   const DD = String(date).padStart(2, '0');

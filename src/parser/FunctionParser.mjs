@@ -109,9 +109,11 @@ export class FunctionParser extends IdentifierParser {
         const container = this.startNode();
         container.BindingIdentifier = node;
         container.Initializer = null;
+        this.scope.declare(node, 'parameter');
         return this.finishNode(container, 'SingleNameBinding');
       }
       case 'BindingRestElement':
+        this.scope.declare(node, 'parameter');
         return node;
       case 'Elision':
         return node;
@@ -159,6 +161,7 @@ export class FunctionParser extends IdentifierParser {
         node.BindingIdentifier = node.IdentifierReference;
         node.BindingIdentifier.type = 'BindingIdentifier';
         delete node.IdentifierReference;
+        this.scope.declare(node, 'parameter');
         return node;
       case 'PropertyDefinition':
         if (node.PropertyName === null) {
@@ -169,6 +172,7 @@ export class FunctionParser extends IdentifierParser {
           node.type = 'BindingProperty';
           node.BindingElement = this.convertArrowParameter(node.AssignmentExpression);
         }
+        this.scope.declare(node, 'parameter');
         delete node.AssignmentExpression;
         return node;
       case 'SpreadElement':
@@ -182,6 +186,7 @@ export class FunctionParser extends IdentifierParser {
         } else {
           node.BindingPattern = this.convertArrowParameter(node.AssignmentExpression).BindingPattern;
         }
+        this.scope.declare(node, 'parameter');
         delete node.AssignmentExpression;
         return node;
       default:
@@ -190,13 +195,36 @@ export class FunctionParser extends IdentifierParser {
     }
   }
 
-  parseArrowFunction(node, parameters, kind) {
+  parseArrowFunction(node, { arrowInfo, Arguments }, kind) {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
-    node.ArrowParameters = parameters.map((p) => this.convertArrowParameter(p));
-    const body = this.parseConciseBody(isAsync);
-    this.validateFormalParameters(node.ArrowParameters, body, true);
-    node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
+    if (arrowInfo) {
+      arrowInfo.awaitExpressions.forEach((e) => {
+        this.raiseEarly('AwaitInFormalParameters', e);
+      });
+      arrowInfo.yieldExpressions.forEach((e) => {
+        this.raiseEarly('YieldInFormalParameters', e);
+      });
+      if (isAsync) {
+        arrowInfo.awaitIdentifiers.forEach((e) => {
+          this.raiseEarly('AwaitInFormalParameters', e);
+        });
+      }
+    }
+    this.scope.with({
+      default: false,
+      lexical: true,
+      variable: true,
+    }, () => {
+      this.scope.with({
+        parameters: true,
+      }, () => {
+        node.ArrowParameters = Arguments.map((p) => this.convertArrowParameter(p));
+      });
+      const body = this.parseConciseBody(isAsync);
+      this.validateFormalParameters(node.ArrowParameters, body, true);
+      node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
+    });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
 

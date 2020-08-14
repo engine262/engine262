@@ -48,7 +48,7 @@ if (!process.send) {
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(CPU_COUNT * 0.75);
-  const RUN_LONG = process.argv.includes('--run-long');
+  const RUN_SLOW_TESTS = process.argv.includes('--run-slow-tests');
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
@@ -78,7 +78,7 @@ if (!process.send) {
 
   const workers = Array.from({ length: NUM_WORKERS }, () => createWorker());
   let longRunningWorker;
-  if (RUN_LONG) {
+  if (RUN_SLOW_TESTS) {
     longRunningWorker = createWorker();
   }
 
@@ -97,17 +97,20 @@ if (!process.send) {
       return;
     }
 
+    if (/annexB|intl402/.test(test.file)) {
+      return;
+    }
+
     total();
 
-    if (/annexB|intl402/.test(test.file)
-      || (test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
-      || skiplist.includes(test.file)) {
+    if ((test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
+        || skiplist.includes(test.file)) {
       skip();
       return;
     }
 
     if (slowlist.includes(test.file)) {
-      if (RUN_LONG) {
+      if (RUN_SLOW_TESTS) {
         longRunningWorker.send(test);
       } else {
         skip();
@@ -125,7 +128,7 @@ if (!process.send) {
     workers.forEach((w) => {
       w.send('DONE');
     });
-    if (RUN_LONG) {
+    if (RUN_SLOW_TESTS) {
       longRunningWorker.send('DONE');
     }
   });

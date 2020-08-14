@@ -1,13 +1,20 @@
-# Tests that take a really long time
+##################
+### Slow Tests ###
+##################
 
-built-ins/parseFloat/S15.1.2.3_A6.js
-built-ins/parseInt/S15.1.2.2_A8.js
+# Comments start with `#`.
+# Paths are relative to the `test262/test` directory.
+# Paths may contain globs.
 
+# TODO: precomute all character sets so these aren't slow.
 built-ins/RegExp/character-class-escape-non-whitespace.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape*
 built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape*
 built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape*
 built-ins/RegExp/property-escapes/generated/*.js
+
+built-ins/parseFloat/S15.1.2.3_A6.js
+built-ins/parseInt/S15.1.2.2_A8.js
 
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js

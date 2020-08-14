@@ -1,3 +1,10 @@
+#####################
+### Skipped Tests ###
+#####################
+
+# Comments start with `#`.
+# Paths are relative to the `test262/test` directory.
+# Paths may contain globs.
 
 # https://github.com/tc39/test262/issues/427
 language/expressions/prefix-increment/S11.4.4_A5_T4.js
@@ -36,17 +43,8 @@ language/expressions/assignment/S11.13.1_A5_T4.js
 # https://github.com/tc39/ecma262/issues/1426
 built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 
-# TODO(7): Missing Date.
-built-ins/Date/S15.9.3.1_A5_T*.js
-built-ins/Date/parse/time-value-maximum-range.js
+# We need our own date parser
 built-ins/Date/parse/without-utc-offset.js
-built-ins/Date/prototype/*/this-value-invalid-date.js
-built-ins/Date/prototype/toISOString/15.9.5.43-0-10.js
-built-ins/Date/prototype/toISOString/15.9.5.43-0-11.js
-built-ins/Date/prototype/toISOString/15.9.5.43-0-12.js
-built-ins/Date/prototype/toISOString/15.9.5.43-0-4.js
-built-ins/Date/prototype/toISOString/15.9.5.43-0-9.js
-harness/assertRelativeDateMs.js
 
 # TODO(46): Missing Number
 built-ins/Number/prototype/*.js

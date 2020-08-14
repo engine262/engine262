@@ -30,6 +30,7 @@ export function getDeclarations(node) {
     case 'LexicalBinding':
     case 'VariableDeclaration':
     case 'BindingRestElement':
+    case 'BindingRestProperty':
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return getDeclarations(node.BindingIdentifier);
@@ -60,10 +61,20 @@ export function getDeclarations(node) {
       return getDeclarations(node.ImportedBinding);
     case 'NamedImports':
       return getDeclarations(node.ImportsList);
-    case 'ObjectBindingPattern':
-      return getDeclarations(node.BindingPropertyList);
-    case 'ArrayBindingPattern':
-      return getDeclarations(node.BindingElementList);
+    case 'ObjectBindingPattern': {
+      const declarations = getDeclarations(node.BindingPropertyList);
+      if (node.BindingRestProperty) {
+        declarations.push(...getDeclarations(node.BindingRestProperty));
+      }
+      return declarations;
+    }
+    case 'ArrayBindingPattern': {
+      const declarations = getDeclarations(node.BindingElementList);
+      if (node.BindingRestElement) {
+        declarations.push(...getDeclarations(node.BindingRestElement));
+      }
+      return declarations;
+    }
     case 'BindingElement':
       return getDeclarations(node.BindingPattern);
     case 'BindingProperty':
@@ -102,6 +113,7 @@ export class Scope {
     this.parser = parser;
     this.scopeStack = [];
     this.labels = [];
+    this.arrowInfoStack = [];
     this.exports = new Set();
     this.undefinedExports = new Map();
     this.flags = 0;
@@ -205,6 +217,20 @@ export class Scope {
     this.flags = oldFlags;
 
     return r;
+  }
+
+  pushArrowInfo(isAsync = false) {
+    this.arrowInfoStack.push({
+      isAsync,
+      hasTrailingComma: false,
+      yieldExpressions: [],
+      awaitExpressions: [],
+      awaitIdentifiers: [],
+    });
+  }
+
+  popArrowInfo() {
+    return this.arrowInfoStack.pop();
   }
 
   lexicalScope() {

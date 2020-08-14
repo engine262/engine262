@@ -7,6 +7,7 @@ import {
   Q, X,
 } from './completion.mjs';
 import {
+  IsCallable,
   Call, Construct, Assert, GetModuleNamespace,
   PerformPromiseThen, CreateBuiltinFunction,
   GetActiveScriptOrModule,
@@ -380,4 +381,20 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
     }
   }
   return NormalCompletion(undefined);
+}
+
+// #sec-hostmakejobcallback
+export function HostMakeJobCallback(callback) {
+  // 1. Assert: IsCallable(callback) is true.
+  Assert(IsCallable(callback) === Value.true);
+  // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
+  return { Callback: callback, HostDefined: undefined };
+}
+
+// #sec-hostcalljobcallback
+export function HostCallJobCallback(jobCallback, V, argumentsList) {
+  // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
+  Assert(IsCallable(jobCallback.Callback) === Value.true);
+  // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
+  return Q(Call(jobCallback.Callback, V, argumentsList));
 }

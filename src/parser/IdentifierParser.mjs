@@ -7,13 +7,6 @@ import {
 import { BaseParser } from './BaseParser.mjs';
 
 export class IdentifierParser extends BaseParser {
-  // IdentifierName but not ReservedWord
-  parseIdentifier() {
-    const node = this.startNode();
-    node.name = this.expect(Token.IDENTIFIER).value;
-    return this.finishNode(node, 'Identifier');
-  }
-
   // IdentifierName
   parseIdentifierName() {
     const node = this.startNode();
@@ -47,6 +40,13 @@ export class IdentifierParser extends BaseParser {
         break;
       case Token.AWAIT:
         node.name = 'await';
+        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
+          const arrowInfo = this.scope.arrowInfoStack[i];
+          if (arrowInfo.isAsync) {
+            arrowInfo.awaitIdentifiers.push(node);
+            break;
+          }
+        }
         break;
       default:
         this.unexpected(token);
@@ -96,6 +96,13 @@ export class IdentifierParser extends BaseParser {
       case Token.AWAIT:
         if (this.scope.hasAwait()) {
           this.unexpected(token);
+        }
+        for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
+          const arrowInfo = this.scope.arrowInfoStack[i];
+          if (arrowInfo.isAsync) {
+            arrowInfo.awaitIdentifiers.push(node);
+            break;
+          }
         }
         node.name = 'await';
         break;
