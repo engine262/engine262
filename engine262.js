@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 763c45fd0bb1eaa822f896f17d0af13fe4e16ef0
+ * engine262 0.0.1 a85635932676dd3865cdaa828332af00b76ed77c
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -18900,6 +18900,13 @@
 
       while (true) {
         if (this.position >= this.source.length) {
+          // templates will eat newlines before hitting EOF and realizing
+          // there is no end, so walk back to the last line with content on it
+          // for the error message.
+          while (isLineTerminator(this.source[this.position - 1])) {
+            this.position -= 1;
+          }
+
           this.raise('UnterminatedTemplate', this.position);
         }
 
@@ -20798,25 +20805,38 @@
         startIndex = context.startIndex;
         endIndex = context.endIndex;
       }
+      /*
+       * Source looks like:
+       *
+       *  const a = 1;
+       *  const b 'string string string'; // a string
+       *  const c = 3;                  |            |
+       *  |       |                     |            |
+       *  |       | startIndex          | endIndex   |
+       *  | lineStart                                | lineEnd
+       *
+       * Exception looks like:
+       *
+       *  const b 'string string string'; // a string
+       *          ^^^^^^^^^^^^^^^^^^^^^^
+       *  SyntaxError: unexpected token
+       */
 
-      startIndex = Math.min(this.source.length - 1, startIndex);
-      endIndex = Math.min(this.source.length - 1, endIndex);
-      let lineStart = this.source.lastIndexOf('\n', startIndex - 1);
 
-      if (lineStart === -1) {
-        lineStart = 0;
+      let lineStart = startIndex;
+
+      while (!isLineTerminator(this.source[lineStart - 1]) && this.source[lineStart - 1] !== undefined) {
+        lineStart -= 1;
       }
 
-      let lineEnd = this.source.indexOf('\n', endIndex);
+      let lineEnd = startIndex;
 
-      if (lineEnd === -1) {
-        lineEnd = this.source.length;
-      } else {
-        lineEnd -= 1;
+      while (!isLineTerminator(this.source[lineEnd]) && this.source[lineEnd] !== undefined) {
+        lineEnd += 1;
       }
 
       const e = new SyntaxError(messages[template](...templateArgs));
-      e.decoration = `${this.source.slice(lineStart, lineEnd + 1)}
+      e.decoration = `${this.source.slice(lineStart, lineEnd)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
       return e;
     }
