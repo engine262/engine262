@@ -973,7 +973,7 @@ export class ExpressionParser extends FunctionParser {
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue;
     {
-      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags);
+      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags.includes('u'));
       // throws if invalid
       p.parsePattern();
     }

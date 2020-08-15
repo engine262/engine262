@@ -19,7 +19,7 @@ const isBinaryDigit = (c) => (c === '0' || c === '1');
 export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
-const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
+export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -284,7 +284,7 @@ export class Lexer {
   }
 
   skipBlockComment() {
-    const end = this.source.indexOf('*/', this.position);
+    const end = this.source.indexOf('*/', this.position + 2);
     if (end === -1) {
       this.raise('UnterminatedComment', this.position);
     }
@@ -843,12 +843,21 @@ export class Lexer {
           break;
         case '/':
           this.position += 1;
-          if (inClass || this.source[this.position - 2] === '\\') {
-            buffer += c;
-            break;
+          if (!inClass) {
+            this.scannedValue = buffer;
+            return;
           }
-          this.scannedValue = buffer;
-          return;
+          buffer += c;
+          break;
+        case '\\':
+          buffer += c;
+          this.position += 1;
+          if (isLineTerminator(this.source[this.position])) {
+            this.raise('UnterminatedRegExp', this.position);
+          }
+          buffer += this.source[this.position];
+          this.position += 1;
+          break;
         default:
           if (isLineTerminator(c)) {
             this.raise('UnterminatedRegExp', this.position);
@@ -868,7 +877,9 @@ export class Lexer {
         return;
       }
       const c = this.source[this.position];
-      if (isRegularExpressionFlagPart(c)) {
+      if (isRegularExpressionFlagPart(c)
+          && 'gimsuy'.includes(c)
+          && !buffer.includes(c)) {
         this.position += 1;
         buffer += c;
       } else {

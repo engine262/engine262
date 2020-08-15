@@ -43,16 +43,19 @@ export function CharacterValue(node) {
           throw new OutOfRange('Evaluate_CharacterEscape', node);
       }
     case 'RegExpUnicodeEscapeSequence': {
-      const {
-        Hex4Digits: {
-          HexDigit_a,
-          HexDigit_b,
-          HexDigit_c,
-          HexDigit_d,
-        },
-      } = node;
-      const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
-      return String.fromCharCode(Number.parseInt(chars, 16));
+      if (node.Hex4Digits) {
+        const {
+          Hex4Digits: {
+            HexDigit_a,
+            HexDigit_b,
+            HexDigit_c,
+            HexDigit_d,
+          },
+        } = node;
+        const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
+        return String.fromCodePoint(Number.parseInt(chars, 16));
+      }
+      return String.fromCodePoint(node.CodePoint);
     }
     case 'ClassAtom':
       switch (true) {

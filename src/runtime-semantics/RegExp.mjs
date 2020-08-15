@@ -34,6 +34,14 @@ const SetOfAllCharactersExceptLineTerminator = new Set();
 const SetOfAllNotDigitCharacters = new Set();
 const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
 const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
+const SetOfWordCharacters = new Set([
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
+]);
+const SetOfWordCharactersIgnoreCaseUnicode = new Set();
+const SetOfAllNotWordCharacters = new Set();
+const SetOfAllNotWordCharactersUnicodeIgnoreCase = new Set();
 
 function ensureSets() {
   if (SetOfAllCharacters.size > 0) {
@@ -50,11 +58,25 @@ function ensureSets() {
         SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
       }
     }
-    if (lineTerminator && isWhitespace(c)) {
+    if (lineTerminator || isWhitespace(c)) {
       SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
     }
     if (!isDecimalDigit(c)) {
       SetOfAllNotDigitCharacters.add(c);
+    }
+
+    if (SetOfWordCharacters.has(c)) {
+      if (unicodeCaseFoldingSimple.has(c)) {
+        SetOfWordCharactersIgnoreCaseUnicode.add(unicodeCaseFoldingSimple.get(c));
+      }
+      if (unicodeCaseFoldingCommon.has(c)) {
+        SetOfWordCharactersIgnoreCaseUnicode.add(unicodeCaseFoldingCommon.get(c));
+      }
+    } else {
+      SetOfAllNotWordCharacters.add(c);
+      if (!unicodeCaseFoldingSimple.has(c) && !unicodeCaseFoldingCommon.has(c)) {
+        SetOfWordCharactersIgnoreCaseUnicode.add(c);
+      }
     }
   }
 }
@@ -579,28 +601,15 @@ export function Evaluate_Pattern(Pattern, flags) {
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
     //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     //   0 1 2 3 4 5 6 7 8 9 _
-    const A = new Set([
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
-    ]);
     // 2. Let U be an empty set.
-    const U = new Set();
     // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
-    for (let i = 0; i < 0x10FFFF; i += 1) {
-      const c = String.fromCodePoint(i);
-      if (A.has(c)) {
-        continue;
-      }
-      if (A.has(Canonicalize(c))) {
-        U.add(c);
-      }
-    }
     // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
-    Assert((Unicode && IgnoreCase) || U.size === 0);
     // 5. Add the characters in set U to set A.
     // Return A.
-    return A;
+    if (Unicode && IgnoreCase) {
+      return SetOfWordCharactersIgnoreCaseUnicode;
+    }
+    return SetOfWordCharacters;
   }
 
   // #sec-runtime-semantics-iswordchar-abstract-operation
@@ -637,7 +646,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         break;
     }
     const { DecimalDigits_a, DecimalDigits_b } = QuantifierPrefix;
-    return [DecimalDigits_a, DecimalDigits_b === undefined ? Infinity : DecimalDigits_b, greedy];
+    return [DecimalDigits_a, DecimalDigits_b || DecimalDigits_a, greedy];
   }
 
   // #sec-atom
@@ -955,31 +964,17 @@ export function Evaluate_Pattern(Pattern, flags) {
         return WordCharacters();
       case 'W': {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
-        const set = WordCharacters();
-        const A = new Set();
-        for (let i = 0; i < 0x10FFFF; i += 1) {
-          const c = String.fromCodePoint(i);
-          if (!set.has(c)) {
-            A.add(c);
-          }
+        if (Unicode && IgnoreCase) {
+          return SetOfAllNotWordCharactersUnicodeIgnoreCase;
         }
-        return A;
+        return SetOfAllNotWordCharacters;
       }
       case 'p':
         // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
         return Evaluate(node.UnicodePropertyValueExpression);
-      case 'P': {
+      case 'P':
         // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
-        const set = Evaluate(node.UnicodePropertyValueExpression);
-        const A = new Set();
-        for (let i = 0; i < 0x10FFFF; i += 1) {
-          const c = String.fromCodePoint(i);
-          if (!set.has(c)) {
-            A.add(c);
-          }
-        }
-        return A;
-      }
+        return new Set();
       default:
         throw new OutOfRange('Evaluate_CharacterClassEscape', node);
     }

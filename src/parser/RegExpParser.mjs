@@ -6,12 +6,11 @@ import {
 } from '../runtime-semantics/all.mjs';
 import { CharacterValue } from '../static-semantics/all.mjs';
 import {
-  isIdentifierStart,
-  isIdentifierContinue,
+  isIdentifierPart,
   isHexDigit,
 } from './Lexer.mjs';
 
-const isSyntaxCharacter = (c) => '^$.*+?()[]{}|'.includes(c);
+const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
@@ -23,6 +22,7 @@ export class RegExpParser {
     this.plusU = plusU;
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
+    this.decimalEscapes = [];
   }
 
   peek() {
@@ -63,6 +63,14 @@ export class RegExpParser {
       Disjunction: undefined,
     };
     node.Disjunction = this.parseDisjunction();
+    if (this.position < this.source.length) {
+      throw new SyntaxError('Unexpected token');
+    }
+    this.decimalEscapes.forEach((d) => {
+      if (d.value > node.capturingGroups.length) {
+        throw new SyntaxError('Invalid decimal escape');
+      }
+    });
     return node;
   }
 
@@ -220,11 +228,13 @@ export class RegExpParser {
       };
       QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
       if (this.eat(',')) {
-        if (!this.test('}')) {
+        if (this.test('}')) {
+          QuantifierPrefix.DecimalDigits_b = Infinity;
+        } else {
           QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
-          if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
-            throw new SyntaxError('Numbers out of order in {} quantifier');
-          }
+        }
+        if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
+          throw new SyntaxError('Numbers out of order in quantifier');
         }
       }
       this.expect('}');
@@ -275,6 +285,9 @@ export class RegExpParser {
         this.capturingGroups.push(node);
       }
       if (node.GroupSpecifier) {
+        if (this.groupSpecifiers.has(node.GroupSpecifier)) {
+          throw new SyntaxError(`Duplicate group specifier '${node.GroupSpecifier}'`);
+        }
         this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
       }
       node.Disjunction = this.parseDisjunction();
@@ -350,12 +363,21 @@ export class RegExpParser {
       case 'c': {
         this.next();
         const c = this.next();
+        if (c === undefined) {
+          return {
+            type: 'CharacterEscape',
+            IdentityEscape: 'c',
+          };
+        }
         const p = c.codePointAt(0);
         if ((p >= 65 && p <= 90) || (p >= 97 && p <= 122)) {
           return {
             type: 'CharacterEscape',
             ControlLetter: c,
           };
+        }
+        if (this.plusU) {
+          throw new SyntaxError('Invalid identity escape');
         }
         return {
           type: 'CharacterEscape',
@@ -368,6 +390,9 @@ export class RegExpParser {
             type: 'CharacterEscape',
             HexEscapeSequence: this.parseHexEscapeSequence(),
           };
+        }
+        if (this.plusU) {
+          throw new SyntaxError('Invalid identity escape');
         }
         this.next();
         return {
@@ -382,6 +407,9 @@ export class RegExpParser {
             RegExpUnicodeEscapeSequence,
           };
         }
+        if (this.plusU) {
+          throw new SyntaxError('Invalid identity escape');
+        }
         this.next();
         return {
           type: 'CharacterEscape',
@@ -390,11 +418,17 @@ export class RegExpParser {
       }
       default: {
         const c = this.next();
+        if (c === undefined) {
+          throw new SyntaxError('Unexpected escape');
+        }
         if (c === '0' && !isDecimalDigit(this.peek())) {
           return {
             type: 'CharacterEscape',
             subtype: '0',
           };
+        }
+        if (this.plusU && !isSyntaxCharacter(c) && c !== '/') {
+          throw new SyntaxError('Invalid identity escape');
         }
         return {
           type: 'CharacterEscape',
@@ -414,10 +448,12 @@ export class RegExpParser {
         buffer += this.source[this.position];
         this.position += 1;
       }
-      return {
+      const node = {
         type: 'DecimalEscape',
         value: Number.parseInt(buffer, 10),
       };
+      this.decimalEscapes.push(node);
+      return node;
     }
     return undefined;
   }
@@ -573,16 +609,24 @@ export class RegExpParser {
       }
       const atom = this.parseClassAtom();
       if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
-        const atom2 = this.parseClassAtom();
-        if (atom2.type === 'CharacterClassEscape') {
+        if (this.peek() === ']') {
           ranges.push(atom);
-          ranges.push({ type: 'ClassAtom', value: '-' });
-          ranges.push(atom2);
+          ranges.push({
+            type: 'ClassAtom',
+            SourceCharacter: '-',
+          });
         } else {
-          if (CharacterValue(atom) > CharacterValue(atom2)) {
-            throw new SyntaxError('Invalid class range');
+          const atom2 = this.parseClassAtom();
+          if (atom2.type === 'CharacterClassEscape') {
+            ranges.push(atom);
+            ranges.push({ type: 'ClassAtom', value: '-' });
+            ranges.push(atom2);
+          } else {
+            if (CharacterValue(atom) > CharacterValue(atom2)) {
+              throw new SyntaxError('Invalid class range');
+            }
+            ranges.push([atom, atom2]);
           }
-          ranges.push([atom, atom2]);
         }
       } else {
         ranges.push(atom);
@@ -633,7 +677,7 @@ export class RegExpParser {
 
   parseGroupName() {
     this.expect('<');
-    const RegExpIdentifierName = this.parseIdentifierName();
+    const RegExpIdentifierName = this.parseRegExpIdentifierName();
     this.expect('>');
     return RegExpIdentifierName;
   }
@@ -641,17 +685,43 @@ export class RegExpParser {
   // RegExpIdentifierName ::
   //   RegExpIdentifierStart
   //   RegExpIdentifierName RegExpIdentifierPart
-  parseIdentifierName() {
-    let name = '';
-    while (true) {
-      const c = this.peek();
-      if (isIdentifierStart(c) || isIdentifierContinue(c) || c === '$') {
-        name += this.next();
+  parseRegExpIdentifierName() {
+    let buffer = '';
+    while (this.position < this.source.length) {
+      const c = this.source[this.position];
+      const code = c.charCodeAt(0);
+      if (c === '\\') {
+        this.position += 1;
+        const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+        if (!RegExpUnicodeEscapeSequence) {
+          throw new SyntaxError('Invalid unicode escape');
+        }
+        const raw = 'CodePoint' in RegExpUnicodeEscapeSequence
+          ? String.fromCodePoint(RegExpUnicodeEscapeSequence.CodePoint)
+          : CharacterValue(RegExpUnicodeEscapeSequence);
+        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
+          throw new SyntaxError('Invalid unicode escape');
+        }
+        buffer += raw;
+      } else if (isIdentifierPart(c)) {
+        this.position += 1;
+        buffer += c;
+      } else if (!this.plusU && (code >= 0xD800 && code <= 0xDBFF)) {
+        const lowSurrogate = this.source.charCodeAt(this.position + 1);
+        if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
+          throw new SyntaxError('Invalid surrogate pair');
+        }
+        const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
+        if (!isIdentifierPart(raw)) {
+          throw new SyntaxError('Invalid surrogate pair');
+        }
+        this.position += 2;
+        buffer += raw;
       } else {
         break;
       }
     }
-    return name;
+    return buffer;
   }
 
   // DecimalDigits ::
@@ -697,7 +767,7 @@ export class RegExpParser {
       this.position = start;
       return undefined;
     }
-    if (this.test('{')) {
+    if (this.eat('{')) {
       let buffer = '';
       while (!this.eat('}')) {
         if (this.position >= this.source.length) {
@@ -710,7 +780,6 @@ export class RegExpParser {
         }
         buffer += this.next();
       }
-      this.expect('}');
       const CodePoint = Number.parseInt(buffer, 16);
       if (CodePoint > 0x10FFFF) {
         this.position = start;
