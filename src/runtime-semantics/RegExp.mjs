@@ -29,63 +29,85 @@ function isContinuation(v) {
   return typeof v === 'function' && v.length === 1;
 }
 
-const SetOfAllCharacters = new Set();
-const SetOfAllCharactersExceptLineTerminator = new Set();
-const SetOfAllNotDigitCharacters = new Set();
-const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
-const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
-const SetOfWordCharacters = new Set([
-  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
-]);
-const SetOfWordCharactersIgnoreCaseUnicode = new Set();
-const SetOfAllNotWordCharacters = new Set();
-const SetOfAllNotWordCharactersUnicodeIgnoreCase = new Set();
+class CharSet {
+  union(other) {
+    const concrete = new Set();
+    const fns = [];
+    const add = (cs) => {
+      if (cs.fns) {
+        fns.push(...cs.fns);
+        cs.concrete.forEach((c) => {
+          concrete.add(c);
+        });
+      } else if (cs.fn) {
+        fns.push(cs.fn);
+      } else {
+        cs.concrete.forEach((c) => {
+          concrete.add(c);
+        });
+      }
+    };
+    add(this);
+    add(other);
+    return new UnionCharSet(concrete, fns);
+  }
+}
 
-function ensureSets() {
-  if (SetOfAllCharacters.size > 0) {
-    return;
+class UnionCharSet extends CharSet {
+  constructor(concrete, fns) {
+    super();
+
+    this.concrete = concrete;
+    this.fns = fns;
   }
 
-  for (let i = 0; i < 0x10FFFF; i += 1) {
-    const c = String.fromCodePoint(i);
-    SetOfAllCharacters.add(c);
-    const lineTerminator = isLineTerminator(c);
-    if (!lineTerminator) {
-      SetOfAllCharactersExceptLineTerminator.add(c);
-      if (!isWhitespace(c)) {
-        SetOfCharactersOfNotWhitespaceOrLineTerminator.add(c);
+  has(c) {
+    if (this.concrete.has(c)) {
+      return true;
+    }
+    for (const fn of this.fns) {
+      if (fn(c)) {
+        return true;
       }
     }
-    if (lineTerminator || isWhitespace(c)) {
-      SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
-    }
-    if (!isDecimalDigit(c)) {
-      SetOfAllNotDigitCharacters.add(c);
-    }
+    return false;
+  }
+}
 
-    if (SetOfWordCharacters.has(c)) {
-      if (unicodeCaseFoldingSimple.has(c)) {
-        SetOfWordCharactersIgnoreCaseUnicode.add(unicodeCaseFoldingSimple.get(c));
-      }
-      if (unicodeCaseFoldingCommon.has(c)) {
-        SetOfWordCharactersIgnoreCaseUnicode.add(unicodeCaseFoldingCommon.get(c));
-      }
-    } else {
-      SetOfAllNotWordCharacters.add(c);
-      if (!unicodeCaseFoldingSimple.has(c) && !unicodeCaseFoldingCommon.has(c)) {
-        SetOfWordCharactersIgnoreCaseUnicode.add(c);
-      }
-    }
+class ConcreteCharSet extends CharSet {
+  constructor(items) {
+    super();
+    this.concrete = items instanceof Set ? items : new Set(items);
+  }
+
+  has(c) {
+    return this.concrete.has(c);
+  }
+
+  get size() {
+    return this.concrete.size;
+  }
+
+  first() {
+    Assert(this.concrete.size >= 1);
+    return this.concrete.values().next().value;
+  }
+}
+
+class VirtualCharSet extends CharSet {
+  constructor(fn) {
+    super();
+    this.fn = fn;
+  }
+
+  has(c) {
+    return this.fn(c);
   }
 }
 
 // #sec-pattern
 //   Pattern :: Disjunction
 export function Evaluate_Pattern(Pattern, flags) {
-  ensureSets();
-
   // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
@@ -606,10 +628,23 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
     // 5. Add the characters in set U to set A.
     // Return A.
+    const A = new ConcreteCharSet([
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
+    ]);
     if (Unicode && IgnoreCase) {
-      return SetOfWordCharactersIgnoreCaseUnicode;
+      return new VirtualCharSet((c) => {
+        if (A.has(c)) {
+          return true;
+        }
+        if (A.has(Canonicalize(c))) {
+          return true;
+        }
+        return false;
+      });
     }
-    return SetOfWordCharacters;
+    return A;
   }
 
   // #sec-runtime-semantics-iswordchar-abstract-operation
@@ -663,7 +698,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Let ch be the character matched by PatternCharacter.
         const ch = Atom.PatternCharacter;
         // 2. Let A be a one-element CharSet containing the character ch.
-        const A = new Set([Canonicalize(ch)]);
+        const A = new ConcreteCharSet([Canonicalize(ch)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
@@ -672,10 +707,10 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. If DotAll is true, then
         if (DotAll) {
           // a. Let A be the set of all characters.
-          A = SetOfAllCharacters;
+          A = new VirtualCharSet((_c) => true);
         } else {
           // 2. Otherwise, let A be the set of all characters except LineTerminator.
-          A = SetOfAllCharactersExceptLineTerminator;
+          A = new VirtualCharSet((c) => !isLineTerminator(c));
         }
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
@@ -848,7 +883,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 1. Evaluate CharacterEscape to obtain a character ch.
         const ch = Evaluate(AtomEscape.CharacterEscape);
         // 2. Let A be a one-element CharSet containing the character ch.
-        const A = new Set([Canonicalize(ch)]);
+        const A = new ConcreteCharSet([Canonicalize(ch)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
       }
@@ -949,32 +984,30 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (node.value) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
-        return new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        return new ConcreteCharSet(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
       case 'D':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
-        return SetOfAllNotDigitCharacters;
+        return new VirtualCharSet((c) => !isDecimalDigit(c));
       case 's':
         // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
-        return SetOfCharactersOfWhitespaceOrLineTerminator;
+        return new VirtualCharSet((c) => isWhitespace(c) || isLineTerminator(c));
       case 'S':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
-        return SetOfCharactersOfNotWhitespaceOrLineTerminator;
+        return new VirtualCharSet((c) => !isWhitespace(c) && !isLineTerminator(c));
       case 'w':
         // 1. Return the set of all characters returned by WordCharacters().
         return WordCharacters();
       case 'W': {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
-        if (Unicode && IgnoreCase) {
-          return SetOfAllNotWordCharactersUnicodeIgnoreCase;
-        }
-        return SetOfAllNotWordCharacters;
+        const s = WordCharacters();
+        return new VirtualCharSet((c) => !s.has(c));
       }
       case 'p':
         // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
         return Evaluate(node.UnicodePropertyValueExpression);
       case 'P':
         // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
-        return new Set();
+        return new ConcreteCharSet([]);
       default:
         throw new OutOfRange('Evaluate_CharacterClassEscape', node);
     }
@@ -1018,18 +1051,15 @@ export function Evaluate_Pattern(Pattern, flags) {
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
   function Evaluate_CharacterClass({ invert, ClassRanges }) {
-    const A = new Set();
+    let A = new ConcreteCharSet([]);
     for (const range of ClassRanges) {
       if (Array.isArray(range)) {
-        const C = Evaluate(range[0]);
-        const D = Evaluate(range[1]);
-        CharacterRange(C, D).forEach((c) => {
-          A.add(c);
-        });
+        const B = Evaluate(range[0]);
+        const C = Evaluate(range[1]);
+        const D = CharacterRange(B, C);
+        A = A.union(D);
       } else {
-        Evaluate(range).forEach((c) => {
-          A.add(c);
-        });
+        A = A.union(Evaluate(range));
       }
     }
     return { A, invert };
@@ -1040,9 +1070,9 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 1. Assert: A and B each contain exactly one character.
     Assert(A.size === 1 && B.size === 1);
     // 2. Let a be the one character in CharSet A.
-    const a = A.values().next().value;
+    const a = A.first();
     // 3. Let b be the one character in CharSet B.
-    const b = B.values().next().value;
+    const b = B.first();
     // 4. Let i be the character value of character a.
     const i = a.codePointAt(0);
     // 5. Let j be the character value of character b.
@@ -1054,7 +1084,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     for (let k = i; k <= j; k += 1) {
       set.add(Canonicalize(String.fromCodePoint(k)));
     }
-    return set;
+    return new ConcreteCharSet(set);
   }
 
   // #sec-classatom
@@ -1068,10 +1098,10 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (true) {
       case !!ClassAtom.SourceCharacter:
         // 1. Return the CharSet containing the character matched by SourceCharacter.
-        return new Set([Canonicalize(ClassAtom.SourceCharacter)]);
+        return new ConcreteCharSet([Canonicalize(ClassAtom.SourceCharacter)]);
       case ClassAtom.value === '-':
         // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
-        return new Set(['-']);
+        return new ConcreteCharSet(['-']);
       default:
         throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
     }
@@ -1093,7 +1123,7 @@ export function Evaluate_Pattern(Pattern, flags) {
         // 2. Let c be the character whose character value is cv.
         const c = cv;
         // 3. Return the CharSet containing the single character c.
-        return new Set([Canonicalize(c)]);
+        return new ConcreteCharSet([Canonicalize(c)]);
       }
       default:
         throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
