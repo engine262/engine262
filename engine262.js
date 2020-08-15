@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 8865d28d2a0f0f4b7cad6bcc173b0c57ae823341
+ * engine262 0.0.1 bd432210c9b7375aaff8f59f66c3d4c6651e6fbd
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14060,7 +14060,17 @@
       const A = new ConcreteCharSet(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_']);
 
       if (Unicode && IgnoreCase) {
-        return new VirtualCharSet(c => !A.has(c));
+        return new VirtualCharSet(c => {
+          if (A.has(c)) {
+            return true;
+          }
+
+          if (A.has(Canonicalize(c))) {
+            return true;
+          }
+
+          return false;
+        });
       }
 
       return A;
@@ -14427,7 +14437,7 @@
 
         case 'S':
           // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
-          return new VirtualCharSet(c => !isWhitespace(c) && !isWhitespace(c));
+          return new VirtualCharSet(c => !isWhitespace(c) && !isLineTerminator(c));
 
         case 'w':
           // 1. Return the set of all characters returned by WordCharacters().
