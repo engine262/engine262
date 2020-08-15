@@ -864,7 +864,7 @@ export class ExpressionParser extends FunctionParser {
               hasConstructor = true;
             }
           }
-          if (name === 'prototype'
+          if ((m.static && name === 'prototype')
               || (!m.static && !isActualConstructor && name === 'constructor')) {
             this.raiseEarly('InvalidMethodName', m, name);
           }

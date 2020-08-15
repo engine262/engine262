@@ -273,23 +273,31 @@ function DateProto_setMilliseconds([ms = Value.undefined], { thisValue }) {
 
 // 20.3.4.24 #sec-date.prototype.setminutes
 function DateProto_setMinutes([min = Value.undefined, sec, ms], { thisValue }) {
+  // 1. Let t be LocalTime(? thisTimeValue(this value)).
   const t = LocalTime(Q(thisTimeValue(thisValue)));
+  // 2. Let m be ? ToNumber(min).
   const m = Q(ToNumber(min));
   let s;
+  // 3. If sec is not present, let s be SecFromTime(t); otherwise, let s be ? ToNumber(sec).
   if (sec !== undefined) {
     s = Q(ToNumber(sec));
   } else {
     s = SecFromTime(t);
   }
   let milli;
+  // 4. If ms is not present, let milli be msFromTime(t); otherwise, let milli be ? ToNumber(ms).
   if (ms !== undefined) {
     milli = Q(ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
+  // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
   const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
+  // 6. Let u be TimeClip(UTC(date)).
   const u = TimeClip(UTC(date));
+  // 7. Set the [[DateValue]] internal slot of this Date object to u.
   thisValue.DateValue = u;
+  // 8. Return u.
   return u;
 }
 
