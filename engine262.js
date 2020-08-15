@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 ff856832203eef4a87aa9b1cdb10a2c0663663af
+ * engine262 0.0.1 1ff03e2a3caca0fa4e356646eda01f6b0465f09d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2093,7 +2093,6 @@
   const isRegularExpressionFlagPart = c => c && (isIdentifierContinue(c) || c === '$');
 
   const isIdentifierPart = c => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
-
   const SingleCharTokens = {
     '__proto__': null,
     '0': Token.NUMBER,
@@ -2368,7 +2367,7 @@
     }
 
     skipBlockComment() {
-      const end = this.source.indexOf('*/', this.position);
+      const end = this.source.indexOf('*/', this.position + 2);
 
       if (end === -1) {
         this.raise('UnterminatedComment', this.position);
@@ -3046,13 +3045,25 @@
           case '/':
             this.position += 1;
 
-            if (inClass || this.source[this.position - 2] === '\\') {
-              buffer += c;
-              break;
+            if (!inClass) {
+              this.scannedValue = buffer;
+              return;
             }
 
-            this.scannedValue = buffer;
-            return;
+            buffer += c;
+            break;
+
+          case '\\':
+            buffer += c;
+            this.position += 1;
+
+            if (isLineTerminator(this.source[this.position])) {
+              this.raise('UnterminatedRegExp', this.position);
+            }
+
+            buffer += this.source[this.position];
+            this.position += 1;
+            break;
 
           default:
             if (isLineTerminator(c)) {
@@ -3077,7 +3088,7 @@
 
         const c = this.source[this.position];
 
-        if (isRegularExpressionFlagPart(c)) {
+        if (isRegularExpressionFlagPart(c) && 'gimsuy'.includes(c) && !buffer.includes(c)) {
           this.position += 1;
           buffer += c;
         } else {
@@ -13379,6 +13390,10 @@
   const SetOfAllNotDigitCharacters = new Set();
   const SetOfCharactersOfWhitespaceOrLineTerminator = new Set();
   const SetOfCharactersOfNotWhitespaceOrLineTerminator = new Set();
+  const SetOfWordCharacters = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_']);
+  const SetOfWordCharactersIgnoreCaseUnicode = new Set();
+  const SetOfAllNotWordCharacters = new Set();
+  const SetOfAllNotWordCharactersUnicodeIgnoreCase = new Set();
 
   function ensureSets() {
     if (SetOfAllCharacters.size > 0) {
@@ -13398,12 +13413,28 @@
         }
       }
 
-      if (lineTerminator && isWhitespace(c)) {
+      if (lineTerminator || isWhitespace(c)) {
         SetOfCharactersOfWhitespaceOrLineTerminator.add(c);
       }
 
       if (!isDecimalDigit(c)) {
         SetOfAllNotDigitCharacters.add(c);
+      }
+
+      if (SetOfWordCharacters.has(c)) {
+        if (symbols$1.has(c)) {
+          SetOfWordCharactersIgnoreCaseUnicode.add(symbols$1.get(c));
+        }
+
+        if (symbols.has(c)) {
+          SetOfWordCharactersIgnoreCaseUnicode.add(symbols.get(c));
+        }
+      } else {
+        SetOfAllNotWordCharacters.add(c);
+
+        if (!symbols$1.has(c) && !symbols.has(c)) {
+          SetOfWordCharactersIgnoreCaseUnicode.add(c);
+        }
       }
     }
   } // #sec-pattern
@@ -13993,27 +14024,16 @@
       //   a b c d e f g h i j k l m n o p q r s t u v w x y z
       //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
       //   0 1 2 3 4 5 6 7 8 9 _
-      const A = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_']); // 2. Let U be an empty set.
-
-      const U = new Set(); // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
-
-      for (let i = 0; i < 0x10FFFF; i += 1) {
-        const c = String.fromCodePoint(i);
-
-        if (A.has(c)) {
-          continue;
-        }
-
-        if (A.has(Canonicalize(c))) {
-          U.add(c);
-        }
-      } // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
-
-
-      Assert(Unicode && IgnoreCase || U.size === 0, "(Unicode && IgnoreCase) || U.size === 0"); // 5. Add the characters in set U to set A.
+      // 2. Let U be an empty set.
+      // 3. For each character c not in set A where Canonicalize(c) is in A, add c to U.
+      // 4. Assert: Unless Unicode and IgnoreCase are both true, U is empty.
+      // 5. Add the characters in set U to set A.
       // Return A.
+      if (Unicode && IgnoreCase) {
+        return SetOfWordCharactersIgnoreCaseUnicode;
+      }
 
-      return A;
+      return SetOfWordCharacters;
     } // #sec-runtime-semantics-iswordchar-abstract-operation
 
     function IsWordChar(e) {
@@ -14062,7 +14082,7 @@
         DecimalDigits_a,
         DecimalDigits_b
       } = QuantifierPrefix;
-      return [DecimalDigits_a, DecimalDigits_b === undefined ? Infinity : DecimalDigits_b, greedy];
+      return [DecimalDigits_a, DecimalDigits_b || DecimalDigits_a, greedy];
     } // #sec-atom
 
     function Evaluate_Atom(Atom, direction) {
@@ -14386,18 +14406,11 @@
         case 'W':
           {
             // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
-            const set = WordCharacters();
-            const A = new Set();
-
-            for (let i = 0; i < 0x10FFFF; i += 1) {
-              const c = String.fromCodePoint(i);
-
-              if (!set.has(c)) {
-                A.add(c);
-              }
+            if (Unicode && IgnoreCase) {
+              return SetOfAllNotWordCharactersUnicodeIgnoreCase;
             }
 
-            return A;
+            return SetOfAllNotWordCharacters;
           }
 
         case 'p':
@@ -14405,21 +14418,8 @@
           return Evaluate(node.UnicodePropertyValueExpression);
 
         case 'P':
-          {
-            // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
-            const set = Evaluate(node.UnicodePropertyValueExpression);
-            const A = new Set();
-
-            for (let i = 0; i < 0x10FFFF; i += 1) {
-              const c = String.fromCodePoint(i);
-
-              if (!set.has(c)) {
-                A.add(c);
-              }
-            }
-
-            return A;
-          }
+          // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
+          return new Set();
 
         /*istanbul ignore next*/
         default:
@@ -16999,7 +16999,7 @@
     return new Set();
   }
 
-  const isSyntaxCharacter = c => '^$.*+?()[]{}|'.includes(c);
+  const isSyntaxCharacter = c => '^$\\.*+?()[]{}|'.includes(c);
 
   const isClosingSyntaxCharacter = c => ')]}|'.includes(c);
 
@@ -17014,6 +17014,7 @@
       this.plusU = plusU;
       this.capturingGroups = [];
       this.groupSpecifiers = new Map();
+      this.decimalEscapes = [];
     }
 
     peek() {
@@ -17055,6 +17056,16 @@
         Disjunction: undefined
       };
       node.Disjunction = this.parseDisjunction();
+
+      if (this.position < this.source.length) {
+        throw new SyntaxError('Unexpected token');
+      }
+
+      this.decimalEscapes.forEach(d => {
+        if (d.value > node.capturingGroups.length) {
+          throw new SyntaxError('Invalid decimal escape');
+        }
+      });
       return node;
     } // Disjunction ::
     //   Alternative
@@ -17236,12 +17247,14 @@
         QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
 
         if (this.eat(',')) {
-          if (!this.test('}')) {
+          if (this.test('}')) {
+            QuantifierPrefix.DecimalDigits_b = Infinity;
+          } else {
             QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
+          }
 
-            if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
-              throw new SyntaxError('Numbers out of order in {} quantifier');
-            }
+          if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
+            throw new SyntaxError('Numbers out of order in quantifier');
           }
         }
 
@@ -17302,6 +17315,10 @@
         }
 
         if (node.GroupSpecifier) {
+          if (this.groupSpecifiers.has(node.GroupSpecifier)) {
+            throw new SyntaxError(`Duplicate group specifier '${node.GroupSpecifier}'`);
+          }
+
           this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
         }
 
@@ -17388,6 +17405,14 @@
           {
             this.next();
             const c = this.next();
+
+            if (c === undefined) {
+              return {
+                type: 'CharacterEscape',
+                IdentityEscape: 'c'
+              };
+            }
+
             const p = c.codePointAt(0);
 
             if (p >= 65 && p <= 90 || p >= 97 && p <= 122) {
@@ -17395,6 +17420,10 @@
                 type: 'CharacterEscape',
                 ControlLetter: c
               };
+            }
+
+            if (this.plusU) {
+              throw new SyntaxError('Invalid identity escape');
             }
 
             return {
@@ -17409,6 +17438,10 @@
               type: 'CharacterEscape',
               HexEscapeSequence: this.parseHexEscapeSequence()
             };
+          }
+
+          if (this.plusU) {
+            throw new SyntaxError('Invalid identity escape');
           }
 
           this.next();
@@ -17428,6 +17461,10 @@
               };
             }
 
+            if (this.plusU) {
+              throw new SyntaxError('Invalid identity escape');
+            }
+
             this.next();
             return {
               type: 'CharacterEscape',
@@ -17439,11 +17476,19 @@
           {
             const c = this.next();
 
+            if (c === undefined) {
+              throw new SyntaxError('Unexpected escape');
+            }
+
             if (c === '0' && !isDecimalDigit$1(this.peek())) {
               return {
                 type: 'CharacterEscape',
                 subtype: '0'
               };
+            }
+
+            if (this.plusU && !isSyntaxCharacter(c) && c !== '/') {
+              throw new SyntaxError('Invalid identity escape');
             }
 
             return {
@@ -17466,10 +17511,12 @@
           this.position += 1;
         }
 
-        return {
+        const node = {
           type: 'DecimalEscape',
           value: Number.parseInt(buffer, 10)
         };
+        this.decimalEscapes.push(node);
+        return node;
       }
 
       return undefined;
@@ -17653,21 +17700,29 @@
         const atom = this.parseClassAtom();
 
         if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
-          const atom2 = this.parseClassAtom();
-
-          if (atom2.type === 'CharacterClassEscape') {
+          if (this.peek() === ']') {
             ranges.push(atom);
             ranges.push({
               type: 'ClassAtom',
-              value: '-'
+              SourceCharacter: '-'
             });
-            ranges.push(atom2);
           } else {
-            if (CharacterValue(atom) > CharacterValue(atom2)) {
-              throw new SyntaxError('Invalid class range');
-            }
+            const atom2 = this.parseClassAtom();
 
-            ranges.push([atom, atom2]);
+            if (atom2.type === 'CharacterClassEscape') {
+              ranges.push(atom);
+              ranges.push({
+                type: 'ClassAtom',
+                value: '-'
+              });
+              ranges.push(atom2);
+            } else {
+              if (CharacterValue(atom) > CharacterValue(atom2)) {
+                throw new SyntaxError('Invalid class range');
+              }
+
+              ranges.push([atom, atom2]);
+            }
           }
         } else {
           ranges.push(atom);
@@ -17724,7 +17779,7 @@
 
     parseGroupName() {
       this.expect('<');
-      const RegExpIdentifierName = this.parseIdentifierName();
+      const RegExpIdentifierName = this.parseRegExpIdentifierName();
       this.expect('>');
       return RegExpIdentifierName;
     } // RegExpIdentifierName ::
@@ -17732,20 +17787,52 @@
     //   RegExpIdentifierName RegExpIdentifierPart
 
 
-    parseIdentifierName() {
-      let name = '';
+    parseRegExpIdentifierName() {
+      let buffer = '';
 
-      while (true) {
-        const c = this.peek();
+      while (this.position < this.source.length) {
+        const c = this.source[this.position];
+        const code = c.charCodeAt(0);
 
-        if (isIdentifierStart(c) || isIdentifierContinue(c) || c === '$') {
-          name += this.next();
+        if (c === '\\') {
+          this.position += 1;
+          const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+
+          if (!RegExpUnicodeEscapeSequence) {
+            throw new SyntaxError('Invalid unicode escape');
+          }
+
+          const raw = 'CodePoint' in RegExpUnicodeEscapeSequence ? String.fromCodePoint(RegExpUnicodeEscapeSequence.CodePoint) : CharacterValue(RegExpUnicodeEscapeSequence);
+
+          if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
+            throw new SyntaxError('Invalid unicode escape');
+          }
+
+          buffer += raw;
+        } else if (isIdentifierPart(c)) {
+          this.position += 1;
+          buffer += c;
+        } else if (!this.plusU && code >= 0xD800 && code <= 0xDBFF) {
+          const lowSurrogate = this.source.charCodeAt(this.position + 1);
+
+          if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
+            throw new SyntaxError('Invalid surrogate pair');
+          }
+
+          const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
+
+          if (!isIdentifierPart(raw)) {
+            throw new SyntaxError('Invalid surrogate pair');
+          }
+
+          this.position += 2;
+          buffer += raw;
         } else {
           break;
         }
       }
 
-      return name;
+      return buffer;
     } // DecimalDigits ::
     //   DecimalDigit
     //   DecimalDigits DecimalDigit
@@ -17799,7 +17886,7 @@
         return undefined;
       }
 
-      if (this.test('{')) {
+      if (this.eat('{')) {
         let buffer = '';
 
         while (!this.eat('}')) {
@@ -17816,7 +17903,6 @@
           buffer += this.next();
         }
 
-        this.expect('}');
         const CodePoint = Number.parseInt(buffer, 16);
 
         if (CodePoint > 0x10FFFF) {
@@ -18985,7 +19071,7 @@
       this.scanRegularExpressionFlags();
       node.RegularExpressionFlags = this.scannedValue;
       {
-        const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags); // throws if invalid
+        const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags.includes('u')); // throws if invalid
 
         p.parsePattern();
       }
@@ -21445,16 +21531,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       case 'RegExpUnicodeEscapeSequence':
         {
-          const {
-            Hex4Digits: {
-              HexDigit_a,
-              HexDigit_b,
-              HexDigit_c,
-              HexDigit_d
-            }
-          } = node;
-          const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
-          return String.fromCharCode(Number.parseInt(chars, 16));
+          if (node.Hex4Digits) {
+            const {
+              Hex4Digits: {
+                HexDigit_a,
+                HexDigit_b,
+                HexDigit_c,
+                HexDigit_d
+              }
+            } = node;
+            const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
+            return String.fromCodePoint(Number.parseInt(chars, 16));
+          }
+
+          return String.fromCodePoint(node.CodePoint);
         }
 
       case 'ClassAtom':
@@ -36173,7 +36263,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp107 instanceof Completion) {
             _temp107 = _temp107.Value;
           }
-        }
+        } else ;
 
         lower += 1;
       }
