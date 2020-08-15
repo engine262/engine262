@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 a85635932676dd3865cdaa828332af00b76ed77c
+ * engine262 0.0.1 ff856832203eef4a87aa9b1cdb10a2c0663663af
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -18854,7 +18854,7 @@ class ExpressionParser extends FunctionParser {
             }
           }
 
-          if (name === 'prototype' || !m.static && !isActualConstructor && name === 'constructor') {
+          if (m.static && name === 'prototype' || !m.static && !isActualConstructor && name === 'constructor') {
             this.raiseEarly('InvalidMethodName', m, name);
           }
         }
@@ -41422,7 +41422,8 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], {
     _temp31 = _temp31.Value;
   }
 
-  const t = LocalTime(_temp31);
+  // 1. Let t be LocalTime(? thisTimeValue(this value)).
+  const t = LocalTime(_temp31); // 2. Let m be ? ToNumber(min).
 
   let _temp32 = ToNumber(min);
 
@@ -41435,7 +41436,7 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], {
   }
 
   const m = _temp32;
-  let s;
+  let s; // 3. If sec is not present, let s be SecFromTime(t); otherwise, let s be ? ToNumber(sec).
 
   if (sec !== undefined) {
     let _temp33 = ToNumber(sec);
@@ -41453,7 +41454,7 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], {
     s = SecFromTime(t);
   }
 
-  let milli;
+  let milli; // 4. If ms is not present, let milli be msFromTime(t); otherwise, let milli be ? ToNumber(ms).
 
   if (ms !== undefined) {
     let _temp34 = ToNumber(ms);
@@ -41469,11 +41470,15 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], {
     milli = _temp34;
   } else {
     milli = msFromTime(t);
-  }
+  } // 5. Let date be MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)).
 
-  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
-  const u = TimeClip(UTC(date));
-  thisValue.DateValue = u;
+
+  const date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli)); // 6. Let u be TimeClip(UTC(date)).
+
+  const u = TimeClip(UTC(date)); // 7. Set the [[DateValue]] internal slot of this Date object to u.
+
+  thisValue.DateValue = u; // 8. Return u.
+
   return u;
 } // 20.3.4.25 #sec-date.prototype.setmonth
 
