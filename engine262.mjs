@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 678d696df2f7788326a83b3db88f7326e5f5ecc0
+ * engine262 0.0.1 763c45fd0bb1eaa822f896f17d0af13fe4e16ef0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -20783,7 +20783,7 @@ class Parser extends LanguageParser {
 
     if (typeof context === 'number') {
       startIndex = context;
-      endIndex = context;
+      endIndex = context + 1;
     } else {
       if (context.location) {
         context = context.location;
@@ -20804,11 +20804,13 @@ class Parser extends LanguageParser {
     let lineEnd = this.source.indexOf('\n', endIndex);
 
     if (lineEnd === -1) {
-      lineEnd = this.source.length - 1;
+      lineEnd = this.source.length;
+    } else {
+      lineEnd -= 1;
     }
 
     const e = new SyntaxError(messages[template](...templateArgs));
-    e.decoration = `${this.source.slice(lineStart, lineEnd)}
+    e.decoration = `${this.source.slice(lineStart, lineEnd + 1)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
     return e;
   }
