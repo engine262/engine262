@@ -33,6 +33,10 @@ export const FEATURES = Object.freeze([
     name: 'NumericSeparators',
     url: 'https://github.com/tc39/proposal-numeric-separator',
   },
+  {
+    name: 'RegExpMatchIndices',
+    url: 'https://github.com/tc39/proposal-regexp-match-indices',
+  },
 ].map(Object.freeze));
 
 let agentSignifier = 0;

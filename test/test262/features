@@ -12,16 +12,12 @@
 
 -tail-call-optimization
 
--u180e
-
 -class-fields-public
 -class-fields-private
 -class-methods-private
 -class-static-fields-public
 -class-static-fields-private
 -class-static-methods-private
-
--regexp-match-indices
 
 -cleanupSome
 
@@ -33,3 +29,6 @@ hashbang = hashbang
 
 # https://github.com/tc39/proposal-numeric-separator
 numeric-separator-literal = NumericSeparators
+
+# https://github.com/tc39/proposal-regexp-match-indices
+regexp-match-indices = RegExpMatchIndices

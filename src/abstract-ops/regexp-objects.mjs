@@ -1,12 +1,16 @@
 import { surroundingAgent } from '../engine.mjs';
 import { ParsePattern, isLineTerminator } from '../parse.mjs';
-import { Descriptor, Value } from '../value.mjs';
+import { Descriptor, Value, Type } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
 import {
+  ArrayCreate,
   Assert,
+  CreateArrayFromList,
+  CreateDataPropertyOrThrow,
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
+  OrdinaryObjectCreate,
   Set,
   ToString,
 } from './all.mjs';
@@ -142,4 +146,108 @@ export function EscapeRegExpPattern(P, _F) {
     }
   }
   return new Value(escaped);
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex
+export function GetStringIndex(S, Input, e) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
+  Assert(Array.isArray(Input));
+  // 3. Assert: e is an integer value ≥ 0 and < the number of elements in Input.
+  Assert(e >= 0);
+  // 4. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+  //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+  let eUTF = 0;
+  if (e >= Input.length) {
+    eUTF = S.stringValue().length;
+  } else {
+    for (let i = 0; i < e; i += 1) {
+      eUTF += Input[i].length;
+    }
+  }
+  // 5. Return eUTF.
+  return eUTF;
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring
+export function GetMatchString(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: match is a Match Record.
+  Assert('StartIndex' in match && 'EndIndex' in match);
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
+  return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
+export function GetMatchIndicesArray(S, match) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: match is a Match Record.
+  Assert('StartIndex' in match && 'EndIndex' in match);
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
+  // 1. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
+  return CreateArrayFromList([
+    new Value(match.StartIndex),
+    new Value(match.EndIndex),
+  ]);
+}
+
+// https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
+export function MakeIndicesArray(S, indices, groupNames) {
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: indices is a List.
+  Assert(Array.isArray(indices));
+  // 3. Assert: groupNames is a List or is undefined.
+  Assert(Array.isArray(indices) || groupNames === Value.undefined);
+  // 4. Let n be the number of elements in indices.
+  const n = indices.length;
+  // 5. Assert: n < 2**32-1.
+  Assert(n < (2 ** 32) - 1);
+  // 6. Set A to ! ArrayCreate(n).
+  // 7. Assert: The value of A's "length" property is n.
+  const A = X(ArrayCreate(new Value(n)));
+  // 8. If groupNames is not undefined, then
+  let groups;
+  if (groupNames !== Value.undefined) {
+    // a. Let groups be ! ObjectCreate(null).
+    groups = X(OrdinaryObjectCreate(Value.null));
+  } else { // 9. Else,
+    // a. Let groups be undefined.
+    groups = Value.undefined;
+  }
+  // 10. Perform ! CreateDataProperty(A, "groups", groups).
+  X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
+  // 11. For each integer i such that i ≥ 0 and i < n, do
+  for (let i = 0; i < n; i += 1) {
+    // a. Let matchIndices be indices[i].
+    const matchIndices = indices[i];
+    // b. If matchIndices is not undefined, then
+    let matchIndicesArray;
+    if (matchIndices !== Value.undefined) {
+      // i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
+      matchIndicesArray = X(GetMatchIndicesArray(S, matchIndices));
+    } else { // c. Else,
+      // i. Let matchIndicesArray be undefined.
+      matchIndicesArray = Value.undefined;
+    }
+    // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
+    X(CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), matchIndicesArray));
+    // e. If groupNames is not undefined and groupNames[i] is not undefined, then
+    if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
+      // i. Perform ! CreateDataProperty(groups, groupNames[i], matchIndicesArray).
+      X(CreateDataPropertyOrThrow(groups, groupNames[i], matchIndicesArray));
+    }
+  }
+  // 12. Return A.
+  return A;
 }

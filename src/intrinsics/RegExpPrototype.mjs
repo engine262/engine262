@@ -9,7 +9,10 @@ import {
   CreateDataPropertyOrThrow,
   EscapeRegExpPattern,
   Get,
+  GetMatchString,
+  GetStringIndex,
   IsCallable,
+  MakeIndicesArray,
   OrdinaryObjectCreate,
   SameValue,
   Set,
@@ -123,19 +126,24 @@ export function RegExpBuiltinExec(R, S) {
   const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
   // 14. If fullUnicode is true, then
   if (fullUnicode) {
-    // a. e is an index into the Input character list, derived from S, matched by matcher.
-    //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
-    //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
-    let eUTF = 0;
-    if (e >= Input.length) {
-      eUTF = S.stringValue().length;
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
+      e = X(GetStringIndex(S, Input, e));
     } else {
-      for (let i = 0; i < e; i += 1) {
-        eUTF += Input[i].length;
+      // a. e is an index into the Input character list, derived from S, matched by matcher.
+      //    Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+      //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
+      let eUTF = 0;
+      if (e >= Input.length) {
+        eUTF = S.stringValue().length;
+      } else {
+        for (let i = 0; i < e; i += 1) {
+          eUTF += Input[i].length;
+        }
       }
+      // b. Set e to eUTF.
+      e = eUTF;
     }
-    // b. Set e to eUTF.
-    e = eUTF;
   }
   // 15. If global is true or sticky is true, then
   if (global || sticky) {
@@ -155,18 +163,41 @@ export function RegExpBuiltinExec(R, S) {
   // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataPropertyOrThrow(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
-  // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
-  const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
-  // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
-  X(CreateDataProperty(A, new Value('0'), new Value(matchedSubstr)));
+  let indices;
+  if (surroundingAgent.feature('RegExpMatchIndices')) {
+    // 25. Let indices be a new empty List.
+    indices = [];
+    // 26. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    const match = { StartIndex: lastIndex.numberValue(), EndIndex: e };
+    // 27. Add match as the last element of indices.
+    indices.push(match);
+    // 28. Let matchedValue be ! GetMatchString(S, match).
+    const matchedValue = X(GetMatchString(S, match));
+    // 29. Perform ! CreateDataProperty(A, "0", matchedValue).
+    X(CreateDataPropertyOrThrow(A, new Value('0'), matchedValue));
+  } else {
+    // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
+    const matchedSubstr = S.stringValue().substring(lastIndex.numberValue(), e);
+    // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
+    X(CreateDataPropertyOrThrow(A, new Value('0'), new Value(matchedSubstr)));
+  }
   let groups;
+  let groupNames;
   // 24. If R contains any GroupName, then
   if (R.parsedPattern.groupSpecifiers.size > 0) {
     // a. Let groups be OrdinaryObjectCreate(null).
     groups = OrdinaryObjectCreate(Value.null);
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // b. Let groupNames be a new empty List.
+      groupNames = [Value.undefined];
+    }
   } else { // 25. Else,
     // a. Let groups be undefined.
     groups = Value.undefined;
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // b. Let groupNames be undefined.
+      groupNames = Value.undefined;
+    }
   }
   // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
   X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
@@ -175,19 +206,47 @@ export function RegExpBuiltinExec(R, S) {
     // a. Let captureI be ith element of r's captures List.
     const captureI = r.captures[i];
     let capturedValue;
-    // b. If captureI is undefined, let capturedValue be undefined.
-    if (captureI === Value.undefined) {
-      capturedValue = Value.undefined;
-    } else if (fullUnicode) { // c. Else if fullUnicode is true, then
-      // i. Assert: captureI is a List of code points.
-      // ii. Let capturedValue be ! UTF16Encode(captureI).
-      capturedValue = new Value(captureI.join(''));
-    } else { // d. Else,
-      // i. Assert: fullUnicode is false.
-      Assert(fullUnicode === false);
-      // ii. Assert: captureI is a List of code units.
-      // iii. Let capturedValue be the String value consisting of the code units of captureI.
-      capturedValue = new Value(captureI.join(''));
+    if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // e. If captureI is undefined, then
+      if (captureI === Value.undefined) {
+        // i. Let capturedValue be undefined.
+        capturedValue = Value.undefined;
+        // ii. Add undefined as the last element of indices.
+        indices.push(Value.undefined);
+      } else { // f. Else,
+        // i. Let captureStart be captureI's startIndex.
+        let captureStart = captureI.startIndex;
+        // ii. Let captureEnd be captureI's endIndex.
+        let captureEnd = captureI.endIndex;
+        // iii. If fullUnicode is true, then
+        if (fullUnicode) {
+          // 1. Set captureStart to ! GetStringIndex(S, Input, captureStart).
+          captureStart = X(GetStringIndex(S, Input, captureStart));
+          // 2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
+          captureEnd = X(GetStringIndex(S, Input, captureEnd));
+        }
+        // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
+        const capture = { StartIndex: captureStart, EndIndex: captureEnd };
+        // v. Append capture to indices.
+        indices.push(capture);
+        // vi. Let capturedValue be ! GetMatchString(S, capture).
+        capturedValue = X(GetMatchString(S, capture));
+      }
+    } else {
+      // b. If captureI is undefined, let capturedValue be undefined.
+      if (captureI === Value.undefined) {
+        capturedValue = Value.undefined;
+      } else if (fullUnicode) { // c. Else if fullUnicode is true, then
+        // i. Assert: captureI is a List of code points.
+        // ii. Let capturedValue be ! UTF16Encode(captureI).
+        capturedValue = new Value(captureI.join(''));
+      } else { // d. Else,
+        // i. Assert: fullUnicode is false.
+        Assert(fullUnicode === false);
+        // ii. Assert: captureI is a List of code units.
+        // iii. Let capturedValue be the String value consisting of the code units of captureI.
+        capturedValue = new Value(captureI.join(''));
+      }
     }
     // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
     X(CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), capturedValue));
@@ -197,7 +256,24 @@ export function RegExpBuiltinExec(R, S) {
       const s = new Value(capturingParens[i - 1].GroupSpecifier);
       // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
       X(CreateDataPropertyOrThrow(groups, s, capturedValue));
+      if (surroundingAgent.feature('RegExpMatchIndices')) {
+        // iii. Assert: groupNames is a List.
+        Assert(Array.isArray(groupNames));
+        // iv. Append s to groupNames.
+        groupNames.push(s);
+      }
+    } else if (surroundingAgent.feature('RegExpMatchIndices')) {
+      // i. If groupNames is a List, append undefined to groupNames.
+      if (Array.isArray(groupNames)) {
+        groupNames.push(Value.undefined);
+      }
     }
+  }
+  if (surroundingAgent.feature('RegExpMatchIndices')) {
+    // 34. Let indicesArray be MakeIndicesArray(S, indices, groupNames).
+    const indicesArray = MakeIndicesArray(S, indices, groupNames);
+    // 35. Perform ! CreateDataProperty(A, "indices", indicesArray).
+    X(CreateDataPropertyOrThrow(A, new Value('indices'), indicesArray));
   }
   // 28. Return A.
   return A;
