@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 d188d9ef24aef7a072eba37a929866ea14c1e146
+ * engine262 0.0.1 c5d5bea29ff4989d1d86516626ed5127461d37d7
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -17055,6 +17055,7 @@
       this.capturingGroups = [];
       this.groupSpecifiers = new Map();
       this.decimalEscapes = [];
+      this.groupNameRefs = [];
       this.state = 0;
     }
 
@@ -17138,7 +17139,12 @@
 
       this.decimalEscapes.forEach(d => {
         if (d.value > node.capturingGroups.length) {
-          this.raise('Invalid decimal escape');
+          this.raise('Invalid decimal escape', d.position);
+        }
+      });
+      this.groupNameRefs.forEach(g => {
+        if (!node.groupSpecifiers.has(g.GroupName)) {
+          this.raise('Invalid group name', g.position);
         }
       });
       return node;
@@ -17427,10 +17433,13 @@
 
     parseAtomEscape() {
       if (this.plusN && this.eat('k')) {
-        return {
+        const node = {
           type: 'AtomEscape',
+          position: this.position,
           GroupName: this.parseGroupName()
         };
+        this.groupNameRefs.push(node);
+        return node;
       }
 
       const CharacterClassEscape = this.maybeParseCharacterClassEscape();
@@ -17583,6 +17592,7 @@
 
     maybeParseDecimalEscape() {
       if (isDecimalDigit$1(this.source[this.position]) && this.source[this.position] !== '0') {
+        const start = this.position;
         let buffer = this.source[this.position];
         this.position += 1;
 
@@ -17593,6 +17603,7 @@
 
         const node = {
           type: 'DecimalEscape',
+          position: start,
           value: Number.parseInt(buffer, 10)
         };
         this.decimalEscapes.push(node);
@@ -17892,7 +17903,7 @@
           }
 
           buffer += raw;
-        } else if (!this.plusU && code >= 0xD800 && code <= 0xDBFF) {
+        } else if (code >= 0xD800 && code <= 0xDBFF) {
           const lowSurrogate = this.source.charCodeAt(this.position + 1);
 
           if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
@@ -17916,6 +17927,10 @@
         }
 
         check = isIdentifierPart;
+      }
+
+      if (buffer.length === 0) {
+        this.raise('Invalid empty identifier');
       }
 
       return buffer;
@@ -19206,7 +19221,7 @@
         }
       } catch (e) {
         if (e instanceof SyntaxError) {
-          this.raise('Raw', node.location.startIndex + e.position, e.message);
+          this.raise('Raw', node.location.startIndex + e.position + 1, e.message);
         } else {
           throw e;
         }
