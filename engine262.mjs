@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 bd432210c9b7375aaff8f59f66c3d4c6651e6fbd
+ * engine262 0.0.1 d188d9ef24aef7a072eba37a929866ea14c1e146
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2071,8 +2071,10 @@ var regex$1=/[0-9A-Z_a-z\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02
 
 var regex$2=/[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
 
-const isIdentifierStart = c => c && regex.test(c);
-const isIdentifierContinue = c => c && regex$1.test(c);
+const isUnicodeIDStart = c => c && regex.test(c);
+
+const isUnicodeIDContinue = c => c && regex$1.test(c);
+
 const isDecimalDigit = c => c && /\d/u.test(c);
 const isHexDigit = c => c && /[\da-f]/ui.test(c);
 
@@ -2084,9 +2086,10 @@ const isWhitespace = c => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c
 
 const isLineTerminator = c => c && /[\r\n\u2028\u2029]/u.test(c);
 
-const isRegularExpressionFlagPart = c => c && (isIdentifierContinue(c) || c === '$');
+const isRegularExpressionFlagPart = c => c && (isUnicodeIDContinue(c) || c === '$');
 
-const isIdentifierPart = c => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
+const isIdentifierStart = c => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
+const isIdentifierPart = c => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
 const SingleCharTokens = {
   '__proto__': null,
   '0': Token.NUMBER,
@@ -2665,12 +2668,14 @@ class Lexer {
       }
     }
 
-    if (isIdentifierStart(c)) {
-      this.position -= 1;
+    this.position -= 1;
+    const code = c.charCodeAt(0);
+
+    if (code >= 0xD800 && code <= 0xDBFF || isIdentifierStart(c)) {
       return this.scanIdentifierOrKeyword();
     }
 
-    return this.unexpected(c);
+    return this.unexpected(this.position);
   }
 
   scanNumber() {
@@ -2945,6 +2950,7 @@ class Lexer {
   scanIdentifierOrKeyword() {
     let buffer = '';
     let escapeIndex = -1;
+    let check = isIdentifierStart;
 
     while (this.position < this.source.length) {
       const c = this.source[this.position];
@@ -2964,18 +2970,11 @@ class Lexer {
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
 
-        if (!isIdentifierPart(raw)) {
-          this.unexpected(escapeIndex);
-        }
-
-        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
-          this.unexpected(escapeIndex);
+        if (!check(raw)) {
+          this.unexpected(this.position);
         }
 
         buffer += raw;
-      } else if (isIdentifierPart(c)) {
-        this.position += 1;
-        buffer += c;
       } else if (code >= 0xD800 && code <= 0xDBFF) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
 
@@ -2983,17 +2982,23 @@ class Lexer {
           this.unexpected(this.position);
         }
 
-        const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
+        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const raw = String.fromCodePoint(codePoint);
 
-        if (!isIdentifierPart(raw)) {
+        if (!check(raw)) {
           this.unexpected(this.position);
         }
 
         this.position += 2;
         buffer += raw;
+      } else if (check(c)) {
+        buffer += c;
+        this.position += 1;
       } else {
         break;
       }
+
+      check = isIdentifierPart;
     }
 
     if (isKeywordRaw(buffer)) {
@@ -17035,14 +17040,50 @@ const isDecimalDigit$1 = c => /[0123456789]/u.test(c);
 
 const isControlLetter = c => /[a-zA-Z]/u.test(c);
 
+const PLUS_U = 1 << 0;
+const PLUS_N = 1 << 1;
 class RegExpParser {
-  constructor(source, plusU) {
+  constructor(source) {
     this.source = source;
     this.position = 0;
-    this.plusU = plusU;
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
     this.decimalEscapes = [];
+    this.state = 0;
+  }
+
+  scope(flags, f) {
+    const oldState = this.state;
+
+    if (flags.U === true) {
+      this.state |= PLUS_U;
+    } else if (flags.U === false) {
+      this.state &= ~PLUS_U;
+    }
+
+    if (flags.N === true) {
+      this.state |= PLUS_N;
+    } else if (flags.N === false) {
+      this.state &= ~PLUS_N;
+    }
+
+    const r = f();
+    this.state = oldState;
+    return r;
+  }
+
+  get plusU() {
+    return (this.state & PLUS_U) > 0;
+  }
+
+  get plusN() {
+    return (this.state & PLUS_N) > 0;
+  }
+
+  raise(message, position = this.position) {
+    const e = new SyntaxError(message);
+    e.position = position;
+    throw e;
   }
 
   peek() {
@@ -17070,7 +17111,7 @@ class RegExpParser {
 
   expect(c) {
     if (!this.eat(c)) {
-      throw new SyntaxError(`Expected ${c} but got ${this.peek()}`);
+      this.raise(`Expected ${c} but got ${this.peek()}`);
     }
   } // Pattern ::
   //   Disjunction
@@ -17086,12 +17127,12 @@ class RegExpParser {
     node.Disjunction = this.parseDisjunction();
 
     if (this.position < this.source.length) {
-      throw new SyntaxError('Unexpected token');
+      this.raise('Unexpected token');
     }
 
     this.decimalEscapes.forEach(d => {
       if (d.value > node.capturingGroups.length) {
-        throw new SyntaxError('Invalid decimal escape');
+        this.raise('Invalid decimal escape');
       }
     });
     return node;
@@ -17282,7 +17323,7 @@ class RegExpParser {
         }
 
         if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
-          throw new SyntaxError('Numbers out of order in quantifier');
+          this.raise('Numbers out of order in quantifier');
         }
       }
 
@@ -17344,7 +17385,7 @@ class RegExpParser {
 
       if (node.GroupSpecifier) {
         if (this.groupSpecifiers.has(node.GroupSpecifier)) {
-          throw new SyntaxError(`Duplicate group specifier '${node.GroupSpecifier}'`);
+          this.raise(`Duplicate group specifier '${node.GroupSpecifier}'`);
         }
 
         this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
@@ -17364,7 +17405,7 @@ class RegExpParser {
     }
 
     if (isSyntaxCharacter(this.peek())) {
-      throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
+      this.raise(`Expected a PatternCharacter but got ${this.peek()}`);
     }
 
     return {
@@ -17375,11 +17416,11 @@ class RegExpParser {
   //   DecimalEscape
   //   CharacterClassEscape
   //   CharacterEscape
-  //   `k` GroupName
+  //   [+N] `k` GroupName
 
 
   parseAtomEscape() {
-    if (this.eat('k')) {
+    if (this.plusN && this.eat('k')) {
       return {
         type: 'AtomEscape',
         GroupName: this.parseGroupName()
@@ -17415,6 +17456,11 @@ class RegExpParser {
   //   HexEscapeSequence
   //   RegExpUnicodeEscapeSequence
   //   IdentityEscape
+  //
+  // IdentityEscape ::
+  //   [+U] SyntaxCharacter
+  //   [+U] `/`
+  //   [~U] SourceCharacter but not UnicodeIDContinue
 
 
   parseCharacterEscape() {
@@ -17451,7 +17497,7 @@ class RegExpParser {
           }
 
           if (this.plusU) {
-            throw new SyntaxError('Invalid identity escape');
+            this.raise('Invalid identity escape');
           }
 
           return {
@@ -17469,7 +17515,7 @@ class RegExpParser {
         }
 
         if (this.plusU) {
-          throw new SyntaxError('Invalid identity escape');
+          this.raise('Invalid identity escape');
         }
 
         this.next();
@@ -17490,7 +17536,7 @@ class RegExpParser {
           }
 
           if (this.plusU) {
-            throw new SyntaxError('Invalid identity escape');
+            this.raise('Invalid identity escape');
           }
 
           this.next();
@@ -17505,7 +17551,7 @@ class RegExpParser {
           const c = this.next();
 
           if (c === undefined) {
-            throw new SyntaxError('Unexpected escape');
+            this.raise('Unexpected escape');
           }
 
           if (c === '0' && !isDecimalDigit$1(this.peek())) {
@@ -17516,7 +17562,7 @@ class RegExpParser {
           }
 
           if (this.plusU && !isSyntaxCharacter(c) && c !== '/') {
-            throw new SyntaxError('Invalid identity escape');
+            this.raise('Invalid identity escape');
           }
 
           return {
@@ -17586,7 +17632,7 @@ class RegExpParser {
 
           while (true) {
             if (this.position >= this.source.length) {
-              throw new SyntaxError('Invalid unicode property name or value');
+              this.raise('Invalid unicode property name or value');
             }
 
             const c = this.source[this.position];
@@ -17613,12 +17659,12 @@ class RegExpParser {
           }
 
           if (LoneUnicodePropertyNameOrValue.length === 0) {
-            throw new SyntaxError('Invalid unicode property name or value');
+            this.raise('Invalid unicode property name or value');
           }
 
           if (sawDigit && this.eat('}')) {
             if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
-              throw new SyntaxError('Invalid unicode property name or value');
+              this.raise('Invalid unicode property name or value');
             }
 
             return {
@@ -17639,7 +17685,7 @@ class RegExpParser {
 
             while (true) {
               if (this.position >= this.source.length) {
-                throw new SyntaxError('Invalid unicode property value');
+                this.raise('Invalid unicode property value');
               }
 
               const c = this.source[this.position];
@@ -17653,7 +17699,7 @@ class RegExpParser {
             }
 
             if (UnicodePropertyValue.length === 0) {
-              throw new SyntaxError('Invalid unicode property value');
+              this.raise('Invalid unicode property value');
             }
           }
 
@@ -17661,11 +17707,11 @@ class RegExpParser {
 
           if (UnicodePropertyValue) {
             if (!(LoneUnicodePropertyNameOrValue in NonbinaryUnicodeProperties)) {
-              throw new SyntaxError('Invalid unicode property name');
+              this.raise('Invalid unicode property name');
             }
 
             if (!(UnicodePropertyValue in UnicodeGeneralCategoryValues || UnicodePropertyValue in UnicodeScriptValues)) {
-              throw new SyntaxError('Invalid unicode property value');
+              this.raise('Invalid unicode property value');
             }
 
             return {
@@ -17680,7 +17726,7 @@ class RegExpParser {
           }
 
           if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
-            throw new SyntaxError('Invalid unicode property name or value');
+            this.raise('Invalid unicode property name or value');
           }
 
           return {
@@ -17722,17 +17768,17 @@ class RegExpParser {
 
     while (!this.test(']')) {
       if (this.position >= this.source.length) {
-        throw new SyntaxError('Unexpected end of CharacterClass');
+        this.raise('Unexpected end of CharacterClass');
       }
 
       const atom = this.parseClassAtom();
 
       if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
-        if (this.peek() === ']') {
+        if (this.test(']')) {
           ranges.push(atom);
           ranges.push({
             type: 'ClassAtom',
-            SourceCharacter: '-'
+            value: '-'
           });
         } else {
           const atom2 = this.parseClassAtom();
@@ -17746,7 +17792,7 @@ class RegExpParser {
             ranges.push(atom2);
           } else {
             if (CharacterValue(atom) > CharacterValue(atom2)) {
-              throw new SyntaxError('Invalid class range');
+              this.raise('Invalid class range');
             }
 
             ranges.push([atom, atom2]);
@@ -17780,7 +17826,7 @@ class RegExpParser {
         };
       }
 
-      if (this.eat('-')) {
+      if (this.plusU && this.eat('-')) {
         return {
           type: 'ClassEscape',
           value: '-'
@@ -17817,6 +17863,7 @@ class RegExpParser {
 
   parseRegExpIdentifierName() {
     let buffer = '';
+    let check = isIdentifierStart;
 
     while (this.position < this.source.length) {
       const c = this.source[this.position];
@@ -17824,40 +17871,45 @@ class RegExpParser {
 
       if (c === '\\') {
         this.position += 1;
-        const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+        const RegExpUnicodeEscapeSequence = this.scope({
+          U: true
+        }, () => this.maybeParseRegExpUnicodeEscapeSequence());
 
         if (!RegExpUnicodeEscapeSequence) {
-          throw new SyntaxError('Invalid unicode escape');
+          this.raise('Invalid unicode escape');
         }
 
-        const raw = 'CodePoint' in RegExpUnicodeEscapeSequence ? String.fromCodePoint(RegExpUnicodeEscapeSequence.CodePoint) : CharacterValue(RegExpUnicodeEscapeSequence);
+        const raw = CharacterValue(RegExpUnicodeEscapeSequence);
 
-        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
-          throw new SyntaxError('Invalid unicode escape');
+        if (!check(raw)) {
+          this.raise('Invalid identifier escape');
         }
 
         buffer += raw;
-      } else if (isIdentifierPart(c)) {
-        this.position += 1;
-        buffer += c;
       } else if (!this.plusU && code >= 0xD800 && code <= 0xDBFF) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
 
         if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
-          throw new SyntaxError('Invalid surrogate pair');
+          this.raise('Invalid trailing surrogate');
         }
 
-        const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
+        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const raw = String.fromCodePoint(codePoint);
 
-        if (!isIdentifierPart(raw)) {
-          throw new SyntaxError('Invalid surrogate pair');
+        if (!check(raw)) {
+          this.raise('Invalid surrogate pair');
         }
 
         this.position += 2;
         buffer += raw;
+      } else if (check(c)) {
+        buffer += c;
+        this.position += 1;
       } else {
         break;
       }
+
+      check = isIdentifierPart;
     }
 
     return buffer;
@@ -17883,13 +17935,13 @@ class RegExpParser {
     const HexDigit_a = this.next();
 
     if (!isHexDigit(HexDigit_a)) {
-      throw new SyntaxError('Not a hex digit');
+      this.raise('Not a hex digit');
     }
 
     const HexDigit_b = this.next();
 
     if (!isHexDigit(HexDigit_b)) {
-      throw new SyntaxError('Not a hex digit');
+      this.raise('Not a hex digit');
     }
 
     return {
@@ -17897,13 +17949,34 @@ class RegExpParser {
       HexDigit_a,
       HexDigit_b
     };
+  }
+
+  scanHex(length) {
+    if (length === 0) {
+      this.raise('Invalid code point');
+    }
+
+    let n = 0;
+
+    for (let i = 0; i < length; i += 1) {
+      const c = this.source[this.position];
+
+      if (isHexDigit(c)) {
+        this.position += 1;
+        n = n << 4 | Number.parseInt(c, 16);
+      } else {
+        this.raise('Invalid hex digit');
+      }
+    }
+
+    return n;
   } // RegExpUnicodeEscapeSequence ::
-  //   `u` HexLeadSurrogate `\u` HexTrailSurrogate
-  //   `u` HexLeadSurrogate
-  //   `u` HexTrailSurrogate
-  //   `u` HexNonSurrogate
-  //   `u` Hex4Digits
-  //   `u{` CodePoint `}`
+  //   [+U] `u` HexLeadSurrogate `\u` HexTrailSurrogate
+  //   [+U] `u` HexLeadSurrogate
+  //   [+U] `u` HexTrailSurrogate
+  //   [+U] `u` HexNonSurrogate
+  //   [~U] `u` Hex4Digits
+  //   [+U] `u{` CodePoint `}`
 
 
   maybeParseRegExpUnicodeEscapeSequence() {
@@ -17914,57 +17987,66 @@ class RegExpParser {
       return undefined;
     }
 
-    if (this.eat('{')) {
-      let buffer = '';
+    if (this.plusU && this.eat('{')) {
+      const end = this.source.indexOf('}', this.position);
+      let code;
 
-      while (!this.eat('}')) {
-        if (this.position >= this.source.length) {
-          this.position = start;
-          return undefined;
-        }
-
-        if (!isHexDigit(this.source[this.position])) {
-          this.position = start;
-          return undefined;
-        }
-
-        buffer += this.next();
-      }
-
-      const CodePoint = Number.parseInt(buffer, 16);
-
-      if (CodePoint > 0x10FFFF) {
+      try {
+        code = this.scanHex(end - this.position);
+      } catch {
         this.position = start;
         return undefined;
+      }
+
+      if (code > 0x10FFFF) {
+        this.position = start;
+        return undefined;
+      }
+
+      this.position += 1;
+      return {
+        type: 'RegExpUnicodeEscapeSequence',
+        CodePoint: code
+      };
+    }
+
+    let lead;
+
+    try {
+      lead = this.scanHex(4);
+    } catch {
+      this.position = start;
+      return undefined;
+    }
+
+    if (this.plusU && lead >= 0xD800 && lead <= 0xDBFF) {
+      const back = this.position;
+
+      if (this.eat('\\') && this.eat('u')) {
+        let trail;
+
+        try {
+          trail = this.scanHex(4);
+        } catch {
+          this.position = back;
+        }
+
+        return {
+          type: 'RegExpUnicodeEscapeSequence',
+          HexLeadSurrogate: lead,
+          HexTrailSurrogate: trail
+        };
       }
 
       return {
         type: 'RegExpUnicodeEscapeSequence',
-        CodePoint
+        HexLeadSurrogate: lead
       };
-    }
-
-    const digits = [];
-
-    for (let i = 0; i < 4; i += 1) {
-      const HexDigit = this.next();
-
-      if (!isHexDigit(HexDigit)) {
-        this.position = start;
-        return undefined;
-      }
-
-      digits.push(HexDigit);
     }
 
     return {
       type: 'RegExpUnicodeEscapeSequence',
-      Hex4Digits: {
-        HexDigit_a: digits[0],
-        HexDigit_b: digits[1],
-        HexDigit_c: digits[2],
-        HexDigit_d: digits[3]
-      }
+      Hex4Digits: lead
     };
   }
 
@@ -19014,13 +19096,6 @@ class ExpressionParser extends FunctionParser {
 
     while (true) {
       if (this.position >= this.source.length) {
-        // templates will eat newlines before hitting EOF and realizing
-        // there is no end, so walk back to the last line with content on it
-        // for the error message.
-        while (isLineTerminator(this.source[this.position - 1])) {
-          this.position -= 1;
-        }
-
         this.raise('UnterminatedTemplate', this.position);
       }
 
@@ -19098,11 +19173,39 @@ class ExpressionParser extends FunctionParser {
     node.RegularExpressionBody = this.scannedValue;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue;
-    {
-      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags.includes('u')); // throws if invalid
 
-      p.parsePattern();
+    try {
+      const parse = flags => {
+        const p = new RegExpParser(node.RegularExpressionBody);
+        return p.scope(flags, () => p.parsePattern());
+      };
+
+      if (node.RegularExpressionFlags.includes('u')) {
+        parse({
+          U: true,
+          N: true
+        });
+      } else {
+        const pattern = parse({
+          U: false,
+          N: false
+        });
+
+        if (pattern.groupSpecifiers.size > 0) {
+          parse({
+            U: false,
+            N: true
+          });
+        }
+      }
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        this.raise('Raw', node.location.startIndex + e.position, e.message);
+      } else {
+        throw e;
+      }
     }
+
     const fakeToken = {
       endIndex: this.position - 1,
       line: this.line - 1,
@@ -20909,8 +21012,22 @@ class Parser extends LanguageParser {
     let endIndex;
 
     if (typeof context === 'number') {
+      if (context === this.source.length) {
+        while (isLineTerminator(this.source[context - 1])) {
+          context -= 1;
+        }
+      }
+
       startIndex = context;
       endIndex = context + 1;
+    } else if (context.type === Token.EOS) {
+      startIndex = context.startIndex;
+
+      while (isLineTerminator(this.source[startIndex - 1])) {
+        startIndex -= 1;
+      }
+
+      endIndex = startIndex + 1;
     } else {
       if (context.location) {
         context = context.location;
@@ -21147,9 +21264,37 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
 } // #sec-parsepattern
 
 function ParsePattern(patternText, u) {
+  const parse = flags => {
+    const p = new RegExpParser(patternText);
+    return p.scope(flags, () => p.parsePattern());
+  };
+
   try {
-    const p = new RegExpParser(patternText, u);
-    return p.parsePattern();
+    // 1. If u is true, then
+    if (u) {
+      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[+U, +N].
+      return parse({
+        U: true,
+        N: true
+      });
+    } else {
+      // 2. Else
+      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[~U, ~N].
+      //    If the result of parsing contains a GroupName, reparse with the goal symbol Pattern[~U, +N] and use this result instead.
+      const pattern = parse({
+        U: false,
+        N: false
+      });
+
+      if (pattern.groupSpecifiers.size > 0) {
+        return parse({
+          U: false,
+          N: true
+        });
+      }
+
+      return pattern;
+    }
   } catch (e) {
     return [handleError(e)];
   }
@@ -21558,21 +21703,22 @@ function CharacterValue(node) {
       }
 
     case 'RegExpUnicodeEscapeSequence':
-      {
-        if (node.Hex4Digits) {
-          const {
-            Hex4Digits: {
-              HexDigit_a,
-              HexDigit_b,
-              HexDigit_c,
-              HexDigit_d
-            }
-          } = node;
-          const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
-          return String.fromCodePoint(Number.parseInt(chars, 16));
-        }
+      switch (true) {
+        case 'Hex4Digits' in node:
+          return String.fromCodePoint(node.Hex4Digits);
 
-        return String.fromCodePoint(node.CodePoint);
+        case 'CodePoint' in node:
+          return String.fromCodePoint(node.CodePoint);
+
+        case 'HexTrailSurrogate' in node:
+          return String.fromCodePoint((node.HexLeadSurrogate - 0xD800) * 0x400 + (node.HexTrailSurrogate - 0xDC00) + 0x10000);
+
+        case 'HexLeadSurrogate' in node:
+          return String.fromCodePoint(node.HexLeadSurrogate);
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('Evaluate_CharacterEscape', node);
       }
 
     case 'ClassAtom':
