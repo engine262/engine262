@@ -177,9 +177,24 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
 
 // #sec-parsepattern
 export function ParsePattern(patternText, u) {
+  const parse = (flags) => {
+    const p = new RegExpParser(patternText);
+    return p.scope(flags, () => p.parsePattern());
+  };
   try {
-    const p = new RegExpParser(patternText, u);
-    return p.parsePattern();
+    // 1. If u is true, then
+    if (u) {
+      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[+U, +N].
+      return parse({ U: true, N: true });
+    } else { // 2. Else
+      // a. Parse patternText using the grammars in 21.2.1. The goal symbol for the parse is Pattern[~U, ~N].
+      //    If the result of parsing contains a GroupName, reparse with the goal symbol Pattern[~U, +N] and use this result instead.
+      const pattern = parse({ U: false, N: false });
+      if (pattern.groupSpecifiers.size > 0) {
+        return parse({ U: false, N: true });
+      }
+      return pattern;
+    }
   } catch (e) {
     return [handleError(e)];
   }

@@ -90,8 +90,19 @@ export class Parser extends LanguageParser {
     let startIndex;
     let endIndex;
     if (typeof context === 'number') {
+      if (context === this.source.length) {
+        while (isLineTerminator(this.source[context - 1])) {
+          context -= 1;
+        }
+      }
       startIndex = context;
       endIndex = context + 1;
+    } else if (context.type === Token.EOS) {
+      startIndex = context.startIndex;
+      while (isLineTerminator(this.source[startIndex - 1])) {
+        startIndex -= 1;
+      }
+      endIndex = startIndex + 1;
     } else {
       if (context.location) {
         context = context.location;

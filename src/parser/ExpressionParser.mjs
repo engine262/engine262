@@ -903,12 +903,6 @@ export class ExpressionParser extends FunctionParser {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
-        // templates will eat newlines before hitting EOF and realizing
-        // there is no end, so walk back to the last line with content on it
-        // for the error message.
-        while (isLineTerminator(this.source[this.position - 1])) {
-          this.position -= 1;
-        }
         this.raise('UnterminatedTemplate', this.position);
       }
       const c = this.source[this.position];
@@ -972,10 +966,25 @@ export class ExpressionParser extends FunctionParser {
     node.RegularExpressionBody = this.scannedValue;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue;
-    {
-      const p = new RegExpParser(node.RegularExpressionBody, node.RegularExpressionFlags.includes('u'));
-      // throws if invalid
-      p.parsePattern();
+    try {
+      const parse = (flags) => {
+        const p = new RegExpParser(node.RegularExpressionBody);
+        return p.scope(flags, () => p.parsePattern());
+      };
+      if (node.RegularExpressionFlags.includes('u')) {
+        parse({ U: true, N: true });
+      } else {
+        const pattern = parse({ U: false, N: false });
+        if (pattern.groupSpecifiers.size > 0) {
+          parse({ U: false, N: true });
+        }
+      }
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        this.raise('Raw', node.location.startIndex + e.position, e.message);
+      } else {
+        throw e;
+      }
     }
     const fakeToken = {
       endIndex: this.position - 1,

@@ -1,5 +1,5 @@
-import isIdentifierStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex';
-import isIdentifierContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
+import isUnicodeIDStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex';
+import isUnicodeIDContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
 import isSpaceSeparatorRegex from 'unicode-13.0.0/General_Category/Space_Separator/regex';
 import { surroundingAgent } from '../engine.mjs';
 import {
@@ -10,16 +10,17 @@ import {
   isKeywordRaw,
 } from './tokens.mjs';
 
-export const isIdentifierStart = (c) => c && isIdentifierStartRegex.test(c);
-export const isIdentifierContinue = (c) => c && isIdentifierContinueRegex.test(c);
+const isUnicodeIDStart = (c) => c && isUnicodeIDStartRegex.test(c);
+const isUnicodeIDContinue = (c) => c && isUnicodeIDContinueRegex.test(c);
 export const isDecimalDigit = (c) => c && /\d/u.test(c);
 export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
 const isOctalDigit = (c) => c && /[0-7]/u.test(c);
 const isBinaryDigit = (c) => (c === '0' || c === '1');
 export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
 export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
-const isRegularExpressionFlagPart = (c) => c && (isIdentifierContinue(c) || c === '$');
-export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isIdentifierContinue(c);
+const isRegularExpressionFlagPart = (c) => c && (isUnicodeIDContinue(c) || c === '$');
+export const isIdentifierStart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
+export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -539,12 +540,14 @@ export class Lexer {
       }
     }
 
-    if (isIdentifierStart(c)) {
-      this.position -= 1;
+    this.position -= 1;
+
+    const code = c.charCodeAt(0);
+    if ((code >= 0xD800 && code <= 0xDBFF) || isIdentifierStart(c)) {
       return this.scanIdentifierOrKeyword();
     }
 
-    return this.unexpected(c);
+    return this.unexpected(this.position);
   }
 
   scanNumber() {
@@ -770,6 +773,7 @@ export class Lexer {
   scanIdentifierOrKeyword() {
     let buffer = '';
     let escapeIndex = -1;
+    let check = isIdentifierStart;
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       const code = c.charCodeAt(0);
@@ -783,30 +787,29 @@ export class Lexer {
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
-        if (!isIdentifierPart(raw)) {
-          this.unexpected(escapeIndex);
-        }
-        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
-          this.unexpected(escapeIndex);
+        if (!check(raw)) {
+          this.unexpected(this.position);
         }
         buffer += raw;
-      } else if (isIdentifierPart(c)) {
-        this.position += 1;
-        buffer += c;
       } else if (code >= 0xD800 && code <= 0xDBFF) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
           this.unexpected(this.position);
         }
-        const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
-        if (!isIdentifierPart(raw)) {
+        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const raw = String.fromCodePoint(codePoint);
+        if (!check(raw)) {
           this.unexpected(this.position);
         }
         this.position += 2;
         buffer += raw;
+      } else if (check(c)) {
+        buffer += c;
+        this.position += 1;
       } else {
         break;
       }
+      check = isIdentifierPart;
     }
     if (isKeywordRaw(buffer)) {
       if (escapeIndex !== -1) {

@@ -6,6 +6,7 @@ import {
 } from '../runtime-semantics/all.mjs';
 import { CharacterValue } from '../static-semantics/all.mjs';
 import {
+  isIdentifierStart,
   isIdentifierPart,
   isHexDigit,
 } from './Lexer.mjs';
@@ -15,14 +16,53 @@ const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
 
+const PLUS_U = 1 << 0;
+const PLUS_N = 1 << 1;
+
 export class RegExpParser {
-  constructor(source, plusU) {
+  constructor(source) {
     this.source = source;
     this.position = 0;
-    this.plusU = plusU;
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
     this.decimalEscapes = [];
+    this.state = 0;
+  }
+
+  scope(flags, f) {
+    const oldState = this.state;
+
+    if (flags.U === true) {
+      this.state |= PLUS_U;
+    } else if (flags.U === false) {
+      this.state &= ~PLUS_U;
+    }
+
+    if (flags.N === true) {
+      this.state |= PLUS_N;
+    } else if (flags.N === false) {
+      this.state &= ~PLUS_N;
+    }
+
+    const r = f();
+
+    this.state = oldState;
+
+    return r;
+  }
+
+  get plusU() {
+    return (this.state & PLUS_U) > 0;
+  }
+
+  get plusN() {
+    return (this.state & PLUS_N) > 0;
+  }
+
+  raise(message, position = this.position) {
+    const e = new SyntaxError(message);
+    e.position = position;
+    throw e;
   }
 
   peek() {
@@ -49,7 +89,7 @@ export class RegExpParser {
 
   expect(c) {
     if (!this.eat(c)) {
-      throw new SyntaxError(`Expected ${c} but got ${this.peek()}`);
+      this.raise(`Expected ${c} but got ${this.peek()}`);
     }
   }
 
@@ -64,11 +104,11 @@ export class RegExpParser {
     };
     node.Disjunction = this.parseDisjunction();
     if (this.position < this.source.length) {
-      throw new SyntaxError('Unexpected token');
+      this.raise('Unexpected token');
     }
     this.decimalEscapes.forEach((d) => {
       if (d.value > node.capturingGroups.length) {
-        throw new SyntaxError('Invalid decimal escape');
+        this.raise('Invalid decimal escape');
       }
     });
     return node;
@@ -234,7 +274,7 @@ export class RegExpParser {
           QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
         }
         if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
-          throw new SyntaxError('Numbers out of order in quantifier');
+          this.raise('Numbers out of order in quantifier');
         }
       }
       this.expect('}');
@@ -286,7 +326,7 @@ export class RegExpParser {
       }
       if (node.GroupSpecifier) {
         if (this.groupSpecifiers.has(node.GroupSpecifier)) {
-          throw new SyntaxError(`Duplicate group specifier '${node.GroupSpecifier}'`);
+          this.raise(`Duplicate group specifier '${node.GroupSpecifier}'`);
         }
         this.groupSpecifiers.set(node.GroupSpecifier, node.capturingParenthesesBefore);
       }
@@ -302,7 +342,7 @@ export class RegExpParser {
       };
     }
     if (isSyntaxCharacter(this.peek())) {
-      throw new SyntaxError(`Expected a PatternCharacter but got ${this.peek()}`);
+      this.raise(`Expected a PatternCharacter but got ${this.peek()}`);
     }
     return {
       type: 'Atom',
@@ -314,9 +354,9 @@ export class RegExpParser {
   //   DecimalEscape
   //   CharacterClassEscape
   //   CharacterEscape
-  //   `k` GroupName
+  //   [+N] `k` GroupName
   parseAtomEscape() {
-    if (this.eat('k')) {
+    if (this.plusN && this.eat('k')) {
       return {
         type: 'AtomEscape',
         GroupName: this.parseGroupName(),
@@ -349,6 +389,11 @@ export class RegExpParser {
   //   HexEscapeSequence
   //   RegExpUnicodeEscapeSequence
   //   IdentityEscape
+  //
+  // IdentityEscape ::
+  //   [+U] SyntaxCharacter
+  //   [+U] `/`
+  //   [~U] SourceCharacter but not UnicodeIDContinue
   parseCharacterEscape() {
     switch (this.peek()) {
       case 'f':
@@ -377,7 +422,7 @@ export class RegExpParser {
           };
         }
         if (this.plusU) {
-          throw new SyntaxError('Invalid identity escape');
+          this.raise('Invalid identity escape');
         }
         return {
           type: 'CharacterEscape',
@@ -392,7 +437,7 @@ export class RegExpParser {
           };
         }
         if (this.plusU) {
-          throw new SyntaxError('Invalid identity escape');
+          this.raise('Invalid identity escape');
         }
         this.next();
         return {
@@ -408,7 +453,7 @@ export class RegExpParser {
           };
         }
         if (this.plusU) {
-          throw new SyntaxError('Invalid identity escape');
+          this.raise('Invalid identity escape');
         }
         this.next();
         return {
@@ -419,7 +464,7 @@ export class RegExpParser {
       default: {
         const c = this.next();
         if (c === undefined) {
-          throw new SyntaxError('Unexpected escape');
+          this.raise('Unexpected escape');
         }
         if (c === '0' && !isDecimalDigit(this.peek())) {
           return {
@@ -428,7 +473,7 @@ export class RegExpParser {
           };
         }
         if (this.plusU && !isSyntaxCharacter(c) && c !== '/') {
-          throw new SyntaxError('Invalid identity escape');
+          this.raise('Invalid identity escape');
         }
         return {
           type: 'CharacterEscape',
@@ -490,7 +535,7 @@ export class RegExpParser {
         let LoneUnicodePropertyNameOrValue = '';
         while (true) {
           if (this.position >= this.source.length) {
-            throw new SyntaxError('Invalid unicode property name or value');
+            this.raise('Invalid unicode property name or value');
           }
           const c = this.source[this.position];
           if (isDecimalDigit(c)) {
@@ -511,12 +556,12 @@ export class RegExpParser {
           LoneUnicodePropertyNameOrValue += c;
         }
         if (LoneUnicodePropertyNameOrValue.length === 0) {
-          throw new SyntaxError('Invalid unicode property name or value');
+          this.raise('Invalid unicode property name or value');
         }
         if (sawDigit && this.eat('}')) {
           if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues
               || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
-            throw new SyntaxError('Invalid unicode property name or value');
+            this.raise('Invalid unicode property name or value');
           }
           return {
             type: 'CharacterClassEscape',
@@ -533,7 +578,7 @@ export class RegExpParser {
           UnicodePropertyValue = '';
           while (true) {
             if (this.position >= this.source.length) {
-              throw new SyntaxError('Invalid unicode property value');
+              this.raise('Invalid unicode property value');
             }
             const c = this.source[this.position];
             if (!isControlLetter(c) && !isDecimalDigit(c) && c !== '_') {
@@ -543,16 +588,16 @@ export class RegExpParser {
             UnicodePropertyValue += c;
           }
           if (UnicodePropertyValue.length === 0) {
-            throw new SyntaxError('Invalid unicode property value');
+            this.raise('Invalid unicode property value');
           }
         }
         this.expect('}');
         if (UnicodePropertyValue) {
           if (!(LoneUnicodePropertyNameOrValue in NonbinaryUnicodeProperties)) {
-            throw new SyntaxError('Invalid unicode property name');
+            this.raise('Invalid unicode property name');
           }
           if (!(UnicodePropertyValue in UnicodeGeneralCategoryValues || UnicodePropertyValue in UnicodeScriptValues)) {
-            throw new SyntaxError('Invalid unicode property value');
+            this.raise('Invalid unicode property value');
           }
           return {
             type: 'CharacterClassEscape',
@@ -566,7 +611,7 @@ export class RegExpParser {
         }
         if (!(LoneUnicodePropertyNameOrValue in UnicodeGeneralCategoryValues
             || LoneUnicodePropertyNameOrValue in BinaryUnicodeProperties)) {
-          throw new SyntaxError('Invalid unicode property name or value');
+          this.raise('Invalid unicode property name or value');
         }
         return {
           type: 'CharacterClassEscape',
@@ -605,16 +650,13 @@ export class RegExpParser {
     const ranges = [];
     while (!this.test(']')) {
       if (this.position >= this.source.length) {
-        throw new SyntaxError('Unexpected end of CharacterClass');
+        this.raise('Unexpected end of CharacterClass');
       }
       const atom = this.parseClassAtom();
       if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
-        if (this.peek() === ']') {
+        if (this.test(']')) {
           ranges.push(atom);
-          ranges.push({
-            type: 'ClassAtom',
-            SourceCharacter: '-',
-          });
+          ranges.push({ type: 'ClassAtom', value: '-' });
         } else {
           const atom2 = this.parseClassAtom();
           if (atom2.type === 'CharacterClassEscape') {
@@ -623,7 +665,7 @@ export class RegExpParser {
             ranges.push(atom2);
           } else {
             if (CharacterValue(atom) > CharacterValue(atom2)) {
-              throw new SyntaxError('Invalid class range');
+              this.raise('Invalid class range');
             }
             ranges.push([atom, atom2]);
           }
@@ -654,7 +696,7 @@ export class RegExpParser {
           value: 'b',
         };
       }
-      if (this.eat('-')) {
+      if (this.plusU && this.eat('-')) {
         return {
           type: 'ClassEscape',
           value: '-',
@@ -687,39 +729,40 @@ export class RegExpParser {
   //   RegExpIdentifierName RegExpIdentifierPart
   parseRegExpIdentifierName() {
     let buffer = '';
+    let check = isIdentifierStart;
     while (this.position < this.source.length) {
       const c = this.source[this.position];
       const code = c.charCodeAt(0);
       if (c === '\\') {
         this.position += 1;
-        const RegExpUnicodeEscapeSequence = this.maybeParseRegExpUnicodeEscapeSequence();
+        const RegExpUnicodeEscapeSequence = this.scope({ U: true }, () => this.maybeParseRegExpUnicodeEscapeSequence());
         if (!RegExpUnicodeEscapeSequence) {
-          throw new SyntaxError('Invalid unicode escape');
+          this.raise('Invalid unicode escape');
         }
-        const raw = 'CodePoint' in RegExpUnicodeEscapeSequence
-          ? String.fromCodePoint(RegExpUnicodeEscapeSequence.CodePoint)
-          : CharacterValue(RegExpUnicodeEscapeSequence);
-        if (buffer.length === 0 && (raw === '\u{200C}' || raw === '\u{200D}')) {
-          throw new SyntaxError('Invalid unicode escape');
+        const raw = CharacterValue(RegExpUnicodeEscapeSequence);
+        if (!check(raw)) {
+          this.raise('Invalid identifier escape');
         }
         buffer += raw;
-      } else if (isIdentifierPart(c)) {
-        this.position += 1;
-        buffer += c;
       } else if (!this.plusU && (code >= 0xD800 && code <= 0xDBFF)) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
-          throw new SyntaxError('Invalid surrogate pair');
+          this.raise('Invalid trailing surrogate');
         }
-        const raw = String.fromCodePoint((code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000);
-        if (!isIdentifierPart(raw)) {
-          throw new SyntaxError('Invalid surrogate pair');
+        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const raw = String.fromCodePoint(codePoint);
+        if (!check(raw)) {
+          this.raise('Invalid surrogate pair');
         }
         this.position += 2;
         buffer += raw;
+      } else if (check(c)) {
+        buffer += c;
+        this.position += 1;
       } else {
         break;
       }
+      check = isIdentifierPart;
     }
     return buffer;
   }
@@ -741,11 +784,11 @@ export class RegExpParser {
     this.expect('x');
     const HexDigit_a = this.next();
     if (!isHexDigit(HexDigit_a)) {
-      throw new SyntaxError('Not a hex digit');
+      this.raise('Not a hex digit');
     }
     const HexDigit_b = this.next();
     if (!isHexDigit(HexDigit_b)) {
-      throw new SyntaxError('Not a hex digit');
+      this.raise('Not a hex digit');
     }
     return {
       type: 'HexEscapeSequence',
@@ -754,59 +797,85 @@ export class RegExpParser {
     };
   }
 
+  scanHex(length) {
+    if (length === 0) {
+      this.raise('Invalid code point');
+    }
+    let n = 0;
+    for (let i = 0; i < length; i += 1) {
+      const c = this.source[this.position];
+      if (isHexDigit(c)) {
+        this.position += 1;
+        n = (n << 4) | Number.parseInt(c, 16);
+      } else {
+        this.raise('Invalid hex digit');
+      }
+    }
+    return n;
+  }
+
   // RegExpUnicodeEscapeSequence ::
-  //   `u` HexLeadSurrogate `\u` HexTrailSurrogate
-  //   `u` HexLeadSurrogate
-  //   `u` HexTrailSurrogate
-  //   `u` HexNonSurrogate
-  //   `u` Hex4Digits
-  //   `u{` CodePoint `}`
+  //   [+U] `u` HexLeadSurrogate `\u` HexTrailSurrogate
+  //   [+U] `u` HexLeadSurrogate
+  //   [+U] `u` HexTrailSurrogate
+  //   [+U] `u` HexNonSurrogate
+  //   [~U] `u` Hex4Digits
+  //   [+U] `u{` CodePoint `}`
   maybeParseRegExpUnicodeEscapeSequence() {
     const start = this.position;
     if (!this.eat('u')) {
       this.position = start;
       return undefined;
     }
-    if (this.eat('{')) {
-      let buffer = '';
-      while (!this.eat('}')) {
-        if (this.position >= this.source.length) {
-          this.position = start;
-          return undefined;
-        }
-        if (!isHexDigit(this.source[this.position])) {
-          this.position = start;
-          return undefined;
-        }
-        buffer += this.next();
-      }
-      const CodePoint = Number.parseInt(buffer, 16);
-      if (CodePoint > 0x10FFFF) {
+    if (this.plusU && this.eat('{')) {
+      const end = this.source.indexOf('}', this.position);
+      let code;
+      try {
+        code = this.scanHex(end - this.position);
+      } catch {
         this.position = start;
         return undefined;
+      }
+      if (code > 0x10FFFF) {
+        this.position = start;
+        return undefined;
+      }
+      this.position += 1;
+      return {
+        type: 'RegExpUnicodeEscapeSequence',
+        CodePoint: code,
+      };
+    }
+    let lead;
+    try {
+      lead = this.scanHex(4);
+    } catch {
+      this.position = start;
+      return undefined;
+    }
+    if (this.plusU && (lead >= 0xD800 && lead <= 0xDBFF)) {
+      const back = this.position;
+      if (this.eat('\\') && this.eat('u')) {
+        let trail;
+        try {
+          trail = this.scanHex(4);
+        } catch {
+          this.position = back;
+        }
+        return {
+          type: 'RegExpUnicodeEscapeSequence',
+          HexLeadSurrogate: lead,
+          HexTrailSurrogate: trail,
+        };
       }
       return {
         type: 'RegExpUnicodeEscapeSequence',
-        CodePoint,
+        HexLeadSurrogate: lead,
       };
-    }
-    const digits = [];
-    for (let i = 0; i < 4; i += 1) {
-      const HexDigit = this.next();
-      if (!isHexDigit(HexDigit)) {
-        this.position = start;
-        return undefined;
-      }
-      digits.push(HexDigit);
     }
     return {
       type: 'RegExpUnicodeEscapeSequence',
-      Hex4Digits: {
-        HexDigit_a: digits[0],
-        HexDigit_b: digits[1],
-        HexDigit_c: digits[2],
-        HexDigit_d: digits[3],
-      },
+      Hex4Digits: lead,
     };
   }
 }

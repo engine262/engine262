@@ -42,21 +42,19 @@ export function CharacterValue(node) {
         default:
           throw new OutOfRange('Evaluate_CharacterEscape', node);
       }
-    case 'RegExpUnicodeEscapeSequence': {
-      if (node.Hex4Digits) {
-        const {
-          Hex4Digits: {
-            HexDigit_a,
-            HexDigit_b,
-            HexDigit_c,
-            HexDigit_d,
-          },
-        } = node;
-        const chars = `${HexDigit_a}${HexDigit_b}${HexDigit_c}${HexDigit_d}`;
-        return String.fromCodePoint(Number.parseInt(chars, 16));
+    case 'RegExpUnicodeEscapeSequence':
+      switch (true) {
+        case 'Hex4Digits' in node:
+          return String.fromCodePoint(node.Hex4Digits);
+        case 'CodePoint' in node:
+          return String.fromCodePoint(node.CodePoint);
+        case 'HexTrailSurrogate' in node:
+          return String.fromCodePoint((node.HexLeadSurrogate - 0xD800) * 0x400 + (node.HexTrailSurrogate - 0xDC00) + 0x10000);
+        case 'HexLeadSurrogate' in node:
+          return String.fromCodePoint(node.HexLeadSurrogate);
+        default:
+          throw new OutOfRange('Evaluate_CharacterEscape', node);
       }
-      return String.fromCodePoint(node.CodePoint);
-    }
     case 'ClassAtom':
       switch (true) {
         case node.value === '-':
