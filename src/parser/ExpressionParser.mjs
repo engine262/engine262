@@ -981,7 +981,7 @@ export class ExpressionParser extends FunctionParser {
       }
     } catch (e) {
       if (e instanceof SyntaxError) {
-        this.raise('Raw', node.location.startIndex + e.position, e.message);
+        this.raise('Raw', node.location.startIndex + e.position + 1, e.message);
       } else {
         throw e;
       }

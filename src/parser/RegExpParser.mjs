@@ -26,6 +26,7 @@ export class RegExpParser {
     this.capturingGroups = [];
     this.groupSpecifiers = new Map();
     this.decimalEscapes = [];
+    this.groupNameRefs = [];
     this.state = 0;
   }
 
@@ -108,7 +109,12 @@ export class RegExpParser {
     }
     this.decimalEscapes.forEach((d) => {
       if (d.value > node.capturingGroups.length) {
-        this.raise('Invalid decimal escape');
+        this.raise('Invalid decimal escape', d.position);
+      }
+    });
+    this.groupNameRefs.forEach((g) => {
+      if (!node.groupSpecifiers.has(g.GroupName)) {
+        this.raise('Invalid group name', g.position);
       }
     });
     return node;
@@ -357,10 +363,13 @@ export class RegExpParser {
   //   [+N] `k` GroupName
   parseAtomEscape() {
     if (this.plusN && this.eat('k')) {
-      return {
+      const node = {
         type: 'AtomEscape',
+        position: this.position,
         GroupName: this.parseGroupName(),
       };
+      this.groupNameRefs.push(node);
+      return node;
     }
     const CharacterClassEscape = this.maybeParseCharacterClassEscape();
     if (CharacterClassEscape) {
@@ -487,6 +496,7 @@ export class RegExpParser {
   //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
   maybeParseDecimalEscape() {
     if (isDecimalDigit(this.source[this.position]) && this.source[this.position] !== '0') {
+      const start = this.position;
       let buffer = this.source[this.position];
       this.position += 1;
       while (isDecimalDigit(this.source[this.position])) {
@@ -495,6 +505,7 @@ export class RegExpParser {
       }
       const node = {
         type: 'DecimalEscape',
+        position: start,
         value: Number.parseInt(buffer, 10),
       };
       this.decimalEscapes.push(node);
@@ -744,7 +755,7 @@ export class RegExpParser {
           this.raise('Invalid identifier escape');
         }
         buffer += raw;
-      } else if (!this.plusU && (code >= 0xD800 && code <= 0xDBFF)) {
+      } else if (code >= 0xD800 && code <= 0xDBFF) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
           this.raise('Invalid trailing surrogate');
@@ -763,6 +774,9 @@ export class RegExpParser {
         break;
       }
       check = isIdentifierPart;
+    }
+    if (buffer.length === 0) {
+      this.raise('Invalid empty identifier');
     }
     return buffer;
   }
