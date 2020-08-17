@@ -54,11 +54,3 @@ built-ins/RegExp/property-escapes/**/*.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-plus-quantifier.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js
-built-ins/RegExp/unicode_restricted_character_class_escape.js
-built-ins/RegExp/unicode_restricted_identity_escape_alpha.js
-built-ins/RegExp/unicode_restricted_identity_escape_c.js
-built-ins/RegExp/unicode_restricted_identity_escape_u.js
-language/literals/regexp/u-invalid-non-empty-class-ranges.js
-language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-ab.js
-language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-a.js
-language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-b.js

@@ -423,6 +423,9 @@ export class RegExpParser {
         this.next();
         const c = this.next();
         if (c === undefined) {
+          if (this.plusU) {
+            this.raise('Invalid identity escape');
+          }
           return {
             type: 'CharacterEscape',
             IdentityEscape: 'c',
@@ -669,22 +672,22 @@ export class RegExpParser {
         this.raise('Unexpected end of CharacterClass');
       }
       const atom = this.parseClassAtom();
-      if (atom.type !== 'CharacterClassEscape' && this.eat('-')) {
+      if (this.eat('-')) {
+        if (atom.type === 'CharacterClassEscape') {
+          this.raise('Invalid class range');
+        }
         if (this.test(']')) {
           ranges.push(atom);
           ranges.push({ type: 'ClassAtom', value: '-' });
         } else {
           const atom2 = this.parseClassAtom();
           if (atom2.type === 'CharacterClassEscape') {
-            ranges.push(atom);
-            ranges.push({ type: 'ClassAtom', value: '-' });
-            ranges.push(atom2);
-          } else {
-            if (CharacterValue(atom) > CharacterValue(atom2)) {
-              this.raise('Invalid class range');
-            }
-            ranges.push([atom, atom2]);
+            this.raise('Invalid class range');
           }
+          if (CharacterValue(atom) > CharacterValue(atom2)) {
+            this.raise('Invalid class range');
+          }
+          ranges.push([atom, atom2]);
         }
       } else {
         ranges.push(atom);
@@ -800,6 +803,9 @@ export class RegExpParser {
   //   DecimalDigits DecimalDigit
   parseDecimalDigits() {
     let n = '';
+    if (!isDecimalDigit(this.peek())) {
+      this.raise('Invalid decimal digits');
+    }
     while (isDecimalDigit(this.peek())) {
       n += this.next();
     }
@@ -857,16 +863,12 @@ export class RegExpParser {
     }
     if (this.plusU && this.eat('{')) {
       const end = this.source.indexOf('}', this.position);
-      let code;
-      try {
-        code = this.scanHex(end - this.position);
-      } catch {
-        this.position = start;
-        return undefined;
+      if (end === -1) {
+        this.raise('Invalid code point');
       }
+      const code = this.scanHex(end - this.position);
       if (code > 0x10FFFF) {
-        this.position = start;
-        return undefined;
+        this.raise('Invalid code point');
       }
       this.position += 1;
       return {
