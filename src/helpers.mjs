@@ -17,41 +17,34 @@ function convertValueForKey(key) {
   }
 }
 
-export class ValueMap extends Map {
-  constructor(init) {
-    super();
-    if (init !== null && init !== undefined) {
-      for (const [k, v] of init) {
-        this.set(convertValueForKey(k), v);
-      }
-    }
+export class ValueMap {
+  constructor() {
+    this.map = new Map();
+  }
+
+  get size() {
+    return this.map.size;
   }
 
   get(key) {
-    return super.get(convertValueForKey(key));
+    return this.map.get(convertValueForKey(key));
   }
 
   set(key, value) {
-    return super.set(convertValueForKey(key), value);
+    return this.map.set(convertValueForKey(key), value);
   }
 
   has(key) {
-    return super.has(convertValueForKey(key));
+    return this.map.has(convertValueForKey(key));
   }
 
   delete(key) {
-    return super.delete(convertValueForKey(key));
+    return this.map.delete(convertValueForKey(key));
   }
 
   * keys() {
-    for (const [key] of this) {
+    for (const [key] of this.entries()) {
       yield key;
-    }
-  }
-
-  * values() {
-    for (const [, value] of this) {
-      yield value;
     }
   }
 
@@ -60,13 +53,13 @@ export class ValueMap extends Map {
   }
 
   forEach(cb) {
-    for (const [key, value] of this) {
+    for (const [key, value] of this.entries()) {
       cb(value, key, this);
     }
   }
 
   * [Symbol.iterator]() {
-    for (const [key, value] of super.entries()) {
+    for (const [key, value] of this.map.entries()) {
       if (typeof key === 'string' || typeof key === 'number') {
         yield [new Value(key), value];
       } else {
@@ -83,9 +76,9 @@ export class ValueMap extends Map {
   }
 }
 
-export class ValueSet extends Set {
+export class ValueSet {
   constructor(init) {
-    super();
+    this.set = new Set();
     if (init !== undefined && init !== null) {
       for (const item of init) {
         this.add(item);
@@ -93,20 +86,20 @@ export class ValueSet extends Set {
     }
   }
 
+  get size() {
+    return this.set.size;
+  }
+
   add(item) {
-    return super.add(convertValueForKey(item));
+    return this.set.add(convertValueForKey(item));
   }
 
   has(item) {
-    return super.has(convertValueForKey(item));
+    return this.set.has(convertValueForKey(item));
   }
 
   delete(item) {
-    return super.delete(convertValueForKey(item));
-  }
-
-  keys() {
-    return this[Symbol.iterator]();
+    return this.set.delete(convertValueForKey(item));
   }
 
   values() {
@@ -114,7 +107,7 @@ export class ValueSet extends Set {
   }
 
   * [Symbol.iterator]() {
-    for (const key of super.values()) {
+    for (const key of this.set.values()) {
       if (typeof key === 'string' || typeof key === 'number') {
         yield new Value(key);
       } else {
@@ -131,9 +124,9 @@ export class ValueSet extends Set {
 }
 
 export class OutOfRange extends RangeError {
+  /* istanbul ignore next */
   constructor(fn, detail) {
     super(`${fn}() argument out of range`);
-
     this.detail = detail;
   }
 }
@@ -145,6 +138,7 @@ export function unwind(iterator, maxSteps = 1) {
     if (done) {
       return value;
     }
+    /* istanbul ignore next */
     steps += 1;
     if (steps > maxSteps) {
       throw new RangeError('Max steps exceeded');

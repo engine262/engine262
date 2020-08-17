@@ -30,9 +30,6 @@ Completion.prototype.mark = function mark(m) {
 
 // #sec-normalcompletion
 export function NormalCompletion(argument) {
-  if (new.target !== undefined) {
-    throw new TypeError();
-  }
   // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'normal', Value: argument, Target: undefined });
 }
@@ -54,21 +51,9 @@ export class AbruptCompletion {
 
 // #sec-throwcompletion
 export function ThrowCompletion(argument) {
-  if (new.target !== undefined) {
-    throw new TypeError();
-  }
   // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: argument, Target: undefined });
 }
-
-Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
-  value: function hasInstance(v) {
-    return v instanceof Completion && v.Type === 'throw';
-  },
-  writable: true,
-  enumerable: false,
-  configurable: true,
-});
 
 // 6.2.3.4 #sec-updateempty
 export function UpdateEmpty(completionRecord, value) {
@@ -83,8 +68,9 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target });
 }
 
-// 5.2.3.3 #sec-returnifabrupt
+// #sec-returnifabrupt
 export function ReturnIfAbrupt() {
+  /* istanbul skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
@@ -92,16 +78,14 @@ export function ReturnIfAbrupt() {
 export const Q = ReturnIfAbrupt;
 
 // #sec-returnifabrupt-shorthands ! OperationName()
-export function X(val) {
-  Assert(!(val instanceof AbruptCompletion));
-  if (val instanceof Completion) {
-    return val.Value;
-  }
-  return val;
+export function X() {
+  /* istanbul skip next */
+  throw new TypeError('X() requires build');
 }
 
 // 25.6.1.1.1 #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise() {
+  /* istanbul skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 
