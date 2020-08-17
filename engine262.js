@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 ba300e88785c0eaa4833ed0c320cd3b2a034b931
+ * engine262 0.0.1 427ed405b4ad625719268ae747eb25e95b53cd8d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -45,42 +45,34 @@
     }
   }
 
-  class ValueMap extends Map {
-    constructor(init) {
-      super();
+  class ValueMap {
+    constructor() {
+      this.map = new Map();
+    }
 
-      if (init !== null && init !== undefined) {
-        for (const [k, v] of init) {
-          this.set(convertValueForKey(k), v);
-        }
-      }
+    get size() {
+      return this.map.size;
     }
 
     get(key) {
-      return super.get(convertValueForKey(key));
+      return this.map.get(convertValueForKey(key));
     }
 
     set(key, value) {
-      return super.set(convertValueForKey(key), value);
+      return this.map.set(convertValueForKey(key), value);
     }
 
     has(key) {
-      return super.has(convertValueForKey(key));
+      return this.map.has(convertValueForKey(key));
     }
 
     delete(key) {
-      return super.delete(convertValueForKey(key));
+      return this.map.delete(convertValueForKey(key));
     }
 
     *keys() {
-      for (const [key] of this) {
+      for (const [key] of this.entries()) {
         yield key;
-      }
-    }
-
-    *values() {
-      for (const [, value] of this) {
-        yield value;
       }
     }
 
@@ -89,13 +81,13 @@
     }
 
     forEach(cb) {
-      for (const [key, value] of this) {
+      for (const [key, value] of this.entries()) {
         cb(value, key, this);
       }
     }
 
     *[Symbol.iterator]() {
-      for (const [key, value] of super.entries()) {
+      for (const [key, value] of this.map.entries()) {
         if (typeof key === 'string' || typeof key === 'number') {
           yield [new Value(key), value];
         } else {
@@ -112,9 +104,9 @@
     }
 
   }
-  class ValueSet extends Set {
+  class ValueSet {
     constructor(init) {
-      super();
+      this.set = new Set();
 
       if (init !== undefined && init !== null) {
         for (const item of init) {
@@ -123,20 +115,20 @@
       }
     }
 
+    get size() {
+      return this.set.size;
+    }
+
     add(item) {
-      return super.add(convertValueForKey(item));
+      return this.set.add(convertValueForKey(item));
     }
 
     has(item) {
-      return super.has(convertValueForKey(item));
+      return this.set.has(convertValueForKey(item));
     }
 
     delete(item) {
-      return super.delete(convertValueForKey(item));
-    }
-
-    keys() {
-      return this[Symbol.iterator]();
+      return this.set.delete(convertValueForKey(item));
     }
 
     values() {
@@ -144,7 +136,7 @@
     }
 
     *[Symbol.iterator]() {
-      for (const key of super.values()) {
+      for (const key of this.set.values()) {
         if (typeof key === 'string' || typeof key === 'number') {
           yield new Value(key);
         } else {
@@ -161,6 +153,7 @@
 
   }
   class OutOfRange extends RangeError {
+    /* istanbul ignore next */
     constructor(fn, detail) {
       super(`${fn}() argument out of range`);
       this.detail = detail;
@@ -179,6 +172,8 @@
       if (done) {
         return value;
       }
+      /* istanbul ignore next */
+
 
       steps += 1;
 
@@ -15490,14 +15485,6 @@
 
   function MV_StringNumericLiteral(StringNumericLiteral) {
     return new Value(Number(StringNumericLiteral));
-  } // 7.1.3.1.1 #sec-runtime-semantics-mv-s
-  //   StrDecimalLiteral :::
-  //     StrUnsignedDecimalLiteral
-  //     `+` StrUnsignedDecimalLiteral
-  //     `-` StrUnsignedDecimalLiteral
-
-  function MV_StrDecimalLiteral(StrDecimalLiteral) {
-    return new Value(Number(StrDecimalLiteral));
   }
 
   function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
@@ -25340,11 +25327,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
   function NormalCompletion(argument) {
-    if (new.target !== undefined) {
-      throw new TypeError();
-    } // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
-
-
+    // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
     return new Completion({
       Type: 'normal',
       Value: argument,
@@ -25367,25 +25350,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // #sec-throwcompletion
 
   function ThrowCompletion(argument) {
-    if (new.target !== undefined) {
-      throw new TypeError();
-    } // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
-
-
+    // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
     return new Completion({
       Type: 'throw',
       Value: argument,
       Target: undefined
     });
-  }
-  Object.defineProperty(ThrowCompletion, Symbol.hasInstance, {
-    value: function hasInstance(v) {
-      return v instanceof Completion && v.Type === 'throw';
-    },
-    writable: true,
-    enumerable: false,
-    configurable: true
-  }); // 6.2.3.4 #sec-updateempty
+  } // 6.2.3.4 #sec-updateempty
 
   function UpdateEmpty(completionRecord, value) {
     Assert(completionRecord instanceof Completion, "completionRecord instanceof Completion"); // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
@@ -25402,25 +25373,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Value: value,
       Target: completionRecord.Target
     });
-  } // 5.2.3.3 #sec-returnifabrupt
+  } // #sec-returnifabrupt
 
   function ReturnIfAbrupt() {
+    /* istanbul skip next */
     throw new TypeError('ReturnIfAbrupt requires build');
   } // #sec-returnifabrupt-shorthands ? OperationName()
 
   const Q = ReturnIfAbrupt; // #sec-returnifabrupt-shorthands ! OperationName()
 
-  function X(val) {
-    Assert(!(val instanceof AbruptCompletion), "!(val instanceof AbruptCompletion)");
-
-    if (val instanceof Completion) {
-      return val.Value;
-    }
-
-    return val;
+  function X() {
+    /* istanbul skip next */
+    throw new TypeError('X() requires build');
   } // 25.6.1.1.1 #sec-ifabruptrejectpromise
 
   function IfAbruptRejectPromise() {
+    /* istanbul skip next */
     throw new TypeError('IfAbruptRejectPromise requires build');
   }
   function EnsureCompletion(val) {
@@ -61871,7 +61839,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.LexicallyScopedDeclarations = LexicallyScopedDeclarations;
   exports.LocalTZA = LocalTZA;
   exports.LocalTime = LocalTime;
-  exports.MV_StrDecimalLiteral = MV_StrDecimalLiteral;
   exports.MV_StringNumericLiteral = MV_StringNumericLiteral;
   exports.MakeBasicObject = MakeBasicObject;
   exports.MakeClassConstructor = MakeClassConstructor;
