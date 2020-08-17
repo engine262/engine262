@@ -1,9 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  Type,
+  Value,
+  wellKnownSymbols,
+} from '../value.mjs';
+import {
   ArrayCreate,
   Assert,
   Call,
-  CodePointAt,
   Construct,
   CreateDataProperty,
   CreateDataPropertyOrThrow,
@@ -27,11 +31,7 @@ import {
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
-import {
-  Type,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
+import { CodePointAt, CodePointsToString } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
@@ -238,14 +238,14 @@ export function RegExpBuiltinExec(R, S) {
         capturedValue = Value.undefined;
       } else if (fullUnicode) { // c. Else if fullUnicode is true, then
         // i. Assert: captureI is a List of code points.
-        // ii. Let capturedValue be ! UTF16Encode(captureI).
-        capturedValue = new Value(captureI.join(''));
+        // ii. Let capturedValue be ! CodePointsToString(captureI).
+        capturedValue = new Value(X(CodePointsToString(captureI)));
       } else { // d. Else,
         // i. Assert: fullUnicode is false.
         Assert(fullUnicode === false);
         // ii. Assert: captureI is a List of code units.
         // iii. Let capturedValue be the String value consisting of the code units of captureI.
-        capturedValue = new Value(captureI.join(''));
+        capturedValue = new Value(String.fromCharCode(...captureI));
       }
     }
     // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
@@ -281,22 +281,27 @@ export function RegExpBuiltinExec(R, S) {
 
 // #sec-advancestringindex
 export function AdvanceStringIndex(S, index, unicode) {
-  Assert(Type(S) === 'String');
   index = index.numberValue();
+  // 1. Assert: Type(S) is String.
+  Assert(Type(S) === 'String');
+  // 2. Assert: 0 ≤ index ≤ 253 - 1 and ! IsInteger(index) is true.
   Assert(Number.isInteger(index) && index >= 0 && index <= (2 ** 53) - 1);
+  // 3. Assert: Type(unicode) is Boolean.
   Assert(Type(unicode) === 'Boolean');
-
+  // 4. If unicode is false, return index + 1.
   if (unicode === Value.false) {
     return new Value(index + 1);
   }
-
+  // 5. Let length be the number of code units in S.
   const length = S.stringValue().length;
+  // 6. If index + 1 ≥ length, return index + 1.
   if (index + 1 >= length) {
     return new Value(index + 1);
   }
-
-  const cp = X(CodePointAt(S, index));
-  return new Value(index + cp.CodeUnitCount.numberValue());
+  // 7. Let cp be ! CodePointAt(S, index).
+  const cp = X(CodePointAt(S.stringValue(), index));
+  // 8. Return index + cp.[[CodeUnitCount]].
+  return new Value(index + cp.CodeUnitCount);
 }
 
 // 21.2.5.3 #sec-get-regexp.prototype.dotAll

@@ -3,12 +3,12 @@ import { isHexDigit } from '../parse.mjs';
 import { Value } from '../value.mjs';
 import {
   Assert,
-  CodePointAt,
   CreateBuiltinFunction,
   SetFunctionLength,
   SetFunctionName,
   ToString,
 } from '../abstract-ops/all.mjs';
+import { CodePointAt } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 
 function utf8Encode(utf) {
@@ -134,15 +134,15 @@ function Encode(string, unescapedSet) {
       R = `${R}${C}`;
     } else { // d. Else,
       // i. Let cp be ! CodePointAt(string, k).
-      const cp = X(CodePointAt(new Value(string), k));
+      const cp = X(CodePointAt(string, k));
       // ii. If cp.[[IsUnpairedSurrogate]] is true, throw a URIError exception.
-      if (cp.IsUnpairedSurrogate === Value.true) {
+      if (cp.IsUnpairedSurrogate) {
         return surroundingAgent.Throw('URIError', 'URIMalformed');
       }
       // iii. Set k to k + cp.[[CodeUnitCount]].
-      k += cp.CodeUnitCount.numberValue();
+      k += cp.CodeUnitCount;
       // iv. Let Octets be the List of octets resulting by applying the UTF-8 transformation to cp.[[CodePoint]].
-      const Octets = utf8Encode(cp.CodePoint.numberValue());
+      const Octets = utf8Encode(cp.CodePoint);
       // v. For each element octet of Octets in List order, do
       Octets.forEach((octet) => {
         // 1. Set R to the string-concatenation of:

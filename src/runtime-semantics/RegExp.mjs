@@ -3,7 +3,7 @@ import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
-import { CharacterValue } from '../static-semantics/all.mjs';
+import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parse.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -33,15 +33,17 @@ function isContinuation(v) {
 class CharSet {
   union(other) {
     const concrete = new Set();
-    const fns = [];
+    const fns = new Set();
     const add = (cs) => {
       if (cs.fns) {
-        fns.push(...cs.fns);
+        cs.fns.forEach((fn) => {
+          fns.add(fn);
+        });
         cs.concrete.forEach((c) => {
           concrete.add(c);
         });
       } else if (cs.fn) {
-        fns.push(cs.fn);
+        fns.add(cs.fn);
       } else {
         cs.concrete.forEach((c) => {
           concrete.add(c);
@@ -149,26 +151,18 @@ export function Evaluate_Pattern(Pattern, flags) {
       // b. Assert: ! IsNonNegativeInteger(index) is true and index ≤ the length of str.
       Assert(X(IsNonNegativeInteger(index)) === Value.true
              && index.numberValue() <= str.stringValue().length);
-      // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! UTF16DecodeString(str).
+      // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! StringToCodePoints(str).
       //    Otherwise, let Input be a List consisting of the sequence of code units that are the elements of str.
       //    Input will be used throughout the algorithms in 21.2.2. Each element of Input is considered to be a character.
       if (Unicode) {
-        Input = Array.from(str.stringValue());
+        Input = X(StringToCodePoints(str.stringValue()));
       } else {
-        Input = str.stringValue().split('');
+        Input = str.stringValue().split('').map((c) => c.charCodeAt(0));
       }
       // d. Let InputLength be the number of characters contained in Input. This variable will be used throughout the algorithms in 21.2.2.
       InputLength = Input.length;
       // e. Let listIndex be the index into Input of the character that was obtained from element index of str.
-      let listIndex = 0;
-      let seenChars = 0;
-      for (const char of Input) {
-        seenChars += char.length;
-        if (seenChars > index.numberValue()) {
-          break;
-        }
-        listIndex += 1;
-      }
+      const listIndex = index.numberValue();
       // f. Let c be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
       const c = (y) => {
         // i. Assert: y is a State.
@@ -435,7 +429,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is zero, or if Multiline is true and the character Input[e - 1] is one of LineTerminator, then
-          if (e === 0 || (Multiline && isLineTerminator(Input[e - 1]))) {
+          if (e === 0 || (Multiline && isLineTerminator(String.fromCodePoint(Input[e - 1])))) {
             // i. Call c(x) and return its result.
             return c(x);
           }
@@ -452,7 +446,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is equal to InputLength, or if Multiline is true and the character Input[e] is one of LineTerminator, then
-          if (e === InputLength || (Multiline && isLineTerminator(Input[e]))) {
+          if (e === InputLength || (Multiline && isLineTerminator(String.fromCodePoint(Input[e])))) {
             // i. Call c(x) and return its result.
             return c(x);
           }
@@ -641,7 +635,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
-    ]);
+    ].map((c) => c.codePointAt(0)));
     if (Unicode && IgnoreCase) {
       return new VirtualCharSet((c) => {
         if (A.has(c)) {
@@ -705,7 +699,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (true) {
       case !!Atom.PatternCharacter: {
         // 1. Let ch be the character matched by PatternCharacter.
-        const ch = Atom.PatternCharacter;
+        const ch = Atom.PatternCharacter.codePointAt(0);
         // 2. Let A be a one-element CharSet containing the character ch.
         const A = new ConcreteCharSet([Canonicalize(ch)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
@@ -719,7 +713,7 @@ export function Evaluate_Pattern(Pattern, flags) {
           A = new VirtualCharSet((_c) => true);
         } else {
           // 2. Otherwise, let A be the set of all characters except LineTerminator.
-          A = new VirtualCharSet((c) => !isLineTerminator(c));
+          A = new VirtualCharSet((c) => !isLineTerminator(String.fromCodePoint(c)));
         }
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
         return CharacterSetMatcher(A, false, direction);
@@ -849,20 +843,20 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
     // 2. If Unicode is true, then
     if (Unicode === true) {
+      const s = String.fromCodePoint(ch);
       // a. If the file CaseFolding.txt of the Unicode Character Database provides a simple or common case folding mapping for ch, return the result of applying that mapping to ch.
-      if (unicodeCaseFoldingSimple.has(ch)) {
-        return unicodeCaseFoldingSimple.get(ch);
+      if (unicodeCaseFoldingSimple.has(s)) {
+        return unicodeCaseFoldingSimple.get(s).codePointAt(0);
       }
-      if (unicodeCaseFoldingCommon.has(ch)) {
-        return unicodeCaseFoldingCommon.get(ch);
+      if (unicodeCaseFoldingCommon.has(s)) {
+        return unicodeCaseFoldingCommon.get(s).codePointAt(0);
       }
       // b. Return ch.
       return ch;
     } else { // 3. Else
       // a. Assert: ch is a UTF-16 code unit.
-      Assert(ch.length === 1);
       // b. Let s be the String value consisting of the single code unit ch.
-      const s = ch;
+      const s = String.fromCodePoint(ch);
       // c. Let u be the same result produced as if by performing the algorithm for String.prototype.toUpperCase using s as the this value.
       const u = s.toUpperCase();
       // d. Assert: Type(u) is String.
@@ -872,9 +866,9 @@ export function Evaluate_Pattern(Pattern, flags) {
         return ch;
       }
       // f. Let cu be u's single code unit element.
-      const cu = u[0];
+      const cu = u.codePointAt(0);
       // g. If the numeric value of ch ≥ 128 and the numeric value of cu < 128, return ch.
-      if (ch.codePointAt(0) >= 128 && cu.codePointAt(0) < 128) {
+      if (ch >= 128 && cu < 128) {
         return ch;
       }
       // h. Return cu.
@@ -1016,16 +1010,22 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (node.value) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
-        return new ConcreteCharSet(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        return new ConcreteCharSet(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((c) => c.codePointAt(0)));
       case 'D':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
-        return new VirtualCharSet((c) => !isDecimalDigit(c));
+        return new VirtualCharSet((c) => !isDecimalDigit(String.fromCodePoint(c)));
       case 's':
         // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
-        return new VirtualCharSet((c) => isWhitespace(c) || isLineTerminator(c));
+        return new VirtualCharSet((c) => {
+          const s = String.fromCodePoint(c);
+          return isWhitespace(s) || isLineTerminator(s);
+        });
       case 'S':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `s`.
-        return new VirtualCharSet((c) => !isWhitespace(c) && !isLineTerminator(c));
+        return new VirtualCharSet((c) => {
+          const s = String.fromCodePoint(c);
+          return !isWhitespace(s) && !isLineTerminator(s);
+        });
       case 'w':
         // 1. Return the set of all characters returned by WordCharacters().
         return WordCharacters();
@@ -1106,15 +1106,15 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 3. Let b be the one character in CharSet B.
     const b = B.first();
     // 4. Let i be the character value of character a.
-    const i = a.codePointAt(0);
+    const i = a;
     // 5. Let j be the character value of character b.
-    const j = b.codePointAt(0);
+    const j = b;
     // 6. Assert: i ≤ j.
     Assert(i <= j);
     // 7. Return the set containing all characters numbered i through j, inclusive.
     const set = new Set();
     for (let k = i; k <= j; k += 1) {
-      set.add(Canonicalize(String.fromCodePoint(k)));
+      set.add(Canonicalize(k));
     }
     return new ConcreteCharSet(set);
   }
@@ -1130,10 +1130,10 @@ export function Evaluate_Pattern(Pattern, flags) {
     switch (true) {
       case !!ClassAtom.SourceCharacter:
         // 1. Return the CharSet containing the character matched by SourceCharacter.
-        return new ConcreteCharSet([Canonicalize(ClassAtom.SourceCharacter)]);
+        return new ConcreteCharSet([Canonicalize(ClassAtom.SourceCharacter.codePointAt(0))]);
       case ClassAtom.value === '-':
         // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
-        return new ConcreteCharSet(['-']);
+        return new ConcreteCharSet([0x002D]);
       default:
         throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
     }

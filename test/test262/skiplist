@@ -49,35 +49,15 @@ built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
 # We need our own date parser
 built-ins/Date/parse/without-utc-offset.js
 
-# TODO(46): Missing Number
-built-ins/Number/prototype/*.js
-built-ins/Number/prototype/toExponential/*.js
-built-ins/Number/prototype/toFixed/*.js
-built-ins/Number/prototype/toLocaleString/*.js
-built-ins/Number/prototype/toPrecision/*.js
-built-ins/Number/prototype/toString/*.js
-built-ins/JSON/stringify/string-escape-ascii.js
-built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js
-built-ins/TypedArray/prototype/toLocaleString/return-result.js
-language/expressions/property-accessors/S11.2.1_A3_T2.js
-language/literals/regexp/S7.8.5_A1.1_T2.js
-language/literals/regexp/S7.8.5_A1.4_T2.js
-language/literals/regexp/S7.8.5_A2.1_T2.js
-language/literals/regexp/S7.8.5_A2.4_T2.js
-language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js
-
 # TODO: RegExp
-built-ins/RegExp/property-escapes/character-class.js
-built-ins/RegExp/property-escapes/character-class-range-end.js
-built-ins/RegExp/property-escapes/character-class-range-no-dash-end.js
-built-ins/RegExp/property-escapes/character-class-range-no-dash-start.js
-built-ins/RegExp/property-escapes/character-class-range-start.js
+built-ins/RegExp/property-escapes/**/*.js
+built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-plus-quantifier.js
+built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier.js
+built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js
 built-ins/RegExp/unicode_restricted_character_class_escape.js
 built-ins/RegExp/unicode_restricted_identity_escape_alpha.js
 built-ins/RegExp/unicode_restricted_identity_escape_c.js
 built-ins/RegExp/unicode_restricted_identity_escape_u.js
-language/literals/regexp/u-astral-char-class-invert.js
-language/literals/regexp/u-astral.js
 language/literals/regexp/u-invalid-non-empty-class-ranges.js
 language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-ab.js
 language/literals/regexp/u-invalid-non-empty-class-ranges-no-dash-a.js

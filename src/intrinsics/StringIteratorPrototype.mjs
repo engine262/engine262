@@ -1,10 +1,10 @@
 import { Type, Value } from '../value.mjs';
 import {
   Assert,
-  CodePointAt,
   CreateIterResultObject,
   OrdinaryObjectCreate,
 } from '../abstract-ops/all.mjs';
+import { CodePointAt } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
@@ -57,11 +57,11 @@ function StringIteratorPrototype_next(args, { thisValue }) {
     return CreateIterResultObject(Value.undefined, Value.true);
   }
   // 9. Let cp be ! CodePointAt(s, position).
-  const cp = X(CodePointAt(s, position));
+  const cp = X(CodePointAt(s.stringValue(), position));
   // 10. Let resultString be the String value containing cp.[[CodeUnitCount]] consecutive code units from s beginning with the code unit at index position.
-  const resultString = new Value(s.stringValue().substr(position, cp.CodeUnitCount.numberValue()));
+  const resultString = new Value(s.stringValue().substr(position, cp.CodeUnitCount));
   // 11. Set O.[[StringNextIndex]] to position + cp.[[CodeUnitCount]].
-  O.StringNextIndex = position + cp.CodeUnitCount.numberValue();
+  O.StringNextIndex = position + cp.CodeUnitCount;
   // 12. Return CreateIterResultObject(resultString, false).
   return CreateIterResultObject(resultString, Value.false);
 }

@@ -4,10 +4,15 @@ import {
   UnicodeGeneralCategoryValues,
   UnicodeScriptValues,
 } from '../runtime-semantics/all.mjs';
-import { CharacterValue } from '../static-semantics/all.mjs';
+import {
+  CharacterValue,
+  UTF16SurrogatePairToCodePoint,
+} from '../static-semantics/all.mjs';
 import {
   isIdentifierStart,
   isIdentifierPart,
+  isLeadingSurrogate,
+  isTrailingSurrogate,
   isHexDigit,
 } from './Lexer.mjs';
 
@@ -352,7 +357,7 @@ export class RegExpParser {
     }
     return {
       type: 'Atom',
-      PatternCharacter: this.next(),
+      PatternCharacter: this.parseSourceCharacter(),
     };
   }
 
@@ -724,8 +729,17 @@ export class RegExpParser {
     }
     return {
       type: 'ClassAtom',
-      SourceCharacter: this.next(),
+      SourceCharacter: this.parseSourceCharacter(),
     };
+  }
+
+  parseSourceCharacter() {
+    const lead = this.source.charCodeAt(this.position);
+    const trail = this.source.charCodeAt(this.position + 1);
+    if (trail && isLeadingSurrogate(lead) && isTrailingSurrogate(trail)) {
+      return this.next() + this.next();
+    }
+    return this.next();
   }
 
   parseGroupName() {
@@ -750,17 +764,17 @@ export class RegExpParser {
         if (!RegExpUnicodeEscapeSequence) {
           this.raise('Invalid unicode escape');
         }
-        const raw = CharacterValue(RegExpUnicodeEscapeSequence);
+        const raw = String.fromCodePoint(CharacterValue(RegExpUnicodeEscapeSequence));
         if (!check(raw)) {
           this.raise('Invalid identifier escape');
         }
         buffer += raw;
-      } else if (code >= 0xD800 && code <= 0xDBFF) {
+      } else if (isLeadingSurrogate(code)) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
-        if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
+        if (!isTrailingSurrogate(lowSurrogate)) {
           this.raise('Invalid trailing surrogate');
         }
-        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const codePoint = UTF16SurrogatePairToCodePoint(code, lowSurrogate);
         const raw = String.fromCodePoint(codePoint);
         if (!check(raw)) {
           this.raise('Invalid surrogate pair');
@@ -867,7 +881,7 @@ export class RegExpParser {
       this.position = start;
       return undefined;
     }
-    if (this.plusU && (lead >= 0xD800 && lead <= 0xDBFF)) {
+    if (this.plusU && isLeadingSurrogate(lead)) {
       const back = this.position;
       if (this.eat('\\') && this.eat('u')) {
         let trail;

@@ -1,9 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  Type,
+  Value,
+  wellKnownSymbols,
+} from '../value.mjs';
+import {
   ArrayCreate,
   Assert,
   Call,
-  CodePointAt,
   CreateDataPropertyOrThrow,
   Get,
   GetMethod,
@@ -19,16 +23,12 @@ import {
   StringCreate,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
-  Value,
-  wellKnownSymbols,
-} from '../value.mjs';
-import {
   GetSubstitution,
   TrimString,
   StringPad,
   StringIndexOf,
 } from '../runtime-semantics/all.mjs';
+import { CodePointAt } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './Bootstrap.mjs';
@@ -79,8 +79,8 @@ function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   if (position < 0 || position >= size) {
     return Value.undefined;
   }
-  const cp = X(CodePointAt(S, position));
-  return cp.CodePoint;
+  const cp = X(CodePointAt(S.stringValue(), position));
+  return new Value(cp.CodePoint);
 }
 
 // 21.1.3.4 #sec-string.prototype.concat

@@ -36,3 +36,8 @@ export * from './TemplateStrings.mjs';
 export * from './ImportEntriesForModule.mjs';
 export * from './ExportEntriesForModule.mjs';
 export * from './CharacterValue.mjs';
+export * from './UTF16SurrogatePairToCodePoint.mjs';
+export * from './CodePointAt.mjs';
+export * from './CodePointToUTF16CodeUnits.mjs';
+export * from './StringToCodePoints.mjs';
+export * from './CodePointsToString.mjs';

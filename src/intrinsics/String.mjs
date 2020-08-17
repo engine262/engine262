@@ -1,5 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  Type,
+  Value,
+} from '../value.mjs';
+import {
   Get,
   GetPrototypeFromConstructor,
   IsInteger,
@@ -10,12 +14,8 @@ import {
   ToObject,
   ToString,
   ToUint16,
-  UTF16Encoding,
 } from '../abstract-ops/all.mjs';
-import {
-  Type,
-  Value,
-} from '../value.mjs';
+import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { BootstrapConstructor } from './Bootstrap.mjs';
 
@@ -65,7 +65,7 @@ function String_fromCodePoint(codePoints) {
     if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
-    elements.push(...UTF16Encoding(nextCP.numberValue()));
+    elements.push(...CodePointToUTF16CodeUnits(nextCP.numberValue()));
     nextIndex += 1;
   }
   const result = elements.reduce((previous, current) => previous + String.fromCharCode(current), '');

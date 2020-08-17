@@ -23,7 +23,6 @@ export * from './proxy-objects.mjs';
 export * from './realms.mjs';
 export * from './reference-operations.mjs';
 export * from './regexp-objects.mjs';
-export * from './source-code.mjs';
 export * from './spec-types.mjs';
 export * from './string-objects.mjs';
 export * from './symbol-objects.mjs';

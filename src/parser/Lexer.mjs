@@ -2,6 +2,7 @@ import isUnicodeIDStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex
 import isUnicodeIDContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
 import isSpaceSeparatorRegex from 'unicode-13.0.0/General_Category/Space_Separator/regex';
 import { surroundingAgent } from '../engine.mjs';
+import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
 import {
   RawTokens,
   Token,
@@ -21,6 +22,8 @@ export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
 const isRegularExpressionFlagPart = (c) => c && (isUnicodeIDContinue(c) || c === '$');
 export const isIdentifierStart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
 export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
+export const isLeadingSurrogate = (cp) => cp >= 0xD800 && cp <= 0xDBFF;
+export const isTrailingSurrogate = (cp) => cp >= 0xDC00 && cp <= 0xDFFF;
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -542,8 +545,7 @@ export class Lexer {
 
     this.position -= 1;
 
-    const code = c.charCodeAt(0);
-    if ((code >= 0xD800 && code <= 0xDBFF) || isIdentifierStart(c)) {
+    if (isLeadingSurrogate(c.charCodeAt(0)) || isIdentifierStart(c)) {
       return this.scanIdentifierOrKeyword();
     }
 
@@ -791,12 +793,12 @@ export class Lexer {
           this.unexpected(this.position);
         }
         buffer += raw;
-      } else if (code >= 0xD800 && code <= 0xDBFF) {
+      } else if (isLeadingSurrogate(code)) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
-        if (lowSurrogate < 0xDC00 || lowSurrogate > 0xDFFF) {
+        if (!isTrailingSurrogate(lowSurrogate)) {
           this.unexpected(this.position);
         }
-        const codePoint = (code - 0xD800) * 0x400 + (lowSurrogate - 0xDC00) + 0x10000;
+        const codePoint = UTF16SurrogatePairToCodePoint(code, lowSurrogate);
         const raw = String.fromCodePoint(codePoint);
         if (!check(raw)) {
           this.unexpected(this.position);

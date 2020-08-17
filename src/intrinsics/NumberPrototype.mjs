@@ -1,6 +1,7 @@
 import {
   Type,
   Value,
+  NumberValue,
 } from '../value.mjs';
 import {
   Assert,
@@ -23,167 +24,53 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
 }
 
-// 20.1.3.2 #sec-number.prototype.toexponential
+// #sec-number.prototype.toexponential
 function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
-  let x = Q(thisNumberValue(thisValue)).numberValue();
+  const x = Q(thisNumberValue(thisValue));
   const f = Q(ToInteger(fractionDigits)).numberValue();
   Assert(fractionDigits !== Value.undefined || f === 0);
-  if (Number.isNaN(x)) {
-    return new Value('NaN');
-  }
-  let s = '';
-  if (x < 0) {
-    s = '-';
-    x = -x;
-  }
-  if (x === Infinity) {
-    return new Value(`${s}Infinity`);
+  if (!x.isFinite()) {
+    return NumberValue.toString(x);
   }
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  let m;
-  let e;
-  if (x === 0) {
-    m = '0'.repeat(f + 1);
-    e = 0;
-  } else {
-    let n;
-    if (fractionDigits !== Value.undefined) {
-      // TODO: compute e and n.
-    } else {
-      // TODO: compute e, n and f.
-    }
-    m = String(n);
-    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toExponential is not fully implemented');
-  }
-  if (f !== 0) {
-    const a = m[0];
-    const b = m.slice(1);
-    m = `${a}.${b}`;
-  }
-  let c;
-  let d;
-  if (e === 0) {
-    c = '+';
-    d = '0';
-  } else {
-    if (e > 0) {
-      c = '+';
-    } else {
-      c = '-';
-      e = -e;
-    }
-    d = String(e);
-  }
-  m = `${m}e${c}${d}`;
-  return new Value(`${s}${m}`);
+  return new Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
 // 20.1.3.3 #sec-number.prototype.tofixed
 function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
-  let x = Q(thisNumberValue(thisValue)).numberValue();
+  const x = Q(thisNumberValue(thisValue));
   const f = Q(ToInteger(fractionDigits)).numberValue();
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
   }
-  if (Number.isNaN(x)) {
-    return new Value('NaN');
+  if (!x.isFinite()) {
+    return X(NumberValue.toString(x));
   }
-  let s = '';
-  if (x < 0) {
-    s = '-';
-    x = -x;
-  }
-  let m;
-  if (x >= 10 ** 21) {
-    m = X(ToString(new Value(x))).stringValue();
-  } else {
-    // TODO: compute n.
-    // if (n === 0) {
-    //   m = '0';
-    // } else {
-    //   m = String(n);
-    // }
-    // if (f !== 0) {
-    //   let k = m.length;
-    //   if (k <= f) {
-    //     const z = '0'.repeat(f + 1 - k);
-    //     m = `${z}${m}`;
-    //     k = f + 1;
-    //   }
-    //   const a = m.slice(0, k - f);
-    //   const b = m.slice(k - f);
-    //   m = `${a}.${b}`;
-    // }
-    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toFixed is not fully implemented');
-  }
-  return new Value(`${s}${m}`);
+  return new Value(x.numberValue().toFixed(f));
 }
 
 // 20.1.3.4 #sec-number.prototype.tolocalestring
-function NumberProto_toLocaleString() {
-  return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toLocaleString is not implemented');
+function NumberProto_toLocaleString(args, { thisValue }) {
+  return NumberProto_toString([], { thisValue });
 }
 
 // 20.1.3.5 #sec-number.prototype.toprecision
 function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
-  let x = Q(thisNumberValue(thisValue)).numberValue();
+  const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
-    return X(ToString(new Value(x)));
+    return X(ToString(x));
   }
   const p = Q(ToInteger(precision)).numberValue();
-  if (Number.isNaN(x)) {
-    return new Value('NaN');
-  }
-  let s = '';
-  if (x < 0) {
-    s = '-';
-    x = -x;
-  }
-  if (x === Infinity) {
-    return new Value(`${s}Infinity`);
+  if (!x.isFinite()) {
+    return X(NumberValue.toString(x));
   }
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  let m;
-  let e;
-  if (x === 0) {
-    m = '0'.repeat(p);
-    e = 0;
-  } else {
-    // TODO: compute e and n.
-    // m = String(n);
-    // if (e < -6 || e >= p) {
-    //   Assert(e !== 0);
-    //   if (p !== 1) {
-    //     const a = m[0];
-    //     const b = m.slice(1);
-    //     m = `${a}.${b}`;
-    //   }
-    //   let c;
-    //   if (e > 0) {
-    //     c = '+';
-    //   } else {
-    //     c = '-';
-    //     e = -e;
-    //   }
-    //   const d = String(e);
-    //   return new Value(`${s}${m}e${c}${d}`);
-    // }
-    return surroundingAgent.Throw('Error', 'Raw', 'Number.prototype.toPrecision is not fully implemented');
-  }
-  if (e === p - 1) {
-    return new Value(`${s}${m}`);
-  }
-  if (e >= 0) {
-    m = `${m.slice(0, e + 1)}.${m.slice(e + 1)}`;
-  } else {
-    m = `0.${'0'.repeat(-(e + 1))}${m}`;
-  }
-  return new Value(`${s}${m}`);
+  return new Value(x.numberValue().toPrecision(p));
 }
 
 // 20.1.3.6 #sec-number.prototype.tostring
@@ -220,7 +107,7 @@ export function BootstrapNumberPrototype(realmRec) {
     ['toFixed', NumberProto_toFixed, 1],
     ['toLocaleString', NumberProto_toLocaleString, 0],
     ['toPrecision', NumberProto_toPrecision, 1],
-    ['toString', NumberProto_toString, 0],
+    ['toString', NumberProto_toString, 1],
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 

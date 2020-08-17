@@ -23,8 +23,14 @@ import {
   ToInteger,
   ToNumber,
   ToString,
-  UTF16Encoding,
 } from '../abstract-ops/all.mjs';
+import {
+  isLeadingSurrogate,
+  isTrailingSurrogate,
+} from '../parser/Lexer.mjs';
+import {
+  CodePointToUTF16CodeUnits,
+} from '../static-semantics/all.mjs';
 import {
   NormalCompletion,
   Q, X,
@@ -369,11 +375,11 @@ function QuoteJSONString(value) { // eslint-disable-line no-shadow
   for (const C of cpList) {
     if (codeUnitTable.has(C)) {
       product = `${product}${codeUnitTable.get(C)}`;
-    } else if (C < 0x0020 || (C >= 0xD800 && C <= 0xDBFF) || (C >= 0xDC00 && C <= 0xDFFF)) {
+    } else if (C < 0x0020 || isLeadingSurrogate(C) || isTrailingSurrogate(C)) {
       const unit = String.fromCodePoint(C);
       product = `${product}${UnicodeEscape(unit)}`;
     } else {
-      product = `${product}${String.fromCodePoint(...UTF16Encoding(C))}`;
+      product = `${product}${String.fromCodePoint(...CodePointToUTF16CodeUnits(C))}`;
     }
   }
   product = `${product}\u0022`;
