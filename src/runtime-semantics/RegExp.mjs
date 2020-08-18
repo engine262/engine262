@@ -5,7 +5,7 @@ import { Type, Value } from '../value.mjs';
 import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
-import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parse.mjs';
+import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   UnicodeMatchProperty,

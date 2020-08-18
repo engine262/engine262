@@ -308,7 +308,7 @@ export class Lexer {
     // set token location info after skipping space
     this.positionForNextToken = this.position;
     this.lineForNextToken = this.line;
-    this.columnForNextToken = this.position - this.columnOffset;
+    this.columnForNextToken = this.position - this.columnOffset + 1;
 
     if (this.position >= this.source.length) {
       return Token.EOS;
@@ -785,23 +785,23 @@ export class Lexer {
         }
         this.position += 1;
         if (this.source[this.position] !== 'u') {
-          this.unexpected(this.position);
+          this.raise('InvalidUnicodeEscape', this.position);
         }
         this.position += 1;
         const raw = String.fromCodePoint(this.scanCodePoint());
         if (!check(raw)) {
-          this.unexpected(this.position);
+          this.raise('InvalidUnicodeEscape', this.position);
         }
         buffer += raw;
       } else if (isLeadingSurrogate(code)) {
         const lowSurrogate = this.source.charCodeAt(this.position + 1);
         if (!isTrailingSurrogate(lowSurrogate)) {
-          this.unexpected(this.position);
+          this.raise('InvalidUnicodeEscape', this.position);
         }
         const codePoint = UTF16SurrogatePairToCodePoint(code, lowSurrogate);
         const raw = String.fromCodePoint(codePoint);
         if (!check(raw)) {
-          this.unexpected(this.position);
+          this.raise('InvalidUnicodeEscape', this.position);
         }
         this.position += 2;
         buffer += raw;

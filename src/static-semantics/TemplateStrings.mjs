@@ -1,5 +1,5 @@
 import { Value } from '../value.mjs';
-import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parse.mjs';
+import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mjs';
 
 export function TV(s) {
   let buffer = '';

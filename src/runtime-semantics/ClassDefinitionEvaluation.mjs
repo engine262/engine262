@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Parser } from '../parse.mjs';
 import { Value, Type } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
@@ -17,6 +16,7 @@ import {
   ConstructorMethod,
   NonConstructorMethodDefinitions,
 } from '../static-semantics/all.mjs';
+import { Parser } from '../parser/Parser.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import {
   Q, X,
@@ -29,7 +29,7 @@ import {
 } from './all.mjs';
 
 function parseMethodDefinition(sourceText) {
-  const parser = new Parser(sourceText);
+  const parser = new Parser({ source: sourceText });
   return parser.scope.with({ superCall: true }, () => parser.parseMethodDefinition());
 }
 

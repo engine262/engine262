@@ -1,5 +1,4 @@
 import { surroundingAgent } from '../engine.mjs';
-import { isHexDigit } from '../parse.mjs';
 import { Value } from '../value.mjs';
 import {
   Assert,
@@ -9,6 +8,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { CodePointAt } from '../static-semantics/all.mjs';
+import { isHexDigit } from '../parser/Lexer.mjs';
 import { Q, X } from '../completion.mjs';
 
 function utf8Encode(utf) {

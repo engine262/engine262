@@ -1,8 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
-import { ParsePattern, isLineTerminator } from '../parse.mjs';
 import { Descriptor, Value, Type } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
+import { ParsePattern } from '../parse.mjs';
+import { isLineTerminator } from '../parser/Lexer.mjs';
 import {
   ArrayCreate,
   Assert,

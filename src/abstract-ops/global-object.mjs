@@ -75,7 +75,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   //   d. If inFunction is false, and body Contains NewTarget, throw a SyntaxError exception.
   //   e. If inMethod is false, and body Contains SuperProperty, throw a SyntaxError exception.
   //   f. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
-  const script = wrappedParse(x.stringValue(), (parser) => parser.scope.with({
+  const script = wrappedParse({ source: x.stringValue() }, (parser) => parser.scope.with({
     strict: strictCaller,
     newTarget: inFunction,
     superProperty: inMethod,

@@ -40,88 +40,88 @@ const { total, pass, fail } = require('./base');
     const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript(`
-      function x() { throw new Error('owo'); }
-      function y() { x(); }
-      try {
-        y();
-      } catch (e) {
-        e.stack;
-      }
-    `);
-    assert.strictEqual(result.Value.stringValue(), `
+    const result = realm.evaluateScript(`\
+function x() { throw new Error('owo'); }
+function y() { x(); }
+try {
+  y();
+} catch (e) {
+  e.stack;
+}
+`);
+    assert.strictEqual(result.Value.stringValue(), `\
 Error: owo
-    at x (<anonymous>:2:37)
-    at y (<anonymous>:3:21)
-    at <anonymous>:5:8`.trim());
+    at x (<anonymous>:1:32)
+    at y (<anonymous>:2:16)
+    at <anonymous>:4:3`);
   },
   () => {
     const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript(`
-      async function x() { await 1; throw new Error('owo'); }
-      async function y() { await x(); }
-      y().catch((e) => e.stack);
-    `);
-    assert.strictEqual(result.Value.PromiseResult.stringValue(), `
+    const result = realm.evaluateScript(`\
+async function x() { await 1; throw new Error('owo'); }
+async function y() { await x(); }
+y().catch((e) => e.stack);
+`);
+    assert.strictEqual(result.Value.PromiseResult.stringValue(), `\
 Error: owo
-    at async x (<anonymous>:2:52)
-    at async y (<anonymous>:3:33)`.trim());
+    at async x (<anonymous>:1:47)
+    at async y (<anonymous>:2:28)`);
   },
   () => {
     const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript(`
-      function x() { Reflect.get(); }
-      try {
-        x();
-      } catch (e) {
-        e.stack;
-      }
-    `);
-    assert.strictEqual(result.Value.stringValue(), `
+    const result = realm.evaluateScript(`\
+function x() { Reflect.get(); }
+try {
+  x();
+} catch (e) {
+  e.stack;
+}
+`);
+    assert.strictEqual(result.Value.stringValue(), `\
 TypeError: undefined is not an object
     at get (native)
-    at x (<anonymous>:2:21)
-    at <anonymous>:4:8`.trim());
+    at x (<anonymous>:1:16)
+    at <anonymous>:3:3`);
   },
   () => {
     const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript(`
-      function Y() { throw new Error('owo'); }
-      function x() { new Y(); }
-      try {
-        x();
-      } catch (e) {
-        e.stack;
-      }
-    `);
-    assert.strictEqual(result.Value.stringValue(), `
+    const result = realm.evaluateScript(`\
+function Y() { throw new Error('owo'); }
+function x() { new Y(); }
+try {
+  x();
+} catch (e) {
+  e.stack;
+}
+`);
+    assert.strictEqual(result.Value.stringValue(), `\
 Error: owo
-    at new Y (<anonymous>:2:37)
-    at x (<anonymous>:3:25)
-    at <anonymous>:5:8`.trim());
+    at new Y (<anonymous>:1:32)
+    at x (<anonymous>:2:20)
+    at <anonymous>:4:3`);
   },
   () => {
     const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript(`
-      let e;
-      new Promise(() => {
-        e = new Error('owo');
-      });
-      e.stack;
-    `);
-    assert.strictEqual(result.Value.stringValue(), `
+    const result = realm.evaluateScript(`\
+let e;
+new Promise(() => {
+  e = new Error('owo');
+});
+e.stack;
+`);
+    assert.strictEqual(result.Value.stringValue(), `\
 Error: owo
-    at <anonymous> (<anonymous>:4:22)
+    at <anonymous> (<anonymous>:3:17)
     at new Promise (native)
-    at <anonymous>:3:18`.trim());
+    at <anonymous>:2:13`);
   },
   () => {
     const agent = new Agent({

@@ -52,17 +52,17 @@ export class IdentifierParser extends BaseParser {
         this.unexpected(token);
     }
     if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
     if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
     if (this.isStrictMode()) {
       if (isReservedWordStrict(node.name)) {
-        this.raiseEarly('UnexpectedToken', token);
+        this.raiseEarly('UnexpectedReservedWordStrict', token);
       }
       if (node.name === 'eval' || node.name === 'arguments') {
-        this.raiseEarly('UnexpectedToken', token);
+        this.raiseEarly('UnexpectedEvalOrArguments', token);
       }
     }
     if (node.name !== 'yield'
@@ -110,13 +110,13 @@ export class IdentifierParser extends BaseParser {
         this.unexpected(token);
     }
     if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
     if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
     if (this.isStrictMode() && isReservedWordStrict(node.name)) {
-      this.raiseEarly('UnexpectedToken', token);
+      this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
     if (node.name !== 'yield'
         && node.name !== 'await'

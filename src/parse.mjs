@@ -1,11 +1,4 @@
-import {
-  Parser,
-  Token,
-  isLineTerminator,
-  isWhitespace,
-  isHexDigit,
-  isDecimalDigit,
-} from './parser/Parser.mjs';
+import { Parser } from './parser/Parser.mjs';
 import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
@@ -35,8 +28,8 @@ function handleError(e) {
   }
 }
 
-export function wrappedParse(sourceText, f) {
-  const p = new Parser(sourceText);
+export function wrappedParse(init, f) {
+  const p = new Parser(init);
 
   try {
     const r = f(p);
@@ -49,15 +42,6 @@ export function wrappedParse(sourceText, f) {
   }
 }
 
-export {
-  Parser,
-  Token,
-  isLineTerminator,
-  isWhitespace,
-  isHexDigit,
-  isDecimalDigit,
-};
-
 export function ParseScript(sourceText, realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
@@ -67,7 +51,7 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse(sourceText, (p) => p.parseScript());
+  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
@@ -94,7 +78,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse(sourceText, (p) => p.parseModule());
+  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;

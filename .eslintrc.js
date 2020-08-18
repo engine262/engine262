@@ -15,11 +15,13 @@ Module._findPath = (request, paths, isMain) => {
 };
 
 module.exports = {
+  root: true,
   extends: 'airbnb-base',
   plugins: ['engine262'],
-  parser: 'babel-eslint',
+  parser: '@babel/eslint-parser',
   parserOptions: {
     ecmaVersion: 2020,
+    requireConfigFile: false,
   },
   overrides: [
     {

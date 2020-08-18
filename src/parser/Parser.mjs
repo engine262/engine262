@@ -5,18 +5,11 @@ import { Token } from './tokens.mjs';
 import { Scope } from './Scope.mjs';
 import { isLineTerminator } from './Lexer.mjs';
 
-export { Token };
-export {
-  isLineTerminator,
-  isWhitespace,
-  isDecimalDigit,
-  isHexDigit,
-} from './Lexer.mjs';
-
 export class Parser extends LanguageParser {
-  constructor(source) {
-    super(source);
+  constructor({ source, specifier }) {
+    super();
     this.source = source;
+    this.specifier = specifier;
     this.earlyErrors = new Set();
     this.state = {
       hasTopLevelAwait: false,
@@ -64,42 +57,29 @@ export class Parser extends LanguageParser {
   }
 
   createSyntaxError(context = this.peek(), template, templateArgs) {
-    if (template === 'UnexpectedToken') {
-      switch (context.type) {
-        case Token.AWAIT:
-          template = 'AwaitNotInAsyncFunction';
-          break;
-        case Token.YIELD:
-          template = 'YieldNotInGenerator';
-          break;
-        case Token.IDENTIFIER:
-          if (context.value === 'await') {
-            template = 'AwaitNotInAsyncFunction';
-          } else if (context.value === 'yield') {
-            template = 'YieldNotInGenerator';
-          }
-          break;
-        case Token.EOS:
-          template = 'UnexpectedEOS';
-          break;
-        default:
-          break;
-      }
+    if (template === 'UnexpectedToken' && context.type === Token.EOS) {
+      template = 'UnexpectedEOS';
     }
 
     let startIndex;
     let endIndex;
+    let line;
+    let column;
     if (typeof context === 'number') {
+      line = this.line;
       if (context === this.source.length) {
         while (isLineTerminator(this.source[context - 1])) {
+          line -= 1;
           context -= 1;
         }
       }
       startIndex = context;
       endIndex = context + 1;
     } else if (context.type === Token.EOS) {
+      line = this.line;
       startIndex = context.startIndex;
       while (isLineTerminator(this.source[startIndex - 1])) {
+        line -= 1;
         startIndex -= 1;
       }
       endIndex = startIndex + 1;
@@ -107,8 +87,14 @@ export class Parser extends LanguageParser {
       if (context.location) {
         context = context.location;
       }
-      startIndex = context.startIndex;
-      endIndex = context.endIndex;
+      ({
+        startIndex,
+        endIndex,
+        start: {
+          line,
+          column,
+        } = context,
+      } = context);
     }
 
     /*
@@ -138,8 +124,13 @@ export class Parser extends LanguageParser {
       lineEnd += 1;
     }
 
+    if (column === undefined) {
+      column = startIndex - lineStart + 1;
+    }
+
     const e = new SyntaxError(messages[template](...templateArgs));
-    e.decoration = `${this.source.slice(lineStart, lineEnd)}
+    e.decoration = `\
+${this.specifier ? `${this.specifier}:${line}:${column}\n` : ''}${this.source.slice(lineStart, lineEnd)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
     return e;
   }

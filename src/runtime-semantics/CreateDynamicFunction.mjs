@@ -13,7 +13,8 @@ import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
 } from '../engine.mjs';
-import { Token, wrappedParse } from '../parse.mjs';
+import { wrappedParse } from '../parse.mjs';
+import { Token } from '../parser/tokens.mjs';
 import { Descriptor, Type, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
@@ -126,7 +127,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   let parameters;
   let body;
   {
-    const f = wrappedParse(sourceString, (p) => {
+    const f = wrappedParse({ source: sourceString }, (p) => {
       const r = p.parseExpression();
       p.expect(Token.EOS);
       return r;

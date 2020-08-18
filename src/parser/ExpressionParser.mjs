@@ -390,7 +390,7 @@ export class ExpressionParser extends FunctionParser {
           if (this.isStrictMode()
               && node.operator === 'delete'
               && node.UnaryExpression.type === 'IdentifierReference') {
-            this.raiseEarly('UnexpectedToken', node.UnaryExpression);
+            this.raiseEarly('DeleteIdentifier', node.UnaryExpression);
           }
           if (this.test(Token.EXP)) {
             this.unexpected();
@@ -459,13 +459,13 @@ export class ExpressionParser extends FunctionParser {
         this.next();
         if (this.test(Token.LPAREN)) {
           if (!this.scope.hasSuperCall()) {
-            this.raiseEarly('UnexpectedToken');
+            this.raiseEarly('InvalidSuperCall');
           }
           node.Arguments = this.parseArguments().Arguments;
           result = this.finishNode(node, 'SuperCall');
         } else {
           if (!this.scope.hasSuperProperty()) {
-            this.raiseEarly('UnexpectedToken');
+            this.raiseEarly('InvalidSuperProperty');
           }
           if (this.eat(Token.LBRACK)) {
             node.Expression = this.parseExpression();
@@ -568,7 +568,7 @@ export class ExpressionParser extends FunctionParser {
       base.Expression = this.parseExpression();
       this.expect(Token.RBRACK);
     } else if (this.test(Token.TEMPLATE)) {
-      this.unexpected();
+      this.raise('TemplateInOptionalChain');
     } else {
       base.IdentifierName = this.parseIdentifierName();
     }
@@ -586,7 +586,7 @@ export class ExpressionParser extends FunctionParser {
         this.expect(Token.RBRACK);
         base = this.finishNode(node, 'OptionalChain');
       } else if (this.test(Token.TEMPLATE)) {
-        this.unexpected();
+        this.raise('TemplateInOptionalChain');
       } else if (this.eat(Token.PERIOD)) {
         node.OptionalChain = base;
         node.IdentifierName = this.parseIdentifierName();
@@ -819,7 +819,7 @@ export class ExpressionParser extends FunctionParser {
           this.scope.declare(node.BindingIdentifier, 'lexical');
         }
       } else if (isExpression === false && !this.scope.isDefault()) {
-        this.unexpected();
+        this.raise('ClassMissingBindingIdentifier');
       } else {
         node.BindingIdentifier = null;
       }
@@ -914,7 +914,7 @@ export class ExpressionParser extends FunctionParser {
           if (!tagged) {
             node.TemplateSpanList.forEach((s) => {
               if (TV(s) === undefined) {
-                this.unexpected(node);
+                this.raise('InvalidTemplateEscape');
               }
             });
           }
@@ -1174,10 +1174,10 @@ export class ExpressionParser extends FunctionParser {
           && !isKeyword(firstName.name)) {
         firstName.type = 'IdentifierReference';
         if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
-          this.raiseEarly('UnexpectedToken', firstName);
+          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
         }
         if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
-          this.raiseEarly('UnexpectedToken', firstName);
+          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
         }
         if (firstName.name !== 'yield'
             && firstName.name !== 'await'
@@ -1185,7 +1185,7 @@ export class ExpressionParser extends FunctionParser {
           this.raiseEarly('UnexpectedToken', firstName);
         }
         if (this.isStrictMode() && isReservedWordStrict(firstName.name)) {
-          this.raiseEarly('UnexpectedToken', firstName);
+          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
         }
         return firstName;
       }
