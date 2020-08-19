@@ -39,7 +39,9 @@ export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
   // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
-  callback = finalizationRegistry.CleanupCallback;
+  if (callback === undefined || callback === Value.undefined) {
+    callback = finalizationRegistry.CleanupCallback;
+  }
   // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
   for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
     // a. Choose any such _cell_.

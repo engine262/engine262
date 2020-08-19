@@ -106,9 +106,6 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         if (v.nativeFunction && v.nativeFunction.section) {
           return new Value(v.nativeFunction.section);
         }
-        if (v.constructor.section) {
-          return new Value(v.constructor.section);
-        }
         return Value.undefined;
       }],
     ].forEach(([name, value]) => {

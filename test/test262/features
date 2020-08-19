@@ -19,8 +19,6 @@
 -class-static-fields-private
 -class-static-methods-private
 
--cleanupSome
-
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = TopLevelAwait
 
@@ -32,3 +30,6 @@ numeric-separator-literal = NumericSeparators
 
 # https://github.com/tc39/proposal-regexp-match-indices
 regexp-match-indices = RegExpMatchIndices
+
+# https://github.com/tc39/proposal-cleanup-some
+cleanupSome = CleanupSome

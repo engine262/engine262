@@ -37,6 +37,10 @@ export const FEATURES = Object.freeze([
     name: 'RegExpMatchIndices',
     url: 'https://github.com/tc39/proposal-regexp-match-indices',
   },
+  {
+    name: 'CleanupSome',
+    url: 'https://github.com/tc39/proposal-cleanup-some',
+  },
 ].map(Object.freeze));
 
 let agentSignifier = 0;

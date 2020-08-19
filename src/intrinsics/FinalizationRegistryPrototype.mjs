@@ -1,11 +1,29 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, Type } from '../value.mjs';
 import {
+  CleanupFinalizationRegistry,
+  IsCallable,
   RequireInternalSlot,
   SameValue,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
+
+// #sec-finalization-registry.prototype.cleanupSome
+function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {
+  // 1. Let finalizationRegistry be the this value.
+  const finalizationRegistry = thisValue;
+  // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
+  Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
+  // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
+  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+  }
+  // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
+  Q(CleanupFinalizationRegistry(finalizationRegistry, callback));
+  // 5. Return *undefined*.
+  return Value.undefined;
+}
 
 // #sec-finalization-registry.prototype.register
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], { thisValue }) {
@@ -72,6 +90,9 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 
 export function BootstrapFinalizationRegistryPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
+    surroundingAgent.feature('CleanupSome')
+      ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]
+      : undefined,
     ['register', FinalizationRegistryProto_register, 2],
     ['unregister', FinalizationRegistryProto_unregister, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
