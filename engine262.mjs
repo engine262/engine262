@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 774c83504b9b350de8c6514f4f824d4d61b77071
+ * engine262 0.0.1 aed8c6e3875ea7fc8b5d907e29e6eacfe33a09d4
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -24836,6 +24836,9 @@ const FEATURES = Object.freeze([{
 }, {
   name: 'RegExpMatchIndices',
   url: 'https://github.com/tc39/proposal-regexp-match-indices'
+}, {
+  name: 'CleanupSome',
+  url: 'https://github.com/tc39/proposal-cleanup-some'
 }].map(Object.freeze));
 let agentSignifier = 0; // #sec-agents
 
@@ -57553,7 +57556,7 @@ function BootstrapWeakRef(realmRec) {
   realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }
 
-function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
+function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   thisValue
 }) {
   // 1. Let finalizationRegistry be the this value.
@@ -57571,6 +57574,43 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
 
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
+  }
+
+  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
+  } // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
+
+
+  let _temp2 = CleanupFinalizationRegistry(finalizationRegistry, callback);
+
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+
+  return Value.undefined;
+} // #sec-finalization-registry.prototype.register
+
+
+FinalizationRegistryProto_cleanupSome.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome';
+
+function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let finalizationRegistry be the this value.
+  const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
+
+  let _temp3 = RequireInternalSlot(finalizationRegistry, 'Cells');
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
   }
 
   if (Type(target) !== 'Object') {
@@ -57614,14 +57654,14 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
 
-  let _temp2 = RequireInternalSlot(finalizationRegistry, 'Cells');
+  let _temp4 = RequireInternalSlot(finalizationRegistry, 'Cells');
 
-  if (_temp2 instanceof AbruptCompletion) {
-    return _temp2;
+  if (_temp4 instanceof AbruptCompletion) {
+    return _temp4;
   }
 
-  if (_temp2 instanceof Completion) {
-    _temp2 = _temp2.Value;
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
   }
 
   if (Type(unregisterToken) !== 'Object') {
@@ -57649,7 +57689,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 
 FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
 function BootstrapFinalizationRegistryPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
+  const proto = BootstrapPrototype(realmRec, [surroundingAgent.feature('CleanupSome') ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0] : undefined, ['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
   realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
 }
 
@@ -60923,7 +60963,10 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry, "'Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry"); // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
 
-  callback = finalizationRegistry.CleanupCallback; // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
+  if (callback === undefined || callback === Value.undefined) {
+    callback = finalizationRegistry.CleanupCallback;
+  } // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
+
 
   for (let i = 0; i < finalizationRegistry.Cells.length; i += 1) {
     // a. Choose any such _cell_.
