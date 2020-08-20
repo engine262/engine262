@@ -23,16 +23,7 @@ if (isMainThread) {
   });
   worker.on('message', (data) => {
     const node = JSON.parse(data);
-    const frame = codeFrameColumns(source, {
-      start: {
-        line: node.loc.start.line,
-        column: node.loc.start.column + 1,
-      },
-      end: {
-        line: node.loc.end.line,
-        column: node.loc.end.column + 1,
-      },
-    }, {
+    const frame = codeFrameColumns(source, node.location, {
       highlightCode: true,
       message: node.type,
     });
@@ -44,13 +35,14 @@ if (isMainThread) {
 } else {
   const {
     Agent,
-    Realm,
+    setSurroundingAgent,
+    ManagedRealm,
     AbruptCompletion,
     inspect,
   } = require('..');
 
   const shared32 = new Int32Array(workerData.shared);
-  const agent = new Agent({
+  setSurroundingAgent(new Agent({
     onNodeEvaluation(node) {
       if (node.type === 'ExpressionStatement') {
         return;
@@ -59,15 +51,16 @@ if (isMainThread) {
       Atomics.wait(shared32, 0, 0);
       Atomics.store(shared32, 0, 0);
     },
+  }));
+
+  const realm = new ManagedRealm();
+
+  realm.scope(() => {
+    const completion = realm.evaluateScript(workerData.source);
+    if (completion instanceof AbruptCompletion) {
+      process.stdout.write(`${inspect(completion, realm)}\n`);
+    }
   });
-  agent.enter();
-
-  const realm = new Realm();
-
-  const completion = realm.evaluateScript(workerData.source);
-  if (completion instanceof AbruptCompletion) {
-    process.stdout.write(`${inspect(completion, realm)}\n`);
-  }
 
   process.exit(0);
 }

@@ -264,8 +264,8 @@ export class ExpressionParser extends FunctionParser {
     if (p >= precedence) {
       do {
         while (TokenPrecedence[this.peek().type] === p) {
-          const node = this.startNode();
           const left = x;
+          const node = this.startNode(left);
           if (this.peek().type === Token.IN && !this.scope.hasIn()) {
             return left;
           }
@@ -504,7 +504,7 @@ export class ExpressionParser extends FunctionParser {
 
     const check = allowCalls ? isPropertyOrCall : isMember;
     while (check(this.peek().type)) {
-      const node = this.startNode();
+      const node = this.startNode(result);
       switch (this.peek().type) {
         case Token.LBRACK: {
           this.next();

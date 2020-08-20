@@ -26,14 +26,14 @@ export class Parser extends LanguageParser {
     return surroundingAgent.feature(name);
   }
 
-  startNode() {
+  startNode(inheritStart = undefined) {
     this.peek();
     const node = {
       type: undefined,
       location: {
-        startIndex: this.peekToken.startIndex,
+        startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
         endIndex: -1,
-        start: {
+        start: inheritStart ? { ...inheritStart.location.start } : {
           line: this.peekToken.line,
           column: this.peekToken.column,
         },
