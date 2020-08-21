@@ -42,7 +42,7 @@ export class LanguageParser extends StatementParser {
       strict: true,
       in: true,
       importMeta: true,
-      await: this.feature('TopLevelAwait'),
+      await: this.feature('top-level-await'),
       lexical: true,
       variable: true,
     }, () => {

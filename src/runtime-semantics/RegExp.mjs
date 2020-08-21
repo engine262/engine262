@@ -752,7 +752,7 @@ export function Evaluate_Pattern(Pattern, flags) {
             if (direction === +1) {
               // 1. Assert: xe ≤ ye.
               Assert(xe <= ye);
-              if (surroundingAgent.feature('RegExpMatchIndices')) {
+              if (surroundingAgent.feature('regexp-match-indices')) {
                 // 2. Let r be the Range (xe, ye).
                 s = new Range(xe, ye);
               } else {
@@ -764,7 +764,7 @@ export function Evaluate_Pattern(Pattern, flags) {
               Assert(direction === -1);
               // 2. Assert: ye ≤ xe.
               Assert(ye <= xe);
-              if (surroundingAgent.feature('RegExpMatchIndices')) {
+              if (surroundingAgent.feature('regexp-match-indices')) {
                 // 3. Let r be the Range (ye, xe).
                 s = new Range(ye, xe);
               } else {
@@ -939,7 +939,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // f. Let e be x's endIndex.
       const e = x.endIndex;
       let len;
-      if (surroundingAgent.feature('RegExpMatchIndices')) {
+      if (surroundingAgent.feature('regexp-match-indices')) {
         // g. Let rs be r's startIndex.
         const rs = s.startIndex;
         // h. Let re be r's endIndex.
@@ -960,7 +960,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       const g = Math.min(e, f);
       // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
       for (let i = 0; i < len; i += 1) {
-        const part = surroundingAgent.feature('RegExpMatchIndices')
+        const part = surroundingAgent.feature('regexp-match-indices')
           ? Input[s.startIndex + i]
           : s[i];
         if (Canonicalize(part) !== Canonicalize(Input[g + i])) {

@@ -22,23 +22,28 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'TopLevelAwait',
+    name: 'Top-Level Await',
+    flag: 'top-level-await',
     url: 'https://github.com/tc39/proposal-top-level-await',
   },
   {
-    name: 'hashbang',
+    name: 'Hashbang Grammar',
+    flag: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
   },
   {
-    name: 'NumericSeparators',
+    name: 'Numeric Separators',
+    flag: 'numeric-separators',
     url: 'https://github.com/tc39/proposal-numeric-separator',
   },
   {
-    name: 'RegExpMatchIndices',
+    name: 'RegExp Match Indices',
+    flag: 'regexp-match-indices',
     url: 'https://github.com/tc39/proposal-regexp-match-indices',
   },
   {
-    name: 'CleanupSome',
+    name: 'FinalizationRegistry.prototype.cleanupSome',
+    flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
 ].map(Object.freeze));
@@ -74,11 +79,11 @@ export class Agent {
     this.jobQueue = [];
     this.hostDefinedOptions = {
       ...options,
-      features: FEATURES.reduce((acc, { name }) => {
+      features: FEATURES.reduce((acc, { flag }) => {
         if (options.features) {
-          acc[name] = options.features.includes(name);
+          acc[flag] = options.features.includes(flag);
         } else {
-          acc[name] = false;
+          acc[flag] = false;
         }
         return acc;
       }, {}),

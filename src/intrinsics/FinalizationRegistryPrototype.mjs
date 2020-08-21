@@ -90,7 +90,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 
 export function BootstrapFinalizationRegistryPrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [
-    surroundingAgent.feature('CleanupSome')
+    surroundingAgent.feature('cleanup-some')
       ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]
       : undefined,
     ['register', FinalizationRegistryProto_register, 2],

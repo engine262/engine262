@@ -23,6 +23,7 @@ export class Parser extends LanguageParser {
   }
 
   feature(name) {
+    // eslint-disable-next-line engine262/valid-feature
     return surroundingAgent.feature(name);
   }
 

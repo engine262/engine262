@@ -126,7 +126,7 @@ export function RegExpBuiltinExec(R, S) {
   const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
   // 14. If fullUnicode is true, then
   if (fullUnicode) {
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
       e = X(GetStringIndex(S, Input, e));
     } else {
@@ -164,7 +164,7 @@ export function RegExpBuiltinExec(R, S) {
   X(CreateDataPropertyOrThrow(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
   let indices;
-  if (surroundingAgent.feature('RegExpMatchIndices')) {
+  if (surroundingAgent.feature('regexp-match-indices')) {
     // 25. Let indices be a new empty List.
     indices = [];
     // 26. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
@@ -187,14 +187,14 @@ export function RegExpBuiltinExec(R, S) {
   if (R.parsedPattern.groupSpecifiers.size > 0) {
     // a. Let groups be OrdinaryObjectCreate(null).
     groups = OrdinaryObjectCreate(Value.null);
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // b. Let groupNames be a new empty List.
       groupNames = [Value.undefined];
     }
   } else { // 25. Else,
     // a. Let groups be undefined.
     groups = Value.undefined;
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // b. Let groupNames be undefined.
       groupNames = Value.undefined;
     }
@@ -206,7 +206,7 @@ export function RegExpBuiltinExec(R, S) {
     // a. Let captureI be ith element of r's captures List.
     const captureI = r.captures[i];
     let capturedValue;
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // e. If captureI is undefined, then
       if (captureI === Value.undefined) {
         // i. Let capturedValue be undefined.
@@ -256,20 +256,20 @@ export function RegExpBuiltinExec(R, S) {
       const s = new Value(capturingParens[i - 1].GroupSpecifier);
       // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
       X(CreateDataPropertyOrThrow(groups, s, capturedValue));
-      if (surroundingAgent.feature('RegExpMatchIndices')) {
+      if (surroundingAgent.feature('regexp-match-indices')) {
         // iii. Assert: groupNames is a List.
         Assert(Array.isArray(groupNames));
         // iv. Append s to groupNames.
         groupNames.push(s);
       }
-    } else if (surroundingAgent.feature('RegExpMatchIndices')) {
+    } else if (surroundingAgent.feature('regexp-match-indices')) {
       // i. If groupNames is a List, append undefined to groupNames.
       if (Array.isArray(groupNames)) {
         groupNames.push(Value.undefined);
       }
     }
   }
-  if (surroundingAgent.feature('RegExpMatchIndices')) {
+  if (surroundingAgent.feature('regexp-match-indices')) {
     // 34. Let indicesArray be MakeIndicesArray(S, indices, groupNames).
     const indicesArray = MakeIndicesArray(S, indices, groupNames);
     // 35. Perform ! CreateDataProperty(A, "indices", indicesArray).

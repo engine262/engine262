@@ -20,16 +20,16 @@
 -class-static-methods-private
 
 # https://github.com/tc39/proposal-top-level-await
-top-level-await = TopLevelAwait
+top-level-await = top-level-await
 
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang
 
 # https://github.com/tc39/proposal-numeric-separator
-numeric-separator-literal = NumericSeparators
+numeric-separator-literal = numeric-separators
 
 # https://github.com/tc39/proposal-regexp-match-indices
-regexp-match-indices = RegExpMatchIndices
+regexp-match-indices = regexp-match-indices
 
 # https://github.com/tc39/proposal-cleanup-some
-cleanupSome = CleanupSome
+cleanupSome = cleanup-some

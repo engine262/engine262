@@ -553,7 +553,7 @@ export class Lexer {
   }
 
   scanNumber() {
-    const separators = surroundingAgent.feature('NumericSeparators');
+    const separators = surroundingAgent.feature('numeric-separators');
     const start = this.position;
     let base = 10;
     let check = isDecimalDigit;

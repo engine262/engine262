@@ -78,15 +78,30 @@ if (argv.h || argv.help) {
   process.stdout.write(help);
   process.exit(0);
 } else if (argv.features === true) {
-  FEATURES.forEach(({ name, url }) => {
-    process.stdout.write(`${name} - ${url}\n`);
+  let nameLength = 0;
+  let flagLength = 0;
+  FEATURES.forEach((f) => {
+    if (f.name.length > nameLength) {
+      nameLength = f.name.length;
+    }
+    if (f.flag.length > flagLength) {
+      flagLength = f.flag.length;
+    }
+  });
+  const log = (n, f, u) => {
+    process.stdout.write(`${n.padEnd(nameLength, ' ')} ${f.padEnd(flagLength, ' ')} ${u}\n`);
+  };
+  log('name', 'flag', 'url');
+  log('----', '----', '---');
+  FEATURES.forEach((f) => {
+    log(f.name, f.flag, f.url);
   });
   process.exit(0);
 }
 
 let features;
 if (argv.features === 'all') {
-  features = FEATURES.map((f) => f.name);
+  features = FEATURES.map((f) => f.flag);
 } else if (argv.features) {
   features = argv.features.split(',');
 } else {

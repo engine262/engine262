@@ -41,6 +41,7 @@ module.exports = {
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'curly': ['error', 'all'],
     'engine262/no-use-in-def': 'error',
+    'engine262/valid-feature': 'error',
     'engine262/valid-throw': 'error',
     'import/order': ['error', { 'newlines-between': 'never' }],
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
