@@ -1056,7 +1056,7 @@ export class ExpressionParser extends FunctionParser {
 
     // ArrowParameters :
     //   CoverParenthesizedExpressionAndArrowParameterList
-    if (this.test(Token.ARROW)) {
+    if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
       node.Arguments = expressions;
       node.arrowInfo = arrowInfo;
       assignmentInfo.clear();

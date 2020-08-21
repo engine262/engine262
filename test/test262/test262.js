@@ -217,20 +217,20 @@ if (!process.send) {
       }
 
       {
-        const completion = realm.evaluateScript(`
-  var Test262Error = class Test262Error extends Error {};
+        const completion = realm.evaluateScript(`\
+var Test262Error = class Test262Error extends Error {};
 
-  function $DONE(error) {
-    if (error) {
-      if (typeof error === 'object' && error !== null && 'stack' in error) {
-        __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
-      } else {
-        __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
-      }
+function $DONE(error) {
+  if (error) {
+    if (typeof error === 'object' && error !== null && 'stack' in error) {
+      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
     } else {
-      __consolePrintHandle__('Test262:AsyncTestComplete');
+      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
     }
-  }`.trim());
+  } else {
+    __consolePrintHandle__('Test262:AsyncTestComplete');
+  }
+}`);
         if (completion instanceof AbruptCompletion) {
           return { status: 'FAIL', error: inspect(completion) };
         }
