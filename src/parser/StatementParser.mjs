@@ -582,10 +582,17 @@ export class StatementParser extends ExpressionParser {
 
       this.scope.pushAssignmentInfo('for');
       const expression = this.scope.with({ in: false }, () => this.parseExpression());
+      const validateLHS = (n) => {
+        if (n.type === 'AssignmentExpression') {
+          this.raiseEarly('UnexpectedToken', n);
+        } else {
+          this.validateAssignmentTarget(n);
+        }
+      };
       const assignmentInfo = this.scope.popAssignmentInfo();
       if (!isAwait && this.eat(Token.IN)) {
         assignmentInfo.clear();
-        this.validateAssignmentTarget(expression);
+        validateLHS(expression);
         node.LeftHandSideExpression = expression;
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
@@ -594,7 +601,7 @@ export class StatementParser extends ExpressionParser {
       }
       if (this.eat('of')) {
         assignmentInfo.clear();
-        this.validateAssignmentTarget(expression);
+        validateLHS(expression);
         node.LeftHandSideExpression = expression;
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);

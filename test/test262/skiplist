@@ -9,6 +9,9 @@
 # Spec bug
 built-ins/Date/prototype/setMonth/this-value-invalid-date.js
 
+# Spec bug
+built-ins/Function/prototype/bind/instance-length-tointeger.js
+
 # https://github.com/tc39/test262/issues/427
 language/expressions/prefix-increment/S11.4.4_A5_T4.js
 language/expressions/prefix-increment/S11.4.4_A5_T5.js
