@@ -1,6 +1,5 @@
 import {
   TopLevelLexicallyDeclaredNames,
-  BoundNames,
 } from './all.mjs';
 
 export function LexicallyDeclaredNames(node) {
