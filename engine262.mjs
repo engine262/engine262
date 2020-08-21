@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 dcd485dc96c882b0902184a1c0b1abae68c3146e
+ * engine262 0.0.1 a41347d0b6de4856d40a296153450e7f8cf0fb56
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2291,7 +2291,7 @@ class Lexer {
   }
 
   scanNumber() {
-    const separators = surroundingAgent.feature('NumericSeparators');
+    const separators = surroundingAgent.feature('numeric-separators');
     const start = this.position;
     let base = 10;
     let check = isDecimalDigit;
@@ -8784,7 +8784,7 @@ class LanguageParser extends StatementParser {
       strict: true,
       in: true,
       importMeta: true,
-      await: this.feature('TopLevelAwait'),
+      await: this.feature('top-level-await'),
       lexical: true,
       variable: true
     }, () => {
@@ -8865,6 +8865,7 @@ class Parser extends LanguageParser {
   }
 
   feature(name) {
+    // eslint-disable-next-line engine262/valid-feature
     return surroundingAgent.feature(name);
   }
 
@@ -19034,7 +19035,7 @@ function Evaluate_Pattern(Pattern, flags) {
                 // 1. Assert: xe ≤ ye.
                 Assert(xe <= ye, "xe <= ye");
 
-                if (surroundingAgent.feature('RegExpMatchIndices')) {
+                if (surroundingAgent.feature('regexp-match-indices')) {
                   // 2. Let r be the Range (xe, ye).
                   s = new Range(xe, ye);
                 } else {
@@ -19048,7 +19049,7 @@ function Evaluate_Pattern(Pattern, flags) {
 
                 Assert(ye <= xe, "ye <= xe");
 
-                if (surroundingAgent.feature('RegExpMatchIndices')) {
+                if (surroundingAgent.feature('regexp-match-indices')) {
                   // 3. Let r be the Range (ye, xe).
                   s = new Range(ye, xe);
                 } else {
@@ -19239,7 +19240,7 @@ function Evaluate_Pattern(Pattern, flags) {
       const e = x.endIndex;
       let len;
 
-      if (surroundingAgent.feature('RegExpMatchIndices')) {
+      if (surroundingAgent.feature('regexp-match-indices')) {
         // g. Let rs be r's startIndex.
         const rs = s.startIndex; // h. Let re be r's endIndex.
 
@@ -19262,7 +19263,7 @@ function Evaluate_Pattern(Pattern, flags) {
       const g = Math.min(e, f); // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
 
       for (let i = 0; i < len; i += 1) {
-        const part = surroundingAgent.feature('RegExpMatchIndices') ? Input[s.startIndex + i] : s[i];
+        const part = surroundingAgent.feature('regexp-match-indices') ? Input[s.startIndex + i] : s[i];
 
         if (Canonicalize(part) !== Canonicalize(Input[g + i])) {
           return 'failure';
@@ -24732,19 +24733,24 @@ function TypeNumeric(val) {
 }
 
 const FEATURES = Object.freeze([{
-  name: 'TopLevelAwait',
+  name: 'Top-Level Await',
+  flag: 'top-level-await',
   url: 'https://github.com/tc39/proposal-top-level-await'
 }, {
-  name: 'hashbang',
+  name: 'Hashbang Grammar',
+  flag: 'hashbang',
   url: 'https://github.com/tc39/proposal-hashbang'
 }, {
-  name: 'NumericSeparators',
+  name: 'Numeric Separators',
+  flag: 'numeric-separators',
   url: 'https://github.com/tc39/proposal-numeric-separator'
 }, {
-  name: 'RegExpMatchIndices',
+  name: 'RegExp Match Indices',
+  flag: 'regexp-match-indices',
   url: 'https://github.com/tc39/proposal-regexp-match-indices'
 }, {
-  name: 'CleanupSome',
+  name: 'FinalizationRegistry.prototype.cleanupSome',
+  flag: 'cleanup-some',
   url: 'https://github.com/tc39/proposal-cleanup-some'
 }].map(Object.freeze));
 let agentSignifier = 0; // #sec-agents
@@ -24778,12 +24784,12 @@ class Agent {
     this.jobQueue = [];
     this.hostDefinedOptions = { ...options,
       features: FEATURES.reduce((acc, {
-        name
+        flag
       }) => {
         if (options.features) {
-          acc[name] = options.features.includes(name);
+          acc[flag] = options.features.includes(flag);
         } else {
-          acc[name] = false;
+          acc[flag] = false;
         }
 
         return acc;
@@ -43432,7 +43438,7 @@ function RegExpBuiltinExec(R, S) {
   const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split(''); // 14. If fullUnicode is true, then
 
   if (fullUnicode) {
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       let _temp9 = GetStringIndex(S, Input, e);
 
       Assert(!(_temp9 instanceof AbruptCompletion), "GetStringIndex(S, Input, e)" + ' returned an abrupt completion');
@@ -43519,7 +43525,7 @@ function RegExpBuiltinExec(R, S) {
   const capturingParens = R.parsedPattern.capturingGroups;
   let indices;
 
-  if (surroundingAgent.feature('RegExpMatchIndices')) {
+  if (surroundingAgent.feature('regexp-match-indices')) {
     // 25. Let indices be a new empty List.
     indices = []; // 26. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
 
@@ -43567,7 +43573,7 @@ function RegExpBuiltinExec(R, S) {
     // a. Let groups be OrdinaryObjectCreate(null).
     groups = OrdinaryObjectCreate(Value.null);
 
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // b. Let groupNames be a new empty List.
       groupNames = [Value.undefined];
     }
@@ -43576,7 +43582,7 @@ function RegExpBuiltinExec(R, S) {
     // a. Let groups be undefined.
     groups = Value.undefined;
 
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // b. Let groupNames be undefined.
       groupNames = Value.undefined;
     }
@@ -43596,7 +43602,7 @@ function RegExpBuiltinExec(R, S) {
     const captureI = r.captures[i];
     let capturedValue;
 
-    if (surroundingAgent.feature('RegExpMatchIndices')) {
+    if (surroundingAgent.feature('regexp-match-indices')) {
       // e. If captureI is undefined, then
       if (captureI === Value.undefined) {
         // i. Let capturedValue be undefined.
@@ -43707,13 +43713,13 @@ function RegExpBuiltinExec(R, S) {
         _temp24 = _temp24.Value;
       }
 
-      if (surroundingAgent.feature('RegExpMatchIndices')) {
+      if (surroundingAgent.feature('regexp-match-indices')) {
         // iii. Assert: groupNames is a List.
         Assert(Array.isArray(groupNames), "Array.isArray(groupNames)"); // iv. Append s to groupNames.
 
         groupNames.push(s);
       }
-    } else if (surroundingAgent.feature('RegExpMatchIndices')) {
+    } else if (surroundingAgent.feature('regexp-match-indices')) {
       // i. If groupNames is a List, append undefined to groupNames.
       if (Array.isArray(groupNames)) {
         groupNames.push(Value.undefined);
@@ -43721,7 +43727,7 @@ function RegExpBuiltinExec(R, S) {
     }
   }
 
-  if (surroundingAgent.feature('RegExpMatchIndices')) {
+  if (surroundingAgent.feature('regexp-match-indices')) {
     // 34. Let indicesArray be MakeIndicesArray(S, indices, groupNames).
     const indicesArray = MakeIndicesArray(S, indices, groupNames); // 35. Perform ! CreateDataProperty(A, "indices", indicesArray).
 
@@ -57596,7 +57602,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 
 FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
 function BootstrapFinalizationRegistryPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [surroundingAgent.feature('CleanupSome') ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0] : undefined, ['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
+  const proto = BootstrapPrototype(realmRec, [surroundingAgent.feature('cleanup-some') ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0] : undefined, ['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
   realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
 }
 
