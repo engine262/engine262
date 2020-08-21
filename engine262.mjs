@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 aed8c6e3875ea7fc8b5d907e29e6eacfe33a09d4
+ * engine262 0.0.1 dcd485dc96c882b0902184a1c0b1abae68c3146e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -545,16 +545,6 @@ function IsIdentifierRef(node) {
 }
 
 function LexicallyDeclaredNames(node) {
-  if (Array.isArray(node)) {
-    const names = [];
-
-    for (const StatementListItem of node) {
-      names.push(...LexicallyDeclaredNames(StatementListItem));
-    }
-
-    return names;
-  }
-
   switch (node.type) {
     case 'Script':
       if (node.ScriptBody) {
@@ -571,54 +561,6 @@ function LexicallyDeclaredNames(node) {
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyDeclaredNames(node.FunctionStatementList);
-
-    case 'LabelledStatement':
-      return LexicallyDeclaredNames(node.LabelledItem);
-
-    case 'ClassDeclaration':
-    case 'LexicalDeclaration':
-    case 'FunctionDeclaration':
-    case 'GeneratorDeclaration':
-    case 'AsyncFunctionDeclaration':
-    case 'AsyncGeneratorDeclaration':
-      return BoundNames(node);
-
-    case 'CaseBlock':
-      {
-        const names = [];
-
-        if (node.CaseClauses_a) {
-          names.push(...LexicallyDeclaredNames(node.CaseClauses_a));
-        }
-
-        if (node.DefaultClause) {
-          names.push(...LexicallyDeclaredNames(node.DefaultClause));
-        }
-
-        if (node.CaseClauses_b) {
-          names.push(...LexicallyDeclaredNames(node.CaseClauses_b));
-        }
-
-        return names;
-      }
-
-    case 'CaseClause':
-    case 'DefaultClause':
-      if (node.StatementList) {
-        return LexicallyDeclaredNames(node.StatementList);
-      }
-
-      return [];
-
-    case 'ImportDeclaration':
-      return BoundNames(node);
-
-    case 'ExportDeclaration':
-      if (node.VariableStatement) {
-        return [];
-      }
-
-      return BoundNames(node);
 
     default:
       return [];
@@ -701,41 +643,6 @@ function BoundNames(node) {
       }
 
       return [new Value('*default*')];
-
-    case 'ImportDeclaration':
-      {
-        if (node.ImportClause) {
-          return BoundNames(node.ImportClause);
-        }
-
-        return [];
-      }
-
-    case 'ImportClause':
-      {
-        const names = [];
-
-        if (node.ImportedDefaultBinding) {
-          names.push(...BoundNames(node.ImportedDefaultBinding));
-        }
-
-        if (node.NameSpaceImport) {
-          names.push(...BoundNames(node.NameSpaceImport));
-        }
-
-        if (node.NamedImports) {
-          names.push(...BoundNames(node.NamedImports));
-        }
-
-        return names;
-      }
-
-    case 'ImportedDefaultBinding':
-    case 'NameSpaceImport':
-      return BoundNames(node.ImportedBinding);
-
-    case 'NamedImports':
-      return BoundNames(node.ImportsList);
 
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
@@ -1293,16 +1200,6 @@ function TopLevelLexicallyScopedDeclarations(node) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
       return [node];
-
-    case 'Script':
-      if (node.ScriptBody) {
-        return TopLevelLexicallyScopedDeclarations(node.ScriptBody);
-      }
-
-      return [];
-
-    case 'ScriptBody':
-      return TopLevelLexicallyScopedDeclarations(node.StatementList);
 
     default:
       return [];
@@ -6344,8 +6241,8 @@ class ExpressionParser extends FunctionParser {
     if (p >= precedence) {
       do {
         while (TokenPrecedence[this.peek().type] === p) {
-          const node = this.startNode();
           const left = x;
+          const node = this.startNode(left);
 
           if (this.peek().type === Token.IN && !this.scope.hasIn()) {
             return left;
@@ -6628,7 +6525,7 @@ class ExpressionParser extends FunctionParser {
     const check = allowCalls ? isPropertyOrCall : isMember;
 
     while (check(this.peek().type)) {
-      const node = this.startNode();
+      const node = this.startNode(result);
 
       switch (this.peek().type) {
         case Token.LBRACK:
@@ -8150,11 +8047,20 @@ class StatementParser extends ExpressionParser {
       const expression = this.scope.with({
         in: false
       }, () => this.parseExpression());
+
+      const validateLHS = n => {
+        if (n.type === 'AssignmentExpression') {
+          this.raiseEarly('UnexpectedToken', n);
+        } else {
+          this.validateAssignmentTarget(n);
+        }
+      };
+
       const assignmentInfo = this.scope.popAssignmentInfo();
 
       if (!isAwait && this.eat(Token.IN)) {
         assignmentInfo.clear();
-        this.validateAssignmentTarget(expression);
+        validateLHS(expression);
         node.LeftHandSideExpression = expression;
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
@@ -8164,7 +8070,7 @@ class StatementParser extends ExpressionParser {
 
       if (this.eat('of')) {
         assignmentInfo.clear();
-        this.validateAssignmentTarget(expression);
+        validateLHS(expression);
         node.LeftHandSideExpression = expression;
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
@@ -8962,14 +8868,15 @@ class Parser extends LanguageParser {
     return surroundingAgent.feature(name);
   }
 
-  startNode() {
+  startNode(inheritStart = undefined) {
     this.peek();
     const node = {
       type: undefined,
       location: {
-        startIndex: this.peekToken.startIndex,
+        startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
         endIndex: -1,
-        start: {
+        start: inheritStart ? { ...inheritStart.location.start
+        } : {
           line: this.peekToken.line,
           column: this.peekToken.column
         },
