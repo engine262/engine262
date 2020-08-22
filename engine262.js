@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 a41347d0b6de4856d40a296153450e7f8cf0fb56
+ * engine262 0.0.1 26d69976bc312416e291ab9568465c8dbc3b3148
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -7191,7 +7191,7 @@
       const assignmentInfo = this.scope.popAssignmentInfo(); // ArrowParameters :
       //   CoverParenthesizedExpressionAndArrowParameterList
 
-      if (this.test(Token.ARROW)) {
+      if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
         node.Arguments = expressions;
         node.arrowInfo = arrowInfo;
         assignmentInfo.clear();
