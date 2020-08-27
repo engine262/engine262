@@ -46,10 +46,10 @@ export function ImportEntriesForModule(node, module) {
     case 'NameSpaceImport': {
       // 1. Let localName be the StringValue of ImportedBinding.
       const localName = StringValue(node.ImportedBinding);
-      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: localName }.
+      // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: localName }.
       const entry = {
         ModuleRequest: module,
-        ImportName: new Value('*'),
+        ImportName: 'star',
         LocalName: localName,
       };
       // 3. Return a new List containing entry.
@@ -66,6 +66,19 @@ export function ImportEntriesForModule(node, module) {
       if (node.IdentifierName) {
         // 1. Let importName be the StringValue of IdentifierName.
         const importName = StringValue(node.IdentifierName);
+        // 2. Let localName be the StringValue of ImportedBinding.
+        const localName = StringValue(node.ImportedBinding);
+        // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
+        const entry = {
+          ModuleRequest: module,
+          ImportName: importName,
+          LocalName: localName,
+        };
+        // 4. Return a new List containing entry.
+        return [entry];
+      } else if (node.ModuleExportName) {
+        // 1. Let importName be the StringValue of ModuleExportName.
+        const importName = StringValue(node.ModuleExportName);
         // 2. Let localName be the StringValue of ImportedBinding.
         const localName = StringValue(node.ImportedBinding);
         // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.

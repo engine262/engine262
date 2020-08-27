@@ -84,6 +84,8 @@ export function getDeclarations(node) {
     case 'IdentifierName':
     case 'LabelIdentifier':
       return [{ name: node.name, node }];
+    case 'StringLiteral':
+      return [{ name: node.value, node }];
     case 'Elision':
       return [];
     case 'ForDeclaration':

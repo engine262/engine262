@@ -1,3 +1,4 @@
+import { IsStringValidUnicode, StringValue } from '../static-semantics/all.mjs';
 import { Token, isAutomaticSemicolon, isKeywordRaw } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
@@ -29,7 +30,7 @@ export class StatementParser extends ExpressionParser {
           this.state.strict = true;
           directiveData.forEach((d) => {
             if (/\\([1-9]|0\d)/.test(d.directive)) {
-              this.raiseEarly('UnexpectedToken', d.token);
+              this.raiseEarly('IllegalOctalEscape', d.token);
             }
           });
         }
@@ -1020,20 +1021,27 @@ export class StatementParser extends ExpressionParser {
   // ImportSpecifier :
   //   ImportedBinding
   //   IdentifierName `as` ImportedBinding
+  //   ModuleExportName `as` ImportedBinding
   parseImportSpecifier() {
     const node = this.startNode();
-    const name = this.parseIdentifierName();
-    if (this.eat('as')) {
-      node.IdentifierName = name;
+    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+      node.ModuleExportName = this.parseModuleExportName();
+      this.expect('as');
       node.ImportedBinding = this.parseBindingIdentifier();
     } else {
-      node.ImportedBinding = name;
-      node.ImportedBinding.type = 'BindingIdentifier';
-      if (isKeywordRaw(node.ImportedBinding.name)) {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-      }
-      if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+      const name = this.parseIdentifierName();
+      if (this.eat('as')) {
+        node.IdentifierName = name;
+        node.ImportedBinding = this.parseBindingIdentifier();
+      } else {
+        node.ImportedBinding = name;
+        node.ImportedBinding.type = 'BindingIdentifier';
+        if (isKeywordRaw(node.ImportedBinding.name)) {
+          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+        }
+        if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
+          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+        }
       }
     }
     return this.finishNode(node, 'ImportSpecifier');
@@ -1051,6 +1059,7 @@ export class StatementParser extends ExpressionParser {
   // ExportFromClause :
   //   `*`
   //   `*` as IdentifierName
+  //   `*` as ModuleExportName
   //   NamedExports
   parseExportDeclaration() {
     const node = this.startNode();
@@ -1112,8 +1121,13 @@ export class StatementParser extends ExpressionParser {
           const inner = this.startNode();
           this.next();
           if (this.eat('as')) {
-            inner.IdentifierName = this.parseIdentifierName();
-            this.scope.declare(inner.IdentifierName, 'export');
+            if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+              inner.ModuleExportName = this.parseModuleExportName();
+              this.scope.declare(inner.ModuleExportName, 'export');
+            } else {
+              inner.IdentifierName = this.parseIdentifierName();
+              this.scope.declare(inner.IdentifierName, 'export');
+            }
           }
           node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
           node.FromClause = this.parseFromClause();
@@ -1156,18 +1170,34 @@ export class StatementParser extends ExpressionParser {
   // ExportSpecifier :
   //   IdentifierName
   //   IdentifierName `as` IdentifierName
+  //   IdentifierName `as` ModuleExportName
   parseExportSpecifier() {
     const node = this.startNode();
     const name = this.parseIdentifierName();
     if (this.eat('as')) {
-      node.IdentifierName_a = name;
-      node.IdentifierName_b = this.parseIdentifierName();
-      this.scope.declare(node.IdentifierName_b, 'export');
+      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+        node.IdentifierName = name;
+        node.ModuleExportName = this.parseModuleExportName();
+        this.scope.declare(node.ModuleExportName, 'export');
+      } else {
+        node.IdentifierName_a = name;
+        node.IdentifierName_b = this.parseIdentifierName();
+        this.scope.declare(node.IdentifierName_b, 'export');
+      }
     } else {
       node.IdentifierName = name;
       this.scope.declare(name, 'export');
     }
     return this.finishNode(node, 'ExportSpecifier');
+  }
+
+  // ModuleExportName : StringLiteral
+  parseModuleExportName() {
+    const literal = this.parseStringLiteral();
+    if (!IsStringValidUnicode(StringValue(literal))) {
+      this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+    }
+    return literal;
   }
 
   // FromClause :

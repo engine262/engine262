@@ -50,6 +50,7 @@ export const DuplicateExports = () => 'Module cannot contain duplicate exports';
 export const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const IllegalBreakContinue = (isBreak) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
+export const IllegalOctalEscape = () => 'Illegal octal escape';
 export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
 export const InvalidArrayLength = (l) => `Invalid array length: ${i(l)}`;
 export const InvalidAssignmentTarget = () => 'Invalid assignment target';
@@ -71,6 +72,7 @@ export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
 export const JSONUnexpectedChar = (c) => `Unexpected character ${c} in JSON`;
 export const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
 export const LetInLexicalBinding = () => '\'let\' is not allowed to be used as a name in lexical declarations';
+export const ModuleExportNameInvalidUnicode = () => 'Export name is not valid unicode';
 export const ModuleUndefinedExport = (n) => `Export '${i(n)}' is not defined in module`;
 export const NegativeIndex = (n) => `${n} cannot be negative`;
 export const NewlineAfterThrow = () => 'Illegal newline after throw';
@@ -81,6 +83,7 @@ export const NotATypeObject = (t, v) => `${i(v)} is not a ${t} object`;
 export const NotAnObject = (v) => `${i(v)} is not an object`;
 export const NotASymbol = (v) => `${i(v)} is not a symbol`;
 export const NotDefined = (n) => `${i(n)} is not defined`;
+export const NotInitialized = (n) => `${i(n)} cannot be used before initialization`;
 export const NotPropertyName = (p) => `${i(p)} is not a valid property name`;
 export const NumberFormatRange = (m) => `Invalid format range for ${m}`;
 export const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
@@ -121,7 +124,7 @@ export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned trui
 export const RegExpArgumentNotAllowed = (m) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o) => `${i(o)} is not object or null`;
 export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
-  ? `Could not resolve import '${i(n)}' from ${m.HostDefined.specifier}`
+  ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
 export const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 export const StrictModeDelete = (n) => `Cannot not delete property ${i(n)}`;

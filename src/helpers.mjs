@@ -4,6 +4,9 @@ import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstra
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
 
 function convertValueForKey(key) {
+  if (typeof key === 'string') {
+    return Symbol.for(`engine262_helper_key_${key}`);
+  }
   switch (Type(key)) {
     case 'String':
       return key.stringValue();

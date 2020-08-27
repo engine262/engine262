@@ -18,8 +18,8 @@ import {
 
 // #sec-initializeboundname
 export function InitializeBoundName(name, value, environment) {
-  // 1. Assert: Type(name) is String.
-  Assert(Type(name) === 'String');
+  // 1. Assert: Either Type(name) is String or name is ~default~.
+  Assert(name === 'default' || Type(name) === 'String');
   // 2. If environment is not undefined, then
   if (environment !== Value.undefined) {
     // a. Perform environment.InitializeBinding(name, value).

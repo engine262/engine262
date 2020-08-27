@@ -128,8 +128,8 @@ function ModuleNamespaceGet(P, Receiver) {
   const targetModule = binding.Module;
   // 9. Assert: targetModule is not undefined.
   Assert(targetModule !== Value.undefined);
-  // 10. If binding.[[BindingName]] is "*namespace*", then
-  if (binding.BindingName.stringValue() === '*namespace*') {
+  // 10. If binding.[[BindingName]] is ~namespace~, then
+  if (binding.BindingName === 'namespace') {
     // a. Return ? GetModuleNamespace(targetModule).
     return Q(GetModuleNamespace(targetModule));
   }

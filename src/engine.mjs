@@ -46,6 +46,11 @@ export const FEATURES = Object.freeze([
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
+  {
+    name: 'Arbitrary Module Namespace Names',
+    flag: 'arbitrary-module-namespace-names',
+    url: 'https://github.com/tc39/ecma262/pull/2154',
+  },
 ].map(Object.freeze));
 
 let agentSignifier = 0;

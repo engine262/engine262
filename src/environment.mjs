@@ -141,7 +141,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     }
     // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
     }
     // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
     if (binding.mutable === true) {
@@ -166,7 +166,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     Assert(binding !== undefined);
     // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
     }
     // 4. Return the value currently bound to N in envRec.
     return binding.value;
@@ -823,7 +823,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
     }
     // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+      return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
     }
     // 6. Return the value currently bound to N in envRec.
     return binding.value;

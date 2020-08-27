@@ -34,7 +34,7 @@ import { Evaluate } from './evaluator.mjs';
 export class ResolvedBindingRecord {
   constructor({ Module, BindingName }) {
     Assert(Module instanceof AbstractModuleRecord);
-    Assert(Type(BindingName) === 'String');
+    Assert(BindingName === 'namespace' || BindingName === 'default' || Type(BindingName) === 'String');
     this.Module = Module;
     this.BindingName = BindingName;
   }
@@ -288,13 +288,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
-        // ii. If e.[[ImportName]] is "*", then
-        if (e.ImportName.stringValue() === '*') {
+        // ii. If e.[[ImportName]] is ~star~, then
+        if (e.ImportName === 'star') {
           // 1. Assert: module does not provide the direct binding for this export
-          // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: "*namespace*" }.
+          // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
           return new ResolvedBindingRecord({
             Module: importedModule,
-            BindingName: new Value('*namespace*'),
+            BindingName: 'namespace',
           });
         } else { // iii. Else,
           // 1. Assert: module imports a specific binding for this export.
@@ -377,8 +377,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = X(HostResolveImportedModule(module, ie.ModuleRequest));
       // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-      // c. If in.[[ImportName]] is "*", then
-      if (ie.ImportName.stringValue() === '*') {
+      // c. If in.[[ImportName]] is ~star~, then
+      if (ie.ImportName === 'star') {
         // i. Let namespace be ? GetModuleNamespace(importedModule).
         const namespace = Q(GetModuleNamespace(importedModule));
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
@@ -398,8 +398,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             importedModule,
           );
         }
-        // iii. If resolution.[[BindingName]] is "*namespace*", then
-        if (resolution.BindingName.stringValue() === '*namespace*') {
+        // iii. If resolution.[[BindingName]] is ~namespace~, then
+        if (resolution.BindingName === 'namespace') {
           // 1. Let namespace be ? GetModuleNamespace(resolution.[[Module]]).
           const namespace = Q(GetModuleNamespace(resolution.Module));
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).

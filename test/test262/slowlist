@@ -18,9 +18,6 @@ language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 
-built-ins/parseFloat/S15.1.2.3_A6.js
-built-ins/parseInt/S15.1.2.2_A8.js
-
 language/comments/S7.4_A5.js
 language/comments/S7.4_A6.js
 
