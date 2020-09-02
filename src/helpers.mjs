@@ -31,7 +31,8 @@ export class ValueMap {
   }
 
   set(key, value) {
-    return this.map.set(convertValueForKey(key), value);
+    this.map.set(convertValueForKey(key), value);
+    return this;
   }
 
   has(key) {
@@ -91,7 +92,8 @@ export class ValueSet {
   }
 
   add(item) {
-    return this.set.add(convertValueForKey(item));
+    this.set.add(convertValueForKey(item));
+    return this;
   }
 
   has(item) {
