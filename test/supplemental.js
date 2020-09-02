@@ -7,6 +7,8 @@ const {
   setSurroundingAgent,
   ManagedRealm,
   Value,
+  ValueMap,
+  ValueSet,
   FEATURES,
   Get,
   CreateArrayFromList,
@@ -255,6 +257,16 @@ Error: owo
 }
     `);
     assert.strictEqual(result.Value, Value.undefined);
+  },
+  () => {
+    const valueMap = new ValueMap();
+    valueMap.set(new Value(-0), true);
+    assert.strictEqual(valueMap.get(new Value(-0)), true);
+  },
+  () => {
+    const valueSet = new ValueSet();
+    valueSet.add(new Value(-0));
+    assert.strictEqual(valueSet.has(new Value(-0)), true);
   },
 ].forEach((test) => {
   total();

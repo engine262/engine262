@@ -3,6 +3,7 @@ import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
 
+const kNegativeZero = new Value(-0);
 function convertValueForKey(key) {
   if (typeof key === 'string') {
     return Symbol.for(`engine262_helper_key_${key}`);
@@ -12,7 +13,7 @@ function convertValueForKey(key) {
       return key.stringValue();
     case 'Number':
       if (key.numberValue() === 0 && Object.is(key.numberValue(), -0)) {
-        return key;
+        return kNegativeZero;
       }
       return key.numberValue();
     default:
