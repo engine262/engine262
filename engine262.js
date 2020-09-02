@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 26d69976bc312416e291ab9568465c8dbc3b3148
+ * engine262 0.0.1 2203505f0ea95ff27c3643ad6e03ce3ffffe603d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -59,7 +59,8 @@
     }
 
     set(key, value) {
-      return this.map.set(convertValueForKey(key), value);
+      this.map.set(convertValueForKey(key), value);
+      return this;
     }
 
     has(key) {
@@ -120,7 +121,8 @@
     }
 
     add(item) {
-      return this.set.add(convertValueForKey(item));
+      this.set.add(convertValueForKey(item));
+      return this;
     }
 
     has(item) {
