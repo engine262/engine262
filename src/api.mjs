@@ -24,6 +24,7 @@ import {
 } from './parse.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
 
+export { ValueMap, ValueSet } from './helpers.mjs';
 export * from './value.mjs';
 export * from './engine.mjs';
 export * from './completion.mjs';

@@ -3,13 +3,14 @@ import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
 
+const kNegativeZero = new Value(-0);
 function convertValueForKey(key) {
   switch (Type(key)) {
     case 'String':
       return key.stringValue();
     case 'Number':
       if (key.numberValue() === 0 && Object.is(key.numberValue(), -0)) {
-        return key;
+        return kNegativeZero;
       }
       return key.numberValue();
     default:
