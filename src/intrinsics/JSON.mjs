@@ -545,5 +545,4 @@ export function BootstrapJSON(realmRec) {
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSON.parse%'] = X(json.Get(new Value('parse')));
 }

@@ -585,8 +585,4 @@ export function BootstrapArrayPrototype(realmRec) {
   }
 
   realmRec.Intrinsics['%Array.prototype%'] = proto;
-
-  realmRec.Intrinsics['%Array.prototype.keys%'] = proto.Get(new Value('keys'), proto);
-  realmRec.Intrinsics['%Array.prototype.entries%'] = proto.Get(new Value('entries'), proto);
-  realmRec.Intrinsics['%Array.prototype.values%'] = proto.Get(new Value('values'), proto);
 }
