@@ -413,7 +413,7 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(internalSlotsList.concat('InitialName')));
+  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
@@ -425,7 +425,7 @@ export function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype
   func.Prototype = prototype;
   // 8. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
-  // 9. Set func.[[Extensible]] to true.
+  // 9. Set func.[[ScriptOrModule]] to null.
   func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
