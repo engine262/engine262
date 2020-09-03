@@ -159,7 +159,7 @@ export const KeywordLookup = Keywords
 
 const KeywordTokens = new Set(Object.values(KeywordLookup));
 
-const isInRange = (t, l, h) => (t - l) <= (h - l);
+const isInRange = (t, l, h) => t >= l && t <= h;
 export const isAutomaticSemicolon = (t) => isInRange(t, Token.SEMICOLON, Token.EOS);
 export const isMember = (t) => isInRange(t, Token.TEMPLATE, Token.LBRACK);
 export const isPropertyOrCall = (t) => isInRange(t, Token.TEMPLATE, Token.LPAREN);

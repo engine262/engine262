@@ -584,5 +584,8 @@ export function BootstrapArrayPrototype(realmRec) {
     })));
   }
 
+  // Used in `arguments` objects.
+  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, new Value('values')));
+
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }
