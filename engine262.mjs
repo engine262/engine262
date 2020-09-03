@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 2203505f0ea95ff27c3643ad6e03ce3ffffe603d
+ * engine262 0.0.1 bf431630e848c50867bc9b7da6f7e4d7c08c8bab
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -28131,9 +28131,9 @@ function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isCon
   } // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
 
 
-  let _temp12 = MakeBasicObject(internalSlotsList.concat('InitialName'));
+  let _temp12 = MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList));
 
-  Assert(!(_temp12 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList.concat('InitialName'))" + ' returned an abrupt completion');
+  Assert(!(_temp12 instanceof AbruptCompletion), "MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))" + ' returned an abrupt completion');
 
   if (_temp12 instanceof Completion) {
     _temp12 = _temp12.Value;
@@ -28152,7 +28152,7 @@ function CreateBuiltinFunction(steps, internalSlotsList, realm, prototype, isCon
 
   func.Prototype = prototype; // 8. Set func.[[Extensible]] to true.
 
-  func.Extensible = Value.true; // 9. Set func.[[Extensible]] to true.
+  func.Extensible = Value.true; // 9. Set func.[[ScriptOrModule]] to null.
 
   func.ScriptOrModule = Value.null; // 10. Set func.[[InitialName]] to null.
 
