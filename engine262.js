@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 bf431630e848c50867bc9b7da6f7e4d7c08c8bab
+ * engine262 0.0.1 ef282b355707d43fa44f20bbdbfae7742d3ed887
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -29,6 +29,10 @@
 }(this, (function (exports) { 'use strict';
 
   function convertValueForKey(key) {
+    if (typeof key === 'string') {
+      return Symbol.for(`engine262_helper_key_${key}`);
+    }
+
     switch (Type(key)) {
       case 'String':
         return key.stringValue();
@@ -650,7 +654,7 @@
           return BoundNames(node.BindingIdentifier);
         }
 
-        return [new Value('*default*')];
+        return ['default'];
 
       case 'ImportSpecifier':
         return BoundNames(node.ImportedBinding);
@@ -679,7 +683,7 @@
         }
 
         if (node.AssignmentExpression) {
-          return [new Value('*default*')];
+          return ['default'];
         }
 
         throw new OutOfRange('BoundNames', node);
@@ -1571,11 +1575,11 @@
           case node.default && !!node.AssignmentExpression:
             {
               // `export` `default` AssignmentExpression `;`
-              // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
+              // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: ~default~, [[ExportName]]: "default" }.
               const entry = {
                 ModuleRequest: Value.null,
                 ImportName: Value.null,
-                LocalName: new Value('*default*'),
+                LocalName: 'default',
                 ExportName: new Value('default')
               }; // 2. Return a new List containing entry.
 
@@ -1680,7 +1684,7 @@
   }, Object.create(null));
   const KeywordTokens = new Set(Object.values(KeywordLookup));
 
-  const isInRange = (t, l, h) => t - l <= h - l;
+  const isInRange = (t, l, h) => t >= l && t <= h;
 
   const isAutomaticSemicolon = t => isInRange(t, Token.SEMICOLON, Token.EOS);
   const isMember = t => isInRange(t, Token.TEMPLATE, Token.LBRACK);
@@ -2521,7 +2525,7 @@
             this.position += 1;
             return '\u{0000}';
           } else if (this.isStrictMode() && isDecimalDigit(c)) {
-            this.unexpected(this.position);
+            this.raise('IllegalOctalEscape', this.position);
           }
 
           this.position += 1;
@@ -2904,11 +2908,11 @@
       case 'NameSpaceImport':
         {
           // 1. Let localName be the StringValue of ImportedBinding.
-          const localName = StringValue(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: localName }.
+          const localName = StringValue(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: localName }.
 
           const entry = {
             ModuleRequest: module,
-            ImportName: new Value('*'),
+            ImportName: 'star',
             LocalName: localName
           }; // 3. Return a new List containing entry.
 
@@ -2928,6 +2932,19 @@
         if (node.IdentifierName) {
           // 1. Let importName be the StringValue of IdentifierName.
           const importName = StringValue(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
+
+          const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
+
+          const entry = {
+            ModuleRequest: module,
+            ImportName: importName,
+            LocalName: localName
+          }; // 4. Return a new List containing entry.
+
+          return [entry];
+        } else if (node.ModuleExportName) {
+          // 1. Let importName be the StringValue of ModuleExportName.
+          const importName = StringValue(node.ModuleExportName); // 2. Let localName be the StringValue of ImportedBinding.
 
           const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
 
@@ -2970,21 +2987,33 @@
       case 'ExportFromClause':
         if (node.IdentifierName) {
           // 1. Let exportName be the StringValue of IdentifierName.
-          const exportName = StringValue(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: exportName }.
+          const exportName = StringValue(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
 
           const entry = {
             ModuleRequest: module,
-            ImportName: new Value('*'),
+            ImportName: 'star',
+            LocalName: Value.null,
+            ExportName: exportName
+          }; // 3. Return a new List containing entry.
+
+          return [entry];
+        } else if (node.ModuleExportName) {
+          // 1. Let exportName be the StringValue of ModuleExportName.
+          const exportName = StringValue(node.ModuleExportName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
+
+          const entry = {
+            ModuleRequest: module,
+            ImportName: 'star',
             LocalName: Value.null,
             ExportName: exportName
           }; // 3. Return a new List containing entry.
 
           return [entry];
         } else {
-          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "*", [[LocalName]]: null, [[ExportName]]: null }.
+          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: null }.
           const entry = {
             ModuleRequest: module,
-            ImportName: new Value('*'),
+            ImportName: 'star',
             LocalName: Value.null,
             ExportName: Value.null
           }; // 2. Return a new List containing entry.
@@ -2994,6 +3023,33 @@
 
       case 'ExportSpecifier':
         switch (true) {
+          case !!node.IdentifierName && !!node.ModuleExportName:
+            {
+              // 1. Let sourceName be the StringValue of IdentifierName.
+              const sourceName = StringValue(node.IdentifierName); // 2. Let exportName be the StringValue of ModuleExportName.
+
+              const exportName = StringValue(node.ModuleExportName);
+              let localName;
+              let importName; // 3. If module is null, then
+
+              if (module === Value.null) {
+                localName = sourceName;
+                importName = Value.null;
+              } else {
+                // 4. Else,
+                localName = Value.null;
+                importName = sourceName;
+              } // 5. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: exportName }.
+
+
+              return [{
+                ModuleRequest: module,
+                ImportName: importName,
+                LocalName: localName,
+                ExportName: exportName
+              }];
+            }
+
           case !!node.IdentifierName:
             {
               // 1. Let sourceName be the StringValue of IdentifierName.
@@ -3321,6 +3377,37 @@
 
 
     return result;
+  }
+
+  function IsStringValidUnicode(string) {
+    string = string.stringValue(); // 1. Let _strLen_ be the number of code units in string.
+
+    const strLen = string.length; // 2. Let k be 0.
+
+    let k = 0; // 3. Repeat, while k does not equal strLen,
+
+    while (k !== strLen) {
+      let _temp = CodePointAt(string, k);
+
+      Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(string, k)" + ' returned an abrupt completion');
+      /* istanbul ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      // a. Let cp be ! CodePointAt(string, k).
+      const cp = _temp; // b. If cp.[[IsUnpairedSurrogate]] is true, return false.
+
+      if (cp.IsUnpairedSurrogate) {
+        return false;
+      } // c. Set k to k + cp.[[CodeUnitCount]].
+
+
+      k += cp.CodeUnitCount;
+    }
+
+    return true;
   }
 
   // IdentifierReference :
@@ -3722,6 +3809,7 @@
   const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
   const GeneratorRunning = () => 'Cannot manipulate a running generator';
   const IllegalBreakContinue = isBreak => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
+  const IllegalOctalEscape = () => 'Illegal octal escape';
   const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
   const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
   const InvalidAssignmentTarget = () => 'Invalid assignment target';
@@ -3743,6 +3831,7 @@
   const JSONUnexpectedChar = c => `Unexpected character ${c} in JSON`;
   const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
   const LetInLexicalBinding = () => '\'let\' is not allowed to be used as a name in lexical declarations';
+  const ModuleExportNameInvalidUnicode = () => 'Export name is not valid unicode';
   const ModuleUndefinedExport = n => `Export '${i(n)}' is not defined in module`;
   const NegativeIndex = n => `${n} cannot be negative`;
   const NewlineAfterThrow = () => 'Illegal newline after throw';
@@ -3753,6 +3842,7 @@
   const NotAnObject = v => `${i(v)} is not an object`;
   const NotASymbol = v => `${i(v)} is not a symbol`;
   const NotDefined = n => `${i(n)} is not defined`;
+  const NotInitialized = n => `${i(n)} cannot be used before initialization`;
   const NotPropertyName = p => `${i(p)} is not a valid property name`;
   const NumberFormatRange = m => `Invalid format range for ${m}`;
   const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
@@ -3792,7 +3882,7 @@
   const ProxySetFrozenAccessor = p => `'set' on proxy: trap returned truish for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
   const RegExpArgumentNotAllowed = m => `First argument to ${m} must not be a regular expression`;
   const RegExpExecNotObject = o => `${i(o)} is not object or null`;
-  const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import '${i(n)}' from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
+  const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
   const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
   const StrictModeDelete = n => `Cannot not delete property ${i(n)}`;
   const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
@@ -3868,6 +3958,7 @@
     FunctionDeclarationStatement: FunctionDeclarationStatement,
     GeneratorRunning: GeneratorRunning,
     IllegalBreakContinue: IllegalBreakContinue,
+    IllegalOctalEscape: IllegalOctalEscape,
     InternalSlotMissing: InternalSlotMissing,
     InvalidArrayLength: InvalidArrayLength,
     InvalidAssignmentTarget: InvalidAssignmentTarget,
@@ -3889,6 +3980,7 @@
     JSONUnexpectedChar: JSONUnexpectedChar,
     JSONExpected: JSONExpected,
     LetInLexicalBinding: LetInLexicalBinding,
+    ModuleExportNameInvalidUnicode: ModuleExportNameInvalidUnicode,
     ModuleUndefinedExport: ModuleUndefinedExport,
     NegativeIndex: NegativeIndex,
     NewlineAfterThrow: NewlineAfterThrow,
@@ -3899,6 +3991,7 @@
     NotAnObject: NotAnObject,
     NotASymbol: NotASymbol,
     NotDefined: NotDefined,
+    NotInitialized: NotInitialized,
     NotPropertyName: NotPropertyName,
     NumberFormatRange: NumberFormatRange,
     ObjectToPrimitive: ObjectToPrimitive,
@@ -4070,6 +4163,12 @@
       case 'LabelIdentifier':
         return [{
           name: node.name,
+          node
+        }];
+
+      case 'StringLiteral':
+        return [{
+          name: node.value,
           node
         }];
 
@@ -7409,7 +7508,7 @@
             this.state.strict = true;
             directiveData.forEach(d => {
               if (/\\([1-9]|0\d)/.test(d.directive)) {
-                this.raiseEarly('UnexpectedToken', d.token);
+                this.raiseEarly('IllegalOctalEscape', d.token);
               }
             });
           }
@@ -8551,25 +8650,33 @@
     } // ImportSpecifier :
     //   ImportedBinding
     //   IdentifierName `as` ImportedBinding
+    //   ModuleExportName `as` ImportedBinding
 
 
     parseImportSpecifier() {
       const node = this.startNode();
-      const name = this.parseIdentifierName();
 
-      if (this.eat('as')) {
-        node.IdentifierName = name;
+      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+        node.ModuleExportName = this.parseModuleExportName();
+        this.expect('as');
         node.ImportedBinding = this.parseBindingIdentifier();
       } else {
-        node.ImportedBinding = name;
-        node.ImportedBinding.type = 'BindingIdentifier';
+        const name = this.parseIdentifierName();
 
-        if (isKeywordRaw(node.ImportedBinding.name)) {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-        }
+        if (this.eat('as')) {
+          node.IdentifierName = name;
+          node.ImportedBinding = this.parseBindingIdentifier();
+        } else {
+          node.ImportedBinding = name;
+          node.ImportedBinding.type = 'BindingIdentifier';
 
-        if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+          if (isKeywordRaw(node.ImportedBinding.name)) {
+            this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+          }
+
+          if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
+            this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+          }
         }
       }
 
@@ -8586,6 +8693,7 @@
     // ExportFromClause :
     //   `*`
     //   `*` as IdentifierName
+    //   `*` as ModuleExportName
     //   NamedExports
 
 
@@ -8670,8 +8778,13 @@
               this.next();
 
               if (this.eat('as')) {
-                inner.IdentifierName = this.parseIdentifierName();
-                this.scope.declare(inner.IdentifierName, 'export');
+                if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+                  inner.ModuleExportName = this.parseModuleExportName();
+                  this.scope.declare(inner.ModuleExportName, 'export');
+                } else {
+                  inner.IdentifierName = this.parseIdentifierName();
+                  this.scope.declare(inner.IdentifierName, 'export');
+                }
               }
 
               node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
@@ -8720,6 +8833,7 @@
     } // ExportSpecifier :
     //   IdentifierName
     //   IdentifierName `as` IdentifierName
+    //   IdentifierName `as` ModuleExportName
 
 
     parseExportSpecifier() {
@@ -8727,15 +8841,32 @@
       const name = this.parseIdentifierName();
 
       if (this.eat('as')) {
-        node.IdentifierName_a = name;
-        node.IdentifierName_b = this.parseIdentifierName();
-        this.scope.declare(node.IdentifierName_b, 'export');
+        if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+          node.IdentifierName = name;
+          node.ModuleExportName = this.parseModuleExportName();
+          this.scope.declare(node.ModuleExportName, 'export');
+        } else {
+          node.IdentifierName_a = name;
+          node.IdentifierName_b = this.parseIdentifierName();
+          this.scope.declare(node.IdentifierName_b, 'export');
+        }
       } else {
         node.IdentifierName = name;
         this.scope.declare(name, 'export');
       }
 
       return this.finishNode(node, 'ExportSpecifier');
+    } // ModuleExportName : StringLiteral
+
+
+    parseModuleExportName() {
+      const literal = this.parseStringLiteral();
+
+      if (!IsStringValidUnicode(StringValue(literal))) {
+        this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+      }
+
+      return literal;
     } // FromClause :
     //   `from` ModuleSpecifier
 
@@ -14817,8 +14948,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   function InitializeBoundName(name, value, environment) {
-    // 1. Assert: Type(name) is String.
-    Assert(Type(name) === 'String', "Type(name) === 'String'"); // 2. If environment is not undefined, then
+    // 1. Assert: Either Type(name) is String or name is ~default~.
+    Assert(name === 'default' || Type(name) === 'String', "name === 'default' || Type(name) === 'String'"); // 2. If environment is not undefined, then
 
     if (environment !== Value.undefined) {
       // a. Perform environment.InitializeBinding(name, value).
@@ -17141,9 +17272,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         } else {
           // ii. Else,
           // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-          const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is "*", then
+          const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is ~star~, then
 
-          if (ie.ImportName.stringValue() === '*') {
+          if (ie.ImportName === 'star') {
             // a. NOTE: This is a re-export of an imported module namespace object.
             // b. Append ee to localExportEntries.
             localExportEntries.push(ee);
@@ -17159,8 +17290,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             });
           }
         }
-      } else if (ee.ImportName && ee.ImportName.stringValue() === '*' && ee.ExportName === Value.null) {
-        // b. Else if ee.[[ImportName]] is "*" and ee.[[ExportName]] is null, then
+      } else if (ee.ImportName && ee.ImportName === 'star' && ee.ExportName === Value.null) {
+        // b. Else if ee.[[ImportName]] is ~star~ and ee.[[ExportName]] is null, then
         // i. Append ee to starExportEntries.
         starExportEntries.push(ee);
       } else {
@@ -19863,13 +19994,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
       const value = _temp; // 2. Let className be the sole element of BoundNames of ClassDeclaration.
 
-      const className = BoundNames(ClassDeclaration)[0]; // If className is "*default*", then
+      const className = BoundNames(ClassDeclaration)[0]; // If className is ~default~, then
 
-      if (className.stringValue() === '*default*') {
+      if (className === 'default') {
         // a. Let env be the running execution context's LexicalEnvironment.
-        const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Perform ? InitializeBoundName("*default*", value, env).
+        const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Perform ? InitializeBoundName(~default~, value, env).
 
-        let _temp2 = InitializeBoundName(new Value('*default*'), value, env);
+        let _temp2 = InitializeBoundName('default', value, env);
 
         if (_temp2 instanceof AbruptCompletion) {
           return _temp2;
@@ -19909,9 +20040,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } // 3. Let env be the running execution context's LexicalEnvironment.
 
 
-      const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Perform ? InitializeBoundName("*default*", value, env).
+      const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Perform ? InitializeBoundName(~default~, value, env).
 
-      let _temp4 = InitializeBoundName(new Value('*default*'), value, env);
+      let _temp4 = InitializeBoundName('default', value, env);
 
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
@@ -21912,7 +22043,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       BindingName
     }) {
       Assert(Module instanceof AbstractModuleRecord, "Module instanceof AbstractModuleRecord");
-      Assert(Type(BindingName) === 'String', "Type(BindingName) === 'String'");
+      Assert(BindingName === 'namespace' || BindingName === 'default' || Type(BindingName) === 'String', "BindingName === 'namespace' || BindingName === 'default' || Type(BindingName) === 'String'");
       this.Module = Module;
       this.BindingName = BindingName;
     }
@@ -22237,14 +22368,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
 
           // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-          const importedModule = _temp6; // ii. If e.[[ImportName]] is "*", then
+          const importedModule = _temp6; // ii. If e.[[ImportName]] is ~star~, then
 
-          if (e.ImportName.stringValue() === '*') {
+          if (e.ImportName === 'star') {
             // 1. Assert: module does not provide the direct binding for this export
-            // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: "*namespace*" }.
+            // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
             return new ResolvedBindingRecord({
               Module: importedModule,
-              BindingName: new Value('*namespace*')
+              BindingName: 'namespace'
             });
           } else {
             // iii. Else,
@@ -22365,9 +22496,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
         const importedModule = _temp10; // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-        // c. If in.[[ImportName]] is "*", then
+        // c. If in.[[ImportName]] is ~star~, then
 
-        if (ie.ImportName.stringValue() === '*') {
+        if (ie.ImportName === 'star') {
           let _temp11 = GetModuleNamespace(importedModule);
 
           if (_temp11 instanceof AbruptCompletion) {
@@ -22407,10 +22538,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
           if (resolution === null || resolution === 'ambiguous') {
             return exports.surroundingAgent.Throw('SyntaxError', 'ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule);
-          } // iii. If resolution.[[BindingName]] is "*namespace*", then
+          } // iii. If resolution.[[BindingName]] is ~namespace~, then
 
 
-          if (resolution.BindingName.stringValue() === '*namespace*') {
+          if (resolution.BindingName === 'namespace') {
             let _temp14 = GetModuleNamespace(resolution.Module);
 
             if (_temp14 instanceof AbruptCompletion) {
@@ -22700,7 +22831,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
       if (binding.initialized === false) {
-        return exports.surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return exports.surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
       } // 5. Else if the binding for N in envRec is a mutable binding, change its bound value to V.
 
 
@@ -22727,7 +22858,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Assert(binding !== undefined, "binding !== undefined"); // 3. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
 
       if (binding.initialized === false) {
-        return exports.surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return exports.surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
       } // 4. Return the value currently bound to N in envRec.
 
 
@@ -23591,7 +23722,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
       if (binding.initialized === false) {
-        return exports.surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
+        return exports.surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
       } // 6. Return the value currently bound to N in envRec.
 
 
@@ -24760,6 +24891,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some'
+  }, {
+    name: 'Arbitrary Module Namespace Names',
+    flag: 'arbitrary-module-namespace-names',
+    url: 'https://github.com/tc39/ecma262/pull/2154'
   }].map(Object.freeze));
   let agentSignifier = 0; // #sec-agents
 
@@ -29881,9 +30016,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const targetModule = binding.Module; // 9. Assert: targetModule is not undefined.
 
-    Assert(targetModule !== Value.undefined, "targetModule !== Value.undefined"); // 10. If binding.[[BindingName]] is "*namespace*", then
+    Assert(targetModule !== Value.undefined, "targetModule !== Value.undefined"); // 10. If binding.[[BindingName]] is ~namespace~, then
 
-    if (binding.BindingName.stringValue() === '*namespace*') {
+    if (binding.BindingName === 'namespace') {
       // a. Return ? GetModuleNamespace(targetModule).
       return GetModuleNamespace(targetModule);
     } // 11. Let targetEnv be targetModule.[[Environment]].
@@ -39036,11 +39171,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp158 instanceof Completion) {
         _temp158 = _temp158.Value;
       }
+    } // Used in `arguments` objects.
+
+    let _temp159 = Get(proto, new Value('values'));
+
+    Assert(!(_temp159 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
+
+    if (_temp159 instanceof Completion) {
+      _temp159 = _temp159.Value;
     }
+
+    realmRec.Intrinsics['%Array.prototype.values%'] = _temp159;
     realmRec.Intrinsics['%Array.prototype%'] = proto;
-    realmRec.Intrinsics['%Array.prototype.keys%'] = proto.Get(new Value('keys'), proto);
-    realmRec.Intrinsics['%Array.prototype.entries%'] = proto.Get(new Value('entries'), proto);
-    realmRec.Intrinsics['%Array.prototype.values%'] = proto.Get(new Value('values'), proto);
   }
 
   function ArrayConstructor(argumentsList, {
@@ -46902,36 +47044,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Enumerable: Value.false,
       Configurable: Value.false
     }));
-
-    let _temp48 = Get(promiseConstructor, new Value('all'));
-
-    Assert(!(_temp48 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('all'))" + ' returned an abrupt completion');
-
-    if (_temp48 instanceof Completion) {
-      _temp48 = _temp48.Value;
-    }
-
-    realmRec.Intrinsics['%Promise.all%'] = _temp48;
-
-    let _temp49 = Get(promiseConstructor, new Value('reject'));
-
-    Assert(!(_temp49 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('reject'))" + ' returned an abrupt completion');
-
-    if (_temp49 instanceof Completion) {
-      _temp49 = _temp49.Value;
-    }
-
-    realmRec.Intrinsics['%Promise.reject%'] = _temp49;
-
-    let _temp50 = Get(promiseConstructor, new Value('resolve'));
-
-    Assert(!(_temp50 instanceof AbruptCompletion), "Get(promiseConstructor, new Value('resolve'))" + ' returned an abrupt completion');
-
-    if (_temp50 instanceof Completion) {
-      _temp50 = _temp50.Value;
-    }
-
-    realmRec.Intrinsics['%Promise.resolve%'] = _temp50;
     realmRec.Intrinsics['%Promise%'] = promiseConstructor;
   }
 
@@ -53219,16 +53331,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function BootstrapJSON(realmRec) {
     const json = BootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
     realmRec.Intrinsics['%JSON%'] = json;
-
-    let _temp88 = json.Get(new Value('parse'));
-
-    Assert(!(_temp88 instanceof AbruptCompletion), "json.Get(new Value('parse'))" + ' returned an abrupt completion');
-
-    if (_temp88 instanceof Completion) {
-      _temp88 = _temp88.Value;
-    }
-
-    realmRec.Intrinsics['%JSON.parse%'] = _temp88;
   }
 
   function Eval([x = Value.undefined]) {
@@ -61810,6 +61912,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsStrict = IsStrict;
   exports.IsStrictReference = IsStrictReference;
   exports.IsStringPrefix = IsStringPrefix;
+  exports.IsStringValidUnicode = IsStringValidUnicode;
   exports.IsSuperReference = IsSuperReference;
   exports.IsUnresolvableReference = IsUnresolvableReference;
   exports.IsValidIntegerIndex = IsValidIntegerIndex;
