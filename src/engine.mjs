@@ -215,6 +215,10 @@ export class ExecutionContext {
 
 // 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
+  if (surroundingAgent.hostDefinedOptions.boost) {
+    return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
+  }
+
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptContext = new ExecutionContext();
   scriptContext.Function = Value.null;

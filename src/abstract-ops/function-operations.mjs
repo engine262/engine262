@@ -227,7 +227,9 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
     'IsClassConstructor',
   ];
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
-  F.Call = FunctionCallSlot;
+  F.Call = surroundingAgent.hostDefinedOptions.boost
+    ? surroundingAgent.hostDefinedOptions.boost.callFunction
+    : FunctionCallSlot;
   F.SourceText = sourceText;
   F.Environment = Scope;
   F.FormalParameters = ParameterList;
@@ -256,7 +258,9 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(IsConstructor(F) === Value.false);
   Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
-  F.Construct = FunctionConstructSlot;
+  F.Construct = surroundingAgent.hostDefinedOptions.boost
+    ? surroundingAgent.hostDefinedOptions.boost.constructFunction
+    : FunctionConstructSlot;
   F.ConstructorKind = 'base';
   if (writablePrototype === undefined) {
     writablePrototype = Value.true;
