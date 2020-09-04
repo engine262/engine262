@@ -1,5 +1,5 @@
 /*
- * engine262 0.0.1 8ee8637f102f4eb66a6e0da8a64735f6ab604458
+ * engine262 0.0.1 a4f1fde6217eeb19a868b7d8e938fdd8f39697be
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -25081,6 +25081,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 15.1.10 #sec-runtime-semantics-scriptevaluation
 
   function ScriptEvaluation(scriptRecord) {
+    if (exports.surroundingAgent.hostDefinedOptions.boost) {
+      return exports.surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
+    }
+
     const globalEnv = scriptRecord.Realm.GlobalEnv;
     const scriptContext = new ExecutionContext();
     scriptContext.Function = Value.null;
@@ -28024,7 +28028,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     const F = _temp3;
-    F.Call = FunctionCallSlot;
+    F.Call = exports.surroundingAgent.hostDefinedOptions.boost ? exports.surroundingAgent.hostDefinedOptions.boost.callFunction : FunctionCallSlot;
     F.SourceText = sourceText;
     F.Environment = Scope;
     F.FormalParameters = ParameterList;
@@ -28078,7 +28082,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     Assert(_temp5 === Value.true && _temp6 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
-    F.Construct = FunctionConstructSlot;
+    F.Construct = exports.surroundingAgent.hostDefinedOptions.boost ? exports.surroundingAgent.hostDefinedOptions.boost.constructFunction : FunctionConstructSlot;
     F.ConstructorKind = 'base';
 
     if (writablePrototype === undefined) {
