@@ -9,7 +9,7 @@ const { name, version } = require('./package.json');
 
 const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
-const banner = `/*
+const banner = `/*!
  * engine262 ${version} ${hash}
  *
  * ${fs.readFileSync('./LICENSE', 'utf8').trim().split('\n').join('\n * ')}

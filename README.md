@@ -84,9 +84,12 @@ Or, you can install it locally and use the API:
 
 const {
   Agent,
+  setSurroundingAgent,
   ManagedRealm,
   Value,
+
   CreateDataProperty,
+
   inspect,
 } = require('engine262');
 
@@ -97,7 +100,7 @@ const agent = new Agent({
   // onNodeEvaluation() {},
   // features: [],
 });
-agent.enter();
+setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({
   // promiseRejectionTracker() {},
@@ -107,12 +110,14 @@ const realm = new ManagedRealm({
   // randomSeed() {},
 });
 
-// Add print function from host
-const print = new Value(realm, (args) => {
-  console.log(...args.map((tmp) => inspect(tmp)));
-  return Value.undefined;
+realm.scope(() => {
+  // Add print function from host
+  const print = new Value((args) => {
+    console.log(...args.map((tmp) => inspect(tmp)));
+    return Value.undefined;
+  });
+  CreateDataProperty(realm.global, new Value('print'), print);
 });
-CreateDataProperty(realm.global, new Value(realm, 'print'), print);
 
 realm.evaluateScript(`
 'use strict';
