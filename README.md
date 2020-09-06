@@ -116,7 +116,7 @@ realm.scope(() => {
     console.log(...args.map((tmp) => inspect(tmp)));
     return Value.undefined;
   });
-  CreateDataProperty(realm.global, new Value('print'), print);
+  CreateDataProperty(realm.GlobalObject, new Value('print'), print);
 });
 
 realm.evaluateScript(`
