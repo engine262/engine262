@@ -32,11 +32,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-hashbang',
   },
   {
-    name: 'Numeric Separators',
-    flag: 'numeric-separators',
-    url: 'https://github.com/tc39/proposal-numeric-separator',
-  },
-  {
     name: 'RegExp Match Indices',
     flag: 'regexp-match-indices',
     url: 'https://github.com/tc39/proposal-regexp-match-indices',

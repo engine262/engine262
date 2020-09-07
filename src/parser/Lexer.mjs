@@ -1,7 +1,6 @@
 import isUnicodeIDStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex';
 import isUnicodeIDContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
 import isSpaceSeparatorRegex from 'unicode-13.0.0/General_Category/Space_Separator/regex';
-import { surroundingAgent } from '../engine.mjs';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
 import {
   RawTokens,
@@ -553,7 +552,6 @@ export class Lexer {
   }
 
   scanNumber() {
-    const separators = surroundingAgent.feature('numeric-separators');
     const start = this.position;
     let base = 10;
     let check = isDecimalDigit;
@@ -599,9 +597,9 @@ export class Lexer {
     }
     while (this.position < this.source.length) {
       const c = this.source[this.position];
-      if (check(c) || (separators && c === '_')) {
+      if (check(c) || c === '_') {
         this.position += 1;
-        if (separators && c === '_') {
+        if (c === '_') {
           if (!check(this.source[this.position])) {
             this.unexpected(this.position);
           }
@@ -618,14 +616,14 @@ export class Lexer {
     }
     if (base === 10 && this.source[this.position] === '.') {
       this.position += 1;
-      if (separators && this.source[this.position] === '_') {
+      if (this.source[this.position] === '_') {
         this.unexpected(this.position);
       }
       while (this.position < this.source.length) {
         const c = this.source[this.position];
-        if (isDecimalDigit(c) || (separators && c === '_')) {
+        if (isDecimalDigit(c) || c === '_') {
           this.position += 1;
-          if (separators && c === '_') {
+          if (c === '_') {
             if (!isDecimalDigit(this.source[this.position])) {
               this.unexpected(this.position);
             }
@@ -637,14 +635,20 @@ export class Lexer {
     }
     if (base === 10 && (this.source[this.position] === 'E' || this.source[this.position] === 'e')) {
       this.position += 1;
+      if (this.source[this.position] === '_') {
+        this.unexpected(this.position);
+      }
       if (this.source[this.position] === '-' || this.source[this.position] === '+') {
         this.position += 1;
       }
+      if (this.source[this.position] === '_') {
+        this.unexpected(this.position);
+      }
       while (this.position < this.source.length) {
         const c = this.source[this.position];
-        if (isDecimalDigit(c) || (separators && c === '_')) {
+        if (isDecimalDigit(c) || c === '_') {
           this.position += 1;
-          if (separators && c === '_') {
+          if (c === '_') {
             if (!isDecimalDigit(this.source[this.position])) {
               this.unexpected(this.position);
             }
