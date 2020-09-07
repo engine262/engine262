@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 1c0ef533f4e22b45c436cc68b30ab28ea2f2f6a2
+ * engine262 0.0.1 d8db4bb01ec70e688847d5af3b24b213b24efd04
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2297,7 +2297,6 @@ class Lexer {
   }
 
   scanNumber() {
-    const separators = surroundingAgent.feature('numeric-separators');
     const start = this.position;
     let base = 10;
     let check = isDecimalDigit;
@@ -2355,10 +2354,10 @@ class Lexer {
     while (this.position < this.source.length) {
       const c = this.source[this.position];
 
-      if (check(c) || separators && c === '_') {
+      if (check(c) || c === '_') {
         this.position += 1;
 
-        if (separators && c === '_') {
+        if (c === '_') {
           if (!check(this.source[this.position])) {
             this.unexpected(this.position);
           }
@@ -2378,17 +2377,17 @@ class Lexer {
     if (base === 10 && this.source[this.position] === '.') {
       this.position += 1;
 
-      if (separators && this.source[this.position] === '_') {
+      if (this.source[this.position] === '_') {
         this.unexpected(this.position);
       }
 
       while (this.position < this.source.length) {
         const c = this.source[this.position];
 
-        if (isDecimalDigit(c) || separators && c === '_') {
+        if (isDecimalDigit(c) || c === '_') {
           this.position += 1;
 
-          if (separators && c === '_') {
+          if (c === '_') {
             if (!isDecimalDigit(this.source[this.position])) {
               this.unexpected(this.position);
             }
@@ -2402,17 +2401,25 @@ class Lexer {
     if (base === 10 && (this.source[this.position] === 'E' || this.source[this.position] === 'e')) {
       this.position += 1;
 
+      if (this.source[this.position] === '_') {
+        this.unexpected(this.position);
+      }
+
       if (this.source[this.position] === '-' || this.source[this.position] === '+') {
         this.position += 1;
+      }
+
+      if (this.source[this.position] === '_') {
+        this.unexpected(this.position);
       }
 
       while (this.position < this.source.length) {
         const c = this.source[this.position];
 
-        if (isDecimalDigit(c) || separators && c === '_') {
+        if (isDecimalDigit(c) || c === '_') {
           this.position += 1;
 
-          if (separators && c === '_') {
+          if (c === '_') {
             if (!isDecimalDigit(this.source[this.position])) {
               this.unexpected(this.position);
             }
@@ -24873,10 +24880,6 @@ const FEATURES = Object.freeze([{
   name: 'Hashbang Grammar',
   flag: 'hashbang',
   url: 'https://github.com/tc39/proposal-hashbang'
-}, {
-  name: 'Numeric Separators',
-  flag: 'numeric-separators',
-  url: 'https://github.com/tc39/proposal-numeric-separator'
 }, {
   name: 'RegExp Match Indices',
   flag: 'regexp-match-indices',
