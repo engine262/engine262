@@ -92,7 +92,7 @@ export function TV(s) {
 
 export function TemplateStrings(node, raw) {
   if (raw) {
-    return node.TemplateSpanList.map(Value);
+    return node.TemplateSpanList.map((s) => new Value(s));
   }
   return node.TemplateSpanList.map((v) => {
     const tv = TV(v);
