@@ -21,22 +21,24 @@ import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange } from './helpers.mjs';
 
 // #sec-ecmascript-language-types
-export function Value(value) {
-  if (new.target !== undefined && new.target !== Value) {
-    return undefined;
-  }
+export class Value {
+  constructor(value) {
+    if (new.target !== Value) {
+      return this;
+    }
 
-  switch (typeof value) {
-    case 'string':
-      return new StringValue(value);
-    case 'number':
-      return new NumberValue(value);
-    case 'bigint':
-      return new BigIntValue(value);
-    case 'function':
-      return CreateBuiltinFunction(value, []);
-    default:
-      throw new OutOfRange('new Value', value);
+    switch (typeof value) {
+      case 'string':
+        return new StringValue(value);
+      case 'number':
+        return new NumberValue(value);
+      case 'bigint':
+        return new BigIntValue(value);
+      case 'function':
+        return CreateBuiltinFunction(value, []);
+      default:
+        throw new OutOfRange('new Value', value);
+    }
   }
 }
 
