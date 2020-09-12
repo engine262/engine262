@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 d8db4bb01ec70e688847d5af3b24b213b24efd04
+ * engine262 0.0.1 46a44086f7d425eb5e05ec77bc4552796137006e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -32,10 +32,6 @@ function convertValueForKey(key) {
       return key.stringValue();
 
     case 'Number':
-      if (key.numberValue() === 0 && Object.is(key.numberValue(), -0)) {
-        return key;
-      }
-
       return key.numberValue();
 
     default:
@@ -2354,14 +2350,14 @@ class Lexer {
     while (this.position < this.source.length) {
       const c = this.source[this.position];
 
-      if (check(c) || c === '_') {
+      if (check(c)) {
         this.position += 1;
-
-        if (c === '_') {
-          if (!check(this.source[this.position])) {
-            this.unexpected(this.position);
-          }
+      } else if (c === '_') {
+        if (!check(this.source[this.position + 1])) {
+          this.unexpected(this.position + 1);
         }
+
+        this.position += 1;
       } else {
         break;
       }
@@ -2384,14 +2380,14 @@ class Lexer {
       while (this.position < this.source.length) {
         const c = this.source[this.position];
 
-        if (isDecimalDigit(c) || c === '_') {
+        if (isDecimalDigit(c)) {
           this.position += 1;
-
-          if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position])) {
-              this.unexpected(this.position);
-            }
+        } else if (c === '_') {
+          if (!isDecimalDigit(this.source[this.position + 1])) {
+            this.unexpected(this.position + 1);
           }
+
+          this.position += 1;
         } else {
           break;
         }
@@ -2416,14 +2412,14 @@ class Lexer {
       while (this.position < this.source.length) {
         const c = this.source[this.position];
 
-        if (isDecimalDigit(c) || c === '_') {
+        if (isDecimalDigit(c)) {
           this.position += 1;
-
-          if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position])) {
-              this.unexpected(this.position);
-            }
+        } else if (c === '_') {
+          if (!isDecimalDigit(this.source[this.position + 1])) {
+            this.unexpected(this.position + 1);
           }
+
+          this.position += 1;
         } else {
           break;
         }
