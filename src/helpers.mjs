@@ -11,9 +11,6 @@ function convertValueForKey(key) {
     case 'String':
       return key.stringValue();
     case 'Number':
-      if (key.numberValue() === 0 && Object.is(key.numberValue(), -0)) {
-        return key;
-      }
       return key.numberValue();
     default:
       return key;

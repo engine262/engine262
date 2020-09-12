@@ -597,13 +597,13 @@ export class Lexer {
     }
     while (this.position < this.source.length) {
       const c = this.source[this.position];
-      if (check(c) || c === '_') {
+      if (check(c)) {
         this.position += 1;
-        if (c === '_') {
-          if (!check(this.source[this.position])) {
-            this.unexpected(this.position);
-          }
+      } else if (c === '_') {
+        if (!check(this.source[this.position + 1])) {
+          this.unexpected(this.position + 1);
         }
+        this.position += 1;
       } else {
         break;
       }
@@ -621,13 +621,13 @@ export class Lexer {
       }
       while (this.position < this.source.length) {
         const c = this.source[this.position];
-        if (isDecimalDigit(c) || c === '_') {
+        if (isDecimalDigit(c)) {
           this.position += 1;
-          if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position])) {
-              this.unexpected(this.position);
-            }
+        } else if (c === '_') {
+          if (!isDecimalDigit(this.source[this.position + 1])) {
+            this.unexpected(this.position + 1);
           }
+          this.position += 1;
         } else {
           break;
         }
@@ -646,13 +646,13 @@ export class Lexer {
       }
       while (this.position < this.source.length) {
         const c = this.source[this.position];
-        if (isDecimalDigit(c) || c === '_') {
+        if (isDecimalDigit(c)) {
           this.position += 1;
-          if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position])) {
-              this.unexpected(this.position);
-            }
+        } else if (c === '_') {
+          if (!isDecimalDigit(this.source[this.position + 1])) {
+            this.unexpected(this.position + 1);
           }
+          this.position += 1;
         } else {
           break;
         }
