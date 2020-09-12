@@ -140,11 +140,11 @@ export function CompletePropertyDescriptor(Desc) {
   Assert(Type(Desc) === 'Descriptor');
   const like = Descriptor({
     Value: Value.undefined,
-    Writable: false,
+    Writable: Value.false,
     Get: Value.undefined,
     Set: Value.undefined,
-    Enumerable: false,
-    Configurable: false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
   });
   if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
     if (Desc.Value === undefined) {
