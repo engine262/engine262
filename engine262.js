@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 46a44086f7d425eb5e05ec77bc4552796137006e
+ * engine262 0.0.1 b6914dbe868c1df6fb17f49c28e8ca036540befd
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2842,7 +2842,7 @@
   }
   function TemplateStrings(node, raw) {
     if (raw) {
-      return node.TemplateSpanList.map(Value);
+      return node.TemplateSpanList.map(s => new Value(s));
     }
 
     return node.TemplateSpanList.map(v => {
@@ -23130,7 +23130,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     constructor() {
       super();
       this.ThisValue = undefined;
-      this.ThisBindingValue = undefined;
+      this.ThisBindingStatus = undefined;
       this.FunctionObject = undefined;
       this.HomeObject = Value.undefined;
       this.NewTarget = undefined;
@@ -23219,7 +23219,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     mark(m) {
       super.mark(m);
       m(this.ThisValue);
-      m(this.ThisBindingValue);
       m(this.FunctionObject);
       m(this.HomeObject);
       m(this.NewTarget);
@@ -23894,28 +23893,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return env;
   }
 
-  function Value(value) {
-    if (new.target !== undefined && new.target !== Value) {
-      return undefined;
+  class Value {
+    constructor(value) {
+      if (new.target !== Value) {
+        return this;
+      }
+
+      switch (typeof value) {
+        case 'string':
+          return new StringValue$1(value);
+
+        case 'number':
+          return new NumberValue(value);
+
+        case 'bigint':
+          return new BigIntValue(value);
+
+        case 'function':
+          return CreateBuiltinFunction(value, []);
+
+        /*istanbul ignore next*/
+        default:
+          throw new OutOfRange('new Value', value);
+      }
     }
 
-    switch (typeof value) {
-      case 'string':
-        return new StringValue$1(value);
-
-      case 'number':
-        return new NumberValue(value);
-
-      case 'bigint':
-        return new BigIntValue(value);
-
-      case 'function':
-        return CreateBuiltinFunction(value, []);
-
-      /*istanbul ignore next*/
-      default:
-        throw new OutOfRange('new Value', value);
-    }
   }
   class PrimitiveValue extends Value {} // #sec-ecmascript-language-types-undefined-type
 
@@ -58866,11 +58868,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(Type(Desc) === 'Descriptor', "Type(Desc) === 'Descriptor'");
     const like = Descriptor({
       Value: Value.undefined,
-      Writable: false,
+      Writable: Value.false,
       Get: Value.undefined,
       Set: Value.undefined,
-      Enumerable: false,
-      Configurable: false
+      Enumerable: Value.false,
+      Configurable: Value.false
     });
 
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
