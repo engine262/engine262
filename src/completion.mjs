@@ -83,6 +83,12 @@ export function X() {
   throw new TypeError('X() requires build');
 }
 
+// 7.4.7 #sec-ifabruptcloseiterator
+export function IfAbruptCloseIterator(_value, _iteratorRecord) {
+  /* c8 skip next */
+  throw new TypeError('IfAbruptCloseIterator() requires build');
+}
+
 // 25.6.1.1.1 #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise() {
   /* c8 skip next */
