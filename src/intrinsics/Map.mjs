@@ -16,7 +16,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import {
-  AbruptCompletion,
+  IfAbruptCloseIterator,
   Q,
 } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -37,18 +37,18 @@ export function AddEntriesFromIterable(target, iterable, adder) {
       const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
       return Q(IteratorClose(iteratorRecord, error));
     }
+    // e. Let k be Get(nextItem, "0").
     const k = Get(nextItem, new Value('0'));
-    if (k instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, k));
-    }
+    // f. IfAbruptCloseIterator(k, iteratorRecord).
+    IfAbruptCloseIterator(k, iteratorRecord);
+    // g. Let v be Get(nextItem, "1").
     const v = Get(nextItem, new Value('1'));
-    if (v instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, v));
-    }
-    const status = Call(adder, target, [k.Value, v.Value]);
-    if (status instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, status));
-    }
+    // h. IfAbruptCloseIterator(v, iteratorRecord).
+    IfAbruptCloseIterator(v, iteratorRecord);
+    // i. Let status be Call(adder, target, « k, v »).
+    const status = Call(adder, target, [k, v]);
+    // j. IfAbruptCloseIterator(status, iteratorRecord).
+    IfAbruptCloseIterator(status, iteratorRecord);
   }
 }
 
