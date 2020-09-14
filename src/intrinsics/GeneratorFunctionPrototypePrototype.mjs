@@ -38,12 +38,12 @@ function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
   return Q(GeneratorResumeAbrupt(g, C));
 }
 
-export function BootstrapGeneratorPrototype(realmRec) {
+export function BootstrapGeneratorFunctionPrototypePrototype(realmRec) {
   const generatorPrototype = BootstrapPrototype(realmRec, [
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],
     ['throw', GeneratorProto_throw, 1],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
 
-  realmRec.Intrinsics['%Generator.prototype%'] = generatorPrototype;
+  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
 }

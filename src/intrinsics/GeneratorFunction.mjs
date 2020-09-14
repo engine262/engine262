@@ -15,7 +15,7 @@ function GeneratorFunctionConstructor(args, { NewTarget }) {
 }
 
 export function BootstrapGeneratorFunction(realmRec) {
-  const generator = realmRec.Intrinsics['%Generator%'];
+  const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
 
   const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
   X(DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({

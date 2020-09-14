@@ -32,12 +32,12 @@ export function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
   funcEnv.CreateImmutableBinding(name, Value.false);
   // 5. Let source text be the source textmatched by AsyncGeneratorExpression.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
-  // 6. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
+  // 6. Let closure be OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv));
   // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,

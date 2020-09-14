@@ -3,8 +3,8 @@ import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { BootstrapPrototype } from './Bootstrap.mjs';
 
-export function BootstrapGenerator(realmRec) {
-  const generatorPrototype = realmRec.Intrinsics['%Generator.prototype%'];
+export function BootstrapGeneratorFunctionPrototype(realmRec) {
+  const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
 
   const generator = BootstrapPrototype(realmRec, [
     ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
@@ -17,5 +17,5 @@ export function BootstrapGenerator(realmRec) {
     Configurable: Value.true,
   })));
 
-  realmRec.Intrinsics['%Generator%'] = generator;
+  realmRec.Intrinsics['%GeneratorFunction.prototype%'] = generator;
 }

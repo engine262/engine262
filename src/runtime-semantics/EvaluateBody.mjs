@@ -78,8 +78,8 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argu
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%Generator.prototype%", « [[GeneratorState]], [[GeneratorContext]] »).
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%Generator.prototype%', ['GeneratorState', 'GeneratorContext']));
+  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]] »).
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']));
   // 3. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
   // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
@@ -91,8 +91,8 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
 export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGenerator.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]] »).
-  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGenerator.prototype%', [
+  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]] »).
+  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', [
     'AsyncGeneratorState',
     'AsyncGeneratorContext',
     'AsyncGeneratorQueue',

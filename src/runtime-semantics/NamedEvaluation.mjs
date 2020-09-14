@@ -41,12 +41,12 @@ function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let sourceText be the source text matched by GeneratorExpression.
   const sourceText = sourceTextMatchedBy(GeneratorExpression);
-  // 3. Let closure be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
+  // 3. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
   // 4. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 5. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -88,8 +88,8 @@ function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name
   const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
   // 4. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 5. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+  // 5. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,

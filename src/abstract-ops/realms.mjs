@@ -44,14 +44,14 @@ import { BootstrapMapPrototype } from '../intrinsics/MapPrototype.mjs';
 import { BootstrapMap } from '../intrinsics/Map.mjs';
 import { BootstrapSetPrototype } from '../intrinsics/SetPrototype.mjs';
 import { BootstrapSet } from '../intrinsics/Set.mjs';
-import { BootstrapGenerator } from '../intrinsics/Generator.mjs';
+import { BootstrapGeneratorFunctionPrototypePrototype } from '../intrinsics/GeneratorFunctionPrototypePrototype.mjs';
+import { BootstrapGeneratorFunctionPrototype } from '../intrinsics/GeneratorFunctionPrototype.mjs';
 import { BootstrapGeneratorFunction } from '../intrinsics/GeneratorFunction.mjs';
-import { BootstrapGeneratorPrototype } from '../intrinsics/GeneratorPrototype.mjs';
 import { BootstrapAsyncFunctionPrototype } from '../intrinsics/AsyncFunctionPrototype.mjs';
 import { BootstrapAsyncFunction } from '../intrinsics/AsyncFunction.mjs';
-import { BootstrapAsyncGenerator } from '../intrinsics/AsyncGenerator.mjs';
+import { BootstrapAsyncGeneratorFunctionPrototypePrototype } from '../intrinsics/AsyncGeneratorFunctionPrototypePrototype.mjs';
+import { BootstrapAsyncGeneratorFunctionPrototype } from '../intrinsics/AsyncGeneratorFunctionPrototype.mjs';
 import { BootstrapAsyncGeneratorFunction } from '../intrinsics/AsyncGeneratorFunction.mjs';
-import { BootstrapAsyncGeneratorPrototype } from '../intrinsics/AsyncGeneratorPrototype.mjs';
 import { BootstrapAsyncFromSyncIteratorPrototype } from '../intrinsics/AsyncFromSyncIteratorPrototype.mjs';
 import { BootstrapArrayBuffer } from '../intrinsics/ArrayBuffer.mjs';
 import { BootstrapArrayBufferPrototype } from '../intrinsics/ArrayBufferPrototype.mjs';
@@ -212,15 +212,15 @@ export function CreateIntrinsics(realmRec) {
   BootstrapMapPrototype(realmRec);
   BootstrapMap(realmRec);
 
-  BootstrapGeneratorPrototype(realmRec);
-  BootstrapGenerator(realmRec);
+  BootstrapGeneratorFunctionPrototypePrototype(realmRec);
+  BootstrapGeneratorFunctionPrototype(realmRec);
   BootstrapGeneratorFunction(realmRec);
 
   BootstrapAsyncFunctionPrototype(realmRec);
   BootstrapAsyncFunction(realmRec);
 
-  BootstrapAsyncGeneratorPrototype(realmRec);
-  BootstrapAsyncGenerator(realmRec);
+  BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
+  BootstrapAsyncGeneratorFunctionPrototype(realmRec);
   BootstrapAsyncGeneratorFunction(realmRec);
 
   BootstrapAsyncFromSyncIteratorPrototype(realmRec);
