@@ -32,12 +32,12 @@ export function* Evaluate_GeneratorExpression(GeneratorExpression) {
   funcEnv.CreateImmutableBinding(name, Value.false);
   // 5. Let sourceText be the source text matched by GeneratorExpression.
   const sourceText = sourceTextMatchedBy(GeneratorExpression);
-  // 6. Let closure be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv));
+  // 6. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv));
   // 7. Perform SetFunctionName(closure, name).
   SetFunctionName(closure, name);
-  // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  // 8. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,

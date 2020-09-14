@@ -51,8 +51,8 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   } else if (kind === 'generator') { // 8. Else if kind is generator, then
     // a. Let goal be the grammar symbol GeneratorBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[+Yield, ~Await].
-    // c. Let fallbackProto be "%Generator%".
-    fallbackProto = '%Generator%';
+    // c. Let fallbackProto be "%GeneratorFunction.prototype%".
+    fallbackProto = '%GeneratorFunction.prototype%';
   } else if (kind === 'async') { // 9. Else if kind is async, then
     // a. Let goal be the grammar symbol AsyncFunctionBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
@@ -63,7 +63,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     Assert(kind === 'asyncGenerator');
     // b. Let goal be the grammar symbol AsyncGeneratorBody.
     // c. Let parameterGoal be the grammar symbol FormalParameters[+Yield, +Await].
-    // d. Let fallbackProto be "%AsyncGenerator%".
+    // d. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
     fallbackProto = '%AsyncGeneratorFunction.prototype%';
   }
   // 11. Let argCount be the number of elements in args.
@@ -165,8 +165,8 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   SetFunctionName(F, new Value('anonymous'));
   // 26. If kind is generator, then
   if (kind === 'generator') {
-    // a. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+    // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
@@ -175,8 +175,8 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       Configurable: Value.false,
     }));
   } else if (kind === 'asyncGenerator') { // 27. Else if kind is asyncGenerator, then
-    // a. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+    // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,

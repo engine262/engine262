@@ -42,12 +42,12 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let sourceText be the source text matched by GeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(GeneratorDeclaration);
-  // 3. Let F be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope));
+  // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope));
   // 4. Perform SetFunctionName(F, name).
   SetFunctionName(F, name);
-  // 5. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')));
+  // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -87,12 +87,12 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
   // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
-  // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
   const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
   // 4. Perform ! SetFunctionName(F, name).
   SetFunctionName(F, name);
-  // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')));
+  // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+  const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')));
   // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
     Value: prototype,

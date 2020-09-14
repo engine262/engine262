@@ -224,14 +224,14 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let sourceText be the source text matched by GeneratorMethod.
   const sourceText = sourceTextMatchedBy(GeneratorMethod);
-  // 5. Let closure be ! OrdinaryFunctionCreate(%Generator%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope));
+  // 5. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope));
   // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
   // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  // 8. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -263,14 +263,14 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
-  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope));
   // 6. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
   // 7. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
-  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+  // 8. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
