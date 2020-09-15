@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b6914dbe868c1df6fb17f49c28e8ca036540befd
+ * engine262 0.0.1 2b21fb9d9aa991d66417e714b581e4c14774c8c2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -10664,11 +10664,11 @@ function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, sc
 
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by GeneratorDeclaration.
 
-  const sourceText = sourceTextMatchedBy(GeneratorDeclaration); // 3. Let F be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+  const sourceText = sourceTextMatchedBy(GeneratorDeclaration); // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
 
-  let _temp2 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
+  let _temp2 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
 
-  Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+  Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
 
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
@@ -10676,11 +10676,11 @@ function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, sc
 
   const F = _temp2; // 4. Perform SetFunctionName(F, name).
 
-  SetFunctionName(F, name); // 5. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  SetFunctionName(F, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
 
-  let _temp3 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'));
+  let _temp3 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
 
-  Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%'))" + ' returned an abrupt completion');
+  Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
 
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
@@ -10745,7 +10745,7 @@ function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDecla
 
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
 
-  const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
 
   let _temp6 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
 
@@ -10757,11 +10757,11 @@ function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDecla
 
   const F = _temp6; // 4. Perform ! SetFunctionName(F, name).
 
-  SetFunctionName(F, name); // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  SetFunctionName(F, name); // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
 
-  let _temp7 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'));
+  let _temp7 = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
 
-  Assert(!(_temp7 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%'))" + ' returned an abrupt completion');
+  Assert(!(_temp7 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
 
   if (_temp7 instanceof Completion) {
     _temp7 = _temp7.Value;
@@ -11561,7 +11561,7 @@ function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsLis
     _temp7 = _temp7.Value;
   }
 
-  let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%Generator.prototype%', ['GeneratorState', 'GeneratorContext']);
+  let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']);
 
   if (_temp8 instanceof AbruptCompletion) {
     return _temp8;
@@ -11594,7 +11594,7 @@ function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argument
     _temp9 = _temp9.Value;
   }
 
-  let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGenerator.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue']);
+  let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue']);
 
   if (_temp10 instanceof AbruptCompletion) {
     return _temp10;
@@ -13281,11 +13281,11 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by GeneratorMethod.
 
-  const sourceText = sourceTextMatchedBy(GeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%Generator%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+  const sourceText = sourceTextMatchedBy(GeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
 
-  let _temp11 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope);
+  let _temp11 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope);
 
-  Assert(!(_temp11 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+  Assert(!(_temp11 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
 
   if (_temp11 instanceof Completion) {
     _temp11 = _temp11.Value;
@@ -13309,7 +13309,7 @@ function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, 
     _temp13 = _temp13.Value;
   }
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -13352,7 +13352,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
 
-  const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
 
   let _temp14 = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
 
@@ -13380,7 +13380,7 @@ function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod
     _temp16 = _temp16.Value;
   }
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -13495,13 +13495,13 @@ function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
 
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by GeneratorExpression.
 
-  const sourceText = sourceTextMatchedBy(GeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+  const sourceText = sourceTextMatchedBy(GeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
 
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
+  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
 
-  SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -13561,9 +13561,9 @@ function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name
 
   const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
 
-  SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -17407,8 +17407,8 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // 8. Else if kind is generator, then
     // a. Let goal be the grammar symbol GeneratorBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[+Yield, ~Await].
-    // c. Let fallbackProto be "%Generator%".
-    fallbackProto = '%Generator%';
+    // c. Let fallbackProto be "%GeneratorFunction.prototype%".
+    fallbackProto = '%GeneratorFunction.prototype%';
   } else if (kind === 'async') {
     // 9. Else if kind is async, then
     // a. Let goal be the grammar symbol AsyncFunctionBody.
@@ -17420,7 +17420,7 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // a. Assert: kind is asyncGenerator.
     Assert(kind === 'asyncGenerator', "kind === 'asyncGenerator'"); // b. Let goal be the grammar symbol AsyncGeneratorBody.
     // c. Let parameterGoal be the grammar symbol FormalParameters[+Yield, +Await].
-    // d. Let fallbackProto be "%AsyncGenerator%".
+    // d. Let fallbackProto be "%AsyncGeneratorFunction.prototype%".
 
     fallbackProto = '%AsyncGeneratorFunction.prototype%';
   } // 11. Let argCount be the number of elements in args.
@@ -17588,8 +17588,8 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   SetFunctionName(F, new Value('anonymous')); // 26. If kind is generator, then
 
   if (kind === 'generator') {
-    // a. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
-    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')); // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+    // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
     DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
@@ -17599,8 +17599,8 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
     }));
   } else if (kind === 'asyncGenerator') {
     // 27. Else if kind is asyncGenerator, then
-    // a. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
-    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')); // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+    // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+    const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
     DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
       Value: prototype,
@@ -17643,11 +17643,11 @@ function* Evaluate_GeneratorExpression(GeneratorExpression) {
 
   funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let sourceText be the source text matched by GeneratorExpression.
 
-  const sourceText = sourceTextMatchedBy(GeneratorExpression); // 6. Let closure be OrdinaryFunctionCreate(%Generator%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
+  const sourceText = sourceTextMatchedBy(GeneratorExpression); // 6. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, funcEnv).
 
-  let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv);
+  let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv);
 
-  Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Generator%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+  Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
   /* istanbul ignore if */
 
   if (_temp instanceof Completion) {
@@ -17656,9 +17656,9 @@ function* Evaluate_GeneratorExpression(GeneratorExpression) {
 
   const closure = _temp; // 7. Perform SetFunctionName(closure, name).
 
-  SetFunctionName(closure, name); // 8. Let prototype be OrdinaryObjectCreate(%Generator.prototype%).
+  SetFunctionName(closure, name); // 8. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Generator.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   let _temp2 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -17739,7 +17739,7 @@ function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
 
   funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let source text be the source textmatched by AsyncGeneratorExpression.
 
-  const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression); // 6. Let closure be OrdinaryFunctionCreate(%AsyncGenerator%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
+  const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression); // 6. Let closure be OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, funcEnv).
 
   let _temp = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv);
 
@@ -17752,9 +17752,9 @@ function* Evaluate_AsyncGeneratorExpression(AsyncGeneratorExpression) {
 
   const closure = _temp; // 7. Perform SetFunctionName(closure, name).
 
-  SetFunctionName(closure, name); // 8. Let prototype be OrdinaryObjectCreate(%AsyncGenerator.prototype%).
+  SetFunctionName(closure, name); // 8. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
 
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGenerator.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
 
   let _temp2 = DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
     Value: prototype,
@@ -51188,67 +51188,6 @@ function BootstrapSet(realmRec) {
   realmRec.Intrinsics['%Set%'] = setConstructor;
 }
 
-function BootstrapGenerator(realmRec) {
-  const generatorPrototype = realmRec.Intrinsics['%Generator.prototype%'];
-  const generator = BootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
-    Writable: Value.false
-  }]], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
-
-  let _temp = DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
-    Value: generator,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true
-  }));
-
-  Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-  /* istanbul ignore if */
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-  realmRec.Intrinsics['%Generator%'] = generator;
-}
-
-function GeneratorFunctionConstructor(args, {
-  NewTarget
-}) {
-  // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject; // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
-  // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
-
-  return CreateDynamicFunction(C, NewTarget, 'generator', args);
-}
-
-GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfunction';
-function BootstrapGeneratorFunction(realmRec) {
-  const generator = realmRec.Intrinsics['%Generator%'];
-  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
-
-  let _temp = DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({
-    Writable: Value.false,
-    Configurable: Value.false
-  }));
-
-  Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-  /* istanbul ignore if */
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-
-  let _temp2 = DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({
-    Writable: Value.false
-  }));
-
-  Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({\n    Writable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-  if (_temp2 instanceof Completion) {
-    _temp2 = _temp2.Value;
-  }
-  realmRec.Intrinsics['%GeneratorFunction%'] = cons;
-}
-
 function GeneratorProto_next([value = Value.undefined], {
   thisValue
 }) {
@@ -51291,9 +51230,70 @@ function GeneratorProto_throw([exception = Value.undefined], {
 }
 
 GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype.throw';
-function BootstrapGeneratorPrototype(realmRec) {
+function BootstrapGeneratorFunctionPrototypePrototype(realmRec) {
   const generatorPrototype = BootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
-  realmRec.Intrinsics['%Generator.prototype%'] = generatorPrototype;
+  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
+}
+
+function BootstrapGeneratorFunctionPrototype(realmRec) {
+  const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
+  const generator = BootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
+    Writable: Value.false
+  }]], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
+
+  let _temp = DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({
+    Value: generator,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
+  }));
+
+  Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+  realmRec.Intrinsics['%GeneratorFunction.prototype%'] = generator;
+}
+
+function GeneratorFunctionConstructor(args, {
+  NewTarget
+}) {
+  // 1. Let C be the active function object.
+  const C = surroundingAgent.activeFunctionObject; // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
+  // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
+
+  return CreateDynamicFunction(C, NewTarget, 'generator', args);
+}
+
+GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfunction';
+function BootstrapGeneratorFunction(realmRec) {
+  const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
+  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
+
+  let _temp = DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({
+    Writable: Value.false,
+    Configurable: Value.false
+  }));
+
+  Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  let _temp2 = DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({
+    Writable: Value.false
+  }));
+
+  Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({\n    Writable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+  realmRec.Intrinsics['%GeneratorFunction%'] = cons;
 }
 
 function BootstrapAsyncFunctionPrototype(realmRec) {
@@ -51321,69 +51321,6 @@ function BootstrapAsyncFunction(realmRec) {
   }));
   cons.Prototype = realmRec.Intrinsics['%Function%'];
   realmRec.Intrinsics['%AsyncFunction%'] = cons;
-}
-
-function BootstrapAsyncGenerator(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGenerator.prototype%'], undefined, {
-    Writable: Value.false
-  }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
-
-  let _temp = realmRec.Intrinsics['%AsyncGenerator.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
-    Value: proto,
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true
-  }));
-
-  Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGenerator.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-  /* istanbul ignore if */
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-  realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'] = proto;
-}
-
-function AsyncGeneratorFunctionConstructor(args, {
-  NewTarget
-}) {
-  // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject; // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
-  // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-
-  return CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args);
-}
-
-AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
-function BootstrapAsyncGeneratorFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
-
-  let _temp = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.false
-  }));
-
-  Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-  /* istanbul ignore if */
-
-  if (_temp instanceof Completion) {
-    _temp = _temp.Value;
-  }
-
-  let _temp2 = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
-    Writable: Value.false,
-    Enumerable: Value.false,
-    Configurable: Value.true
-  }));
-
-  Assert(!(_temp2 instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-
-  if (_temp2 instanceof Completion) {
-    _temp2 = _temp2.Value;
-  }
-  cons.Prototype = realmRec.Intrinsics['%Function%'];
-  realmRec.Intrinsics['%AsyncGeneratorFunction%'] = cons;
 }
 
 function AsyncGeneratorPrototype_next([value = Value.undefined], {
@@ -51455,9 +51392,72 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], {
 }
 
 AsyncGeneratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw';
-function BootstrapAsyncGeneratorPrototype(realmRec) {
+function BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
   const proto = BootstrapPrototype(realmRec, [['next', AsyncGeneratorPrototype_next, 1], ['return', AsyncGeneratorPrototype_return, 1], ['throw', AsyncGeneratorPrototype_throw, 1]], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
-  realmRec.Intrinsics['%AsyncGenerator.prototype%'] = proto;
+  realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'] = proto;
+}
+
+function BootstrapAsyncGeneratorFunctionPrototype(realmRec) {
+  const proto = BootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, {
+    Writable: Value.false
+  }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
+
+  let _temp = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+    Value: proto,
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
+  }));
+
+  Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+  realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'] = proto;
+}
+
+function AsyncGeneratorFunctionConstructor(args, {
+  NewTarget
+}) {
+  // 1. Let C be the active function object.
+  const C = surroundingAgent.activeFunctionObject; // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
+  // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
+
+  return CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args);
+}
+
+AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
+function BootstrapAsyncGeneratorFunction(realmRec) {
+  const cons = BootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
+
+  let _temp = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
+  }));
+
+  Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+  /* istanbul ignore if */
+
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
+
+  let _temp2 = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
+  }));
+
+  Assert(!(_temp2 instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+  cons.Prototype = realmRec.Intrinsics['%Function%'];
+  realmRec.Intrinsics['%AsyncGeneratorFunction%'] = cons;
 }
 
 function AsyncFromSyncIteratorPrototype_next([value], {
@@ -57882,13 +57882,13 @@ function CreateIntrinsics(realmRec) {
   BootstrapSet(realmRec);
   BootstrapMapPrototype(realmRec);
   BootstrapMap(realmRec);
-  BootstrapGeneratorPrototype(realmRec);
-  BootstrapGenerator(realmRec);
+  BootstrapGeneratorFunctionPrototypePrototype(realmRec);
+  BootstrapGeneratorFunctionPrototype(realmRec);
   BootstrapGeneratorFunction(realmRec);
   BootstrapAsyncFunctionPrototype(realmRec);
   BootstrapAsyncFunction(realmRec);
-  BootstrapAsyncGeneratorPrototype(realmRec);
-  BootstrapAsyncGenerator(realmRec);
+  BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
+  BootstrapAsyncGeneratorFunctionPrototype(realmRec);
   BootstrapAsyncGeneratorFunction(realmRec);
   BootstrapAsyncFromSyncIteratorPrototype(realmRec);
   BootstrapArrayBufferPrototype(realmRec);
