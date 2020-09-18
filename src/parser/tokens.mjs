@@ -117,6 +117,7 @@ export const RawTokens = [
   ['FALSE', 'false'],
   ['NUMBER', null],
   ['STRING', null],
+  ['BIGINT', null],
 
   // BEGIN Callable
   ['SUPER', 'super'],
@@ -141,7 +142,7 @@ export const Token = RawTokens
   .reduce((obj, [name], i) => {
     obj[name] = i;
     return obj;
-  }, {});
+  }, Object.create(null));
 
 export const TokenNames = RawTokens.map((r) => r[0]);
 
