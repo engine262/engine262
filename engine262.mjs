@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 2b21fb9d9aa991d66417e714b581e4c14774c8c2
+ * engine262 0.0.1 f005ad30dd92f4000778feae2a05d423ed7c2470
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -4620,23 +4620,26 @@ class IdentifierParser extends BaseParser {
         this.unexpected(token);
     }
 
-    if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
+    this.validateIdentifierReference(node.name, token);
+    return this.finishNode(node, 'IdentifierReference');
+  }
+
+  validateIdentifierReference(name, token) {
+    if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
 
-    if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
+    if (name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
 
-    if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+    if (this.isStrictMode() && isReservedWordStrict(name)) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
 
-    if (node.name !== 'yield' && node.name !== 'await' && isKeywordRaw(node.name)) {
+    if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
       this.raiseEarly('UnexpectedToken', token);
     }
-
-    return this.finishNode(node, 'IdentifierReference');
   } // LabelIdentifier :
   //   Identifier
   //   [~Yield] `yield`
@@ -6186,6 +6189,10 @@ class ExpressionParser extends FunctionParser {
         return;
 
       case 'ParenthesizedExpression':
+        if (node.Expression.type === 'ObjectLiteral' || node.Expression.type === 'ArrayLiteral') {
+          break;
+        }
+
         this.validateAssignmentTarget(node.Expression);
         return;
 
@@ -6195,7 +6202,11 @@ class ExpressionParser extends FunctionParser {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
 
-          this.validateAssignmentTarget(p);
+          if (p.type === 'AssignmentExpression') {
+            this.validateAssignmentTarget(p.LeftHandSideExpression);
+          } else {
+            this.validateAssignmentTarget(p);
+          }
         });
         return;
 
@@ -6210,11 +6221,12 @@ class ExpressionParser extends FunctionParser {
         return;
 
       case 'PropertyDefinition':
-        this.validateAssignmentTarget(node.AssignmentExpression);
-        return;
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          this.validateAssignmentTarget(node.AssignmentExpression.LeftHandSideExpression);
+        } else {
+          this.validateAssignmentTarget(node.AssignmentExpression);
+        }
 
-      case 'AssignmentExpression':
-        this.validateAssignmentTarget(node.LeftHandSideExpression);
         return;
 
       case 'Elision':
@@ -6518,7 +6530,9 @@ class ExpressionParser extends FunctionParser {
 
     if (this.scope.arrowInfoStack.length > 0) {
       this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].awaitExpressions.push(node);
-    } else if (!this.scope.hasReturn()) {
+    }
+
+    if (!this.scope.hasReturn()) {
       this.state.hasTopLevelAwait = true;
     }
 
@@ -7414,23 +7428,7 @@ class ExpressionParser extends FunctionParser {
 
       if (!isSpecialMethod && firstName.type === 'IdentifierName' && !this.test(Token.LPAREN) && !isKeyword(firstName.name)) {
         firstName.type = 'IdentifierReference';
-
-        if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
-
-        if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
-
-        if (firstName.name !== 'yield' && firstName.name !== 'await' && isKeywordRaw(firstName.name)) {
-          this.raiseEarly('UnexpectedToken', firstName);
-        }
-
-        if (this.isStrictMode() && isReservedWordStrict(firstName.name)) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
-
+        this.validateIdentifierReference(firstName.name, firstName);
         return firstName;
       }
     }
@@ -40191,7 +40189,7 @@ function NumberProto_toString([radix = Value.undefined], {
   }
 
   if (radixNumber < 2 || radixNumber > 36) {
-    return surroundingAgent.Throw('TypeError', 'NumberFormatRange', 'toString');
+    return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toString');
   }
 
   if (radixNumber === 10) {
