@@ -4,8 +4,6 @@ import {
   isPropertyOrCall,
   isMember,
   isKeyword,
-  isKeywordRaw,
-  isReservedWordStrict,
 } from './tokens.mjs';
 import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
@@ -129,6 +127,9 @@ export class ExpressionParser extends FunctionParser {
       case 'SuperProperty':
         return;
       case 'ParenthesizedExpression':
+        if (node.Expression.type === 'ObjectLiteral' || node.Expression.type === 'ArrayLiteral') {
+          break;
+        }
         this.validateAssignmentTarget(node.Expression);
         return;
       case 'ArrayLiteral':
@@ -136,7 +137,11 @@ export class ExpressionParser extends FunctionParser {
           if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
-          this.validateAssignmentTarget(p);
+          if (p.type === 'AssignmentExpression') {
+            this.validateAssignmentTarget(p.LeftHandSideExpression);
+          } else {
+            this.validateAssignmentTarget(p);
+          }
         });
         return;
       case 'ObjectLiteral':
@@ -149,10 +154,11 @@ export class ExpressionParser extends FunctionParser {
         });
         return;
       case 'PropertyDefinition':
-        this.validateAssignmentTarget(node.AssignmentExpression);
-        return;
-      case 'AssignmentExpression':
-        this.validateAssignmentTarget(node.LeftHandSideExpression);
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          this.validateAssignmentTarget(node.AssignmentExpression.LeftHandSideExpression);
+        } else {
+          this.validateAssignmentTarget(node.AssignmentExpression);
+        }
         return;
       case 'Elision':
         return;
@@ -412,7 +418,8 @@ export class ExpressionParser extends FunctionParser {
     node.UnaryExpression = this.parseUnaryExpression();
     if (this.scope.arrowInfoStack.length > 0) {
       this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].awaitExpressions.push(node);
-    } else if (!this.scope.hasReturn()) {
+    }
+    if (!this.scope.hasReturn()) {
       this.state.hasTopLevelAwait = true;
     }
     return this.finishNode(node, 'AwaitExpression');
@@ -1173,20 +1180,7 @@ export class ExpressionParser extends FunctionParser {
           && !this.test(Token.LPAREN)
           && !isKeyword(firstName.name)) {
         firstName.type = 'IdentifierReference';
-        if (firstName.name === 'await' && (this.isStrictMode() || this.scope.hasAwait())) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
-        if (firstName.name === 'yield' && (this.isStrictMode() || this.scope.hasYield())) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
-        if (firstName.name !== 'yield'
-            && firstName.name !== 'await'
-            && isKeywordRaw(firstName.name)) {
-          this.raiseEarly('UnexpectedToken', firstName);
-        }
-        if (this.isStrictMode() && isReservedWordStrict(firstName.name)) {
-          this.raiseEarly('UnexpectedReservedWordStrict', firstName);
-        }
+        this.validateIdentifierReference(firstName.name, firstName);
         return firstName;
       }
     }

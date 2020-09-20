@@ -109,21 +109,23 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
+    this.validateIdentifierReference(node.name, token);
+    return this.finishNode(node, 'IdentifierReference');
+  }
+
+  validateIdentifierReference(name, token) {
+    if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
-    if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
+    if (name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
-    if (this.isStrictMode() && isReservedWordStrict(node.name)) {
+    if (this.isStrictMode() && isReservedWordStrict(name)) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
-    if (node.name !== 'yield'
-        && node.name !== 'await'
-        && isKeywordRaw(node.name)) {
+    if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
       this.raiseEarly('UnexpectedToken', token);
     }
-    return this.finishNode(node, 'IdentifierReference');
   }
 
   // LabelIdentifier :

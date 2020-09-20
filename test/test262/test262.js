@@ -219,6 +219,9 @@ if (!process.send) {
       {
         const completion = realm.evaluateScript(`\
 var Test262Error = class Test262Error extends Error {};
+Test262Error.thrower = (...args) => {
+  throw new Test262Error(...args);
+};
 
 function $DONE(error) {
   if (error) {
