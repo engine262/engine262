@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 f005ad30dd92f4000778feae2a05d423ed7c2470
+ * engine262 0.0.1 51224629b6fb8d3e7300d1ca7f465ea27aaaa90c
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1656,7 +1656,7 @@ const RawTokens = [// BEGIN PropertyOrCall
 // INSTANCEOF
 ['NEW', 'new'], ['RETURN', 'return'], ['SWITCH', 'switch'], ['THROW', 'throw'], ['TRY', 'try'], // TYPEOF
 ['VAR', 'var'], // VOID
-['WHILE', 'while'], ['WITH', 'with'], ['THIS', 'this'], ['NULL', 'null'], ['TRUE', 'true'], ['FALSE', 'false'], ['NUMBER', null], ['STRING', null], // BEGIN Callable
+['WHILE', 'while'], ['WITH', 'with'], ['THIS', 'this'], ['NULL', 'null'], ['TRUE', 'true'], ['FALSE', 'false'], ['NUMBER', null], ['STRING', null], ['BIGINT', null], // BEGIN Callable
 ['SUPER', 'super'], // BEGIN AnyIdentifier
 ['IDENTIFIER', null], ['AWAIT', 'await'], ['YIELD', 'yield'], // END AnyIdentifier
 // END Callable
@@ -1664,7 +1664,7 @@ const RawTokens = [// BEGIN PropertyOrCall
 const Token = RawTokens.reduce((obj, [name], i) => {
   obj[name] = i;
   return obj;
-}, {});
+}, Object.create(null));
 const TokenNames = RawTokens.map(r => r[0]);
 const TokenPrecedence = RawTokens.map(r => r[2] || 0);
 const Keywords = RawTokens.filter(([name, raw]) => name.toLowerCase() === raw).map(([, raw]) => raw);
