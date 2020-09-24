@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 51224629b6fb8d3e7300d1ca7f465ea27aaaa90c
+ * engine262 0.0.1 6ea3dd9565ba495a22087665e56e298768e02d95
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -24888,6 +24888,10 @@ const FEATURES = Object.freeze([{
   name: 'Arbitrary Module Namespace Names',
   flag: 'arbitrary-module-namespace-names',
   url: 'https://github.com/tc39/ecma262/pull/2154'
+}, {
+  name: 'item Method',
+  flag: 'item-method',
+  url: 'https://github.com/tc39/proposal-item-method'
 }].map(Object.freeze));
 let agentSignifier = 0; // #sec-agents
 
@@ -39038,148 +39042,220 @@ function ArrayProto_values(args, {
 
   const O = _temp146;
   return CreateArrayIterator(O, 'value');
-}
+} // https://tc39.es/proposal-item-method/#sec-array.prototype.item
+
 
 ArrayProto_values.section = 'https://tc39.es/ecma262/#sec-array.prototype.values';
-function BootstrapArrayPrototype(realmRec) {
-  let _temp147 = ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']);
 
-  Assert(!(_temp147 instanceof AbruptCompletion), "ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%'])" + ' returned an abrupt completion');
+function ArrayProto_item([index = Value.undefined], {
+  thisValue
+}) {
+  let _temp147 = ToObject(thisValue);
+
+  if (_temp147 instanceof AbruptCompletion) {
+    return _temp147;
+  }
 
   if (_temp147 instanceof Completion) {
     _temp147 = _temp147.Value;
   }
 
-  const proto = _temp147;
-  assignProps(realmRec, proto, [['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], ['keys', ArrayProto_keys, 0], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['sort', ArrayProto_sort, 1], ['splice', ArrayProto_splice, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0]]);
+  // 1. Let O be ? ToObject(this value).
+  const O = _temp147; // 2. Let len be ? LengthOfArrayLike(O).
+
+  let _temp148 = LengthOfArrayLike(O);
+
+  if (_temp148 instanceof AbruptCompletion) {
+    return _temp148;
+  }
+
+  if (_temp148 instanceof Completion) {
+    _temp148 = _temp148.Value;
+  }
+
+  const len = _temp148.numberValue(); // 3. Let relativeIndex be ? ToInteger(index).
+
+
+  let _temp149 = ToInteger(index);
+
+  if (_temp149 instanceof AbruptCompletion) {
+    return _temp149;
+  }
+
+  if (_temp149 instanceof Completion) {
+    _temp149 = _temp149.Value;
+  }
+
+  const relativeIndex = _temp149.numberValue();
+
+  let k; // 4. If relativeIndex ≥ 0, then
+
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else {
+    // 5. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  } // 6. If k < 0 or k ≥ len, then return undefined.
+
+
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  } // 7. Return ? Get(O, ! ToString(k)).
+
+
+  let _temp150 = ToString(new Value(k));
+
+  Assert(!(_temp150 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+
+  if (_temp150 instanceof Completion) {
+    _temp150 = _temp150.Value;
+  }
+
+  return Get(O, _temp150);
+}
+
+ArrayProto_item.section = 'https://tc39.es/proposal-item-method/#sec-array.prototype.item';
+function BootstrapArrayPrototype(realmRec) {
+  let _temp151 = ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']);
+
+  Assert(!(_temp151 instanceof AbruptCompletion), "ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%'])" + ' returned an abrupt completion');
+
+  if (_temp151 instanceof Completion) {
+    _temp151 = _temp151.Value;
+  }
+
+  const proto = _temp151;
+  assignProps(realmRec, proto, [['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], surroundingAgent.feature('item-method') ? ['item', ArrayProto_item, 1] : undefined, ['keys', ArrayProto_keys, 0], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['sort', ArrayProto_sort, 1], ['splice', ArrayProto_splice, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0]]);
   BootstrapArrayPrototypeShared(realmRec, proto, () => {}, O => Get(O, new Value('length')));
   proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
 
-    let _temp148 = CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true);
+    let _temp152 = CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true);
 
-    Assert(!(_temp148 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)" + ' returned an abrupt completion');
-
-    if (_temp148 instanceof Completion) {
-      _temp148 = _temp148.Value;
-    }
-
-    Assert(_temp148 === Value.true, "X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true");
-
-    let _temp149 = CreateDataProperty(unscopableList, new Value('entries'), Value.true);
-
-    Assert(!(_temp149 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('entries'), Value.true)" + ' returned an abrupt completion');
-
-    if (_temp149 instanceof Completion) {
-      _temp149 = _temp149.Value;
-    }
-
-    Assert(_temp149 === Value.true, "X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true");
-
-    let _temp150 = CreateDataProperty(unscopableList, new Value('fill'), Value.true);
-
-    Assert(!(_temp150 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('fill'), Value.true)" + ' returned an abrupt completion');
-
-    if (_temp150 instanceof Completion) {
-      _temp150 = _temp150.Value;
-    }
-
-    Assert(_temp150 === Value.true, "X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true");
-
-    let _temp151 = CreateDataProperty(unscopableList, new Value('find'), Value.true);
-
-    Assert(!(_temp151 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('find'), Value.true)" + ' returned an abrupt completion');
-
-    if (_temp151 instanceof Completion) {
-      _temp151 = _temp151.Value;
-    }
-
-    Assert(_temp151 === Value.true, "X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true");
-
-    let _temp152 = CreateDataProperty(unscopableList, new Value('findIndex'), Value.true);
-
-    Assert(!(_temp152 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp152 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp152 instanceof Completion) {
       _temp152 = _temp152.Value;
     }
 
-    Assert(_temp152 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true");
+    Assert(_temp152 === Value.true, "X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true");
 
-    let _temp153 = CreateDataProperty(unscopableList, new Value('flat'), Value.true);
+    let _temp153 = CreateDataProperty(unscopableList, new Value('entries'), Value.true);
 
-    Assert(!(_temp153 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flat'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp153 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('entries'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp153 instanceof Completion) {
       _temp153 = _temp153.Value;
     }
 
-    Assert(_temp153 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true");
+    Assert(_temp153 === Value.true, "X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true");
 
-    let _temp154 = CreateDataProperty(unscopableList, new Value('flatMap'), Value.true);
+    let _temp154 = CreateDataProperty(unscopableList, new Value('fill'), Value.true);
 
-    Assert(!(_temp154 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp154 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('fill'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp154 instanceof Completion) {
       _temp154 = _temp154.Value;
     }
 
-    Assert(_temp154 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true");
+    Assert(_temp154 === Value.true, "X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true");
 
-    let _temp155 = CreateDataProperty(unscopableList, new Value('includes'), Value.true);
+    let _temp155 = CreateDataProperty(unscopableList, new Value('find'), Value.true);
 
-    Assert(!(_temp155 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('includes'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp155 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('find'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp155 instanceof Completion) {
       _temp155 = _temp155.Value;
     }
 
-    Assert(_temp155 === Value.true, "X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true");
+    Assert(_temp155 === Value.true, "X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true");
 
-    let _temp156 = CreateDataProperty(unscopableList, new Value('keys'), Value.true);
+    let _temp156 = CreateDataProperty(unscopableList, new Value('findIndex'), Value.true);
 
-    Assert(!(_temp156 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('keys'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp156 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp156 instanceof Completion) {
       _temp156 = _temp156.Value;
     }
 
-    Assert(_temp156 === Value.true, "X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true");
+    Assert(_temp156 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true");
 
-    let _temp157 = CreateDataProperty(unscopableList, new Value('values'), Value.true);
+    let _temp157 = CreateDataProperty(unscopableList, new Value('flat'), Value.true);
 
-    Assert(!(_temp157 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('values'), Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp157 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flat'), Value.true)" + ' returned an abrupt completion');
 
     if (_temp157 instanceof Completion) {
       _temp157 = _temp157.Value;
     }
 
-    Assert(_temp157 === Value.true, "X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true");
+    Assert(_temp157 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true");
 
-    let _temp158 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
+    let _temp158 = CreateDataProperty(unscopableList, new Value('flatMap'), Value.true);
+
+    Assert(!(_temp158 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)" + ' returned an abrupt completion');
+
+    if (_temp158 instanceof Completion) {
+      _temp158 = _temp158.Value;
+    }
+
+    Assert(_temp158 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true");
+
+    let _temp159 = CreateDataProperty(unscopableList, new Value('includes'), Value.true);
+
+    Assert(!(_temp159 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('includes'), Value.true)" + ' returned an abrupt completion');
+
+    if (_temp159 instanceof Completion) {
+      _temp159 = _temp159.Value;
+    }
+
+    Assert(_temp159 === Value.true, "X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true");
+
+    let _temp160 = CreateDataProperty(unscopableList, new Value('keys'), Value.true);
+
+    Assert(!(_temp160 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('keys'), Value.true)" + ' returned an abrupt completion');
+
+    if (_temp160 instanceof Completion) {
+      _temp160 = _temp160.Value;
+    }
+
+    Assert(_temp160 === Value.true, "X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true");
+
+    let _temp161 = CreateDataProperty(unscopableList, new Value('values'), Value.true);
+
+    Assert(!(_temp161 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('values'), Value.true)" + ' returned an abrupt completion');
+
+    if (_temp161 instanceof Completion) {
+      _temp161 = _temp161.Value;
+    }
+
+    Assert(_temp161 === Value.true, "X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true");
+
+    let _temp162 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,
       Writable: Value.false,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
 
-    Assert(!(_temp158 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+    Assert(!(_temp162 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
 
-    if (_temp158 instanceof Completion) {
-      _temp158 = _temp158.Value;
+    if (_temp162 instanceof Completion) {
+      _temp162 = _temp162.Value;
     }
   } // Used in `arguments` objects.
 
-  let _temp159 = Get(proto, new Value('values'));
+  let _temp163 = Get(proto, new Value('values'));
 
-  Assert(!(_temp159 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
+  Assert(!(_temp163 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
 
-  if (_temp159 instanceof Completion) {
-    _temp159 = _temp159.Value;
+  if (_temp163 instanceof Completion) {
+    _temp163 = _temp163.Value;
   }
 
-  realmRec.Intrinsics['%Array.prototype.values%'] = _temp159;
+  realmRec.Intrinsics['%Array.prototype.values%'] = _temp163;
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }
 
@@ -49599,12 +49675,77 @@ function StringProto_iterator(args, {
 
   const S = _temp116;
   return CreateStringIterator(S);
-}
+} // https://tc39.es/proposal-item-method/#sec-string.prototype.item
+
 
 StringProto_iterator.section = 'https://tc39.es/ecma262/#sec-string.prototype-@@iterator';
+
+function StringProto_item([index = Value.undefined], {
+  thisValue
+}) {
+  let _temp117 = RequireObjectCoercible(thisValue);
+
+  if (_temp117 instanceof AbruptCompletion) {
+    return _temp117;
+  }
+
+  if (_temp117 instanceof Completion) {
+    _temp117 = _temp117.Value;
+  }
+
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = _temp117; // 2. Let S be ? ToString(O).
+
+  let _temp118 = ToString(O);
+
+  if (_temp118 instanceof AbruptCompletion) {
+    return _temp118;
+  }
+
+  if (_temp118 instanceof Completion) {
+    _temp118 = _temp118.Value;
+  }
+
+  const S = _temp118; // 3. Let len be the length of S.
+
+  const len = S.stringValue().length; // 4. Let relativeIndex be ? ToInteger(index).
+
+  let _temp119 = ToInteger(index);
+
+  if (_temp119 instanceof AbruptCompletion) {
+    return _temp119;
+  }
+
+  if (_temp119 instanceof Completion) {
+    _temp119 = _temp119.Value;
+  }
+
+  const relativeIndex = _temp119.numberValue();
+
+  let k; // 5. If relativeIndex ≥ 0, then
+
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else {
+    // 6. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  } // 7. If k < 0 or k ≥ len, then return undefined.
+
+
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  } // 8. Return the String value consisting of only the code unit at position k in S.
+
+
+  return new Value(S.stringValue()[k]);
+}
+
+StringProto_item.section = 'https://tc39.es/proposal-item-method/#sec-string.prototype.item';
 function BootstrapStringPrototype(realmRec) {
   const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
-  assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
+  assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], surroundingAgent.feature('item-method') ? ['item', StringProto_item, 1] : undefined, ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
   realmRec.Intrinsics['%String.prototype%'] = proto;
 }
 
@@ -55903,55 +56044,116 @@ function TypedArrayProto_toStringTag(args, {
   Assert(Type(name) === 'String', "Type(name) === 'String'"); // 6. Return name.
 
   return name;
-}
+} // https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.item
+
 
 TypedArrayProto_toStringTag.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag';
-function BootstrapTypedArrayPrototype(realmRec) {
-  let _temp58 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
 
-  Assert(!(_temp58 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
+function TypedArrayProto_item([index = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue; // 2. Perform ? ValidateTypedArray(O).
+
+  let _temp58 = ValidateTypedArray(O);
+
+  if (_temp58 instanceof AbruptCompletion) {
+    return _temp58;
+  }
 
   if (_temp58 instanceof Completion) {
     _temp58 = _temp58.Value;
   }
 
-  const ArrayProto_toString = _temp58;
-  Assert(Type(ArrayProto_toString) === 'Object', "Type(ArrayProto_toString) === 'Object'");
-  const proto = BootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_buffer]], ['byteLength', [TypedArrayProto_byteLength]], ['byteOffset', [TypedArrayProto_byteOffset]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_length]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]]], realmRec.Intrinsics['%Object.prototype%']);
-  BootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
-    let _temp59 = ValidateTypedArray(thisValue);
+  const len = O.ArrayLength.numberValue(); // 4. Let relativeIndex be ? ToInteger(index).
 
-    if (_temp59 instanceof AbruptCompletion) {
-      return _temp59;
+  let _temp59 = ToInteger(index);
+
+  if (_temp59 instanceof AbruptCompletion) {
+    return _temp59;
+  }
+
+  if (_temp59 instanceof Completion) {
+    _temp59 = _temp59.Value;
+  }
+
+  const relativeIndex = _temp59.numberValue();
+
+  let k; // 5. If relativeIndex ≥ 0, then
+
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else {
+    // 6. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  } // 7. If k < 0 or k ≥ len, then return undefined.
+
+
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  } // 8. Return ? Get(O, ! ToString(k)).
+
+
+  let _temp60 = ToString(new Value(k));
+
+  Assert(!(_temp60 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
+
+  if (_temp60 instanceof Completion) {
+    _temp60 = _temp60.Value;
+  }
+
+  return Get(O, _temp60);
+}
+
+TypedArrayProto_item.section = 'https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.item';
+function BootstrapTypedArrayPrototype(realmRec) {
+  let _temp61 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
+
+  Assert(!(_temp61 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
+
+  if (_temp61 instanceof Completion) {
+    _temp61 = _temp61.Value;
+  }
+
+  const ArrayProto_toString = _temp61;
+  Assert(Type(ArrayProto_toString) === 'Object', "Type(ArrayProto_toString) === 'Object'");
+  const proto = BootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_buffer]], ['byteLength', [TypedArrayProto_byteLength]], ['byteOffset', [TypedArrayProto_byteOffset]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], surroundingAgent.feature('item-method') ? ['item', TypedArrayProto_item, 1] : undefined, ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_length]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]]], realmRec.Intrinsics['%Object.prototype%']);
+  BootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
+    let _temp62 = ValidateTypedArray(thisValue);
+
+    if (_temp62 instanceof AbruptCompletion) {
+      return _temp62;
     }
 
-    if (_temp59 instanceof Completion) {
-      _temp59 = _temp59.Value;
+    if (_temp62 instanceof Completion) {
+      _temp62 = _temp62.Value;
     }
   }, O => O.ArrayLength); // 22.2.3.31 #sec-%typedarray%.prototype-@@iterator
 
   {
-    let _temp60 = Get(proto, new Value('values'));
+    let _temp63 = Get(proto, new Value('values'));
 
-    Assert(!(_temp60 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
+    Assert(!(_temp63 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
 
-    if (_temp60 instanceof Completion) {
-      _temp60 = _temp60.Value;
+    if (_temp63 instanceof Completion) {
+      _temp63 = _temp63.Value;
     }
 
-    const fn = _temp60;
+    const fn = _temp63;
 
-    let _temp61 = proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
+    let _temp64 = proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
 
-    Assert(!(_temp61 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+    Assert(!(_temp64 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
 
-    if (_temp61 instanceof Completion) {
-      _temp61 = _temp61.Value;
+    if (_temp64 instanceof Completion) {
+      _temp64 = _temp64.Value;
     }
   }
   realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
