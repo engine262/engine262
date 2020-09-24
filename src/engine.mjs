@@ -46,6 +46,11 @@ export const FEATURES = Object.freeze([
     flag: 'arbitrary-module-namespace-names',
     url: 'https://github.com/tc39/ecma262/pull/2154',
   },
+  {
+    name: 'item Method',
+    flag: 'item-method',
+    url: 'https://github.com/tc39/proposal-item-method',
+  },
 ].map(Object.freeze));
 
 let agentSignifier = 0;

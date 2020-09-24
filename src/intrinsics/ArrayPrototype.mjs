@@ -531,6 +531,31 @@ function ArrayProto_values(args, { thisValue }) {
   return CreateArrayIterator(O, 'value');
 }
 
+// https://tc39.es/proposal-item-method/#sec-array.prototype.item
+function ArrayProto_item([index = Value.undefined], { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  const O = Q(ToObject(thisValue));
+  // 2. Let len be ? LengthOfArrayLike(O).
+  const len = Q(LengthOfArrayLike(O)).numberValue();
+  // 3. Let relativeIndex be ? ToInteger(index).
+  const relativeIndex = Q(ToInteger(index)).numberValue();
+  let k;
+  // 4. If relativeIndex ≥ 0, then
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else { // 5. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  }
+  // 6. If k < 0 or k ≥ len, then return undefined.
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  }
+  // 7. Return ? Get(O, ! ToString(k)).
+  return Q(Get(O, X(ToString(new Value(k)))));
+}
+
 export function BootstrapArrayPrototype(realmRec) {
   const proto = X(ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']));
 
@@ -542,6 +567,9 @@ export function BootstrapArrayPrototype(realmRec) {
     ['filter', ArrayProto_filter, 1],
     ['flat', ArrayProto_flat, 0],
     ['flatMap', ArrayProto_flatMap, 1],
+    surroundingAgent.feature('item-method')
+      ? ['item', ArrayProto_item, 1]
+      : undefined,
     ['keys', ArrayProto_keys, 0],
     ['map', ArrayProto_map, 1],
     ['pop', ArrayProto_pop, 0],

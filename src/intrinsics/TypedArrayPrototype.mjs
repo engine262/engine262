@@ -793,6 +793,33 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   return name;
 }
 
+// https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.item
+function TypedArrayProto_item([index = Value.undefined], { thisValue }) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. Perform ? ValidateTypedArray(O).
+  Q(ValidateTypedArray(O));
+  // 3. Let len be O.[[ArrayLength]].
+  const len = O.ArrayLength.numberValue();
+  // 4. Let relativeIndex be ? ToInteger(index).
+  const relativeIndex = Q(ToInteger(index)).numberValue();
+  let k;
+  // 5. If relativeIndex ≥ 0, then
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else { // 6. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  }
+  // 7. If k < 0 or k ≥ len, then return undefined.
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  }
+  // 8. Return ? Get(O, ! ToString(k)).
+  return Q(Get(O, X(ToString(new Value(k)))));
+}
+
 export function BootstrapTypedArrayPrototype(realmRec) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
   Assert(Type(ArrayProto_toString) === 'Object');
@@ -805,6 +832,9 @@ export function BootstrapTypedArrayPrototype(realmRec) {
     ['entries', TypedArrayProto_entries, 0],
     ['fill', TypedArrayProto_fill, 1],
     ['filter', TypedArrayProto_filter, 1],
+    surroundingAgent.feature('item-method')
+      ? ['item', TypedArrayProto_item, 1]
+      : undefined,
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_length]],
     ['map', TypedArrayProto_map, 1],

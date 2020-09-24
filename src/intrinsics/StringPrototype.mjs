@@ -678,6 +678,33 @@ function StringProto_iterator(args, { thisValue }) {
   return Q(CreateStringIterator(S));
 }
 
+// https://tc39.es/proposal-item-method/#sec-string.prototype.item
+function StringProto_item([index = Value.undefined], { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = Q(RequireObjectCoercible(thisValue));
+  // 2. Let S be ? ToString(O).
+  const S = Q(ToString(O));
+  // 3. Let len be the length of S.
+  const len = S.stringValue().length;
+  // 4. Let relativeIndex be ? ToInteger(index).
+  const relativeIndex = Q(ToInteger(index)).numberValue();
+  let k;
+  // 5. If relativeIndex ≥ 0, then
+  if (relativeIndex >= 0) {
+    // a. Let k be relativeIndex.
+    k = relativeIndex;
+  } else { // 6. Else,
+    // a. Let k be len + relativeIndex.
+    k = len + relativeIndex;
+  }
+  // 7. If k < 0 or k ≥ len, then return undefined.
+  if (k < 0 || k >= len) {
+    return Value.undefined;
+  }
+  // 8. Return the String value consisting of only the code unit at position k in S.
+  return new Value(S.stringValue()[k]);
+}
+
 export function BootstrapStringPrototype(realmRec) {
   const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
 
@@ -689,6 +716,9 @@ export function BootstrapStringPrototype(realmRec) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
+    surroundingAgent.feature('item-method')
+      ? ['item', StringProto_item, 1]
+      : undefined,
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
     ['match', StringProto_match, 1],

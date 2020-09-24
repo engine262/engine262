@@ -30,3 +30,8 @@ regexp-match-indices = regexp-match-indices
 
 # https://github.com/tc39/proposal-cleanup-some
 cleanupSome = cleanup-some
+
+# https://github.com/tc39/proposal-item-method/
+Array.prototype.item = item-method
+String.prototype.item = item-method
+TypedArray.prototype.item = item-method
