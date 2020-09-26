@@ -25,6 +25,9 @@ async function* scan(d) {
     const category = item.replace('node_modules/unicode-13.0.0/', '');
     // eslint-disable-next-line import/no-dynamic-require
     const cps = require(`unicode-13.0.0/${category}/code-points.js`);
+    if (!Array.isArray(cps)) {
+      continue;
+    }
     const ranges = [];
     let from = 0;
     let to = 0;
