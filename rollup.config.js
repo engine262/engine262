@@ -4,6 +4,7 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const { babel } = require('@rollup/plugin-babel');
 const commonjs = require('@rollup/plugin-commonjs');
+const json = require('@rollup/plugin-json');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const { name, version } = require('./package.json');
 
@@ -19,6 +20,7 @@ const banner = `/*!
 module.exports = () => ({
   input: './src/api.mjs',
   plugins: [
+    json(),
     commonjs(),
     nodeResolve(),
     babel({

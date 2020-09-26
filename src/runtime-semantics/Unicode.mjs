@@ -1,4 +1,5 @@
 import { Assert } from '../abstract-ops/all.mjs';
+import UnicodeSets from '../data-gen.json';
 
 // #table-nonbinary-unicode-properties
 export const NonbinaryUnicodeProperties = {
@@ -534,9 +535,16 @@ export function UnicodeMatchPropertyValue(p, v) {
   return value;
 }
 
-export function getUnicodePropertyValueSet(_property, _value) {
-  // FIXME: figure out bundling unicode properties
-  // const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
-  // return new Set(require(`unicode-13.0.0/${path}/symbols.js`));
-  return new Set();
+export function getUnicodePropertyValueSet(property, value) {
+  const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
+  if (Array.isArray(UnicodeSets[path])) {
+    const set = new Set();
+    UnicodeSets[path].forEach(([from, to]) => {
+      for (let i = from; i <= to; i += 1) {
+        set.add(i);
+      }
+    });
+    UnicodeSets[path] = set;
+  }
+  return UnicodeSets[path];
 }

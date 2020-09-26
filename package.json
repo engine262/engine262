@@ -11,7 +11,8 @@
   "main": "dist/engine262",
   "scripts": {
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
-    "build": "npm run build:engine",
+    "build": "npm run build:regex_data && npm run build:engine",
+    "build:regex_data": "node scripts/gen_regex_sets.js",
     "build:engine": "rollup -c",
     "test": "bash test/test_root.sh",
     "test:test262": "node test/test262/test262.js",
@@ -37,6 +38,7 @@
     "@babel/eslint-parser": "^7.11.3",
     "@rollup/plugin-babel": "^5.1.0",
     "@rollup/plugin-commonjs": "^14.0.0",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
     "@snek/source-map-support": "^1.0.4",
     "acorn": "^7.4.0",

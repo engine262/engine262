@@ -1037,9 +1037,11 @@ export function Evaluate_Pattern(Pattern, flags) {
       case 'p':
         // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
         return Evaluate(node.UnicodePropertyValueExpression);
-      case 'P':
+      case 'P': {
         // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
-        return new ConcreteCharSet([]);
+        const s = Evaluate(node.UnicodePropertyValueExpression);
+        return new VirtualCharSet((c) => !s.has(c));
+      }
       default:
         throw new OutOfRange('Evaluate_CharacterClassEscape', node);
     }
@@ -1055,14 +1057,14 @@ export function Evaluate_Pattern(Pattern, flags) {
       // 2. If ! UnicodeMatchPropertyValue(General_Category, s) is identical to a List of Unicode code points that is the name of a Unicode general category or general category alias listed in the “Property value and aliases” column of Table 57, then
       if (X(UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues)) {
         // a. Return the CharSet containing all Unicode code points whose character database definition includes the property “General_Category” with value s.
-        return getUnicodePropertyValueSet('General_Category', s);
+        return new ConcreteCharSet(getUnicodePropertyValueSet('General_Category', s));
       }
       // 3. Let p be ! UnicodeMatchProperty(s).
       const p = X(UnicodeMatchProperty(s));
       // 4. Assert: p is a binary Unicode property or binary property alias listed in the “Property name and aliases” column of Table 56.
       Assert(p in BinaryUnicodeProperties);
       // 5. Return the CharSet containing all Unicode code points whose character database definition includes the property p with value “True”.
-      return getUnicodePropertyValueSet(p);
+      return new ConcreteCharSet(getUnicodePropertyValueSet(p));
     }
     // 1. Let ps be SourceText of UnicodePropertyName.
     const ps = UnicodePropertyValueExpression.UnicodePropertyName;
@@ -1075,7 +1077,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 5. Let v be ! UnicodeMatchPropertyValue(p, vs).
     const v = X(UnicodeMatchPropertyValue(p, vs));
     // 6. Return the CharSet containing all Unicode code points whose character database definition includes the property p with value v.
-    return getUnicodePropertyValueSet(p, v);
+    return new ConcreteCharSet(getUnicodePropertyValueSet(p, v));
   }
 
   // #sec-characterclass

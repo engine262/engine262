@@ -215,7 +215,7 @@ export class ExecutionContext {
 
 // 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
-  if (surroundingAgent.hostDefinedOptions.boost) {
+  if (surroundingAgent.hostDefinedOptions.boost && surroundingAgent.hostDefinedOptions.boost.evaluateScript) {
     return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
   }
 

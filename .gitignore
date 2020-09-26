@@ -4,3 +4,4 @@ test.mjs
 .eslintcache
 coverage
 .nyc_output
+*-gen.json

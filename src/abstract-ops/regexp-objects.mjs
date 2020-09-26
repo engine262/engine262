@@ -73,7 +73,9 @@ export function RegExpInitialize(obj, pattern, flags) {
   // 14. Set obj.[[RegExpMatcher]] to the Abstract Closure that evaluates parseResult by
   //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
   //     List of SourceCharacter values and F as the flag parameters.
-  obj.RegExpMatcher = Evaluate_Pattern(parseResult, F.stringValue());
+  obj.RegExpMatcher = surroundingAgent.hostDefinedOptions.boost && surroundingAgent.hostDefinedOptions.boost.evaluatePattern
+    ? surroundingAgent.hostDefinedOptions.boost.evaluatePattern(parseResult, F.stringValue())
+    : Evaluate_Pattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", 0, true).
   Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
   // 16. Return obj.
