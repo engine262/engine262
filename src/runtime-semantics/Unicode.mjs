@@ -1,6 +1,8 @@
 import { Assert } from '../abstract-ops/all.mjs';
 import UnicodeSets from '../data-gen.json';
 
+export { UnicodeSets };
+
 // #table-nonbinary-unicode-properties
 export const NonbinaryUnicodeProperties = {
   __proto__: null,
@@ -535,16 +537,17 @@ export function UnicodeMatchPropertyValue(p, v) {
   return value;
 }
 
+const expandedSets = new Map();
 export function getUnicodePropertyValueSet(property, value) {
   const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
-  if (Array.isArray(UnicodeSets[path])) {
+  if (!expandedSets.has(path)) {
     const set = new Set();
     UnicodeSets[path].forEach(([from, to]) => {
       for (let i = from; i <= to; i += 1) {
         set.add(i);
       }
     });
-    UnicodeSets[path] = set;
+    expandedSets.set(path, set);
   }
-  return UnicodeSets[path];
+  return expandedSets.get(path);
 }
