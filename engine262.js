@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 f297980638aafc5721149d4237e300a7a848a879
+ * engine262 0.0.1 39787377a7b8715c87fd67e1ccca09b1512e313e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -136291,20 +136291,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     return value;
   }
+  const expandedSets = new Map();
   function getUnicodePropertyValueSet(property, value) {
     const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
 
-    if (Array.isArray(UnicodeSets[path])) {
+    if (!expandedSets.has(path)) {
       const set = new Set();
       UnicodeSets[path].forEach(([from, to]) => {
         for (let i = from; i <= to; i += 1) {
           set.add(i);
         }
       });
-      UnicodeSets[path] = set;
+      expandedSets.set(path, set);
     }
 
-    return UnicodeSets[path];
+    return expandedSets.get(path);
   }
 
   class ResolvedBindingRecord {
@@ -176564,6 +176565,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.UnicodeMatchProperty = UnicodeMatchProperty;
   exports.UnicodeMatchPropertyValue = UnicodeMatchPropertyValue;
   exports.UnicodeScriptValues = UnicodeScriptValues;
+  exports.UnicodeSets = UnicodeSets;
   exports.UpdateEmpty = UpdateEmpty;
   exports.ValidateAndApplyPropertyDescriptor = ValidateAndApplyPropertyDescriptor;
   exports.ValidateTypedArray = ValidateTypedArray;
