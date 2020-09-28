@@ -438,7 +438,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
     // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
     X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
       Configurable: Value.true,
-      Enmerable: Value.false,
+      Enumerable: Value.false,
       Writable: Value.true,
       Value: X(CreateArrayFromList(errors)),
     })));
@@ -486,7 +486,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
         // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
         X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
           Configurable: Value.true,
-          Enmerable: Value.false,
+          Enumerable: Value.false,
           Writable: Value.true,
           Value: X(CreateArrayFromList(errors)),
         })));
