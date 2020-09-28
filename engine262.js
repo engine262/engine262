@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 39787377a7b8715c87fd67e1ccca09b1512e313e
+ * engine262 0.0.1 597da6c1cb7fb0390a3ae8e216c71c884f9c1c76
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -160892,12 +160892,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       let _temp31 = DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
         Configurable: Value.true,
-        Enmerable: Value.false,
+        Enumerable: Value.false,
         Writable: Value.true,
         Value: _temp32
       }));
 
-      Assert(!(_temp31 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, new Value('errors'), Descriptor({\n      Configurable: Value.true,\n      Enmerable: Value.false,\n      Writable: Value.true,\n      Value: X(CreateArrayFromList(errors)),\n    }))" + ' returned an abrupt completion');
+      Assert(!(_temp31 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, new Value('errors'), Descriptor({\n      Configurable: Value.true,\n      Enumerable: Value.false,\n      Writable: Value.true,\n      Value: X(CreateArrayFromList(errors)),\n    }))" + ' returned an abrupt completion');
 
       if (_temp31 instanceof Completion) {
         _temp31 = _temp31.Value;
@@ -160982,12 +160982,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
           let _temp35 = DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
             Configurable: Value.true,
-            Enmerable: Value.false,
+            Enumerable: Value.false,
             Writable: Value.true,
             Value: _temp36
           }));
 
-          Assert(!(_temp35 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, new Value('errors'), Descriptor({\n          Configurable: Value.true,\n          Enmerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        }))" + ' returned an abrupt completion');
+          Assert(!(_temp35 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, new Value('errors'), Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        }))" + ' returned an abrupt completion');
 
           if (_temp35 instanceof Completion) {
             _temp35 = _temp35.Value;
