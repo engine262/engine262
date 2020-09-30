@@ -19,6 +19,17 @@ const readListPaths = (name) => readList(name)
   .flatMap((t) => glob.sync(path.resolve(TEST262, 'test', t)))
   .map((f) => path.relative(TEST262, f));
 
+async function* readdir(dir) {
+  for await (const dirent of await fs.promises.opendir(dir)) {
+    const p = path.join(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      yield* readdir(p);
+    } else {
+      yield p;
+    }
+  }
+}
+
 const disabledFeatures = [];
 const featureMap = {};
 readList('features')
@@ -36,8 +47,7 @@ if (!process.send) {
   // supervisor
 
   const childProcess = require('child_process');
-  const TestStream = require('test262-stream');
-
+  const YAML = require('js-yaml');
   const {
     pass,
     fail,
@@ -86,22 +96,8 @@ if (!process.send) {
   const slowlist = readListPaths('slowlist');
   const skiplist = readListPaths('skiplist');
 
-  const stream = new TestStream(TEST262, {
-    paths: [override || 'test'],
-    omitRuntime: true,
-  });
-
   let workerIndex = 0;
-  stream.on('data', (test) => {
-    if (test.attrs.flags.module && test.scenario !== 'default') {
-      // test262-stream duplicates module tests, deduplicate here
-      return;
-    }
-
-    if (/annexB|intl402/.test(test.file)) {
-      return;
-    }
-
+  const handleTest = (test) => {
     total();
 
     if ((test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
@@ -123,16 +119,54 @@ if (!process.send) {
         workerIndex = 0;
       }
     }
-  });
+  };
 
-  stream.on('end', () => {
+  (async () => {
+    for await (const file of readdir(path.join(TEST262, override || 'test'))) {
+      if (/annexB|intl402|_FIXTURE/.test(file)) {
+        continue;
+      }
+
+      const contents = await fs.promises.readFile(file, 'utf8');
+      const yamlStart = contents.indexOf('/*---') + 5;
+      const yamlEnd = contents.indexOf('---*/', yamlStart);
+      const yaml = contents.slice(yamlStart, yamlEnd);
+      const attrs = YAML.load(yaml);
+
+      attrs.flags = (attrs.flags || []).reduce((acc, c) => {
+        acc[c] = true;
+        return acc;
+      }, {});
+      attrs.includes = attrs.includes || [];
+
+      const test = {
+        file: path.relative(TEST262, file),
+        attrs,
+        contents,
+      };
+
+      if (test.attrs.flags.module) {
+        handleTest(test);
+      } else {
+        if (!test.attrs.flags.onlyStrict) {
+          handleTest(test);
+        }
+
+        if (!test.attrs.flags.noStrict && !test.attrs.flags.raw) {
+          test.contents = `'use strict';\n${test.contents}`;
+          test.attrs.description += ' (Strict Mode)';
+          handleTest(test);
+        }
+      }
+    }
+
     workers.forEach((w) => {
       w.send('DONE');
     });
     if (RUN_SLOW_TESTS) {
       longRunningWorker.send('DONE');
     }
-  });
+  })();
 } else {
   // worker
 

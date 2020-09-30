@@ -1171,22 +1171,36 @@ export class StatementParser extends ExpressionParser {
   //   IdentifierName
   //   IdentifierName `as` IdentifierName
   //   IdentifierName `as` ModuleExportName
+  //   ModuleExportName
+  //   ModuleExportName `as` ModuleExportName
   parseExportSpecifier() {
     const node = this.startNode();
-    const name = this.parseIdentifierName();
-    if (this.eat('as')) {
-      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-        node.IdentifierName = name;
-        node.ModuleExportName = this.parseModuleExportName();
-        this.scope.declare(node.ModuleExportName, 'export');
+    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+      const name = this.parseModuleExportName();
+      if (this.eat('as')) {
+        node.ModuleExportName_a = name;
+        node.ModuleExportName_b = this.parseModuleExportName();
+        this.scope.declare(node.ModuleExportName_b, 'export');
       } else {
-        node.IdentifierName_a = name;
-        node.IdentifierName_b = this.parseIdentifierName();
-        this.scope.declare(node.IdentifierName_b, 'export');
+        node.ModuleExportName = name;
+        this.scope.declare(name, 'export');
       }
     } else {
-      node.IdentifierName = name;
-      this.scope.declare(name, 'export');
+      const name = this.parseIdentifierName();
+      if (this.eat('as')) {
+        if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+          node.IdentifierName = name;
+          node.ModuleExportName = this.parseModuleExportName();
+          this.scope.declare(node.ModuleExportName, 'export');
+        } else {
+          node.IdentifierName_a = name;
+          node.IdentifierName_b = this.parseIdentifierName();
+          this.scope.declare(node.IdentifierName_b, 'export');
+        }
+      } else {
+        node.IdentifierName = name;
+        this.scope.declare(name, 'export');
+      }
     }
     return this.finishNode(node, 'ExportSpecifier');
   }
