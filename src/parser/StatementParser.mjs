@@ -1111,6 +1111,11 @@ export class StatementParser extends ExpressionParser {
             node.ExportFromClause = NamedExports;
             node.FromClause = this.parseFromClause();
           } else {
+            NamedExports.ExportsList.forEach((n) => {
+              if (n.localName.type === 'ModuleExportName') {
+                this.raiseEarly('UnexpectedToken', n.localName);
+              }
+            });
             node.NamedExports = NamedExports;
             this.scope.checkUndefinedExports(node.NamedExports);
           }
@@ -1173,35 +1178,22 @@ export class StatementParser extends ExpressionParser {
   //   IdentifierName `as` ModuleExportName
   //   ModuleExportName
   //   ModuleExportName `as` ModuleExportName
+  //   ModuleExportName `as` IdentifierName
   parseExportSpecifier() {
     const node = this.startNode();
-    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-      const name = this.parseModuleExportName();
-      if (this.eat('as')) {
-        node.ModuleExportName_a = name;
-        node.ModuleExportName_b = this.parseModuleExportName();
-        this.scope.declare(node.ModuleExportName_b, 'export');
-      } else {
-        node.ModuleExportName = name;
-        this.scope.declare(name, 'export');
+    const parseName = () => {
+      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+        return this.parseModuleExportName();
       }
+      return this.parseIdentifierName();
+    };
+    node.localName = parseName();
+    if (this.eat('as')) {
+      node.exportName = parseName();
     } else {
-      const name = this.parseIdentifierName();
-      if (this.eat('as')) {
-        if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-          node.IdentifierName = name;
-          node.ModuleExportName = this.parseModuleExportName();
-          this.scope.declare(node.ModuleExportName, 'export');
-        } else {
-          node.IdentifierName_a = name;
-          node.IdentifierName_b = this.parseIdentifierName();
-          this.scope.declare(node.IdentifierName_b, 'export');
-        }
-      } else {
-        node.IdentifierName = name;
-        this.scope.declare(name, 'export');
-      }
+      node.exportName = node.localName;
     }
+    this.scope.declare(node.exportName, 'export');
     return this.finishNode(node, 'ExportSpecifier');
   }
 

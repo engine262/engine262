@@ -35,3 +35,5 @@ cleanupSome = cleanup-some
 Array.prototype.item = item-method
 String.prototype.item = item-method
 TypedArray.prototype.item = item-method
+
+arbitrary-module-namespace-names = arbitrary-module-namespace-names

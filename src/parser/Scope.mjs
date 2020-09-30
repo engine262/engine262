@@ -91,10 +91,7 @@ export function getDeclarations(node) {
     case 'ForDeclaration':
       return getDeclarations(node.ForBinding);
     case 'ExportSpecifier':
-      if (node.IdentifierName) {
-        return getDeclarations(node.IdentifierName);
-      }
-      return getDeclarations(node.IdentifierName_b);
+      return getDeclarations(node.exportName);
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
@@ -362,9 +359,9 @@ export class Scope {
   checkUndefinedExports(NamedExports) {
     const scope = this.variableScope();
     NamedExports.ExportsList.forEach((n) => {
-      const targetNode = n.IdentifierName || n.IdentifierName_a;
-      if (!scope.lexicals.has(targetNode.name) && !scope.variables.has(targetNode.name)) {
-        this.undefinedExports.set(targetNode.name, targetNode);
+      const name = n.localName.name || n.localName.value;
+      if (!scope.lexicals.has(name) && !scope.variables.has(name)) {
+        this.undefinedExports.set(name, n.localName);
       }
     });
   }

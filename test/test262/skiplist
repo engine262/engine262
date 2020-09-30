@@ -24,15 +24,8 @@ built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-pl
 built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js
 
-# https://github.com/tc39/test262/pull/2840
-language/module-code/export-expname-from-string-binding.js
-language/module-code/export-expname-from-string.js
+# ???
 language/module-code/export-expname-from-binding-string.js
-language/module-code/export-expname-from-string-string.js
-language/module-code/export-expname-from-star-string.js
-language/module-code/export-expname-import-string-binding.js
-language/module-code/export-expname-from-star.js
-language/module-code/export-expname-binding-string.js
 
 # broken stuff in test262
 language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-caller.js
