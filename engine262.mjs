@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b3d792a0afd95f737f8663ff7f11ca234f00feaa
+ * engine262 0.0.1 ebd8b5609e190f4cdfb92d694bebbed1dfee11ee
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -3019,93 +3019,27 @@ function ExportEntriesForModule(node, module) {
       }
 
     case 'ExportSpecifier':
-      switch (true) {
-        case !!node.IdentifierName && !!node.ModuleExportName:
-          {
-            // 1. Let sourceName be the StringValue of IdentifierName.
-            const sourceName = StringValue(node.IdentifierName); // 2. Let exportName be the StringValue of ModuleExportName.
+      {
+        const sourceName = StringValue(node.localName);
+        const exportName = StringValue(node.exportName);
+        let localName;
+        let importName;
 
-            const exportName = StringValue(node.ModuleExportName);
-            let localName;
-            let importName; // 3. If module is null, then
+        if (module === Value.null) {
+          localName = sourceName;
+          importName = Value.null;
+        } else {
+          // 4. Else,
+          localName = Value.null;
+          importName = sourceName;
+        }
 
-            if (module === Value.null) {
-              localName = sourceName;
-              importName = Value.null;
-            } else {
-              // 4. Else,
-              localName = Value.null;
-              importName = sourceName;
-            } // 5. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: exportName }.
-
-
-            return [{
-              ModuleRequest: module,
-              ImportName: importName,
-              LocalName: localName,
-              ExportName: exportName
-            }];
-          }
-
-        case !!node.IdentifierName:
-          {
-            // 1. Let sourceName be the StringValue of IdentifierName.
-            const sourceName = StringValue(node.IdentifierName);
-            let localName;
-            let importName; // 2. If module is null, then
-
-            if (module === Value.null) {
-              // a. Let localName be sourceName.
-              localName = sourceName; // b. Let importName be null.
-
-              importName = Value.null;
-            } else {
-              // 3. Else,
-              // a. Let localName be null.
-              localName = Value.null; // b. Let importName be sourceName.
-
-              importName = sourceName;
-            } // 4. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: sourceName }.
-
-
-            return [{
-              ModuleRequest: module,
-              ImportName: importName,
-              LocalName: localName,
-              ExportName: sourceName
-            }];
-          }
-
-        case !!node.IdentifierName_a && !!node.IdentifierName_b:
-          {
-            // 1. Let sourceName be the StringValue of the first IdentifierName.
-            const sourceName = StringValue(node.IdentifierName_a); // 2. Let exportName be the StringValue of the second IdentifierName.
-
-            const exportName = StringValue(node.IdentifierName_b);
-            let localName;
-            let importName; // 3. If module is null, then
-
-            if (module === Value.null) {
-              localName = sourceName;
-              importName = Value.null;
-            } else {
-              // 4. Else,
-              localName = Value.null;
-              importName = sourceName;
-            } // 5. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName, [[ExportName]]: exportName }.
-
-
-            return [{
-              ModuleRequest: module,
-              ImportName: importName,
-              LocalName: localName,
-              ExportName: exportName
-            }];
-          }
-
-        /*istanbul ignore next*/
-        default:
-          throw new OutOfRange('ExportEntriesForModule', node);
+        return [{
+          ModuleRequest: module,
+          ImportName: importName,
+          LocalName: localName,
+          ExportName: exportName
+        }];
       }
 
     case 'NamedExports':
@@ -4176,11 +4110,7 @@ function getDeclarations(node) {
       return getDeclarations(node.ForBinding);
 
     case 'ExportSpecifier':
-      if (node.IdentifierName) {
-        return getDeclarations(node.IdentifierName);
-      }
-
-      return getDeclarations(node.IdentifierName_b);
+      return getDeclarations(node.exportName);
 
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
@@ -4483,10 +4413,10 @@ class Scope {
   checkUndefinedExports(NamedExports) {
     const scope = this.variableScope();
     NamedExports.ExportsList.forEach(n => {
-      const targetNode = n.IdentifierName || n.IdentifierName_a;
+      const name = n.localName.name || n.localName.value;
 
-      if (!scope.lexicals.has(targetNode.name) && !scope.variables.has(targetNode.name)) {
-        this.undefinedExports.set(targetNode.name, targetNode);
+      if (!scope.lexicals.has(name) && !scope.variables.has(name)) {
+        this.undefinedExports.set(name, n.localName);
       }
     });
   }
@@ -8759,6 +8689,11 @@ class StatementParser extends ExpressionParser {
               node.ExportFromClause = NamedExports;
               node.FromClause = this.parseFromClause();
             } else {
+              NamedExports.ExportsList.forEach(n => {
+                if (n.localName.type === 'ModuleExportName') {
+                  this.raiseEarly('UnexpectedToken', n.localName);
+                }
+              });
               node.NamedExports = NamedExports;
               this.scope.checkUndefinedExports(node.NamedExports);
             }
@@ -8831,41 +8766,29 @@ class StatementParser extends ExpressionParser {
   //   IdentifierName `as` ModuleExportName
   //   ModuleExportName
   //   ModuleExportName `as` ModuleExportName
+  //   ModuleExportName `as` IdentifierName
 
 
   parseExportSpecifier() {
     const node = this.startNode();
 
-    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-      const name = this.parseModuleExportName();
-
-      if (this.eat('as')) {
-        node.ModuleExportName_a = name;
-        node.ModuleExportName_b = this.parseModuleExportName();
-        this.scope.declare(node.ModuleExportName_b, 'export');
-      } else {
-        node.ModuleExportName = name;
-        this.scope.declare(name, 'export');
+    const parseName = () => {
+      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
+        return this.parseModuleExportName();
       }
+
+      return this.parseIdentifierName();
+    };
+
+    node.localName = parseName();
+
+    if (this.eat('as')) {
+      node.exportName = parseName();
     } else {
-      const name = this.parseIdentifierName();
-
-      if (this.eat('as')) {
-        if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-          node.IdentifierName = name;
-          node.ModuleExportName = this.parseModuleExportName();
-          this.scope.declare(node.ModuleExportName, 'export');
-        } else {
-          node.IdentifierName_a = name;
-          node.IdentifierName_b = this.parseIdentifierName();
-          this.scope.declare(node.IdentifierName_b, 'export');
-        }
-      } else {
-        node.IdentifierName = name;
-        this.scope.declare(name, 'export');
-      }
+      node.exportName = node.localName;
     }
 
+    this.scope.declare(node.exportName, 'export');
     return this.finishNode(node, 'ExportSpecifier');
   } // ModuleExportName : StringLiteral
 
