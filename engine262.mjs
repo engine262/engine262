@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 597da6c1cb7fb0390a3ae8e216c71c884f9c1c76
+ * engine262 0.0.1 02518492c33b559fe67513b184e4fd7f381c8767
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -172903,7 +172903,7 @@ function GetMatchString(S, match) {
 
   Assert('StartIndex' in match && 'EndIndex' in match, "'StartIndex' in match && 'EndIndex' in match"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
 
-  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length, "match.StartIndex >= 0 && match.StartIndex < S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
 
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
 
@@ -172916,7 +172916,7 @@ function GetMatchIndicesArray(S, match) {
 
   Assert('StartIndex' in match && 'EndIndex' in match, "'StartIndex' in match && 'EndIndex' in match"); // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
 
-  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length, "match.StartIndex >= 0 && match.StartIndex < S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length, "match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length"); // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
 
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length"); // 1. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
 
