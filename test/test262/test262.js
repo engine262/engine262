@@ -9,13 +9,15 @@ const fs = require('fs');
 const util = require('util');
 const glob = require('glob');
 
+const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
+
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
 };
 const readListPaths = (name) => readList(name)
-  .flatMap((t) => glob.sync(path.resolve(__dirname, 'test262', 'test', t)))
-  .map((f) => path.relative(path.resolve(__dirname, 'test262'), f));
+  .flatMap((t) => glob.sync(path.resolve(TEST262, 'test', t)))
+  .map((f) => path.relative(TEST262, f));
 
 const disabledFeatures = [];
 const featureMap = {};
@@ -53,13 +55,12 @@ if (!process.send) {
   const createWorker = () => {
     const c = childProcess.fork(__filename);
     c.on('message', (message) => {
-      const { description, status, error } = message;
-      switch (status) {
+      switch (message.status) {
         case 'PASS':
           pass();
           break;
         case 'FAIL':
-          fail(description, error);
+          fail(message.description, message.error);
           break;
         case 'SKIP':
           skip();
@@ -85,7 +86,7 @@ if (!process.send) {
   const slowlist = readListPaths('slowlist');
   const skiplist = readListPaths('skiplist');
 
-  const stream = new TestStream(path.resolve(__dirname, 'test262'), {
+  const stream = new TestStream(TEST262, {
     paths: [override || 'test'],
     omitRuntime: true,
   });
@@ -251,7 +252,7 @@ function $DONE(error) {
         });
       }
 
-      const specifier = path.resolve(__dirname, 'test262', test.file);
+      const specifier = path.resolve(TEST262, test.file);
 
       let completion;
       if (test.attrs.flags.module) {

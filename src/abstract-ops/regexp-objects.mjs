@@ -180,7 +180,7 @@ export function GetMatchString(S, match) {
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
@@ -194,7 +194,7 @@ export function GetMatchIndicesArray(S, match) {
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
-  Assert(match.StartIndex >= 0 && match.StartIndex < S.stringValue().length);
+  Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 1. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
