@@ -13,7 +13,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 export const GlobalSymbolRegistry = [];
 
@@ -73,7 +73,7 @@ function Symbol_keyFor([sym = Value.undefined]) {
 }
 
 export function BootstrapSymbol(realmRec) {
-  const symbolConstructor = BootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [
+  const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],
   ]);

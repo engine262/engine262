@@ -10,7 +10,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-error.prototype.tostring
 function ErrorProto_toString(args, { thisValue }) {
@@ -49,7 +49,7 @@ function ErrorProto_toString(args, { thisValue }) {
 }
 
 export function BootstrapErrorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['toString', ErrorProto_toString, 0],
     ['message', new Value('')],
     ['name', new Value('Error')],

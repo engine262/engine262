@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value, wellKnownSymbols } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-arraybuffer-length
 function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
@@ -36,7 +36,7 @@ function ArrayBuffer_species(a, { thisValue }) {
 }
 
 export function BootstrapArrayBuffer(realmRec) {
-  const c = BootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
+  const c = bootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
     ['isView', ArrayBuffer_isView, 1],
     [wellKnownSymbols.species, [ArrayBuffer_species]],
   ]);

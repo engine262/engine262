@@ -7,7 +7,7 @@ import {
 import { CodePointAt } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 // #sec-createstringiterator
@@ -67,7 +67,7 @@ function StringIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function BootstrapStringIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', StringIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
 

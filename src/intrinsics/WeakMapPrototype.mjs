@@ -8,7 +8,7 @@ import {
   Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-weakmap.prototype.delete
 function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
@@ -116,7 +116,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
 }
 
 export function BootstrapWeakMapPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['delete', WeakMapProto_delete, 1],
     ['get', WeakMapProto_get, 1],
     ['has', WeakMapProto_has, 1],

@@ -29,7 +29,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { AddEntriesFromIterable } from './Map.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-object-value
 function ObjectConstructor([value = Value.undefined], { NewTarget }) {
@@ -402,7 +402,7 @@ function Object_values([O = Value.undefined]) {
 }
 
 export function BootstrapObject(realmRec) {
-  const objectConstructor = BootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
+  const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],
     ['defineProperties', Object_defineProperties, 2],

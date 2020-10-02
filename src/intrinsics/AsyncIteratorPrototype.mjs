@@ -1,5 +1,5 @@
 import { wellKnownSymbols } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-asynciteratorprototype-asynciterator
 function AsyncIteratorPrototype_asyncIterator(args, { thisValue }) {
@@ -8,7 +8,7 @@ function AsyncIteratorPrototype_asyncIterator(args, { thisValue }) {
 }
 
 export function BootstrapAsyncIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     [wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 

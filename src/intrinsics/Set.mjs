@@ -11,7 +11,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value, wellKnownSymbols } from '../value.mjs';
 import { AbruptCompletion, Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-set-iterable
 function SetConstructor([iterable = Value.undefined], { NewTarget }) {
@@ -61,7 +61,7 @@ function Set_speciesGetter(args, { thisValue }) {
 }
 
 export function BootstrapSet(realmRec) {
-  const setConstructor = BootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
+  const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
     [wellKnownSymbols.species, [Set_speciesGetter]],
   ]);
 

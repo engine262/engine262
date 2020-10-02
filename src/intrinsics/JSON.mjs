@@ -37,7 +37,7 @@ import {
 } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import { evaluateScript } from '../api.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -539,7 +539,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
 }
 
 export function BootstrapJSON(realmRec) {
-  const json = BootstrapPrototype(realmRec, [
+  const json = bootstrapPrototype(realmRec, [
     ['parse', JSON_parse, 2],
     ['stringify', JSON_stringify, 3],
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');

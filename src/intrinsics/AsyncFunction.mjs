@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-async-function-constructor-arguments
 function AsyncFunctionConstructor(args, { NewTarget }) {
@@ -14,7 +14,7 @@ function AsyncFunctionConstructor(args, { NewTarget }) {
 }
 
 export function BootstrapAsyncFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
+  const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
 
   cons.DefineOwnProperty(new Value('prototype'), Descriptor({
     Writable: Value.false,

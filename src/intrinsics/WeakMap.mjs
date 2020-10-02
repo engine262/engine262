@@ -10,7 +10,7 @@ import {
   Q,
 } from '../completion.mjs';
 import { AddEntriesFromIterable } from './Map.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-weakmap-constructor
 function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
@@ -33,7 +33,7 @@ function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
 }
 
 export function BootstrapWeakMap(realmRec) {
-  const c = BootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
+  const c = bootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
 
   realmRec.Intrinsics['%WeakMap%'] = c;
 }

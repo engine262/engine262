@@ -10,7 +10,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 function thisNumberValue(value) {
   if (Type(value) === 'Number') {
@@ -102,7 +102,7 @@ function NumberProto_valueOf(args, { thisValue }) {
 }
 
 export function BootstrapNumberPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['toExponential', NumberProto_toExponential, 1],
     ['toFixed', NumberProto_toFixed, 1],
     ['toLocaleString', NumberProto_toLocaleString, 0],

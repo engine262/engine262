@@ -843,15 +843,10 @@ export function Type(val) {
   throw new OutOfRange('Type', val);
 }
 
-// Used for Type(x)::y for numerics
-export function TypeNumeric(val) {
-  if (val instanceof NumberValue) {
-    return NumberValue;
+// Used for Type(x)::y
+export function TypeForMethod(val) {
+  if (val instanceof Value) {
+    return val.constructor;
   }
-
-  if (val instanceof BigIntValue) {
-    return BigIntValue;
-  }
-
-  throw new OutOfRange('TypeNumeric', val);
+  throw new OutOfRange('TypeForValue', val);
 }

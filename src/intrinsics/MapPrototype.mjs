@@ -12,7 +12,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 function CreateMapIterator(map, kind) {
@@ -209,7 +209,7 @@ function MapProto_values(args, { thisValue }) {
 }
 
 export function BootstrapMapPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['clear', MapProto_clear, 0],
     ['delete', MapProto_delete, 1],
     ['entries', MapProto_entries, 0],

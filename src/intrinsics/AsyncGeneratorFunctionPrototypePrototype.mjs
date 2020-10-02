@@ -6,7 +6,7 @@ import {
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { AsyncGeneratorEnqueue } from '../abstract-ops/all.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-asyncgenerator-prototype-next
 function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) {
@@ -39,7 +39,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
 }
 
 export function BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', AsyncGeneratorPrototype_next, 1],
     ['return', AsyncGeneratorPrototype_return, 1],
     ['throw', AsyncGeneratorPrototype_throw, 1],

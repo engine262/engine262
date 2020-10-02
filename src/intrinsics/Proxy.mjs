@@ -13,7 +13,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { assignProps } from './Bootstrap.mjs';
+import { assignProps } from './bootstrap.mjs';
 
 // #sec-proxy-target-handler
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {

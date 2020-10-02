@@ -11,7 +11,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 // 21.2.5.8.1 #sec-createregexpstringiterator
@@ -73,7 +73,7 @@ function RegExpStringIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function BootstrapRegExpStringIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', RegExpStringIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');
 

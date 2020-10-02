@@ -17,7 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // 21.1.1.1 #sec-string-constructor-string-value
 function StringConstructor([value], { NewTarget }) {
@@ -104,7 +104,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
 }
 
 export function BootstrapString(realmRec) {
-  const stringConstructor = BootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
+  const stringConstructor = bootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
     ['fromCodePoint', String_fromCodePoint, 1],
     ['raw', String_raw, 1],

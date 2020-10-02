@@ -16,7 +16,7 @@ import {
   AbruptCompletion,
   Q, X,
 } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 
 // #sec-date-constructor
@@ -194,7 +194,7 @@ function parseDate(dateTimeString) {
 }
 
 export function BootstrapDate(realmRec) {
-  const cons = BootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [
+  const cons = bootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [
     ['now', Date_now, 0],
     ['parse', Date_parse, 1],
     ['UTC', Date_UTC, 7],

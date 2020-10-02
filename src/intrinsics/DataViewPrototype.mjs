@@ -8,7 +8,7 @@ import {
 import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-get-dataview.prototype.buffer
 function DataViewProto_buffer(args, { thisValue }) {
@@ -237,7 +237,7 @@ function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.un
 }
 
 export function BootstrapDataViewPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['buffer', [DataViewProto_buffer]],
     ['byteLength', [DataViewProto_byteLength]],
     ['byteOffset', [DataViewProto_byteOffset]],

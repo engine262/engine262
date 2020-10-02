@@ -14,7 +14,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-regexp-constructor
 function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], { NewTarget }) {
@@ -79,7 +79,7 @@ function RegExp_speciesGetter(args, { thisValue }) {
 export function BootstrapRegExp(realmRec) {
   const proto = realmRec.Intrinsics['%RegExp.prototype%'];
 
-  const cons = BootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [
+  const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [
     [wellKnownSymbols.species, [RegExp_speciesGetter]],
   ]);
 

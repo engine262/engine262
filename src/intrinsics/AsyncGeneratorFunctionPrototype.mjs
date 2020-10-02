@@ -1,9 +1,9 @@
 import { X } from '../completion.mjs';
 import { Descriptor, Value } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 export function BootstrapAsyncGeneratorFunctionPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
 

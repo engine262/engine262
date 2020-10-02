@@ -13,7 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { captureStack } from '../helpers.mjs';
-import { BootstrapConstructor, BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mjs';
 
 export function BootstrapNativeError(realmRec) {
   for (const name of [
@@ -24,7 +24,7 @@ export function BootstrapNativeError(realmRec) {
     'TypeError',
     'URIError',
   ]) {
-    const proto = BootstrapPrototype(realmRec, [
+    const proto = bootstrapPrototype(realmRec, [
       ['name', new Value(name)],
       ['message', new Value('')],
     ], realmRec.Intrinsics['%Error.prototype%']);
@@ -64,7 +64,7 @@ export function BootstrapNativeError(realmRec) {
       configurable: true,
     });
 
-    const cons = BootstrapConstructor(realmRec, Constructor, name, 1, proto, []);
+    const cons = bootstrapConstructor(realmRec, Constructor, name, 1, proto, []);
     cons.Prototype = realmRec.Intrinsics['%Error%'];
 
     realmRec.Intrinsics[`%${name}.prototype%`] = proto;

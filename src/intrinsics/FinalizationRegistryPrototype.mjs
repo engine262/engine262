@@ -7,7 +7,7 @@ import {
   SameValue,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-finalization-registry.prototype.cleanupSome
 function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {
@@ -89,7 +89,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
 }
 
 export function BootstrapFinalizationRegistryPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     surroundingAgent.feature('cleanup-some')
       ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]
       : undefined,

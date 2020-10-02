@@ -1,12 +1,12 @@
 import { Descriptor, Value } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 export function BootstrapGeneratorFunctionPrototype(realmRec) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
 
-  const generator = BootstrapPrototype(realmRec, [
+  const generator = bootstrapPrototype(realmRec, [
     ['prototype', generatorPrototype, undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
 

@@ -7,7 +7,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-dataview-constructor
 function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {
@@ -59,7 +59,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
 }
 
 export function BootstrapDataView(realmRec) {
-  const dvConstructor = BootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
+  const dvConstructor = bootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
 
   realmRec.Intrinsics['%DataView%'] = dvConstructor;
 }

@@ -13,7 +13,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-reflect.apply
 function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
@@ -189,7 +189,7 @@ function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefin
 }
 
 export function BootstrapReflect(realmRec) {
-  const reflect = BootstrapPrototype(realmRec, [
+  const reflect = bootstrapPrototype(realmRec, [
     ['apply', Reflect_apply, 3],
     ['construct', Reflect_construct, 2],
     ['defineProperty', Reflect_defineProperty, 3],

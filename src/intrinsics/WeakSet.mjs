@@ -11,7 +11,7 @@ import {
   IteratorClose,
 } from '../abstract-ops/all.mjs';
 import { Q, AbruptCompletion } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-weakset-iterable
 function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
@@ -55,6 +55,6 @@ function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
 }
 
 export function BootstrapWeakSet(realmRec) {
-  const c = BootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
+  const c = bootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
   realmRec.Intrinsics['%WeakSet%'] = c;
 }

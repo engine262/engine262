@@ -16,7 +16,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
-import { Type, TypeNumeric, Value } from '../value.mjs';
+import { Type, TypeForMethod, Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // #sec-delete-operator-runtime-semantics-evaluation
@@ -131,7 +131,7 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }) {
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const oldValue = Q(ToNumeric(Q(GetValue(expr))));
   // 3. Let T be Type(oldValue).
-  const T = TypeNumeric(oldValue);
+  const T = TypeForMethod(oldValue);
   // 4. Return ! T::unaryMinus(oldValue).
   return X(T.unaryMinus(oldValue));
 }
@@ -144,7 +144,7 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }) {
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const oldValue = Q(ToNumeric(Q(GetValue(expr))));
   // 3. Let T be Type(oldValue).
-  const T = TypeNumeric(oldValue);
+  const T = TypeForMethod(oldValue);
   // 4. Return ! T::bitwiseNOT(oldValue).
   return X(T.bitwiseNOT(oldValue));
 }

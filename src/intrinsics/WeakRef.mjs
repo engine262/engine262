@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { AddToKeptObjects, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-weak-ref-target
 function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
@@ -25,7 +25,7 @@ function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
 }
 
 export function BootstrapWeakRef(realmRec) {
-  const bigintConstructor = BootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
+  const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
 
   realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }

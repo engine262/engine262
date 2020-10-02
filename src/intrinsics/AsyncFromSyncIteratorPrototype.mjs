@@ -10,7 +10,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-%asyncfromsynciteratorprototype%.next
 function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
@@ -130,7 +130,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
 }
 
 export function BootstrapAsyncFromSyncIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', AsyncFromSyncIteratorPrototype_next, 0],
     ['return', AsyncFromSyncIteratorPrototype_return, 0],
     ['throw', AsyncFromSyncIteratorPrototype_throw, 0],

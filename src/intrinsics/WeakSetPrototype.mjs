@@ -8,7 +8,7 @@ import {
   Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-weakset.prototype.add
 function WeakSetProto_add([value = Value.undefined], { thisValue }) {
@@ -87,7 +87,7 @@ function WeakSetProto_has([value = Value.undefined], { thisValue }) {
 }
 
 export function BootstrapWeakSetPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['add', WeakSetProto_add, 1],
     ['delete', WeakSetProto_delete, 1],
     ['has', WeakSetProto_has, 1],

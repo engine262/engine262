@@ -26,7 +26,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { assignProps } from './Bootstrap.mjs';
+import { assignProps } from './bootstrap.mjs';
 
 // #sec-properties-of-the-function-prototype-object
 function FunctionProto(_args, _meta) {

@@ -10,7 +10,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { captureStack } from '../helpers.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-error-constructor
 function ErrorConstructor([message = Value.undefined], { NewTarget }) {
@@ -45,7 +45,7 @@ function ErrorConstructor([message = Value.undefined], { NewTarget }) {
 }
 
 export function BootstrapError(realmRec) {
-  const error = BootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
+  const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;
 }

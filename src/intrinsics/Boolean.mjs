@@ -4,7 +4,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-boolean-constructor-boolean-value
 function BooleanConstructor([value = Value.undefined], { NewTarget }) {
@@ -23,7 +23,7 @@ function BooleanConstructor([value = Value.undefined], { NewTarget }) {
 }
 
 export function BootstrapBoolean(realmRec) {
-  const cons = BootstrapConstructor(
+  const cons = bootstrapConstructor(
     realmRec, BooleanConstructor, 'Boolean', 1,
     realmRec.Intrinsics['%Boolean.prototype%'], [],
   );

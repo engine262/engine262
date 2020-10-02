@@ -1,7 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Q } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-function-p1-p2-pn-body
 function FunctionConstructor(args, { NewTarget }) {
@@ -13,6 +13,6 @@ function FunctionConstructor(args, { NewTarget }) {
 }
 
 export function BootstrapFunction(realmRec) {
-  const cons = BootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
+  const cons = bootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
   realmRec.Intrinsics['%Function%'] = cons;
 }

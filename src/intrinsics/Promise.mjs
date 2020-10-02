@@ -39,7 +39,7 @@ import {
   EnsureCompletion,
   Q, X,
 } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-promise-executor
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
@@ -661,7 +661,7 @@ function Promise_symbolSpecies(args, { thisValue }) {
 }
 
 export function BootstrapPromise(realmRec) {
-  const promiseConstructor = BootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
+  const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
     ['allSettled', Promise_allSettled, 1],
     ['any', Promise_any, 1],

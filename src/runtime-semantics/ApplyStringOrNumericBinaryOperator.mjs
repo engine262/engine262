@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, TypeNumeric, Value } from '../value.mjs';
+import { Type, TypeForMethod, Value } from '../value.mjs';
 import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
@@ -35,7 +35,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
   // 6. Let T be Type(lnum).
-  const T = TypeNumeric(lnum);
+  const T = TypeForMethod(lnum);
   // 7. Let operation be the abstract operation associated with opText in the following table:
   const operation = {
     '**': T.exponentiate,

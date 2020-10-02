@@ -8,7 +8,7 @@ import {
   Q,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-generator.prototype.next
 function GeneratorProto_next([value = Value.undefined], { thisValue }) {
@@ -39,7 +39,7 @@ function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
 }
 
 export function BootstrapGeneratorFunctionPrototypePrototype(realmRec) {
-  const generatorPrototype = BootstrapPrototype(realmRec, [
+  const generatorPrototype = bootstrapPrototype(realmRec, [
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],
     ['throw', GeneratorProto_throw, 1],

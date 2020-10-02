@@ -5,7 +5,7 @@ import {
   PutValue,
   ToNumeric,
 } from '../abstract-ops/all.mjs';
-import { TypeNumeric } from '../value.mjs';
+import { TypeForMethod } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 
 // UpdateExpression :
@@ -22,7 +22,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
       const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
       // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
-      const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
+      const newValue = X(TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit));
       // 4. Perform ? PutValue(lhs, newValue).
       Q(PutValue(lhs, newValue));
       // 5. Return oldValue.
@@ -36,7 +36,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
       const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
       // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
-      const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
+      const newValue = X(TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit));
       // 4. Perform ? PutValue(lhs, newValue).
       Q(PutValue(lhs, newValue));
       // 5. Return oldValue.
@@ -50,7 +50,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
       const oldValue = Q(ToNumeric(Q(GetValue(expr))));
       // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
-      const newValue = X(TypeNumeric(oldValue).add(oldValue, TypeNumeric(oldValue).unit));
+      const newValue = X(TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit));
       // 4. Perform ? PutValue(expr, newValue).
       Q(PutValue(expr, newValue));
       // 5. Return newValue.
@@ -64,7 +64,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
       const oldValue = Q(ToNumeric(Q(GetValue(expr))));
       // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
-      const newValue = X(TypeNumeric(oldValue).subtract(oldValue, TypeNumeric(oldValue).unit));
+      const newValue = X(TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit));
       // 4. Perform ? PutValue(expr, newValue).
       Q(PutValue(expr, newValue));
       // 5. Return newValue.

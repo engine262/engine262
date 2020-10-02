@@ -32,7 +32,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { StringPad } from '../runtime-semantics/all.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 export function thisTimeValue(value) {
@@ -654,7 +654,7 @@ function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
 }
 
 export function BootstrapDatePrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['getDate', DateProto_getDate, 0],
     ['getDay', DateProto_getDay, 0],
     ['getFullYear', DateProto_getFullYear, 0],

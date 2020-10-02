@@ -1,6 +1,6 @@
 import { RequireInternalSlot, WeakRefDeref } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-weak-ref.prototype.deref
 function WeakRefProto_deref(args, { thisValue }) {
@@ -13,7 +13,7 @@ function WeakRefProto_deref(args, { thisValue }) {
 }
 
 export function BootstrapWeakRefPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['deref', WeakRefProto_deref, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
 

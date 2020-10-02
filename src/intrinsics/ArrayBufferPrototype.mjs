@@ -5,7 +5,7 @@ import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToInteger, SameValue, CopyDataBlockBytes,
 } from '../abstract-ops/all.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-get-arraybuffer.prototype.bytelength
 function ArrayBufferProto_byteLength(args, { thisValue }) {
@@ -106,7 +106,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
 }
 
 export function BootstrapArrayBufferPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['slice', ArrayBufferProto_slice, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');

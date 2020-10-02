@@ -9,7 +9,7 @@ import {
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // 20.1.1.1 #sec-number-constructor-number-value
 function NumberConstructor([value], { NewTarget }) {
@@ -82,7 +82,7 @@ export function BootstrapNumber(realmRec) {
     Enumerable: Value.false,
     Configurable: Value.false,
   };
-  const numberConstructor = BootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
+  const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
     ['EPSILON', new Value(Number.EPSILON), undefined, override],
     ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER), undefined, override],
     ['MAX_VALUE', new Value(Number.MAX_VALUE), undefined, override],

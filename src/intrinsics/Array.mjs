@@ -35,7 +35,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // 22.1.1 #sec-array-constructor
 function ArrayConstructor(argumentsList, { NewTarget }) {
@@ -204,7 +204,7 @@ function Array_speciesGetter(args, { thisValue }) {
 export function BootstrapArray(realmRec) {
   const proto = realmRec.Intrinsics['%Array.prototype%'];
 
-  const cons = BootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
+  const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [
     ['from', Array_from, 1],
     ['isArray', Array_isArray, 1],
     ['of', Array_of, 0],

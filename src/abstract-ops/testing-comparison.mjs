@@ -1,7 +1,7 @@
 import {
   BigIntValue,
   Type,
-  TypeNumeric,
+  TypeForMethod,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -146,7 +146,7 @@ export function SameValue(x, y) {
   // 2. If Type(x) is Number or BigInt, then
   if (Type(x) === 'Number' || Type(x) === 'BigInt') {
     // a. Return ! Type(x)::sameValue(x, y).
-    return TypeNumeric(x).sameValue(x, y);
+    return TypeForMethod(x).sameValue(x, y);
   }
   // 3. Return ! SameValueNonNumeric(x, y).
   return X(SameValueNonNumber(x, y));
@@ -161,7 +161,7 @@ export function SameValueZero(x, y) {
   // 2. If Type(x) is Number or BigInt, then
   if (Type(x) === 'Number' || Type(x) === 'BigInt') {
     // a. Return ! Type(x)::sameValueZero(x, y).
-    return TypeNumeric(x).sameValueZero(x, y);
+    return TypeForMethod(x).sameValueZero(x, y);
   }
   // 3. Return ! SameValueNonNumeric(x, y).
   return X(SameValueNonNumber(x, y));
@@ -277,7 +277,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     const ny = Q(ToNumeric(py));
     // e. If Type(nx) is the same as Type(ny), return Type(nx)::lessThan(nx, ny).
     if (Type(nx) === Type(ny)) {
-      return TypeNumeric(nx).lessThan(nx, ny);
+      return TypeForMethod(nx).lessThan(nx, ny);
     }
     // f. Assert: Type(nx) is BigInt and Type(ny) is Number, or Type(nx) is Number and Type(ny) is BigInt.
     Assert((Type(nx) === 'BigInt' && Type(ny) === 'Number') || (Type(nx) === 'Number' && Type(ny) === 'BigInt'));
@@ -378,7 +378,7 @@ export function StrictEqualityComparison(x, y) {
   // 2. If Type(x) is Number or BigInt, then
   if (Type(x) === 'Number' || Type(x) === 'BigInt') {
     // a. Return ! Type(x)::equal(x, y).
-    return X(TypeNumeric(x).equal(x, y));
+    return X(TypeForMethod(x).equal(x, y));
   }
   // 3. Return ! SameValueNonNumeric(x, y).
   return SameValueNonNumber(x, y);

@@ -10,7 +10,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { captureStack } from '../helpers.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-aggregate-error-constructor
 function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined], { NewTarget }) {
@@ -50,7 +50,7 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
 }
 
 export function BootstrapAggregateError(realmRec) {
-  const c = BootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
+  const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
   c.Prototype = realmRec.Intrinsics['%Error%'];
   realmRec.Intrinsics['%AggregateError%'] = c;
 }

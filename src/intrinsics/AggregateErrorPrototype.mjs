@@ -1,8 +1,8 @@
 import { Value } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 export function BootstrapAggregateErrorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['name', new Value('AggregateError')],
     ['message', new Value('')],
   ], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');

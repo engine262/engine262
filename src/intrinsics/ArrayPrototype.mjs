@@ -29,7 +29,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { assignProps } from './Bootstrap.mjs';
+import { assignProps } from './bootstrap.mjs';
 import { ArrayProto_sortBody, BootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat

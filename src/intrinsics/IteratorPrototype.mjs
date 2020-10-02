@@ -1,5 +1,5 @@
 import { wellKnownSymbols } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-%iteratorprototype%-@@iterator
 function IteratorPrototype_iterator(args, { thisValue }) {
@@ -8,7 +8,7 @@ function IteratorPrototype_iterator(args, { thisValue }) {
 }
 
 export function BootstrapIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 

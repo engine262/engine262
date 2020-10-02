@@ -3,7 +3,7 @@ import { Descriptor, Value } from '../value.mjs';
 import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-generatorfunction
 function GeneratorFunctionConstructor(args, { NewTarget }) {
@@ -17,7 +17,7 @@ function GeneratorFunctionConstructor(args, { NewTarget }) {
 export function BootstrapGeneratorFunction(realmRec) {
   const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
 
-  const cons = BootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
+  const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
   X(DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({
     Writable: Value.false,
     Configurable: Value.false,

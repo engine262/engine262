@@ -17,7 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-promise.prototype.catch
 function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
@@ -118,7 +118,7 @@ function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.un
 }
 
 export function BootstrapPromisePrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],
     ['then', PromiseProto_then, 2],

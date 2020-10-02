@@ -12,7 +12,7 @@ import {
   wellKnownSymbols,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // 23.2.5.1 #sec-createsetiterator
 function CreateSetIterator(set, kind) {
@@ -175,7 +175,7 @@ function SetProto_values(args, { thisValue }) {
 }
 
 export function BootstrapSetPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],
     ['delete', SetProto_delete, 1],

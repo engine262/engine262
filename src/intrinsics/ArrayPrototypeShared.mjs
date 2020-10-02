@@ -19,7 +19,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
-import { assignProps } from './Bootstrap.mjs';
+import { assignProps } from './bootstrap.mjs';
 
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.

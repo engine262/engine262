@@ -11,7 +11,7 @@ import {
   ToNumber,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // 20.2.2.1 #sec-math.abs
 function Math_abs([x = Value.undefined]) {
@@ -111,9 +111,9 @@ export function BootstrapMath(realmRec) {
     ['SQRT1_2', 0.7071067811865476],
     ['SQRT2', 1.4142135623730951],
   ].map(([name, value]) => [name, new Value(value), undefined, readonly]);
-  // @@toStringTag is handled in the BootstrapPrototype() call.
+  // @@toStringTag is handled in the bootstrapPrototype() call.
 
-  const mathObj = BootstrapPrototype(realmRec, [
+  const mathObj = bootstrapPrototype(realmRec, [
     ...valueProps,
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],

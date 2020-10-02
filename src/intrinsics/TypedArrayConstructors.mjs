@@ -22,7 +22,7 @@ import {
   typedArrayInfoByName,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 export function BootstrapTypedArrayConstructors(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
@@ -274,7 +274,7 @@ export function BootstrapTypedArrayConstructors(realmRec) {
       }
     }
 
-    const taConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [
+    const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [
       ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
         Writable: Value.false,
         Configurable: Value.false,

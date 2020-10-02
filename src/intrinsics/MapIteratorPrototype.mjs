@@ -6,7 +6,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
 import { X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 // #sec-%mapiteratorprototype%.next
@@ -71,7 +71,7 @@ function MapIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function BootstrapMapIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
 

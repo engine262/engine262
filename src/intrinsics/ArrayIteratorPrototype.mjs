@@ -15,7 +15,7 @@ import {
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-%arrayiteratorprototype%-object
 function ArrayIteratorPrototype_next(args, { thisValue }) {
@@ -87,7 +87,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function BootstrapArrayIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', ArrayIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
 

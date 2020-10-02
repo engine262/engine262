@@ -33,7 +33,7 @@ import {
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
 import { CodePointAt, CodePointsToString } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
 
 
@@ -788,7 +788,7 @@ function RegExpProto_unicodeGetter(args, { thisValue }) {
 }
 
 export function BootstrapRegExpPrototype(realmRec) {
-  const proto = BootstrapPrototype(
+  const proto = bootstrapPrototype(
     realmRec,
     [
       ['exec', RegExpProto_exec, 1],

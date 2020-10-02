@@ -29,7 +29,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor, Type, Value, wellKnownSymbols,
 } from '../value.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 import { ArrayProto_sortBody, BootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // #sec-get-%typedarray%.prototype.buffer
@@ -824,7 +824,7 @@ export function BootstrapTypedArrayPrototype(realmRec) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
   Assert(Type(ArrayProto_toString) === 'Object');
 
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['buffer', [TypedArrayProto_buffer]],
     ['byteLength', [TypedArrayProto_byteLength]],
     ['byteOffset', [TypedArrayProto_byteOffset]],

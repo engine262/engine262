@@ -3,7 +3,7 @@ import { Type, Value } from '../value.mjs';
 import { ToPrimitive, ToBigInt, ToIndex } from '../abstract-ops/all.mjs';
 import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-bigint-constructor
 function BigIntConstructor([value], { NewTarget }) {
@@ -44,7 +44,7 @@ function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
 }
 
 export function BootstrapBigInt(realmRec) {
-  const bigintConstructor = BootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [
+  const bigintConstructor = bootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [
     ['asIntN', BigInt_asIntN, 2],
     ['asUintN', BigInt_asUintN, 2],
   ]);

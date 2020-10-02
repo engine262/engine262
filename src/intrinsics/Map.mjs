@@ -19,7 +19,7 @@ import {
   AbruptCompletion,
   Q,
 } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {
@@ -79,7 +79,7 @@ function Map_speciesGetter(args, { thisValue }) {
 }
 
 export function BootstrapMap(realmRec) {
-  const mapConstructor = BootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
+  const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     [wellKnownSymbols.species, [Map_speciesGetter]],
   ]);
 

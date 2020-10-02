@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-finalization-registry-cleanup-callback
 function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { NewTarget }) {
@@ -33,7 +33,7 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
 }
 
 export function BootstrapFinalizationRegistry(realmRec) {
-  const cons = BootstrapConstructor(
+  const cons = bootstrapConstructor(
     realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1,
     realmRec.Intrinsics['%FinalizationRegistry.prototype%'], [],
   );

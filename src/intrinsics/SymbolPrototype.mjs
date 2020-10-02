@@ -11,7 +11,7 @@ import {
   SymbolDescriptiveString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-thissymbolvalue
 function thisSymbolValue(value) {
@@ -68,7 +68,7 @@ export function BootstrapSymbolPrototype(realmRec) {
     Enumerable: Value.false,
     Configurable: Value.true,
   };
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['toString', SymbolProto_toString, 0],
     ['description', [SymbolProto_descriptionGetter]],
     ['valueOf', SymbolProto_valueOf, 0],

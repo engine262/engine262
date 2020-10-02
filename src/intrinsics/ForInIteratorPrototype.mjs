@@ -7,7 +7,7 @@ import {
   CreateIterResultObject,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-createforiniterator
 export function CreateForInIterator(object) {
@@ -96,7 +96,7 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
 }
 
 export function BootstrapForInIteratorPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['next', ForInIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%']);
 

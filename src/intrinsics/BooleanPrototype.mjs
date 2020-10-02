@@ -7,7 +7,7 @@ import {
 } from '../engine.mjs';
 import { Assert } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
-import { BootstrapPrototype } from './Bootstrap.mjs';
+import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 function thisBooleanValue(value) {
@@ -42,7 +42,7 @@ function BooleanProto_valueOf(argList, { thisValue }) {
 }
 
 export function BootstrapBooleanPrototype(realmRec) {
-  const proto = BootstrapPrototype(realmRec, [
+  const proto = bootstrapPrototype(realmRec, [
     ['toString', BooleanProto_toString, 0],
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);

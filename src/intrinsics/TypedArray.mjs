@@ -15,7 +15,7 @@ import {
   ToString,
   TypedArrayCreate,
 } from '../abstract-ops/all.mjs';
-import { BootstrapConstructor } from './Bootstrap.mjs';
+import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-%typedarray%-intrinsic-object
 function TypedArrayConstructor() {
@@ -135,7 +135,7 @@ function TypedArray_speciesGetter(args, { thisValue }) {
 }
 
 export function BootstrapTypedArray(realmRec) {
-  const typedArrayConstructor = BootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [
+  const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [
     ['from', TypedArray_from, 1],
     ['of', TypedArray_of, 0],
     [wellKnownSymbols.species, [TypedArray_speciesGetter]],

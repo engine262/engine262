@@ -13,7 +13,7 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { assignProps } from './Bootstrap.mjs';
+import { assignProps } from './bootstrap.mjs';
 
 // #sec-object.prototype.hasownproperty
 function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
