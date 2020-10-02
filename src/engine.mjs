@@ -51,6 +51,11 @@ export const FEATURES = Object.freeze([
     flag: 'item-method',
     url: 'https://github.com/tc39/proposal-item-method',
   },
+  {
+    name: 'debugger',
+    flag: 'debugger',
+    url: '#',
+  }
 ].map(Object.freeze));
 
 let agentSignifier = 0;
@@ -93,6 +98,9 @@ export class Agent {
         return acc;
       }, {}),
     };
+    if (this.hostDefinedOptions.features.debugger) {
+      this.hostDefinedOptions.onDebugger = () => { debugger };
+    }
   }
 
   // #running-execution-context
