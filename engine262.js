@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 6094f3b3749fd608b899c7e3a1821e4d0b346bae
+ * engine262 0.0.1 58dbb18eaee66398d038de6a95a99956a5fc97fd
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -6294,6 +6294,11 @@
         do {
           while (TokenPrecedence[this.peek().type] === p) {
             const left = x;
+
+            if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression')) {
+              return left;
+            }
+
             const node = this.startNode(left);
 
             if (this.peek().type === Token.IN && !this.scope.hasIn()) {
@@ -6301,8 +6306,7 @@
             }
 
             const op = this.next();
-            const nextP = op.type === Token.EXP ? p : p + 1;
-            const right = this.parseBinaryExpression(nextP);
+            const right = this.parseBinaryExpression(op.type === Token.EXP ? p : p + 1);
             let name;
 
             switch (op.type) {
@@ -6440,10 +6444,6 @@
 
             if (this.isStrictMode() && node.operator === 'delete' && node.UnaryExpression.type === 'IdentifierReference') {
               this.raiseEarly('DeleteIdentifier', node.UnaryExpression);
-            }
-
-            if (this.test(Token.EXP)) {
-              this.unexpected();
             }
 
             return this.finishNode(node, 'UnaryExpression');
@@ -139289,7 +139289,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 15.1.10 #sec-runtime-semantics-scriptevaluation
 
   function ScriptEvaluation(scriptRecord) {
-    if (exports.surroundingAgent.hostDefinedOptions.boost && exports.surroundingAgent.hostDefinedOptions.boost.evaluateScript) {
+    var _surroundingAgent$hos;
+
+    if ((_surroundingAgent$hos = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos === void 0 ? void 0 : _surroundingAgent$hos.evaluateScript) {
       return exports.surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
     }
 
@@ -142224,6 +142226,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   FunctionConstructSlot.section = 'https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget';
   function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope) {
+    var _surroundingAgent$hos;
+
     Assert(Type(functionPrototype) === 'Object', "Type(functionPrototype) === 'Object'");
     const internalSlotsList = ['Environment', 'FormalParameters', 'ECMAScriptCode', 'ConstructorKind', 'Realm', 'ScriptOrModule', 'ThisMode', 'Strict', 'HomeObject', 'SourceText', 'IsClassConstructor'];
 
@@ -142236,7 +142240,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     const F = _temp3;
-    F.Call = exports.surroundingAgent.hostDefinedOptions.boost && exports.surroundingAgent.hostDefinedOptions.boost.callFunction ? exports.surroundingAgent.hostDefinedOptions.boost.callFunction : FunctionCallSlot;
+    F.Call = ((_surroundingAgent$hos = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos === void 0 ? void 0 : _surroundingAgent$hos.callFunction) || FunctionCallSlot;
     F.SourceText = sourceText;
     F.Environment = Scope;
     F.FormalParameters = ParameterList;
@@ -142270,6 +142274,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 9.2.10 #sec-makeconstructor
 
   function MakeConstructor(F, writablePrototype, prototype) {
+    var _surroundingAgent$hos2;
+
     Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
     Assert(IsConstructor(F) === Value.false, "IsConstructor(F) === Value.false");
 
@@ -142290,7 +142296,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     Assert(_temp5 === Value.true && _temp6 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
-    F.Construct = exports.surroundingAgent.hostDefinedOptions.boost && exports.surroundingAgent.hostDefinedOptions.boost.constructFunction ? exports.surroundingAgent.hostDefinedOptions.boost.constructFunction : FunctionConstructSlot;
+    F.Construct = ((_surroundingAgent$hos2 = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos2 === void 0 ? void 0 : _surroundingAgent$hos2.constructFunction) || FunctionConstructSlot;
     F.ConstructorKind = 'base';
 
     if (writablePrototype === undefined) {
@@ -172637,6 +172643,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // #sec-regexpinitialize
 
   function RegExpInitialize(obj, pattern, flags) {
+    var _surroundingAgent$hos;
+
     let P; // 1. If pattern is undefined, let P be the empty String.
 
     if (pattern === Value.undefined) {
@@ -172707,7 +172715,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
     //     List of SourceCharacter values and F as the flag parameters.
 
-    obj.RegExpMatcher = exports.surroundingAgent.hostDefinedOptions.boost && exports.surroundingAgent.hostDefinedOptions.boost.evaluatePattern ? exports.surroundingAgent.hostDefinedOptions.boost.evaluatePattern(parseResult, F.stringValue()) : Evaluate_Pattern(parseResult, F.stringValue()); // 15. Perform ? Set(obj, "lastIndex", 0, true).
+    const evaluatePattern = ((_surroundingAgent$hos = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos === void 0 ? void 0 : _surroundingAgent$hos.evaluatePattern) || Evaluate_Pattern;
+    obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue()); // 15. Perform ? Set(obj, "lastIndex", 0, true).
 
     let _temp5 = Set$1(obj, new Value('lastIndex'), new Value(0), Value.true);
 
