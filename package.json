@@ -34,9 +34,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/eslint-parser": "^7.11.3",
-    "@rollup/plugin-babel": "^5.1.0",
+    "@babel/core": "^7.11.6",
+    "@babel/eslint-parser": "^7.11.5",
+    "@babel/plugin-proposal-optional-chaining": "^7.11.0",
+    "@rollup/plugin-babel": "^5.2.1",
     "@rollup/plugin-commonjs": "^14.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
@@ -44,12 +45,12 @@
     "acorn": "^7.4.0",
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-import": "^2.22.1",
     "glob": "^7.1.6",
     "js-yaml": "^3.14.0",
     "minimatch": "^3.0.4",
     "nyc": "^15.1.0",
-    "rollup": "^2.23.1",
+    "rollup": "^2.28.2",
     "unicode-13.0.0": "^0.8.0",
     "ws": "^7.2.3"
   }

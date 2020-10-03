@@ -271,13 +271,15 @@ export class ExpressionParser extends FunctionParser {
       do {
         while (TokenPrecedence[this.peek().type] === p) {
           const left = x;
+          if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression')) {
+            return left;
+          }
           const node = this.startNode(left);
           if (this.peek().type === Token.IN && !this.scope.hasIn()) {
             return left;
           }
           const op = this.next();
-          const nextP = op.type === Token.EXP ? p : p + 1;
-          const right = this.parseBinaryExpression(nextP);
+          const right = this.parseBinaryExpression(op.type === Token.EXP ? p : p + 1);
           let name;
           switch (op.type) {
             case Token.EXP:
@@ -397,9 +399,6 @@ export class ExpressionParser extends FunctionParser {
               && node.operator === 'delete'
               && node.UnaryExpression.type === 'IdentifierReference') {
             this.raiseEarly('DeleteIdentifier', node.UnaryExpression);
-          }
-          if (this.test(Token.EXP)) {
-            this.unexpected();
           }
           return this.finishNode(node, 'UnaryExpression');
         default:
