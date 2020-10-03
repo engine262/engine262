@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const acorn = require('acorn');
 
 function isThrowCall(node) {
