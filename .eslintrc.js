@@ -1,23 +1,9 @@
 'use strict';
 
-const Module = require('module');
-
-const ModuleFindPath = Module._findPath;
-const hacks = [
-  'eslint-plugin-engine262',
-];
-Module._findPath = (request, paths, isMain) => {
-  const r = ModuleFindPath(request, paths, isMain);
-  if (!r && hacks.includes(request)) {
-    return require.resolve(`./test/${request}`);
-  }
-  return r;
-};
-
 module.exports = {
   root: true,
   extends: 'airbnb-base',
-  plugins: ['engine262'],
+  plugins: ['@engine262'],
   parser: '@babel/eslint-parser',
   parserOptions: {
     ecmaVersion: 2020,
@@ -37,12 +23,12 @@ module.exports = {
     SharedArrayBuffer: false,
   },
   rules: {
+    '@engine262/no-use-in-def': 'error',
+    '@engine262/valid-feature': 'error',
+    '@engine262/valid-throw': 'error',
     'arrow-parens': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'curly': ['error', 'all'],
-    'engine262/no-use-in-def': 'error',
-    'engine262/valid-feature': 'error',
-    'engine262/valid-throw': 'error',
     'import/order': ['error', { 'newlines-between': 'never' }],
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'no-multiple-empty-lines': ['error', { maxBOF: 0, max: 2 }],
