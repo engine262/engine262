@@ -197,7 +197,7 @@ export function* AsyncGeneratorYield(value) {
   // b. Let awaited be Await(resumptionValue.[[Value]]).
   const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
   // c. If awaited.[[Type]] is throw, return Completion(awaited).
-  if (awaited.Type === 'Throw') {
+  if (awaited.Type === 'throw') {
     return Completion(awaited);
   }
   // d. Assert: awaited.[[Type]] is normal.
