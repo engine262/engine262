@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 58dbb18eaee66398d038de6a95a99956a5fc97fd
+ * engine262 0.0.1 4c628bd6fa14b3b6b6ec3728462bbe07886b1972
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -8938,7 +8938,7 @@ class Parser extends LanguageParser {
   }
 
   feature(name) {
-    // eslint-disable-next-line engine262/valid-feature
+    // eslint-disable-next-line @engine262/valid-feature
     return surroundingAgent.feature(name);
   }
 
