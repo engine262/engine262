@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 4c628bd6fa14b3b6b6ec3728462bbe07886b1972
+ * engine262 0.0.1 3659c18c5c23ab58c1dc1ac49adc7248d51cebda
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -141381,7 +141381,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const awaited = EnsureCompletion(yield* Await(resumptionValue.Value)); // c. If awaited.[[Type]] is throw, return Completion(awaited).
 
-    if (awaited.Type === 'Throw') {
+    if (awaited.Type === 'throw') {
       return Completion(awaited);
     } // d. Assert: awaited.[[Type]] is normal.
 
