@@ -61,6 +61,11 @@ export const FEATURES = Object.freeze([
     flag: 'accessible-object-hasownproperty',
     url: 'https://github.com/tc39/proposal-accessible-object-hasownproperty',
   },
+  {
+    name: 'Symbols as WeakMap keys',
+    flag: 'symbols-as-weakmap-keys',
+    url: 'https://github.com/tc39/proposal-symbols-as-weakmap-keys',
+  },
 ].map(Object.freeze));
 
 class ExecutionContextStack extends Array {
