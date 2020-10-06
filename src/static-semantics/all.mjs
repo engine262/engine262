@@ -41,5 +41,5 @@ export * from './CodePointAt.mjs';
 export * from './CodePointToUTF16CodeUnits.mjs';
 export * from './StringToCodePoints.mjs';
 export * from './CodePointsToString.mjs';
-export * from './IsStringValidUnicode.mjs';
+export * from './IsStringWellFormedUnicode.mjs';
 export * from './IsComputedPropertyKey.mjs';
