@@ -1,4 +1,4 @@
-import { IsStringValidUnicode, StringValue } from '../static-semantics/all.mjs';
+import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mjs';
 import { Token, isAutomaticSemicolon, isKeywordRaw } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
@@ -1208,7 +1208,7 @@ export class StatementParser extends ExpressionParser {
   // ModuleExportName : StringLiteral
   parseModuleExportName() {
     const literal = this.parseStringLiteral();
-    if (!IsStringValidUnicode(StringValue(literal))) {
+    if (!IsStringWellFormedUnicode(StringValue(literal))) {
       this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
     }
     return literal;

@@ -1,7 +1,7 @@
 import { X } from '../completion.mjs';
 import { CodePointAt } from './all.mjs';
 
-export function IsStringValidUnicode(string) {
+export function IsStringWellFormedUnicode(string) {
   string = string.stringValue();
   // 1. Let _strLen_ be the number of code units in string.
   const strLen = string.length;
@@ -18,5 +18,6 @@ export function IsStringValidUnicode(string) {
     // c. Set k to k + cp.[[CodeUnitCount]].
     k += cp.CodeUnitCount;
   }
+  // 4. Return true.
   return true;
 }
