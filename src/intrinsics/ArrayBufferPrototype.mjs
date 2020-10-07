@@ -80,7 +80,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   }
   // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
   if (IsDetachedBuffer(newO) === Value.true) {
-    return surroundingAgent.Throe('TypeError', 'ArrayBufferDetached');
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
   if (SameValue(newO, O) === Value.true) {
