@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3659c18c5c23ab58c1dc1ac49adc7248d51cebda
+ * engine262 0.0.1 03d8ded05f90eb963c1df1c9f0214dd1cb8a689f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -166318,7 +166318,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     if (IsDetachedBuffer(newO) === Value.true) {
-      return exports.surroundingAgent.Throe('TypeError', 'ArrayBufferDetached');
+      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     } // 16. If SameValue(new, O) is true, throw a TypeError exception.
 
 

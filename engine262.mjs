@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3659c18c5c23ab58c1dc1ac49adc7248d51cebda
+ * engine262 0.0.1 03d8ded05f90eb963c1df1c9f0214dd1cb8a689f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -166313,7 +166313,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
 
 
   if (IsDetachedBuffer(newO) === Value.true) {
-    return surroundingAgent.Throe('TypeError', 'ArrayBufferDetached');
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   } // 16. If SameValue(new, O) is true, throw a TypeError exception.
 
 
