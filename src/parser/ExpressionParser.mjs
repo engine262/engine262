@@ -1,4 +1,9 @@
-import { TV, PropName } from '../static-semantics/all.mjs';
+import {
+  TV,
+  PropName,
+  StringValue,
+  IsComputedPropertyKey,
+} from '../static-semantics/all.mjs';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -758,11 +763,25 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.LBRACE);
     node.PropertyDefinitionList = [];
+    let hasProto = false;
     while (true) {
       if (this.eat(Token.RBRACE)) {
         break;
       }
-      node.PropertyDefinitionList.push(this.parsePropertyDefinition());
+      const PropertyDefinition = this.parsePropertyDefinition();
+      if (!this.state.json
+          && PropertyDefinition.type === 'PropertyDefinition'
+          && PropertyDefinition.PropertyName
+          && !IsComputedPropertyKey(PropertyDefinition.PropertyName)
+          && PropertyDefinition.PropertyName.type !== 'NumericLiteral'
+          && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
+        if (hasProto) {
+          this.scope.registerObjectLiteralEarlyError(this.raiseEarly('DuplicateProto', PropertyDefinition.PropertyName));
+        } else {
+          hasProto = true;
+        }
+      }
+      node.PropertyDefinitionList.push(PropertyDefinition);
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -1170,7 +1189,7 @@ export class ExpressionParser extends FunctionParser {
         node.IdentifierReference.type = 'IdentifierReference';
         node.Initializer = this.parseInitializerOpt();
         this.finishNode(node, 'CoverInitializedName');
-        this.scope.registerCoverInitializedName(node);
+        this.scope.registerObjectLiteralEarlyError(this.raiseEarly('UnexpectedToken'));
         return node;
       }
 

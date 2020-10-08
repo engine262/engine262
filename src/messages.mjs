@@ -47,6 +47,7 @@ export const DateInvalidTime = () => 'Invalid time';
 export const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
 export const DuplicateConstructor = () => 'A class may only have one constructor';
 export const DuplicateExports = () => 'Module cannot contain duplicate exports';
+export const DuplicateProto = () => 'An object literal may only have one __proto__ property';
 export const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const IllegalBreakContinue = (isBreak) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;

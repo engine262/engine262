@@ -35,7 +35,7 @@ import {
   NormalCompletion,
   Q, X,
 } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
+import { ValueSet, kInternal } from '../helpers.mjs';
 import { evaluateScript } from '../api.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -274,7 +274,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 4. Let completion be the result of parsing and evaluating
   //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
   //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
-  const completion = evaluateScript(scriptString, surroundingAgent.currentRealmRecord);
+  const completion = evaluateScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } });
   // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.

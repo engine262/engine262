@@ -3,6 +3,8 @@ import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X, AwaitFulfilledFunctions } from './completion.mjs';
 
+export const kInternal = Symbol('kInternal');
+
 function convertValueForKey(key) {
   if (typeof key === 'string') {
     return Symbol.for(`engine262_helper_key_${key}`);

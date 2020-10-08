@@ -32,3 +32,4 @@ language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-acc
 language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-caller.js
 language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-arguments.js
 language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-arguments.js
+built-ins/Object/seal/seal-sharedarraybuffer.js

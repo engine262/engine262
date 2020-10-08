@@ -238,9 +238,9 @@ export class Scope {
     const parser = this.parser;
     this.assignmentInfoStack.push({
       type,
-      coverInitializedNameErrors: [],
+      earlyErrors: [],
       clear() {
-        this.coverInitializedNameErrors.forEach((e) => {
+        this.earlyErrors.forEach((e) => {
           parser.earlyErrors.delete(e);
         });
       },
@@ -251,11 +251,10 @@ export class Scope {
     return this.assignmentInfoStack.pop();
   }
 
-  registerCoverInitializedName(CoverInitializedName) {
-    const error = this.parser.raiseEarly('UnexpectedToken', CoverInitializedName);
+  registerObjectLiteralEarlyError(error) {
     for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
       const info = this.assignmentInfoStack[i];
-      info.coverInitializedNameErrors.push(error);
+      info.earlyErrors.push(error);
       if (info.type !== 'assign') {
         break;
       }

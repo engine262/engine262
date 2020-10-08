@@ -1,13 +1,19 @@
+import { surroundingAgent } from '../engine.mjs';
 import {
   Type,
   Value,
+  Descriptor,
   wellKnownSymbols,
 } from '../value.mjs';
 import {
+  DefinePropertyOrThrow,
   Get,
   HasOwnProperty,
   Invoke,
+  IsAccessorDescriptor,
   IsArray,
+  IsCallable,
+  RequireObjectCoercible,
   SameValue,
   ToObject,
   ToPropertyKey,
@@ -125,6 +131,136 @@ function ObjectProto_valueOf(argList, { thisValue }) {
   return Q(ToObject(thisValue));
 }
 
+// #sec-object.prototype.__defineGetter__
+function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined], { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  const O = Q(ToObject(thisValue));
+  // 2. If IsCallable(getter) is false, throw a TypeError exception.
+  if (IsCallable(getter) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
+  }
+  // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
+  const desc = Descriptor({
+    Get: getter,
+    Enumerable: Value.true,
+    Configurable: Value.true,
+  });
+  // 4. Let key be ? ToPropertyKey(P).
+  const key = Q(ToPropertyKey(P));
+  // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
+  Q(DefinePropertyOrThrow(O, key, desc));
+  // 6. Return undefined.
+  return Value.undefined;
+}
+
+// #sec-object.prototype.__defineSetter__
+function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined], { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  const O = Q(ToObject(thisValue));
+  // 2. If IsCallable(setter) is false, throw a TypeError exception.
+  if (IsCallable(setter) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
+  }
+  // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
+  const desc = Descriptor({
+    Set: setter,
+    Enumerable: Value.true,
+    Configurable: Value.true,
+  });
+  // 4. Let key be ? ToPropertyKey(P).
+  const key = Q(ToPropertyKey(P));
+  // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
+  Q(DefinePropertyOrThrow(O, key, desc));
+  // 6. Return undefined.
+  return Value.undefined;
+}
+
+// #sec-object.prototype.__lookupGetter__
+function ObjectProto__lookupGetter__([P = Value.undefined], { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  let O = Q(ToObject(thisValue));
+  // 2. Let key be ? ToPropertyKey(P).
+  const key = Q(ToPropertyKey(P));
+  // 3. Repeat,
+  while (true) {
+    // a. Let desc be ? O.[[GetOwnProperty]](key).
+    const desc = Q(O.GetOwnProperty(key));
+    // b. If desc is not undefined, then
+    if (desc !== Value.undefined) {
+      // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
+      if (IsAccessorDescriptor(desc)) {
+        return desc.Get;
+      }
+      // ii. Return undefined.
+      return Value.undefined;
+    }
+    // c. Set O to ? O.[[GetPrototypeOf]]().
+    O = Q(O.GetPrototypeOf());
+    // d. If O is null, return undefined.
+    if (O === Value.null) {
+      return Value.undefined;
+    }
+  }
+}
+
+// #sec-object.prototype.__lookupSetter__
+function ObjectProto__lookupSetter__([P = Value.undefined], { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  let O = Q(ToObject(thisValue));
+  // 2. Let key be ? ToPropertyKey(P).
+  const key = Q(ToPropertyKey(P));
+  // 3. Repeat,
+  while (true) {
+    // a. Let desc be ? O.[[GetOwnProperty]](key).
+    const desc = Q(O.GetOwnProperty(key));
+    // b. If desc is not undefined, then
+    if (desc !== Value.undefined) {
+      // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
+      if (IsAccessorDescriptor(desc)) {
+        return desc.Set;
+      }
+      // ii. Return undefined.
+      return Value.undefined;
+    }
+    // c. Set O to ? O.[[GetPrototypeOf]]().
+    O = Q(O.GetPrototypeOf());
+    // d. If O is null, return undefined.
+    if (O === Value.null) {
+      return Value.undefined;
+    }
+  }
+}
+
+// #sec-get-object.prototype.__proto__
+function ObjectProto__proto__Get(args, { thisValue }) {
+  // 1. Let O be ? ToObject(this value).
+  const O = Q(ToObject(thisValue));
+  // 2. Return ? O.[[GetPrototypeOf]]().
+  return Q(O.GetPrototypeOf());
+}
+
+// #sec-set-object.prototype.__proto__
+function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = Q(RequireObjectCoercible(thisValue));
+  // 2. If Type(proto) is neither Object nor Null, return undefined.
+  if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
+    return Value.undefined;
+  }
+  // 3. If Type(O) is not Object, return undefined.
+  if (Type(O) !== 'Object') {
+    return Value.undefined;
+  }
+  // 4. Let status be ? O.[[SetPrototypeOf]](proto).
+  const status = Q(O.SetPrototypeOf(proto));
+  // 5. If status is false, throw a TypeError exception.
+  if (status === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
+  }
+  // 6. Return undefined.
+  return Value.undefined;
+}
+
 export function BootstrapObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
 
@@ -135,6 +271,11 @@ export function BootstrapObjectPrototype(realmRec) {
     ['toLocaleString', ObjectProto_toLocaleString, 0],
     ['toString', ObjectProto_toString, 0],
     ['valueOf', ObjectProto_valueOf, 0],
+    ['__defineGetter__', ObjectProto__defineGetter__, 2],
+    ['__defineSetter__', ObjectProto__defineSetter__, 2],
+    ['__lookupGetter__', ObjectProto__lookupGetter__, 1],
+    ['__lookupSetter__', ObjectProto__lookupSetter__, 1],
+    ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]],
   ]);
 
   realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, new Value('toString')));
