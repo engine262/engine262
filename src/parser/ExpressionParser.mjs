@@ -1189,7 +1189,7 @@ export class ExpressionParser extends FunctionParser {
         node.IdentifierReference.type = 'IdentifierReference';
         node.Initializer = this.parseInitializerOpt();
         this.finishNode(node, 'CoverInitializedName');
-        this.scope.registerObjectLiteralEarlyError(this.raiseEarly('UnexpectedToken'));
+        this.scope.registerObjectLiteralEarlyError(this.raiseEarly('UnexpectedToken', node));
         return node;
       }
 
