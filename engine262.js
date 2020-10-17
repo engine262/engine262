@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 8f4fbaa992e4d3a49c926f70fc042cea0d3ebded
+ * engine262 0.0.1 d81af93eabdd99ae85e7598401bb54b4f05759c0
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -7873,7 +7873,7 @@
       return this.finishNode(node, 'VariableDeclaration');
     } // IfStatement :
     //  `if` `(` Expression `)` Statement `else` Statement
-    //  `if` `(` Expression `)` Statement
+    //  `if` `(` Expression `)` Statement [lookahead != `else`]
 
 
     parseIfStatement() {
@@ -8713,7 +8713,7 @@
                 node.FromClause = this.parseFromClause();
               } else {
                 NamedExports.ExportsList.forEach(n => {
-                  if (n.localName.type === 'ModuleExportName') {
+                  if (n.localName.type === 'StringLiteral') {
                     this.raiseEarly('UnexpectedToken', n.localName);
                   }
                 });
@@ -143303,32 +143303,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       if (numericIndex !== Value.undefined) {
         let _temp2 = IntegerIndexedElementGet(O, numericIndex);
-        /* istanbul ignore if */
 
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-        /* istanbul ignore if */
-
+        Assert(!(_temp2 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion');
 
         if (_temp2 instanceof Completion) {
           _temp2 = _temp2.Value;
         }
 
-        // i. Let value be ? IntegerIndexedElementGet(O, numericIndex).
+        // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
         const value = _temp2; // ii. If value is undefined, return undefined.
 
         if (value === Value.undefined) {
           return Value.undefined;
-        } // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: false }.
+        } // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
 
 
         return Descriptor({
           Value: value,
           Writable: Value.true,
           Enumerable: Value.true,
-          Configurable: Value.false
+          Configurable: Value.true
         });
       }
     } // 4. Return OrdinaryGetOwnProperty(O, P).
@@ -143358,10 +143352,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       if (numericIndex !== Value.undefined) {
         // i. Let buffer be O.[[ViewedArrayBuffer]].
-        const buffer = O.ViewedArrayBuffer; // ii. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+        const buffer = O.ViewedArrayBuffer; // ii. If IsDetachedBuffer(buffer) is true, return false.
 
         if (IsDetachedBuffer(buffer) === Value.true) {
-          return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+          return Value.false;
         } // iii. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
 
 
@@ -143458,8 +143452,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const numericIndex = _temp5; // b. If numericIndex is not undefined, then
 
       if (numericIndex !== Value.undefined) {
-        // i. Return ? IntegerIndexedElementGet(O, numericIndex).
-        return IntegerIndexedElementGet(O, numericIndex);
+        let _temp6 = IntegerIndexedElementGet(O, numericIndex);
+
+        Assert(!(_temp6 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion');
+
+        if (_temp6 instanceof Completion) {
+          _temp6 = _temp6.Value;
+        }
+
+        // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+        return _temp6;
       }
     } // 3. Return ? OrdinaryGet(O, P, Receiver).
 
@@ -143473,16 +143475,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. If Type(P) is String, then
 
     if (Type(P) === 'String') {
-      let _temp6 = CanonicalNumericIndexString(P);
+      let _temp7 = CanonicalNumericIndexString(P);
 
-      Assert(!(_temp6 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
+      Assert(!(_temp7 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
 
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
 
       // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-      const numericIndex = _temp6; // b. If numericIndex is not undefined, then
+      const numericIndex = _temp7; // b. If numericIndex is not undefined, then
 
       if (numericIndex !== Value.undefined) {
         // i. Return ? IntegerIndexedElementSet(O, numericIndex, V).
@@ -143492,6 +143494,53 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     return OrdinarySet(O, P, V, Receiver);
+  } // #sec-integer-indexed-exotic-objects-delete-p
+
+  function IntegerIndexedDelete(P) {
+    const O = this; // 1. Assert: IsPropertyKey(P) is true.
+
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // 2. Assert: O is an Integer-Indexed exotic object.
+
+    Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)"); // 3. If Type(P) is String, then
+
+    if (Type(P) === 'String') {
+      let _temp8 = CanonicalNumericIndexString(P);
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+
+      // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+      const numericIndex = _temp8; // b. If numericIndex is not undefined, then
+
+      if (numericIndex !== Value.undefined) {
+        // i. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return true.
+        if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+          return Value.true;
+        } // ii. If ! IsValidIntegerIndex(O, numericIndex) is false, return true.
+
+
+        let _temp9 = IsValidIntegerIndex(O, numericIndex);
+
+        Assert(!(_temp9 instanceof AbruptCompletion), "IsValidIntegerIndex(O, numericIndex)" + ' returned an abrupt completion');
+
+        if (_temp9 instanceof Completion) {
+          _temp9 = _temp9.Value;
+        }
+
+        if (_temp9 === Value.false) {
+          return Value.true;
+        } // iii. Return false.
+
+
+        return Value.false;
+      }
+    } // 4. Return ? OrdinaryDelete(O, P).
+
+
+    return OrdinaryDelete(O, P);
   } // 9.4.5.6 #sec-integer-indexed-exotic-objects-ownpropertykeys
 
   function IntegerIndexedOwnPropertyKeys() {
@@ -143504,16 +143553,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const len = O.ArrayLength.numberValue(); // 4. For each integer i starting with 0 such that i < len, in ascending order, do
 
     for (let i = 0; i < len; i += 1) {
-      let _temp7 = ToString(new Value(i));
+      let _temp10 = ToString(new Value(i));
 
-      Assert(!(_temp7 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
+      Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(i))" + ' returned an abrupt completion');
 
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
       }
 
       // a. Add ! ToString(i) as the last element of keys.
-      keys.push(_temp7);
+      keys.push(_temp10);
     } // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
 
 
@@ -143544,10 +143593,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     Assert(Type(index) === 'Number', "Type(index) === 'Number'"); // 3. Let buffer be O.[[ViewedArrayBuffer]].
 
-    const buffer = O.ViewedArrayBuffer; // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    const buffer = O.ViewedArrayBuffer; // 4. If IsDetachedBuffer(buffer) is true, return undefined.
 
     if (IsDetachedBuffer(buffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      return Value.undefined;
     } // 5. If ! IsValidIntegerIndex(O, index) is false, return undefined.
 
 
@@ -143579,36 +143628,40 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let numValue;
 
     if (O.ContentType === 'BigInt') {
-      let _temp8 = ToBigInt(value);
+      let _temp11 = ToBigInt(value);
+      /* istanbul ignore if */
 
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
+
+      if (_temp11 instanceof AbruptCompletion) {
+        return _temp11;
+      }
+      /* istanbul ignore if */
+
+
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
       }
 
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-
-      numValue = _temp8;
+      numValue = _temp11;
     } else {
-      let _temp9 = ToNumber(value);
+      let _temp12 = ToNumber(value);
 
-      if (_temp9 instanceof AbruptCompletion) {
-        return _temp9;
+      if (_temp12 instanceof AbruptCompletion) {
+        return _temp12;
       }
 
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
       }
 
-      numValue = _temp9;
+      numValue = _temp12;
     } // 5. Let buffer be O.[[ViewedArrayBuffer]].
 
 
-    const buffer = O.ViewedArrayBuffer; // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    const buffer = O.ViewedArrayBuffer; // 6. If IsDetachedBuffer(buffer) is true, return false.
 
     if (IsDetachedBuffer(buffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      return Value.false;
     } // 7. If ! IsValidIntegerIndex(O, index) is false, return false.
 
 
@@ -143627,12 +143680,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const elementType = typedArrayInfoByName[arrayTypeName].ElementType; // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
 
-    let _temp10 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
+    let _temp13 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue);
 
-    Assert(!(_temp10 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true, 'Unordered')" + ' returned an abrupt completion');
+    Assert(!(_temp13 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true, 'Unordered')" + ' returned an abrupt completion');
 
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
     }
 
     return Value.true;
@@ -143642,15 +143695,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]], [[ViewedArrayBuffer]], [[TypedArrayName]], [[ContentType]], [[ByteLength]], [[ByteOffset]], [[ArrayLength]] ».
     const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength']; // 2. Let A be ! MakeBasicObject(internalSlotsList).
 
-    let _temp11 = MakeBasicObject(internalSlotsList);
+    let _temp14 = MakeBasicObject(internalSlotsList);
 
-    Assert(!(_temp11 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
+    Assert(!(_temp14 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
 
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
     }
 
-    const A = _temp11; // 3. Set A.[[GetOwnProperty]] as specified in 9.4.5.1.
+    const A = _temp14; // 3. Set A.[[GetOwnProperty]] as specified in 9.4.5.1.
 
     A.GetOwnProperty = IntegerIndexedGetOwnProperty; // 4. Set A.[[HasProperty]] as specified in 9.4.5.2.
 
@@ -143660,11 +143713,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     A.Get = IntegerIndexedGet; // 7. Set A.[[Set]] as specified in 9.4.5.5.
 
-    A.Set = IntegerIndexedSet; // 8. Set A.[[OwnPropertyKeys]] as specified in 9.4.5.6.
+    A.Set = IntegerIndexedSet; // 8. Set A.[[Delete]] as specified in 9.4.5.6.
 
-    A.OwnPropertyKeys = IntegerIndexedOwnPropertyKeys; // 9. Set A.[[Prototype]] to prototype.
+    A.Delete = IntegerIndexedDelete; // 9. Set A.[[OwnPropertyKeys]] as specified in 9.4.5.6.
 
-    A.Prototype = prototype; // 10. Return A.
+    A.OwnPropertyKeys = IntegerIndexedOwnPropertyKeys; // 10. Set A.[[Prototype]] to prototype.
+
+    A.Prototype = prototype; // 11. Return A.
 
     return A;
   }
@@ -166565,11 +166620,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (IsSharedArrayBuffer() === Value.true) {
       return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
-    } // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
+    } // 4. If IsDetachedBuffer(O) is true, return +0f.
 
 
     if (IsDetachedBuffer(O) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      return new Value(0);
     } // 5. Let length be O.[[ArrayBufferByteLength]].
 
 
@@ -170290,95 +170345,97 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp45 = _temp45.Value;
     }
 
-    const A = _temp45; // 10. Let srcName be the String value of O.[[TypedArrayName]].
+    const A = _temp45; // 10. If count > 0, then
 
-    const srcName = O.TypedArrayName.stringValue(); // 11. Let srcType be the Element Type value in Table 61 for srcName.
-
-    const srcType = typedArrayInfoByName[srcName].ElementType; // 12. Let targetName be the String value of A.[[TypedArrayName]].
-
-    const targetName = A.TypedArrayName.stringValue(); // 13. Let targetType be the Element Type value in Table 61 for targetName.
-
-    const targetType = typedArrayInfoByName[targetName].ElementType; // 14. If srcType is different from targetType, then
-
-    if (srcType !== targetType) {
-      // a. Let n be 0.
-      let n = 0; // b. Repeat, while k < final
-
-      while (k < final) {
-        let _temp46 = ToString(new Value(k));
-
-        Assert(!(_temp46 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-
-        if (_temp46 instanceof Completion) {
-          _temp46 = _temp46.Value;
-        }
-
-        // i. Let Pk be ! ToString(k).
-        const Pk = _temp46; // ii. Let kValue be ? Get(O, Pk).
-
-        let _temp47 = Get(O, Pk);
-
-        if (_temp47 instanceof AbruptCompletion) {
-          return _temp47;
-        }
-
-        if (_temp47 instanceof Completion) {
-          _temp47 = _temp47.Value;
-        }
-
-        const kValue = _temp47; // iii. Perform ! Set(A, ! ToString(n), kValue, true).
-
-        let _temp49 = ToString(new Value(n));
-
-        Assert(!(_temp49 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
-
-        if (_temp49 instanceof Completion) {
-          _temp49 = _temp49.Value;
-        }
-
-        let _temp48 = Set$1(A, _temp49, kValue, Value.true);
-
-        Assert(!(_temp48 instanceof AbruptCompletion), "Set(A, X(ToString(new Value(n))), kValue, Value.true)" + ' returned an abrupt completion');
-
-        if (_temp48 instanceof Completion) {
-          _temp48 = _temp48.Value;
-        }
-
-        k += 1; // v. Set n to n + 1.
-
-        n += 1;
-      }
-    } else if (count > 0) {
-      // a. Let srcBuffer be O.[[ViewedArrayBuffer]].
-      const srcBuffer = O.ViewedArrayBuffer; // b. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-
-      if (IsDetachedBuffer(srcBuffer) === Value.true) {
+    if (count > 0) {
+      // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+      if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
         return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-      } // c. Let targetBuffer be A.[[ViewedArrayBuffer]].
+      } // b. Let srcName be the String value of O.[[TypedArrayName]].
 
 
-      const targetBuffer = A.ViewedArrayBuffer; // d. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
+      const srcName = O.TypedArrayName.stringValue(); // c. Let srcType be the Element Type value in Table 61 for srcName.
 
-      const elementSize = typedArrayInfoByType[srcType].ElementSize; // e. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-      // f. Let srcByteOffet be O.[[ByteOffset]].
+      const srcType = typedArrayInfoByName[srcName].ElementType; // d. Let targetName be the String value of A.[[TypedArrayName]].
 
-      const srcByteOffset = O.ByteOffset.numberValue(); // g. Let targetByteIndex be A.[[ByteOffset]].
+      const targetName = A.TypedArrayName.stringValue(); // e. Let targetType be the Element Type value in Table 61 for targetName.
 
-      let targetByteIndex = A.ByteOffset.numberValue(); // h. Let srcByteIndex be (k × elementSize) + srcByteOffet.
+      const targetType = typedArrayInfoByName[targetName].ElementType; // f. If srcType is different from targetType, then
 
-      let srcByteIndex = k * elementSize + srcByteOffset; // i. Let limit be targetByteIndex + count × elementSize.
+      if (srcType !== targetType) {
+        // i. Let n be 0.
+        let n = 0; // ii. Repeat, while k < final
 
-      const limit = targetByteIndex + count * elementSize; // j. Repeat, while targetByteIndex < limit
+        while (k < final) {
+          let _temp46 = ToString(new Value(k));
 
-      while (targetByteIndex < limit) {
-        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8'); // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+          Assert(!(_temp46 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
 
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value); // iii. Set srcByteIndex to srcByteIndex + 1.
+          if (_temp46 instanceof Completion) {
+            _temp46 = _temp46.Value;
+          }
 
-        srcByteIndex += 1; // iv. Set targetByteIndex to targetByteIndex + 1.
+          // 1. Let Pk be ! ToString(k).
+          const Pk = _temp46; // 2. Let kValue be ! Get(O, Pk).
 
-        targetByteIndex += 1;
+          let _temp47 = Get(O, Pk);
+
+          Assert(!(_temp47 instanceof AbruptCompletion), "Get(O, Pk)" + ' returned an abrupt completion');
+
+          if (_temp47 instanceof Completion) {
+            _temp47 = _temp47.Value;
+          }
+
+          const kValue = _temp47; // 3. Perform ! Set(A, ! ToString(n), kValue, true).
+
+          let _temp49 = ToString(new Value(n));
+
+          Assert(!(_temp49 instanceof AbruptCompletion), "ToString(new Value(n))" + ' returned an abrupt completion');
+
+          if (_temp49 instanceof Completion) {
+            _temp49 = _temp49.Value;
+          }
+
+          let _temp48 = Set$1(A, _temp49, kValue, Value.true);
+
+          Assert(!(_temp48 instanceof AbruptCompletion), "Set(A, X(ToString(new Value(n))), kValue, Value.true)" + ' returned an abrupt completion');
+
+          if (_temp48 instanceof Completion) {
+            _temp48 = _temp48.Value;
+          }
+
+          k += 1; // 5. Set n to n + 1.
+
+          n += 1;
+        }
+      } else {
+        // g. Else,
+        // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
+        const srcBuffer = O.ViewedArrayBuffer; // ii. Let targetBuffer be A.[[ViewedArrayBuffer]].
+
+        const targetBuffer = A.ViewedArrayBuffer; // iii. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
+
+        const elementSize = typedArrayInfoByType[srcType].ElementSize; // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+        // v. Let srcByteOffet be O.[[ByteOffset]].
+
+        const srcByteOffset = O.ByteOffset.numberValue(); // vi. Let targetByteIndex be A.[[ByteOffset]].
+
+        let targetByteIndex = A.ByteOffset.numberValue(); // vii. Let srcByteIndex be (k × elementSize) + srcByteOffet.
+
+        let srcByteIndex = k * elementSize + srcByteOffset; // viii. Let limit be targetByteIndex + count × elementSize.
+
+        const limit = targetByteIndex + count * elementSize; // ix. Repeat, while targetByteIndex < limit
+
+        while (targetByteIndex < limit) {
+          // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+          const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8'); // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+
+          SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value); // 3. Set srcByteIndex to srcByteIndex + 1.
+
+          srcByteIndex += 1; // 4. Set targetByteIndex to targetByteIndex + 1.
+
+          targetByteIndex += 1;
+        }
       }
     } // 16. Return A.
 
@@ -176677,6 +176734,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.InstantiateFunctionObject_FunctionDeclaration = InstantiateFunctionObject_FunctionDeclaration;
   exports.InstantiateFunctionObject_GeneratorDeclaration = InstantiateFunctionObject_GeneratorDeclaration;
   exports.IntegerIndexedDefineOwnProperty = IntegerIndexedDefineOwnProperty;
+  exports.IntegerIndexedDelete = IntegerIndexedDelete;
   exports.IntegerIndexedElementGet = IntegerIndexedElementGet;
   exports.IntegerIndexedElementSet = IntegerIndexedElementSet;
   exports.IntegerIndexedGet = IntegerIndexedGet;
