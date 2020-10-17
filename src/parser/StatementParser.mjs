@@ -396,7 +396,7 @@ export class StatementParser extends ExpressionParser {
 
   // IfStatement :
   //  `if` `(` Expression `)` Statement `else` Statement
-  //  `if` `(` Expression `)` Statement
+  //  `if` `(` Expression `)` Statement [lookahead != `else`]
   parseIfStatement() {
     const node = this.startNode();
     this.expect(Token.IF);
@@ -1112,7 +1112,7 @@ export class StatementParser extends ExpressionParser {
             node.FromClause = this.parseFromClause();
           } else {
             NamedExports.ExportsList.forEach((n) => {
-              if (n.localName.type === 'ModuleExportName') {
+              if (n.localName.type === 'StringLiteral') {
                 this.raiseEarly('UnexpectedToken', n.localName);
               }
             });

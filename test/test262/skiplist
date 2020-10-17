@@ -24,12 +24,39 @@ built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-pl
 built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js
 
-# ???
-language/module-code/export-expname-from-binding-string.js
-
 # broken stuff in test262
-language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-caller.js
-language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-caller.js
-language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-arguments.js
-language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-arguments.js
 built-ins/Object/seal/seal-sharedarraybuffer.js
+
+# https://github.com/tc39/test262/issues/2866
+language/module-code/export-expname-binding-string.js
+
+# https://github.com/tc39/test262/pull/2833#issuecomment-709635850
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
+built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
+built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js
+built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js
+built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/filter/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/findIndex/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/find/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
+built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js

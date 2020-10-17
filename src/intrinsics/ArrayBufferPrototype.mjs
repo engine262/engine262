@@ -17,9 +17,9 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   if (IsSharedArrayBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
-  // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
+  // 4. If IsDetachedBuffer(O) is true, return +0f.
   if (IsDetachedBuffer(O) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return new Value(0);
   }
   // 5. Let length be O.[[ArrayBufferByteLength]].
   const length = O.ArrayBufferByteLength;

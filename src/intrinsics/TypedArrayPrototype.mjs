@@ -582,61 +582,64 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   const count = Math.max(final - k, 0);
   // 9. Let A be ? TypedArraySpeciesCreate(O, « count »).
   const A = Q(TypedArraySpeciesCreate(O, [new Value(count)]));
-  // 10. Let srcName be the String value of O.[[TypedArrayName]].
-  const srcName = O.TypedArrayName.stringValue();
-  // 11. Let srcType be the Element Type value in Table 61 for srcName.
-  const srcType = typedArrayInfoByName[srcName].ElementType;
-  // 12. Let targetName be the String value of A.[[TypedArrayName]].
-  const targetName = A.TypedArrayName.stringValue();
-  // 13. Let targetType be the Element Type value in Table 61 for targetName.
-  const targetType = typedArrayInfoByName[targetName].ElementType;
-  // 14. If srcType is different from targetType, then
-  if (srcType !== targetType) {
-    // a. Let n be 0.
-    let n = 0;
-    // b. Repeat, while k < final
-    while (k < final) {
-      // i. Let Pk be ! ToString(k).
-      const Pk = X(ToString(new Value(k)));
-      // ii. Let kValue be ? Get(O, Pk).
-      const kValue = Q(Get(O, Pk));
-      // iii. Perform ! Set(A, ! ToString(n), kValue, true).
-      X(Set(A, X(ToString(new Value(n))), kValue, Value.true));
-      // iv. Set k to k + 1.
-      k += 1;
-      // v. Set n to n + 1.
-      n += 1;
-    }
-  } else if (count > 0) {
-    // a. Let srcBuffer be O.[[ViewedArrayBuffer]].
-    const srcBuffer = O.ViewedArrayBuffer;
-    // b. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(srcBuffer) === Value.true) {
+  // 10. If count > 0, then
+  if (count > 0) {
+    // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
-    // c. Let targetBuffer be A.[[ViewedArrayBuffer]].
-    const targetBuffer = A.ViewedArrayBuffer;
-    // d. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
-    const elementSize = typedArrayInfoByType[srcType].ElementSize;
-    // e. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-    // f. Let srcByteOffet be O.[[ByteOffset]].
-    const srcByteOffset = O.ByteOffset.numberValue();
-    // g. Let targetByteIndex be A.[[ByteOffset]].
-    let targetByteIndex = A.ByteOffset.numberValue();
-    // h. Let srcByteIndex be (k × elementSize) + srcByteOffet.
-    let srcByteIndex = (k * elementSize) + srcByteOffset;
-    // i. Let limit be targetByteIndex + count × elementSize.
-    const limit = targetByteIndex + count * elementSize;
-    // j. Repeat, while targetByteIndex < limit
-    while (targetByteIndex < limit) {
-      // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-      const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8', Value.true, 'Unordered');
-      // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value, Value.true, 'Unordered');
-      // iii. Set srcByteIndex to srcByteIndex + 1.
-      srcByteIndex += 1;
-      // iv. Set targetByteIndex to targetByteIndex + 1.
-      targetByteIndex += 1;
+    // b. Let srcName be the String value of O.[[TypedArrayName]].
+    const srcName = O.TypedArrayName.stringValue();
+    // c. Let srcType be the Element Type value in Table 61 for srcName.
+    const srcType = typedArrayInfoByName[srcName].ElementType;
+    // d. Let targetName be the String value of A.[[TypedArrayName]].
+    const targetName = A.TypedArrayName.stringValue();
+    // e. Let targetType be the Element Type value in Table 61 for targetName.
+    const targetType = typedArrayInfoByName[targetName].ElementType;
+    // f. If srcType is different from targetType, then
+    if (srcType !== targetType) {
+      // i. Let n be 0.
+      let n = 0;
+      // ii. Repeat, while k < final
+      while (k < final) {
+        // 1. Let Pk be ! ToString(k).
+        const Pk = X(ToString(new Value(k)));
+        // 2. Let kValue be ! Get(O, Pk).
+        const kValue = X(Get(O, Pk));
+        // 3. Perform ! Set(A, ! ToString(n), kValue, true).
+        X(Set(A, X(ToString(new Value(n))), kValue, Value.true));
+        // 4. Set k to k + 1.
+        k += 1;
+        // 5. Set n to n + 1.
+        n += 1;
+      }
+    } else { // g. Else,
+      // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
+      const srcBuffer = O.ViewedArrayBuffer;
+      // ii. Let targetBuffer be A.[[ViewedArrayBuffer]].
+      const targetBuffer = A.ViewedArrayBuffer;
+      // iii. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
+      const elementSize = typedArrayInfoByType[srcType].ElementSize;
+      // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+      // v. Let srcByteOffet be O.[[ByteOffset]].
+      const srcByteOffset = O.ByteOffset.numberValue();
+      // vi. Let targetByteIndex be A.[[ByteOffset]].
+      let targetByteIndex = A.ByteOffset.numberValue();
+      // vii. Let srcByteIndex be (k × elementSize) + srcByteOffet.
+      let srcByteIndex = (k * elementSize) + srcByteOffset;
+      // viii. Let limit be targetByteIndex + count × elementSize.
+      const limit = targetByteIndex + count * elementSize;
+      // ix. Repeat, while targetByteIndex < limit
+      while (targetByteIndex < limit) {
+        // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8', Value.true, 'Unordered');
+        // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value, Value.true, 'Unordered');
+        // 3. Set srcByteIndex to srcByteIndex + 1.
+        srcByteIndex += 1;
+        // 4. Set targetByteIndex to targetByteIndex + 1.
+        targetByteIndex += 1;
+      }
     }
   }
   // 16. Return A.
