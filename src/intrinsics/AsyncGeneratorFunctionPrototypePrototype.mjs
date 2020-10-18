@@ -14,8 +14,8 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) 
   const generator = thisValue;
   // 2. Let completion be NormalCompletion(value).
   const completion = NormalCompletion(value);
-  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
-  return X(AsyncGeneratorEnqueue(generator, completion));
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  return X(AsyncGeneratorEnqueue(generator, completion, undefined));
 }
 
 // #sec-asyncgenerator-prototype-return
@@ -24,8 +24,8 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
   const generator = thisValue;
   // 2. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
-  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
-  return X(AsyncGeneratorEnqueue(generator, completion));
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  return X(AsyncGeneratorEnqueue(generator, completion, undefined));
 }
 
 // #sec-asyncgenerator-prototype-throw
@@ -34,8 +34,8 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
   const generator = thisValue;
   // 2. Let completion be ThrowCompletion(exception).
   const completion = ThrowCompletion(exception);
-  // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
-  return X(AsyncGeneratorEnqueue(generator, completion));
+  // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  return X(AsyncGeneratorEnqueue(generator, completion, undefined));
 }
 
 export function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {

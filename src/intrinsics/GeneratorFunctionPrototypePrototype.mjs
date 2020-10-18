@@ -14,8 +14,8 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 function GeneratorProto_next([value = Value.undefined], { thisValue }) {
   // 1. Let g be the this value.
   const g = thisValue;
-  // 2. Return ? GeneratorResume(g, value).
-  return Q(GeneratorResume(g, value));
+  // 2. Return ? GeneratorResume(g, value, empty).
+  return Q(GeneratorResume(g, value, undefined));
 }
 
 // #sec-generator.prototype.return
@@ -24,8 +24,8 @@ function GeneratorProto_return([value = Value.undefined], { thisValue }) {
   const g = thisValue;
   // 2. Let C be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   const C = new Completion({ Type: 'return', Value: value, Target: undefined });
-  // 3. Return ? GeneratorResumeAbrupt(g, C).
-  return Q(GeneratorResumeAbrupt(g, C));
+  // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
+  return Q(GeneratorResumeAbrupt(g, C, undefined));
 }
 
 // #sec-generator.prototype.throw
@@ -34,8 +34,8 @@ function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
   const g = thisValue;
   // 2. Let C be ThrowCompletion(exception).
   const C = ThrowCompletion(exception);
-  // 3. Return ? GeneratorResumeAbrupt(g, C).
-  return Q(GeneratorResumeAbrupt(g, C));
+  // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
+  return Q(GeneratorResumeAbrupt(g, C, undefined));
 }
 
 export function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
