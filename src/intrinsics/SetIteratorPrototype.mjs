@@ -2,64 +2,64 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   CreateArrayFromList,
-  CreateIterResultObject,
+  CreateIteratorFromClosure,
+  GeneratorResume,
+  RequireInternalSlot,
+  Yield,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import { Q, X } from '../completion.mjs';
+import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
+
+const kSetIteratorPrototype = new Value('%SetIteratorPrototype%');
+
+// 23.2.5.1 #sec-createsetiterator
+export function CreateSetIterator(set, kind) {
+  // 1. Assert: kind is key+value or value.
+  Assert(kind === 'key+value' || kind === 'value');
+  // 2. Perform ? RequireInternalSlot(set, [[SetData]]).
+  Q(RequireInternalSlot(set, 'SetData'));
+  // 3. Let closure be a new Abstract Closure with no parameters that captures set and kind and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let index be 0.
+    let index = 0;
+    // b. Let entries be the List that is set.[[SetData]].
+    const entries = set.SetData;
+    // c. Let numEntries be the number of elements of entries.
+    let numEntries = entries.length;
+    // d. Repeat, while index < numEntries,
+    while (index < numEntries) {
+      // i. Let e be entries[index].
+      const e = entries[index];
+      // ii. Set index to index + 1.
+      index += 1;
+      // iii. If e is not empty, then
+      if (e !== undefined) {
+        // 1. If kind is key+value, then
+        if (kind === 'key+value') {
+          // a. Perform ? Yield(! CreateArrayFromList(« e, e »)).
+          Q(yield* Yield(X(CreateArrayFromList([e, e]))));
+        } else { // 2. Else,
+          // a. Assert: kind is value.
+          Assert(kind === 'value');
+          // b. Perform ? Yield(e).
+          Q(yield* Yield(e));
+        }
+      }
+      // iv. Set numEntries to the number of elements of entries.
+      numEntries = entries.length;
+    }
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
+  return X(CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%')));
+}
 
 // #sec-%setiteratorprototype%.next
 function SetIteratorPrototype_next(args, { thisValue }) {
-  // 1. Let O be the this value.
-  const O = thisValue;
-  // 2. If Type(O) is not Object, throw a TypeError exception.
-  if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
-  }
-  // 3. If O does not have all of the internal slots of a Set Iterator Instance (23.2.5.3), throw a TypeError exception.
-  if (!('IteratedSet' in O && 'SetNextIndex' in O && 'SetIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
-  }
-  // 4. Let s be O.[[IteratedSet]].
-  const s = O.IteratedSet;
-  // 5. Let index be O.[[SetNextIndex]].
-  let index = O.SetNextIndex;
-  // 6. Let itemKind be O.[[SetIterationKind]].
-  const itemKind = O.SetIterationKind;
-  // 7. If s is undefined, return CreateIterResultObject(undefined, true).
-  if (s === Value.undefined) {
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-  // 8. Assert: s has a [[SetData]] internal slot.
-  Assert('SetData' in s);
-  // 9. Let entries be the List that is s.[[SetData]].
-  const entries = s.SetData;
-  // 10. Let numEntries be the number of elements of entries.
-  const numEntries = entries.length;
-  // 11. NOTE: numEntries must be redetermined each time this method is evaluated.
-  while (index < numEntries) {
-    // a. Repeat, while index is less than numEntries,
-    const e = entries[index];
-    // b. Set index to index + 1.
-    index += 1;
-    // c. Set O.[[SetNextIndex]] to index.
-    O.SetNextIndex = index;
-    // e. If e is not empty, then
-    if (e !== undefined) {
-      // i. If itemKind is key+value, then
-      if (itemKind === 'key+value') {
-        // 1. If itemKind is key+value, then
-        return CreateIterResultObject(CreateArrayFromList([e, e]), Value.false);
-      }
-      // ii. Assert: itemKind is value.
-      Assert(itemKind === 'value');
-      // iii. Return CreateIterResultObject(e, false).
-      return CreateIterResultObject(e, Value.false);
-    }
-  }
-  // 13. Set O.[[IteratedSet]] to undefined.
-  O.IteratedSet = Value.undefined;
-  // 14. Return CreateIterResultObject(undefined, true).
-  return CreateIterResultObject(Value.undefined, Value.true);
+  // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
+  return Q(GeneratorResume(thisValue, undefined, kSetIteratorPrototype));
 }
 
 export function bootstrapSetIteratorPrototype(realmRec) {
