@@ -207,16 +207,16 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let py;
   // 1. If the LeftFirst flag is true, then
   if (LeftFirst === true) {
-    // a. Let px be ? ToPrimitive(x, hint Number).
-    px = Q(ToPrimitive(x, 'Number'));
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = Q(ToPrimitive(y, 'Number'));
+    // a. Let px be ? ToPrimitive(x, number).
+    px = Q(ToPrimitive(x, 'number'));
+    // b. Let py be ? ToPrimitive(y, number).
+    py = Q(ToPrimitive(y, 'number'));
   } else {
     // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = Q(ToPrimitive(y, 'Number'));
-    // c. Let px be ? ToPrimitive(x, hint Number).
-    px = Q(ToPrimitive(x, 'Number'));
+    // b. Let py be ? ToPrimitive(y, number).
+    py = Q(ToPrimitive(y, 'number'));
+    // c. Let px be ? ToPrimitive(x, number).
+    px = Q(ToPrimitive(x, 'number'));
   }
   // 3. If Type(px) is String and Type(py) is String, then
   if (Type(px) === 'String' && Type(py) === 'String') {

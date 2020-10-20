@@ -515,7 +515,7 @@ function DateProto_toISOString(args, { thisValue }) {
 // 20.3.4.37 #sec-date.prototype.tojson
 function DateProto_toJSON(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
-  const tv = Q(ToPrimitive(O, 'Number'));
+  const tv = Q(ToPrimitive(O, 'number'));
   if (Type(tv) === 'Number' && !Number.isFinite(tv.numberValue())) {
     return Value.null;
   }
@@ -644,9 +644,9 @@ function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   }
   let tryFirst;
   if (Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
-    tryFirst = new Value('string');
+    tryFirst = 'string';
   } else if (Type(hint) === 'String' && hint.stringValue() === 'number') {
-    tryFirst = new Value('number');
+    tryFirst = 'number';
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
   }
