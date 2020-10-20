@@ -23,53 +23,77 @@ import {
 } from './all.mjs';
 
 // 7.1.1 #sec-toprimitive
-export function ToPrimitive(input, PreferredType) {
+export function ToPrimitive(input, preferredType) {
+  // 1. Assert: input is an ECMAScript language value.
   Assert(input instanceof Value);
+  // 2. If Type(input) is Object, then
   if (Type(input) === 'Object') {
-    let hint;
-    if (PreferredType === undefined) {
-      hint = new Value('default');
-    } else if (PreferredType === 'String') {
-      hint = new Value('string');
-    } else {
-      Assert(PreferredType === 'Number');
-      hint = new Value('number');
-    }
+    // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
     const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
+    // b. If exoticToPrim is not undefined, then
     if (exoticToPrim !== Value.undefined) {
+      let hint;
+      // i. If preferredType is not present, let hint be "default".
+      if (preferredType === undefined) {
+        hint = 'default';
+      } else if (preferredType === 'string') { // ii. Else if preferredType is string, let hint be "string".
+        hint = 'string';
+      } else { // iii. Else,
+        // 1. Assert: preferredType is number.
+        Assert(preferredType === 'number');
+        // 2. Let hint be "number".
+        hint = 'number';
+      }
+      // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       const result = Q(Call(exoticToPrim, input, [hint]));
+      // v. If Type(result) is not Object, return result.
       if (Type(result) !== 'Object') {
         return result;
       }
+      // vi. Throw a TypeError exception.
       return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
     }
-    if (hint.stringValue() === 'default') {
-      hint = new Value('number');
+    // c. If preferredType is not present, let preferredType be number.
+    if (preferredType === undefined) {
+      preferredType = 'number';
     }
-    return Q(OrdinaryToPrimitive(input, hint));
+    // d. Return ? OrdinaryToPrimitive(input, preferredType).
+    return Q(OrdinaryToPrimitive(input, preferredType));
   }
+  // 3. Return input.
   return input;
 }
 
 // 7.1.1.1 #sec-ordinarytoprimitive
 export function OrdinaryToPrimitive(O, hint) {
+  // 1. Assert: Type(O) is Object.
   Assert(Type(O) === 'Object');
-  Assert(Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number'));
+  // 2. Assert: hint is either string or number.
+  Assert(hint === 'string' || hint === 'number');
   let methodNames;
-  if (hint.stringValue() === 'string') {
+  // 3. If hint is string, then
+  if (hint === 'string') {
+    // a. Let methodNames be « "toString", "valueOf" ».
     methodNames = [new Value('toString'), new Value('valueOf')];
-  } else {
+  } else { // 4. Else,
+    // a. Let methodNames be « "valueOf", "toString" ».
     methodNames = [new Value('valueOf'), new Value('toString')];
   }
+  // 5. For each element name of methodNames, do
   for (const name of methodNames) {
+    // a. Let method be ? Get(O, name).
     const method = Q(Get(O, name));
+    // b. If IsCallable(method) is true, then
     if (IsCallable(method) === Value.true) {
+      // i. Let result be ? Call(method, O).
       const result = Q(Call(method, O));
+      // ii. If Type(result) is not Object, return result.
       if (Type(result) !== 'Object') {
         return result;
       }
     }
   }
+  // 6. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 }
 
@@ -109,8 +133,8 @@ export function ToBoolean(argument) {
 
 // #sec-tonumeric
 export function ToNumeric(value) {
-  // 1. Let primValue be ? ToPrimitive(value, hint Number).
-  const primValue = Q(ToPrimitive(value, 'Number'));
+  // 1. Let primValue be ? ToPrimitive(value, number).
+  const primValue = Q(ToPrimitive(value, 'number'));
   // 2. If Type(primValue) is BigInt, return primValue.
   if (Type(primValue) === 'BigInt') {
     return primValue;
@@ -141,7 +165,9 @@ export function ToNumber(argument) {
     case 'Symbol':
       return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
     case 'Object': {
-      const primValue = Q(ToPrimitive(argument, 'Number'));
+      // 1. Let primValue be ? ToPrimitive(argument, number).
+      const primValue = Q(ToPrimitive(argument, 'number'));
+      // 2. Return ? ToNumber(primValue).
       return Q(ToNumber(primValue));
     }
     default:
@@ -278,8 +304,8 @@ export function ToUint8Clamp(argument) {
 
 // #sec-tobigint
 export function ToBigInt(argument) {
-  // 1. Let prim be ? ToPrimitive(argument, hint Number).
-  const prim = Q(ToPrimitive(argument, 'Number'));
+  // 1. Let prim be ? ToPrimitive(argument, number).
+  const prim = Q(ToPrimitive(argument, 'number'));
   // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
   switch (Type(prim)) {
     case 'Undefined':
@@ -374,7 +400,9 @@ export function ToString(argument) {
       // Return ! BigInt::toString(argument).
       return X(BigIntValue.toString(argument));
     case 'Object': {
-      const primValue = Q(ToPrimitive(argument, 'String'));
+      // 1. Let primValue be ? ToPrimitive(argument, string).
+      const primValue = Q(ToPrimitive(argument, 'string'));
+      // 2. Return ? ToString(primValue).
       return Q(ToString(primValue));
     }
     default:
@@ -421,10 +449,14 @@ export function ToObject(argument) {
 
 // 7.1.14 #sec-topropertykey
 export function ToPropertyKey(argument) {
-  const key = Q(ToPrimitive(argument, 'String'));
+  // 1. Let key be ? ToPrimitive(argument, string).
+  const key = Q(ToPrimitive(argument, 'string'));
+  // 2. If Type(key) is Symbol, then
   if (Type(key) === 'Symbol') {
+    // a. Return key.
     return key;
   }
+  // 3. Return ! ToString(key).
   return X(ToString(key));
 }
 

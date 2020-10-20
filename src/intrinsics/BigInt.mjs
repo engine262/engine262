@@ -11,8 +11,8 @@ function BigIntConstructor([value], { NewTarget }) {
   if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
   }
-  // 2. Let prim be ? ToPrimitive(value, hint Number).
-  const prim = Q(ToPrimitive(value, 'Number'));
+  // 2. Let prim be ? ToPrimitive(value, number).
+  const prim = Q(ToPrimitive(value, 'number'));
   // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
   // 4. Otherwise, return ? ToBigInt(value).
   if (Type(prim) === 'Number') {
