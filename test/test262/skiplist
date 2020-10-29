@@ -27,14 +27,12 @@ built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plu
 # broken stuff in test262
 built-ins/Object/seal/seal-sharedarraybuffer.js
 
-# https://github.com/tc39/test262/issues/2866
-language/module-code/export-expname-binding-string.js
-
 # https://github.com/tc39/test262/pull/2833#issuecomment-709635850
 built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js
 built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex.js
 built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js
 built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
 built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js

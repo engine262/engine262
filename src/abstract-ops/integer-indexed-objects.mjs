@@ -112,7 +112,7 @@ export function IntegerIndexedDefineOwnProperty(P, Desc) {
         return Value.false;
       }
       // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-      if (Desc.Configurable === Value.true) {
+      if (Desc.Configurable === Value.false) {
         return Value.false;
       }
       // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
