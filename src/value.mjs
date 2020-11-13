@@ -747,16 +747,16 @@ export class SuperReference extends Reference {
 }
 
 export function Descriptor(O) {
-  if (new.target === Descriptor) {
-    this.Value = O.Value;
-    this.Get = O.Get;
-    this.Set = O.Set;
-    this.Writable = O.Writable;
-    this.Enumerable = O.Enumerable;
-    this.Configurable = O.Configurable;
-  } else {
+  if (new.target === undefined) {
     return new Descriptor(O);
   }
+
+  this.Value = O.Value;
+  this.Get = O.Get;
+  this.Set = O.Set;
+  this.Writable = O.Writable;
+  this.Enumerable = O.Enumerable;
+  this.Configurable = O.Configurable;
 }
 
 Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {

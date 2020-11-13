@@ -11,16 +11,16 @@ import { resume } from './helpers.mjs';
 
 // #sec-completion-record-specification-type
 export function Completion(init) {
-  if (new.target === Completion) {
-    this.Type = init.Type;
-    this.Value = init.Value;
-    this.Target = init.Target;
-  } else {
+  if (new.target === undefined) {
     // 1. Assert: completionRecord is a Completion Record.
     Assert(init instanceof Completion);
     // 2. Return completionRecord as the Completion Record of this abstract operation.
     return init;
   }
+
+  this.Type = init.Type;
+  this.Value = init.Value;
+  this.Target = init.Target;
 }
 
 // NON-SPEC
