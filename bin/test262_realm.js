@@ -4,9 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const {
   Value,
+  CreateBuiltinFunction,
   CreateDataProperty,
   DetachArrayBuffer,
   OrdinaryObjectCreate,
+  SetFunctionLength,
+  SetFunctionName,
   ToString,
   Type,
   Throw,
@@ -58,7 +61,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     const setPrintHandle = (f) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, new Value('print'), new Value((args) => {
+    CreateDataProperty(realm.GlobalObject, new Value('print'), CreateBuiltinFunction((args) => {
       /* istanbul ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -88,28 +91,36 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         }
       }
       return Value.undefined;
-    }));
+    }, []));
 
     [
       ['global', realm.GlobalObject],
       ['createRealm', () => {
         const info = createRealm();
         return info.$262;
-      }],
-      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue())],
-      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer)],
+      }, 0],
+      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue()), 1],
+      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer), 1],
       ['gc', () => {
         gc();
         return Value.undefined;
-      }],
+      }, 0],
       ['spec', ([v]) => {
         if (v.nativeFunction && v.nativeFunction.section) {
           return new Value(v.nativeFunction.section);
         }
         return Value.undefined;
-      }],
-    ].forEach(([name, value]) => {
-      const v = value instanceof Value ? value : new Value(value);
+      }, 1],
+    ].forEach(([name, value, length]) => {
+      let v;
+      if (value instanceof Value) {
+        v = value;
+      } else {
+        v = CreateBuiltinFunction(value, []);
+        SetFunctionLength(v, new Value(length));
+        SetFunctionName(v, new Value(name));
+      }
+
       CreateDataProperty($262, new Value(name), v);
     });
 

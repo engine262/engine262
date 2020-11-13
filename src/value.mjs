@@ -34,8 +34,6 @@ export class Value {
         return new NumberValue(value);
       case 'bigint':
         return new BigIntValue(value);
-      case 'function':
-        return CreateBuiltinFunction(value, []);
       default:
         throw new OutOfRange('new Value', value);
     }
