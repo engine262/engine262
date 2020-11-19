@@ -38,9 +38,9 @@
     "@babel/plugin-proposal-optional-chaining": "^7.11.0",
     "@engine262/eslint-plugin": "file:./test/eslint-plugin-engine262",
     "@rollup/plugin-babel": "^5.2.1",
-    "@rollup/plugin-commonjs": "^14.0.0",
+    "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^8.4.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
     "@snek/source-map-support": "^1.0.4",
     "@unicode/unicode-13.0.0": "^1.0.2",
     "acorn": "^7.4.0",
@@ -51,7 +51,7 @@
     "js-yaml": "^3.14.0",
     "minimatch": "^3.0.4",
     "nyc": "^15.1.0",
-    "rollup": "^2.28.2",
+    "rollup": "^2.33.3",
     "ws": "^7.2.3"
   }
 }
