@@ -42,6 +42,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
     "@snek/source-map-support": "^1.0.4",
+    "@unicode/unicode-13.0.0": "^1.0.2",
     "acorn": "^7.4.0",
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "^14.2.0",
@@ -51,7 +52,6 @@
     "minimatch": "^3.0.4",
     "nyc": "^15.1.0",
     "rollup": "^2.28.2",
-    "unicode-13.0.0": "^0.8.0",
     "ws": "^7.2.3"
   }
 }
