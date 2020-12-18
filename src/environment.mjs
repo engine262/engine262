@@ -366,7 +366,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     this.ThisValue = undefined;
     this.ThisBindingStatus = undefined;
     this.FunctionObject = undefined;
-    this.HomeObject = Value.undefined;
     this.NewTarget = undefined;
   }
 
@@ -402,14 +401,13 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
   // #sec-function-environment-records-hassuperbinding
   HasSuperBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false.
+    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
     if (envRec.ThisBindingStatus === 'lexical') {
       return Value.false;
     }
-    // 3. If envRec.[[HomeObject]] has the value undefined, return false; otherwise, return true.
-    if (Type(envRec.HomeObject) === 'Undefined') {
+    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
+    if (envRec.FunctionObject.HomeObject === Value.undefined) {
       return Value.false;
     } else {
       return Value.true;
@@ -432,17 +430,16 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
   // #sec-getsuperbase
   GetSuperBase() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. Let home be envRec.[[HomeObject]].
-    const home = envRec.HomeObject;
-    // 3. If home has the value undefined, return undefined.
-    if (Type(home) === 'Undefined') {
+    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
+    const home = envRec.FunctionObject.HomeObject;
+    // 2. If home has the value undefined, return undefined.
+    if (home === Value.undefined) {
       return Value.undefined;
     }
-    // 4. Assert: Type(home) is Object.
+    // 3. Assert: Type(home) is Object.
     Assert(Type(home) === 'Object');
-    // 5. Return ? home.[[GetPrototypeOf]]().
+    // 4. Return ? home.[[GetPrototypeOf]]().
     return Q(home.GetPrototypeOf());
   }
 
@@ -450,7 +447,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     super.mark(m);
     m(this.ThisValue);
     m(this.FunctionObject);
-    m(this.HomeObject);
     m(this.NewTarget);
   }
 }
@@ -936,15 +932,11 @@ export function NewFunctionEnvironment(F, newTarget) {
   } else { // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
     env.ThisBindingStatus = 'uninitialized';
   }
-  // 7. Let home be F.[[HomeObject]].
-  const home = F.HomeObject;
-  // 8. Set env.[[HomeObject]] to home.
-  env.HomeObject = home;
-  // 9. Set env.[[NewTarget]] to newTarget.
+  // 7. Set env.[[NewTarget]] to newTarget.
   env.NewTarget = newTarget;
-  // 10. Set env.[[OuterEnv]] to F.[[Environment]].
+  // 8. Set env.[[OuterEnv]] to F.[[Environment]].
   env.OuterEnv = F.Environment;
-  // 11. Return env.
+  // 9. Return env.
   return env;
 }
 

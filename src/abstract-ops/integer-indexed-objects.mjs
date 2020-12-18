@@ -168,8 +168,10 @@ export function IntegerIndexedSet(P, V, Receiver) {
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
     if (numericIndex !== Value.undefined) {
-      // i. Return ? IntegerIndexedElementSet(O, numericIndex, V).
-      return Q(IntegerIndexedElementSet(O, numericIndex, V));
+      // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
+      Q(IntegerIndexedElementSet(O, numericIndex, V));
+      // ii. Return true.
+      return Value.true;
     }
   }
   // 3. Return ? OrdinarySet(O, P, V, Receiver).

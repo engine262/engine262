@@ -32,8 +32,8 @@ regexp-match-indices = regexp-match-indices
 cleanupSome = cleanup-some
 
 # https://github.com/tc39/proposal-item-method/
-Array.prototype.item = item-method
-String.prototype.item = item-method
-TypedArray.prototype.item = item-method
+Array.prototype.at = at-method
+String.prototype.at = at-method
+TypedArray.prototype.at = at-method
 
 arbitrary-module-namespace-names = arbitrary-module-namespace-names

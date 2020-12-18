@@ -796,8 +796,8 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   return name;
 }
 
-// https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.item
-function TypedArrayProto_item([index = Value.undefined], { thisValue }) {
+// https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.at
+function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Perform ? ValidateTypedArray(O).
@@ -835,8 +835,8 @@ export function BootstrapTypedArrayPrototype(realmRec) {
     ['entries', TypedArrayProto_entries, 0],
     ['fill', TypedArrayProto_fill, 1],
     ['filter', TypedArrayProto_filter, 1],
-    surroundingAgent.feature('item-method')
-      ? ['item', TypedArrayProto_item, 1]
+    surroundingAgent.feature('at-method')
+      ? ['at', TypedArrayProto_at, 1]
       : undefined,
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_length]],

@@ -678,8 +678,8 @@ function StringProto_iterator(args, { thisValue }) {
   return Q(CreateStringIterator(S));
 }
 
-// https://tc39.es/proposal-item-method/#sec-string.prototype.item
-function StringProto_item([index = Value.undefined], { thisValue }) {
+// https://tc39.es/proposal-item-method/#sec-string.prototype.at
+function StringProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. Let S be ? ToString(O).
@@ -716,8 +716,8 @@ export function BootstrapStringPrototype(realmRec) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
-    surroundingAgent.feature('item-method')
-      ? ['item', StringProto_item, 1]
+    surroundingAgent.feature('at-method')
+      ? ['at', StringProto_at, 1]
       : undefined,
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],

@@ -47,8 +47,8 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/ecma262/pull/2154',
   },
   {
-    name: 'item Method',
-    flag: 'item-method',
+    name: 'At Method',
+    flag: 'at-method',
     url: 'https://github.com/tc39/proposal-item-method',
   },
 ].map(Object.freeze));
