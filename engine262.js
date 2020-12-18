@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 a95974c32ca8e554ff47f2b4aff3b441c8a6a2e9
+ * engine262 0.0.1 ff734b4b05d0d7d63e14d3b029c72ab5fba10712
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -139023,16 +139023,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   }
   function Descriptor(O) {
-    if (new.target === Descriptor) {
-      this.Value = O.Value;
-      this.Get = O.Get;
-      this.Set = O.Set;
-      this.Writable = O.Writable;
-      this.Enumerable = O.Enumerable;
-      this.Configurable = O.Configurable;
-    } else {
+    if (new.target === undefined) {
       return new Descriptor(O);
     }
+
+    this.Value = O.Value;
+    this.Get = O.Get;
+    this.Set = O.Set;
+    this.Writable = O.Writable;
+    this.Enumerable = O.Enumerable;
+    this.Configurable = O.Configurable;
   }
 
   Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
@@ -139648,16 +139648,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   function Completion(init) {
-    if (new.target === Completion) {
-      this.Type = init.Type;
-      this.Value = init.Value;
-      this.Target = init.Target;
-    } else {
+    if (new.target === undefined) {
       // 1. Assert: completionRecord is a Completion Record.
       Assert(init instanceof Completion, "init instanceof Completion"); // 2. Return completionRecord as the Completion Record of this abstract operation.
 
       return init;
     }
+
+    this.Type = init.Type;
+    this.Value = init.Value;
+    this.Target = init.Target;
   } // NON-SPEC
 
   Completion.prototype.mark = function mark(m) {
