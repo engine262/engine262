@@ -278,7 +278,7 @@ export function LengthOfArrayLike(obj) {
 // 7.3.17 #sec-createlistfromarraylike
 export function CreateListFromArrayLike(obj, elementTypes) {
   if (!elementTypes) {
-    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
+    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
   }
   if (Type(obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
