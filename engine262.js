@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 ff734b4b05d0d7d63e14d3b029c72ab5fba10712
+ * engine262 0.0.1 249f092d2566683e8f52133192f50e90d41c3f42
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -145476,7 +145476,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function CreateListFromArrayLike(obj, elementTypes) {
     if (!elementTypes) {
-      elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'Object'];
+      elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
     }
 
     if (Type(obj) !== 'Object') {
