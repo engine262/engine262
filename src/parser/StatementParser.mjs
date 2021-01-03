@@ -445,7 +445,7 @@ export class StatementParser extends ExpressionParser {
   // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
   // `for` `(` `var` ForBinding `in` Expression `)` Statement
   // `for` `(` ForDeclaration `in` Expression `)` Statement
-  // `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
   // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
   // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
   // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
@@ -600,7 +600,7 @@ export class StatementParser extends ExpressionParser {
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
-      if (this.eat('of')) {
+      if (!(expression.type === 'IdentifierReference' && expression.name === 'async') && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression;
