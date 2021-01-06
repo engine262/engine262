@@ -896,6 +896,7 @@ export class StatementParser extends ExpressionParser {
         }
         break;
     }
+    const startToken = this.peek();
     const node = this.startNode();
     const expression = this.parseExpression();
     if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
@@ -918,9 +919,16 @@ export class StatementParser extends ExpressionParser {
         default:
           break;
       }
+      if (type !== null && this.scope.labels.length > 0) {
+        const last = this.scope.labels[this.scope.labels.length - 1];
+        if (last.nextToken === startToken) {
+          last.type = type;
+        }
+      }
       this.scope.labels.push({
         name: node.LabelIdentifier.name,
         type,
+        nextToken: type === null ? this.peek() : null,
       });
 
       node.LabelledItem = this.parseStatement();
