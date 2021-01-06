@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 249f092d2566683e8f52133192f50e90d41c3f42
+ * engine262 0.0.1 7c5d6f77dcf54839b446081c09feba3740e42857
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -7928,7 +7928,7 @@
     // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
     // `for` `(` `var` ForBinding `in` Expression `)` Statement
     // `for` `(` ForDeclaration `in` Expression `)` Statement
-    // `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+    // `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
     // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
     // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
     // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
@@ -8123,7 +8123,7 @@
           return this.finishNode(node, 'ForInStatement');
         }
 
-        if (this.eat('of')) {
+        if (!(expression.type === 'IdentifierReference' && expression.name === 'async') && this.eat('of')) {
           assignmentInfo.clear();
           validateLHS(expression);
           node.LeftHandSideExpression = expression;
@@ -8463,6 +8463,7 @@
           break;
       }
 
+      const startToken = this.peek();
       const node = this.startNode();
       const expression = this.parseExpression();
 
@@ -8488,9 +8489,18 @@
             break;
         }
 
+        if (type !== null && this.scope.labels.length > 0) {
+          const last = this.scope.labels[this.scope.labels.length - 1];
+
+          if (last.nextToken === startToken) {
+            last.type = type;
+          }
+        }
+
         this.scope.labels.push({
           name: node.LabelIdentifier.name,
-          type
+          type,
+          nextToken: type === null ? this.peek() : null
         });
         node.LabelledItem = this.parseStatement();
         this.scope.labels.pop();
