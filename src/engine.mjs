@@ -53,6 +53,22 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
+class ExecutionContextStack extends Array {
+  // This ensures that only the length taking overload is supported.
+  // This is necessary to support `ArraySpeciesCreate`, which invokes
+  // the constructor with argument `length`:
+  constructor(length = 0) {
+    super(+length);
+  }
+
+  pop(ctx) {
+    if (!ctx.poppedForTailCall) {
+      const popped = super.pop();
+      Assert(popped === ctx);
+    }
+  }
+}
+
 let agentSignifier = 0;
 // #sec-agents
 export class Agent {
@@ -71,14 +87,7 @@ export class Agent {
     };
 
     // #execution-context-stack
-    this.executionContextStack = [];
-    const stackPop = this.executionContextStack.pop;
-    this.executionContextStack.pop = function pop(ctx) {
-      if (!ctx.poppedForTailCall) {
-        const popped = stackPop.call(this);
-        Assert(popped === ctx);
-      }
-    };
+    this.executionContextStack = new ExecutionContextStack();
 
     // NON-SPEC
     this.jobQueue = [];

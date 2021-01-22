@@ -256,6 +256,13 @@ Error: owo
     `);
     assert.strictEqual(result.Value, Value.undefined);
   },
+  () => {
+    const agent1 = new Agent();
+    const agent2 = new Agent();
+
+    assert.strictEqual(agent1.executionContextStack.pop, agent2.executionContextStack.pop,
+      "The 'agent.executionContextStack.pop' method is identical for every execution context stack.");
+  },
 ].forEach((test) => {
   total();
   try {
