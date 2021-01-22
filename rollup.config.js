@@ -28,6 +28,9 @@ module.exports = () => ({
       exclude: 'node_modules/**',
       plugins: [
         '@babel/plugin-proposal-optional-chaining',
+        ['@babel/plugin-proposal-class-properties', {
+          loose: true,
+        }],
         './scripts/transform.js',
       ],
     }),

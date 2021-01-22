@@ -121,20 +121,18 @@ const SingleCharTokens = {
 };
 
 export class Lexer {
-  constructor() {
-    this.currentToken = undefined;
-    this.peekToken = undefined;
-    this.peekAheadToken = undefined;
+  currentToken = undefined;
+  peekToken = undefined;
+  peekAheadToken = undefined;
 
-    this.position = 0;
-    this.line = 1;
-    this.columnOffset = 0;
-    this.scannedValue = undefined;
-    this.lineTerminatorBeforeNextToken = false;
-    this.positionForNextToken = 0;
-    this.lineForNextToken = 0;
-    this.columnForNextToken = 0;
-  }
+  position = 0;
+  line = 1;
+  columnOffset = 0;
+  scannedValue = undefined;
+  lineTerminatorBeforeNextToken = false;
+  positionForNextToken = 0;
+  lineForNextToken = 0;
+  columnForNextToken = 0;
 
   advance() {
     this.lineTerminatorBeforeNextToken = false;

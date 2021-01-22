@@ -40,6 +40,11 @@ export class Value {
         throw new OutOfRange('new Value', value);
     }
   }
+
+  static undefined = undefined;
+  static null = undefined;
+  static true = undefined;
+  static false = undefined;
 }
 
 export class PrimitiveValue extends Value {}
@@ -347,9 +352,9 @@ export class NumberValue extends PrimitiveValue {
     // TODO: implement properly
     return new Value(`${xVal}`);
   }
-}
 
-NumberValue.unit = new NumberValue(1);
+  static unit = new NumberValue(1);
+}
 
 // #sec-numberbitwiseop
 function NumberBitwiseOp(op, x, y) {
@@ -529,9 +534,9 @@ export class BigIntValue extends PrimitiveValue {
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
     return new Value(`${x.bigintValue()}`);
   }
-}
 
-BigIntValue.unit = new BigIntValue(1n);
+  static unit = new BigIntValue(1n);
+}
 
 /*
 // #sec-binaryand
@@ -653,10 +658,11 @@ function BigIntBitwiseOp(op, x, y) {
 
 // #sec-object-type
 export class ObjectValue extends Value {
+  properties = new ValueMap();
+
   constructor(internalSlotsList) {
     super();
 
-    this.properties = new ValueMap();
     this.internalSlotsList = internalSlotsList;
   }
 

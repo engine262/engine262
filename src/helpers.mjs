@@ -20,9 +20,7 @@ function convertValueForKey(key) {
 }
 
 export class ValueMap {
-  constructor() {
-    this.map = new Map();
-  }
+  map = new Map();
 
   get size() {
     return this.map.size;
@@ -80,8 +78,9 @@ export class ValueMap {
 }
 
 export class ValueSet {
+  set = new Set();
+
   constructor(init) {
-    this.set = new Set();
     if (init !== undefined && init !== null) {
       for (const item of init) {
         this.add(item);

@@ -34,11 +34,9 @@ import {
 
 // 25.6.1.1 #sec-promisecapability-records
 export class PromiseCapabilityRecord {
-  constructor() {
-    this.Promise = Value.undefined;
-    this.Resolve = Value.undefined;
-    this.Reject = Value.undefined;
-  }
+  Promise = Value.undefined;
+  Resolve = Value.undefined;
+  Reject = Value.undefined;
 }
 
 // 25.6.1.2 #sec-promisereaction-records

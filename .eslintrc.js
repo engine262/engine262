@@ -8,6 +8,11 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     requireConfigFile: false,
+    babelOptions: {
+      plugins: [
+        '@babel/plugin-syntax-class-properties',
+      ],
+    },
   },
   overrides: [
     {

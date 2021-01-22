@@ -25,9 +25,7 @@ import { ValueMap } from './helpers.mjs';
 
 // #sec-environment-records
 export class EnvironmentRecord {
-  constructor() {
-    this.OuterEnv = undefined;
-  }
+  OuterEnv = undefined;
 
   // NON-SPEC
   mark(m) {
@@ -37,10 +35,7 @@ export class EnvironmentRecord {
 
 // #sec-declarative-environment-records
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.bindings = new ValueMap();
-  }
+  bindings = new ValueMap()
 
   // #sec-declarative-environment-records-hasbinding-n
   HasBinding(N) {
@@ -361,13 +356,10 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
 // #sec-function-environment-records
 export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  constructor() {
-    super();
-    this.ThisValue = undefined;
-    this.ThisBindingStatus = undefined;
-    this.FunctionObject = undefined;
-    this.NewTarget = undefined;
-  }
+  ThisValue = undefined;
+  ThisBindingStatus = undefined;
+  FunctionObject = undefined;
+  NewTarget = undefined;
 
   // #sec-bindthisvalue
   BindThisValue(V) {
@@ -453,13 +445,10 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
 // #sec-global-environment-records
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.ObjectRecord = undefined;
-    this.GlobalThisValue = undefined;
-    this.DeclarativeRecord = undefined;
-    this.VarNames = undefined;
-  }
+  ObjectRecord = undefined;
+  GlobalThisValue = undefined;
+  DeclarativeRecord = undefined;
+  VarNames = undefined;
 
   // #sec-global-environment-records-hasbinding-n
   HasBinding(N) {

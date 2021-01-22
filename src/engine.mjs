@@ -174,19 +174,18 @@ export function setSurroundingAgent(a) {
 
 // #sec-execution-contexts
 export class ExecutionContext {
-  constructor() {
-    this.codeEvaluationState = undefined;
-    this.Function = undefined;
-    this.Realm = undefined;
-    this.ScriptOrModule = undefined;
-    this.VariableEnvironment = undefined;
-    this.LexicalEnvironment = undefined;
+  codeEvaluationState = undefined;
+  Function = undefined;
+  Realm = undefined;
+  ScriptOrModule = undefined;
+  VariableEnvironment = undefined;
+  LexicalEnvironment = undefined;
 
-    // NON-SPEC
-    this.callSite = new CallSite(this);
-    this.promiseCapability = undefined;
-    this.poppedForTailCall = false;
-  }
+  // NON-SPEC
+  HostDefined = undefined;
+  callSite = new CallSite(this);
+  promiseCapability = undefined;
+  poppedForTailCall = false;
 
   copy() {
     const e = new ExecutionContext();
