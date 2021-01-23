@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3ab56d870e4f065bb0a20d75cd4a4a780d9fc799
+ * engine262 0.0.1 a28d5eb4e142ed9ae856a3b10a77824fe9753900
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -139157,6 +139157,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     flag: 'at-method',
     url: 'https://github.com/tc39/proposal-item-method'
   }].map(Object.freeze));
+
+  class ExecutionContextStack extends Array {
+    // This ensures that only the length taking overload is supported.
+    // This is necessary to support `ArraySpeciesCreate`, which invokes
+    // the constructor with argument `length`:
+    constructor(length = 0) {
+      super(+length);
+    }
+
+    pop(ctx) {
+      if (!ctx.poppedForTailCall) {
+        const popped = super.pop();
+        Assert(popped === ctx, "popped === ctx");
+      }
+    }
+
+  }
+
   let agentSignifier = 0; // #sec-agents
 
   class Agent {
@@ -139174,16 +139192,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         KeptAlive: new Set()
       }; // #execution-context-stack
 
-      this.executionContextStack = [];
-      const stackPop = this.executionContextStack.pop;
-
-      this.executionContextStack.pop = function pop(ctx) {
-        if (!ctx.poppedForTailCall) {
-          const popped = stackPop.call(this);
-          Assert(popped === ctx, "popped === ctx");
-        }
-      }; // NON-SPEC
-
+      this.executionContextStack = new ExecutionContextStack(); // NON-SPEC
 
       this.jobQueue = [];
       this.hostDefinedOptions = { ...options,
@@ -159669,7 +159678,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     Assert('OriginalFlags' in R, "'OriginalFlags' in R");
     const src = R.OriginalSource;
-    const flags = R.OriginalFlags;
+    R.OriginalFlags;
     return EscapeRegExpPattern(src);
   } // 21.2.5.13 #sec-regexp.prototype-@@split
 
