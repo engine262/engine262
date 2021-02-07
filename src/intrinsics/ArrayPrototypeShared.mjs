@@ -3,7 +3,6 @@ import {
   Call,
   DeletePropertyOrThrow,
   Get,
-  HasOwnProperty,
   HasProperty,
   Invoke,
   IsCallable,
@@ -33,57 +32,41 @@ import { assignProps } from './bootstrap.mjs';
 export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = false) {
   len = len.numberValue();
 
-  // Collect all elements. Count how many holes we have for error checking.
-  const collected = [];
-  let holes = 0;
-  for (let k = 0; k < len; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    const prop = Q(Get(obj, curProp));
-    if (prop === Value.undefined) {
-      Assert(!internalMethodsRestricted);
-      const hasOwn = Q(HasOwnProperty(obj, curProp));
-      if (hasOwn === Value.false) {
-        holes += 1;
-      } else {
-        collected.push(prop);
-      }
+  const items = [];
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(new Value(k)));
+    if (internalMethodsRestricted) {
+      items.push(Q(Get(obj, Pk)));
     } else {
-      collected.push(prop);
+      const kPresent = Q(HasProperty(obj, Pk));
+      if (kPresent === Value.true) {
+        const kValue = Q(Get(obj, Pk));
+        items.push(kValue);
+      }
     }
+    k += 1;
   }
-  if (internalMethodsRestricted) {
-    Assert(holes === 0);
-  }
-  Assert(collected.length + holes === len);
-
-  // Get rid of holes by deleting properties at the end.
-  // See Note 1: Because non-existent property values always compare greater
-  // than undefined property values, and undefined always compares greater
-  // than any other value, undefined property values always sort to the end
-  // of the result, followed by non-existent property values.
-  for (let k = collected.length; k < len; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    Q(DeletePropertyOrThrow(obj, curProp));
-  }
+  const itemCount = items.length;
 
   // Mergesort.
   const lBuffer = [];
   const rBuffer = [];
-  for (let step = 1; step < collected.length; step *= 2) {
-    for (let start = 0; start < collected.length - 1; start += 2 * step) {
+  for (let step = 1; step < items.length; step *= 2) {
+    for (let start = 0; start < items.length - 1; start += 2 * step) {
       const sizeLeft = step;
       const mid = start + sizeLeft;
-      const sizeRight = Math.min(step, collected.length - mid);
+      const sizeRight = Math.min(step, items.length - mid);
       if (sizeRight < 0) {
         continue;
       }
 
       // Merge.
       for (let l = 0; l < sizeLeft; l += 1) {
-        lBuffer[l] = collected[start + l];
+        lBuffer[l] = items[start + l];
       }
       for (let r = 0; r < sizeRight; r += 1) {
-        rBuffer[r] = collected[mid + r];
+        rBuffer[r] = items[mid + r];
       }
 
       {
@@ -93,22 +76,22 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
         while (l < sizeLeft && r < sizeRight) {
           const cmp = Q(SortCompare(lBuffer[l], rBuffer[r])).numberValue();
           if (cmp <= 0) {
-            collected[o] = lBuffer[l];
+            items[o] = lBuffer[l];
             o += 1;
             l += 1;
           } else {
-            collected[o] = rBuffer[r];
+            items[o] = rBuffer[r];
             o += 1;
             r += 1;
           }
         }
         while (l < sizeLeft) {
-          collected[o] = lBuffer[l];
+          items[o] = lBuffer[l];
           o += 1;
           l += 1;
         }
         while (r < sizeRight) {
-          collected[o] = rBuffer[r];
+          items[o] = rBuffer[r];
           o += 1;
           r += 1;
         }
@@ -116,10 +99,14 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
     }
   }
 
-  // Copy the sorted results back to the array.
-  for (let k = 0; k < collected.length; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    Q(Set(obj, curProp, collected[k], Value.true));
+  let j = 0;
+  while (j < itemCount) {
+    Q(Set(obj, X(ToString(new Value(j))), items[j], Value.true));
+    j += 1;
+  }
+  while (j < len) {
+    Q(DeletePropertyOrThrow(obj, X(ToString(new Value(j)))));
+    j += 1;
   }
 
   return obj;

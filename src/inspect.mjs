@@ -137,16 +137,19 @@ const INSPECTORS = {
       if (isArray || isTypedArray) {
         const length = X(LengthOfArrayLike(v)).numberValue();
         let holes = 0;
+        const flushHoles = () => {
+          if (holes > 0) {
+            out.push(`<${holes} empty items>`);
+            holes = 0;
+          }
+        };
         const out = [];
         for (let j = 0; j < length; j += 1) {
           const elem = X(v.GetOwnProperty(new Value(j.toString())));
           if (elem === Value.undefined) {
             holes += 1;
           } else {
-            if (holes > 0) {
-              out.push(`<${holes} empty items>`);
-              holes = 0;
-            }
+            flushHoles();
             if (elem.Value) {
               out.push(i(elem.Value));
             } else {
@@ -154,6 +157,7 @@ const INSPECTORS = {
             }
           }
         }
+        flushHoles();
         return `${isTypedArray ? `${v.TypedArrayName.stringValue()} ` : ''}[${out.join(', ')}]`;
       }
 
