@@ -27,6 +27,7 @@ module.exports = () => ({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
       plugins: [
+        '@babel/plugin-proposal-optional-chaining',
         './scripts/transform.js',
       ],
     }),

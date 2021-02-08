@@ -91,6 +91,7 @@ export class Agent {
 
     // NON-SPEC
     this.jobQueue = [];
+    this.scheduledForCleanup = new Set();
     this.hostDefinedOptions = {
       ...options,
       features: FEATURES.reduce((acc, { flag }) => {
@@ -380,15 +381,14 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
 }
 
 // #sec-host-cleanup-finalization-registry
-const scheduledForCleanup = new Set();
 export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
   } else {
-    if (!scheduledForCleanup.has(fg)) {
-      scheduledForCleanup.add(fg);
+    if (!surroundingAgent.scheduledForCleanup.has(fg)) {
+      surroundingAgent.scheduledForCleanup.add(fg);
       surroundingAgent.queueJob('FinalizationCleanup', () => {
-        scheduledForCleanup.delete(fg);
+        surroundingAgent.scheduledForCleanup.delete(fg);
         CleanupFinalizationRegistry(fg);
       });
     }

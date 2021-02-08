@@ -15,7 +15,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@master
         with:
-          node-version: 12
+          node-version: 15
           registry-url: https://npm.pkg.github.com/
           scope: '@engine262'
           always-auth: true # required if using yarn

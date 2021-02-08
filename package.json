@@ -35,6 +35,7 @@
   "devDependencies": {
     "@babel/core": "^7.12.13",
     "@babel/eslint-parser": "^7.12.13",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.13",
     "@engine262/eslint-plugin": "file:./test/eslint-plugin-engine262",
     "@rollup/plugin-babel": "^5.2.3",
     "@rollup/plugin-commonjs": "^17.1.0",
