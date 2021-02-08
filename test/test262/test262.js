@@ -67,7 +67,7 @@ if (!process.send) {
     c.on('message', (message) => {
       switch (message.status) {
         case 'PASS':
-          pass();
+          pass(message.count);
           break;
         case 'FAIL':
           fail(message.description, message.error);
@@ -337,26 +337,34 @@ function $DONE(error) {
     return r;
   };
 
-  let p = Promise.resolve();
   const handleSendError = (e) => {
     if (e) {
       process.exit(1);
     }
   };
+  let passChunk = 0;
   process.on('message', (test) => {
     if (test === 'DONE') {
-      p.then(() => process.exit(0));
-      p = undefined;
-    } else {
-      const description = `${test.file}\n${test.attrs.description}`;
-      p = p
-        .then(() => run(test))
-        .then((r) => {
-          process.send({ description, ...r }, handleSendError);
-        })
-        .catch((e) => {
-          process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
-        });
+      if (passChunk > 0) {
+        process.send({ status: 'PASS', count: passChunk }, handleSendError);
+      }
+      process.exit(0);
+      return;
+    }
+    const description = `${test.file}\n${test.attrs.description}`;
+    try {
+      const r = run(test);
+      if (r.status === 'PASS') {
+        passChunk += 1;
+        if (passChunk > 20) {
+          process.send({ status: 'PASS', count: passChunk }, handleSendError);
+          passChunk = 0;
+        }
+      } else {
+        process.send({ description, ...r }, handleSendError);
+      }
+    } catch (e) {
+      process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
     }
   });
 }
