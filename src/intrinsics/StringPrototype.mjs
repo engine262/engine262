@@ -21,7 +21,7 @@ import {
   ToString,
   ToUint32,
   StringCreate,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   GetSubstitution,
@@ -66,9 +66,9 @@ function StringProto_charCodeAt([pos = Value.undefined], { thisValue }) {
   const position = Q(ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return 𝔽(NaN);
+    return F(NaN);
   }
-  return 𝔽(S.stringValue().charCodeAt(position));
+  return F(S.stringValue().charCodeAt(position));
 }
 
 // 21.1.3.3 #sec-string.prototype.codepointat
@@ -81,7 +81,7 @@ function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
     return Value.undefined;
   }
   const cp = X(CodePointAt(S.stringValue(), position));
-  return 𝔽(cp.CodePoint);
+  return F(cp.CodePoint);
 }
 
 // 21.1.3.4 #sec-string.prototype.concat
@@ -205,12 +205,12 @@ function StringProto_lastIndexOf([searchString = Value.undefined, position = Val
         }
       }
       if (match) {
-        return 𝔽(k);
+        return F(k);
       }
     }
     k -= 1;
   }
-  return 𝔽(-1);
+  return F(-1);
 }
 
 // 21.1.3.10 #sec-string.prototype.localecompare
@@ -219,11 +219,11 @@ function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   const S = Q(ToString(O)).stringValue();
   const That = Q(ToString(that)).stringValue();
   if (S === That) {
-    return 𝔽(0);
+    return F(+0);
   } else if (S < That) {
-    return 𝔽(-1);
+    return F(-1);
   } else {
-    return 𝔽(1);
+    return F(1);
   }
 }
 
@@ -350,7 +350,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   }
   let replStr;
   if (functionalReplace === Value.true) {
-    const replValue = Q(Call(replaceValue, Value.undefined, [matched, 𝔽(pos), string]));
+    const replValue = Q(Call(replaceValue, Value.undefined, [matched, F(pos), string]));
     replStr = Q(ToString(replValue));
   } else {
     const captures = [];
@@ -424,7 +424,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
     // a. If functionalReplace is true, then
     if (functionalReplace === Value.true) {
       // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
-      replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, 𝔽(position), string]))));
+      replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
     } else { // b. Else,
       // i. Assert: Type(replaceValue) is String.
       Assert(Type(replaceValue) === 'String');
@@ -507,7 +507,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   let lengthA = 0;
   let lim;
   if (limit === Value.undefined) {
-    lim = 𝔽((2 ** 32) - 1);
+    lim = F((2 ** 32) - 1);
   } else {
     lim = Q(ToUint32(limit));
   }
@@ -537,7 +537,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
         q += 1;
       } else {
         const T = new Value(S.stringValue().substring(p, q));
-        X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(lengthA))), T));
+        X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
         lengthA += 1;
         if (lengthA === lim.numberValue()) {
           return A;
@@ -548,7 +548,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     }
   }
   const T = new Value(S.stringValue().substring(p, s));
-  X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(lengthA))), T));
+  X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
   return A;
 }
 

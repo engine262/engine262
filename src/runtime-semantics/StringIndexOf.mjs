@@ -1,5 +1,5 @@
 import { Type, Value } from '../value.mjs';
-import { Assert, isNonNegativeInteger, 𝔽 } from '../abstract-ops/all.mjs';
+import { Assert, isNonNegativeInteger, F } from '../abstract-ops/all.mjs';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
 export function StringIndexOf(string, searchValue, fromIndex) {
@@ -13,9 +13,9 @@ export function StringIndexOf(string, searchValue, fromIndex) {
   const searchStr = searchValue.stringValue();
   // 4. Let len be the length of string.
   const len = stringStr.length;
-  // 5. If searchValue is the empty string, and fromIndex <= len, return fromIndex.
+  // 5. If searchValue is the empty string, and fromIndex <= len, return 𝔽(fromIndex).
   if (searchStr === '' && fromIndex <= len) {
-    return 𝔽(fromIndex);
+    return F(fromIndex);
   }
   // 6. Let searchLen be the length of searchValue.
   const searchLen = searchStr.length;
@@ -38,6 +38,6 @@ export function StringIndexOf(string, searchValue, fromIndex) {
     }
     k += 1;
   }
-  // 8. Return pos.
-  return 𝔽(pos);
+  // 8. Return 𝔽(pos).
+  return F(pos);
 }

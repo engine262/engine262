@@ -14,7 +14,7 @@ import {
   ToObject,
   ToString,
   ToUint16,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -86,7 +86,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   const stringElements = [];
   let nextIndex = 0;
   while (true) {
-    const nextKey = X(ToString(𝔽(nextIndex)));
+    const nextKey = X(ToString(F(nextIndex)));
     const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {

@@ -7,7 +7,7 @@ import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
@@ -112,7 +112,7 @@ export function bootstrapNumberPrototype(realmRec) {
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.NumberData = 𝔽(+0);
+  proto.NumberData = F(+0);
 
   realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

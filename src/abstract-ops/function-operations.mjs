@@ -32,9 +32,10 @@ import {
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   ToObject,
+  isNonNegativeInteger,
   isStrictModeCode,
   Realm,
-  𝔽,
+  F as 𝔽,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -340,8 +341,7 @@ export function SetFunctionName(F, name, prefix) {
 
 // 9.2.14 #sec-setfunctionlength
 export function SetFunctionLength(F, length) {
-  Assert(typeof length === 'number' && length >= 0
-    && (Number.isInteger(length) || !Number.isFinite(length)));
+  Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).

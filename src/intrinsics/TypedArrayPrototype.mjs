@@ -23,7 +23,7 @@ import {
   RequireInternalSlot,
   typedArrayInfoByName,
   typedArrayInfoByType,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -57,14 +57,14 @@ function TypedArrayProto_byteLength(args, { thisValue }) {
   Assert('ViewedArrayBuffer' in O);
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  // 5. If IsDetachedBuffer(buffer) is true, return 0.
+  // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return 𝔽(+0);
+    return F(+0);
   }
   // 6. Let size be O.[[ByteLength]].
   const size = O.ByteLength;
   // 7. Return size.
-  return 𝔽(size);
+  return F(size);
 }
 
 // #sec-get-%typedarray%.prototype.byteoffset
@@ -77,14 +77,14 @@ function TypedArrayProto_byteOffset(args, { thisValue }) {
   Assert('ViewedArrayBuffer' in O);
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  // 5. If IsDetachedBuffer(buffer) is true, return 0.
+  // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return 𝔽(+0);
+    return F(+0);
   }
   // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
   // 7. Return offset.
-  return 𝔽(offset);
+  return F(offset);
 }
 
 // #sec-%typedarray%.prototype.copywithin
@@ -236,7 +236,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   // 11. Repeat, while k < final
   while (k < final) {
     // a. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     // b. Perform ! Set(O, Pk, value, true).
     X(Set(O, Pk, value, Value.true));
     // c. Set k to k + 1.
@@ -267,11 +267,11 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   // 8. Repeat, while k < len
   while (k < len) {
     // a. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     // b. Let kValue be ? Get(O, Pk).
     const kValue = Q(Get(O, Pk));
     // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O])));
+    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, F(k), O])));
     // d. If selected is true, then
     if (selected === Value.true) {
       // i. Append kValue to the end of kept.
@@ -283,13 +283,13 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
     k += 1;
   }
   // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
-  const A = Q(TypedArraySpeciesCreate(O, [𝔽(captured)]));
+  const A = Q(TypedArraySpeciesCreate(O, [F(captured)]));
   // 10. Let n be 0.
   let n = 0;
   // 11. For each element e of kept, do
   for (const e of kept) {
     // a. Perform ! Set(A, ! ToString(𝔽(n)), e, true).
-    X(Set(A, X(ToString(𝔽(n))), e, Value.true));
+    X(Set(A, X(ToString(F(n))), e, Value.true));
     // b. Set n to n + 1.
     n += 1;
   }
@@ -317,14 +317,14 @@ function TypedArrayProto_length(args, { thisValue }) {
   Assert('ViewedArrayBuffer' in O && 'ArrayLength' in O);
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  // 5. If IsDetachedBuffer(buffer) is true, return 0.
+  // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return 𝔽(+0);
+    return F(+0);
   }
   // 6. Let length be O.[[ArrayLength]].
   const length = O.ArrayLength;
-  // 8. Return length.
-  return 𝔽(length);
+  // 8. Return 𝔽(length).
+  return F(length);
 }
 
 // #sec-%typedarray%.prototype.map
@@ -339,18 +339,18 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
-  // 5. Let A be ? TypedArraySpeciesCreate(O, « len »).
-  const A = Q(TypedArraySpeciesCreate(O, [𝔽(len)]));
+  // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
+  const A = Q(TypedArraySpeciesCreate(O, [F(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
   while (k < len) {
     // a. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     // b. Let kValue be ? Get(O, Pk).
     const kValue = Q(Get(O, Pk));
     // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O]));
+    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, F(k), O]));
     // d. Perform ? Set(A, Pk, mappedValue, true).
     Q(Set(A, Pk, mappedValue, Value.true));
     // e. Set k to k + 1.
@@ -411,7 +411,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     // 20. Repeat, while targetByteIndex < limit
     while (targetByteIndex < limit) {
       // a. Let Pk be ! ToString(𝔽(k)).
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       // b. Let value be ? Get(src, Pk).
       let value = Q(Get(src, Pk));
       // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
@@ -582,7 +582,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   // 8. Let count be max(final - k, 0).
   const count = Math.max(final - k, 0);
   // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
-  const A = Q(TypedArraySpeciesCreate(O, [𝔽(count)]));
+  const A = Q(TypedArraySpeciesCreate(O, [F(count)]));
   // 10. If count > 0, then
   if (count > 0) {
     // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
@@ -604,11 +604,11 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
       // ii. Repeat, while k < final
       while (k < final) {
         // 1. Let Pk be ! ToString(𝔽(k)).
-        const Pk = X(ToString(𝔽(k)));
+        const Pk = X(ToString(F(k)));
         // 2. Let kValue be ! Get(O, Pk).
         const kValue = X(Get(O, Pk));
         // 3. Perform ! Set(A, ! ToString(𝔽(n)), kValue, true).
-        X(Set(A, X(ToString(𝔽(n))), kValue, Value.true));
+        X(Set(A, X(ToString(F(n))), kValue, Value.true));
         // 4. Set k to k + 1.
         k += 1;
         // 5. Set n to n + 1.
@@ -675,45 +675,45 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
     if (IsDetachedBuffer(buffer) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
-    // c. If v is NaN, return +0.
+    // c. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
-      return 𝔽(+0);
+      return F(+0);
     }
     // d. Return v.
     return v;
   }
-  // 3. If x and y are both NaN, return +0.
+  // 3. If x and y are both NaN, return +0𝔽.
   if (x.isNaN() && y.isNaN()) {
-    return 𝔽(+0);
+    return F(+0);
   }
-  // 4. If x is NaN, return 1.
+  // 4. If x is NaN, return 1𝔽.
   if (x.isNaN()) {
-    return 𝔽(1);
+    return F(1);
   }
-  // 5. If y is NaN, return -1.
+  // 5. If y is NaN, return -1𝔽.
   if (y.isNaN()) {
-    return 𝔽(-1);
+    return F(-1);
   }
   x = x.numberValue ? x.numberValue() : x.bigintValue();
   y = y.numberValue ? y.numberValue() : y.bigintValue();
-  // 6. If x < y, return -1.
+  // 6. If x < y, return -1𝔽.
   if (x < y) {
-    return 𝔽(-1);
+    return F(-1);
   }
-  // 7. If x > y, return 1.
+  // 7. If x > y, return 1𝔽.
   if (x > y) {
-    return 𝔽(1);
+    return F(1);
   }
-  // 8. If x is -0 and y is +0, return -1.
+  // 8. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
   if (Object.is(x, -0) && Object.is(y, +0)) {
-    return 𝔽(-1);
+    return F(-1);
   }
-  // 9. If x is +0 and y is -0, return 1.
+  // 9. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
   if (Object.is(x, +0) && Object.is(y, -0)) {
-    return 𝔽(1);
+    return F(1);
   }
-  // 10. Return +0.
-  return 𝔽(+0);
+  // 10. Return +0𝔽.
+  return F(+0);
 }
 
 // #sec-%typedarray%.prototype.subarray
@@ -762,7 +762,7 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   // 14. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
   const beginByteOffset = srcByteOffset + beginIndex * elementSize;
   // 15. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
-  const argumentsList = [buffer, 𝔽(beginByteOffset), 𝔽(newLength)];
+  const argumentsList = [buffer, F(beginByteOffset), F(newLength)];
   // 16. Return ? TypedArraySpeciesCreate(O, argumentsList).
   return Q(TypedArraySpeciesCreate(O, argumentsList));
 }
@@ -821,7 +821,7 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
     return Value.undefined;
   }
   // 8. Return ? Get(O, ! ToString(𝔽(k))).
-  return Q(Get(O, X(ToString(𝔽(k)))));
+  return Q(Get(O, X(ToString(F(k)))));
 }
 
 export function bootstrapTypedArrayPrototype(realmRec) {

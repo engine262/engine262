@@ -28,7 +28,7 @@ import {
   IsPropertyKey,
   isArrayIndex,
   isNonNegativeInteger,
-  𝔽,
+  F,
 } from './all.mjs';
 
 // #sec-array-exotic-objects-defineownproperty-p-desc
@@ -52,7 +52,7 @@ function ArrayDefineOwnProperty(P, Desc) {
       return Value.false;
     }
     if (index.numberValue() >= oldLen.numberValue()) {
-      oldLenDesc.Value = 𝔽(index.numberValue() + 1);
+      oldLenDesc.Value = F(index.numberValue() + 1);
       const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
       Assert(succeeded === Value.true);
     }
@@ -82,7 +82,7 @@ export function ArrayCreate(length, proto) {
   A.DefineOwnProperty = ArrayDefineOwnProperty;
 
   X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
-    Value: 𝔽(length),
+    Value: F(length),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -123,7 +123,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
-  return Q(Construct(C, [𝔽(length)]));
+  return Q(Construct(C, [F(length)]));
 }
 
 // 9.4.2.4 #sec-arraysetlength
@@ -137,7 +137,7 @@ export function ArraySetLength(A, Desc) {
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
-  newLenDesc.Value = 𝔽(newLen);
+  newLenDesc.Value = F(newLen);
   const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
   Assert(X(IsDataDescriptor(oldLenDesc)));
   Assert(oldLenDesc.Configurable === Value.false);
@@ -169,7 +169,7 @@ export function ArraySetLength(A, Desc) {
   for (const P of keys) {
     const deleteSucceeded = X(A.Delete(P));
     if (deleteSucceeded === Value.false) {
-      newLenDesc.Value = 𝔽(X(ToUint32(P)).numberValue() + 1);
+      newLenDesc.Value = F(X(ToUint32(P)).numberValue() + 1);
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }
@@ -200,15 +200,15 @@ export function IsConcatSpreadable(O) {
 export function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
-    return 𝔽(+0);
+    return F(+0);
   }
   // 2. If x is undefined, return 1𝔽.
   if (x === Value.undefined) {
-    return 𝔽(1);
+    return F(1);
   }
   // 3. If y is undefined, return -1𝔽.
   if (y === Value.undefined) {
-    return 𝔽(-1);
+    return F(-1);
   }
   // 4. If comparefn is not undefined, then
   if (comparefn !== Value.undefined) {
@@ -216,7 +216,7 @@ export function SortCompare(x, y, comparefn) {
     const v = Q(ToNumber(Q(Call(comparefn, Value.undefined, [x, y]))));
     // b. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
-      return 𝔽(+0);
+      return F(+0);
     }
     // c. Return v.
     return v;
@@ -229,16 +229,16 @@ export function SortCompare(x, y, comparefn) {
   const xSmaller = AbstractRelationalComparison(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
   if (xSmaller === Value.true) {
-    return 𝔽(-1);
+    return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
   const ySmaller = AbstractRelationalComparison(yString, xString);
   // 10. If ySmaller is true, return 1𝔽.
   if (ySmaller === Value.true) {
-    return 𝔽(1);
+    return F(1);
   }
   // 11. Return +0𝔽.
-  return 𝔽(+0);
+  return F(+0);
 }
 
 // 22.1.5.1 #sec-createarrayiterator

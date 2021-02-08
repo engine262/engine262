@@ -4,7 +4,7 @@ import {
   ToBigInt,
   ToIndex,
   ToPrimitive,
-  ℤ,
+  Z,
 } from '../abstract-ops/all.mjs';
 import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
@@ -35,7 +35,7 @@ function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   bigint = Q(ToBigInt(bigint));
   // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
   // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
-  return ℤ(BigInt.asIntN(bits, bigint.bigintValue()));
+  return Z(BigInt.asIntN(bits, bigint.bigintValue()));
 }
 
 // #sec-bigint.asuintn
@@ -45,8 +45,8 @@ function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   // 2. Set bigint to ? ToBigInt(bigint).
   bigint = Q(ToBigInt(bigint));
   // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
-  // 4. If mod ≥ 2 ** (bits - 1), return ℤ(mod - 2 ** bits); otherwise, return ℤ(mod).
-  return ℤ(BigInt.asUintN(bits, bigint.bigintValue()));
+  // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
+  return Z(BigInt.asUintN(bits, bigint.bigintValue()));
 }
 
 export function bootstrapBigInt(realmRec) {
