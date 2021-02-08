@@ -128,7 +128,7 @@ export class ValueSet {
 }
 
 export class OutOfRange extends RangeError {
-  /* istanbul ignore next */
+  /* c8 ignore next */
   constructor(fn, detail) {
     super(`${fn}() argument out of range`);
     this.detail = detail;
@@ -142,7 +142,7 @@ export function unwind(iterator, maxSteps = 1) {
     if (done) {
       return value;
     }
-    /* istanbul ignore next */
+    /* c8 ignore next */
     steps += 1;
     if (steps > maxSteps) {
       throw new RangeError('Max steps exceeded');

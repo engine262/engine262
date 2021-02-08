@@ -70,7 +70,7 @@ export function UpdateEmpty(completionRecord, value) {
 
 // #sec-returnifabrupt
 export function ReturnIfAbrupt() {
-  /* istanbul skip next */
+  /* c8 skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
@@ -79,13 +79,13 @@ export const Q = ReturnIfAbrupt;
 
 // #sec-returnifabrupt-shorthands ! OperationName()
 export function X() {
-  /* istanbul skip next */
+  /* c8 skip next */
   throw new TypeError('X() requires build');
 }
 
 // 25.6.1.1.1 #sec-ifabruptrejectpromise
 export function IfAbruptRejectPromise() {
-  /* istanbul skip next */
+  /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 

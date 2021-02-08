@@ -18,7 +18,7 @@
     "test:test262": "node test/test262/test262.js",
     "test:supplemental": "node test/supplemental.js",
     "test:json": "node test/json/json.js",
-    "coverage": "nyc --reporter=lcov npm run test",
+    "coverage": "c8 --reporter=lcov npm run test",
     "prepublishOnly": "node scripts/tag_version_with_git_hash.js",
     "postpublish": "git reset --hard HEAD"
   },
@@ -44,13 +44,13 @@
     "@snek/source-map-support": "^1.0.4",
     "@unicode/unicode-13.0.0": "^1.0.3",
     "acorn": "^8.0.5",
+    "c8": "^7.5.0",
     "eslint": "^7.19.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
     "glob": "^7.1.6",
     "js-yaml": "^3.14.0",
     "minimatch": "^3.0.4",
-    "nyc": "^15.1.0",
     "rollup": "^2.38.5",
     "ws": "^7.2.3"
   }

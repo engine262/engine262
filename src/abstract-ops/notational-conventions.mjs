@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Type } from '../value.mjs';
 
 export function Assert(invariant, source) {
-  /* istanbul ignore next */
+  /* c8 ignore next */
   if (!invariant) {
     throw new TypeError(`Assert failed${source ? `: ${source}` : ''}`.trim());
   }

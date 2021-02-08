@@ -16,7 +16,7 @@ export const Flag = {
   'default',
   'module',
 ].forEach((name, i) => {
-  /* istanbul ignore next */
+  /* c8 ignore next */
   if (i > 31) {
     throw new RangeError(name);
   }
@@ -268,7 +268,7 @@ export class Scope {
         return scope;
       }
     }
-    /* istanbul ignore next */
+    /* c8 ignore next */
     throw new RangeError();
   }
 
@@ -279,7 +279,7 @@ export class Scope {
         return scope;
       }
     }
-    /* istanbul ignore next */
+    /* c8 ignore next */
     throw new RangeError();
   }
 
@@ -349,7 +349,7 @@ export class Scope {
           }
           break;
         default:
-          /* istanbul ignore next */
+          /* c8 ignore next */
           throw new RangeError(type);
       }
     });
