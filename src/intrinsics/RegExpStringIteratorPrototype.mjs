@@ -8,6 +8,7 @@ import {
   ToLength,
   Get,
   Set,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
@@ -59,10 +60,12 @@ function RegExpStringIteratorPrototype_next(args, { thisValue }) {
       const matchStrValue = Q(Get(match, new Value('0')));
       const matchStr = Q(ToString(matchStrValue));
       if (matchStr.stringValue() === '') {
-        const thisIndexValue = Q(Get(R, new Value('lastIndex')));
-        const thisIndex = Q(ToLength(thisIndexValue));
+        // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
+        const thisIndex = Q(ToLength(Q(Get(R, new Value('lastIndex'))))).numberValue();
+        // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
         const nextIndex = X(AdvanceStringIndex(S, thisIndex, fullUnicode));
-        Q(Set(R, new Value('lastIndex'), nextIndex, Value.true));
+        // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
+        Q(Set(R, new Value('lastIndex'), 𝔽(nextIndex), Value.true));
       }
       return Q(CreateIterResultObject(match, Value.false));
     } else {

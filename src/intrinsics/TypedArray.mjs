@@ -14,6 +14,7 @@ import {
   ToObject,
   ToString,
   TypedArrayCreate,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
@@ -49,14 +50,14 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   if (usingIterator !== Value.undefined) {
     const values = Q(IterableToList(source, usingIterator));
     const len = values.length;
-    const targetObj = Q(TypedArrayCreate(C, [new Value(len)]));
+    const targetObj = Q(TypedArrayCreate(C, [𝔽(len)]));
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(𝔽(k)));
       const kValue = values.shift();
       let mappedValue;
       if (mapping) {
-        mappedValue = Q(Call(mapfn, thisArg, [kValue, new Value(k)]));
+        mappedValue = Q(Call(mapfn, thisArg, [kValue, 𝔽(k)]));
       } else {
         mappedValue = kValue;
       }
@@ -70,22 +71,22 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   // 8. Let arrayLike be ! ToObject(source).
   const arrayLike = X(ToObject(source));
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
-  const len = Q(LengthOfArrayLike(arrayLike)).numberValue();
-  // 10. Let targetObj be ? TypedArrayCreate(C, « len »).
-  const targetObj = Q(TypedArrayCreate(C, [new Value(len)]));
+  const len = Q(LengthOfArrayLike(arrayLike));
+  // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
+  const targetObj = Q(TypedArrayCreate(C, [𝔽(len)]));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
   while (k < len) {
-    // a. Let Pk be ! ToString(k).
-    const Pk = X(ToString(new Value(k)));
+    // a. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(𝔽(k)));
     // b. Let kValue be ? Get(arrayLike, Pk).
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     // c. If mapping is true, then
     if (mapping) {
-      // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, k »).
-      mappedValue = Q(Call(mapfn, thisArg, [kValue, new Value(k)]));
+      // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
+      mappedValue = Q(Call(mapfn, thisArg, [kValue, 𝔽(k)]));
     } else {
       // d. Else, let mappedValue be kValue.
       mappedValue = kValue;
@@ -110,16 +111,16 @@ function TypedArray_of(items, { thisValue }) {
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
-  // 5. Let newObj be ? TypedArrayCreate(C, « len »).
-  const newObj = Q(TypedArrayCreate(C, [new Value(len)]));
+  // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
+  const newObj = Q(TypedArrayCreate(C, [𝔽(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
   while (k < len) {
     // a. Let kValue be items[k].
     const kValue = items[k];
-    // b. Let Pk be ! ToString(k).
-    const Pk = X(ToString(new Value(k)));
+    // b. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(𝔽(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
     Q(Set(newObj, Pk, kValue, Value.true));
     // d. Set k to k + 1.

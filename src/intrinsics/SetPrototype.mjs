@@ -5,6 +5,7 @@ import {
   OrdinaryObjectCreate,
   SameValueZero,
   RequireInternalSlot,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -46,7 +47,7 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
   }
   // 5. If value is -0, set value to +0.
   if (Type(value) === 'Number' && Object.is(value.numberValue(), -0)) {
-    value = new Value(0);
+    value = 𝔽(0);
   }
   // 6. Append value as the last element of entries.
   entries.push(value);
@@ -163,7 +164,7 @@ function SetProto_sizeGetter(args, { thisValue }) {
     }
   }
   // 6. Return count.
-  return new Value(count);
+  return 𝔽(count);
 }
 
 // #sec-set.prototype.values

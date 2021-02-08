@@ -14,7 +14,7 @@ import {
   LengthOfArrayLike,
   ToBoolean,
   ToBigInt,
-  ToInteger,
+  ToIntegerOrInfinity,
   ToNumber,
   ToObject,
   ToString,
@@ -23,6 +23,7 @@ import {
   RequireInternalSlot,
   typedArrayInfoByName,
   typedArrayInfoByType,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -58,12 +59,12 @@ function TypedArrayProto_byteLength(args, { thisValue }) {
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return 0.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return new Value(0);
+    return 𝔽(+0);
   }
   // 6. Let size be O.[[ByteLength]].
   const size = O.ByteLength;
   // 7. Return size.
-  return size;
+  return 𝔽(size);
 }
 
 // #sec-get-%typedarray%.prototype.byteoffset
@@ -78,12 +79,12 @@ function TypedArrayProto_byteOffset(args, { thisValue }) {
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return 0.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return new Value(0);
+    return 𝔽(+0);
   }
   // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
   // 7. Return offset.
-  return offset;
+  return 𝔽(offset);
 }
 
 // #sec-%typedarray%.prototype.copywithin
@@ -93,9 +94,9 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
-  // 4. Let relativeTarget be ? ToInteger(target).
-  const relativeTarget = Q(ToInteger(target)).numberValue();
+  const len = O.ArrayLength;
+  // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
+  const relativeTarget = Q(ToIntegerOrInfinity(target));
   // 5. If relativeTarget < 0, let to be max((len + relativeTarget), 0); else let to be min(relativeTarget, len).
   let to;
   if (relativeTarget < 0) {
@@ -103,8 +104,8 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   } else {
     to = Math.min(relativeTarget, len);
   }
-  // 6. Let relativeStart be ? ToInteger(start).
-  const relativeStart = Q(ToInteger(start)).numberValue();
+  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
+  const relativeStart = Q(ToIntegerOrInfinity(start));
   // 7. If relativeStart < 0, let from be max((len + relativeStart), 0); else let from be min(relativeStart, len).
   let from;
   if (relativeStart < 0) {
@@ -112,12 +113,12 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   } else {
     from = Math.min(relativeStart, len);
   }
-  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToInteger(end)).numberValue();
+    relativeEnd = Q(ToIntegerOrInfinity(end));
   }
   // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
   let final;
@@ -142,7 +143,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     // e. Let elementSize be the Element Size value specified in Table 61 for typedArrayName.
     const elementSize = typedArrayInfoByName[typedArrayName].ElementSize;
     // f. Let byteOffset be O.[[ByteOffset].
-    const byteOffset = O.ByteOffset.numberValue();
+    const byteOffset = O.ByteOffset;
     // g. Let toByteIndex be to × elementSize + byteOffset.
     let toByteIndex = to * elementSize + byteOffset;
     // h. Let fromByteIndex be from × elementSize + byteOffset.
@@ -165,9 +166,9 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     // l. Repeat, while countBytes > 0
     while (countBytes > 0) {
       // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-      const value = GetValueFromBuffer(buffer, new Value(fromByteIndex), 'Uint8', Value.true, 'Unordered');
+      const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', Value.true, 'Unordered');
       // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-      SetValueInBuffer(buffer, new Value(toByteIndex), 'Uint8', value, Value.true, 'Unordered');
+      SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, Value.true, 'Unordered');
       // iii. Set fromByteIndex to fromByteIndex + direction.
       fromByteIndex += direction;
       // iv. Set toByteIndex to toByteIndex + direction.
@@ -197,7 +198,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]]
-  const len = O.ArrayLength.numberValue();
+  const len = O.ArrayLength;
   // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
   // 5. Else, set value to ? ToNumber(value).
   if (O.ContentType === 'BigInt') {
@@ -205,8 +206,8 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   } else {
     value = Q(ToNumber(value));
   }
-  // 6. Let relativeStart be ? ToInteger(start).
-  const relativeStart = Q(ToInteger(start)).numberValue();
+  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
+  const relativeStart = Q(ToIntegerOrInfinity(start));
   // 7. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
   let k;
   if (relativeStart < 0) {
@@ -214,12 +215,12 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   } else {
     k = Math.min(relativeStart, len);
   }
-  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToInteger(end)).numberValue();
+    relativeEnd = Q(ToIntegerOrInfinity(end));
   }
   // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
   let final;
@@ -234,8 +235,8 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   }
   // 11. Repeat, while k < final
   while (k < final) {
-    // a. Let Pk be ! ToString(k).
-    const Pk = X(ToString(new Value(k)));
+    // a. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(𝔽(k)));
     // b. Perform ! Set(O, Pk, value, true).
     X(Set(O, Pk, value, Value.true));
     // c. Set k to k + 1.
@@ -252,7 +253,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
+  const len = O.ArrayLength;
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
@@ -265,12 +266,12 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   let captured = 0;
   // 8. Repeat, while k < len
   while (k < len) {
-    // a. Let Pk be ! ToString(k).
-    const Pk = X(ToString(new Value(k)));
+    // a. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(𝔽(k)));
     // b. Let kValue be ? Get(O, Pk).
     const kValue = Q(Get(O, Pk));
-    // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, k, O »)).
-    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, new Value(k), O])));
+    // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O])));
     // d. If selected is true, then
     if (selected === Value.true) {
       // i. Append kValue to the end of kept.
@@ -281,14 +282,14 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
     // e. Set k to k + 1.
     k += 1;
   }
-  // 9. Let A be ? TypedArraySpeciesCreate(O, « captured »).
-  const A = Q(TypedArraySpeciesCreate(O, [new Value(captured)]));
+  // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
+  const A = Q(TypedArraySpeciesCreate(O, [𝔽(captured)]));
   // 10. Let n be 0.
   let n = 0;
   // 11. For each element e of kept, do
   for (const e of kept) {
-    // a. Perform ! Set(A, ! ToString(n), e, true).
-    X(Set(A, X(ToString(new Value(n))), e, Value.true));
+    // a. Perform ! Set(A, ! ToString(𝔽(n)), e, true).
+    X(Set(A, X(ToString(𝔽(n))), e, Value.true));
     // b. Set n to n + 1.
     n += 1;
   }
@@ -318,12 +319,12 @@ function TypedArrayProto_length(args, { thisValue }) {
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return 0.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return new Value(0);
+    return 𝔽(+0);
   }
   // 6. Let length be O.[[ArrayLength]].
   const length = O.ArrayLength;
   // 8. Return length.
-  return length;
+  return 𝔽(length);
 }
 
 // #sec-%typedarray%.prototype.map
@@ -339,17 +340,17 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 5. Let A be ? TypedArraySpeciesCreate(O, « len »).
-  const A = Q(TypedArraySpeciesCreate(O, [len]));
+  const A = Q(TypedArraySpeciesCreate(O, [𝔽(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
-  while (k < len.numberValue()) {
-    // a. Let Pk be ! ToString(k).
-    const Pk = X(ToString(new Value(k)));
+  while (k < len) {
+    // a. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(𝔽(k)));
     // b. Let kValue be ? Get(O, Pk).
     const kValue = Q(Get(O, Pk));
-    // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, k, O »).
-    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, new Value(k), O]));
+    // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
+    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O]));
     // d. Perform ? Set(A, Pk, mappedValue, true).
     Q(Set(A, Pk, mappedValue, Value.true));
     // e. Set k to k + 1.
@@ -371,8 +372,8 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     Q(RequireInternalSlot(target, 'TypedArrayName'));
     // 4. Assert: target has a [[ViewedArrayBuffer]] internal slot.
     Assert('ViewedArrayBuffer' in target);
-    // 5. Let targetOffset be ? ToInteger(offset).
-    const targetOffset = Q(ToInteger(offset)).numberValue();
+    // 5. Let targetOffset be ? ToIntegerOrInfinity(offset).
+    const targetOffset = Q(ToIntegerOrInfinity(offset));
     // 6. If targetOffset < 0, throw a RangeError exception.
     if (targetOffset < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
@@ -384,7 +385,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     // 9. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength.numberValue();
+    const targetLength = target.ArrayLength;
     // 10. Let targetName be the String value of target.[[TypedArrayName]].
     const targetName = target.TypedArrayName.stringValue();
     // 11. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
@@ -392,11 +393,11 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     // 12. Let targetType be the Element Type value in Table 61 for targetName.
     const targetType = typedArrayInfoByName[targetName].ElementType;
     // 13. Let targetByteOffset be target.[[ByteOffset]].
-    const targetByteOffset = target.ByteOffset.numberValue();
+    const targetByteOffset = target.ByteOffset;
     // 14. Let src be ? ToObject(array).
     const src = Q(ToObject(array));
     // 15. Let srcLength be ? LengthOfArrayLike(src).
-    const srcLength = Q(LengthOfArrayLike(src)).numberValue();
+    const srcLength = Q(LengthOfArrayLike(src));
     // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     if (srcLength + targetOffset > targetLength) {
       return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
@@ -409,8 +410,8 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     const limit = targetByteIndex + targetElementSize * srcLength;
     // 20. Repeat, while targetByteIndex < limit
     while (targetByteIndex < limit) {
-      // a. Let Pk be ! ToString(k).
-      const Pk = X(ToString(new Value(k)));
+      // a. Let Pk be ! ToString(𝔽(k)).
+      const Pk = X(ToString(𝔽(k)));
       // b. Let value be ? Get(src, Pk).
       let value = Q(Get(src, Pk));
       // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
@@ -425,7 +426,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
         return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
       }
       // f. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-      SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, value, Value.true, 'Unordered');
+      SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'Unordered');
       // g. Set k to k + 1.
       k += 1;
       // h. Set targetByteIndex to targetByteIndex + targetElementSize.
@@ -444,8 +445,8 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     Q(RequireInternalSlot(target, 'TypedArrayName'));
     // 4. Assert: target has a [[ViewedArrayBuffer]] internal slot.
     Assert('ViewedArrayBuffer' in target);
-    // 5. Let targetOffset be ? ToInteger(offset).
-    const targetOffset = Q(ToInteger(offset)).numberValue();
+    // 5. Let targetOffset be ? ToIntegerOrInfinity(offset).
+    const targetOffset = Q(ToIntegerOrInfinity(offset));
     // 6. If targetOffset < 0, throw a RangeError exception.
     if (targetOffset < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
@@ -457,7 +458,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     // 9. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength.numberValue();
+    const targetLength = target.ArrayLength;
     // 10. Let srcBuffer be typedArray.[[ViewedArrayBuffer]].
     let srcBuffer = typedArray.ViewedArrayBuffer;
     // 11. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
@@ -471,7 +472,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     // 14. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
     const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
     // 15. Let targetByteOffset be target.[[ByteOffset]].
-    const targetByteOffset = target.ByteOffset.numberValue();
+    const targetByteOffset = target.ByteOffset;
     // 16. Let srcName be the String value of typedArray.[[TypedArrayName]].
     const srcName = typedArray.TypedArrayName.stringValue();
     // 17. Let srcType be the Element Type value in Table 61 for srcName.
@@ -479,9 +480,9 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
     // 18. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
     const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
     // 19. Let srcLength be typedArray.[[ArrayLength]].
-    const srcLength = typedArray.ArrayLength.numberValue();
+    const srcLength = typedArray.ArrayLength;
     // 20. Let srcByteOffset be typedArray.[[ByteOffset]].
-    const srcByteOffset = typedArray.ByteOffset.numberValue();
+    const srcByteOffset = typedArray.ByteOffset;
     // 21. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     if (srcLength + targetOffset > targetLength) {
       return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
@@ -503,7 +504,7 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       // a. Let srcByteLength be typedArray.[[ByteLength]].
       const srcByteLength = typedArray.ByteLength;
       // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
-      srcBuffer = Q(CloneArrayBuffer(srcBuffer, new Value(srcByteOffset), srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%')));
+      srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%')));
       // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
       // d. Let srcByteIndex be 0.
       srcByteIndex = 0;
@@ -521,9 +522,9 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       // b. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
         // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8', Value.true, 'Unordered');
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true, 'Unordered');
         // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value, Value.true, 'Unordered');
+        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'Unordered');
         // iii. Set srcByteIndex to srcByteIndex + 1.
         srcByteIndex += 1;
         // iv. Set targetByteIndex to targetByteIndex + 1.
@@ -533,9 +534,9 @@ function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undef
       // a. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
         // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), srcType, Value.true, 'Unordered');
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, Value.true, 'Unordered');
         // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), targetType, value, Value.true, 'Unordered');
+        SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'Unordered');
         // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
         srcByteIndex += srcElementSize;
         // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
@@ -554,9 +555,9 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
-  // 4. Let relativeStart be ? ToInteger(start).
-  const relativeStart = Q(ToInteger(start)).numberValue();
+  const len = O.ArrayLength;
+  // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
+  const relativeStart = Q(ToIntegerOrInfinity(start));
   // 5. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
   let k;
   if (relativeStart < 0) {
@@ -564,12 +565,12 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   } else {
     k = Math.min(relativeStart, len);
   }
-  // 6. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+  // 6. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToInteger(end)).numberValue();
+    relativeEnd = Q(ToIntegerOrInfinity(end));
   }
   // 7. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
   let final;
@@ -580,8 +581,8 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   }
   // 8. Let count be max(final - k, 0).
   const count = Math.max(final - k, 0);
-  // 9. Let A be ? TypedArraySpeciesCreate(O, « count »).
-  const A = Q(TypedArraySpeciesCreate(O, [new Value(count)]));
+  // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
+  const A = Q(TypedArraySpeciesCreate(O, [𝔽(count)]));
   // 10. If count > 0, then
   if (count > 0) {
     // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
@@ -602,12 +603,12 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
       let n = 0;
       // ii. Repeat, while k < final
       while (k < final) {
-        // 1. Let Pk be ! ToString(k).
-        const Pk = X(ToString(new Value(k)));
+        // 1. Let Pk be ! ToString(𝔽(k)).
+        const Pk = X(ToString(𝔽(k)));
         // 2. Let kValue be ! Get(O, Pk).
         const kValue = X(Get(O, Pk));
-        // 3. Perform ! Set(A, ! ToString(n), kValue, true).
-        X(Set(A, X(ToString(new Value(n))), kValue, Value.true));
+        // 3. Perform ! Set(A, ! ToString(𝔽(n)), kValue, true).
+        X(Set(A, X(ToString(𝔽(n))), kValue, Value.true));
         // 4. Set k to k + 1.
         k += 1;
         // 5. Set n to n + 1.
@@ -622,9 +623,9 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
       const elementSize = typedArrayInfoByType[srcType].ElementSize;
       // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
       // v. Let srcByteOffet be O.[[ByteOffset]].
-      const srcByteOffset = O.ByteOffset.numberValue();
+      const srcByteOffset = O.ByteOffset;
       // vi. Let targetByteIndex be A.[[ByteOffset]].
-      let targetByteIndex = A.ByteOffset.numberValue();
+      let targetByteIndex = A.ByteOffset;
       // vii. Let srcByteIndex be (k × elementSize) + srcByteOffet.
       let srcByteIndex = (k * elementSize) + srcByteOffset;
       // viii. Let limit be targetByteIndex + count × elementSize.
@@ -632,9 +633,9 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
       // ix. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
         // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, new Value(srcByteIndex), 'Uint8', Value.true, 'Unordered');
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true, 'Unordered');
         // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, new Value(targetByteIndex), 'Uint8', value, Value.true, 'Unordered');
+        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'Unordered');
         // 3. Set srcByteIndex to srcByteIndex + 1.
         srcByteIndex += 1;
         // 4. Set targetByteIndex to targetByteIndex + 1.
@@ -676,43 +677,43 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
     }
     // c. If v is NaN, return +0.
     if (v.isNaN()) {
-      return new Value(+0);
+      return 𝔽(+0);
     }
     // d. Return v.
     return v;
   }
   // 3. If x and y are both NaN, return +0.
   if (x.isNaN() && y.isNaN()) {
-    return new Value(+0);
+    return 𝔽(+0);
   }
   // 4. If x is NaN, return 1.
   if (x.isNaN()) {
-    return new Value(1);
+    return 𝔽(1);
   }
   // 5. If y is NaN, return -1.
   if (y.isNaN()) {
-    return new Value(-1);
+    return 𝔽(-1);
   }
   x = x.numberValue ? x.numberValue() : x.bigintValue();
   y = y.numberValue ? y.numberValue() : y.bigintValue();
   // 6. If x < y, return -1.
   if (x < y) {
-    return new Value(-1);
+    return 𝔽(-1);
   }
   // 7. If x > y, return 1.
   if (x > y) {
-    return new Value(1);
+    return 𝔽(1);
   }
   // 8. If x is -0 and y is +0, return -1.
   if (Object.is(x, -0) && Object.is(y, +0)) {
-    return new Value(-1);
+    return 𝔽(-1);
   }
   // 9. If x is +0 and y is -0, return 1.
   if (Object.is(x, +0) && Object.is(y, -0)) {
-    return new Value(1);
+    return 𝔽(1);
   }
   // 10. Return +0.
-  return new Value(+0);
+  return 𝔽(+0);
 }
 
 // #sec-%typedarray%.prototype.subarray
@@ -726,9 +727,9 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. Let srcLength be O.[[ArrayLength]].
-  const srcLength = O.ArrayLength.numberValue();
-  // 6. Let relativeBegin be ? ToInteger(begin).
-  const relativeBegin = Q(ToInteger(begin)).numberValue();
+  const srcLength = O.ArrayLength;
+  // 6. Let relativeBegin be ? ToIntegerOrInfinity(begin).
+  const relativeBegin = Q(ToIntegerOrInfinity(begin));
   // 7. If relativeBegin < 0, let beginIndex be max((srcLength + relativeBegin), 0); else let beginIndex be min(relativeBegin, srcLength).
   let beginIndex;
   if (relativeBegin < 0) {
@@ -736,12 +737,12 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   } else {
     beginIndex = Math.min(relativeBegin, srcLength);
   }
-  // 8. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToInteger(end).
+  // 8. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
   if (end === Value.undefined) {
     relativeEnd = srcLength;
   } else {
-    relativeEnd = Q(ToInteger(end)).numberValue();
+    relativeEnd = Q(ToIntegerOrInfinity(end));
   }
   // 9. If relativeEnd < 0, let endIndex be max((srcLength + relativeEnd), 0); else let endIndex be min(relativeEnd, srcLength).
   let endIndex;
@@ -757,11 +758,11 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   // 12. Let elementSize be the Element Size value specified in Table 61 for constructorName.
   const elementSize = typedArrayInfoByName[constructorName].ElementSize;
   // 13. Let srcByteOffset be O.[[ByteOffset]].
-  const srcByteOffset = O.ByteOffset.numberValue();
+  const srcByteOffset = O.ByteOffset;
   // 14. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
   const beginByteOffset = srcByteOffset + beginIndex * elementSize;
-  // 15. Let argumentsList be « buffer, beginByteOffset, newLength ».
-  const argumentsList = [buffer, new Value(beginByteOffset), new Value(newLength)];
+  // 15. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
+  const argumentsList = [buffer, 𝔽(beginByteOffset), 𝔽(newLength)];
   // 16. Return ? TypedArraySpeciesCreate(O, argumentsList).
   return Q(TypedArraySpeciesCreate(O, argumentsList));
 }
@@ -803,9 +804,9 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
-  // 4. Let relativeIndex be ? ToInteger(index).
-  const relativeIndex = Q(ToInteger(index)).numberValue();
+  const len = O.ArrayLength;
+  // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
+  const relativeIndex = Q(ToIntegerOrInfinity(index));
   let k;
   // 5. If relativeIndex ≥ 0, then
   if (relativeIndex >= 0) {
@@ -819,8 +820,8 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   if (k < 0 || k >= len) {
     return Value.undefined;
   }
-  // 8. Return ? Get(O, ! ToString(k)).
-  return Q(Get(O, X(ToString(new Value(k)))));
+  // 8. Return ? Get(O, ! ToString(𝔽(k))).
+  return Q(Get(O, X(ToString(𝔽(k)))));
 }
 
 export function bootstrapTypedArrayPrototype(realmRec) {

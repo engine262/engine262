@@ -15,6 +15,8 @@ import {
   OrdinarySetPrototypeOf,
   ToInt32,
   ToUint32,
+  ℤ,
+  𝔽,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
@@ -142,9 +144,9 @@ export class NumberValue extends PrimitiveValue {
   // #sec-numeric-types-number-unaryMinus
   static unaryMinus(x) {
     if (x.isNaN()) {
-      return new Value(NaN);
+      return 𝔽(NaN);
     }
-    return new Value(-x.numberValue());
+    return 𝔽(-x.numberValue());
   }
 
   // #sec-numeric-types-number-bitwiseNOT
@@ -152,38 +154,38 @@ export class NumberValue extends PrimitiveValue {
     // 1. Let oldValue be ! ToInt32(x).
     const oldValue = X(ToInt32(x));
     // 2. Return the result of applying bitwise complement to oldValue. The result is a signed 32-bit integer.
-    return new Value(~oldValue.numberValue()); // eslint-disable-line no-bitwise
+    return 𝔽(~oldValue.numberValue());
   }
 
   // #sec-numeric-types-number-exponentiate
   static exponentiate(base, exponent) {
-    return new Value(base.numberValue() ** exponent.numberValue());
+    return 𝔽(base.numberValue() ** exponent.numberValue());
   }
 
   // #sec-numeric-types-number-multiply
   static multiply(x, y) {
-    return new Value(x.numberValue() * y.numberValue());
+    return 𝔽(x.numberValue() * y.numberValue());
   }
 
   // #sec-numeric-types-number-divide
   static divide(x, y) {
-    return new Value(x.numberValue() / y.numberValue());
+    return 𝔽(x.numberValue() / y.numberValue());
   }
 
   // #sec-numeric-types-number-remainder
   static remainder(n, d) {
-    return new Value(n.numberValue() % d.numberValue());
+    return 𝔽(n.numberValue() % d.numberValue());
   }
 
   // #sec-numeric-types-number-add
   static add(x, y) {
-    return new Value(x.numberValue() + y.numberValue());
+    return 𝔽(x.numberValue() + y.numberValue());
   }
 
   // #sec-numeric-types-number-subtract
   static subtract(x, y) {
     // The result of - operator is x + (-y).
-    return NumberValue.add(x, new Value(-y.numberValue()));
+    return NumberValue.add(x, 𝔽(-y.numberValue()));
   }
 
   // #sec-numeric-types-number-leftShift
@@ -195,7 +197,7 @@ export class NumberValue extends PrimitiveValue {
     // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
     const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of left shifting lnum by shiftCount bits. The result is a signed 32-bit integer.
-    return new Value(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
   }
 
   // #sec-numeric-types-number-signedRightShift
@@ -208,7 +210,7 @@ export class NumberValue extends PrimitiveValue {
     const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
     //    The most significant bit is propagated. The result is a signed 32-bit integer.
-    return new Value(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
   }
 
   // #sec-numeric-types-number-unsignedRightShift
@@ -221,7 +223,7 @@ export class NumberValue extends PrimitiveValue {
     const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
     //    Vacated bits are filled with zero. The result is an unsigned 32-bit integer.
-    return new Value(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
   }
 
   // #sec-numeric-types-number-lessThan
@@ -315,16 +317,19 @@ export class NumberValue extends PrimitiveValue {
 
   // #sec-numeric-types-number-bitwiseAND
   static bitwiseAND(x, y) {
+    // 1. Return NumberBitwiseOp(&, x, y).
     return NumberBitwiseOp('&', x, y);
   }
 
   // #sec-numeric-types-number-bitwiseXOR
   static bitwiseXOR(x, y) {
+    // 1. Return NumberBitwiseOp(^, x, y).
     return NumberBitwiseOp('^', x, y);
   }
 
   // #sec-numeric-types-number-bitwiseOR
   static bitwiseOR(x, y) {
+    // 1. Return NumberBitwiseOp(|, x, y).
     return NumberBitwiseOp('|', x, y);
   }
 
@@ -338,7 +343,7 @@ export class NumberValue extends PrimitiveValue {
       return new Value('0');
     }
     if (xVal < 0) {
-      const str = X(NumberValue.toString(new Value(-xVal))).stringValue();
+      const str = X(NumberValue.toString(𝔽(-xVal))).stringValue();
       return new Value(`-${str}`);
     }
     if (x.isInfinity()) {
@@ -360,11 +365,11 @@ function NumberBitwiseOp(op, x, y) {
   // 3. Return the result of applying the bitwise operator op to lnum and rnum. The result is a signed 32-bit integer.
   switch (op) {
     case '&':
-      return new Value(lnum.numberValue() & rnum.numberValue()); // eslint-disable-line no-bitwise
+      return 𝔽(lnum.numberValue() & rnum.numberValue());
     case '|':
-      return new Value(lnum.numberValue() | rnum.numberValue()); // eslint-disable-line no-bitwise
+      return 𝔽(lnum.numberValue() | rnum.numberValue());
     case '^':
-      return new Value(lnum.numberValue() ^ rnum.numberValue()); // eslint-disable-line no-bitwise
+      return 𝔽(lnum.numberValue() ^ rnum.numberValue());
     default:
       throw new OutOfRange('NumberBitwiseOp', op);
   }
@@ -392,14 +397,14 @@ export class BigIntValue extends PrimitiveValue {
   // #sec-numeric-types-bigint-unaryMinus
   static unaryMinus(x) {
     if (x.bigintValue() === 0n) {
-      return new Value(0n);
+      return ℤ(0n);
     }
-    return new Value(-x.bigintValue());
+    return ℤ(-x.bigintValue());
   }
 
   // #sec-numeric-types-bigint-bitwiseNOT
   static bitwiseNOT(x) {
-    return new Value(-x.bigintValue() - 1n);
+    return ℤ(-x.bigintValue() - 1n);
   }
 
   // #sec-numeric-types-bigint-exponentiate
@@ -410,15 +415,15 @@ export class BigIntValue extends PrimitiveValue {
     }
     // 2. If base is 0n and exponent is 0n, return 1n.
     if (base.bigintValue() === 0n && exponent.bigintValue() === 0n) {
-      return new Value(1n);
+      return ℤ(1n);
     }
     // 3. Return the BigInt value that represents the mathematical value of base raised to the power exponent.
-    return new Value(base.bigintValue() ** exponent.bigintValue());
+    return ℤ(base.bigintValue() ** exponent.bigintValue());
   }
 
   // #sec-numeric-types-bigint-multiply
   static multiply(x, y) {
-    return new Value(x.bigintValue() * y.bigintValue());
+    return ℤ(x.bigintValue() * y.bigintValue());
   }
 
   // #sec-numeric-types-bigint-divide
@@ -430,7 +435,7 @@ export class BigIntValue extends PrimitiveValue {
     // 2. Let quotient be the mathematical value of x divided by y.
     const quotient = x.bigintValue() / y.bigintValue();
     // 3. Return the BigInt value that represents quotient rounded towards 0 to the next integral value.
-    return new Value(quotient);
+    return ℤ(quotient);
   }
 
   // #sec-numeric-types-bigint-remainder
@@ -441,36 +446,36 @@ export class BigIntValue extends PrimitiveValue {
     }
     // 2. If n is 0n, return 0n.
     if (n.bigintValue() === 0n) {
-      return new Value(0n);
+      return ℤ(0n);
     }
     // 3. Let r be the BigInt defined by the mathematical relation r = n - (d × q)
     //   where q is a BigInt that is negative only if n/d is negative and positive
     //   only if n/d is positive, and whose magnitude is as large as possible without
     //   exceeding the magnitude of the true mathematical quotient of n and d.
-    const r = new Value(n.bigintValue() % d.bigintValue());
+    const r = ℤ(n.bigintValue() % d.bigintValue());
     // 4. Return r.
     return r;
   }
 
   // #sec-numeric-types-bigint-add
   static add(x, y) {
-    return new Value(x.bigintValue() + y.bigintValue());
+    return ℤ(x.bigintValue() + y.bigintValue());
   }
 
   // #sec-numeric-types-bigint-subtract
   static subtract(x, y) {
-    return new Value(x.bigintValue() - y.bigintValue());
+    return ℤ(x.bigintValue() - y.bigintValue());
   }
 
   // #sec-numeric-types-bigint-leftShift
   static leftShift(x, y) {
-    return new Value(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
+    return ℤ(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
   }
 
   // #sec-numeric-types-bigint-signedRightShift
   static signedRightShift(x, y) {
     // 1. Return BigInt::leftShift(x, -y).
-    return BigIntValue.leftShift(x, new Value(-y.bigintValue()));
+    return BigIntValue.leftShift(x, ℤ(-y.bigintValue()));
   }
 
   // #sec-numeric-types-bigint-unsignedRightShift
@@ -503,27 +508,27 @@ export class BigIntValue extends PrimitiveValue {
 
   // #sec-numeric-types-bigint-bitwiseAND
   static bitwiseAND(x, y) {
-    // 1. Return BigIntBitwiseOp("&", x, y).
-    return BigIntBitwiseOp('&', x.bigintValue(), y.bigintValue());
+    // 1. Return BigIntBitwiseOp(&, x, y).
+    return BigIntBitwiseOp('&', x, y);
   }
 
   // #sec-numeric-types-bigint-bitwiseXOR
   static bitwiseXOR(x, y) {
-    // 1. Return BigIntBitwiseOp("^", x, y).
-    return BigIntBitwiseOp('^', x.bigintValue(), y.bigintValue());
+    // 1. Return BigIntBitwiseOp(^, x, y).
+    return BigIntBitwiseOp('^', x, y);
   }
 
   // #sec-numeric-types-bigint-bitwiseOR
   static bitwiseOR(x, y) {
-    // 1. Return BigIntBitwiseOp("|", x, y);
-    return BigIntBitwiseOp('|', x.bigintValue(), y.bigintValue());
+    // 1. Return BigIntBitwiseOp(|, x, y);
+    return BigIntBitwiseOp('|', x, y);
   }
 
   // #sec-numeric-types-bigint-tostring
   static toString(x) {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (x.bigintValue() < 0n) {
-      const str = X(BigIntValue.toString(new Value(-x.bigintValue()))).stringValue();
+      const str = X(BigIntValue.toString(ℤ(-x.bigintValue()))).stringValue();
       return new Value(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
@@ -637,15 +642,15 @@ function BigIntBitwiseOp(op, x, y) {
     result -= 2n ** shift;
   }
   // 9. Return result.
-  return new Value(result);
+  return ℤ(result);
   */
   switch (op) {
     case '&':
-      return new Value(x & y); // eslint-disable-line no-bitwise
+      return ℤ(x.bigintValue() & y.bigintValue());
     case '|':
-      return new Value(x | y); // eslint-disable-line no-bitwise
+      return ℤ(x.bigintValue() | y.bigintValue());
     case '^':
-      return new Value(x ^ y); // eslint-disable-line no-bitwise
+      return ℤ(x.bigintValue() ^ y.bigintValue());
     default:
       throw new OutOfRange('BigIntBitwiseOp', op);
   }

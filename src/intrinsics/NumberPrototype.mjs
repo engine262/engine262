@@ -5,8 +5,9 @@ import {
 } from '../value.mjs';
 import {
   Assert,
-  ToInteger,
+  ToIntegerOrInfinity,
   ToString,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
@@ -27,7 +28,7 @@ function thisNumberValue(value) {
 // #sec-number.prototype.toexponential
 function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToInteger(fractionDigits)).numberValue();
+  const f = Q(ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
     return NumberValue.toString(x);
@@ -41,7 +42,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
 // 20.1.3.3 #sec-number.prototype.tofixed
 function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToInteger(fractionDigits)).numberValue();
+  const f = Q(ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
@@ -63,7 +64,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   if (precision === Value.undefined) {
     return X(ToString(x));
   }
-  const p = Q(ToInteger(precision)).numberValue();
+  const p = Q(ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
     return X(NumberValue.toString(x));
   }
@@ -80,7 +81,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   if (radix === Value.undefined) {
     radixNumber = 10;
   } else {
-    radixNumber = Q(ToInteger(radix)).numberValue();
+    radixNumber = Q(ToIntegerOrInfinity(radix));
   }
   if (radixNumber < 2 || radixNumber > 36) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toString');
@@ -111,7 +112,7 @@ export function bootstrapNumberPrototype(realmRec) {
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.NumberData = new Value(0);
+  proto.NumberData = 𝔽(+0);
 
   realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

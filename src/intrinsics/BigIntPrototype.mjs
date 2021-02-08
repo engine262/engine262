@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
-import { Assert, ToInteger, ToString } from '../abstract-ops/all.mjs';
+import { Assert, ToIntegerOrInfinity, ToString } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -38,8 +38,8 @@ function BigIntProto_toString([radix], { thisValue }) {
     // 3. Else if radix is undefined, let radixNumber be 10.
     radixNumber = 10;
   } else {
-    // 4. Else, let radixNumber be ? ToInteger(radix).
-    radixNumber = Q(ToInteger(radix)).numberValue();
+    // 4. Else, let radixNumber be ? ToIntegerOrInfinity(radix).
+    radixNumber = Q(ToIntegerOrInfinity(radix));
   }
   // 5. If radixNumber < 2 or radixNumber > 36, throw a RangeError exception.
   if (radixNumber < 2 || radixNumber > 36) {

@@ -175,7 +175,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     const resolveElement = X(CreateBuiltinFunction(steps, [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
     ]));
-    X(SetFunctionLength(resolveElement, new Value(1)));
+    X(SetFunctionLength(resolveElement, 1));
     X(SetFunctionName(resolveElement, new Value('')));
     // l. Set resolveElement.[[AlreadyCalled]] to the Record { [[Value]]: false }.
     resolveElement.AlreadyCalled = { Value: false };
@@ -333,7 +333,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       'Capability',
       'RemainingElements',
     ]));
-    X(SetFunctionLength(resolveElement, new Value(1)));
+    X(SetFunctionLength(resolveElement, 1));
     X(SetFunctionName(resolveElement, new Value('')));
     // l. Let alreadyCalled be the Record { [[Value]]: false }.
     const alreadyCalled = { Value: false };
@@ -357,7 +357,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       'Capability',
       'RemainingElements',
     ]));
-    X(SetFunctionLength(rejectElement, new Value(1)));
+    X(SetFunctionLength(rejectElement, 1));
     X(SetFunctionName(rejectElement, new Value('')));
     // t. Set rejectElement.[[AlreadyCalled]] to alreadyCalled.
     rejectElement.AlreadyCalled = alreadyCalled;
@@ -512,7 +512,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     const steps = PromiseAnyRejectElementFunctions;
     // k. Let rejectElement be ! CreateBuiltinFunction(steps, « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
     const rejectElement = X(CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
-    X(SetFunctionLength(rejectElement, new Value(1)));
+    X(SetFunctionLength(rejectElement, 1));
     X(SetFunctionName(rejectElement, new Value('')));
     // l. Set rejectElement.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     rejectElement.AlreadyCalled = { Value: false };

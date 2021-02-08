@@ -19,7 +19,7 @@ import {
   IteratorValue,
   SpeciesConstructor,
   IsDetachedBuffer,
-  IsNonNegativeInteger,
+  isNonNegativeInteger,
   IntegerIndexedObjectCreate,
   GetPrototypeFromConstructor,
   AllocateArrayBuffer,
@@ -124,7 +124,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   // 3. If argumentList is a List of a single Number, then
   if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
     // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
-    if (newTypedArray.ArrayLength.numberValue() < argumentList[0].numberValue()) {
+    if (newTypedArray.ArrayLength < argumentList[0].numberValue()) {
       return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
     }
   }
@@ -152,11 +152,11 @@ export function AllocateTypedArray(constructorName, newTarget, defaultProto, len
   // 7. If length is not present, then
   if (length === undefined) {
     // 1. Set obj.[[ByteLength]] to 0.
-    obj.ByteLength = new Value(0);
+    obj.ByteLength = 0;
     // 1. Set obj.[[ByteOffset]] to 0.
-    obj.ByteOffset = new Value(0);
+    obj.ByteOffset = 0;
     // 1. Set obj.[[ArrayLength]] to 0.
-    obj.ArrayLength = new Value(0);
+    obj.ArrayLength = 0;
   } else {
     // a. Perform ? AllocateTypedArrayBuffer(obj, length).
     Q(AllocateTypedArrayBuffer(obj, length));
@@ -171,14 +171,14 @@ export function AllocateTypedArrayBuffer(O, length) {
   Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O);
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
   Assert(O.ViewedArrayBuffer === Value.undefined);
-  // 3. Assert: ! IsNonNegativeInteger(length) is true.
-  Assert(X(IsNonNegativeInteger(length)) === Value.true);
+  // 3. Assert: length is a non-negative integer.
+  Assert(isNonNegativeInteger(length));
   // 4. Let constructorName be the String value of O.[[TypedArrayName]].
   const constructorName = O.TypedArrayName.stringValue();
   // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
   const elementSize = typedArrayInfoByName[constructorName].ElementSize;
   // 6. Let byteLength be elementSize × length.
-  const byteLength = new Value(elementSize * length.numberValue());
+  const byteLength = elementSize * length;
   // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
   const data = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
   // 8. Set O.[[ViewedArrayBuffer]] to data.
@@ -186,7 +186,7 @@ export function AllocateTypedArrayBuffer(O, length) {
   // 9. Set O.[[ByteLength]] to byteLength.
   O.ByteLength = byteLength;
   // 10. Set O.[[ByteOffset]] to 0.
-  O.ByteOffset = new Value(0);
+  O.ByteOffset = 0;
   // 11. Set O.[[ArrayLength]] to length.
   O.ArrayLength = length;
   // 12. Return O.

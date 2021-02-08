@@ -20,7 +20,7 @@ import {
   IsCallable,
   OrdinaryObjectCreate,
   LengthOfArrayLike,
-  ToInteger,
+  ToIntegerOrInfinity,
   ToNumber,
   ToString,
 } from '../abstract-ops/all.mjs';
@@ -36,7 +36,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { ValueSet, kInternal } from '../helpers.mjs';
-import { evaluateScript } from '../api.mjs';
+import { evaluateScript, 𝔽 } from '../api.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -236,9 +236,9 @@ function InternalizeJSONProperty(holder, name, reviver) {
     const isArray = Q(IsArray(val));
     if (isArray === Value.true) {
       let I = 0;
-      const len = Q(LengthOfArrayLike(val)).numberValue();
+      const len = Q(LengthOfArrayLike(val));
       while (I < len) {
-        const Istr = X(ToString(new Value(I)));
+        const Istr = X(ToString(𝔽(I)));
         const newElement = Q(InternalizeJSONProperty(val, Istr, reviver));
         if (Type(newElement) === 'Undefined') {
           Q(val.Delete(Istr));
@@ -440,10 +440,10 @@ function SerializeJSONArray(state, value) {
   const stepback = state.Indent;
   state.Indent = `${state.Indent}${state.Gap}`;
   const partial = [];
-  const len = Q(LengthOfArrayLike(value)).numberValue();
+  const len = Q(LengthOfArrayLike(value));
   let index = 0;
   while (index < len) {
-    const indexStr = X(ToString(new Value(index)));
+    const indexStr = X(ToString(𝔽(index)));
     const strP = Q(SerializeJSONProperty(state, indexStr, value));
     if (strP === Value.undefined) {
       partial.push('null');
@@ -483,10 +483,10 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       const isArray = Q(IsArray(replacer));
       if (isArray === Value.true) {
         PropertyList = new ValueSet();
-        const len = Q(LengthOfArrayLike(replacer)).numberValue();
+        const len = Q(LengthOfArrayLike(replacer));
         let k = 0;
         while (k < len) {
-          const vStr = X(ToString(new Value(k)));
+          const vStr = X(ToString(𝔽(k)));
           const v = Q(Get(replacer, vStr));
           let item = Value.undefined;
           if (Type(v) === 'String') {
@@ -515,7 +515,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   }
   let gap;
   if (Type(space) === 'Number') {
-    space = Math.min(10, X(ToInteger(space)).numberValue());
+    space = Math.min(10, X(ToIntegerOrInfinity(space)));
     if (space < 1) {
       gap = '';
     } else {

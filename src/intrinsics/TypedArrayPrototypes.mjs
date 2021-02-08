@@ -1,4 +1,4 @@
-import { typedArrayInfoByName } from '../abstract-ops/all.mjs';
+import { typedArrayInfoByName, 𝔽 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -6,7 +6,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 export function bootstrapTypedArrayPrototypes(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [
-      ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
+      ['BYTES_PER_ELEMENT', 𝔽(info.ElementSize), undefined, {
         Writable: Value.false,
         Configurable: Value.false,
       }],

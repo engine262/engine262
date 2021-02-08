@@ -1,7 +1,8 @@
 import {
-  IsInteger,
+  IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -17,12 +18,12 @@ function NumberConstructor([value], { NewTarget }) {
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
     if (Type(prim) === 'BigInt') {
-      n = new Value(Number(prim.bigintValue()));
+      n = 𝔽(Number(prim.bigintValue()));
     } else {
       n = prim;
     }
   } else {
-    n = new Value(0);
+    n = 𝔽(+0);
   }
   if (NewTarget === Value.undefined) {
     return n;
@@ -46,7 +47,7 @@ function Number_isFinite([number = Value.undefined]) {
 
 // 20.1.2.3 #sec-number.isinteger
 function Number_isInteger([number = Value.undefined]) {
-  return X(IsInteger(number));
+  return X(IsIntegralNumber(number));
 }
 
 // 20.1.2.4 #sec-number.isnan
@@ -67,7 +68,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
     return Value.false;
   }
 
-  if (X(IsInteger(number)) === Value.true) {
+  if (X(IsIntegralNumber(number)) === Value.true) {
     if (Math.abs(number.numberValue()) <= (2 ** 53) - 1) {
       return Value.true;
     }
@@ -83,14 +84,14 @@ export function bootstrapNumber(realmRec) {
     Configurable: Value.false,
   };
   const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
-    ['EPSILON', new Value(Number.EPSILON), undefined, override],
-    ['MAX_SAFE_INTEGER', new Value(Number.MAX_SAFE_INTEGER), undefined, override],
-    ['MAX_VALUE', new Value(Number.MAX_VALUE), undefined, override],
-    ['MIN_SAFE_INTEGER', new Value(Number.MIN_SAFE_INTEGER), undefined, override],
-    ['MIN_VALUE', new Value(Number.MIN_VALUE), undefined, override],
-    ['NaN', new Value(NaN), undefined, override],
-    ['NEGATIVE_INFINITY', new Value(-Infinity), undefined, override],
-    ['POSITIVE_INFINITY', new Value(Infinity), undefined, override],
+    ['EPSILON', 𝔽(Number.EPSILON), undefined, override],
+    ['MAX_SAFE_INTEGER', 𝔽(Number.MAX_SAFE_INTEGER), undefined, override],
+    ['MAX_VALUE', 𝔽(Number.MAX_VALUE), undefined, override],
+    ['MIN_SAFE_INTEGER', 𝔽(Number.MIN_SAFE_INTEGER), undefined, override],
+    ['MIN_VALUE', 𝔽(Number.MIN_VALUE), undefined, override],
+    ['NaN', 𝔽(NaN), undefined, override],
+    ['NEGATIVE_INFINITY', 𝔽(-Infinity), undefined, override],
+    ['POSITIVE_INFINITY', 𝔽(+Infinity), undefined, override],
 
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],

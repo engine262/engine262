@@ -91,7 +91,7 @@ export function IsExtensible(O) {
 }
 
 // 7.2.6 #sec-isinteger
-export function IsInteger(argument) {
+export function IsIntegralNumber(argument) {
   if (Type(argument) !== 'Number') {
     return Value.false;
   }
@@ -388,25 +388,15 @@ export function StrictEqualityComparison(x, y) {
 export function IsValidIntegerIndex(O, index) {
   Assert(isIntegerIndexedExoticObject(O));
   Assert(Type(index) === 'Number');
-  if (IsInteger(index) === Value.false) {
+  if (IsIntegralNumber(index) === Value.false) {
     return Value.false;
   }
   index = index.numberValue();
   if (Object.is(index, -0)) {
     return Value.false;
   }
-  if (index < 0 || index >= O.ArrayLength.numberValue()) {
+  if (index < 0 || index >= O.ArrayLength) {
     return Value.false;
   }
   return Value.true;
-}
-
-// #sec-isnonnegativeinteger
-export function IsNonNegativeInteger(argument) {
-  // 1. If ! IsInteger(argument) is true and argument ≥ 0, return true.
-  if (X(IsInteger(argument)) === Value.true && argument.numberValue() >= 0) {
-    return Value.true;
-  }
-  // 2. Otherwise, return false.
-  return Value.false;
 }

@@ -9,41 +9,42 @@ import {
   SetFunctionLength,
   SetFunctionName,
   ToNumber,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 // 20.2.2.1 #sec-math.abs
 function Math_abs([x = Value.undefined]) {
-  x = Q(ToNumber(x));
-  if (x.isNaN()) {
-    return x;
-  } else if (Object.is(x.numberValue(), -0)) {
-    return new Value(0);
-  } else if (x.isInfinity()) {
-    return new Value(Infinity);
+  const n = Q(ToNumber(x));
+  if (n.isNaN()) {
+    return n;
+  } else if (Object.is(n.numberValue(), -0)) {
+    return 𝔽(+0);
+  } else if (n.isInfinity()) {
+    return 𝔽(Infinity);
   }
 
-  if (x.numberValue() < 0) {
-    return new Value(-x.numberValue());
+  if (n.numberValue() < 0) {
+    return 𝔽(-n.numberValue());
   }
-  return x;
+  return n;
 }
 
 // 20.2.2.2 #sec-math.acos
 function Math_acos([x = Value.undefined]) {
-  x = Q(ToNumber(x));
-  if (x.isNaN()) {
-    return x;
-  } else if (x.numberValue() > 1) {
-    return new Value(NaN);
-  } else if (x.numberValue() < -1) {
-    return new Value(NaN);
-  } else if (x.numberValue() === 1) {
-    return new Value(+0);
+  const n = Q(ToNumber(x));
+  if (n.isNaN()) {
+    return n;
+  } else if (n.numberValue() > 1) {
+    return 𝔽(NaN);
+  } else if (n.numberValue() < -1) {
+    return 𝔽(NaN);
+  } else if (n.numberValue() === 1) {
+    return 𝔽(+0);
   }
 
-  return new Value(Math.acos(x.numberValue()));
+  return 𝔽(Math.acos(n.numberValue()));
 }
 
 // #sec-math.pow
@@ -94,7 +95,7 @@ function Math_random() {
   // Convert to double in [0, 1) range
   big64View[0] = (s0 >> 12n) | 0x3FF0000000000000n;
   const result = floatView[0] - 1;
-  return new Value(result);
+  return 𝔽(result);
 }
 
 // 20.2 #sec-math-object
@@ -110,7 +111,7 @@ export function bootstrapMath(realmRec) {
     ['PI', 3.1415926535897932],
     ['SQRT1_2', 0.7071067811865476],
     ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, new Value(value), undefined, readonly]);
+  ].map(([name, value]) => [name, 𝔽(value), undefined, readonly]);
   // @@toStringTag is handled in the bootstrapPrototype() call.
 
   const mathObj = bootstrapPrototype(realmRec, [
@@ -162,11 +163,11 @@ export function bootstrapMath(realmRec) {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();
       }
-      return new Value(Math[name](...args));
+      return 𝔽(Math[name](...args));
     };
     const func = CreateBuiltinFunction(method, [], realmRec);
     X(SetFunctionName(func, new Value(name)));
-    X(SetFunctionLength(func, new Value(length)));
+    X(SetFunctionLength(func, length));
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
       Value: func,
       Writable: Value.true,

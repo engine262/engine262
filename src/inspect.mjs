@@ -135,7 +135,7 @@ const INSPECTORS = {
       const isArray = IsArray(v) === Value.true;
       const isTypedArray = 'TypedArrayName' in v;
       if (isArray || isTypedArray) {
-        const length = X(LengthOfArrayLike(v)).numberValue();
+        const length = X(LengthOfArrayLike(v));
         let holes = 0;
         const flushHoles = () => {
           if (holes > 0) {

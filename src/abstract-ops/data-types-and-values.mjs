@@ -37,3 +37,7 @@ export function isArrayIndex(V) {
   }
   return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
 }
+
+export function isNonNegativeInteger(argument) {
+  return Number.isInteger(argument) && argument >= 0;
+}

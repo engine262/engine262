@@ -22,6 +22,6 @@ function IsNaN([number = Value.undefined]) {
 export function bootstrapIsNaN(realmRec) {
   const fn = CreateBuiltinFunction(IsNaN, [], realmRec);
   X(SetFunctionName(fn, new Value('isNaN')));
-  X(SetFunctionLength(fn, new Value(1)));
+  X(SetFunctionLength(fn, 1));
   realmRec.Intrinsics['%isNaN%'] = fn;
 }

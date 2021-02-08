@@ -28,6 +28,7 @@ import {
   ToObject,
   ToString,
   isProxyExoticObject,
+  𝔽,
 } from './all.mjs';
 
 
@@ -257,44 +258,63 @@ export function TestIntegrityLevel(O, level) {
 
 // 7.3.16 #sec-createarrayfromlist
 export function CreateArrayFromList(elements) {
+  // 1. Assert: elements is a List whose elements are all ECMAScript language values.
   Assert(elements.every((e) => e instanceof Value));
-  const array = X(ArrayCreate(new Value(0)));
+  // 2. Let array be ! ArrayCreate(0).
+  const array = X(ArrayCreate(0));
+  // 3. Let n be 0.
   let n = 0;
+  // 4. For each element e of elements, do
   for (const e of elements) {
-    const nStr = X(ToString(new Value(n)));
-    const status = X(CreateDataProperty(array, nStr, e));
-    Assert(status === Value.true);
+    // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
+    X(CreateDataPropertyOrThrow(array, X(ToString(𝔽(n))), e));
+    // b. Set n to n + 1.
     n += 1;
   }
+  // 5. Return array.
   return array;
 }
 
 // 7.3.17 #sec-lengthofarraylike
 export function LengthOfArrayLike(obj) {
+  // 1. Assert: Type(obj) is Object.
   Assert(Type(obj) === 'Object');
-  return Q(ToLength(Q(Get(obj, new Value('length')))));
+  // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
+  return Q(ToLength(Q(Get(obj, new Value('length'))))).numberValue();
 }
 
 // 7.3.17 #sec-createlistfromarraylike
 export function CreateListFromArrayLike(obj, elementTypes) {
+  // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
   if (!elementTypes) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
   }
+  // 2. If Type(obj) is not Object, throw a TypeError exception.
   if (Type(obj) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
-  const len = Q(LengthOfArrayLike(obj)).numberValue();
+  // 3. Let len be ? LengthOfArrayLike(obj).
+  const len = Q(LengthOfArrayLike(obj));
+  // 4. Let list be a new empty List.
   const list = [];
+  // 5. Let index be 0.
   let index = 0;
+  // 6. Repeat, while index < len,
   while (index < len) {
-    const indexName = X(ToString(new Value(index)));
+    // a. Let indexName be ! ToString(𝔽(index)).
+    const indexName = X(ToString(𝔽(index)));
+    // b. Let next be ? Get(obj, indexName).
     const next = Q(Get(obj, indexName));
+    // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
     if (!elementTypes.includes(Type(next))) {
       return surroundingAgent.Throw('TypeError', 'NotPropertyName', next);
     }
+    // d. Append next as the last element of list.
     list.push(next);
+    // e. Set index to index + 1.
     index += 1;
   }
+  // 7. Return list.
   return list;
 }
 

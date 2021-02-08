@@ -16,7 +16,7 @@ import {
   SameValue,
   SetFunctionLength,
   SetFunctionName,
-  ToInteger,
+  ToIntegerOrInfinity,
   CreateBuiltinFunction,
   MakeBasicObject,
 } from '../abstract-ops/all.mjs';
@@ -123,40 +123,46 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   if (IsCallable(Target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', Target);
   }
-  // 3. Let args be a new (possibly empty) List consisting of all of the argument values provided after thisArg in order.
-  // 4. Let F be ? BoundFunctionCreate(Target, thisArg, args).
+  // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
+  // 4. Let L be 0.
+  let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
   const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
   // 6. If targetHasLength is true, then
-  let L;
   if (targetHasLength === Value.true) {
     // a. Let targetLen be ? Get(Target, "length").
-    let targetLen = Q(Get(Target, new Value('length')));
-    // b. If Type(targetLen) is not Number, let L be 0.
-    if (Type(targetLen) !== 'Number') {
-      L = 0;
-    } else { // c. Else,
-      // i. Set targetLen to ! ToInteger(targetLen).
-      targetLen = Q(ToInteger(targetLen)).numberValue();
-      // ii. Let L be the larger of 0 and the result of targetLen minus the number of elements of args.
-      L = Math.max(0, targetLen - args.length);
+    const targetLen = Q(Get(Target, new Value('length')));
+    // b. If Type(targetLen) is Number, then
+    if (Type(targetLen) === 'Number') {
+      // i. If targetLen is +∞𝔽, set L to +∞.
+      if (targetLen.numberValue() === +Infinity) {
+        L = +Infinity;
+      } else if (targetLen.numberValue() === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
+        L = 0;
+      } else { // iii. Else,
+        // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
+        const targetLenAsInt = Q(ToIntegerOrInfinity(targetLen));
+        // 2. Assert: targetLenAsInt is finite.
+        Assert(Number.isFinite(targetLenAsInt));
+        // 3. Let argCount be the number of elements in args.
+        const argCount = args.length;
+        // 4. Set L to max(targetLenAsInt - argCount, 0).
+        L = Math.max(targetLenAsInt - argCount, 0);
+      }
     }
-  } else {
-    // 7. ELse, let L be 0.
-    L = 0;
   }
-  // 8. Perform ! SetFunctionLength(F, L).
-  X(SetFunctionLength(F, new Value(L)));
-  // 9. Let targetName be ? Get(Target, "name").
+  // 7. Perform ! SetFunctionLength(F, L).
+  X(SetFunctionLength(F, L));
+  // 8. Let targetName be ? Get(Target, "name").
   let targetName = Q(Get(Target, new Value('name')));
-  // 10. If Type(targetName) is not String, set targetName to the empty String.
+  // 9. If Type(targetName) is not String, set targetName to the empty String.
   if (Type(targetName) !== 'String') {
     targetName = new Value('');
   }
-  // 11. Perform SetFunctionName(F, targetName, "bound").
+  // 10. Perform SetFunctionName(F, targetName, "bound").
   SetFunctionName(F, targetName, new Value('bound'));
-  // 12. Return F.
+  // 11. Return F.
   return F;
 }
 
@@ -226,7 +232,7 @@ export function bootstrapFunctionPrototype(realmRec) {
   const proto = CreateBuiltinFunction(FunctionProto, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Function.prototype%'] = proto;
 
-  SetFunctionLength(proto, new Value(0));
+  SetFunctionLength(proto, 0);
   SetFunctionName(proto, new Value(''));
 
   const readonly = { Writable: Value.false, Configurable: Value.false };

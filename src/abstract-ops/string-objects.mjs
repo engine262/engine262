@@ -8,15 +8,16 @@ import {
   Assert,
   CanonicalNumericIndexString,
   DefinePropertyOrThrow,
-  IsInteger,
+  IsIntegralNumber,
   IsPropertyKey,
   MakeBasicObject,
   OrdinaryGetOwnProperty,
   OrdinaryDefineOwnProperty,
   IsCompatiblePropertyDescriptor,
-  ToInteger,
+  ToIntegerOrInfinity,
   isArrayIndex,
 } from './all.mjs';
+import { ToString, 𝔽 } from '../api.mjs';
 
 function StringExoticGetOwnProperty(P) {
   const S = this;
@@ -46,17 +47,19 @@ function StringExoticOwnPropertyKeys() {
   Assert(Type(str) === 'String');
   const len = str.stringValue().length;
 
+  // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
-    keys.push(new Value(`${i}`));
+    // a. Add ! ToString(𝔽(i)) as the last element of keys.
+    keys.push(X(ToString(𝔽(i))));
   }
 
   // For each own property key P of O such that P is an array index and
-  // ToInteger(P) ≥ len, in ascending numeric index order, do
+  // ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
     // This is written with two nested ifs to work around https://github.com/devsnek/engine262/issues/24
     if (isArrayIndex(P)) {
-      if (X(ToInteger(P)).numberValue() >= len) {
+      if (X(ToIntegerOrInfinity(P)) >= len) {
         keys.push(P);
       }
     }
@@ -100,10 +103,10 @@ export function StringCreate(value, prototype) {
   // 7. Set S.[[OwnPropertyKeys]] as specified in 9.4.3.3.
   S.OwnPropertyKeys = StringExoticOwnPropertyKeys;
   // 8. Let length be the number of code unit elements in value.
-  const length = new Value(value.stringValue().length);
+  const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
-    Value: length,
+    Value: 𝔽(length),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -123,7 +126,7 @@ export function StringGetOwnProperty(S, P) {
   if (Type(index) === 'Undefined') {
     return Value.undefined;
   }
-  if (IsInteger(index) === Value.false) {
+  if (IsIntegralNumber(index) === Value.false) {
     return Value.undefined;
   }
   if (Object.is(index.numberValue(), -0)) {
