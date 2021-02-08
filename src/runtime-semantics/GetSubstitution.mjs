@@ -2,10 +2,10 @@ import {
   Assert,
   Get,
   ToString,
-  IsNonNegativeInteger,
+  isNonNegativeInteger,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+import { Q } from '../completion.mjs';
 
 // #sec-getsubstitution
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
@@ -17,16 +17,16 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
   Assert(Type(str) === 'String');
   // 4. Let stringLength be the number of code units in str.
   const stringLength = str.stringValue().length;
-  // 5. Assert: ! IsNonNegativeInteger(position) is true.
-  Assert(X(IsNonNegativeInteger(position)) === Value.true);
+  // 5. Assert: position is a non-negative integer.
+  Assert(isNonNegativeInteger(position));
   // 6. Assert: position ≤ stringLength.
-  Assert(position.numberValue() <= stringLength);
+  Assert(position <= stringLength);
   // 7. Assert: captures is a possibly empty List of Strings.
   Assert(Array.isArray(captures) && captures.every((value) => Type(value) === 'String' || Type(value) === 'Undefined'));
   // 8. Assert: Type(replacement) is String.
   Assert(Type(replacement) === 'String');
   // 9. Let tailPos be position + matchLength.
-  const tailPos = position.numberValue() + matchLength;
+  const tailPos = position + matchLength;
   // 10. Let m be the number of elements in captures.
   const m = captures.length;
   // 11. Let result be the String value derived from replacement by copying code unit elements from replacement
@@ -46,10 +46,10 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
         result += matched.stringValue();
         i += 2;
       } else if (nextChar === '`') {
-        if (position.numberValue() === 0) {
+        if (position === 0) {
           // Replacement is the empty String
         } else {
-          result += str.stringValue().substring(0, position.numberValue());
+          result += str.stringValue().substring(0, position);
         }
         i += 2;
       } else if (nextChar === '\'') {

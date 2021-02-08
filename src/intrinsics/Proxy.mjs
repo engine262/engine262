@@ -55,7 +55,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   const steps = ProxyRevocationFunctions;
   // 3. Let revoker be ! CreateBuiltinFunction(steps, « [[RevocableProxy]] »).
   const revoker = X(CreateBuiltinFunction(steps, ['RevocableProxy']));
-  SetFunctionLength(revoker, new Value(0));
+  SetFunctionLength(revoker, 0);
   SetFunctionName(revoker, new Value(''));
   // 4. Set revoker.[[RevocableProxy]] to p.
   revoker.RevocableProxy = p;
@@ -71,7 +71,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
 
 export function bootstrapProxy(realmRec) {
   const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec, undefined, Value.true);
-  SetFunctionLength(proxyConstructor, new Value(2));
+  SetFunctionLength(proxyConstructor, 2);
   SetFunctionName(proxyConstructor, new Value('Proxy'));
 
   assignProps(realmRec, proxyConstructor, [

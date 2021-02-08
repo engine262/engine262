@@ -3,7 +3,8 @@ import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
-  SpeciesConstructor, Construct, ToInteger, SameValue, CopyDataBlockBytes,
+  SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -19,12 +20,12 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   }
   // 4. If IsDetachedBuffer(O) is true, return +0f.
   if (IsDetachedBuffer(O) === Value.true) {
-    return new Value(0);
+    return 𝔽(0);
   }
   // 5. Let length be O.[[ArrayBufferByteLength]].
   const length = O.ArrayBufferByteLength;
   // 6. Return length.
-  return length;
+  return 𝔽(length);
 }
 
 // #sec-arraybuffer.prototype.slice
@@ -42,9 +43,9 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
-  const len = O.ArrayBufferByteLength.numberValue();
-  // 6. Let relativeStart be ? ToInteger(start).
-  const relativeStart = Q(ToInteger(start)).numberValue();
+  const len = O.ArrayBufferByteLength;
+  // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
+  const relativeStart = Q(ToIntegerOrInfinity(start));
   let first;
   // 7. If relativeStart < 0, let first be max((len + relativeStart), 0); else let first be min(relativeStart, len).
   if (relativeStart < 0) {
@@ -53,11 +54,11 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     first = Math.min(relativeStart, len);
   }
   let relativeEnd;
-  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToInteger(end).
+  // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToInteger(end)).numberValue();
+    relativeEnd = Q(ToIntegerOrInfinity(end));
   }
   let final;
   // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
@@ -71,7 +72,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
   const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(Construct(ctor, [new Value(newLen)]));
+  const newO = Q(Construct(ctor, [𝔽(newLen)]));
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
@@ -87,7 +88,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     return surroundingAgent.Throw('TypeError', 'SubclassSameValue', newO);
   }
   // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
-  if (newO.ArrayBufferByteLength.numberValue() < newLen) {
+  if (newO.ArrayBufferByteLength < newLen) {
     return surroundingAgent.Throw('TypeError', 'SubclassLengthTooSmall', newO);
   }
   // 18. NOTE: Side-effects of the above steps may have detached O.

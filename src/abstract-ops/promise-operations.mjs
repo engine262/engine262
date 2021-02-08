@@ -60,13 +60,13 @@ export function CreateResolvingFunctions(promise) {
   const alreadyResolved = { Value: false };
   const stepsResolve = PromiseResolveFunctions;
   const resolve = X(CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']));
-  SetFunctionLength(resolve, new Value(1));
+  SetFunctionLength(resolve, 1);
   SetFunctionName(resolve, new Value(''));
   resolve.Promise = promise;
   resolve.AlreadyResolved = alreadyResolved;
   const stepsReject = PromiseRejectFunctions;
   const reject = X(CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']));
-  SetFunctionLength(reject, new Value(1));
+  SetFunctionLength(reject, 1);
   SetFunctionName(reject, new Value(''));
   reject.Promise = promise;
   reject.AlreadyResolved = alreadyResolved;
@@ -195,7 +195,7 @@ export function NewPromiseCapability(C) {
   const promiseCapability = new PromiseCapabilityRecord();
   const steps = GetCapabilitiesExecutorFunctions;
   const executor = X(CreateBuiltinFunction(steps, ['Capability']));
-  SetFunctionLength(executor, new Value(2));
+  SetFunctionLength(executor, 2);
   SetFunctionName(executor, new Value(''));
   executor.Capability = promiseCapability;
   const promise = Q(Construct(C, [executor]));

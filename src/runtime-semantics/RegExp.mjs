@@ -2,7 +2,7 @@ import unicodeCaseFoldingCommon from '@unicode/unicode-13.0.0/Case_Folding/C/sym
 import unicodeCaseFoldingSimple from '@unicode/unicode-13.0.0/Case_Folding/S/symbols.js';
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
-import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
+import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
@@ -148,9 +148,8 @@ export function Evaluate_Pattern(Pattern, flags) {
     return (str, index) => {
       // a. Assert: Type(str) is String.
       Assert(Type(str) === 'String');
-      // b. Assert: ! IsNonNegativeInteger(index) is true and index ≤ the length of str.
-      Assert(X(IsNonNegativeInteger(index)) === Value.true
-             && index.numberValue() <= str.stringValue().length);
+      // b. Assert: index is a non-negative integer which is ≤ the length of str.
+      Assert(isNonNegativeInteger(index) && index <= str.stringValue().length);
       // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! StringToCodePoints(str).
       //    Otherwise, let Input be a List consisting of the sequence of code units that are the elements of str.
       //    Input will be used throughout the algorithms in 21.2.2. Each element of Input is considered to be a character.
@@ -162,7 +161,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // d. Let InputLength be the number of characters contained in Input. This variable will be used throughout the algorithms in 21.2.2.
       InputLength = Input.length;
       // e. Let listIndex be the index into Input of the character that was obtained from element index of str.
-      const listIndex = index.numberValue();
+      const listIndex = index;
       // f. Let c be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
       const c = (y) => {
         // i. Assert: y is a State.

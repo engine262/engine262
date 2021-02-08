@@ -21,6 +21,7 @@ import {
   ToBigInt,
   isIntegerIndex,
   typedArrayInfoByName,
+  𝔽,
 } from './all.mjs';
 
 export function isIntegerIndexedExoticObject(O) {
@@ -215,11 +216,11 @@ export function IntegerIndexedOwnPropertyKeys() {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
+  const len = O.ArrayLength;
   // 4. For each integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
-    // a. Add ! ToString(i) as the last element of keys.
-    keys.push(X(ToString(new Value(i))));
+    // a. Add ! ToString(𝔽(i)) as the last element of keys.
+    keys.push(X(ToString(𝔽(i))));
   }
   // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
@@ -263,8 +264,8 @@ export function IntegerIndexedElementGet(O, index) {
   const arrayTypeName = O.TypedArrayName.stringValue();
   // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-  // 9. Let indexedPosition be (index × elementSize) + offset.
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+  const indexedPosition = (index.numberValue() * elementSize) + offset;
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
@@ -301,8 +302,8 @@ export function IntegerIndexedElementSet(O, index, value) {
   const arrayTypeName = O.TypedArrayName.stringValue();
   // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-  // 11. Let indexedPosition be (index × elementSize) + offset.
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+  const indexedPosition = (index.numberValue() * elementSize) + offset;
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).

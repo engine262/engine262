@@ -22,6 +22,6 @@ function IsFinite([number = Value.undefined]) {
 export function bootstrapIsFinite(realmRec) {
   const fn = CreateBuiltinFunction(IsFinite, [], realmRec);
   X(SetFunctionName(fn, new Value('isFinite')));
-  X(SetFunctionLength(fn, new Value(1)));
+  X(SetFunctionLength(fn, 1));
   realmRec.Intrinsics['%isFinite%'] = fn;
 }

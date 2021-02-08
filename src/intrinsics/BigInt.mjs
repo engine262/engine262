@@ -1,6 +1,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
-import { ToPrimitive, ToBigInt, ToIndex } from '../abstract-ops/all.mjs';
+import {
+  ToBigInt,
+  ToIndex,
+  ToPrimitive,
+  ℤ,
+} from '../abstract-ops/all.mjs';
 import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -30,7 +35,7 @@ function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   bigint = Q(ToBigInt(bigint));
   // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
   // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
-  return new Value(BigInt.asIntN(bits.numberValue(), bigint.bigintValue()));
+  return ℤ(BigInt.asIntN(bits, bigint.bigintValue()));
 }
 
 // #sec-bigint.asuintn
@@ -39,8 +44,9 @@ function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   bits = Q(ToIndex(bits));
   // 2. Set bigint to ? ToBigInt(bigint).
   bigint = Q(ToBigInt(bigint));
-  // 3. Return the BigInt value that represents bigint modulo 2^bits.
-  return new Value(BigInt.asUintN(bits.numberValue(), bigint.bigintValue()));
+  // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
+  // 4. If mod ≥ 2 ** (bits - 1), return ℤ(mod - 2 ** bits); otherwise, return ℤ(mod).
+  return ℤ(BigInt.asUintN(bits, bigint.bigintValue()));
 }
 
 export function bootstrapBigInt(realmRec) {

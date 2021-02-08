@@ -83,6 +83,7 @@ import {
   Assert,
   DefinePropertyOrThrow,
   OrdinaryObjectCreate,
+  𝔽,
 } from './all.mjs';
 
 // 8.2 #sec-code-realms
@@ -275,8 +276,8 @@ export function SetDefaultGlobalBindings(realmRec) {
 
   // Value Properties of the Global Object
   [
-    ['Infinity', new Value(Infinity)],
-    ['NaN', new Value(NaN)],
+    ['Infinity', 𝔽(Infinity)],
+    ['NaN', 𝔽(NaN)],
     ['undefined', Value.undefined],
   ].forEach(([name, value]) => {
     Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({

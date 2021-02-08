@@ -28,13 +28,13 @@ import {
   HasOwnProperty,
   IsConstructor,
   IsExtensible,
-  IsInteger,
   MakeBasicObject,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   ToObject,
   isStrictModeCode,
   Realm,
+  𝔽,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -247,7 +247,7 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
   F.Realm = surroundingAgent.currentRealmRecord;
   F.HomeObject = Value.undefined;
   const len = ExpectedArgumentCount(ParameterList);
-  X(SetFunctionLength(F, new Value(len)));
+  X(SetFunctionLength(F, len));
   return F;
 }
 
@@ -340,11 +340,13 @@ export function SetFunctionName(F, name, prefix) {
 
 // 9.2.14 #sec-setfunctionlength
 export function SetFunctionLength(F, length) {
+  Assert(typeof length === 'number' && length >= 0
+    && (Number.isInteger(length) || !Number.isFinite(length)));
+  // 1. Assert: F is an extensible object that does not have a "length" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
-  Assert(Type(length) === 'Number');
-  Assert(length.numberValue() >= 0 && X(IsInteger(length)) === Value.true);
+  // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
-    Value: length,
+    Value: 𝔽(length),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,

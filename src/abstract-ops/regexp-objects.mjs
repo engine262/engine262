@@ -14,6 +14,7 @@ import {
   OrdinaryObjectCreate,
   Set,
   ToString,
+  𝔽,
 } from './all.mjs';
 
 // #sec-regexpalloc
@@ -76,7 +77,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", 0, true).
-  Q(Set(obj, new Value('lastIndex'), new Value(0), Value.true));
+  Q(Set(obj, new Value('lastIndex'), 𝔽(0), Value.true));
   // 16. Return obj.
   return obj;
 }
@@ -198,8 +199,8 @@ export function GetMatchIndicesArray(S, match) {
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 1. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
   return CreateArrayFromList([
-    new Value(match.StartIndex),
-    new Value(match.EndIndex),
+    𝔽(match.StartIndex),
+    𝔽(match.EndIndex),
   ]);
 }
 
@@ -217,7 +218,7 @@ export function MakeIndicesArray(S, indices, groupNames) {
   Assert(n < (2 ** 32) - 1);
   // 6. Set A to ! ArrayCreate(n).
   // 7. Assert: The value of A's "length" property is n.
-  const A = X(ArrayCreate(new Value(n)));
+  const A = X(ArrayCreate(n));
   // 8. If groupNames is not undefined, then
   let groups;
   if (groupNames !== Value.undefined) {
@@ -243,7 +244,7 @@ export function MakeIndicesArray(S, indices, groupNames) {
       matchIndicesArray = Value.undefined;
     }
     // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
-    X(CreateDataPropertyOrThrow(A, X(ToString(new Value(i))), matchIndicesArray));
+    X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(i))), matchIndicesArray));
     // e. If groupNames is not undefined and groupNames[i] is not undefined, then
     if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i], matchIndicesArray).

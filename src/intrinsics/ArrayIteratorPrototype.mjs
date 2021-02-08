@@ -13,6 +13,7 @@ import {
   IsDetachedBuffer,
   LengthOfArrayLike,
   ToString,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -55,7 +56,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     len = Q(LengthOfArrayLike(a));
   }
   // 10. If index ≥ len, then
-  if (index >= len.numberValue()) {
+  if (index >= len) {
     // a. Set O.[[IteratedArrayLike]] to undefined.
     O.IteratedArrayLike = Value.undefined;
     // b. Return CreateIterResultObject(undefined, true).
@@ -65,10 +66,10 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   O.ArrayLikeNextIndex = index + 1;
   // 12. If itemKind is key, return CreateIterResultObject(index, false).
   if (itemKind === 'key') {
-    return CreateIterResultObject(new Value(index), Value.false);
+    return CreateIterResultObject(𝔽(index), Value.false);
   }
   // 13. Let elementKey be ! ToString(index).
-  const elementKey = X(ToString(new Value(index)));
+  const elementKey = X(ToString(𝔽(index)));
   // 14. Let elementValue be ? Get(a, elementKey).
   const elementValue = Q(Get(a, elementKey));
   // 15. If itemKind is value, let result be elementValue.
@@ -80,7 +81,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
     // a. Assert: itemKind is key+value.
     Assert(itemKind === 'key+value');
     // b. Let result be ! CreateArrayFromList(« index, elementValue »).
-    result = X(CreateArrayFromList([new Value(index), elementValue]));
+    result = X(CreateArrayFromList([𝔽(index), elementValue]));
   }
   // 17. Return CreateIterResultObject(result, false).
   return CreateIterResultObject(result, Value.false);

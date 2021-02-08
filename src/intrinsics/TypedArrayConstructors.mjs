@@ -20,6 +20,7 @@ import {
   ToIndex,
   ToString,
   typedArrayInfoByName,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -37,7 +38,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
         const constructorName = new Value(TypedArray);
         // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
-        return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, new Value(0)));
+        return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0));
       } else if (Type(args[0]) !== 'Object') {
         // #sec-typedarray-length
         const [length] = args;
@@ -89,7 +90,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 14. Let elementSize be the Element Size value specified in Table 61 for constructorName.
         const elementSize = info.ElementSize;
         // 15. Let byteLength be elementSize × elementLength.
-        const byteLength = new Value(elementSize * elementLength.numberValue());
+        const byteLength = elementSize * elementLength;
         // 16. If IsSharedArrayBuffer(srcData) is false, then
         let bufferConstructor;
         if (IsSharedArrayBuffer(srcData) === Value.false) {
@@ -115,17 +116,17 @@ export function bootstrapTypedArrayConstructors(realmRec) {
             return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
           }
           // d. Let srcByteIndex be srcByteOffset.
-          let srcByteIndex = srcByteOffset.numberValue();
+          let srcByteIndex = srcByteOffset;
           // e. Let targetByteIndex be 0.
           let targetByteIndex = 0;
           // f. Let count be elementLength.
-          let count = elementLength.numberValue();
+          let count = elementLength;
           // g. Repeat, while count > 0
           while (count > 0) {
             // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
-            const value = GetValueFromBuffer(srcData, new Value(srcByteIndex), srcType.stringValue(), true, 'Unordered');
+            const value = GetValueFromBuffer(srcData, srcByteIndex, srcType.stringValue(), true, 'Unordered');
             // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
-            SetValueInBuffer(data, new Value(targetByteIndex), elementType.stringValue(), value, true, 'Unordered');
+            SetValueInBuffer(data, targetByteIndex, elementType.stringValue(), value, true, 'Unordered');
             // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
             srcByteIndex += srcElementSize;
             // iv. Set targetByteIndex to targetByteIndex + elementSize.
@@ -139,7 +140,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 21. Set O.[[ByteLength]] to byteLength.
         O.ByteLength = byteLength;
         // 22. Set O.[[ByteOffset]] to 0.
-        O.ByteOffset = new Value(0);
+        O.ByteOffset = 0;
         // 23. Set O.[[ArrayLength]] to elementLength.
         O.ArrayLength = elementLength;
         // 24. Return O.
@@ -166,13 +167,13 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           // b. Let len be the number of elements in values.
           const len = values.length;
           // c. Perform ? AllocateTypedArrayBuffer(O, len).
-          Q(AllocateTypedArrayBuffer(O, new Value(len)));
+          Q(AllocateTypedArrayBuffer(O, len));
           // d. Let k be 0.
           let k = 0;
           // e. Repeat, while k < len
           while (k < len) {
-            // i. Let Pk be ! ToString(k).
-            const Pk = X(ToString(new Value(k)));
+            // i. Let Pk be ! ToString(𝔽(k)).
+            const Pk = X(ToString(𝔽(k)));
             // ii. Let kValue be the first element of values and remove that element from values.
             const kValue = values.shift();
             // iii. Perform ? Set(O, Pk, kValue, true).
@@ -189,15 +190,15 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 8. Let arrayLike be object.
         const arrayLike = object;
         // 9. Let len be ? LengthOfArrayLike(arrayLike).
-        const len = Q(LengthOfArrayLike(arrayLike)).numberValue();
+        const len = Q(LengthOfArrayLike(arrayLike));
         // 10. Perform ? AllocateTypedArrayBuffer(O, len).
-        Q(AllocateTypedArrayBuffer(O, new Value(len)));
+        Q(AllocateTypedArrayBuffer(O, len));
         // 11. Let k be 0.
         let k = 0;
         // 12. Repeat, while k < len.
         while (k < len) {
-          // a. Let Pk be ! ToString(k).
-          const Pk = X(ToString(new Value(k)));
+          // a. Let Pk be ! ToString(𝔽(k)).
+          const Pk = X(ToString(𝔽(k)));
           // b. Let kValue be ? Get(arrayLike, Pk).
           const kValue = Q(Get(arrayLike, Pk));
           // c. Perform ? Set(O, Pk, kValue, true).
@@ -225,21 +226,21 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 6. Let offset be ? ToIndex(byteOffset).
         const offset = Q(ToIndex(byteOffset));
         // 7. If offset modulo elementSize ≠ 0, throw a RangeError exception.
-        if (offset.numberValue() % elementSize !== 0) {
+        if (offset % elementSize !== 0) {
           return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
         }
         // 8. If length is not undefined, then
         let newLength;
         if (length !== Value.undefined) {
           // Let newLength be ? ToIndex(length).
-          newLength = Q(ToIndex(length)).numberValue();
+          newLength = Q(ToIndex(length));
         }
         // 9. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
         if (IsDetachedBuffer(buffer) === Value.true) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 10. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-        const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
+        const bufferByteLength = buffer.ArrayBufferByteLength;
         // 11. If length is undefined, then
         let newByteLength;
         if (length === Value.undefined) {
@@ -248,7 +249,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
             return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
           }
           // b. Let newByteLength be bufferByteLength - offset.
-          newByteLength = bufferByteLength - offset.numberValue();
+          newByteLength = bufferByteLength - offset;
           // c. If newByteLength < 0, throw a RangeError exception.
           if (newByteLength < 0) {
             return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
@@ -257,25 +258,25 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           // a. Let newByteLength be newLength × elementSize.
           newByteLength = newLength * elementSize;
           // b. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
-          if (offset.numberValue() + newByteLength > bufferByteLength) {
+          if (offset + newByteLength > bufferByteLength) {
             return surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
           }
         }
         // 13. Set O.[[ViewedArrayBuffer]] to buffer.
         O.ViewedArrayBuffer = buffer;
         // 14. Set O.[[ByteLength]] to newByteLength.
-        O.ByteLength = new Value(newByteLength);
+        O.ByteLength = newByteLength;
         // 15. Set O.[[ByteOffset]] to offset.
         O.ByteOffset = offset;
         // 16. Set O.[[ArrayLength]] to newByteLength / elementSize.
-        O.ArrayLength = new Value(newByteLength / elementSize);
+        O.ArrayLength = newByteLength / elementSize;
         // 17. Return O.
         return O;
       }
     }
 
     const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [
-      ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
+      ['BYTES_PER_ELEMENT', 𝔽(info.ElementSize), undefined, {
         Writable: Value.false,
         Configurable: Value.false,
       }],

@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { CreateBuiltinFunction } from '../abstract-ops/all.mjs';
+import { CreateBuiltinFunction, 𝔽 } from '../abstract-ops/all.mjs';
 import { Value, Descriptor } from '../value.mjs';
 import { X } from '../completion.mjs';
 
@@ -17,7 +17,7 @@ export function bootstrapThrowTypeError(realmRec) {
   f.Extensible = Value.false;
 
   f.properties.set(new Value('length'), Descriptor({
-    Value: new Value(0),
+    Value: 𝔽(0),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,

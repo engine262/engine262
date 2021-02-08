@@ -5,6 +5,7 @@ import {
   OrdinaryObjectCreate,
   SameValueZero,
   RequireInternalSlot,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -169,7 +170,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
   }
   // 5. If key is -0, set key to +0.
   if (Type(key) === 'Number' && Object.is(key.numberValue(), -0)) {
-    key = new Value(0);
+    key = 𝔽(0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
@@ -197,7 +198,7 @@ function MapProto_sizeGetter(args, { thisValue }) {
     }
   }
   // 6. Return count.
-  return new Value(count);
+  return 𝔽(count);
 }
 
 // #sec-map.prototype.values

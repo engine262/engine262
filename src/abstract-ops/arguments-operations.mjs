@@ -27,6 +27,7 @@ import {
   HasOwnProperty,
   IsAccessorDescriptor,
   IsDataDescriptor,
+  𝔽,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -123,7 +124,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: new Value(len),
+    Value: 𝔽(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -131,8 +132,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    const idxStr = X(ToString(new Value(index)));
-    X(CreateDataProperty(obj, idxStr, val));
+    X(CreateDataProperty(obj, X(ToString(𝔽(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
@@ -178,7 +178,7 @@ function ArgSetterSteps([value]) {
 function MakeArgSetter(name, env) {
   const steps = ArgSetterSteps;
   const setter = X(CreateBuiltinFunction(steps, ['Name', 'Env']));
-  SetFunctionLength(setter, new Value(1));
+  SetFunctionLength(setter, 1);
   setter.Name = name;
   setter.Env = env;
   return setter;
@@ -203,12 +203,11 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    const idxStr = X(ToString(new Value(index)));
-    X(CreateDataProperty(obj, idxStr, val));
+    X(CreateDataProperty(obj, X(ToString(𝔽(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: new Value(len),
+    Value: 𝔽(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -222,7 +221,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
-        X(map.DefineOwnProperty(X(ToString(new Value(index))), Descriptor({
+        X(map.DefineOwnProperty(X(ToString(𝔽(index))), Descriptor({
           Set: p,
           Get: g,
           Enumerable: Value.false,

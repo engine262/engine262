@@ -319,7 +319,7 @@ export function bootstrapURIHandling(realmRec) {
   ].forEach(([name, f, length]) => {
     const fn = CreateBuiltinFunction(f, [], realmRec);
     X(SetFunctionName(fn, new Value(name)));
-    X(SetFunctionLength(fn, new Value(length)));
+    X(SetFunctionLength(fn, length));
     realmRec.Intrinsics[`%${name}%`] = fn;
   });
 }
