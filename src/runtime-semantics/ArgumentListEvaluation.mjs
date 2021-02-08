@@ -12,7 +12,7 @@ import {
   GetValue,
   IteratorStep,
   IteratorValue,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { TemplateStrings } from '../static-semantics/all.mjs';
 
@@ -47,7 +47,7 @@ function GetTemplateObject(templateLiteral) {
   // 11. Repeat, while index < count
   while (index < count) {
     // a. Let prop be ! ToString(𝔽(index)).
-    const prop = X(ToString(𝔽(index)));
+    const prop = X(ToString(F(index)));
     // b. Let cookedValue be the String value cookedStrings[index].
     const cookedValue = cookedStrings[index];
     // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).

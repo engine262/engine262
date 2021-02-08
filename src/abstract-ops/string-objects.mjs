@@ -17,7 +17,7 @@ import {
   ToIntegerOrInfinity,
   isArrayIndex,
 } from './all.mjs';
-import { ToString, 𝔽 } from '../api.mjs';
+import { ToString, F } from '../api.mjs';
 
 function StringExoticGetOwnProperty(P) {
   const S = this;
@@ -50,7 +50,7 @@ function StringExoticOwnPropertyKeys() {
   // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
     // a. Add ! ToString(𝔽(i)) as the last element of keys.
-    keys.push(X(ToString(𝔽(i))));
+    keys.push(X(ToString(F(i))));
   }
 
   // For each own property key P of O such that P is an array index and
@@ -106,7 +106,7 @@ export function StringCreate(value, prototype) {
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
-    Value: 𝔽(length),
+    Value: F(length),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,

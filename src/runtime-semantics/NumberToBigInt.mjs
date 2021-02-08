@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Assert, IsIntegralNumber, ℤ } from '../abstract-ops/all.mjs';
+import { Assert, IsIntegralNumber, Z } from '../abstract-ops/all.mjs';
 import { Value, Type } from '../value.mjs';
 
 // #sec-numbertobigint
@@ -11,5 +11,5 @@ export function NumberToBigInt(number) {
     return surroundingAgent.Throw('RangeError', 'CannotConvertDecimalToBigInt', number);
   }
   // 3. Return the BigInt value that represents the mathematical value of number.
-  return ℤ(BigInt(number.numberValue()));
+  return Z(BigInt(number.numberValue()));
 }

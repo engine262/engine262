@@ -14,7 +14,7 @@ import {
   OrdinaryObjectCreate,
   Set,
   ToString,
-  𝔽,
+  F as 𝔽,
 } from './all.mjs';
 
 // #sec-regexpalloc
@@ -76,8 +76,8 @@ export function RegExpInitialize(obj, pattern, flags) {
   //     List of SourceCharacter values and F as the flag parameters.
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
-  // 15. Perform ? Set(obj, "lastIndex", 0, true).
-  Q(Set(obj, new Value('lastIndex'), 𝔽(0), Value.true));
+  // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
+  Q(Set(obj, new Value('lastIndex'), 𝔽(+0), Value.true));
   // 16. Return obj.
   return obj;
 }
@@ -243,7 +243,7 @@ export function MakeIndicesArray(S, indices, groupNames) {
       // i. Let matchIndicesArray be undefined.
       matchIndicesArray = Value.undefined;
     }
-    // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
+    // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
     X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(i))), matchIndicesArray));
     // e. If groupNames is not undefined and groupNames[i] is not undefined, then
     if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {

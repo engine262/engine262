@@ -10,7 +10,7 @@ import {
   MakeTime,
   UTC,
   TimeClip,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Value, Type } from '../value.mjs';
 import {
@@ -29,7 +29,7 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs >= 2);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(𝔽(now));
+      return ToDateString(F(now));
     } else {
       const y = Q(ToNumber(year));
       const m = Q(ToNumber(month));
@@ -37,39 +37,39 @@ function DateConstructor(args, { NewTarget }) {
       if (date !== undefined) {
         dt = Q(ToNumber(date));
       } else {
-        dt = 𝔽(1);
+        dt = F(1);
       }
       let h;
       if (hours !== undefined) {
         h = Q(ToNumber(hours));
       } else {
-        h = 𝔽(+0);
+        h = F(+0);
       }
       let min;
       if (minutes !== undefined) {
         min = Q(ToNumber(minutes));
       } else {
-        min = 𝔽(+0);
+        min = F(+0);
       }
       let s;
       if (seconds !== undefined) {
         s = Q(ToNumber(seconds));
       } else {
-        s = 𝔽(+0);
+        s = F(+0);
       }
       let milli;
       if (ms !== undefined) {
         milli = Q(ToNumber(ms));
       } else {
-        milli = 𝔽(+0);
+        milli = F(+0);
       }
       let yr;
       if (y.isNaN()) {
-        yr = 𝔽(NaN);
+        yr = F(NaN);
       } else {
         const yi = X(ToIntegerOrInfinity(y));
         if (yi >= 0 && yi <= 99) {
-          yr = 𝔽(1900 + yi);
+          yr = F(1900 + yi);
         } else {
           yr = y;
         }
@@ -85,7 +85,7 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs === 1);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(𝔽(now));
+      return ToDateString(F(now));
     } else {
       let tv;
       if (Type(value) === 'Object' && 'DateValue' in value) {
@@ -108,10 +108,10 @@ function DateConstructor(args, { NewTarget }) {
     Assert(numberOfArgs === 0);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
-      return ToDateString(𝔽(now));
+      return ToDateString(F(now));
     } else {
       const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
-      O.DateValue = 𝔽(Date.now());
+      O.DateValue = F(Date.now());
       return O;
     }
   }
@@ -120,7 +120,7 @@ function DateConstructor(args, { NewTarget }) {
 // 20.3.3.1 #sec-date.now
 function Date_now() {
   const now = Date.now();
-  return 𝔽(now);
+  return F(now);
 }
 
 // 20.3.3.2 #sec-date.parse
@@ -139,46 +139,46 @@ function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds,
   if (month !== undefined) {
     m = Q(ToNumber(month));
   } else {
-    m = 𝔽(+0);
+    m = F(+0);
   }
   let dt;
   if (date !== undefined) {
     dt = Q(ToNumber(date));
   } else {
-    dt = 𝔽(1);
+    dt = F(1);
   }
   let h;
   if (hours !== undefined) {
     h = Q(ToNumber(hours));
   } else {
-    h = 𝔽(+0);
+    h = F(+0);
   }
   let min;
   if (minutes !== undefined) {
     min = Q(ToNumber(minutes));
   } else {
-    min = 𝔽(+0);
+    min = F(+0);
   }
   let s;
   if (seconds !== undefined) {
     s = Q(ToNumber(seconds));
   } else {
-    s = 𝔽(+0);
+    s = F(+0);
   }
   let milli;
   if (ms !== undefined) {
     milli = Q(ToNumber(ms));
   } else {
-    milli = 𝔽(+0);
+    milli = F(+0);
   }
 
   let yr;
   if (y.isNaN()) {
-    yr = 𝔽(NaN);
+    yr = F(NaN);
   } else {
     const yi = X(ToIntegerOrInfinity(y));
     if (yi >= 0 && yi <= 99) {
-      yr = 𝔽(1900 + yi);
+      yr = F(1900 + yi);
     } else {
       yr = y;
     }
@@ -191,7 +191,7 @@ function parseDate(dateTimeString) {
   // 20.3.1.15 #sec-date-time-string-format
   // TODO: implement parsing without the host.
   const parsed = Date.parse(dateTimeString.stringValue());
-  return 𝔽(parsed);
+  return F(parsed);
 }
 
 export function bootstrapDate(realmRec) {

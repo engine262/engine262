@@ -16,7 +16,7 @@ import {
   ResolveBinding,
   RequireObjectCoercible,
   ToString,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,
@@ -315,7 +315,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           // iii. ReturnIfAbrupt(nextValue).
           ReturnIfAbrupt(nextValue);
           // iv. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-          X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(n))), nextValue));
+          X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
           // v. Set n to n + 1.
           n += 1;
         }

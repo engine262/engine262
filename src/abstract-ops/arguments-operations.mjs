@@ -27,7 +27,7 @@ import {
   HasOwnProperty,
   IsAccessorDescriptor,
   IsDataDescriptor,
-  𝔽,
+  F,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -124,7 +124,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: 𝔽(len),
+    Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -132,7 +132,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    X(CreateDataProperty(obj, X(ToString(𝔽(index))), val));
+    X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
@@ -203,11 +203,11 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    X(CreateDataProperty(obj, X(ToString(𝔽(index))), val));
+    X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: 𝔽(len),
+    Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -221,7 +221,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
-        X(map.DefineOwnProperty(X(ToString(𝔽(index))), Descriptor({
+        X(map.DefineOwnProperty(X(ToString(F(index))), Descriptor({
           Set: p,
           Get: g,
           Enumerable: Value.false,

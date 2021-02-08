@@ -8,7 +8,7 @@ import {
   IteratorValue,
   ToString,
   CreateDataPropertyOrThrow,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
@@ -30,7 +30,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        Q(Set(array, new Value('length'), 𝔽(postIndex), Value.true));
+        Q(Set(array, new Value('length'), F(postIndex), Value.true));
         break;
       case 'SpreadElement':
         postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));
@@ -61,8 +61,8 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }, array, nextI
     }
     // c. Let nextValue be ? IteratorValue(next).
     const nextValue = Q(IteratorValue(next));
-    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(nextIndex), nextValue).
-    X(CreateDataPropertyOrThrow(array, X(ToString(𝔽(nextIndex))), nextValue));
+    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
+    X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue));
     // e. Set nextIndex to nextIndex + 1.
     nextIndex += 1;
   }
@@ -74,8 +74,8 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).
   const initValue = Q(GetValue(initResult));
-  // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(nextIndex), initValue).
-  const _created = X(CreateDataPropertyOrThrow(array, X(ToString(𝔽(nextIndex))), initValue));
+  // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
+  const _created = X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue));
   // 5. Return nextIndex + 1.
   return nextIndex + 1;
 }

@@ -20,13 +20,13 @@ import {
 import { isNonNegativeInteger } from './data-types-and-values.mjs';
 
 // #𝔽
-export function 𝔽(x) {
+export function F(x) {
   Assert(typeof x === 'number');
   return new NumberValue(x);
 }
 
 // #ℤ
-export function ℤ(x) {
+export function Z(x) {
   Assert(typeof x === 'bigint');
   return new BigIntValue(x);
 }

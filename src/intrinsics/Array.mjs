@@ -28,7 +28,7 @@ import {
   ToObject,
   ToString,
   ToUint32,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -62,7 +62,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     if (Type(len) !== 'Number') {
       const defineStatus = X(CreateDataProperty(array, new Value('0'), len));
       Assert(defineStatus === Value.true);
-      intLen = 𝔽(1);
+      intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
       if (intLen.numberValue() !== len.numberValue()) {
@@ -82,7 +82,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const array = ArrayCreate(0, proto);
     let k = 0;
     while (k < numberOfArgs) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const itemK = items[k];
       const defineStatus = X(CreateDataProperty(array, Pk, itemK));
       Assert(defineStatus === Value.true);
@@ -122,16 +122,16 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
         const error = ThrowCompletion(surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength').Value);
         return Q(IteratorClose(iteratorRecord, error));
       }
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const next = Q(IteratorStep(iteratorRecord));
       if (next === Value.false) {
-        Q(Set(A, new Value('length'), 𝔽(k), Value.true));
+        Q(Set(A, new Value('length'), F(k), Value.true));
         return A;
       }
       const nextValue = Q(IteratorValue(next));
       let mappedValue;
       if (mapping) {
-        mappedValue = Call(mapfn, thisArg, [nextValue, 𝔽(k)]);
+        mappedValue = Call(mapfn, thisArg, [nextValue, F(k)]);
         if (mappedValue instanceof AbruptCompletion) {
           return Q(IteratorClose(iteratorRecord, mappedValue));
         }
@@ -149,24 +149,24 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   const arrayLike = X(ToObject(items));
   const len = Q(LengthOfArrayLike(arrayLike));
   if (IsConstructor(C) === Value.true) {
-    A = Q(Construct(C, [𝔽(len)]));
+    A = Q(Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
   let k = 0;
   while (k < len) {
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     if (mapping === true) {
-      mappedValue = Q(Call(mapfn, thisArg, [kValue, 𝔽(k)]));
+      mappedValue = Q(Call(mapfn, thisArg, [kValue, F(k)]));
     } else {
       mappedValue = kValue;
     }
     Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), 𝔽(len), Value.true));
+  Q(Set(A, new Value('length'), F(len), Value.true));
   return A;
 }
 
@@ -182,18 +182,18 @@ function Array_of(items, { thisValue }) {
   const C = thisValue;
   let A;
   if (IsConstructor(C) === Value.true) {
-    A = Q(Construct(C, [𝔽(len)]));
+    A = Q(Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
   let k = 0;
   while (k < len) {
     const kValue = items[k];
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     Q(CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), 𝔽(len), Value.true));
+  Q(Set(A, new Value('length'), F(len), Value.true));
   return A;
 }
 

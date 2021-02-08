@@ -6,8 +6,8 @@ import {
   isNonNegativeInteger, CreateByteDataBlock,
   SameValue, IsConstructor, CopyDataBlockBytes,
   typedArrayInfoByType,
-  𝔽,
-  ℤ,
+  F,
+  Z,
 } from './all.mjs';
 
 // #sec-allocatearraybuffer
@@ -113,7 +113,7 @@ export function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray, rawBytes);
   const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true);
-  return IsBigIntElementType(type) === Value.true ? ℤ(result) : 𝔽(result);
+  return IsBigIntElementType(type) === Value.true ? Z(result) : F(result);
 }
 
 // #sec-getvaluefrombuffer

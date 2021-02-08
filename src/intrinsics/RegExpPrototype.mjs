@@ -30,7 +30,7 @@ import {
   ToObject,
   ToString,
   ToUint32,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
 import { CodePointAt, CodePointsToString } from '../static-semantics/all.mjs';
@@ -97,8 +97,8 @@ export function RegExpBuiltinExec(R, S) {
     if (lastIndex > length) {
       // i. If global is true or sticky is true, then
       if (global || sticky) {
-        // 1. Perform ? Set(R, "lastIndex", 0, true).
-        Q(Set(R, new Value('lastIndex'), 𝔽(0), Value.true));
+        // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
+        Q(Set(R, new Value('lastIndex'), F(+0), Value.true));
       }
       // ii. Return null.
       return Value.null;
@@ -109,8 +109,8 @@ export function RegExpBuiltinExec(R, S) {
     if (r === 'failure') {
       // i. If sticky is true, then
       if (sticky) {
-        // 1. Perform ? Set(R, "lastIndex", 0, true).
-        Q(Set(R, new Value('lastIndex'), 𝔽(0), Value.true));
+        // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
+        Q(Set(R, new Value('lastIndex'), F(+0), Value.true));
         // 2. Return null.
         return Value.null;
       }
@@ -149,8 +149,8 @@ export function RegExpBuiltinExec(R, S) {
   }
   // 15. If global is true or sticky is true, then
   if (global || sticky) {
-    // a. Perform ? Set(R, "lastIndex", e, true).
-    Q(Set(R, new Value('lastIndex'), 𝔽(e), Value.true));
+    // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
+    Q(Set(R, new Value('lastIndex'), F(e), Value.true));
   }
   // 16. Let n be the number of elements in r's captures List.
   const n = r.captures.length - 1;
@@ -161,7 +161,7 @@ export function RegExpBuiltinExec(R, S) {
   // 19. Assert: The value of A's "length" property is n + 1.
   Assert(X(Get(A, new Value('length'))).numberValue() === n + 1);
   // 20. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
-  X(CreateDataPropertyOrThrow(A, new Value('index'), 𝔽(lastIndex)));
+  X(CreateDataPropertyOrThrow(A, new Value('index'), F(lastIndex)));
   // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataPropertyOrThrow(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
@@ -250,8 +250,8 @@ export function RegExpBuiltinExec(R, S) {
         capturedValue = new Value(String.fromCharCode(...captureI));
       }
     }
-    // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(i), capturedValue).
-    X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(i))), capturedValue));
+    // e. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).
+    X(CreateDataPropertyOrThrow(A, X(ToString(F(i))), capturedValue));
     // f. If the ith capture of R was defined with a GroupName, then
     if (capturingParens[i - 1].GroupSpecifier) {
       // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
@@ -417,8 +417,8 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
     Assert(global === Value.true);
     // b. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
     const fullUnicode = ToBoolean(Q(Get(rx, new Value('unicode'))));
-    // c. Perform ? Set(rx, "lastIndex", 0, true).
-    Q(Set(rx, new Value('lastIndex'), 𝔽(0), Value.true));
+    // c. Perform ? Set(rx, "lastIndex", +0𝔽, true).
+    Q(Set(rx, new Value('lastIndex'), F(+0), Value.true));
     // d. Let A be ! ArrayCreate(0).
     const A = X(ArrayCreate(0));
     // e. Let n be 0.
@@ -438,8 +438,8 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
       } else { // iii. Else,
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
         const matchStr = Q(ToString(Q(Get(result, new Value('0')))));
-        // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), matchStr).
-        X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(n))), matchStr));
+        // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
+        X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), matchStr));
         // 3. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
           // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
@@ -447,7 +447,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          Q(Set(rx, new Value('lastIndex'), 𝔽(nextIndex), Value.true));
+          Q(Set(rx, new Value('lastIndex'), F(nextIndex), Value.true));
         }
         // 4. Set n to n + 1.
         n += 1;
@@ -518,7 +518,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   let fullUnicode;
   if (global === Value.true) {
     fullUnicode = ToBoolean(Q(Get(rx, new Value('unicode'))));
-    Q(Set(rx, new Value('lastIndex'), 𝔽(0), Value.true));
+    Q(Set(rx, new Value('lastIndex'), F(+0), Value.true));
   }
 
   const results = [];
@@ -536,7 +536,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         if (matchStr.stringValue() === '') {
           const thisIndex = Q(ToLength(Q(Get(rx, new Value('lastIndex'))))).numberValue();
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
-          Q(Set(rx, new Value('lastIndex'), 𝔽(nextIndex), Value.true));
+          Q(Set(rx, new Value('lastIndex'), F(nextIndex), Value.true));
         }
       }
     }
@@ -557,7 +557,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     let n = 1;
     const captures = [];
     while (n <= nCaptures) {
-      let capN = Q(Get(result, X(ToString(𝔽(n)))));
+      let capN = Q(Get(result, X(ToString(F(n)))));
       if (capN !== Value.undefined) {
         capN = Q(ToString(capN));
       }
@@ -571,7 +571,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     if (functionalReplace === Value.true) {
       const replacerArgs = [matched];
       replacerArgs.push(...captures);
-      replacerArgs.push(𝔽(position), S);
+      replacerArgs.push(F(position), S);
       if (namedCaptures !== Value.undefined) {
         replacerArgs.push(namedCaptures);
       }
@@ -606,8 +606,8 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const S = Q(ToString(string));
 
   const previousLastIndex = Q(Get(rx, new Value('lastIndex')));
-  if (SameValue(previousLastIndex, 𝔽(+0)) === Value.false) {
-    Q(Set(rx, new Value('lastIndex'), 𝔽(+0), Value.true));
+  if (SameValue(previousLastIndex, F(+0)) === Value.false) {
+    Q(Set(rx, new Value('lastIndex'), F(+0), Value.true));
   }
 
   const result = Q(RegExpExec(rx, S));
@@ -617,7 +617,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   }
 
   if (result === Value.null) {
-    return 𝔽(-1);
+    return F(-1);
   }
 
   return Q(Get(result, new Value('index')));
@@ -684,7 +684,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
   let q = p;
   while (q < size) {
-    Q(Set(splitter, new Value('lastIndex'), 𝔽(q), Value.true));
+    Q(Set(splitter, new Value('lastIndex'), F(q), Value.true));
     const z = Q(RegExpExec(splitter, S));
     if (z === Value.null) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
@@ -696,7 +696,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
         q = AdvanceStringIndex(S, q, unicodeMatching);
       } else {
         const T = new Value(S.stringValue().substring(p, q));
-        X(CreateDataProperty(A, X(ToString(𝔽(lengthA))), T));
+        X(CreateDataProperty(A, X(ToString(F(lengthA))), T));
         lengthA += 1;
         if (lengthA === lim) {
           return A;
@@ -706,8 +706,8 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
         while (i <= numberOfCaptures) {
-          const nextCapture = Q(Get(z, X(ToString(𝔽(i)))));
-          X(CreateDataProperty(A, X(ToString(𝔽(lengthA))), nextCapture));
+          const nextCapture = Q(Get(z, X(ToString(F(i)))));
+          X(CreateDataProperty(A, X(ToString(F(lengthA))), nextCapture));
           i += 1;
           lengthA += 1;
           if (lengthA === lim) {
@@ -720,7 +720,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   }
 
   const T = new Value(S.stringValue().substring(p, size));
-  X(CreateDataProperty(A, X(ToString(𝔽(lengthA))), T));
+  X(CreateDataProperty(A, X(ToString(F(lengthA))), T));
   return A;
 }
 

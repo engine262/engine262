@@ -2,7 +2,7 @@ import {
   IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -18,12 +18,12 @@ function NumberConstructor([value], { NewTarget }) {
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
     if (Type(prim) === 'BigInt') {
-      n = 𝔽(Number(prim.bigintValue()));
+      n = F(Number(prim.bigintValue()));
     } else {
       n = prim;
     }
   } else {
-    n = 𝔽(+0);
+    n = F(+0);
   }
   if (NewTarget === Value.undefined) {
     return n;
@@ -84,14 +84,14 @@ export function bootstrapNumber(realmRec) {
     Configurable: Value.false,
   };
   const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
-    ['EPSILON', 𝔽(Number.EPSILON), undefined, override],
-    ['MAX_SAFE_INTEGER', 𝔽(Number.MAX_SAFE_INTEGER), undefined, override],
-    ['MAX_VALUE', 𝔽(Number.MAX_VALUE), undefined, override],
-    ['MIN_SAFE_INTEGER', 𝔽(Number.MIN_SAFE_INTEGER), undefined, override],
-    ['MIN_VALUE', 𝔽(Number.MIN_VALUE), undefined, override],
-    ['NaN', 𝔽(NaN), undefined, override],
-    ['NEGATIVE_INFINITY', 𝔽(-Infinity), undefined, override],
-    ['POSITIVE_INFINITY', 𝔽(+Infinity), undefined, override],
+    ['EPSILON', F(Number.EPSILON), undefined, override],
+    ['MAX_SAFE_INTEGER', F(Number.MAX_SAFE_INTEGER), undefined, override],
+    ['MAX_VALUE', F(Number.MAX_VALUE), undefined, override],
+    ['MIN_SAFE_INTEGER', F(Number.MIN_SAFE_INTEGER), undefined, override],
+    ['MIN_VALUE', F(Number.MIN_VALUE), undefined, override],
+    ['NaN', F(NaN), undefined, override],
+    ['NEGATIVE_INFINITY', F(-Infinity), undefined, override],
+    ['POSITIVE_INFINITY', F(+Infinity), undefined, override],
 
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],

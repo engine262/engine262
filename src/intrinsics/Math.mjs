@@ -9,7 +9,7 @@ import {
   SetFunctionLength,
   SetFunctionName,
   ToNumber,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -20,13 +20,13 @@ function Math_abs([x = Value.undefined]) {
   if (n.isNaN()) {
     return n;
   } else if (Object.is(n.numberValue(), -0)) {
-    return 𝔽(+0);
+    return F(+0);
   } else if (n.isInfinity()) {
-    return 𝔽(Infinity);
+    return F(Infinity);
   }
 
   if (n.numberValue() < 0) {
-    return 𝔽(-n.numberValue());
+    return F(-n.numberValue());
   }
   return n;
 }
@@ -37,14 +37,14 @@ function Math_acos([x = Value.undefined]) {
   if (n.isNaN()) {
     return n;
   } else if (n.numberValue() > 1) {
-    return 𝔽(NaN);
+    return F(NaN);
   } else if (n.numberValue() < -1) {
-    return 𝔽(NaN);
+    return F(NaN);
   } else if (n.numberValue() === 1) {
-    return 𝔽(+0);
+    return F(+0);
   }
 
-  return 𝔽(Math.acos(n.numberValue()));
+  return F(Math.acos(n.numberValue()));
 }
 
 // #sec-math.pow
@@ -95,7 +95,7 @@ function Math_random() {
   // Convert to double in [0, 1) range
   big64View[0] = (s0 >> 12n) | 0x3FF0000000000000n;
   const result = floatView[0] - 1;
-  return 𝔽(result);
+  return F(result);
 }
 
 // 20.2 #sec-math-object
@@ -111,7 +111,7 @@ export function bootstrapMath(realmRec) {
     ['PI', 3.1415926535897932],
     ['SQRT1_2', 0.7071067811865476],
     ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, 𝔽(value), undefined, readonly]);
+  ].map(([name, value]) => [name, F(value), undefined, readonly]);
   // @@toStringTag is handled in the bootstrapPrototype() call.
 
   const mathObj = bootstrapPrototype(realmRec, [
@@ -163,7 +163,7 @@ export function bootstrapMath(realmRec) {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();
       }
-      return 𝔽(Math[name](...args));
+      return F(Math[name](...args));
     };
     const func = CreateBuiltinFunction(method, [], realmRec);
     X(SetFunctionName(func, new Value(name)));

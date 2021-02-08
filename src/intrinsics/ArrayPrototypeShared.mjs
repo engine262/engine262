@@ -14,7 +14,7 @@ import {
   ToLength,
   ToObject,
   ToString,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -34,7 +34,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
   const items = [];
   let k = 0;
   while (k < len) {
-    const Pk = X(ToString(𝔽(k)));
+    const Pk = X(ToString(F(k)));
     if (internalMethodsRestricted) {
       items.push(Q(Get(obj, Pk)));
     } else {
@@ -100,11 +100,11 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
 
   let j = 0;
   while (j < itemCount) {
-    Q(Set(obj, X(ToString(𝔽(j))), items[j], Value.true));
+    Q(Set(obj, X(ToString(F(j))), items[j], Value.true));
     j += 1;
   }
   while (j < len) {
-    Q(DeletePropertyOrThrow(obj, X(ToString(𝔽(j)))));
+    Q(DeletePropertyOrThrow(obj, X(ToString(F(j)))));
     j += 1;
   }
 
@@ -123,11 +123,11 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackFn, thisArg, [kValue, 𝔽(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackFn, thisArg, [kValue, F(k), O])));
         if (testResult === Value.false) {
           return Value.false;
         }
@@ -148,9 +148,9 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, 𝔽(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
       if (testResult === Value.true) {
         return kValue;
       }
@@ -170,15 +170,15 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, 𝔽(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
       if (testResult === Value.true) {
-        return 𝔽(k);
+        return F(k);
       }
       k += 1;
     }
-    return 𝔽(-1);
+    return F(-1);
   }
 
   // 22.1.3.12 #sec-array.prototype.foreach
@@ -192,11 +192,11 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O]));
+        Q(Call(callbackfn, thisArg, [kValue, F(k), O]));
       }
       k += 1;
     }
@@ -226,7 +226,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const kStr = X(ToString(𝔽(k)));
+      const kStr = X(ToString(F(k)));
       const elementK = Q(Get(O, kStr));
       if (SameValueZero(searchElement, elementK) === Value.true) {
         return Value.true;
@@ -243,14 +243,14 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
     if (len === 0) {
-      return 𝔽(-1);
+      return F(-1);
     }
     const n = Q(ToIntegerOrInfinity(fromIndex));
     if (fromIndex === Value.undefined) {
       Assert(n === 0);
     }
     if (n >= len) {
-      return 𝔽(-1);
+      return F(-1);
     }
     let k;
     if (n >= 0) {
@@ -262,18 +262,18 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const kStr = X(ToString(𝔽(k)));
+      const kStr = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
         const same = StrictEqualityComparison(searchElement, elementK);
         if (same === Value.true) {
-          return 𝔽(k);
+          return F(k);
         }
       }
       k += 1;
     }
-    return 𝔽(-1);
+    return F(-1);
   }
 
   // 22.1.3.15 #sec-array.prototype.join
@@ -294,7 +294,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       if (k > 0) {
         R = `${R}${sep}`;
       }
-      const kStr = X(ToString(𝔽(k)));
+      const kStr = X(ToString(F(k)));
       const element = Q(Get(O, kStr));
       let next;
       if (Type(element) === 'Undefined' || Type(element) === 'Null') {
@@ -315,7 +315,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
     if (len === 0) {
-      return 𝔽(-1);
+      return F(-1);
     }
     let n;
     if (fromIndex !== undefined) {
@@ -330,18 +330,18 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       k = len + n;
     }
     while (k >= 0) {
-      const kStr = X(ToString(𝔽(k)));
+      const kStr = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
         const same = StrictEqualityComparison(searchElement, elementK);
         if (same === Value.true) {
-          return 𝔽(k);
+          return F(k);
         }
       }
       k -= 1;
     }
-    return 𝔽(-1);
+    return F(-1);
   }
 
   // 22.1.3.21 #sec-array.prototype.reduce
@@ -363,7 +363,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     } else {
       let kPresent = false;
       while (kPresent === false && k < len) {
-        const Pk = X(ToString(𝔽(k)));
+        const Pk = X(ToString(F(k)));
         kPresent = Q(HasProperty(O, Pk)) === Value.true;
         if (kPresent === true) {
           accumulator = Q(Get(O, Pk));
@@ -375,11 +375,11 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, 𝔽(k), O]));
+        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
       k += 1;
     }
@@ -405,7 +405,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     } else {
       let kPresent = false;
       while (kPresent === false && k >= 0) {
-        const Pk = X(ToString(𝔽(k)));
+        const Pk = X(ToString(F(k)));
         kPresent = Q(HasProperty(O, Pk)) === Value.true;
         if (kPresent === true) {
           accumulator = Q(Get(O, Pk));
@@ -417,11 +417,11 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k >= 0) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, 𝔽(k), O]));
+        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
       k -= 1;
     }
@@ -438,8 +438,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     let lower = 0;
     while (lower !== middle) {
       const upper = len - lower - 1;
-      const upperP = X(ToString(𝔽(upper)));
-      const lowerP = X(ToString(𝔽(lower)));
+      const upperP = X(ToString(F(upper)));
+      const lowerP = X(ToString(F(lower)));
       const lowerExists = Q(HasProperty(O, lowerP));
       let lowerValue;
       let upperValue;
@@ -478,11 +478,11 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(𝔽(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, 𝔽(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, F(k), O])));
         if (testResult === Value.true) {
           return Value.true;
         }
@@ -505,7 +505,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       if (k > 0) {
         R = `${R}${separator}`;
       }
-      const kStr = X(ToString(𝔽(k)));
+      const kStr = X(ToString(F(k)));
       const nextElement = Q(Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
         const S = Q(ToString(Q(Invoke(nextElement, new Value('toLocaleString'))))).stringValue();

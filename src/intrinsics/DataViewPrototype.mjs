@@ -4,7 +4,7 @@ import {
   SetViewValue,
   IsDetachedBuffer,
   RequireInternalSlot,
-  𝔽,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -42,7 +42,7 @@ function DataViewProto_byteLength(args, { thisValue }) {
   // 6. Let size be O.[[ByteLength]].
   const size = O.ByteLength;
   // 7. Return 𝔽(size).
-  return 𝔽(size);
+  return F(size);
 }
 
 // #sec-get-dataview.prototype.byteoffset
@@ -62,7 +62,7 @@ function DataViewProto_byteOffset(args, { thisValue }) {
   // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
   // 7. Return 𝔽(offset).
-  return 𝔽(offset);
+  return F(offset);
 }
 
 // #sec-dataview.prototype.getbigint64
