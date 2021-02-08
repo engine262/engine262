@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 9e6dcf84653670c5d74f35729b86094953f7086f
+ * engine262 0.0.1 149a9b8bf8fd5a66d63fe0af1116bb3676e4e8b2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -154387,10 +154387,10 @@ function BigIntConstructor([value], {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
-  } // 2. Let prim be ? ToPrimitive(value, hint Number).
+  } // 2. Let prim be ? ToPrimitive(value, number).
 
 
-  let _temp = ToPrimitive(value, 'Number');
+  let _temp = ToPrimitive(value, 'number');
   /* istanbul ignore if */
 
 
@@ -157293,7 +157293,7 @@ function DateProto_toJSON(args, {
 
   const O = _temp68;
 
-  let _temp69 = ToPrimitive(O, 'Number');
+  let _temp69 = ToPrimitive(O, 'number');
 
   if (_temp69 instanceof AbruptCompletion) {
     return _temp69;
@@ -157523,9 +157523,9 @@ function DateProto_toPrimitive([hint = Value.undefined], {
   let tryFirst;
 
   if (Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
-    tryFirst = new Value('string');
+    tryFirst = 'string';
   } else if (Type(hint) === 'String' && hint.stringValue() === 'number') {
-    tryFirst = new Value('number');
+    tryFirst = 'number';
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
   }
@@ -174260,7 +174260,7 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let py; // 1. If the LeftFirst flag is true, then
 
   if (LeftFirst === true) {
-    let _temp4 = ToPrimitive(x, 'Number');
+    let _temp4 = ToPrimitive(x, 'number');
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -174270,10 +174270,10 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       _temp4 = _temp4.Value;
     }
 
-    // a. Let px be ? ToPrimitive(x, hint Number).
-    px = _temp4; // b. Let py be ? ToPrimitive(y, hint Number).
+    // a. Let px be ? ToPrimitive(x, number).
+    px = _temp4; // b. Let py be ? ToPrimitive(y, number).
 
-    let _temp5 = ToPrimitive(y, 'Number');
+    let _temp5 = ToPrimitive(y, 'number');
 
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -174285,7 +174285,7 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
 
     py = _temp5;
   } else {
-    let _temp6 = ToPrimitive(y, 'Number');
+    let _temp6 = ToPrimitive(y, 'number');
 
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -174296,10 +174296,10 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
     }
 
     // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = _temp6; // c. Let px be ? ToPrimitive(x, hint Number).
+    // b. Let py be ? ToPrimitive(y, number).
+    py = _temp6; // c. Let px be ? ToPrimitive(x, number).
 
-    let _temp7 = ToPrimitive(x, 'Number');
+    let _temp7 = ToPrimitive(x, 'number');
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -174648,21 +174648,11 @@ function IsNonNegativeInteger(argument) {
   return Value.false;
 }
 
-function ToPrimitive(input, PreferredType) {
-  Assert(input instanceof Value, "input instanceof Value");
+function ToPrimitive(input, preferredType) {
+  // 1. Assert: input is an ECMAScript language value.
+  Assert(input instanceof Value, "input instanceof Value"); // 2. If Type(input) is Object, then
 
   if (Type(input) === 'Object') {
-    let hint;
-
-    if (PreferredType === undefined) {
-      hint = new Value('default');
-    } else if (PreferredType === 'String') {
-      hint = new Value('string');
-    } else {
-      Assert(PreferredType === 'Number', "PreferredType === 'Number'");
-      hint = new Value('number');
-    }
-
     let _temp = GetMethod(input, wellKnownSymbols.toPrimitive);
     /* istanbul ignore if */
 
@@ -174677,10 +174667,27 @@ function ToPrimitive(input, PreferredType) {
       _temp = _temp.Value;
     }
 
-    const exoticToPrim = _temp;
+    // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
+    const exoticToPrim = _temp; // b. If exoticToPrim is not undefined, then
 
     if (exoticToPrim !== Value.undefined) {
-      let _temp2 = Call(exoticToPrim, input, [hint]);
+      let hint; // i. If preferredType is not present, let hint be "default".
+
+      if (preferredType === undefined) {
+        hint = 'default';
+      } else if (preferredType === 'string') {
+        // ii. Else if preferredType is string, let hint be "string".
+        hint = 'string';
+      } else {
+        // iii. Else,
+        // 1. Assert: preferredType is number.
+        Assert(preferredType === 'number', "preferredType === 'number'"); // 2. Let hint be "number".
+
+        hint = 'number';
+      } // iv. Let result be ? Call(exoticToPrim, input, « hint »).
+
+
+      let _temp2 = Call(exoticToPrim, input, [new Value(hint)]);
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -174690,35 +174697,45 @@ function ToPrimitive(input, PreferredType) {
         _temp2 = _temp2.Value;
       }
 
-      const result = _temp2;
+      const result = _temp2; // v. If Type(result) is not Object, return result.
 
       if (Type(result) !== 'Object') {
         return result;
-      }
+      } // vi. Throw a TypeError exception.
+
 
       return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
-    }
+    } // c. If preferredType is not present, let preferredType be number.
 
-    if (hint.stringValue() === 'default') {
-      hint = new Value('number');
-    }
 
-    return OrdinaryToPrimitive(input, hint);
-  }
+    if (preferredType === undefined) {
+      preferredType = 'number';
+    } // d. Return ? OrdinaryToPrimitive(input, preferredType).
+
+
+    return OrdinaryToPrimitive(input, preferredType);
+  } // 3. Return input.
+
 
   return input;
 } // 7.1.1.1 #sec-ordinarytoprimitive
 
 function OrdinaryToPrimitive(O, hint) {
-  Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-  Assert(Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number'), "Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'number')");
-  let methodNames;
+  // 1. Assert: Type(O) is Object.
+  Assert(Type(O) === 'Object', "Type(O) === 'Object'"); // 2. Assert: hint is either string or number.
 
-  if (hint.stringValue() === 'string') {
+  Assert(hint === 'string' || hint === 'number', "hint === 'string' || hint === 'number'");
+  let methodNames; // 3. If hint is string, then
+
+  if (hint === 'string') {
+    // a. Let methodNames be « "toString", "valueOf" ».
     methodNames = [new Value('toString'), new Value('valueOf')];
   } else {
+    // 4. Else,
+    // a. Let methodNames be « "valueOf", "toString" ».
     methodNames = [new Value('valueOf'), new Value('toString')];
-  }
+  } // 5. For each element name of methodNames, do
+
 
   for (const name of methodNames) {
     let _temp3 = Get(O, name);
@@ -174731,7 +174748,8 @@ function OrdinaryToPrimitive(O, hint) {
       _temp3 = _temp3.Value;
     }
 
-    const method = _temp3;
+    // a. Let method be ? Get(O, name).
+    const method = _temp3; // b. If IsCallable(method) is true, then
 
     if (IsCallable(method) === Value.true) {
       let _temp4 = Call(method, O);
@@ -174744,13 +174762,15 @@ function OrdinaryToPrimitive(O, hint) {
         _temp4 = _temp4.Value;
       }
 
-      const result = _temp4;
+      // i. Let result be ? Call(method, O).
+      const result = _temp4; // ii. If Type(result) is not Object, return result.
 
       if (Type(result) !== 'Object') {
         return result;
       }
     }
-  }
+  } // 6. Throw a TypeError exception.
+
 
   return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 } // 7.1.2 #sec-toboolean
@@ -174805,7 +174825,7 @@ function ToBoolean(argument) {
 } // #sec-tonumeric
 
 function ToNumeric(value) {
-  let _temp5 = ToPrimitive(value, 'Number');
+  let _temp5 = ToPrimitive(value, 'number');
 
   if (_temp5 instanceof AbruptCompletion) {
     return _temp5;
@@ -174815,7 +174835,7 @@ function ToNumeric(value) {
     _temp5 = _temp5.Value;
   }
 
-  // 1. Let primValue be ? ToPrimitive(value, hint Number).
+  // 1. Let primValue be ? ToPrimitive(value, number).
   const primValue = _temp5; // 2. If Type(primValue) is BigInt, return primValue.
 
   if (Type(primValue) === 'BigInt') {
@@ -174857,7 +174877,7 @@ function ToNumber(argument) {
 
     case 'Object':
       {
-        let _temp6 = ToPrimitive(argument, 'Number');
+        let _temp6 = ToPrimitive(argument, 'number');
 
         if (_temp6 instanceof AbruptCompletion) {
           return _temp6;
@@ -174867,7 +174887,9 @@ function ToNumber(argument) {
           _temp6 = _temp6.Value;
         }
 
-        const primValue = _temp6;
+        // 1. Let primValue be ? ToPrimitive(argument, number).
+        const primValue = _temp6; // 2. Return ? ToNumber(primValue).
+
         return ToNumber(primValue);
       }
 
@@ -175111,7 +175133,7 @@ function ToUint8Clamp(argument) {
 } // #sec-tobigint
 
 function ToBigInt(argument) {
-  let _temp15 = ToPrimitive(argument, 'Number');
+  let _temp15 = ToPrimitive(argument, 'number');
 
   if (_temp15 instanceof AbruptCompletion) {
     return _temp15;
@@ -175121,7 +175143,7 @@ function ToBigInt(argument) {
     _temp15 = _temp15.Value;
   }
 
-  // 1. Let prim be ? ToPrimitive(argument, hint Number).
+  // 1. Let prim be ? ToPrimitive(argument, number).
   const prim = _temp15; // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
 
   switch (Type(prim)) {
@@ -175279,7 +175301,7 @@ function ToString(argument) {
 
     case 'Object':
       {
-        let _temp21 = ToPrimitive(argument, 'String');
+        let _temp21 = ToPrimitive(argument, 'string');
 
         if (_temp21 instanceof AbruptCompletion) {
           return _temp21;
@@ -175289,7 +175311,9 @@ function ToString(argument) {
           _temp21 = _temp21.Value;
         }
 
-        const primValue = _temp21;
+        // 1. Let primValue be ? ToPrimitive(argument, string).
+        const primValue = _temp21; // 2. Return ? ToString(primValue).
+
         return ToString(primValue);
       }
 
@@ -175356,7 +175380,7 @@ function ToObject(argument) {
 } // 7.1.14 #sec-topropertykey
 
 function ToPropertyKey(argument) {
-  let _temp22 = ToPrimitive(argument, 'String');
+  let _temp22 = ToPrimitive(argument, 'string');
 
   if (_temp22 instanceof AbruptCompletion) {
     return _temp22;
@@ -175366,11 +175390,14 @@ function ToPropertyKey(argument) {
     _temp22 = _temp22.Value;
   }
 
-  const key = _temp22;
+  // 1. Let key be ? ToPrimitive(argument, string).
+  const key = _temp22; // 2. If Type(key) is Symbol, then
 
   if (Type(key) === 'Symbol') {
+    // a. Return key.
     return key;
-  }
+  } // 3. Return ! ToString(key).
+
 
   let _temp23 = ToString(key);
 
