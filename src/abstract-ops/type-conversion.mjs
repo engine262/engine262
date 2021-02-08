@@ -45,7 +45,7 @@ export function ToPrimitive(input, preferredType) {
         hint = 'number';
       }
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
-      const result = Q(Call(exoticToPrim, input, [hint]));
+      const result = Q(Call(exoticToPrim, input, [new Value(hint)]));
       // v. If Type(result) is not Object, return result.
       if (Type(result) !== 'Object') {
         return result;
