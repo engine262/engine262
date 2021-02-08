@@ -41,7 +41,7 @@ function BooleanProto_valueOf(argList, { thisValue }) {
   return Q(thisBooleanValue(thisValue));
 }
 
-export function BootstrapBooleanPrototype(realmRec) {
+export function bootstrapBooleanPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['toString', BooleanProto_toString, 0],
     ['valueOf', BooleanProto_valueOf, 0],

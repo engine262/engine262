@@ -705,7 +705,7 @@ function StringProto_at([index = Value.undefined], { thisValue }) {
   return new Value(S.stringValue()[k]);
 }
 
-export function BootstrapStringPrototype(realmRec) {
+export function bootstrapStringPrototype(realmRec) {
   const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
 
   assignProps(realmRec, proto, [

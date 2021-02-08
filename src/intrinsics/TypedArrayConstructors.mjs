@@ -24,7 +24,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-export function BootstrapTypedArrayConstructors(realmRec) {
+export function bootstrapTypedArrayConstructors(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     // #sec-typedarray-constructors
     function TypedArrayConstructor(args, { NewTarget }) {

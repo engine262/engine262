@@ -44,7 +44,7 @@ function ErrorConstructor([message = Value.undefined], { NewTarget }) {
   return O;
 }
 
-export function BootstrapError(realmRec) {
+export function bootstrapError(realmRec) {
   const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;

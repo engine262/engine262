@@ -30,7 +30,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
-import { ArrayProto_sortBody, BootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // 22.1.3.1 #sec-array.prototype.concat
 function ArrayProto_concat(args, { thisValue }) {
@@ -556,7 +556,7 @@ function ArrayProto_at([index = Value.undefined], { thisValue }) {
   return Q(Get(O, X(ToString(new Value(k)))));
 }
 
-export function BootstrapArrayPrototype(realmRec) {
+export function bootstrapArrayPrototype(realmRec) {
   const proto = X(ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']));
 
   assignProps(realmRec, proto, [
@@ -583,7 +583,7 @@ export function BootstrapArrayPrototype(realmRec) {
     ['values', ArrayProto_values, 0],
   ]);
 
-  BootstrapArrayPrototypeShared(
+  bootstrapArrayPrototypeShared(
     realmRec,
     proto,
     () => {},

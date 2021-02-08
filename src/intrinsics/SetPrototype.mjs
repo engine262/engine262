@@ -174,7 +174,7 @@ function SetProto_values(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'value'));
 }
 
-export function BootstrapSetPrototype(realmRec) {
+export function bootstrapSetPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],

@@ -13,7 +13,7 @@ function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
   return Q(CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
 }
 
-export function BootstrapAsyncGeneratorFunction(realmRec) {
+export function bootstrapAsyncGeneratorFunction(realmRec) {
   const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
   X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({

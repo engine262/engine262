@@ -660,7 +660,7 @@ function Promise_symbolSpecies(args, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapPromise(realmRec) {
+export function bootstrapPromise(realmRec) {
   const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
     ['allSettled', Promise_allSettled, 1],

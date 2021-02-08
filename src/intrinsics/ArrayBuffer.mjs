@@ -35,7 +35,7 @@ function ArrayBuffer_species(a, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapArrayBuffer(realmRec) {
+export function bootstrapArrayBuffer(realmRec) {
   const c = bootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [
     ['isView', ArrayBuffer_isView, 1],
     [wellKnownSymbols.species, [ArrayBuffer_species]],

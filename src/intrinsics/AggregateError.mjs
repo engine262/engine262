@@ -49,7 +49,7 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
   return O;
 }
 
-export function BootstrapAggregateError(realmRec) {
+export function bootstrapAggregateError(realmRec) {
   const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
   c.Prototype = realmRec.Intrinsics['%Error%'];
   realmRec.Intrinsics['%AggregateError%'] = c;

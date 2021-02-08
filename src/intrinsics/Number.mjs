@@ -76,7 +76,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
   return Value.false;
 }
 
-export function BootstrapNumber(realmRec) {
+export function bootstrapNumber(realmRec) {
   const override = {
     Writable: Value.false,
     Enumerable: Value.false,

@@ -78,7 +78,7 @@ function Map_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapMap(realmRec) {
+export function bootstrapMap(realmRec) {
   const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     [wellKnownSymbols.species, [Map_speciesGetter]],
   ]);

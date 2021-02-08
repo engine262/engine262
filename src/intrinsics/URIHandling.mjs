@@ -310,7 +310,7 @@ function encodeURIComponent([uriComponent = Value.undefined]) {
   return Q(Encode(componentString, unescapedURIComponentSet));
 }
 
-export function BootstrapURIHandling(realmRec) {
+export function bootstrapURIHandling(realmRec) {
   [
     ['decodeURI', decodeURI, 1],
     ['decodeURIComponent', decodeURIComponent, 1],

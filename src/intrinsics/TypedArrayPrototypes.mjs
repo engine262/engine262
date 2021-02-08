@@ -3,7 +3,7 @@ import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 // #sec-properties-of-typedarray-prototype-objects
-export function BootstrapTypedArrayPrototypes(realmRec) {
+export function bootstrapTypedArrayPrototypes(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [
       ['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {

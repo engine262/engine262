@@ -54,7 +54,7 @@ function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
   }
 }
 
-export function BootstrapWeakSet(realmRec) {
+export function bootstrapWeakSet(realmRec) {
   const c = bootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
   realmRec.Intrinsics['%WeakSet%'] = c;
 }

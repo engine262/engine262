@@ -12,7 +12,7 @@ function WeakRefProto_deref(args, { thisValue }) {
   return X(WeakRefDeref(weakRef));
 }
 
-export function BootstrapWeakRefPrototype(realmRec) {
+export function bootstrapWeakRefPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['deref', WeakRefProto_deref, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');

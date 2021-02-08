@@ -86,7 +86,7 @@ function WeakSetProto_has([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-export function BootstrapWeakSetPrototype(realmRec) {
+export function bootstrapWeakSetPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', WeakSetProto_add, 1],
     ['delete', WeakSetProto_delete, 1],

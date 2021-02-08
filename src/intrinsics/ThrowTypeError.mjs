@@ -9,7 +9,7 @@ function ThrowTypeError() {
   return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
 }
 
-export function BootstrapThrowTypeError(realmRec) {
+export function bootstrapThrowTypeError(realmRec) {
   const f = X(CreateBuiltinFunction(
     ThrowTypeError, [], realmRec, Value.null,
   ));

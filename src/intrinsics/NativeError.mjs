@@ -15,7 +15,7 @@ import { Q, X } from '../completion.mjs';
 import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mjs';
 
-export function BootstrapNativeError(realmRec) {
+export function bootstrapNativeError(realmRec) {
   for (const name of [
     'EvalError',
     'RangeError',

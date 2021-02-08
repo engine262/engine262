@@ -188,7 +188,7 @@ function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefin
   return Q(target.SetPrototypeOf(proto));
 }
 
-export function BootstrapReflect(realmRec) {
+export function bootstrapReflect(realmRec) {
   const reflect = bootstrapPrototype(realmRec, [
     ['apply', Reflect_apply, 3],
     ['construct', Reflect_construct, 2],

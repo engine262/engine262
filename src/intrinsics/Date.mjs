@@ -193,7 +193,7 @@ function parseDate(dateTimeString) {
   return new Value(parsed);
 }
 
-export function BootstrapDate(realmRec) {
+export function bootstrapDate(realmRec) {
   const cons = bootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [
     ['now', Date_now, 0],
     ['parse', Date_parse, 1],

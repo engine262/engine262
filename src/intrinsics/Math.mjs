@@ -98,7 +98,7 @@ function Math_random() {
 }
 
 // 20.2 #sec-math-object
-export function BootstrapMath(realmRec) {
+export function bootstrapMath(realmRec) {
   // 20.2.1 #sec-value-properties-of-the-math-object
   const readonly = { Writable: Value.false, Configurable: Value.false };
   const valueProps = [

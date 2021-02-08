@@ -115,7 +115,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
   return M;
 }
 
-export function BootstrapWeakMapPrototype(realmRec) {
+export function bootstrapWeakMapPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['delete', WeakMapProto_delete, 1],
     ['get', WeakMapProto_get, 1],

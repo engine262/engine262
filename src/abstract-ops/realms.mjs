@@ -4,81 +4,81 @@ import {
 } from '../value.mjs';
 import { NewGlobalEnvironment } from '../environment.mjs';
 import { Q, X } from '../completion.mjs';
-import { BootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mjs';
-import { BootstrapObject } from '../intrinsics/Object.mjs';
-import { BootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mjs';
-import { BootstrapArray } from '../intrinsics/Array.mjs';
-import { BootstrapBigInt } from '../intrinsics/BigInt.mjs';
-import { BootstrapBigIntPrototype } from '../intrinsics/BigIntPrototype.mjs';
-import { BootstrapBooleanPrototype } from '../intrinsics/BooleanPrototype.mjs';
-import { BootstrapBoolean } from '../intrinsics/Boolean.mjs';
-import { BootstrapNumberPrototype } from '../intrinsics/NumberPrototype.mjs';
-import { BootstrapNumber } from '../intrinsics/Number.mjs';
-import { BootstrapFunctionPrototype } from '../intrinsics/FunctionPrototype.mjs';
-import { BootstrapFunction } from '../intrinsics/Function.mjs';
-import { BootstrapSymbolPrototype } from '../intrinsics/SymbolPrototype.mjs';
-import { BootstrapSymbol } from '../intrinsics/Symbol.mjs';
-import { BootstrapMath } from '../intrinsics/Math.mjs';
-import { BootstrapDatePrototype } from '../intrinsics/DatePrototype.mjs';
-import { BootstrapDate } from '../intrinsics/Date.mjs';
-import { BootstrapRegExpPrototype } from '../intrinsics/RegExpPrototype.mjs';
-import { BootstrapRegExp } from '../intrinsics/RegExp.mjs';
-import { BootstrapPromisePrototype } from '../intrinsics/PromisePrototype.mjs';
-import { BootstrapPromise } from '../intrinsics/Promise.mjs';
-import { BootstrapProxy } from '../intrinsics/Proxy.mjs';
-import { BootstrapReflect } from '../intrinsics/Reflect.mjs';
-import { BootstrapStringPrototype } from '../intrinsics/StringPrototype.mjs';
-import { BootstrapString } from '../intrinsics/String.mjs';
-import { BootstrapErrorPrototype } from '../intrinsics/ErrorPrototype.mjs';
-import { BootstrapError } from '../intrinsics/Error.mjs';
-import { BootstrapNativeError } from '../intrinsics/NativeError.mjs';
-import { BootstrapIteratorPrototype } from '../intrinsics/IteratorPrototype.mjs';
-import { BootstrapAsyncIteratorPrototype } from '../intrinsics/AsyncIteratorPrototype.mjs';
-import { BootstrapArrayIteratorPrototype } from '../intrinsics/ArrayIteratorPrototype.mjs';
-import { BootstrapMapIteratorPrototype } from '../intrinsics/MapIteratorPrototype.mjs';
-import { BootstrapSetIteratorPrototype } from '../intrinsics/SetIteratorPrototype.mjs';
-import { BootstrapStringIteratorPrototype } from '../intrinsics/StringIteratorPrototype.mjs';
-import { BootstrapRegExpStringIteratorPrototype } from '../intrinsics/RegExpStringIteratorPrototype.mjs';
-import { BootstrapForInIteratorPrototype } from '../intrinsics/ForInIteratorPrototype.mjs';
-import { BootstrapMapPrototype } from '../intrinsics/MapPrototype.mjs';
-import { BootstrapMap } from '../intrinsics/Map.mjs';
-import { BootstrapSetPrototype } from '../intrinsics/SetPrototype.mjs';
-import { BootstrapSet } from '../intrinsics/Set.mjs';
-import { BootstrapGeneratorFunctionPrototypePrototype } from '../intrinsics/GeneratorFunctionPrototypePrototype.mjs';
-import { BootstrapGeneratorFunctionPrototype } from '../intrinsics/GeneratorFunctionPrototype.mjs';
-import { BootstrapGeneratorFunction } from '../intrinsics/GeneratorFunction.mjs';
-import { BootstrapAsyncFunctionPrototype } from '../intrinsics/AsyncFunctionPrototype.mjs';
-import { BootstrapAsyncFunction } from '../intrinsics/AsyncFunction.mjs';
-import { BootstrapAsyncGeneratorFunctionPrototypePrototype } from '../intrinsics/AsyncGeneratorFunctionPrototypePrototype.mjs';
-import { BootstrapAsyncGeneratorFunctionPrototype } from '../intrinsics/AsyncGeneratorFunctionPrototype.mjs';
-import { BootstrapAsyncGeneratorFunction } from '../intrinsics/AsyncGeneratorFunction.mjs';
-import { BootstrapAsyncFromSyncIteratorPrototype } from '../intrinsics/AsyncFromSyncIteratorPrototype.mjs';
-import { BootstrapArrayBuffer } from '../intrinsics/ArrayBuffer.mjs';
-import { BootstrapArrayBufferPrototype } from '../intrinsics/ArrayBufferPrototype.mjs';
-import { BootstrapJSON } from '../intrinsics/JSON.mjs';
-import { BootstrapEval } from '../intrinsics/eval.mjs';
-import { BootstrapIsFinite } from '../intrinsics/isFinite.mjs';
-import { BootstrapIsNaN } from '../intrinsics/isNaN.mjs';
-import { BootstrapParseFloat } from '../intrinsics/parseFloat.mjs';
-import { BootstrapParseInt } from '../intrinsics/parseInt.mjs';
-import { BootstrapURIHandling } from '../intrinsics/URIHandling.mjs';
-import { BootstrapThrowTypeError } from '../intrinsics/ThrowTypeError.mjs';
-import { BootstrapTypedArray } from '../intrinsics/TypedArray.mjs';
-import { BootstrapTypedArrayPrototype } from '../intrinsics/TypedArrayPrototype.mjs';
-import { BootstrapTypedArrayConstructors } from '../intrinsics/TypedArrayConstructors.mjs';
-import { BootstrapTypedArrayPrototypes } from '../intrinsics/TypedArrayPrototypes.mjs';
-import { BootstrapDataView } from '../intrinsics/DataView.mjs';
-import { BootstrapDataViewPrototype } from '../intrinsics/DataViewPrototype.mjs';
-import { BootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mjs';
-import { BootstrapWeakMap } from '../intrinsics/WeakMap.mjs';
-import { BootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mjs';
-import { BootstrapWeakSet } from '../intrinsics/WeakSet.mjs';
-import { BootstrapAggregateError } from '../intrinsics/AggregateError.mjs';
-import { BootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mjs';
-import { BootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
-import { BootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
-import { BootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
-import { BootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import { bootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mjs';
+import { bootstrapObject } from '../intrinsics/Object.mjs';
+import { bootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mjs';
+import { bootstrapArray } from '../intrinsics/Array.mjs';
+import { bootstrapBigInt } from '../intrinsics/BigInt.mjs';
+import { bootstrapBigIntPrototype } from '../intrinsics/BigIntPrototype.mjs';
+import { bootstrapBooleanPrototype } from '../intrinsics/BooleanPrototype.mjs';
+import { bootstrapBoolean } from '../intrinsics/Boolean.mjs';
+import { bootstrapNumberPrototype } from '../intrinsics/NumberPrototype.mjs';
+import { bootstrapNumber } from '../intrinsics/Number.mjs';
+import { bootstrapFunctionPrototype } from '../intrinsics/FunctionPrototype.mjs';
+import { bootstrapFunction } from '../intrinsics/Function.mjs';
+import { bootstrapSymbolPrototype } from '../intrinsics/SymbolPrototype.mjs';
+import { bootstrapSymbol } from '../intrinsics/Symbol.mjs';
+import { bootstrapMath } from '../intrinsics/Math.mjs';
+import { bootstrapDatePrototype } from '../intrinsics/DatePrototype.mjs';
+import { bootstrapDate } from '../intrinsics/Date.mjs';
+import { bootstrapRegExpPrototype } from '../intrinsics/RegExpPrototype.mjs';
+import { bootstrapRegExp } from '../intrinsics/RegExp.mjs';
+import { bootstrapPromisePrototype } from '../intrinsics/PromisePrototype.mjs';
+import { bootstrapPromise } from '../intrinsics/Promise.mjs';
+import { bootstrapProxy } from '../intrinsics/Proxy.mjs';
+import { bootstrapReflect } from '../intrinsics/Reflect.mjs';
+import { bootstrapStringPrototype } from '../intrinsics/StringPrototype.mjs';
+import { bootstrapString } from '../intrinsics/String.mjs';
+import { bootstrapErrorPrototype } from '../intrinsics/ErrorPrototype.mjs';
+import { bootstrapError } from '../intrinsics/Error.mjs';
+import { bootstrapNativeError } from '../intrinsics/NativeError.mjs';
+import { bootstrapIteratorPrototype } from '../intrinsics/IteratorPrototype.mjs';
+import { bootstrapAsyncIteratorPrototype } from '../intrinsics/AsyncIteratorPrototype.mjs';
+import { bootstrapArrayIteratorPrototype } from '../intrinsics/ArrayIteratorPrototype.mjs';
+import { bootstrapMapIteratorPrototype } from '../intrinsics/MapIteratorPrototype.mjs';
+import { bootstrapSetIteratorPrototype } from '../intrinsics/SetIteratorPrototype.mjs';
+import { bootstrapStringIteratorPrototype } from '../intrinsics/StringIteratorPrototype.mjs';
+import { bootstrapRegExpStringIteratorPrototype } from '../intrinsics/RegExpStringIteratorPrototype.mjs';
+import { bootstrapForInIteratorPrototype } from '../intrinsics/ForInIteratorPrototype.mjs';
+import { bootstrapMapPrototype } from '../intrinsics/MapPrototype.mjs';
+import { bootstrapMap } from '../intrinsics/Map.mjs';
+import { bootstrapSetPrototype } from '../intrinsics/SetPrototype.mjs';
+import { bootstrapSet } from '../intrinsics/Set.mjs';
+import { bootstrapGeneratorFunctionPrototypePrototype } from '../intrinsics/GeneratorFunctionPrototypePrototype.mjs';
+import { bootstrapGeneratorFunctionPrototype } from '../intrinsics/GeneratorFunctionPrototype.mjs';
+import { bootstrapGeneratorFunction } from '../intrinsics/GeneratorFunction.mjs';
+import { bootstrapAsyncFunctionPrototype } from '../intrinsics/AsyncFunctionPrototype.mjs';
+import { bootstrapAsyncFunction } from '../intrinsics/AsyncFunction.mjs';
+import { bootstrapAsyncGeneratorFunctionPrototypePrototype } from '../intrinsics/AsyncGeneratorFunctionPrototypePrototype.mjs';
+import { bootstrapAsyncGeneratorFunctionPrototype } from '../intrinsics/AsyncGeneratorFunctionPrototype.mjs';
+import { bootstrapAsyncGeneratorFunction } from '../intrinsics/AsyncGeneratorFunction.mjs';
+import { bootstrapAsyncFromSyncIteratorPrototype } from '../intrinsics/AsyncFromSyncIteratorPrototype.mjs';
+import { bootstrapArrayBuffer } from '../intrinsics/ArrayBuffer.mjs';
+import { bootstrapArrayBufferPrototype } from '../intrinsics/ArrayBufferPrototype.mjs';
+import { bootstrapJSON } from '../intrinsics/JSON.mjs';
+import { bootstrapEval } from '../intrinsics/eval.mjs';
+import { bootstrapIsFinite } from '../intrinsics/isFinite.mjs';
+import { bootstrapIsNaN } from '../intrinsics/isNaN.mjs';
+import { bootstrapParseFloat } from '../intrinsics/parseFloat.mjs';
+import { bootstrapParseInt } from '../intrinsics/parseInt.mjs';
+import { bootstrapURIHandling } from '../intrinsics/URIHandling.mjs';
+import { bootstrapThrowTypeError } from '../intrinsics/ThrowTypeError.mjs';
+import { bootstrapTypedArray } from '../intrinsics/TypedArray.mjs';
+import { bootstrapTypedArrayPrototype } from '../intrinsics/TypedArrayPrototype.mjs';
+import { bootstrapTypedArrayConstructors } from '../intrinsics/TypedArrayConstructors.mjs';
+import { bootstrapTypedArrayPrototypes } from '../intrinsics/TypedArrayPrototypes.mjs';
+import { bootstrapDataView } from '../intrinsics/DataView.mjs';
+import { bootstrapDataViewPrototype } from '../intrinsics/DataViewPrototype.mjs';
+import { bootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mjs';
+import { bootstrapWeakMap } from '../intrinsics/WeakMap.mjs';
+import { bootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mjs';
+import { bootstrapWeakSet } from '../intrinsics/WeakSet.mjs';
+import { bootstrapAggregateError } from '../intrinsics/AggregateError.mjs';
+import { bootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mjs';
+import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
+import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
+import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
+import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -143,111 +143,111 @@ export function CreateIntrinsics(realmRec) {
 
   intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
 
-  BootstrapFunctionPrototype(realmRec);
-  BootstrapObjectPrototype(realmRec);
-  BootstrapThrowTypeError(realmRec);
+  bootstrapFunctionPrototype(realmRec);
+  bootstrapObjectPrototype(realmRec);
+  bootstrapThrowTypeError(realmRec);
 
-  BootstrapEval(realmRec);
-  BootstrapIsFinite(realmRec);
-  BootstrapIsNaN(realmRec);
-  BootstrapParseFloat(realmRec);
-  BootstrapParseInt(realmRec);
-  BootstrapURIHandling(realmRec);
+  bootstrapEval(realmRec);
+  bootstrapIsFinite(realmRec);
+  bootstrapIsNaN(realmRec);
+  bootstrapParseFloat(realmRec);
+  bootstrapParseInt(realmRec);
+  bootstrapURIHandling(realmRec);
 
-  BootstrapObject(realmRec);
+  bootstrapObject(realmRec);
 
-  BootstrapErrorPrototype(realmRec);
-  BootstrapError(realmRec);
-  BootstrapNativeError(realmRec);
-  BootstrapAggregateErrorPrototype(realmRec);
-  BootstrapAggregateError(realmRec);
+  bootstrapErrorPrototype(realmRec);
+  bootstrapError(realmRec);
+  bootstrapNativeError(realmRec);
+  bootstrapAggregateErrorPrototype(realmRec);
+  bootstrapAggregateError(realmRec);
 
-  BootstrapFunction(realmRec);
+  bootstrapFunction(realmRec);
 
-  BootstrapIteratorPrototype(realmRec);
-  BootstrapAsyncIteratorPrototype(realmRec);
-  BootstrapArrayIteratorPrototype(realmRec);
-  BootstrapMapIteratorPrototype(realmRec);
-  BootstrapSetIteratorPrototype(realmRec);
-  BootstrapStringIteratorPrototype(realmRec);
-  BootstrapRegExpStringIteratorPrototype(realmRec);
-  BootstrapForInIteratorPrototype(realmRec);
+  bootstrapIteratorPrototype(realmRec);
+  bootstrapAsyncIteratorPrototype(realmRec);
+  bootstrapArrayIteratorPrototype(realmRec);
+  bootstrapMapIteratorPrototype(realmRec);
+  bootstrapSetIteratorPrototype(realmRec);
+  bootstrapStringIteratorPrototype(realmRec);
+  bootstrapRegExpStringIteratorPrototype(realmRec);
+  bootstrapForInIteratorPrototype(realmRec);
 
-  BootstrapStringPrototype(realmRec);
-  BootstrapString(realmRec);
+  bootstrapStringPrototype(realmRec);
+  bootstrapString(realmRec);
 
-  BootstrapArrayPrototype(realmRec);
-  BootstrapArray(realmRec);
+  bootstrapArrayPrototype(realmRec);
+  bootstrapArray(realmRec);
 
-  BootstrapBooleanPrototype(realmRec);
-  BootstrapBoolean(realmRec);
+  bootstrapBooleanPrototype(realmRec);
+  bootstrapBoolean(realmRec);
 
-  BootstrapNumberPrototype(realmRec);
-  BootstrapNumber(realmRec);
+  bootstrapNumberPrototype(realmRec);
+  bootstrapNumber(realmRec);
 
-  BootstrapBigIntPrototype(realmRec);
-  BootstrapBigInt(realmRec);
+  bootstrapBigIntPrototype(realmRec);
+  bootstrapBigInt(realmRec);
 
-  BootstrapSymbolPrototype(realmRec);
-  BootstrapSymbol(realmRec);
+  bootstrapSymbolPrototype(realmRec);
+  bootstrapSymbol(realmRec);
 
-  BootstrapPromisePrototype(realmRec);
-  BootstrapPromise(realmRec);
+  bootstrapPromisePrototype(realmRec);
+  bootstrapPromise(realmRec);
 
-  BootstrapProxy(realmRec);
+  bootstrapProxy(realmRec);
 
-  BootstrapReflect(realmRec);
+  bootstrapReflect(realmRec);
 
-  BootstrapMath(realmRec);
+  bootstrapMath(realmRec);
 
-  BootstrapDatePrototype(realmRec);
-  BootstrapDate(realmRec);
+  bootstrapDatePrototype(realmRec);
+  bootstrapDate(realmRec);
 
-  BootstrapRegExpPrototype(realmRec);
-  BootstrapRegExp(realmRec);
+  bootstrapRegExpPrototype(realmRec);
+  bootstrapRegExp(realmRec);
 
-  BootstrapSetPrototype(realmRec);
-  BootstrapSet(realmRec);
+  bootstrapSetPrototype(realmRec);
+  bootstrapSet(realmRec);
 
-  BootstrapMapPrototype(realmRec);
-  BootstrapMap(realmRec);
+  bootstrapMapPrototype(realmRec);
+  bootstrapMap(realmRec);
 
-  BootstrapGeneratorFunctionPrototypePrototype(realmRec);
-  BootstrapGeneratorFunctionPrototype(realmRec);
-  BootstrapGeneratorFunction(realmRec);
+  bootstrapGeneratorFunctionPrototypePrototype(realmRec);
+  bootstrapGeneratorFunctionPrototype(realmRec);
+  bootstrapGeneratorFunction(realmRec);
 
-  BootstrapAsyncFunctionPrototype(realmRec);
-  BootstrapAsyncFunction(realmRec);
+  bootstrapAsyncFunctionPrototype(realmRec);
+  bootstrapAsyncFunction(realmRec);
 
-  BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
-  BootstrapAsyncGeneratorFunctionPrototype(realmRec);
-  BootstrapAsyncGeneratorFunction(realmRec);
+  bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
+  bootstrapAsyncGeneratorFunctionPrototype(realmRec);
+  bootstrapAsyncGeneratorFunction(realmRec);
 
-  BootstrapAsyncFromSyncIteratorPrototype(realmRec);
+  bootstrapAsyncFromSyncIteratorPrototype(realmRec);
 
-  BootstrapArrayBufferPrototype(realmRec);
-  BootstrapArrayBuffer(realmRec);
+  bootstrapArrayBufferPrototype(realmRec);
+  bootstrapArrayBuffer(realmRec);
 
-  BootstrapTypedArrayPrototype(realmRec);
-  BootstrapTypedArray(realmRec);
-  BootstrapTypedArrayPrototypes(realmRec);
-  BootstrapTypedArrayConstructors(realmRec);
+  bootstrapTypedArrayPrototype(realmRec);
+  bootstrapTypedArray(realmRec);
+  bootstrapTypedArrayPrototypes(realmRec);
+  bootstrapTypedArrayConstructors(realmRec);
 
-  BootstrapDataViewPrototype(realmRec);
-  BootstrapDataView(realmRec);
+  bootstrapDataViewPrototype(realmRec);
+  bootstrapDataView(realmRec);
 
-  BootstrapJSON(realmRec);
+  bootstrapJSON(realmRec);
 
-  BootstrapWeakMapPrototype(realmRec);
-  BootstrapWeakMap(realmRec);
-  BootstrapWeakSetPrototype(realmRec);
-  BootstrapWeakSet(realmRec);
+  bootstrapWeakMapPrototype(realmRec);
+  bootstrapWeakMap(realmRec);
+  bootstrapWeakSetPrototype(realmRec);
+  bootstrapWeakSet(realmRec);
 
-  BootstrapWeakRefPrototype(realmRec);
-  BootstrapWeakRef(realmRec);
+  bootstrapWeakRefPrototype(realmRec);
+  bootstrapWeakRef(realmRec);
 
-  BootstrapFinalizationRegistryPrototype(realmRec);
-  BootstrapFinalizationRegistry(realmRec);
+  bootstrapFinalizationRegistryPrototype(realmRec);
+  bootstrapFinalizationRegistry(realmRec);
 
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 

@@ -72,7 +72,7 @@ function RegExpStringIteratorPrototype_next(args, { thisValue }) {
   }
 }
 
-export function BootstrapRegExpStringIteratorPrototype(realmRec) {
+export function bootstrapRegExpStringIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', RegExpStringIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');

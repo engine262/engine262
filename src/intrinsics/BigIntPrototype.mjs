@@ -63,7 +63,7 @@ function BigIntProto_valueOf(args, { thisValue }) {
   return Q(thisBigIntValue(thisValue));
 }
 
-export function BootstrapBigIntPrototype(realmRec) {
+export function bootstrapBigIntPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['toLocaleString', BigIntProto_toLocalString, 0],
     ['toString', BigIntProto_toString, 0],

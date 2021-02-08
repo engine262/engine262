@@ -73,7 +73,7 @@ function ParseFloat([string = Value.undefined]) {
   return new Value(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
-export function BootstrapParseFloat(realmRec) {
+export function bootstrapParseFloat(realmRec) {
   const fn = CreateBuiltinFunction(ParseFloat, [], realmRec);
   X(SetFunctionName(fn, new Value('parseFloat')));
   X(SetFunctionLength(fn, new Value(1)));

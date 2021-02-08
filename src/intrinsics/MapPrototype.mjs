@@ -208,7 +208,7 @@ function MapProto_values(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'value'));
 }
 
-export function BootstrapMapPrototype(realmRec) {
+export function bootstrapMapPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['clear', MapProto_clear, 0],
     ['delete', MapProto_delete, 1],

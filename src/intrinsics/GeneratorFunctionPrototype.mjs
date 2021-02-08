@@ -3,7 +3,7 @@ import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-export function BootstrapGeneratorFunctionPrototype(realmRec) {
+export function bootstrapGeneratorFunctionPrototype(realmRec) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
 
   const generator = bootstrapPrototype(realmRec, [

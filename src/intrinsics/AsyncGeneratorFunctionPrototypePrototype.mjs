@@ -38,7 +38,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
   return X(AsyncGeneratorEnqueue(generator, completion));
 }
 
-export function BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
+export function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', AsyncGeneratorPrototype_next, 1],
     ['return', AsyncGeneratorPrototype_return, 1],

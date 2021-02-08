@@ -30,7 +30,7 @@ import {
   Descriptor, Type, Value, wellKnownSymbols,
 } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
-import { ArrayProto_sortBody, BootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
 // #sec-get-%typedarray%.prototype.buffer
 function TypedArrayProto_buffer(args, { thisValue }) {
@@ -823,7 +823,7 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   return Q(Get(O, X(ToString(new Value(k)))));
 }
 
-export function BootstrapTypedArrayPrototype(realmRec) {
+export function bootstrapTypedArrayPrototype(realmRec) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
   Assert(Type(ArrayProto_toString) === 'Object');
 
@@ -850,7 +850,7 @@ export function BootstrapTypedArrayPrototype(realmRec) {
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  BootstrapArrayPrototypeShared(
+  bootstrapArrayPrototypeShared(
     realmRec,
     proto,
     (thisValue) => {

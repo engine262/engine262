@@ -105,7 +105,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   return newO;
 }
 
-export function BootstrapArrayBufferPrototype(realmRec) {
+export function bootstrapArrayBufferPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['slice', ArrayBufferProto_slice, 2],

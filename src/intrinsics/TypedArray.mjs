@@ -134,7 +134,7 @@ function TypedArray_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapTypedArray(realmRec) {
+export function bootstrapTypedArray(realmRec) {
   const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [
     ['from', TypedArray_from, 1],
     ['of', TypedArray_of, 0],

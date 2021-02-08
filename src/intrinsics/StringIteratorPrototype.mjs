@@ -66,7 +66,7 @@ function StringIteratorPrototype_next(args, { thisValue }) {
   return CreateIterResultObject(resultString, Value.false);
 }
 
-export function BootstrapStringIteratorPrototype(realmRec) {
+export function bootstrapStringIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', StringIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');

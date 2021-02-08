@@ -1,7 +1,7 @@
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-export function BootstrapAggregateErrorPrototype(realmRec) {
+export function bootstrapAggregateErrorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['name', new Value('AggregateError')],
     ['message', new Value('')],

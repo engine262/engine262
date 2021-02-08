@@ -787,7 +787,7 @@ function RegExpProto_unicodeGetter(args, { thisValue }) {
   return Value.false;
 }
 
-export function BootstrapRegExpPrototype(realmRec) {
+export function bootstrapRegExpPrototype(realmRec) {
   const proto = bootstrapPrototype(
     realmRec,
     [

@@ -96,7 +96,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   return new Value(sign * number);
 }
 
-export function BootstrapParseInt(realmRec) {
+export function bootstrapParseInt(realmRec) {
   const fn = CreateBuiltinFunction(ParseInt, [], realmRec);
   X(SetFunctionName(fn, new Value('parseInt')));
   X(SetFunctionLength(fn, new Value(2)));

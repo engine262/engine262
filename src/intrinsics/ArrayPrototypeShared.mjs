@@ -112,7 +112,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
   return obj;
 }
 
-export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
+export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   // 22.1.3.5 #sec-array.prototype.every
   // 22.2.3.7 #sec-%typedarray%.prototype.every
   function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], { thisValue }) {

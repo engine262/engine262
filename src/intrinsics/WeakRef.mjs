@@ -24,7 +24,7 @@ function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
   return weakRef;
 }
 
-export function BootstrapWeakRef(realmRec) {
+export function bootstrapWeakRef(realmRec) {
   const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
 
   realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;

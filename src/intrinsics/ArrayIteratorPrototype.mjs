@@ -86,7 +86,7 @@ function ArrayIteratorPrototype_next(args, { thisValue }) {
   return CreateIterResultObject(result, Value.false);
 }
 
-export function BootstrapArrayIteratorPrototype(realmRec) {
+export function bootstrapArrayIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', ArrayIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');

@@ -261,7 +261,7 @@ function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
   return Value.undefined;
 }
 
-export function BootstrapObjectPrototype(realmRec) {
+export function bootstrapObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
 
   assignProps(realmRec, proto, [
