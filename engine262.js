@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 149a9b8bf8fd5a66d63fe0af1116bb3676e4e8b2
+ * engine262 0.0.1 7a06b5d8270fecd9a76add0e7ded8b5dd6ffc328
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -157,7 +157,7 @@
 
   }
   class OutOfRange extends RangeError {
-    /* istanbul ignore next */
+    /* c8 ignore next */
     constructor(fn, detail) {
       super(`${fn}() argument out of range`);
       this.detail = detail;
@@ -176,7 +176,7 @@
       if (done) {
         return value;
       }
-      /* istanbul ignore next */
+      /* c8 ignore next */
 
 
       steps += 1;
@@ -202,7 +202,7 @@
       let _temp = value();
 
       Assert(!(_temp instanceof AbruptCompletion), "value()" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -449,7 +449,7 @@
       case 'StringLiteral':
         return new Value(node.value);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('StringValue', node);
     }
@@ -1279,7 +1279,7 @@
       case 'BindingRestElement':
         return false;
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('IsSimpleParameterList', node);
     }
@@ -1353,7 +1353,7 @@
       case 'Elision':
         return false;
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ContainsExpression', node);
     }
@@ -1584,7 +1584,7 @@
               return [entry];
             }
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('ExportEntries', node);
         }
@@ -2891,7 +2891,7 @@
           case !!node.NamedImports:
             return ImportEntriesForModule(node.NamedImports, module);
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('ImportEntriesForModule', node);
         }
@@ -2973,7 +2973,7 @@
           return [entry];
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ImportEntriesForModule', node);
     }
@@ -3053,7 +3053,7 @@
       case 'NamedExports':
         return ExportEntriesForModule(node.ExportsList, module);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ExportEntriesForModule', node);
     }
@@ -3080,7 +3080,7 @@
               case 'r':
                 return 0x000D;
 
-              /*istanbul ignore next*/
+              /*c8 ignore next*/
               default:
                 throw new OutOfRange('Evaluate_CharacterEscape', node);
             }
@@ -3114,7 +3114,7 @@
               return ch;
             }
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('Evaluate_CharacterEscape', node);
         }
@@ -3133,7 +3133,7 @@
           case 'HexLeadSurrogate' in node:
             return node.HexLeadSurrogate;
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('Evaluate_CharacterEscape', node);
         }
@@ -3152,7 +3152,7 @@
               return ch;
             }
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('CharacterValue', node);
         }
@@ -3170,12 +3170,12 @@
           case !!node.CharacterEscape:
             return CharacterValue(node.CharacterEscape);
 
-          /*istanbul ignore next*/
+          /*c8 ignore next*/
           default:
             throw new OutOfRange('CharacterValue', node);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('CharacterValue', node);
     }
@@ -3235,7 +3235,7 @@
     let _temp = UTF16SurrogatePairToCodePoint(first, second);
 
     Assert(!(_temp instanceof AbruptCompletion), "UTF16SurrogatePairToCodePoint(first, second)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -3278,7 +3278,7 @@
       let _temp = CodePointAt(string, position);
 
       Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(string, position)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -3304,7 +3304,7 @@
       let _temp = CodePointToUTF16CodeUnits(cp);
 
       Assert(!(_temp instanceof AbruptCompletion), "CodePointToUTF16CodeUnits(cp)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -3329,7 +3329,7 @@
       let _temp = CodePointAt(string, k);
 
       Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(string, k)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -3401,7 +3401,7 @@
       case 'StringLiteral':
         return StringValue(Literal);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_Literal', Literal);
     }
@@ -3419,13 +3419,13 @@
 
     if (!BindingIdentifier) {
       let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value(''));
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -3698,7 +3698,7 @@
       case 'ExpressionBody':
         return yield* Evaluate_ExpressionBody(node);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate', node);
     }
@@ -4015,7 +4015,7 @@
     __proto__: null
   };
   ['return', 'await', 'yield', 'parameters', 'newTarget', 'importMeta', 'superCall', 'superProperty', 'in', 'default', 'module'].forEach((name, i) => {
-    /* istanbul ignore next */
+    /* c8 ignore next */
     if (i > 31) {
       throw new RangeError(name);
     }
@@ -4141,7 +4141,7 @@
       case 'ClassDeclaration':
         return getDeclarations(node.BindingIdentifier);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('getDeclarations', node);
     }
@@ -4311,7 +4311,7 @@
           return scope;
         }
       }
-      /* istanbul ignore next */
+      /* c8 ignore next */
 
 
       throw new RangeError();
@@ -4325,7 +4325,7 @@
           return scope;
         }
       }
-      /* istanbul ignore next */
+      /* c8 ignore next */
 
 
       throw new RangeError();
@@ -4416,7 +4416,7 @@
             break;
 
           default:
-            /* istanbul ignore next */
+            /* c8 ignore next */
             throw new RangeError(type);
         }
       });
@@ -9155,13 +9155,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // d. Let superclass be ? GetValue(superclassRef).
 
       let _temp = GetValue(superclassRef);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -9235,7 +9235,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp3 = yield* DefineMethod(constructor, proto, constructorParent);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "yield* DefineMethod(constructor, proto, constructorParent)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -9316,11 +9316,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (propKey instanceof AbruptCompletion) {
       return propKey;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (propKey instanceof Completion) {
@@ -9361,7 +9361,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'ClassElement':
         return DefineMethod(node.MethodDefinition, object, functionPrototype);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('DefineMethod', node);
     }
@@ -9393,7 +9393,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp = ToString(nbr);
 
           Assert(!(_temp instanceof AbruptCompletion), "ToString(nbr)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -9408,13 +9408,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName); // 2. Let propName be ? GetValue(exprValue).
 
           let _temp2 = GetValue(exprValue);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp2 instanceof AbruptCompletion) {
             return _temp2;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp2 instanceof Completion) {
@@ -9458,7 +9458,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case '-':
         return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
     }
@@ -9575,7 +9575,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           type: 'Elision'
         };
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('refineLeftHandSideExpression', node.type);
     }
@@ -9598,11 +9598,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // a. Let lref be the result of evaluating LeftHandSideExpression.
         let lref = yield* Evaluate(LeftHandSideExpression); // b. ReturnIfAbrupt(lref).
 
-        /* istanbul ignore if */
+        /* c8 ignore if */
         if (lref instanceof AbruptCompletion) {
           return lref;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (lref instanceof Completion) {
@@ -9620,13 +9620,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const rref = yield* Evaluate(AssignmentExpression); // ii. Let rval be ? GetValue(rref).
 
           let _temp = GetValue(rref);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof Completion) {
@@ -9697,7 +9697,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp6 = ToBoolean(lval);
 
       Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -9952,13 +9952,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(CoalesceExpressionHead); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -10008,13 +10008,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
 
     let _temp = GetValue(exprRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -10060,7 +10060,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = GetActiveScriptOrModule();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10072,13 +10072,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const argRef = yield* Evaluate(AssignmentExpression); // 3. Let specifier be ? GetValue(argRef).
 
     let _temp2 = GetValue(argRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -10099,7 +10099,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let specifierString = ToString(specifier); // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (specifierString instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
 
@@ -10109,7 +10109,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       return promiseCapability.Promise;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (specifierString instanceof Completion) {
@@ -10150,13 +10150,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ? GetValue(exprRef).
 
     let _temp = GetValue(exprRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -10186,13 +10186,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           const lhs = yield* Evaluate(LeftHandSideExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
 
           let _temp4 = GetValue(lhs);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp4 instanceof AbruptCompletion) {
             return _temp4;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp4 instanceof Completion) {
@@ -10214,7 +10214,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp2 = TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit);
 
           Assert(!(_temp2 instanceof AbruptCompletion), "TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp2 instanceof Completion) {
             _temp2 = _temp2.Value;
@@ -10388,7 +10388,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return newValue;
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_UpdateExpression', operator);
     }
@@ -10415,13 +10415,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
       let _temp = env.HasRestrictedGlobalProperty(name);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -10609,7 +10609,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -10770,7 +10770,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'AsyncGeneratorDeclaration':
         return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
     }
@@ -10806,11 +10806,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     for (const StatementListItem of StatementList.slice(1)) {
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (sl instanceof AbruptCompletion) {
         return sl;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (sl instanceof Completion) {
@@ -10858,13 +10858,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const bindingId = StringValue(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId).
 
       let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -10930,11 +10930,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const VariableDeclaration of VariableDeclarationList) {
       next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
 
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (next instanceof Completion) {
@@ -10985,13 +10985,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const ref = yield* Evaluate(memberExpr); // 5. Let func be ? GetValue(ref).
 
     let _temp = GetValue(ref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -11060,13 +11060,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = yield* ArgumentListEvaluation(args);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -11129,7 +11129,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = ArrayCreate(new Value(count));
 
     Assert(!(_temp instanceof AbruptCompletion), "ArrayCreate(new Value(count))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -11258,13 +11258,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             const subRef = yield* Evaluate(Expression);
 
             let _temp9 = GetValue(subRef);
-            /* istanbul ignore if */
+            /* c8 ignore if */
 
 
             if (_temp9 instanceof AbruptCompletion) {
               return _temp9;
             }
-            /* istanbul ignore if */
+            /* c8 ignore if */
 
 
             if (_temp9 instanceof Completion) {
@@ -11278,7 +11278,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return [siteObj, ...restSub];
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
     }
@@ -11399,7 +11399,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
         return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
     }
@@ -11416,13 +11416,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     FunctionStatementList
   }, functionObject, argumentsList) {
     let _temp = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -11482,7 +11482,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp4 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
 
     Assert(!(_temp4 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -11659,7 +11659,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'AsyncConciseBody':
         return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('EvaluateBody', Body);
     }
@@ -11759,7 +11759,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = env.CreateMutableBinding(paramName, Value.false);
 
         Assert(!(_temp instanceof AbruptCompletion), "env.CreateMutableBinding(paramName, Value.false)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -11827,13 +11827,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (hasDuplicates) {
       let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp5 instanceof AbruptCompletion) {
         return _temp5;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp5 instanceof Completion) {
@@ -12010,13 +12010,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     for (const FormalParameter of FormalParameters.slice(0, -1)) {
       let _temp = yield* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -12083,11 +12083,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } // c. ReturnIfAbrupt(next).
 
 
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (next instanceof Completion) {
@@ -12175,7 +12175,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp5 = ArrayCreate(new Value(0));
 
       Assert(!(_temp5 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -12493,13 +12493,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const exprRef = yield* Evaluate(Expression); // 1. Let exprValue be ? GetValue(exprRef).
 
     let _temp = GetValue(exprRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -12511,7 +12511,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = GetGeneratorKind();
 
     Assert(!(_temp2 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -12558,13 +12558,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
     let _temp = GetValue(baseReference);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -12622,7 +12622,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case !!MemberExpression.IdentifierName:
         return Evaluate_MemberExpression_IdentifierName(MemberExpression);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
     }
@@ -12633,13 +12633,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const propertyNameReference = yield* Evaluate(expression); // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
 
     let _temp = GetValue(propertyNameReference);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -12722,7 +12722,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = ResolveBinding(bindingId, undefined, strict);
 
       Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -12740,13 +12740,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const rhs = yield* Evaluate(Initializer); // b. Let value be ? GetValue(rhs).
 
         let _temp2 = GetValue(rhs);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp2 instanceof AbruptCompletion) {
           return _temp2;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp2 instanceof Completion) {
@@ -12801,7 +12801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case !!LexicalBinding.BindingPattern:
         return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding);
     }
@@ -12820,11 +12820,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const LexicalBinding of BindingList) {
       next = yield* Evaluate_LexicalBinding(LexicalBinding);
 
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (next instanceof Completion) {
@@ -12870,13 +12870,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -12894,13 +12894,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     for (const PropertyDefinition of PropertyDefinitionList) {
       let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -12938,7 +12938,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'AsyncGeneratorMethod':
         return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(PropertyDefinition, object, enumerable);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
     } // PropertyDefinition :
@@ -12975,11 +12975,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (propKey instanceof AbruptCompletion) {
       return propKey;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (propKey instanceof Completion) {
@@ -13042,7 +13042,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp4 = CreateDataPropertyOrThrow(object, propKey, propValue);
 
     Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propKey, propValue)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
@@ -13192,7 +13192,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return DefinePropertyOrThrow(object, propKey, desc);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
     }
@@ -13418,7 +13418,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'ClassElement':
         return PropertyDefinitionEvaluation(node.MethodDefinition, object, enumerable);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('PropertyDefinitionEvaluation', node);
     }
@@ -13532,7 +13532,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -13636,11 +13636,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name); // 2. ReturnIfAbrupt(value).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (value instanceof AbruptCompletion) {
       return value;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (value instanceof Completion) {
@@ -13679,7 +13679,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'ParenthesizedExpression':
         return yield* NamedEvaluation(F.Expression, name);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('NamedEvaluation', F);
     }
@@ -13701,7 +13701,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case !!TryStatement.Catch && !!TryStatement.Finally:
         return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_TryStatement', TryStatement);
     }
@@ -13796,7 +13796,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
 
       Assert(!(_temp instanceof AbruptCompletion), "catchEnv.CreateMutableBinding(argName, Value.false)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -13839,7 +13839,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp = env.CreateImmutableBinding(dn, Value.true);
 
           Assert(!(_temp instanceof AbruptCompletion), "env.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -13914,13 +13914,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           postIndex += 1;
 
           let _temp = Set$1(array, new Value('length'), new Value(postIndex), Value.true);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof Completion) {
@@ -14028,7 +14028,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp9 = ToString(new Value(nextIndex));
 
       Assert(!(_temp9 instanceof AbruptCompletion), "ToString(new Value(nextIndex))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp9 instanceof Completion) {
         _temp9 = _temp9.Value;
@@ -14102,11 +14102,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let len = yield* ArrayAccumulation(ElementList, array, 0); // 3. ReturnIfAbrupt(len).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (len instanceof AbruptCompletion) {
       return len;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (len instanceof Completion) {
@@ -14124,11 +14124,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let ref be the result of evaluating UnaryExpression.
     let ref = yield* Evaluate(UnaryExpression); // 2. ReturnIfAbrupt(ref).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (ref instanceof AbruptCompletion) {
       return ref;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (ref instanceof Completion) {
@@ -14158,7 +14158,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = ToObject(GetBase(ref));
 
       Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -14167,13 +14167,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const baseObj = _temp; // c. Let deleteStatus be ? baseObj.[[Delete]](GetReferencedName(ref)).
 
       let _temp2 = baseObj.Delete(GetReferencedName(ref));
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -14282,7 +14282,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         return new Value('object');
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
     }
@@ -14463,7 +14463,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case '!':
         return yield* Evaluate_UnaryExpression_Bang(UnaryExpression);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
     }
@@ -14484,13 +14484,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(EqualityExpression); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -14523,11 +14523,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 5. Let r be the result of performing Abstract Equality Comparison rval == lval.
           let r = AbstractEqualityComparison(rval, lval); // 6. ReturnIfAbrupt(r).
 
-          /* istanbul ignore if */
+          /* c8 ignore if */
           if (r instanceof AbruptCompletion) {
             return r;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (r instanceof Completion) {
@@ -14550,7 +14550,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp3 = StrictEqualityComparison(rval, lval);
 
           Assert(!(_temp3 instanceof AbruptCompletion), "StrictEqualityComparison(rval, lval)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp3 instanceof Completion) {
             _temp3 = _temp3.Value;
@@ -14567,7 +14567,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_EqualityExpression', operator);
     }
@@ -14584,13 +14584,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(LogicalANDExpression); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -14602,7 +14602,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = ToBoolean(lval);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -14631,13 +14631,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(LogicalORExpression); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -14649,7 +14649,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = ToBoolean(lval);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -14675,13 +14675,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const ref = yield* Evaluate(constructExpr); // 4. Let constructor be ? GetValue(ref).
 
     let _temp = GetValue(ref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -14766,7 +14766,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = GetSuperConstructor();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetSuperConstructor()" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -14775,13 +14775,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const func = _temp; // 4. Let argList be ? ArgumentListEvaluation of Arguments.
 
     let _temp2 = yield* ArgumentListEvaluation(Arguments);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -14844,13 +14844,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true"); // 3. Let baseValue be ? env.GetSuperBase().
 
     let _temp = env.GetSuperBase();
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -14971,13 +14971,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     BindingRestProperty
   }, value, environment) {
     let _temp = yield* PropertyBindingInitialization(BindingPropertyList, value, environment);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -15063,7 +15063,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return result;
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('BindingInitialization', node);
     }
@@ -15091,7 +15091,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = NewDeclarativeEnvironment(scope);
 
     Assert(!(_temp instanceof AbruptCompletion), "NewDeclarativeEnvironment(scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -15148,13 +15148,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = GetMethod(target, wellKnownSymbols.hasInstance);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -15177,7 +15177,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp2 = ToBoolean(_temp3);
 
       Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(Q(Call(instOfHandler, target, [V])))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -15243,11 +15243,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
           let r = AbstractRelationalComparison(lval, rval); // 6. ReturnIfAbrupt(r).
 
-          /* istanbul ignore if */
+          /* c8 ignore if */
           if (r instanceof AbruptCompletion) {
             return r;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (r instanceof Completion) {
@@ -15334,7 +15334,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         return HasProperty(rval, ToPropertyKey(lval));
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('Evaluate_RelationalExpression', operator);
     }
@@ -15379,7 +15379,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp = SetFunctionLength(getter, new Value(0));
 
           Assert(!(_temp instanceof AbruptCompletion), "SetFunctionLength(getter, new Value(0))" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -15559,13 +15559,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. If O.[[ObjectWasVisited]] is false, then
       if (O.ObjectWasVisited === Value.false) {
         let _temp = object.OwnPropertyKeys();
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof Completion) {
@@ -15641,7 +15641,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
-  function BootstrapForInIteratorPrototype(realmRec) {
+  function bootstrapForInIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
     realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
   }
@@ -15686,7 +15686,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'LabelledStatement':
         return LabelledEvaluation_LabelledStatement(node, labelSet);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation', node);
     }
@@ -15793,7 +15793,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return Completion(stmtResult);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
     }
@@ -15821,7 +15821,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'ForAwaitStatement':
         return LabelledEvaluation_IterationStatement_ForAwaitStatement(IterationStatement, labelSet);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
     }
@@ -15854,13 +15854,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const exprRef = yield* Evaluate(Expression); // e. Let exprValue be ? GetValue(exprRef).
 
       let _temp = GetValue(exprRef);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -15872,7 +15872,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp2 = ToBoolean(exprValue);
 
       Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(exprValue)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -16022,11 +16022,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let varDcl be the result of evaluating VariableDeclarationList.
           let varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList); // 2. ReturnIfAbrupt(varDcl).
 
-          /* istanbul ignore if */
+          /* c8 ignore if */
           if (varDcl instanceof AbruptCompletion) {
             return varDcl;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (varDcl instanceof Completion) {
@@ -16129,7 +16129,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
     }
@@ -16203,7 +16203,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, 'async');
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
     }
@@ -16278,7 +16278,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
     }
@@ -16819,13 +16819,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const subRef = yield* Evaluate(Expression); // 3. Let sub be ? GetValue(subRef).
 
       let _temp = GetValue(subRef);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -16860,13 +16860,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const exprRef = yield* Evaluate(C.Expression); // 3. Let clauseSelector be ? GetValue(exprRef).
 
     let _temp = GetValue(exprRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -17083,7 +17083,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return NormalCompletion(V);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('CaseBlockEvaluation');
     }
@@ -17155,7 +17155,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = Get(v, stackString);
 
         Assert(!(_temp instanceof AbruptCompletion), "Get(v, stackString)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -17382,13 +17382,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const calleeRealm = exports.surroundingAgent.currentRealmRecord; // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
 
     let _temp = HostEnsureCanCompileStrings(callerRealm, calleeRealm);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -17556,7 +17556,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           body = f.AsyncGeneratorBody;
           break;
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('kind', kind);
       }
@@ -17581,7 +17581,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp6 = OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope);
 
     Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
@@ -17652,7 +17652,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17748,7 +17748,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv);
 
     Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17801,13 +17801,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const lref = yield* Evaluate(Expression);
 
       let _temp = GetValue(lref);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -17832,7 +17832,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = GetGeneratorKind();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -17846,13 +17846,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const exprRef = yield* Evaluate(AssignmentExpression); // 3. Let value be ? GetValue(exprRef).
 
       let _temp2 = GetValue(exprRef);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -18293,13 +18293,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(ShortCircuitExpression); // 2. Let lval be ! ToBoolean(? GetValue(lref)).
 
     let _temp2 = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -18309,7 +18309,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = ToBoolean(_temp2);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToBoolean(Q(GetValue(lref)))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -18488,7 +18488,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = IsNonNegativeInteger(index);
 
         Assert(!(_temp instanceof AbruptCompletion), "IsNonNegativeInteger(index)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -18579,7 +18579,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         case 'ClassEscape':
           return Evaluate_ClassEscape(node, ...args);
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate', node);
       }
@@ -19022,7 +19022,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             };
           }
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_Assertion', subtype);
       }
@@ -19214,7 +19214,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         case !!Atom.Disjunction:
           return Evaluate(Atom.Disjunction, direction);
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_Atom', Atom);
       }
@@ -19354,7 +19354,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return BackreferenceMatcher(parenIndex + 1, direction);
           }
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_AtomEscape', AtomEscape);
       }
@@ -19474,7 +19474,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return new VirtualCharSet(c => !s.has(c));
           }
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_CharacterClassEscape', node);
       }
@@ -19604,7 +19604,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
           return new ConcreteCharSet([0x002D]);
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
       }
@@ -19624,7 +19624,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return new ConcreteCharSet([Canonicalize(c)]);
           }
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
       }
@@ -19635,13 +19635,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(placement === 'start' || placement === 'end', "placement === 'start' || placement === 'end'");
 
     let _temp = ToString(O);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -19703,13 +19703,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function TrimString(string, where) {
     let _temp = RequireObjectCoercible(string);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -19760,13 +19760,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const exprRef = yield* Evaluate(UnaryExpression); // 2. Let value be ? GetValue(exprRef).
 
     let _temp = GetValue(exprRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -19790,13 +19790,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (!BindingIdentifier) {
       let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value('default'));
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -19868,13 +19868,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const val = yield* Evaluate(Expression); // 2. Let obj be ? ToObject(? GetValue(val)).
 
     let _temp2 = GetValue(val);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -19984,13 +19984,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (ClassDeclaration) {
       let _temp = yield* BindingClassDeclarationEvaluation(ClassDeclaration);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -20077,13 +20077,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
 
     let _temp = GetValue(baseReference);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -20252,13 +20252,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const tagRef = yield* Evaluate(MemberExpression); // 1. Let tagFunc be ? GetValue(tagRef).
 
     let _temp = GetValue(tagRef);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -20285,7 +20285,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = IsNonNegativeInteger(position);
 
     Assert(!(_temp instanceof AbruptCompletion), "IsNonNegativeInteger(position)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -20377,13 +20377,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               const groupName = new Value(replacementStr.substring(i + 2, nextSign));
 
               let _temp2 = Get(namedCaptures, groupName);
-              /* istanbul ignore if */
+              /* c8 ignore if */
 
 
               if (_temp2 instanceof AbruptCompletion) {
                 return _temp2;
               }
-              /* istanbul ignore if */
+              /* c8 ignore if */
 
 
               if (_temp2 instanceof Completion) {
@@ -20469,13 +20469,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. If opText is +, then
     if (opText === '+') {
       let _temp = ToPrimitive(lval);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -20588,13 +20588,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const lref = yield* Evaluate(leftOperand); // 2. Let lval be ? GetValue(lref).
 
     let _temp = GetValue(lref);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -20626,7 +20626,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = GetActiveScriptOrModule();
 
     Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -20725,13 +20725,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       for (const item of node) {
         let _temp = yield* PropertyBindingInitialization(item, value, environment);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof Completion) {
@@ -20749,11 +20749,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let P be the result of evaluating PropertyName.
       let P = yield* Evaluate_PropertyName(node.PropertyName); // 2. ReturnIfAbrupt(P).
 
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (P instanceof AbruptCompletion) {
         return P;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (P instanceof Completion) {
@@ -20792,13 +20792,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function* KeyedBindingInitialization(node, value, environment, propertyName) {
     if (node.type === 'BindingElement') {
       let _temp = GetV(value, propertyName);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -20899,13 +20899,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     AssignmentRestProperty
   }, value) {
     let _temp = RequireObjectCoercible(value);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -20948,11 +20948,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.
     let lref = yield* Evaluate(DestructuringAssignmentTarget); // 2. ReturnIfAbrupt(lref).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (lref instanceof AbruptCompletion) {
       return lref;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (lref instanceof Completion) {
@@ -21371,7 +21371,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp15 = ArrayCreate(new Value(0));
 
           Assert(!(_temp15 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp15 instanceof Completion) {
             _temp15 = _temp15.Value;
@@ -21449,7 +21449,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, A);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('IteratorDestructuringAssignmentEvaluation', node);
     }
@@ -21463,7 +21463,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'ArrayAssignmentPattern':
         return DestructuringAssignmentEvaluation_ArrayAssignmentPattern(node, value);
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('DestructuringAssignmentEvaluation', node);
     }
@@ -21473,13 +21473,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     BindingIdentifier
   }, value, environment, excludedNames) {
     let _temp = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -136425,7 +136425,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
 
       Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -136541,13 +136541,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       for (const e of module.StarExportEntries) {
         let _temp4 = HostResolveImportedModule(module, e.ModuleRequest);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp4 instanceof AbruptCompletion) {
           return _temp4;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp4 instanceof Completion) {
@@ -137194,13 +137194,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const bindings = envRec.bindingObject; // 3. Let foundBinding be ? HasProperty(bindings, N).
 
       let _temp = HasProperty(bindings, N);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -137245,7 +137245,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp3 = ToBoolean(_temp4);
 
         Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(Q(Get(unscopables, N)))" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp3 instanceof Completion) {
           _temp3 = _temp3.Value;
@@ -138172,7 +138172,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         case 'function':
           return CreateBuiltinFunction(value, []);
 
-        /*istanbul ignore next*/
+        /*c8 ignore next*/
         default:
           throw new OutOfRange('new Value', value);
       }
@@ -138287,7 +138287,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = ToInt32(x);
 
       Assert(!(_temp instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -138618,7 +138618,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return new Value(lnum.numberValue() ^ rnum.numberValue());
       // eslint-disable-line no-bitwise
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('NumberBitwiseOp', op);
     }
@@ -138923,7 +138923,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return new Value(x ^ y);
       // eslint-disable-line no-bitwise
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('BigIntBitwiseOp', op);
     }
@@ -139195,6 +139195,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.executionContextStack = new ExecutionContextStack(); // NON-SPEC
 
       this.jobQueue = [];
+      this.scheduledForCleanup = new Set();
       this.hostDefinedOptions = { ...options,
         features: FEATURES.reduce((acc, {
           flag
@@ -139244,7 +139245,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp2 = CreateArrayFromList([]);
 
         Assert(!(_temp2 instanceof AbruptCompletion), "CreateArrayFromList([])" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp2 instanceof Completion) {
           _temp2 = _temp2.Value;
@@ -139397,13 +139398,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
     if (exports.surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
       let _temp4 = exports.surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp4 instanceof Completion) {
@@ -139624,7 +139625,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value.undefined;
   } // #sec-host-cleanup-finalization-registry
 
-  const scheduledForCleanup = new Set();
   function HostEnqueueFinalizationRegistryCleanupJob(fg) {
     if (exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
       let _temp17 = exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
@@ -139637,10 +139637,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp17 = _temp17.Value;
       }
     } else {
-      if (!scheduledForCleanup.has(fg)) {
-        scheduledForCleanup.add(fg);
+      if (!exports.surroundingAgent.scheduledForCleanup.has(fg)) {
+        exports.surroundingAgent.scheduledForCleanup.add(fg);
         exports.surroundingAgent.queueJob('FinalizationCleanup', () => {
-          scheduledForCleanup.delete(fg);
+          exports.surroundingAgent.scheduledForCleanup.delete(fg);
           CleanupFinalizationRegistry(fg);
         });
       }
@@ -139734,19 +139734,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // #sec-returnifabrupt
 
   function ReturnIfAbrupt() {
-    /* istanbul skip next */
+    /* c8 skip next */
     throw new TypeError('ReturnIfAbrupt requires build');
   } // #sec-returnifabrupt-shorthands ? OperationName()
 
   const Q = ReturnIfAbrupt; // #sec-returnifabrupt-shorthands ! OperationName()
 
   function X() {
-    /* istanbul skip next */
+    /* c8 skip next */
     throw new TypeError('X() requires build');
   } // 25.6.1.1.1 #sec-ifabruptrejectpromise
 
   function IfAbruptRejectPromise() {
-    /* istanbul skip next */
+    /* c8 skip next */
     throw new TypeError('IfAbruptRejectPromise requires build');
   }
   function EnsureCompletion(val) {
@@ -139782,13 +139782,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const asyncContext = exports.surroundingAgent.runningExecutionContext;
 
     let _temp = PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), value);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -139801,7 +139801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = CreateBuiltinFunction(stepsFulfilled, ['AsyncContext']);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, ['AsyncContext'])" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -139865,7 +139865,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = HasOwnProperty(map, P);
 
     Assert(!(_temp instanceof AbruptCompletion), "HasOwnProperty(map, P)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -139915,13 +139915,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     let _temp4 = OrdinaryDefineOwnProperty(args, P, newArgDesc);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof Completion) {
@@ -140295,7 +140295,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = IsDataDescriptor(oldLenDesc);
 
       Assert(!(_temp instanceof AbruptCompletion), "IsDataDescriptor(oldLenDesc)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -140409,13 +140409,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     let _temp7 = IsArray(originalArray);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp7 instanceof Completion) {
@@ -140754,13 +140754,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function AllocateArrayBuffer(constructor, byteLength) {
     let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -140773,7 +140773,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = IsNonNegativeInteger(byteLength);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "IsNonNegativeInteger(byteLength)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -141041,7 +141041,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
 
         Assert(!(_temp instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -141123,7 +141123,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp = AsyncGeneratorReject(generator, resultValue);
 
           Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorReject(generator, resultValue)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -141278,13 +141278,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           generator.AsyncGeneratorState = 'awaiting-return';
 
           let _temp10 = PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), completion.Value);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp10 instanceof AbruptCompletion) {
             return _temp10;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp10 instanceof Completion) {
@@ -141470,7 +141470,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = CanonicalNumericIndexString(V);
 
     Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(V)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -141524,13 +141524,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function GetViewValue(view, requestIndex, isLittleEndian, type) {
     let _temp = RequireInternalSlot(view, 'DataView');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -141555,7 +141555,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp3 = ToBoolean(isLittleEndian);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -141891,7 +141891,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = ToInteger(hour);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToInteger(hour)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -142141,7 +142141,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = ToObject(thisArgument);
 
         Assert(!(_temp instanceof AbruptCompletion), "ToObject(thisArgument)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -142192,11 +142192,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 10. ReturnIfAbrupt(result).
 
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
       return result;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (result instanceof Completion) {
@@ -142222,13 +142222,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (kind === 'base') {
       let _temp2 = OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -142635,7 +142635,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = CreateIterResultObject(resultValue, Value.true);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(resultValue, Value.true)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -142654,13 +142654,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function GeneratorValidate(generator) {
     let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -142853,13 +142853,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const evalRealm = exports.surroundingAgent.currentRealmRecord; // 4. Perform ? HostEnsureCanCompileStrings(callerRealm, evalRealm).
 
     let _temp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -142876,7 +142876,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp2 = GetThisEnvironment();
 
       Assert(!(_temp2 instanceof AbruptCompletion), "GetThisEnvironment()" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
@@ -143265,13 +143265,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(Type(V) === 'Object' || Type(V) === 'Null', "Type(V) === 'Object' || Type(V) === 'Null'"); // 2. Let current be ? O.[[GetPrototypeOf]]().
 
     let _temp = O.GetPrototypeOf();
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -143303,7 +143303,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = CanonicalNumericIndexString(P);
 
       Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -143499,13 +143499,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       if (numericIndex !== Value.undefined) {
         let _temp8 = IntegerIndexedElementSet(O, numericIndex, V);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp8 instanceof AbruptCompletion) {
           return _temp8;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp8 instanceof Completion) {
@@ -143759,13 +143759,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!method) {
       if (hint === 'async') {
         let _temp = GetMethod(obj, wellKnownSymbols.asyncIterator);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof Completion) {
@@ -144045,7 +144045,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp13 = CreateDataProperty(obj, new Value('value'), value);
 
     Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), value)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
@@ -144150,7 +144150,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
     let done = IteratorComplete(result);
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (done instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
 
@@ -144160,7 +144160,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       return promiseCapability.Promise;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (done instanceof Completion) {
@@ -144249,13 +144249,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     let _temp = O.Get(P, O);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -144408,7 +144408,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp3 = OrdinaryOwnPropertyKeys(O);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryOwnPropertyKeys(O)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -144485,13 +144485,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function InnerModuleLinking(module, stack, index) {
     if (!(module instanceof CyclicModuleRecord)) {
       let _temp = module.Link();
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -144614,7 +144614,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp6 = HostResolveImportedModule(module, required);
 
       Assert(!(_temp6 instanceof AbruptCompletion), "HostResolveImportedModule(module, required)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -144970,7 +144970,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   function Assert(invariant, source) {
-    /* istanbul ignore next */
+    /* c8 ignore next */
     if (!invariant) {
       throw new TypeError(`Assert failed${source ? `: ${source}` : ''}`.trim());
     }
@@ -145041,13 +145041,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(IsPropertyKey(P), "IsPropertyKey(P)"); // TODO: This should just return Q(O.Get(P, O))
 
     let _temp = O.Get(P, O);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -145441,7 +145441,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp18 = ArrayCreate(new Value(0));
 
     Assert(!(_temp18 instanceof AbruptCompletion), "ArrayCreate(new Value(0))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp18 instanceof Completion) {
       _temp18 = _temp18.Value;
@@ -145923,13 +145923,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function OrdinaryDefineOwnProperty(O, P, Desc) {
     let _temp = O.GetOwnProperty(P);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -146347,7 +146347,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp12 = MakeBasicObject(internalSlotsList);
 
     Assert(!(_temp12 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
@@ -146444,7 +146444,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved'])" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -146629,13 +146629,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     executor.Capability = promiseCapability;
 
     let _temp4 = Construct(C, [executor]);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof Completion) {
@@ -146937,13 +146937,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const target = O.ProxyTarget;
 
     let _temp = GetMethod(handler, new Value('getPrototypeOf'));
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -147986,7 +147986,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp46 = CreateArrayFromList(argumentsList);
 
     Assert(!(_temp46 instanceof AbruptCompletion), "CreateArrayFromList(argumentsList)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp46 instanceof Completion) {
       _temp46 = _temp46.Value;
@@ -148117,13 +148117,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = ToPropertyKey(V);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -148280,7 +148280,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp8 = ToObject(thisValue);
 
     Assert(!(_temp8 instanceof AbruptCompletion), "ToObject(thisValue)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
@@ -148693,7 +148693,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ObjectProto__proto__Set.section = 'https://tc39.es/ecma262/#sec-set-object.prototype.__proto__';
-  function BootstrapObjectPrototype(realmRec) {
+  function bootstrapObjectPrototype(realmRec) {
     const proto = realmRec.Intrinsics['%Object.prototype%'];
     assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0], ['__defineGetter__', ObjectProto__defineGetter__, 2], ['__defineSetter__', ObjectProto__defineSetter__, 2], ['__lookupGetter__', ObjectProto__lookupGetter__, 1], ['__lookupSetter__', ObjectProto__lookupSetter__, 1], ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]]]);
 
@@ -148726,13 +148726,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null, "iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null");
 
     let _temp = GetIterator(iterable);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -148849,7 +148849,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Map_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-map-@@species';
-  function BootstrapMap(realmRec) {
+  function bootstrapMap(realmRec) {
     const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [[wellKnownSymbols.species, [Map_speciesGetter]]]);
     realmRec.Intrinsics['%Map%'] = mapConstructor;
   }
@@ -148872,7 +148872,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = ToObject(value);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToObject(value)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -148886,13 +148886,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function Object_assign([target = Value.undefined, ...sources]) {
     let _temp2 = ToObject(target);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -149707,7 +149707,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Object_values.section = 'https://tc39.es/ecma262/#sec-object.values';
-  function BootstrapObject(realmRec) {
+  function bootstrapObject(realmRec) {
     const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [['assign', Object_assign, 2], ['create', Object_create, 2], ['defineProperties', Object_defineProperties, 2], ['defineProperty', Object_defineProperty, 3], ['entries', Object_entries, 1], ['freeze', Object_freeze, 1], ['fromEntries', Object_fromEntries, 1], ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2], ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1], ['getOwnPropertyNames', Object_getOwnPropertyNames, 1], ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1], ['getPrototypeOf', Object_getPrototypeOf, 1], ['is', Object_is, 2], ['isExtensible', Object_isExtensible, 1], ['isFrozen', Object_isFrozen, 1], ['isSealed', Object_isSealed, 1], ['keys', Object_keys, 1], ['preventExtensions', Object_preventExtensions, 1], ['seal', Object_seal, 1], ['setPrototypeOf', Object_setPrototypeOf, 2], ['values', Object_values, 1]]);
     realmRec.Intrinsics['%Object%'] = objectConstructor;
   }
@@ -149729,7 +149729,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = ToString(new Value(k));
 
       Assert(!(_temp instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -149739,13 +149739,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       if (internalMethodsRestricted) {
         let _temp2 = Get(obj, Pk);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp2 instanceof AbruptCompletion) {
           return _temp2;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp2 instanceof Completion) {
@@ -149899,7 +149899,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     return obj;
   }
-  function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
+  function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
     // 22.1.3.5 #sec-array.prototype.every
     // 22.2.3.7 #sec-%typedarray%.prototype.every
     function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], {
@@ -151628,13 +151628,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = ToObject(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -151695,7 +151695,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp5 = ToString(new Value(k));
 
           Assert(!(_temp5 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp5 instanceof Completion) {
             _temp5 = _temp5.Value;
@@ -153784,7 +153784,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ArrayProto_at.section = 'https://tc39.es/proposal-item-method/#sec-array.prototype.at';
-  function BootstrapArrayPrototype(realmRec) {
+  function bootstrapArrayPrototype(realmRec) {
     let _temp151 = ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%']);
 
     Assert(!(_temp151 instanceof AbruptCompletion), "ArrayCreate(new Value(0), realmRec.Intrinsics['%Object.prototype%'])" + ' returned an abrupt completion');
@@ -153795,7 +153795,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const proto = _temp151;
     assignProps(realmRec, proto, [['concat', ArrayProto_concat, 1], ['copyWithin', ArrayProto_copyWithin, 2], ['entries', ArrayProto_entries, 0], ['fill', ArrayProto_fill, 1], ['filter', ArrayProto_filter, 1], ['flat', ArrayProto_flat, 0], ['flatMap', ArrayProto_flatMap, 1], exports.surroundingAgent.feature('at-method') ? ['at', ArrayProto_at, 1] : undefined, ['keys', ArrayProto_keys, 0], ['map', ArrayProto_map, 1], ['pop', ArrayProto_pop, 0], ['push', ArrayProto_push, 1], ['shift', ArrayProto_shift, 0], ['slice', ArrayProto_slice, 2], ['sort', ArrayProto_sort, 1], ['splice', ArrayProto_splice, 2], ['toString', ArrayProto_toString, 0], ['unshift', ArrayProto_unshift, 1], ['values', ArrayProto_values, 0]]);
-    BootstrapArrayPrototypeShared(realmRec, proto, () => {}, O => Get(O, new Value('length')));
+    bootstrapArrayPrototypeShared(realmRec, proto, () => {}, O => Get(O, new Value('length')));
     proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
     {
       const unscopableList = OrdinaryObjectCreate(Value.null);
@@ -153958,7 +153958,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = CreateDataProperty(array, new Value('0'), len);
 
         Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(array, new Value('0'), len)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -154043,13 +154043,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     let _temp4 = GetMethod(items, wellKnownSymbols.iterator);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp4 instanceof Completion) {
@@ -154380,7 +154380,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Array_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-array-@@species';
-  function BootstrapArray(realmRec) {
+  function bootstrapArray(realmRec) {
     const proto = realmRec.Intrinsics['%Array.prototype%'];
     const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [['from', Array_from, 1], ['isArray', Array_isArray, 1], ['of', Array_of, 0], [wellKnownSymbols.species, [Array_speciesGetter]]]);
     realmRec.Intrinsics['%Array%'] = cons;
@@ -154396,13 +154396,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = ToPrimitive(value, 'number');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -154485,7 +154485,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   BigInt_asUintN.section = 'https://tc39.es/ecma262/#sec-bigint.asuintn';
-  function BootstrapBigInt(realmRec) {
+  function bootstrapBigInt(realmRec) {
     const bigintConstructor = bootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [['asIntN', BigInt_asIntN, 2], ['asUintN', BigInt_asUintN, 2]]);
     realmRec.Intrinsics['%BigInt%'] = bigintConstructor;
   }
@@ -154526,13 +154526,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = thisBigIntValue(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -154574,7 +154574,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp3 = ToString(x);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "ToString(x)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -154602,7 +154602,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   BigIntProto_valueOf.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tostring';
-  function BootstrapBigIntPrototype(realmRec) {
+  function bootstrapBigIntPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toLocaleString', BigIntProto_toLocalString, 0], ['toString', BigIntProto_toString, 0], ['valueOf', BigIntProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');
     realmRec.Intrinsics['%BigInt.prototype%'] = proto;
   }
@@ -154626,13 +154626,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = thisBooleanValue(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -154660,7 +154660,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   BooleanProto_valueOf.section = 'https://tc39.es/ecma262/#sec-boolean.prototype.valueof';
-  function BootstrapBooleanPrototype(realmRec) {
+  function bootstrapBooleanPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.BooleanData = Value.false;
     realmRec.Intrinsics['%Boolean.prototype%'] = proto;
@@ -154672,7 +154672,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = ToBoolean(value);
 
     Assert(!(_temp instanceof AbruptCompletion), "ToBoolean(value)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -154687,13 +154687,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp2 = OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -154708,7 +154708,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   BooleanConstructor.section = 'https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value';
-  function BootstrapBoolean(realmRec) {
+  function bootstrapBoolean(realmRec) {
     const cons = bootstrapConstructor(realmRec, BooleanConstructor, 'Boolean', 1, realmRec.Intrinsics['%Boolean.prototype%'], []);
     realmRec.Intrinsics['%Boolean%'] = cons;
   }
@@ -154732,13 +154732,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = thisNumberValue(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -154812,7 +154812,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp5 = NumberValue.toString(x);
 
       Assert(!(_temp5 instanceof AbruptCompletion), "NumberValue.toString(x)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -154965,7 +154965,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   NumberProto_valueOf.section = 'https://tc39.es/ecma262/#sec-number.prototype.valueof';
-  function BootstrapNumberPrototype(realmRec) {
+  function bootstrapNumberPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toExponential', NumberProto_toExponential, 1], ['toFixed', NumberProto_toFixed, 1], ['toLocaleString', NumberProto_toLocaleString, 0], ['toPrecision', NumberProto_toPrecision, 1], ['toString', NumberProto_toString, 1], ['valueOf', NumberProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.NumberData = new Value(0);
     realmRec.Intrinsics['%Number.prototype%'] = proto;
@@ -154978,13 +154978,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (value !== undefined) {
       let _temp = ToNumeric(value);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -155033,7 +155033,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = IsInteger(number);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "IsInteger(number)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -155083,7 +155083,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Number_isSafeInteger.section = 'https://tc39.es/ecma262/#sec-number.issafeinteger';
-  function BootstrapNumber(realmRec) {
+  function bootstrapNumber(realmRec) {
     const override = {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -155149,13 +155149,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = CreateListFromArrayLike(argArray);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -155216,7 +155216,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp3 = MakeBasicObject(internalSlotsList);
 
     Assert(!(_temp3 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
@@ -155440,7 +155440,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   FunctionProto_hasInstance.section = 'https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance';
-  function BootstrapFunctionPrototype(realmRec) {
+  function bootstrapFunctionPrototype(realmRec) {
     const proto = CreateBuiltinFunction(FunctionProto, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Function.prototype%'] = proto;
     SetFunctionLength(proto, new Value(0));
@@ -155463,7 +155463,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   FunctionConstructor.section = 'https://tc39.es/ecma262/#sec-function-p1-p2-pn-body';
-  function BootstrapFunction(realmRec) {
+  function bootstrapFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
     realmRec.Intrinsics['%Function%'] = cons;
   }
@@ -155498,13 +155498,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const s = thisValue; // 2. Let sym be ? thisSymbolValue(s).
 
     let _temp = thisSymbolValue(s);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -155559,7 +155559,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   SymbolProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive';
-  function BootstrapSymbolPrototype(realmRec) {
+  function bootstrapSymbolPrototype(realmRec) {
     const override = {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -155586,13 +155586,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       descString = Value.undefined;
     } else {
       let _temp = ToString(description);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -155666,7 +155666,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Symbol_keyFor.section = 'https://tc39.es/ecma262/#sec-symbol.keyfor';
-  function BootstrapSymbol(realmRec) {
+  function bootstrapSymbol(realmRec) {
     const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [['for', Symbol_for, 1], ['keyFor', Symbol_keyFor, 1]]);
 
     for (const [name, sym] of Object.entries(wellKnownSymbols)) {
@@ -155689,13 +155689,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function Math_abs([x = Value.undefined]) {
     let _temp = ToNumber(x);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -155780,7 +155780,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp5 = NumberValue.exponentiate(base, exponent);
 
     Assert(!(_temp5 instanceof AbruptCompletion), "NumberValue.exponentiate(base, exponent)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -155844,7 +155844,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
   Math_random.section = 'https://tc39.es/ecma262/#sec-math.random';
-  function BootstrapMath(realmRec) {
+  function bootstrapMath(realmRec) {
     // 20.2.1 #sec-value-properties-of-the-math-object
     const readonly = {
       Writable: Value.false,
@@ -155915,13 +155915,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = thisTimeValue(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -157392,7 +157392,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp71 = StringPad(year, new Value(4), new Value('0'), 'start');
 
     Assert(!(_temp71 instanceof AbruptCompletion), "StringPad(year, new Value(4), new Value('0'), 'start')" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp71 instanceof Completion) {
       _temp71 = _temp71.Value;
@@ -157539,7 +157539,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   DateProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
-  function BootstrapDatePrototype(realmRec) {
+  function bootstrapDatePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
       Writable: Value.false,
       Enumerable: Value.false,
@@ -157563,13 +157563,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return ToDateString(new Value(now));
       } else {
         let _temp = ToNumber(year);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof Completion) {
@@ -157687,7 +157687,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp8 = ToInteger(y);
 
           Assert(!(_temp8 instanceof AbruptCompletion), "ToInteger(y)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp8 instanceof Completion) {
             _temp8 = _temp8.Value;
@@ -157979,7 +157979,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return new Value(parsed);
   }
 
-  function BootstrapDate(realmRec) {
+  function bootstrapDate(realmRec) {
     const cons = bootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [['now', Date_now, 0], ['parse', Date_parse, 1], ['UTC', Date_UTC, 7]]);
     realmRec.Intrinsics['%Date%'] = cons;
   }
@@ -158014,7 +158014,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = CreateIterResultObject(Value.undefined, Value.true);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -158029,13 +158029,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const fullUnicode = O.Unicode;
 
     let _temp2 = RegExpExec(R, S);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -158137,7 +158137,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
-  function BootstrapRegExpStringIteratorPrototype(realmRec) {
+  function bootstrapRegExpStringIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');
     realmRec.Intrinsics['%RegExpStringIteratorPrototype%'] = proto;
   }
@@ -158148,13 +158148,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const R = thisValue;
 
     let _temp = RequireInternalSlot(R, 'RegExpMatcher');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -158332,7 +158332,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp9 = GetStringIndex(S, Input, e);
 
         Assert(!(_temp9 instanceof AbruptCompletion), "GetStringIndex(S, Input, e)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp9 instanceof Completion) {
           _temp9 = _temp9.Value;
@@ -160141,7 +160141,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   RegExpProto_unicodeGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode';
-  function BootstrapRegExpPrototype(realmRec) {
+  function bootstrapRegExpPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['exec', RegExpProto_exec, 1], ['dotAll', [RegExpProto_dotAllGetter]], ['flags', [RegExpProto_flagsGetter]], ['global', [RegExpProto_globalGetter]], ['ignoreCase', [RegExpProto_ignoreCaseGetter]], [wellKnownSymbols.match, RegExpProto_match, 1], [wellKnownSymbols.matchAll, RegExpProto_matchAll, 1], ['multiline', [RegExpProto_multilineGetter]], [wellKnownSymbols.replace, RegExpProto_replace, 2], [wellKnownSymbols.search, RegExpProto_search, 1], ['source', [RegExpProto_sourceGetter]], [wellKnownSymbols.split, RegExpProto_split, 2], ['sticky', [RegExpProto_stickyGetter]], ['test', RegExpProto_test, 1], ['toString', RegExpProto_toString, 0], ['unicode', [RegExpProto_unicodeGetter]]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%RegExp.prototype%'] = proto;
   }
@@ -160150,13 +160150,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     NewTarget
   }) {
     let _temp = IsRegExp(pattern);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -160273,7 +160273,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   RegExp_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp-@@species';
-  function BootstrapRegExp(realmRec) {
+  function bootstrapRegExp(realmRec) {
     const proto = realmRec.Intrinsics['%RegExp.prototype%'];
     const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [[wellKnownSymbols.species, [RegExp_speciesGetter]]]);
     realmRec.Intrinsics['%RegExp%'] = cons;
@@ -160296,13 +160296,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(IsCallable(onFinally) === Value.true, "IsCallable(onFinally) === Value.true");
 
     let _temp = Call(onFinally, Value.undefined);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -160397,7 +160397,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp5 = CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']);
 
       Assert(!(_temp5 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally'])" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -160476,7 +160476,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   PromiseProto_then.section = 'https://tc39.es/ecma262/#sec-promise.prototype.then';
-  function BootstrapPromisePrototype(realmRec) {
+  function bootstrapPromisePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['catch', PromiseProto_catch, 1], ['finally', PromiseProto_finally, 1], ['then', PromiseProto_then, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
     let _temp9 = Get(proto, new Value('then'));
@@ -160506,13 +160506,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', ['PromiseState', 'PromiseResult', 'PromiseFulfillReactions', 'PromiseRejectReactions', 'PromiseIsHandled']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -160631,11 +160631,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } // c. ReturnIfAbrupt(next).
 
 
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (next instanceof AbruptCompletion) {
         return next;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (next instanceof Completion) {
@@ -160702,7 +160702,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp6 = CreateBuiltinFunction(steps, ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
 
       Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
@@ -160777,7 +160777,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     let promiseResolve = GetPromiseResolve(C); // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (promiseResolve instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [promiseResolve.Value]);
 
@@ -160787,7 +160787,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       return promiseCapability.Promise;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (promiseResolve instanceof Completion) {
@@ -161778,7 +161778,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Promise_symbolSpecies.section = 'https://tc39.es/ecma262/#sec-get-promise-@@species';
-  function BootstrapPromise(realmRec) {
+  function bootstrapPromise(realmRec) {
     const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['any', Promise_any, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
     promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
       Writable: Value.false,
@@ -161830,13 +161830,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
     let _temp = ProxyCreate(target, handler);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -161851,7 +161851,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = CreateBuiltinFunction(steps, ['RevocableProxy']);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['RevocableProxy'])" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -161885,7 +161885,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Proxy_revocable.section = 'https://tc39.es/ecma262/#sec-proxy.revocable';
-  function BootstrapProxy(realmRec) {
+  function bootstrapProxy(realmRec) {
     const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, [], realmRec, undefined, Value.true);
     SetFunctionLength(proxyConstructor, new Value(2));
     SetFunctionName(proxyConstructor, new Value('Proxy'));
@@ -161901,13 +161901,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = CreateListFromArrayLike(argumentsList);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -162222,7 +162222,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Reflect_setPrototypeOf.section = 'https://tc39.es/ecma262/#sec-reflect.setprototypeof';
-  function BootstrapReflect(realmRec) {
+  function bootstrapReflect(realmRec) {
     const reflect = bootstrapPrototype(realmRec, [['apply', Reflect_apply, 3], ['construct', Reflect_construct, 2], ['defineProperty', Reflect_defineProperty, 3], ['deleteProperty', Reflect_deleteProperty, 2], ['get', Reflect_get, 2], ['getOwnPropertyDescriptor', Reflect_getOwnPropertyDescriptor, 2], ['getPrototypeOf', Reflect_getPrototypeOf, 1], ['has', Reflect_has, 2], ['isExtensible', Reflect_isExtensible, 1], ['ownKeys', Reflect_ownKeys, 1], ['preventExtensions', Reflect_preventExtensions, 1], ['set', Reflect_set, 3], ['setPrototypeOf', Reflect_setPrototypeOf, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Reflect');
     realmRec.Intrinsics['%Reflect%'] = reflect;
   }
@@ -162278,7 +162278,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = CodePointAt(s.stringValue(), position);
 
     Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(s.stringValue(), position)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -162294,7 +162294,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
-  function BootstrapStringIteratorPrototype(realmRec) {
+  function bootstrapStringIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
     realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
   }
@@ -162318,13 +162318,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     let _temp = RequireObjectCoercible(thisValue);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -162468,7 +162468,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp10 = CodePointAt(S.stringValue(), position);
 
     Assert(!(_temp10 instanceof AbruptCompletion), "CodePointAt(S.stringValue(), position)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
@@ -164410,7 +164410,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   StringProto_at.section = 'https://tc39.es/proposal-item-method/#sec-string.prototype.at';
-  function BootstrapStringPrototype(realmRec) {
+  function bootstrapStringPrototype(realmRec) {
     const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
     assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], exports.surroundingAgent.feature('at-method') ? ['at', StringProto_at, 1] : undefined, ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
     realmRec.Intrinsics['%String.prototype%'] = proto;
@@ -164428,7 +164428,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = SymbolDescriptiveString(value);
 
         Assert(!(_temp instanceof AbruptCompletion), "SymbolDescriptiveString(value)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -164438,13 +164438,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       let _temp2 = ToString(value);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -164679,7 +164679,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   String_raw.section = 'https://tc39.es/ecma262/#sec-string.raw';
-  function BootstrapString(realmRec) {
+  function bootstrapString(realmRec) {
     const stringConstructor = bootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [['fromCharCode', String_fromCharCode, 1], ['fromCodePoint', String_fromCodePoint, 1], ['raw', String_raw, 1]]);
     realmRec.Intrinsics['%String%'] = stringConstructor;
   }
@@ -164696,13 +164696,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = Get(O, new Value('name'));
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -164771,7 +164771,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ErrorProto_toString.section = 'https://tc39.es/ecma262/#sec-error.prototype.tostring';
-  function BootstrapErrorPrototype(realmRec) {
+  function bootstrapErrorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', new Value('')], ['name', new Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Error.prototype%'] = proto;
   }
@@ -164790,13 +164790,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -164829,7 +164829,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -164849,12 +164849,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ErrorConstructor.section = 'https://tc39.es/ecma262/#sec-error-constructor';
-  function BootstrapError(realmRec) {
+  function bootstrapError(realmRec) {
     const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
     realmRec.Intrinsics['%Error%'] = error;
   }
 
-  function BootstrapNativeError(realmRec) {
+  function bootstrapNativeError(realmRec) {
     for (const name of ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
       const proto = bootstrapPrototype(realmRec, [['name', new Value(name)], ['message', new Value('')]], realmRec.Intrinsics['%Error.prototype%']); // #sec-nativeerror
 
@@ -164872,13 +164872,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
         let _temp = OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']);
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof AbruptCompletion) {
           return _temp;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp instanceof Completion) {
@@ -164911,7 +164911,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp3 = DefinePropertyOrThrow(O, new Value('message'), msgDesc);
 
           Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, new Value('message'), msgDesc)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp3 instanceof Completion) {
             _temp3 = _temp3.Value;
@@ -164950,7 +164950,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator';
-  function BootstrapIteratorPrototype(realmRec) {
+  function bootstrapIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.iterator, IteratorPrototype_iterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%IteratorPrototype%'] = proto;
   }
@@ -164963,7 +164963,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AsyncIteratorPrototype_asyncIterator.section = 'https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator';
-  function BootstrapAsyncIteratorPrototype(realmRec) {
+  function bootstrapAsyncIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
   }
@@ -165006,13 +165006,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       len = a.ArrayLength;
     } else {
       let _temp = LengthOfArrayLike(a);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -165043,7 +165043,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = ToString(new Value(index));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "ToString(new Value(index))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -165088,7 +165088,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%-object';
-  function BootstrapArrayIteratorPrototype(realmRec) {
+  function bootstrapArrayIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
     realmRec.Intrinsics['%ArrayIterator.prototype%'] = proto;
   }
@@ -165151,7 +165151,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp = CreateArrayFromList([e.Key, e.Value]);
 
           Assert(!(_temp instanceof AbruptCompletion), "CreateArrayFromList([e.Key, e.Value])" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp instanceof Completion) {
             _temp = _temp.Value;
@@ -165172,7 +165172,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
-  function BootstrapMapIteratorPrototype(realmRec) {
+  function bootstrapMapIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
     realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
   }
@@ -165239,20 +165239,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
-  function BootstrapSetIteratorPrototype(realmRec) {
+  function bootstrapSetIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
     realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
   }
 
   function CreateMapIterator(map, kind) {
     let _temp = RequireInternalSlot(map, 'MapData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -165559,13 +165559,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   MapProto_values.section = 'https://tc39.es/ecma262/#sec-map.prototype.values';
-  function BootstrapMapPrototype(realmRec) {
+  function bootstrapMapPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
     let _temp10 = proto.GetOwnProperty(new Value('entries'));
 
     Assert(!(_temp10 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('entries'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
@@ -165585,13 +165585,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function CreateSetIterator(set, kind) {
     let _temp = RequireInternalSlot(set, 'SetData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -165846,13 +165846,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   SetProto_values.section = 'https://tc39.es/ecma262/#sec-set.prototype.values';
-  function BootstrapSetPrototype(realmRec) {
+  function bootstrapSetPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
     let _temp9 = proto.GetOwnProperty(new Value('values'));
 
     Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('values'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
@@ -165888,13 +165888,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -165989,7 +165989,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Set_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-set-@@species';
-  function BootstrapSet(realmRec) {
+  function bootstrapSet(realmRec) {
     const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [[wellKnownSymbols.species, [Set_speciesGetter]]]);
     realmRec.Intrinsics['%Set%'] = setConstructor;
   }
@@ -166036,12 +166036,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype.throw';
-  function BootstrapGeneratorFunctionPrototypePrototype(realmRec) {
+  function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
     const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
     realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
   }
 
-  function BootstrapGeneratorFunctionPrototype(realmRec) {
+  function bootstrapGeneratorFunctionPrototype(realmRec) {
     const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
     const generator = bootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
       Writable: Value.false
@@ -166055,7 +166055,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, new Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166074,7 +166074,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfunction';
-  function BootstrapGeneratorFunction(realmRec) {
+  function bootstrapGeneratorFunction(realmRec) {
     const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
     const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
 
@@ -166084,7 +166084,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166102,7 +166102,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%GeneratorFunction%'] = cons;
   }
 
-  function BootstrapAsyncFunctionPrototype(realmRec) {
+  function bootstrapAsyncFunctionPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [], realmRec.Intrinsics['%Function.prototype%'], 'AsyncFunction');
     realmRec.Intrinsics['%AsyncFunction.prototype%'] = proto;
   }
@@ -166118,7 +166118,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AsyncFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-async-function-constructor-arguments';
-  function BootstrapAsyncFunction(realmRec) {
+  function bootstrapAsyncFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
     cons.DefineOwnProperty(new Value('prototype'), Descriptor({
       Writable: Value.false,
@@ -166140,7 +166140,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = AsyncGeneratorEnqueue(generator, completion);
 
     Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166198,12 +166198,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AsyncGeneratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw';
-  function BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
+  function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', AsyncGeneratorPrototype_next, 1], ['return', AsyncGeneratorPrototype_return, 1], ['throw', AsyncGeneratorPrototype_throw, 1]], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
     realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'] = proto;
   }
 
-  function BootstrapAsyncGeneratorFunctionPrototype(realmRec) {
+  function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, {
       Writable: Value.false
     }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
@@ -166216,7 +166216,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166235,7 +166235,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
-  function BootstrapAsyncGeneratorFunction(realmRec) {
+  function bootstrapAsyncGeneratorFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
     let _temp = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
@@ -166245,7 +166245,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166277,7 +166277,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
 
     Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -166299,7 +166299,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 7. IfAbruptRejectPromise(result, promiseCapability).
 
 
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
 
@@ -166309,7 +166309,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       return promiseCapability.Promise;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (result instanceof Completion) {
@@ -166548,7 +166548,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AsyncFromSyncIteratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw';
-  function BootstrapAsyncFromSyncIteratorPrototype(realmRec) {
+  function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', AsyncFromSyncIteratorPrototype_next, 0], ['return', AsyncFromSyncIteratorPrototype_return, 0], ['throw', AsyncFromSyncIteratorPrototype_throw, 0]], realmRec.Intrinsics['%AsyncIteratorPrototype%']);
     realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
   }
@@ -166563,13 +166563,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = ToIndex(length);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -166609,7 +166609,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ArrayBuffer_species.section = 'https://tc39.es/ecma262/#sec-get-arraybuffer-@@species';
-  function BootstrapArrayBuffer(realmRec) {
+  function bootstrapArrayBuffer(realmRec) {
     const c = bootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [['isView', ArrayBuffer_isView, 1], [wellKnownSymbols.species, [ArrayBuffer_species]]]);
     realmRec.Intrinsics['%ArrayBuffer%'] = c;
   }
@@ -166621,13 +166621,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
 
     let _temp = RequireInternalSlot(O, 'ArrayBufferData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -166799,7 +166799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ArrayBufferProto_slice.section = 'https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice';
-  function BootstrapArrayBufferPrototype(realmRec) {
+  function bootstrapArrayBufferPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLength]], ['slice', ArrayBufferProto_slice, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
     realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
   }
@@ -166820,20 +166820,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = this.eatWhitespace();
 
       Assert(!(_temp instanceof AbruptCompletion), "this.eatWhitespace()" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
 
       let _temp2 = this.parseValue();
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -168138,7 +168138,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
-  function BootstrapJSON(realmRec) {
+  function bootstrapJSON(realmRec) {
     const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
     realmRec.Intrinsics['%JSON%'] = json;
   }
@@ -168155,7 +168155,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   Eval.section = 'https://tc39.es/ecma262/#sec-eval-x';
-  function BootstrapEval(realmRec) {
+  function bootstrapEval(realmRec) {
     const it = CreateBuiltinFunction(Eval, [], realmRec);
     SetFunctionName(it, new Value('eval'));
     SetFunctionLength(it, new Value(1));
@@ -168164,13 +168164,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function IsFinite([number = Value.undefined]) {
     let _temp = ToNumber(number);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -168189,13 +168189,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   IsFinite.section = 'https://tc39.es/ecma262/#sec-isfinite-number';
-  function BootstrapIsFinite(realmRec) {
+  function bootstrapIsFinite(realmRec) {
     const fn = CreateBuiltinFunction(IsFinite, [], realmRec);
 
     let _temp2 = SetFunctionName(fn, new Value('isFinite'));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isFinite'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -168213,13 +168213,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function IsNaN([number = Value.undefined]) {
     let _temp = ToNumber(number);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -168238,13 +168238,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   IsNaN.section = 'https://tc39.es/ecma262/#sec-isnan-number';
-  function BootstrapIsNaN(realmRec) {
+  function bootstrapIsNaN(realmRec) {
     const fn = CreateBuiltinFunction(IsNaN, [], realmRec);
 
     let _temp2 = SetFunctionName(fn, new Value('isNaN'));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(fn, new Value('isNaN'))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -168262,13 +168262,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function ParseFloat([string = Value.undefined]) {
     let _temp = ToString(string);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -168281,7 +168281,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = TrimString(inputString, 'start');
 
     Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -168363,7 +168363,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ParseFloat.section = 'https://tc39.es/ecma262/#sec-parsefloat-string';
-  function BootstrapParseFloat(realmRec) {
+  function bootstrapParseFloat(realmRec) {
     const fn = CreateBuiltinFunction(ParseFloat, [], realmRec);
 
     let _temp3 = SetFunctionName(fn, new Value('parseFloat'));
@@ -168448,13 +168448,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     let _temp = ToString(string);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -168466,7 +168466,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = TrimString(inputString, 'start');
 
     Assert(!(_temp2 instanceof AbruptCompletion), "TrimString(inputString, 'start')" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -168538,7 +168538,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ParseInt.section = 'https://tc39.es/ecma262/#sec-parseint-string-radix';
-  function BootstrapParseInt(realmRec) {
+  function bootstrapParseInt(realmRec) {
     const fn = CreateBuiltinFunction(ParseInt, [], realmRec);
 
     let _temp4 = SetFunctionName(fn, new Value('parseInt'));
@@ -168685,7 +168685,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = CodePointAt(string, k);
 
         Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(string, k)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -168855,13 +168855,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function decodeURI([encodedURI = Value.undefined]) {
     let _temp2 = ToString(encodedURI);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp2 instanceof Completion) {
@@ -168943,7 +168943,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   encodeURIComponent.section = 'https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent';
-  function BootstrapURIHandling(realmRec) {
+  function bootstrapURIHandling(realmRec) {
     [['decodeURI', decodeURI, 1], ['decodeURIComponent', decodeURIComponent, 1], ['encodeURI', encodeURI, 1], ['encodeURIComponent', encodeURIComponent, 1]].forEach(([name, f, length]) => {
       const fn = CreateBuiltinFunction(f, [], realmRec);
 
@@ -168972,11 +168972,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   ThrowTypeError.section = 'https://tc39.es/ecma262/#sec-%throwtypeerror%';
-  function BootstrapThrowTypeError(realmRec) {
+  function bootstrapThrowTypeError(realmRec) {
     let _temp = CreateBuiltinFunction(ThrowTypeError, [], realmRec, Value.null);
 
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(\n    ThrowTypeError, [], realmRec, Value.null,\n  )" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -169035,13 +169035,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = GetMethod(source, wellKnownSymbols.iterator);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -169081,7 +169081,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp4 = ToString(new Value(k));
 
         Assert(!(_temp4 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -169295,7 +169295,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   TypedArray_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%-@@species';
-  function BootstrapTypedArray(realmRec) {
+  function bootstrapTypedArray(realmRec) {
     const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [['from', TypedArray_from, 1], ['of', TypedArray_of, 0], [wellKnownSymbols.species, [TypedArray_speciesGetter]]]);
     realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
   }
@@ -169307,13 +169307,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
 
     let _temp = RequireInternalSlot(O, 'TypedArrayName');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -169673,7 +169673,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp14 = ToString(new Value(k));
 
       Assert(!(_temp14 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp14 instanceof Completion) {
         _temp14 = _temp14.Value;
@@ -170781,7 +170781,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   TypedArrayProto_at.section = 'https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.at';
-  function BootstrapTypedArrayPrototype(realmRec) {
+  function bootstrapTypedArrayPrototype(realmRec) {
     let _temp61 = Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'));
 
     Assert(!(_temp61 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString'))" + ' returned an abrupt completion');
@@ -170793,7 +170793,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const ArrayProto_toString = _temp61;
     Assert(Type(ArrayProto_toString) === 'Object', "Type(ArrayProto_toString) === 'Object'");
     const proto = bootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_buffer]], ['byteLength', [TypedArrayProto_byteLength]], ['byteOffset', [TypedArrayProto_byteOffset]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], exports.surroundingAgent.feature('at-method') ? ['at', TypedArrayProto_at, 1] : undefined, ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_length]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]]], realmRec.Intrinsics['%Object.prototype%']);
-    BootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
+    bootstrapArrayPrototypeShared(realmRec, proto, thisValue => {
       let _temp62 = ValidateTypedArray(thisValue);
 
       if (_temp62 instanceof AbruptCompletion) {
@@ -170832,7 +170832,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
   }
 
-  function BootstrapTypedArrayConstructors(realmRec) {
+  function bootstrapTypedArrayConstructors(realmRec) {
     Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
       // #sec-typedarray-constructors
       function TypedArrayConstructor(args, {
@@ -170861,13 +170861,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
           let _temp = ToIndex(length);
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof AbruptCompletion) {
             return _temp;
           }
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
 
           if (_temp instanceof Completion) {
@@ -171087,7 +171087,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               let _temp10 = ToString(new Value(k));
 
               Assert(!(_temp10 instanceof AbruptCompletion), "ToString(new Value(k))" + ' returned an abrupt completion');
-              /* istanbul ignore if */
+              /* c8 ignore if */
 
               if (_temp10 instanceof Completion) {
                 _temp10 = _temp10.Value;
@@ -171307,7 +171307,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  function BootstrapTypedArrayPrototypes(realmRec) {
+  function bootstrapTypedArrayPrototypes(realmRec) {
     Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
       const proto = bootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', new Value(info.ElementSize), undefined, {
         Writable: Value.false,
@@ -171327,13 +171327,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = RequireInternalSlot(buffer, 'ArrayBufferData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -171416,7 +171416,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   DataViewConstructor.section = 'https://tc39.es/ecma262/#sec-dataview-constructor';
-  function BootstrapDataView(realmRec) {
+  function bootstrapDataView(realmRec) {
     const dvConstructor = bootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
     realmRec.Intrinsics['%DataView%'] = dvConstructor;
   }
@@ -171428,13 +171428,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const O = thisValue; // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
 
     let _temp = RequireInternalSlot(O, 'DataView');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -171793,7 +171793,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   DataViewProto_setUint32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint32';
-  function BootstrapDataViewPrototype(realmRec) {
+  function bootstrapDataViewPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['buffer', [DataViewProto_buffer]], ['byteLength', [DataViewProto_byteLength]], ['byteOffset', [DataViewProto_byteOffset]], ['getBigInt64', DataViewProto_getBigInt64, 1], ['getBigUint64', DataViewProto_getBigUint64, 1], ['getFloat32', DataViewProto_getFloat32, 1], ['getFloat64', DataViewProto_getFloat64, 1], ['getInt8', DataViewProto_getInt8, 1], ['getInt16', DataViewProto_getInt16, 1], ['getInt32', DataViewProto_getInt32, 1], ['getUint8', DataViewProto_getUint8, 1], ['getUint16', DataViewProto_getUint16, 1], ['getUint32', DataViewProto_getUint32, 1], ['setBigInt64', DataViewProto_setBigInt64, 2], ['setBigUint64', DataViewProto_setBigUint64, 2], ['setFloat32', DataViewProto_setFloat32, 2], ['setFloat64', DataViewProto_setFloat64, 2], ['setInt8', DataViewProto_setInt8, 2], ['setInt16', DataViewProto_setInt16, 2], ['setInt32', DataViewProto_setInt32, 2], ['setUint8', DataViewProto_setUint8, 2], ['setUint16', DataViewProto_setUint16, 2], ['setUint32', DataViewProto_setUint32, 2]], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
     realmRec.Intrinsics['%DataView.prototype%'] = proto;
   }
@@ -171805,13 +171805,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
 
     let _temp = RequireInternalSlot(M, 'WeakMapData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -171964,7 +171964,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakMapProto_set.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.set';
-  function BootstrapWeakMapPrototype(realmRec) {
+  function bootstrapWeakMapPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['delete', WeakMapProto_delete, 1], ['get', WeakMapProto_get, 1], ['has', WeakMapProto_has, 1], ['set', WeakMapProto_set, 2]], realmRec.Intrinsics['%Object.prototype%'], 'WeakMap');
     realmRec.Intrinsics['%WeakMap.prototype%'] = proto;
   }
@@ -171979,13 +171979,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172017,7 +172017,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakMapConstructor.section = 'https://tc39.es/ecma262/#sec-weakmap-constructor';
-  function BootstrapWeakMap(realmRec) {
+  function bootstrapWeakMap(realmRec) {
     const c = bootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
     realmRec.Intrinsics['%WeakMap%'] = c;
   }
@@ -172029,13 +172029,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
 
     let _temp = RequireInternalSlot(S, 'WeakSetData');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172142,7 +172142,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakSetProto_has.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.has';
-  function BootstrapWeakSetPrototype(realmRec) {
+  function bootstrapWeakSetPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['add', WeakSetProto_add, 1], ['delete', WeakSetProto_delete, 1], ['has', WeakSetProto_has, 1]], realmRec.Intrinsics['%Object.prototype%'], 'WeakSet');
     realmRec.Intrinsics['%WeakSet.prototype%'] = proto;
   }
@@ -172157,13 +172157,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172248,7 +172248,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakSetConstructor.section = 'https://tc39.es/ecma262/#sec-weakset-iterable';
-  function BootstrapWeakSet(realmRec) {
+  function bootstrapWeakSet(realmRec) {
     const c = bootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
     realmRec.Intrinsics['%WeakSet%'] = c;
   }
@@ -172267,13 +172267,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172299,7 +172299,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp3 = CreateMethodProperty(O, new Value('message'), msg);
 
       Assert(!(_temp3 instanceof AbruptCompletion), "CreateMethodProperty(O, new Value('message'), msg)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
@@ -172352,13 +172352,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   AggregateErrorConstructor.section = 'https://tc39.es/ecma262/#sec-aggregate-error-constructor';
-  function BootstrapAggregateError(realmRec) {
+  function bootstrapAggregateError(realmRec) {
     const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
     c.Prototype = realmRec.Intrinsics['%Error%'];
     realmRec.Intrinsics['%AggregateError%'] = c;
   }
 
-  function BootstrapAggregateErrorPrototype(realmRec) {
+  function bootstrapAggregateErrorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['name', new Value('AggregateError')], ['message', new Value('')]], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
     realmRec.Intrinsics['%AggregateError.prototype%'] = proto;
   }
@@ -172370,13 +172370,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const weakRef = thisValue; // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
 
     let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172386,7 +172386,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = WeakRefDeref(weakRef);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "WeakRefDeref(weakRef)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -172396,7 +172396,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakRefProto_deref.section = 'https://tc39.es/ecma262/#sec-weak-ref.prototype.deref';
-  function BootstrapWeakRefPrototype(realmRec) {
+  function bootstrapWeakRefPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
     realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
   }
@@ -172416,13 +172416,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172434,7 +172434,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = AddToKeptObjects(target);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -172446,7 +172446,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   WeakRefConstructor.section = 'https://tc39.es/ecma262/#sec-weak-ref-target';
-  function BootstrapWeakRef(realmRec) {
+  function bootstrapWeakRef(realmRec) {
     const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
     realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
   }
@@ -172458,13 +172458,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const finalizationRegistry = thisValue; // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
 
     let _temp = RequireInternalSlot(finalizationRegistry, 'Cells');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172583,7 +172583,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
-  function BootstrapFinalizationRegistryPrototype(realmRec) {
+  function bootstrapFinalizationRegistryPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [exports.surroundingAgent.feature('cleanup-some') ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0] : undefined, ['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
     realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
   }
@@ -172603,13 +172603,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
     let _temp = OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', ['Realm', 'CleanupCallback', 'Cells']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -172630,7 +172630,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   FinalizationRegistryConstructor.section = 'https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback';
-  function BootstrapFinalizationRegistry(realmRec) {
+  function bootstrapFinalizationRegistry(realmRec) {
     const cons = bootstrapConstructor(realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1, realmRec.Intrinsics['%FinalizationRegistry.prototype%'], []);
     realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
   }
@@ -172681,7 +172681,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('caller'), Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -172706,81 +172706,81 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const intrinsics = Object.create(null);
     realmRec.Intrinsics = intrinsics;
     intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
-    BootstrapFunctionPrototype(realmRec);
-    BootstrapObjectPrototype(realmRec);
-    BootstrapThrowTypeError(realmRec);
-    BootstrapEval(realmRec);
-    BootstrapIsFinite(realmRec);
-    BootstrapIsNaN(realmRec);
-    BootstrapParseFloat(realmRec);
-    BootstrapParseInt(realmRec);
-    BootstrapURIHandling(realmRec);
-    BootstrapObject(realmRec);
-    BootstrapErrorPrototype(realmRec);
-    BootstrapError(realmRec);
-    BootstrapNativeError(realmRec);
-    BootstrapAggregateErrorPrototype(realmRec);
-    BootstrapAggregateError(realmRec);
-    BootstrapFunction(realmRec);
-    BootstrapIteratorPrototype(realmRec);
-    BootstrapAsyncIteratorPrototype(realmRec);
-    BootstrapArrayIteratorPrototype(realmRec);
-    BootstrapMapIteratorPrototype(realmRec);
-    BootstrapSetIteratorPrototype(realmRec);
-    BootstrapStringIteratorPrototype(realmRec);
-    BootstrapRegExpStringIteratorPrototype(realmRec);
-    BootstrapForInIteratorPrototype(realmRec);
-    BootstrapStringPrototype(realmRec);
-    BootstrapString(realmRec);
-    BootstrapArrayPrototype(realmRec);
-    BootstrapArray(realmRec);
-    BootstrapBooleanPrototype(realmRec);
-    BootstrapBoolean(realmRec);
-    BootstrapNumberPrototype(realmRec);
-    BootstrapNumber(realmRec);
-    BootstrapBigIntPrototype(realmRec);
-    BootstrapBigInt(realmRec);
-    BootstrapSymbolPrototype(realmRec);
-    BootstrapSymbol(realmRec);
-    BootstrapPromisePrototype(realmRec);
-    BootstrapPromise(realmRec);
-    BootstrapProxy(realmRec);
-    BootstrapReflect(realmRec);
-    BootstrapMath(realmRec);
-    BootstrapDatePrototype(realmRec);
-    BootstrapDate(realmRec);
-    BootstrapRegExpPrototype(realmRec);
-    BootstrapRegExp(realmRec);
-    BootstrapSetPrototype(realmRec);
-    BootstrapSet(realmRec);
-    BootstrapMapPrototype(realmRec);
-    BootstrapMap(realmRec);
-    BootstrapGeneratorFunctionPrototypePrototype(realmRec);
-    BootstrapGeneratorFunctionPrototype(realmRec);
-    BootstrapGeneratorFunction(realmRec);
-    BootstrapAsyncFunctionPrototype(realmRec);
-    BootstrapAsyncFunction(realmRec);
-    BootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
-    BootstrapAsyncGeneratorFunctionPrototype(realmRec);
-    BootstrapAsyncGeneratorFunction(realmRec);
-    BootstrapAsyncFromSyncIteratorPrototype(realmRec);
-    BootstrapArrayBufferPrototype(realmRec);
-    BootstrapArrayBuffer(realmRec);
-    BootstrapTypedArrayPrototype(realmRec);
-    BootstrapTypedArray(realmRec);
-    BootstrapTypedArrayPrototypes(realmRec);
-    BootstrapTypedArrayConstructors(realmRec);
-    BootstrapDataViewPrototype(realmRec);
-    BootstrapDataView(realmRec);
-    BootstrapJSON(realmRec);
-    BootstrapWeakMapPrototype(realmRec);
-    BootstrapWeakMap(realmRec);
-    BootstrapWeakSetPrototype(realmRec);
-    BootstrapWeakSet(realmRec);
-    BootstrapWeakRefPrototype(realmRec);
-    BootstrapWeakRef(realmRec);
-    BootstrapFinalizationRegistryPrototype(realmRec);
-    BootstrapFinalizationRegistry(realmRec);
+    bootstrapFunctionPrototype(realmRec);
+    bootstrapObjectPrototype(realmRec);
+    bootstrapThrowTypeError(realmRec);
+    bootstrapEval(realmRec);
+    bootstrapIsFinite(realmRec);
+    bootstrapIsNaN(realmRec);
+    bootstrapParseFloat(realmRec);
+    bootstrapParseInt(realmRec);
+    bootstrapURIHandling(realmRec);
+    bootstrapObject(realmRec);
+    bootstrapErrorPrototype(realmRec);
+    bootstrapError(realmRec);
+    bootstrapNativeError(realmRec);
+    bootstrapAggregateErrorPrototype(realmRec);
+    bootstrapAggregateError(realmRec);
+    bootstrapFunction(realmRec);
+    bootstrapIteratorPrototype(realmRec);
+    bootstrapAsyncIteratorPrototype(realmRec);
+    bootstrapArrayIteratorPrototype(realmRec);
+    bootstrapMapIteratorPrototype(realmRec);
+    bootstrapSetIteratorPrototype(realmRec);
+    bootstrapStringIteratorPrototype(realmRec);
+    bootstrapRegExpStringIteratorPrototype(realmRec);
+    bootstrapForInIteratorPrototype(realmRec);
+    bootstrapStringPrototype(realmRec);
+    bootstrapString(realmRec);
+    bootstrapArrayPrototype(realmRec);
+    bootstrapArray(realmRec);
+    bootstrapBooleanPrototype(realmRec);
+    bootstrapBoolean(realmRec);
+    bootstrapNumberPrototype(realmRec);
+    bootstrapNumber(realmRec);
+    bootstrapBigIntPrototype(realmRec);
+    bootstrapBigInt(realmRec);
+    bootstrapSymbolPrototype(realmRec);
+    bootstrapSymbol(realmRec);
+    bootstrapPromisePrototype(realmRec);
+    bootstrapPromise(realmRec);
+    bootstrapProxy(realmRec);
+    bootstrapReflect(realmRec);
+    bootstrapMath(realmRec);
+    bootstrapDatePrototype(realmRec);
+    bootstrapDate(realmRec);
+    bootstrapRegExpPrototype(realmRec);
+    bootstrapRegExp(realmRec);
+    bootstrapSetPrototype(realmRec);
+    bootstrapSet(realmRec);
+    bootstrapMapPrototype(realmRec);
+    bootstrapMap(realmRec);
+    bootstrapGeneratorFunctionPrototypePrototype(realmRec);
+    bootstrapGeneratorFunctionPrototype(realmRec);
+    bootstrapGeneratorFunction(realmRec);
+    bootstrapAsyncFunctionPrototype(realmRec);
+    bootstrapAsyncFunction(realmRec);
+    bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec);
+    bootstrapAsyncGeneratorFunctionPrototype(realmRec);
+    bootstrapAsyncGeneratorFunction(realmRec);
+    bootstrapAsyncFromSyncIteratorPrototype(realmRec);
+    bootstrapArrayBufferPrototype(realmRec);
+    bootstrapArrayBuffer(realmRec);
+    bootstrapTypedArrayPrototype(realmRec);
+    bootstrapTypedArray(realmRec);
+    bootstrapTypedArrayPrototypes(realmRec);
+    bootstrapTypedArrayConstructors(realmRec);
+    bootstrapDataViewPrototype(realmRec);
+    bootstrapDataView(realmRec);
+    bootstrapJSON(realmRec);
+    bootstrapWeakMapPrototype(realmRec);
+    bootstrapWeakMap(realmRec);
+    bootstrapWeakSetPrototype(realmRec);
+    bootstrapWeakSet(realmRec);
+    bootstrapWeakRefPrototype(realmRec);
+    bootstrapWeakRef(realmRec);
+    bootstrapFinalizationRegistryPrototype(realmRec);
+    bootstrapFinalizationRegistry(realmRec);
     AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
     return intrinsics;
   } // 8.2.3 #sec-setrealmglobalobject
@@ -172812,13 +172812,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Enumerable: Value.false,
         Configurable: Value.false
       }));
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp3 instanceof AbruptCompletion) {
         return _temp3;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp3 instanceof Completion) {
@@ -172917,11 +172917,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 6.2.4.8 #sec-getvalue
 
   function GetValue(V) {
-    /* istanbul ignore if */
+    /* c8 ignore if */
     if (V instanceof AbruptCompletion) {
       return V;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (V instanceof Completion) {
@@ -172945,7 +172945,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = ToObject(base);
 
         Assert(!(_temp instanceof AbruptCompletion), "ToObject(base)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
@@ -173006,13 +173006,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       let _temp3 = base.Set(GetReferencedName(V), W, GetThisValue(V));
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp3 instanceof AbruptCompletion) {
         return _temp3;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp3 instanceof Completion) {
@@ -173069,13 +173069,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function RegExpAlloc(newTarget) {
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -173091,7 +173091,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }));
 
     Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -173482,7 +173482,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = CreateDataProperty(obj, new Value('value'), Desc.Value);
 
       Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(obj, new Value('value'), Desc.Value)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -173551,13 +173551,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const desc = Descriptor({});
 
     let _temp7 = HasProperty(Obj, new Value('enumerable'));
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp7 instanceof Completion) {
@@ -173829,7 +173829,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp = StringGetOwnProperty(S, P);
 
     Assert(!(_temp instanceof AbruptCompletion), "StringGetOwnProperty(S, P)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -174051,7 +174051,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Object':
         return argument;
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('RequireObjectCoercible', {
           type,
@@ -174144,13 +174144,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     let _temp = Get(argument, wellKnownSymbols.match);
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -174192,7 +174192,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp2 = SameValueNonNumber(x, y);
 
     Assert(!(_temp2 instanceof AbruptCompletion), "SameValueNonNumber(x, y)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
@@ -174659,13 +174659,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (Type(input) === 'Object') {
       let _temp = GetMethod(input, wellKnownSymbols.toPrimitive);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof AbruptCompletion) {
         return _temp;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp instanceof Completion) {
@@ -174820,7 +174820,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Object':
         return Value.true;
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ToBoolean', {
           type,
@@ -174898,7 +174898,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return ToNumber(primValue);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ToNumber', {
           type,
@@ -175181,7 +175181,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let _temp16 = StringToBigInt(prim);
 
           Assert(!(_temp16 instanceof AbruptCompletion), "StringToBigInt(prim)" + ' returned an abrupt completion');
-          /* istanbul ignore if */
+          /* c8 ignore if */
 
           if (_temp16 instanceof Completion) {
             _temp16 = _temp16.Value;
@@ -175201,7 +175201,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Symbol':
         return exports.surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ToBigInt', argument);
     }
@@ -175322,7 +175322,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return ToString(primValue);
         }
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ToString', {
           type,
@@ -175375,7 +175375,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Object':
         return argument;
 
-      /*istanbul ignore next*/
+      /*c8 ignore next*/
       default:
         throw new OutOfRange('ToObject', {
           type,
@@ -175590,13 +175590,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function ValidateTypedArray(O) {
     let _temp = RequireInternalSlot(O, 'TypedArrayName');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof AbruptCompletion) {
       return _temp;
     }
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
 
     if (_temp instanceof Completion) {
@@ -175667,7 +175667,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let _temp5 = IntegerIndexedObjectCreate(proto);
 
     Assert(!(_temp5 instanceof AbruptCompletion), "IntegerIndexedObjectCreate(proto)" + ' returned an abrupt completion');
-    /* istanbul ignore if */
+    /* c8 ignore if */
 
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
@@ -175871,7 +175871,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = AddToKeptObjects(target);
 
       Assert(!(_temp instanceof AbruptCompletion), "AddToKeptObjects(target)" + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -175906,13 +175906,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       i -= 1; // c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
 
       let _temp2 = Call(callback, Value.undefined, [cell.HeldValue]);
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
 
       if (_temp2 instanceof Completion) {
@@ -175933,7 +175933,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let _temp = Get(value, wellKnownSymbols.toStringTag);
 
       Assert(!(_temp instanceof AbruptCompletion), "Get(value, wellKnownSymbols.toStringTag)" + ' returned an abrupt completion', "");
-      /* istanbul ignore if */
+      /* c8 ignore if */
 
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -176083,13 +176083,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       if ('ErrorData' in v) {
         let _temp8 = Get(v, new Value('stack'));
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp8 instanceof AbruptCompletion) {
           return _temp8;
         }
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
 
         if (_temp8 instanceof Completion) {
@@ -176372,7 +176372,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let _temp = HostEnqueueFinalizationRegistryCleanupJob(fg);
 
         Assert(!(_temp instanceof AbruptCompletion), "HostEnqueueFinalizationRegistryCleanupJob(fg)" + ' returned an abrupt completion');
-        /* istanbul ignore if */
+        /* c8 ignore if */
 
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
