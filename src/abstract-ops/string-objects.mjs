@@ -15,9 +15,10 @@ import {
   OrdinaryDefineOwnProperty,
   IsCompatiblePropertyDescriptor,
   ToIntegerOrInfinity,
+  ToString,
   isArrayIndex,
+  F,
 } from './all.mjs';
-import { ToString, F } from '../api.mjs';
 
 function StringExoticGetOwnProperty(P) {
   const S = this;

@@ -82,8 +82,8 @@ import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistr
 import {
   Assert,
   DefinePropertyOrThrow,
+  F as toNumberValue,
   OrdinaryObjectCreate,
-  F,
 } from './all.mjs';
 
 // 8.2 #sec-code-realms
@@ -276,8 +276,8 @@ export function SetDefaultGlobalBindings(realmRec) {
 
   // Value Properties of the Global Object
   [
-    ['Infinity', F(Infinity)],
-    ['NaN', F(NaN)],
+    ['Infinity', toNumberValue(Infinity)],
+    ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
   ].forEach(([name, value]) => {
     Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
