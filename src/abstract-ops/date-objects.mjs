@@ -1,11 +1,7 @@
 // This file covers abstract operations defined in
 // 20.3 #sec-date-objects
 
-import {
-  Value,
-} from '../value.mjs';
 import { X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
 import {
   ToIntegerOrInfinity,
   F,
