@@ -96,10 +96,10 @@ export const PromiseCapabilityFunctionAlreadySet = (f) => `Promise ${f} function
 export const PromiseRejectFunction = (v) => `Promise reject function ${i(v)} is not callable`;
 export const PromiseResolveFunction = (v) => `Promise resolve function ${i(v)} is not callable`;
 export const ProxyRevoked = (n) => `Cannot perform '${n}' on a proxy that has been revoked`;
-export const ProxyDefinePropertyNonConfigurable = (p) => `'defineProperty' on proxy: trap returned truish for defining non-configurable property ${i(p)} which is either non-existent or configurable in the proxy target`;
-export const ProxyDefinePropertyNonConfigurableWritable = (p) => `'defineProperty' on proxy: trap returned truish for defining non-configurable property ${i(p)} which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object`;
-export const ProxyDefinePropertyNonExtensible = (p) => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} to the non-extensible proxy target`;
-export const ProxyDefinePropertyIncompatible = (p) => `'defineProperty' on proxy: trap returned truish for adding property ${i(p)} that is incompatible with the existing property in the proxy target`;
+export const ProxyDefinePropertyNonConfigurable = (p) => `'defineProperty' on proxy: trap returned truthy for defining non-configurable property ${i(p)} which is either non-existent or configurable in the proxy target`;
+export const ProxyDefinePropertyNonConfigurableWritable = (p) => `'defineProperty' on proxy: trap returned truthy for defining non-configurable property ${i(p)} which cannot be non-writable, unless there exists a corresponding non-configurable, non-writable own property of the target object`;
+export const ProxyDefinePropertyNonExtensible = (p) => `'defineProperty' on proxy: trap returned truthy for adding property ${i(p)} to the non-extensible proxy target`;
+export const ProxyDefinePropertyIncompatible = (p) => `'defineProperty' on proxy: trap returned truthy for adding property ${i(p)} that is incompatible with the existing property in the proxy target`;
 export const ProxyDeletePropertyNonConfigurable = (p) => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} which is non-configurable in the proxy target`;
 export const ProxyDeletePropertyNonExtensible = (p) => `'deleteProperty' on proxy: trap returned truthy for property ${i(p)} but the proxy target is non-extensible`;
 export const ProxyGetNonConfigurableData = (p) => `'get' on proxy: property ${i(p)} is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value`;
@@ -121,7 +121,7 @@ export const ProxyOwnKeysDuplicateEntries = () => '\'ownKeys\' on proxy: trap re
 export const ProxyPreventExtensionsExtensible = () => '\'preventExtensions\' on proxy: trap returned truthy but the proxy target is extensible';
 export const ProxySetPrototypeOfNonExtensible = () => '\'setPrototypeOf\' on proxy: trap returned truthy for setting a new prototype on the non-extensible proxy target';
 export const ProxySetFrozenData = (p) => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable data property with a different value`;
-export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned truish for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
+export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
 export const RegExpArgumentNotAllowed = (m) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o) => `${i(o)} is not object or null`;
 export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
@@ -156,6 +156,6 @@ export const UnexpectedToken = () => 'Unexpected token';
 export const UnexpectedReservedWordStrict = () => 'Unexpected reserved word in strict mode';
 export const UseStrictNonSimpleParameter = () => 'Function with \'use strict\' directive has non-simple parameter list';
 export const URIMalformed = () => 'URI malformed';
-export const WeakCollectionNotObject = (v) => `${i(v)} is not a valid weak collectection entry object`;
+export const WeakCollectionNotObject = (v) => `${i(v)} is not a valid weak collection entry object`;
 export const YieldInFormalParameters = () => 'yield is not allowed in function parameters';
 export const YieldNotInGenerator = () => 'yield is only valid in generators';
