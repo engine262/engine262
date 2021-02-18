@@ -20,7 +20,7 @@ const banner = `/*!
 module.exports = () => ({
   input: './src/api.mjs',
   plugins: [
-    json(),
+    json({ compact: true }),
     commonjs(),
     nodeResolve(),
     babel({
