@@ -3,8 +3,13 @@ import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
-import { Get, Set } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+import {
+  Get,
+  Set,
+  Call,
+  CreateDefaultExportSyntheticModule,
+} from './abstract-ops/all.mjs';
+import { Q, X } from './completion.mjs';
 import {
   ModuleRequests,
   ImportEntries,
@@ -161,6 +166,16 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     AsyncParentModules: Value.undefined,
     PendingAsyncDependencies: Value.undefined,
   });
+}
+
+// #sec-parsejsonmodule
+export function ParseJSONModule(sourceText, realm, hostDefined) {
+  // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
+  const jsonParse = realm.Intrinsics['%JSON.parse%'];
+  // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
+  const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
+  // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
+  return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 }
 
 // #sec-parsepattern

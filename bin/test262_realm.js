@@ -42,7 +42,9 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           return resolverCache.get(resolved);
         }
         const source = fs.readFileSync(resolved, 'utf8');
-        const m = realm.createSourceTextModule(resolved, source);
+        const m = resolved.endsWith('.json')
+          ? realm.createJSONModule(resolved, source)
+          : realm.createSourceTextModule(resolved, source);
         resolverCache.set(resolved, m);
         return m;
       } catch (e) {

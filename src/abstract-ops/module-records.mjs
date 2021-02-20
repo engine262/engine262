@@ -2,6 +2,7 @@ import { surroundingAgent, HostResolveImportedModule } from '../engine.mjs';
 import {
   AbstractModuleRecord,
   CyclicModuleRecord,
+  SyntheticModuleRecord,
   ResolvedBindingRecord,
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
@@ -260,4 +261,34 @@ export function GetModuleNamespace(module) {
     namespace = ModuleNamespaceCreate(module, unambiguousNames);
   }
   return namespace;
+}
+
+export function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined) {
+  // 1. Return Synthetic Module Record {
+  //      [[Realm]]: realm,
+  //      [[Environment]]: undefined,
+  //      [[Namespace]]: undefined,
+  //      [[HostDefined]]: hostDefined,
+  //      [[ExportNames]]: exportNames,
+  //      [[EvaluationSteps]]: evaluationSteps
+  //    }.
+  return new SyntheticModuleRecord({
+    Realm: realm,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
+    HostDefined: hostDefined,
+    ExportNames: exportNames,
+    EvaluationSteps: evaluationSteps,
+  });
+}
+
+// #sec-create-default-export-synthetic-module
+export function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
+  // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
+  const closure = (module) => { // eslint-disable-line arrow-body-style
+    // a. Return ? module.SetSyntheticExport("default", defaultExport).
+    return Q(module.SetSyntheticExport(new Value('default'), defaultExport));
+  };
+  // 2. Return CreateSyntheticModule(« "default" », closure, realm)
+  return CreateSyntheticModule([new Value('default')], closure, realm, hostDefined);
 }

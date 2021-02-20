@@ -517,3 +517,89 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     m(this.Context);
   }
 }
+
+// #sec-synthetic-module-records
+export class SyntheticModuleRecord extends AbstractModuleRecord {
+  constructor(init) {
+    super(init);
+
+    this.ExportNames = init.ExportNames;
+    this.EvaluationSteps = init.EvaluationSteps;
+  }
+
+  // #sec-synthetic-module-record-getexportednames
+  GetExportedNames(_exportStarSet) {
+    const module = this;
+    // 1. Return module.[[ExportNames]].
+    return module.ExportNames;
+  }
+
+  // #sec-synthetic-module-record-resolveexport
+  ResolveExport(exportName, _resolveSet) {
+    const module = this;
+    // 1. If module.[[ExportNames]] does not contain exportName, return null.
+    // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
+    for (const e of module.ExportNames) {
+      if (SameValue(e, exportName) === Value.true) {
+        return new ResolvedBindingRecord({ Module: module, BindingName: exportName });
+      }
+    }
+    return null;
+  }
+
+  // #sec-synthetic-module-record-link
+  Link() {
+    const module = this;
+    // 1. Let realm be module.[[Realm]].
+    const realm = module.Realm;
+    // 2. Assert: realm is not undefined.
+    Assert(realm !== Value.undefined);
+    // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+    const env = NewModuleEnvironment(realm.GlobalEnv);
+    // 4. Set module.[[Environment]] to env.
+    module.Environment = env;
+    // 5. For each exportName in module.[[ExportNames]],
+    for (const exportName of module.ExportNames) {
+      // a. Perform ! env.CreateMutableBinding(exportName, false).
+      X(env.CreateMutableBinding(exportName, Value.false));
+      // b. Perform ! env.InitializeBinding(exportName, undefined).
+      X(env.InitializeBinding(exportName, Value.undefined));
+    }
+    // 8. Return undefined.
+    return Value.undefined;
+  }
+
+  // #sec-synthetic-module-record-evaluate
+  Evaluate() {
+    const module = this;
+    // 1. Suspend the currently running execution context.
+    // 2. Let moduleContext be a new ECMAScript code execution context.
+    const moduleContext = new ExecutionContext();
+    // 3. Set the Function of moduleContext to null.
+    moduleContext.Function = Value.null;
+    // 4. Set the Realm of moduleContext to module.[[Realm]].
+    moduleContext.Realm = module.Realm;
+    // 5. Set the ScriptOrModule of moduleContext to module.
+    moduleContext.ScriptOrModule = module;
+    // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.VariableEnvironment = module.Environment;
+    // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+    moduleContext.LexicalEnvironment = module.Environment;
+    // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
+    surroundingAgent.executionContextStack.push(moduleContext);
+    // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
+    const result = module.EvaluationSteps(module);
+    // 10. Suspend moduleContext and remove it from the execution context stack.
+    // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+    surroundingAgent.executionContextStack.pop(moduleContext);
+    // 12. Return Completion(result).
+    return Completion(result);
+  }
+
+  // #sec-synthetic-module-record-set-synthetic-export
+  SetSyntheticExport(name, value) {
+    const module = this;
+    // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
+    return Q(module.Environment.SetMutableBinding(name, value, Value.true));
+  }
+}
