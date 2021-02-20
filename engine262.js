@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 1289481ca345a258e461e7dd41b877a5f76c35f3
+ * engine262 0.0.1 ab4baf1b1faeae35da022aea6c60a6a824822167
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -17326,6 +17326,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       AsyncParentModules: Value.undefined,
       PendingAsyncDependencies: Value.undefined
     });
+  } // #sec-parsejsonmodule
+
+  function ParseJSONModule(sourceText, realm, hostDefined) {
+    // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
+    const jsonParse = realm.Intrinsics['%JSON.parse%']; // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
+
+    let _temp3 = Call(jsonParse, Value.undefined, [sourceText]);
+    /* c8 ignore if */
+
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const json = _temp3; // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
+
+    return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
   } // #sec-parsepattern
 
   function ParsePattern(patternText, u) {
@@ -22703,6 +22726,107 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       super.mark(m);
       m(this.ImportMeta);
       m(this.Context);
+    }
+
+  } // #sec-synthetic-module-records
+
+  class SyntheticModuleRecord extends AbstractModuleRecord {
+    constructor(init) {
+      super(init);
+      this.ExportNames = init.ExportNames;
+      this.EvaluationSteps = init.EvaluationSteps;
+    } // #sec-synthetic-module-record-getexportednames
+
+
+    GetExportedNames(_exportStarSet) {
+      const module = this; // 1. Return module.[[ExportNames]].
+
+      return module.ExportNames;
+    } // #sec-synthetic-module-record-resolveexport
+
+
+    ResolveExport(exportName, _resolveSet) {
+      const module = this; // 1. If module.[[ExportNames]] does not contain exportName, return null.
+      // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
+
+      for (const e of module.ExportNames) {
+        if (SameValue(e, exportName) === Value.true) {
+          return new ResolvedBindingRecord({
+            Module: module,
+            BindingName: exportName
+          });
+        }
+      }
+
+      return null;
+    } // #sec-synthetic-module-record-link
+
+
+    Link() {
+      const module = this; // 1. Let realm be module.[[Realm]].
+
+      const realm = module.Realm; // 2. Assert: realm is not undefined.
+
+      Assert(realm !== Value.undefined, "realm !== Value.undefined"); // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+
+      const env = NewModuleEnvironment(realm.GlobalEnv); // 4. Set module.[[Environment]] to env.
+
+      module.Environment = env; // 5. For each exportName in module.[[ExportNames]],
+
+      for (const exportName of module.ExportNames) {
+        let _temp20 = env.CreateMutableBinding(exportName, Value.false);
+
+        Assert(!(_temp20 instanceof AbruptCompletion), "env.CreateMutableBinding(exportName, Value.false)" + ' returned an abrupt completion');
+
+        if (_temp20 instanceof Completion) {
+          _temp20 = _temp20.Value;
+        }
+
+        let _temp21 = env.InitializeBinding(exportName, Value.undefined);
+
+        Assert(!(_temp21 instanceof AbruptCompletion), "env.InitializeBinding(exportName, Value.undefined)" + ' returned an abrupt completion');
+
+        if (_temp21 instanceof Completion) {
+          _temp21 = _temp21.Value;
+        }
+      } // 8. Return undefined.
+
+
+      return Value.undefined;
+    } // #sec-synthetic-module-record-evaluate
+
+
+    Evaluate() {
+      const module = this; // 1. Suspend the currently running execution context.
+      // 2. Let moduleContext be a new ECMAScript code execution context.
+
+      const moduleContext = new ExecutionContext(); // 3. Set the Function of moduleContext to null.
+
+      moduleContext.Function = Value.null; // 4. Set the Realm of moduleContext to module.[[Realm]].
+
+      moduleContext.Realm = module.Realm; // 5. Set the ScriptOrModule of moduleContext to module.
+
+      moduleContext.ScriptOrModule = module; // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+
+      moduleContext.VariableEnvironment = module.Environment; // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+
+      moduleContext.LexicalEnvironment = module.Environment; // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
+
+      exports.surroundingAgent.executionContextStack.push(moduleContext); // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
+
+      const result = module.EvaluationSteps(module); // 10. Suspend moduleContext and remove it from the execution context stack.
+      // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+
+      exports.surroundingAgent.executionContextStack.pop(moduleContext); // 12. Return Completion(result).
+
+      return Completion(result);
+    } // #sec-synthetic-module-record-set-synthetic-export
+
+
+    SetSyntheticExport(name, value) {
+      const module = this; // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
+
+      return module.Environment.SetMutableBinding(name, value, Value.true);
     }
 
   }
@@ -30659,6 +30783,36 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     return namespace;
+  }
+  function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined) {
+    // 1. Return Synthetic Module Record {
+    //      [[Realm]]: realm,
+    //      [[Environment]]: undefined,
+    //      [[Namespace]]: undefined,
+    //      [[HostDefined]]: hostDefined,
+    //      [[ExportNames]]: exportNames,
+    //      [[EvaluationSteps]]: evaluationSteps
+    //    }.
+    return new SyntheticModuleRecord({
+      Realm: realm,
+      Environment: Value.undefined,
+      Namespace: Value.undefined,
+      HostDefined: hostDefined,
+      ExportNames: exportNames,
+      EvaluationSteps: evaluationSteps
+    });
+  } // #sec-create-default-export-synthetic-module
+
+  function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
+    // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
+    const closure = module => {
+      // eslint-disable-line arrow-body-style
+      // a. Return ? module.SetSyntheticExport("default", defaultExport).
+      return module.SetSyntheticExport(new Value('default'), defaultExport);
+    }; // 2. Return CreateSyntheticModule(« "default" », closure, realm)
+
+
+    return CreateSyntheticModule([new Value('default')], closure, realm, hostDefined);
   }
 
   function Assert(invariant, source) {
@@ -53702,6 +53856,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapJSON(realmRec) {
     const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
     realmRec.Intrinsics['%JSON%'] = json;
+
+    let _temp88 = Get(json, new Value('parse'));
+
+    Assert(!(_temp88 instanceof AbruptCompletion), "Get(json, new Value('parse'))" + ' returned an abrupt completion');
+
+    if (_temp88 instanceof Completion) {
+      _temp88 = _temp88.Value;
+    }
+
+    realmRec.Intrinsics['%JSON.parse%'] = _temp88;
   }
 
   function Eval([x = Value.undefined]) {
@@ -62113,12 +62277,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     createSourceTextModule(specifier, sourceText) {
-      if (typeof sourceText !== 'string') {
-        throw new TypeError('sourceText must be a string');
-      }
-
       if (typeof specifier !== 'string') {
         throw new TypeError('specifier must be a string');
+      }
+
+      if (typeof sourceText !== 'string') {
+        throw new TypeError('sourceText must be a string');
       }
 
       const module = this.scope(() => ParseModule(sourceText, this, {
@@ -62130,6 +62294,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return ThrowCompletion(module[0]);
       }
 
+      return module;
+    }
+
+    createJSONModule(specifier, sourceText) {
+      if (typeof specifier !== 'string') {
+        throw new TypeError('specifier must be a string');
+      }
+
+      if (typeof sourceText !== 'string') {
+        throw new TypeError('sourceText must be a string');
+      }
+
+      const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+        specifier
+      }));
       return module;
     }
 
@@ -62205,6 +62384,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateByteDataBlock = CreateByteDataBlock;
   exports.CreateDataProperty = CreateDataProperty;
   exports.CreateDataPropertyOrThrow = CreateDataPropertyOrThrow;
+  exports.CreateDefaultExportSyntheticModule = CreateDefaultExportSyntheticModule;
   exports.CreateDynamicFunction = CreateDynamicFunction;
   exports.CreateIntrinsics = CreateIntrinsics;
   exports.CreateIterResultObject = CreateIterResultObject;
@@ -62214,6 +62394,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateMethodProperty = CreateMethodProperty;
   exports.CreateRealm = CreateRealm;
   exports.CreateResolvingFunctions = CreateResolvingFunctions;
+  exports.CreateSyntheticModule = CreateSyntheticModule;
   exports.CreateUnmappedArgumentsObject = CreateUnmappedArgumentsObject;
   exports.CyclicModuleRecord = CyclicModuleRecord;
   exports.DataBlock = DataBlock;
@@ -62508,6 +62689,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.OrdinarySetPrototypeOf = OrdinarySetPrototypeOf;
   exports.OrdinarySetWithOwnDescriptor = OrdinarySetWithOwnDescriptor;
   exports.OrdinaryToPrimitive = OrdinaryToPrimitive;
+  exports.ParseJSONModule = ParseJSONModule;
   exports.ParseModule = ParseModule;
   exports.ParsePattern = ParsePattern;
   exports.ParseScript = ParseScript;
@@ -62569,6 +62751,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.SuperReference = SuperReference;
   exports.SymbolDescriptiveString = SymbolDescriptiveString;
   exports.SymbolValue = SymbolValue;
+  exports.SyntheticModuleRecord = SyntheticModuleRecord;
   exports.TV = TV;
   exports.TemplateStrings = TemplateStrings;
   exports.TestIntegrityLevel = TestIntegrityLevel;

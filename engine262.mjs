@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 1289481ca345a258e461e7dd41b877a5f76c35f3
+ * engine262 0.0.1 ab4baf1b1faeae35da022aea6c60a6a824822167
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -17320,6 +17320,29 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     AsyncParentModules: Value.undefined,
     PendingAsyncDependencies: Value.undefined
   });
+} // #sec-parsejsonmodule
+
+function ParseJSONModule(sourceText, realm, hostDefined) {
+  // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
+  const jsonParse = realm.Intrinsics['%JSON.parse%']; // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
+
+  let _temp3 = Call(jsonParse, Value.undefined, [sourceText]);
+  /* c8 ignore if */
+
+
+  if (_temp3 instanceof AbruptCompletion) {
+    return _temp3;
+  }
+  /* c8 ignore if */
+
+
+  if (_temp3 instanceof Completion) {
+    _temp3 = _temp3.Value;
+  }
+
+  const json = _temp3; // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
+
+  return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 } // #sec-parsepattern
 
 function ParsePattern(patternText, u) {
@@ -22697,6 +22720,107 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     super.mark(m);
     m(this.ImportMeta);
     m(this.Context);
+  }
+
+} // #sec-synthetic-module-records
+
+class SyntheticModuleRecord extends AbstractModuleRecord {
+  constructor(init) {
+    super(init);
+    this.ExportNames = init.ExportNames;
+    this.EvaluationSteps = init.EvaluationSteps;
+  } // #sec-synthetic-module-record-getexportednames
+
+
+  GetExportedNames(_exportStarSet) {
+    const module = this; // 1. Return module.[[ExportNames]].
+
+    return module.ExportNames;
+  } // #sec-synthetic-module-record-resolveexport
+
+
+  ResolveExport(exportName, _resolveSet) {
+    const module = this; // 1. If module.[[ExportNames]] does not contain exportName, return null.
+    // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
+
+    for (const e of module.ExportNames) {
+      if (SameValue(e, exportName) === Value.true) {
+        return new ResolvedBindingRecord({
+          Module: module,
+          BindingName: exportName
+        });
+      }
+    }
+
+    return null;
+  } // #sec-synthetic-module-record-link
+
+
+  Link() {
+    const module = this; // 1. Let realm be module.[[Realm]].
+
+    const realm = module.Realm; // 2. Assert: realm is not undefined.
+
+    Assert(realm !== Value.undefined, "realm !== Value.undefined"); // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+
+    const env = NewModuleEnvironment(realm.GlobalEnv); // 4. Set module.[[Environment]] to env.
+
+    module.Environment = env; // 5. For each exportName in module.[[ExportNames]],
+
+    for (const exportName of module.ExportNames) {
+      let _temp20 = env.CreateMutableBinding(exportName, Value.false);
+
+      Assert(!(_temp20 instanceof AbruptCompletion), "env.CreateMutableBinding(exportName, Value.false)" + ' returned an abrupt completion');
+
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
+
+      let _temp21 = env.InitializeBinding(exportName, Value.undefined);
+
+      Assert(!(_temp21 instanceof AbruptCompletion), "env.InitializeBinding(exportName, Value.undefined)" + ' returned an abrupt completion');
+
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
+      }
+    } // 8. Return undefined.
+
+
+    return Value.undefined;
+  } // #sec-synthetic-module-record-evaluate
+
+
+  Evaluate() {
+    const module = this; // 1. Suspend the currently running execution context.
+    // 2. Let moduleContext be a new ECMAScript code execution context.
+
+    const moduleContext = new ExecutionContext(); // 3. Set the Function of moduleContext to null.
+
+    moduleContext.Function = Value.null; // 4. Set the Realm of moduleContext to module.[[Realm]].
+
+    moduleContext.Realm = module.Realm; // 5. Set the ScriptOrModule of moduleContext to module.
+
+    moduleContext.ScriptOrModule = module; // 6. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+
+    moduleContext.VariableEnvironment = module.Environment; // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+
+    moduleContext.LexicalEnvironment = module.Environment; // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
+
+    surroundingAgent.executionContextStack.push(moduleContext); // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
+
+    const result = module.EvaluationSteps(module); // 10. Suspend moduleContext and remove it from the execution context stack.
+    // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
+
+    surroundingAgent.executionContextStack.pop(moduleContext); // 12. Return Completion(result).
+
+    return Completion(result);
+  } // #sec-synthetic-module-record-set-synthetic-export
+
+
+  SetSyntheticExport(name, value) {
+    const module = this; // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
+
+    return module.Environment.SetMutableBinding(name, value, Value.true);
   }
 
 }
@@ -30653,6 +30777,36 @@ function GetModuleNamespace(module) {
   }
 
   return namespace;
+}
+function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined) {
+  // 1. Return Synthetic Module Record {
+  //      [[Realm]]: realm,
+  //      [[Environment]]: undefined,
+  //      [[Namespace]]: undefined,
+  //      [[HostDefined]]: hostDefined,
+  //      [[ExportNames]]: exportNames,
+  //      [[EvaluationSteps]]: evaluationSteps
+  //    }.
+  return new SyntheticModuleRecord({
+    Realm: realm,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
+    HostDefined: hostDefined,
+    ExportNames: exportNames,
+    EvaluationSteps: evaluationSteps
+  });
+} // #sec-create-default-export-synthetic-module
+
+function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
+  // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
+  const closure = module => {
+    // eslint-disable-line arrow-body-style
+    // a. Return ? module.SetSyntheticExport("default", defaultExport).
+    return module.SetSyntheticExport(new Value('default'), defaultExport);
+  }; // 2. Return CreateSyntheticModule(« "default" », closure, realm)
+
+
+  return CreateSyntheticModule([new Value('default')], closure, realm, hostDefined);
 }
 
 function Assert(invariant, source) {
@@ -53696,6 +53850,16 @@ JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
 function bootstrapJSON(realmRec) {
   const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
   realmRec.Intrinsics['%JSON%'] = json;
+
+  let _temp88 = Get(json, new Value('parse'));
+
+  Assert(!(_temp88 instanceof AbruptCompletion), "Get(json, new Value('parse'))" + ' returned an abrupt completion');
+
+  if (_temp88 instanceof Completion) {
+    _temp88 = _temp88.Value;
+  }
+
+  realmRec.Intrinsics['%JSON.parse%'] = _temp88;
 }
 
 function Eval([x = Value.undefined]) {
@@ -62107,12 +62271,12 @@ class ManagedRealm extends Realm {
   }
 
   createSourceTextModule(specifier, sourceText) {
-    if (typeof sourceText !== 'string') {
-      throw new TypeError('sourceText must be a string');
-    }
-
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
+    }
+
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
     }
 
     const module = this.scope(() => ParseModule(sourceText, this, {
@@ -62124,6 +62288,21 @@ class ManagedRealm extends Realm {
       return ThrowCompletion(module[0]);
     }
 
+    return module;
+  }
+
+  createJSONModule(specifier, sourceText) {
+    if (typeof specifier !== 'string') {
+      throw new TypeError('specifier must be a string');
+    }
+
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
+    }
+
+    const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+      specifier
+    }));
     return module;
   }
 
@@ -62142,5 +62321,5 @@ class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
 
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetBase, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetReferencedName, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasPrimitiveBase, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictReference, IsStringPrefix, IsStringValidUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue$1 as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakeTime, ManagedRealm, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, Reference, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SuperReference, SymbolDescriptiveString, SymbolValue, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Z, evaluateScript, gc, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetBase, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetReferencedName, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasPrimitiveBase, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictReference, IsStringPrefix, IsStringValidUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue$1 as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakeTime, ManagedRealm, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, Reference, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SuperReference, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Z, evaluateScript, gc, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
