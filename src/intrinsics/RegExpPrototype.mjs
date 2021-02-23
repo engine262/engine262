@@ -176,7 +176,7 @@ export function RegExpBuiltinExec(R, S) {
     groupNames = [];
     // 27. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
     const match = { StartIndex: lastIndex, EndIndex: e };
-    // 28. Add match as the last element of indices.
+    // 28. Append match to indices.
     indices.push(match);
     // 29. Let matchedValue be ! GetMatchString(S, match).
     const matchedValue = X(GetMatchString(S, match));
