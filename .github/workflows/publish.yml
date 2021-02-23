@@ -1,12 +1,15 @@
-name: Publish Package
+name: publish
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - test
+    branches: [main]
+    types:
+      - completed
 
 jobs:
-  publish-gpr:
+  publish:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
@@ -24,16 +27,6 @@ jobs:
       # Run tests and whatnot
       - run: npm install
       - run: npm run build
-      - run: npm run lint
-      - run: npm run coverage
-        env:
-          CONTINUOUS_INTEGRATION: 1
-
-      # Upload coverage data
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{github.token}}
 
       # Publish built package
       - run: npm publish --access=public

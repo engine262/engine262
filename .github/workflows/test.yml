@@ -1,0 +1,30 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Set everything up
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@master
+        with:
+          node-version: 15
+      - run: git submodule update --init --recursive
+
+      # Run tests and whatnot
+      - run: npm install
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run coverage
+        env:
+          CONTINUOUS_INTEGRATION: 1
+
+      # Upload coverage data
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{github.token}}
