@@ -157,9 +157,13 @@ export function GetStringIndex(S, Input, e) {
   Assert(Type(S) === 'String');
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
   Assert(Array.isArray(Input));
-  // 3. Assert: e is an integer value ≥ 0 and < the number of elements in Input.
+  // 3. Assert: e is an integer value ≥ 0.
   Assert(e >= 0);
-  // 4. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
+  // 4. If S is the empty String, return 0.
+  if (S.stringValue() === '') {
+    return 0;
+  }
+  // 5. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
   //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
   let eUTF = 0;
   if (e >= Input.length) {
@@ -169,7 +173,7 @@ export function GetStringIndex(S, Input, e) {
       eUTF += Input[i].length;
     }
   }
-  // 5. Return eUTF.
+  // 6. Return eUTF.
   return eUTF;
 }
 
@@ -179,7 +183,7 @@ export function GetMatchString(S, match) {
   Assert(Type(S) === 'String');
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
-  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
   Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
@@ -193,7 +197,7 @@ export function GetMatchIndicesArray(S, match) {
   Assert(Type(S) === 'String');
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
-  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and < the length of S.
+  // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
   Assert(match.StartIndex >= 0 && match.StartIndex <= S.stringValue().length);
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
@@ -210,18 +214,19 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
   Assert(Type(S) === 'String');
   // 2. Assert: indices is a List.
   Assert(Array.isArray(indices));
-  // 3. Assert: groupNames is a List.
-  Assert(Array.isArray(indices));
-  // 4. Assert: Type(hasGroups) is Boolean.
-  Assert(Type(hasGroups) === 'Boolean');
-  // 5. Let n be the number of elements in indices.
+  // 3. Let n be the number of elements in indices.
   const n = indices.length;
-  // 6. Assert: n < 2**32-1.
+  // 4. Assert: n < 2**32-1.
   Assert(n < (2 ** 32) - 1);
-  // 7. Set A to ! ArrayCreate(n).
-  // 8. Assert: The value of A's "length" property is n.
+  // 5. Assert: groupNames is a List with _n_ - 1 elements.
+  Assert(Array.isArray(groupNames) && groupNames.length === n - 1);
+  // 6. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
+  // 7. Assert: Type(hasGroups) is Boolean.
+  Assert(Type(hasGroups) === 'Boolean');
+  // 8. Set A to ! ArrayCreate(n).
+  // 9. Assert: The value of A's "length" property is n.
   const A = X(ArrayCreate(n));
-  // 9. If hasGroups is true, then
+  // 10. If hasGroups is true, then
   let groups;
   if (hasGroups === Value.true) {
     // a. Let groups be ! ObjectCreate(null).
@@ -230,9 +235,9 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
     // b. Let groups be undefined.
     groups = Value.undefined;
   }
-  // 10. Perform ! CreateDataProperty(A, "groups", groups).
+  // 11. Perform ! CreateDataProperty(A, "groups", groups).
   X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
-  // 11. For each integer i such that i ≥ 0 and i < n, do
+  // 12. For each integer i such that i ≥ 0 and i < n, do
   for (let i = 0; i < n; i += 1) {
     // a. Let matchIndices be indices[i].
     const matchIndices = indices[i];
@@ -253,6 +258,6 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
       X(CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray));
     }
   }
-  // 12. Return A.
+  // 13. Return A.
   return A;
 }
