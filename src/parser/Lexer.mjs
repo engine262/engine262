@@ -9,7 +9,6 @@ import {
   KeywordLookup,
   isKeywordRaw,
 } from './tokens.mjs';
-import { surroundingAgent } from '../engine.mjs';
 
 const isUnicodeIDStart = (c) => c && isUnicodeIDStartRegex.test(c);
 const isUnicodeIDContinue = (c) => c && isUnicodeIDContinueRegex.test(c);
@@ -888,7 +887,7 @@ export class Lexer {
       }
       const c = this.source[this.position];
       if (isRegularExpressionFlagPart(c)
-          && (surroundingAgent.feature('regexp-match-indices') ? 'dgimsuy' : 'gimsuy').includes(c)
+          && (this.feature('regexp-match-indices') ? 'dgimsuy' : 'gimsuy').includes(c)
           && !buffer.includes(c)) {
         this.position += 1;
         buffer += c;
