@@ -212,7 +212,7 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
   Assert(Array.isArray(indices));
   // 3. Assert: groupNames is a List.
   Assert(Array.isArray(indices));
-  // 4. Assert: Type(hasIndices) is Boolean.
+  // 4. Assert: Type(hasGroups) is Boolean.
   Assert(Type(hasGroups) === 'Boolean');
   // 5. Let n be the number of elements in indices.
   const n = indices.length;

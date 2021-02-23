@@ -335,9 +335,11 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
-  const hasIndices = ToBoolean(Q(Get(R, new Value('hasIndices'))));
-  if (hasIndices === Value.true) {
-    result += 'd';
+  if (surroundingAgent.feature('regexp-match-indices')) {
+    const hasIndices = ToBoolean(Q(Get(R, new Value('hasIndices'))));
+    if (hasIndices === Value.true) {
+      result += 'd';
+    }
   }
   const global = ToBoolean(Q(Get(R, new Value('global'))));
   if (global === Value.true) {
