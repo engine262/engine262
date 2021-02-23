@@ -45,8 +45,8 @@ export function RegExpInitialize(obj, pattern, flags) {
     F = Q(ToString(flags));
   }
   const f = F.stringValue();
-  // 5. If F contains any code unit other than "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
-  if (/^[gimsuy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
+  // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
+  if ((surroundingAgent.feature('regexp-match-indices') ? /^[dgimsuy]*$/ : /^[gimsuy]*$/).test(f) === false || (new globalThis.Set(f).size !== f.length)) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
   // 6. If F contains "u", let u be true; else let u be false.
@@ -205,27 +205,29 @@ export function GetMatchIndicesArray(S, match) {
 }
 
 // https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-export function MakeIndicesArray(S, indices, groupNames) {
+export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
   // 2. Assert: indices is a List.
   Assert(Array.isArray(indices));
-  // 3. Assert: groupNames is a List or is undefined.
-  Assert(Array.isArray(indices) || groupNames === Value.undefined);
-  // 4. Let n be the number of elements in indices.
+  // 3. Assert: groupNames is a List.
+  Assert(Array.isArray(indices));
+  // 4. Assert: Type(hasIndices) is Boolean.
+  Assert(Type(hasGroups) === 'Boolean');
+  // 5. Let n be the number of elements in indices.
   const n = indices.length;
-  // 5. Assert: n < 2**32-1.
+  // 6. Assert: n < 2**32-1.
   Assert(n < (2 ** 32) - 1);
-  // 6. Set A to ! ArrayCreate(n).
-  // 7. Assert: The value of A's "length" property is n.
+  // 7. Set A to ! ArrayCreate(n).
+  // 8. Assert: The value of A's "length" property is n.
   const A = X(ArrayCreate(n));
-  // 8. If groupNames is not undefined, then
+  // 9. If hasGroups is true, then
   let groups;
-  if (groupNames !== Value.undefined) {
+  if (hasGroups === Value.true) {
     // a. Let groups be ! ObjectCreate(null).
     groups = X(OrdinaryObjectCreate(Value.null));
   } else { // 9. Else,
-    // a. Let groups be undefined.
+    // b. Let groups be undefined.
     groups = Value.undefined;
   }
   // 10. Perform ! CreateDataProperty(A, "groups", groups).
@@ -245,10 +247,10 @@ export function MakeIndicesArray(S, indices, groupNames) {
     }
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
     X(CreateDataPropertyOrThrow(A, X(ToString(toNumberValue(i))), matchIndicesArray));
-    // e. If groupNames is not undefined and groupNames[i] is not undefined, then
-    if (groupNames !== Value.undefined && groupNames[i] !== Value.undefined) {
-      // i. Perform ! CreateDataProperty(groups, groupNames[i], matchIndicesArray).
-      X(CreateDataPropertyOrThrow(groups, groupNames[i], matchIndicesArray));
+    // e. If i > 0 and groupNames[i - 1] is not undefined, then
+    if (i > 0 && groupNames[i - 1] !== Value.undefined) {
+      // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
+      X(CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray));
     }
   }
   // 12. Return A.

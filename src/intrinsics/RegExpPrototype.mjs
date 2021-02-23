@@ -80,18 +80,20 @@ export function RegExpBuiltinExec(R, S) {
   const global = flags.includes('g');
   // 7. If flags contains "y", let sticky be true; else let sticky be false.
   const sticky = flags.includes('y');
-  // 8. If global is false and sticky is false, set lastIndex to 0.
+  // 8. If flags contains "d", let hasIndices be true; else let hasIndices be false.
+  const hasIndices = surroundingAgent.feature('regexp-match-indices') && flags.includes('d');
+  // 9. If global is false and sticky is false, set lastIndex to 0.
   if (!global && !sticky) {
     lastIndex = 0;
   }
-  // 9. Let matcher be R.[[RegExpMatcher]].
+  // 10. Let matcher be R.[[RegExpMatcher]].
   const matcher = R.RegExpMatcher;
-  // 10. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
+  // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
   const fullUnicode = flags.includes('u');
-  // 11. Let matchSucceeded be false.
+  // 12. Let matchSucceeded be false.
   let matchSucceeded = false;
   let r;
-  // 12. Repeat, while matchSucceeded is false
+  // 13. Repeat, while matchSucceeded is false
   while (matchSucceeded === false) {
     // a. If lastIndex > length, then
     if (lastIndex > length) {
@@ -123,10 +125,10 @@ export function RegExpBuiltinExec(R, S) {
       matchSucceeded = true;
     }
   }
-  // 13. Let e be r's endIndex value.
+  // 14. Let e be r's endIndex value.
   let e = r.endIndex;
   const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
-  // 14. If fullUnicode is true, then
+  // 15. If fullUnicode is true, then
   if (fullUnicode) {
     if (surroundingAgent.feature('regexp-match-indices')) {
       // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
@@ -147,63 +149,66 @@ export function RegExpBuiltinExec(R, S) {
       e = eUTF;
     }
   }
-  // 15. If global is true or sticky is true, then
+  // 16. If global is true or sticky is true, then
   if (global || sticky) {
     // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
     Q(Set(R, new Value('lastIndex'), F(e), Value.true));
   }
-  // 16. Let n be the number of elements in r's captures List.
+  // 17. Let n be the number of elements in r's captures List.
   const n = r.captures.length - 1;
-  // 17. Assert: n < 2^32 - 1.
+  // 18. Assert: n < 2^32 - 1.
   Assert(n < (2 ** 32) - 1);
-  // 18. Let A be ! ArrayCreate(n + 1).
+  // 19. Let A be ! ArrayCreate(n + 1).
   const A = X(ArrayCreate(n + 1));
-  // 19. Assert: The value of A's "length" property is n + 1.
+  // 20. Assert: The value of A's "length" property is n + 1.
   Assert(X(Get(A, new Value('length'))).numberValue() === n + 1);
-  // 20. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
+  // 21. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
   X(CreateDataPropertyOrThrow(A, new Value('index'), F(lastIndex)));
-  // 21. Perform ! CreateDataPropertyOrThrow(A, "input", S).
+  // 22. Perform ! CreateDataPropertyOrThrow(A, "input", S).
   X(CreateDataPropertyOrThrow(A, new Value('input'), S));
   const capturingParens = R.parsedPattern.capturingGroups;
   let indices;
+  let groupNames;
   if (surroundingAgent.feature('regexp-match-indices')) {
     // 25. Let indices be a new empty List.
     indices = [];
-    // 26. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    // 26. Let groupNames be a new empty List.
+    groupNames = [];
+    // 27. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
     const match = { StartIndex: lastIndex, EndIndex: e };
-    // 27. Add match as the last element of indices.
+    // 28. Add match as the last element of indices.
     indices.push(match);
-    // 28. Let matchedValue be ! GetMatchString(S, match).
+    // 29. Let matchedValue be ! GetMatchString(S, match).
     const matchedValue = X(GetMatchString(S, match));
-    // 29. Perform ! CreateDataProperty(A, "0", matchedValue).
+    // 30. Perform ! CreateDataProperty(A, "0", matchedValue).
     X(CreateDataPropertyOrThrow(A, new Value('0'), matchedValue));
   } else {
-    // 22. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
+    // 23. Let matchedSubstr be the matched substring (i.e. the portion of S between offset lastIndex inclusive and offset e exclusive).
     const matchedSubstr = S.stringValue().substring(lastIndex, e);
-    // 23. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
+    // 24. Perform ! CreateDataPropertyOrThrow(A, "0", matchedSubstr).
     X(CreateDataPropertyOrThrow(A, new Value('0'), new Value(matchedSubstr)));
   }
   let groups;
-  let groupNames;
-  // 24. If R contains any GroupName, then
+  let hasGroups;
+  // 25. If R contains any GroupName, then
   if (R.parsedPattern.groupSpecifiers.size > 0) {
     // a. Let groups be OrdinaryObjectCreate(null).
     groups = OrdinaryObjectCreate(Value.null);
     if (surroundingAgent.feature('regexp-match-indices')) {
-      // b. Let groupNames be a new empty List.
-      groupNames = [Value.undefined];
+      // b. Let hasGroups be true.
+      hasGroups = Value.true;
     }
-  } else { // 25. Else,
+  } else { // 26. Else,
     // a. Let groups be undefined.
     groups = Value.undefined;
     if (surroundingAgent.feature('regexp-match-indices')) {
-      // b. Let groupNames be undefined.
-      groupNames = Value.undefined;
+      // b. Let hasGroups be false.
+      hasGroups = Value.false;
     }
   }
-  // 26. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+  // 27. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
   X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
-  // 27. For each integer i such that i > 0 and i ≤ n, do
+  // 28. For each integer i such that i > 0 and i ≤ n, do
   for (let i = 1; i <= n; i += 1) {
     // a. Let captureI be ith element of r's captures List.
     const captureI = r.captures[i];
@@ -213,7 +218,7 @@ export function RegExpBuiltinExec(R, S) {
       if (captureI === Value.undefined) {
         // i. Let capturedValue be undefined.
         capturedValue = Value.undefined;
-        // ii. Add undefined as the last element of indices.
+        // ii. Append undefined to indices.
         indices.push(Value.undefined);
       } else { // f. Else,
         // i. Let captureStart be captureI's startIndex.
@@ -229,10 +234,10 @@ export function RegExpBuiltinExec(R, S) {
         }
         // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
         const capture = { StartIndex: captureStart, EndIndex: captureEnd };
-        // v. Append capture to indices.
-        indices.push(capture);
-        // vi. Let capturedValue be ! GetMatchString(S, capture).
+        // v. Let capturedValue be ! GetMatchString(S, capture).
         capturedValue = X(GetMatchString(S, capture));
+        // vi. Append capture to indices.
+        indices.push(capture);
       }
     } else {
       // b. If captureI is undefined, let capturedValue be undefined.
@@ -259,23 +264,22 @@ export function RegExpBuiltinExec(R, S) {
       // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
       X(CreateDataPropertyOrThrow(groups, s, capturedValue));
       if (surroundingAgent.feature('regexp-match-indices')) {
-        // iii. Assert: groupNames is a List.
-        Assert(Array.isArray(groupNames));
-        // iv. Append s to groupNames.
+        // iii. Append s to groupNames.
         groupNames.push(s);
       }
     } else if (surroundingAgent.feature('regexp-match-indices')) {
-      // i. If groupNames is a List, append undefined to groupNames.
-      if (Array.isArray(groupNames)) {
-        groupNames.push(Value.undefined);
-      }
+      // i. Append undefined to groupNames.
+      groupNames.push(Value.undefined);
     }
   }
   if (surroundingAgent.feature('regexp-match-indices')) {
-    // 34. Let indicesArray be MakeIndicesArray(S, indices, groupNames).
-    const indicesArray = MakeIndicesArray(S, indices, groupNames);
-    // 35. Perform ! CreateDataProperty(A, "indices", indicesArray).
-    X(CreateDataPropertyOrThrow(A, new Value('indices'), indicesArray));
+    // 34. If hasIndices is true, then
+    if (hasIndices) {
+      // a. Let indicesArray be MakeIndicesArray(S, indices, groupNames, hasGroups).
+      const indicesArray = MakeIndicesArray(S, indices, groupNames, hasGroups);
+      // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
+      X(CreateDataPropertyOrThrow(A, new Value('indices'), indicesArray));
+    }
   }
   // 28. Return A.
   return A;
@@ -331,6 +335,10 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
+  const hasIndices = ToBoolean(Q(Get(R, new Value('hasIndices'))));
+  if (hasIndices === Value.true) {
+    result += 'd';
+  }
   const global = ToBoolean(Q(Get(R, new Value('global'))));
   if (global === Value.true) {
     result += 'g';
@@ -372,6 +380,25 @@ function RegExpProto_globalGetter(args, { thisValue }) {
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('g')) {
+    return Value.true;
+  }
+  return Value.false;
+}
+
+// #sec-get-regexp.prototype.hasIndices
+function RegExpProto_hasIndicesGetter(args, { thisValue }) {
+  const R = thisValue;
+  if (Type(R) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+  }
+  if (!('OriginalFlags' in R)) {
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+      return Value.undefined;
+    }
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+  }
+  const flags = R.OriginalFlags;
+  if (flags.stringValue().includes('d')) {
     return Value.true;
   }
   return Value.false;
@@ -796,6 +823,7 @@ export function bootstrapRegExpPrototype(realmRec) {
       ['dotAll', [RegExpProto_dotAllGetter]],
       ['flags', [RegExpProto_flagsGetter]],
       ['global', [RegExpProto_globalGetter]],
+      surroundingAgent.feature('regexp-match-indices') ? ['hasIndices', [RegExpProto_hasIndicesGetter]] : undefined,
       ['ignoreCase', [RegExpProto_ignoreCaseGetter]],
       [wellKnownSymbols.match, RegExpProto_match, 1],
       [wellKnownSymbols.matchAll, RegExpProto_matchAll, 1],
