@@ -133,15 +133,21 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 
   // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
-  // 2. If F.[[IsClassConstructor]] is true, throw a TypeError exception.
-  if (F.IsClassConstructor === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
-  }
-  // 3. Let callerContext be the running execution context.
-  // 4. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
+  // 2. Let callerContext be the running execution context.
+  // 3. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
   const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
-  // 5. Assert: calleeContext is now the running execution context.
+  // 4. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
+  // 5. If F.[[IsClassConstructor]] is true, then
+  if (F.IsClassConstructor === Value.true) {
+    // a. Let error be a newly created TypeError object.
+    const error = surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
+    // b. NOTE: _error_ is created in _calleeContext_ with _F_'s associated Realm Record.
+    // c. Remove _calleeContext_ from the execution context stack and restore _callerContext_ as the running execution context.
+    surroundingAgent.executionContextStack.pop(calleeContext);
+    // d. Return ThrowCompletion(_error_).
+    return error;
+  }
   // 6. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
   OrdinaryCallBindThis(F, calleeContext, thisArgument);
   // 7. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
@@ -254,10 +260,12 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
 
 // 9.2.10 #sec-makeconstructor
 export function MakeConstructor(F, writablePrototype, prototype) {
-  Assert(isECMAScriptFunctionObject(F));
-  Assert(IsConstructor(F) === Value.false);
-  Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
-  F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
+  Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
+  if (isECMAScriptFunctionObject(F)) {
+    Assert(IsConstructor(F) === Value.false);
+    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
+    F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
+  }
   F.ConstructorKind = 'base';
   if (writablePrototype === undefined) {
     writablePrototype = Value.true;

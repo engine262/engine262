@@ -2,21 +2,24 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value, Type } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
+  Construct,
+  CreateBuiltinFunction,
   Get,
   GetValue,
   IsConstructor,
   MakeConstructor,
   MakeClassConstructor,
+  SetFunctionLength,
   SetFunctionName,
   CreateMethodProperty,
   OrdinaryObjectCreate,
+  OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
   IsStatic,
   ConstructorMethod,
   NonConstructorMethodDefinitions,
 } from '../static-semantics/all.mjs';
-import { Parser } from '../parser/Parser.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 import {
   Q, X,
@@ -27,11 +30,6 @@ import {
   DefineMethod,
   PropertyDefinitionEvaluation,
 } from './all.mjs';
-
-function parseMethodDefinition(sourceText) {
-  const parser = new Parser({ source: sourceText });
-  return parser.scope.with({ superCall: true }, () => parser.parseMethodDefinition());
-}
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
 export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
@@ -91,36 +89,33 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   } else { // 8. Else, let constructor be ConstructorMethod of ClassBody.
     constructor = ConstructorMethod(ClassBody);
   }
-  // 9. If constructor is empty, then
-  if (constructor === undefined) {
-    // a. If ClassHeritage is present, then
-    if (ClassHeritage) {
-      // i. Set constructor to the result of parsing the source text
-      //    `constructor(...args) { super(...args); } using the syntactic grammar with the goal
-      //    symbol MethodDefinition[~Yield, ~Await].
-      constructor = parseMethodDefinition('constructor(...args) { super(...args); }');
-    } else { // b. Else,
-      // i. Set constructor to the result of parsing the source text `constructor() {}` using the
-      //    syntactic grammar with the goal symbol MethodDefinition[~Yield, ~Await].
-      constructor = parseMethodDefinition('constructor() {}');
-    }
-  }
-  // 10. Set the running execution context's LexicalEnvironment to classScope.
+  // 9. Set the running execution context's LexicalEnvironment to classScope.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
-  // 11. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
-  const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
-  // 12. Let F be constructorInfo.[[Closure]].
-  const F = constructorInfo.Closure;
-  // 13. Perform SetFunctionName(F, className).
-  SetFunctionName(F, className);
+  let F;
+  // 10. If constructor is empty, then
+  if (constructor === undefined) {
+    // a. Let steps be the algorithm steps defined in #sec-default-constructor-functions
+    const steps = DefaultConstructorFunctions;
+    // b. Let F be ! CreateBuiltinFunction(steps, 0, className, [[ConstructorKind]], [[SourceText]], empty, constructorParent).
+    F = X(CreateBuiltinFunction(steps, ['ConstructorKind', 'SourceText'], undefined, constructorParent, Value.true));
+    SetFunctionLength(F, 0);
+    SetFunctionName(F, className);
+  } else { // 11. Else,
+    // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
+    const constructorInfo = X(yield* DefineMethod(constructor, proto, constructorParent));
+    // b. Let F be constructorInfo.[[Closure]].
+    F = constructorInfo.Closure;
+    // c. Perform MakeClassConstructor(F).
+    MakeClassConstructor(F);
+    // d. Perform SetFunctionName(F, className).
+    SetFunctionName(F, className);
+  }
   // 14. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
   // 15. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
-  // 16. Perform MakeClassConstructor(F).
-  MakeClassConstructor(F);
   // 17. Perform CreateMethodProperty(proto, "constructor", F).
   X(CreateMethodProperty(proto, new Value('constructor'), F));
   // 18. If ClassBody is not present, let methods be a new empty List.
@@ -158,4 +153,32 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   }
   // 23. Return F.
   return F;
+}
+
+// #sec-default-constructor-functions
+function DefaultConstructorFunctions(args, { NewTarget }) {
+  // 1. If NewTarget is undefined, throw a TypeError exception.
+  if (NewTarget === Value.undefined) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+  }
+  // 2. Let F be the active function object.
+  const F = surroundingAgent.activeFunctionObject;
+  // 3. If F.[[ConstructorKind]] is derived, then
+  if (F.ConstructorKind === 'derived') {
+    // a. NOTE: This branch behaves similarly to `constructor(...args) { super(...args); }`. The most
+    //    notable distinction is that while the aforementioned ECMAScript source text observably calls
+    //    the @@iterator method on `%Array.prototype%`, a Default Constructor Function does not.
+    // b. Let func be ! F.[[GetPrototypeOf]]().
+    const func = X(F.GetPrototypeOf());
+    // c. If IsConstructor(func) is false, throw a TypeError exception.
+    if (IsConstructor(func) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+    }
+    // d. Return ? Construct(func, args, NewTarget).
+    return Q(Construct(func, args, NewTarget));
+  } else { // 4. Else,
+    // a. NOTE: This branch behaves similarly to `constructor() {}`.
+    // b. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
+    return Q(OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%'));
+  }
 }

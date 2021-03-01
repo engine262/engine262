@@ -190,7 +190,15 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
 function FunctionProto_toString(args, { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
-  // 2. If func is a built-in function object, then return an implementation-defined
+  // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
+  //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
+  if (Type(func) === 'Object'
+      && 'SourceText' in func
+      && X(HostHasSourceTextAvailable(func)) === Value.true) {
+    // Return ! UTF16Encode(func.[[SourceText]]).
+    return new Value(func.SourceText);
+  }
+  // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
   //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
   //    slot and func.[[InitialName]] is a String, the portion of the returned String
@@ -201,14 +209,6 @@ function FunctionProto_toString(args, { thisValue }) {
       return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
     return new Value('function() { [native code] }');
-  }
-  // 3. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
-  //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (Type(func) === 'Object'
-      && 'SourceText' in func
-      && X(HostHasSourceTextAvailable(func)) === Value.true) {
-    // Return ! UTF16Encode(func.[[SourceText]]).
-    return new Value(func.SourceText);
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
